@@ -67,7 +67,7 @@ def llm_assistant(
         )
 
     job.update(
-        current_step=len(job.get_steps()) - 1,
+        current_step=2,
         status_message="Finished LLMJob successfully!",
     )
 

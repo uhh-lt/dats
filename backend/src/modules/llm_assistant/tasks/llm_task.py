@@ -94,7 +94,19 @@ class LLMTask(
             strategy=strategy,
         )
         self._start_job(job=job, num_documents=len(task_parameters.sdoc_ids))
+        logger.info(
+            "Using model '{}', strategy '{}', and approach '{}'.",
+            approach_parameters.model,
+            strategy.__class__.__name__,
+            approach_parameters.__class__.__name__,
+        )
         self._prepare(context)
+        self._update_progress(
+            processed_documents=0,
+            total_documents=len(task_parameters.sdoc_ids),
+            completed_requests=0,
+            job=job,
+        )
 
         documents = self.document_processor.process(
             model=approach_parameters.model,
@@ -106,7 +118,27 @@ class LLMTask(
         )
         results: list[ResultT] = []
         for document in documents:
-            results.append(self._process_document(context=context, document=document))
+            logger.info(
+                "Processing {} LLM response(s) for document {}.",
+                len(document.responses),
+                document.sdoc_data.id,
+            )
+            result = self._process_document(context=context, document=document)
+            results.append(result)
+            logger.info(
+                "Finished document {} with status '{}': {}",
+                document.sdoc_data.id,
+                result.status,
+                result.status_message,
+            )
+
+        logger.info(
+            "Finished {} task: {} successful, {} partial, {} failed document(s).",
+            self.task_name,
+            sum(result.status == "finished" for result in results),
+            sum(result.status == "partial" for result in results),
+            sum(result.status == "error" for result in results),
+        )
 
         return self._build_output(results)
 
@@ -125,12 +157,15 @@ class LLMTask(
         job: Job,
     ) -> None:
         """Report document and LLM-request progress on the job."""
-        job.update(
-            status_message=(
-                f"Processed {processed_documents} of {total_documents} documents "
-                f"({completed_requests} LLM requests completed)"
-            )
+        message = (
+            f"Processed {processed_documents} of {total_documents} documents "
+            f"({completed_requests} LLM requests completed)"
         )
+        job.update(
+            current_step=1,
+            status_message=message,
+        )
+        logger.info(message)
 
     def _prepare(
         self,

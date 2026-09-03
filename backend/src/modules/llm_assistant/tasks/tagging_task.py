@@ -1,3 +1,4 @@
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.doc.source_document_crud import crud_sdoc
@@ -52,6 +53,11 @@ class TaggingTask(
             tag.id
             for tag in crud_sdoc.read(db=context.db, id=document.sdoc_data.id).tags
         ]
+        logger.info(
+            "Document {} currently has {} tag(s).",
+            document.sdoc_data.id,
+            len(current_tag_ids),
+        )
         if len(document.responses) != 1:
             return TaggingResult(
                 status="error",
@@ -74,6 +80,11 @@ class TaggingTask(
             )
 
         parsed_result = context.strategy.parse_result(result=response.parsed)
+        logger.info(
+            "Document {} produced {} suggested tag(s).",
+            document.sdoc_data.id,
+            len(parsed_result.tag_ids),
+        )
         return TaggingResult(
             status="finished",
             status_message="Document tagging successful",

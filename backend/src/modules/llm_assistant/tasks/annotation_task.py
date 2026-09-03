@@ -224,7 +224,15 @@ class AnnotationTask(
                     )
                 )
 
+        parsed_annotation_count = len(suggested_annotations)
         suggested_annotations = self._dedupe_annotations(suggested_annotations)
+        logger.info(
+            "Document {} produced {} annotation suggestion(s), {} after deduplication, with {} failed response(s).",
+            sdoc_data.id,
+            parsed_annotation_count,
+            len(suggested_annotations),
+            len(errors),
+        )
         created_annos = crud_span_anno.create_bulk(
             db=context.db,
             user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
@@ -234,6 +242,11 @@ class AnnotationTask(
             SpanAnnotationRead.model_validate(annotation)
             for annotation in created_annos
         ]
+        logger.info(
+            "Created {} span annotation(s) for document {}.",
+            len(created_annos_for_sdoc),
+            sdoc_data.id,
+        )
 
         if errors:
             raw_response = aggregate_raw_responses(
