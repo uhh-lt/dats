@@ -1,7 +1,9 @@
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from time import monotonic
 from typing import Generic, Type, TypeVar
 
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -78,13 +80,30 @@ class LLMDocumentProcessor:
         processed_documents = 0
         completed_requests = 0
         total_documents = len(sdoc_ids)
+        submitted_batches = 0
+
+        logger.info(
+            "Starting LLM document processing for {} document(s) with request batch size {}.",
+            total_documents,
+            LLM_REQUEST_BATCH_SIZE,
+        )
 
         def submit_pending_work() -> None:
             """Submit and record the current bounded batch of LLM requests."""
-            nonlocal completed_requests
+            nonlocal completed_requests, submitted_batches
             if len(pending_work) == 0:
                 return
 
+            submitted_batches += 1
+            request_count = len(pending_work)
+            document_count = len({work.sdoc_id for work in pending_work})
+            logger.info(
+                "Submitting LLM batch {} with {} prompt(s) for {} document(s).",
+                submitted_batches,
+                request_count,
+                document_count,
+            )
+            started_at = monotonic()
             batch_responses = self.llm.llm_batch_chat(
                 model=model,
                 messages=[work.message for work in pending_work],
@@ -103,8 +122,21 @@ class LLMDocumentProcessor:
                         response=response,
                     )
                 )
-            completed_requests += len(pending_work)
+            failed_requests = sum(response.is_error for response in batch_responses)
+            logger.info(
+                "Completed LLM batch {} in {:.2f}s: {} successful, {} failed request(s).",
+                submitted_batches,
+                monotonic() - started_at,
+                request_count - failed_requests,
+                failed_requests,
+            )
+            completed_requests += request_count
             pending_work.clear()
+            on_progress(
+                processed_documents,
+                total_documents,
+                completed_requests,
+            )
 
         def take_completed_documents() -> list[LLMDocumentResponse[ResponseT]]:
             """Collect responses for documents whose prompts have all been generated."""
@@ -140,12 +172,14 @@ class LLMDocumentProcessor:
                     f"Document with ID {sdoc_data.id} has no language!"
                 )
 
+            prompt_count = 0
             for message_id, prompt in enumerate(
                 strategy.generate_prompts(
                     language=language,
                     sdoc_data=sdoc_data,
                 )
             ):
+                prompt_count += 1
                 pending_work.append(
                     LLMWorkItem(
                         sdoc_id=sdoc_data.id,
@@ -159,6 +193,11 @@ class LLMDocumentProcessor:
                 submit_pending_work()
                 yield from yield_completed_documents()
 
+            logger.info(
+                "Split document {} into {} prompt(s).",
+                sdoc_data.id,
+                prompt_count,
+            )
             completed_documents.append(sdoc_data)
             if len(pending_work) > 0:
                 continue
@@ -167,3 +206,9 @@ class LLMDocumentProcessor:
 
         submit_pending_work()
         yield from yield_completed_documents()
+        logger.info(
+            "Finished LLM document processing: {} document(s), {} request(s), {} batch(es).",
+            processed_documents,
+            completed_requests,
+            submitted_batches,
+        )

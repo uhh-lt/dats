@@ -1,3 +1,4 @@
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -62,6 +63,12 @@ class MetadataExtractionTask(
             if metadata.project_metadata_id
             in context.task_parameters.project_metadata_ids
         ]
+        logger.info(
+            "Document {} has existing values for {} of {} selected metadata field(s).",
+            document.sdoc_data.id,
+            len(current_metadata),
+            len(context.task_parameters.project_metadata_ids),
+        )
         if len(document.responses) != 1:
             return MetadataExtractionResult(
                 status="error",
@@ -101,6 +108,12 @@ class MetadataExtractionTask(
                 )
             )
 
+        logger.info(
+            "Document {} produced suggestions for {} of {} selected metadata field(s).",
+            document.sdoc_data.id,
+            len(suggested_metadata),
+            len(context.task_parameters.project_metadata_ids),
+        )
         return MetadataExtractionResult(
             status="finished",
             status_message="Metadata extraction successful",
