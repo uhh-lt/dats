@@ -52,6 +52,6 @@ jobs:
           # the prompt only passes the per-run PR number.
           copilot -p "Review pull request #${{ steps.pr.outputs.number }}." \
             --agent pr-reviewer \
-            --allow-tool='github' \
-            --allow-tool='shell' \
-            --deny-tool='write'
+            --allow-tool='read/readFile' \
+            --allow-tool='execute' \
+            --allow-tool='github'

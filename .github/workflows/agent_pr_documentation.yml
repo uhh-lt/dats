@@ -52,7 +52,8 @@ jobs:
           # the prompt only passes the per-run PR number.
           copilot -p "Check pull request #${{ steps.pr.outputs.number }} for documentation impact and create a docs PR if needed." \
             --agent pr-documentation \
-            --allow-tool='github' \
-            --allow-tool='read' \
-            --allow-tool='edit' \
-            --allow-tool='shell'
+            --allow-tool='read/readFile' \
+            --allow-tool='edit/createFile' \
+            --allow-tool='edit/editFiles' \
+            --allow-tool='execute' \
+            --allow-tool='github'

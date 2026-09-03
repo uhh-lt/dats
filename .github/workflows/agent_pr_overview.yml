@@ -51,8 +51,8 @@ jobs:
           # All instructions live in .github/agents/pr-overview.agent.md;
           # the prompt only passes the per-run PR number.
           copilot -p "Generate an overview for pull request #${{ steps.pr.outputs.number }}." \
-            --agent "PR Overview" \
-            --allow-tool='github' \
-            --allow-tool='read' \
-            --allow-tool='shell' \
-            --deny-tool='write'
+            --agent pr-overview \
+            --allow-tool='read/readFile' \
+            --allow-tool='read/viewImage' \
+            --allow-tool='execute' \
+            --allow-tool='github'

@@ -1,10 +1,11 @@
 ---
-name: PR Overview
+name: pr-overview
 description: Generate an overview of a single pull request, summarizing changes and posting it as a PR comment or body update
 tools:
   [
     read/readFile,
     read/viewImage,
+    execute,
     github/add_issue_comment,
     github/get_commit,
     github/get_file_contents,

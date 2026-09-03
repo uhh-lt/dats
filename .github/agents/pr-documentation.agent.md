@@ -4,13 +4,9 @@ description: Keep the mkdocs documentation in sync by reviewing a single PR, det
 tools:
   [
     read/readFile,
-    read/viewImage,
     edit/createFile,
     edit/editFiles,
-    github/add_issue_comment,
-    github/create_branch,
-    github/create_or_update_file,
-    github/create_pull_request,
+    execute,
     github/get_file_contents,
     github/get_me,
     github/pull_request_read,
@@ -32,6 +28,7 @@ The PR's head branch is already checked out in the current working directory. Re
 - DO NOT create more than one Docs PR per source PR.
 - DO NOT overwrite or edit existing PR bodies or comments authored by others.
 - ONLY create a Docs PR when there is a real, verifiable documentation gap — when in doubt, skip and explain why.
+- USE the `execute` tool to run standard `git checkout`, `git commit`, `git push`, and `gh pr create` commands to generate the documentation PR.
 
 ## Definitions
 
