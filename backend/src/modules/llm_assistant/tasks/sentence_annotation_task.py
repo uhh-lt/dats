@@ -268,12 +268,27 @@ class SentenceAnnotationTask(
             )
 
         parsed_annotation_count = len(suggested_annotations)
+        logger.debug(
+            "--- Sentence annotations before deduplication: document {} ({} total) ---\n{}",
+            sdoc_data.id,
+            parsed_annotation_count,
+            "\n".join(repr(annotation) for annotation in suggested_annotations)
+            or "<none>",
+        )
         suggested_annotations = self._dedupe_annotations(suggested_annotations)
+        deduplicated_annotation_count = len(suggested_annotations)
+        logger.debug(
+            "--- Sentence annotations after deduplication: document {} ({} total) ---\n{}",
+            sdoc_data.id,
+            deduplicated_annotation_count,
+            "\n".join(repr(annotation) for annotation in suggested_annotations)
+            or "<none>",
+        )
         logger.info(
             "Document {} produced {} sentence annotation suggestion(s), {} after deduplication, with {} failed response(s).",
             sdoc_data.id,
             parsed_annotation_count,
-            len(suggested_annotations),
+            deduplicated_annotation_count,
             len(errors),
         )
         created_annos = crud_sentence_anno.create_bulk(

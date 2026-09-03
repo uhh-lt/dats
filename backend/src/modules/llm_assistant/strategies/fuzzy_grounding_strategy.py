@@ -2,6 +2,8 @@ import difflib
 import random
 from collections import defaultdict
 from collections.abc import Iterator
+from dataclasses import dataclass
+from enum import Enum
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -29,11 +31,9 @@ class LLMExtractedPassage(BaseModel):
     category: str = Field(description="The category/code of the extracted text passage")
     exact_quote: str = Field(description="The exact verbatim quote of the text passage")
     context_before: str = Field(
-        default="",
         description="Verbatim text immediately before the quote (anchor for disambiguation)",
     )
     context_after: str = Field(
-        default="",
         description="Verbatim text immediately after the quote (anchor for disambiguation)",
     )
 
@@ -42,6 +42,20 @@ class LLMExtractionResult(BaseModel):
     passages: list[LLMExtractedPassage] = Field(
         default_factory=list, description="The extracted relevant text passages"
     )
+
+
+class GroundingMethod(str, Enum):
+    ANCHORED_EXACT = "anchored exact"
+    QUOTE_EXACT = "quote exact"
+    FUZZY = "fuzzy"
+
+
+@dataclass(frozen=True)
+class GroundedQuote:
+    begin: int
+    end: int
+    method: GroundingMethod
+    score: float
 
 
 EN_PROMPT_TEMPLATE = """
@@ -427,16 +441,31 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
             located = self._locate_quote(passage, chunk_text)
             if located is None:
+                quote_preview = self._preview(passage.exact_quote)
                 logger.debug(
-                    "Could not ground quote '{}' for code {}",
-                    passage.exact_quote,
+                    "Could not ground quote for document {}, chunk {}, code {}: length={}, preview={!r}",
+                    sdoc_data.id,
+                    message_id,
                     passage.category,
+                    len(passage.exact_quote),
+                    quote_preview,
                 )
                 continue
 
-            local_begin, local_end = located
-            begin = chunk_start + local_begin
-            end = chunk_start + local_end
+            begin = chunk_start + located.begin
+            end = chunk_start + located.end
+            logger.debug(
+                "Grounded quote for document {}, chunk {}, code {}: method={}, score={:.3f}, offsets={}:{}, length={}, preview={!r}",
+                sdoc_data.id,
+                message_id,
+                passage.category,
+                located.method.value,
+                located.score,
+                begin,
+                end,
+                end - begin,
+                self._preview(sdoc_data.content[begin:end]),
+            )
             spans.append(
                 ParsedSpan(
                     code_id=code_id,
@@ -448,9 +477,17 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         return spans
 
+    @staticmethod
+    def _preview(text: str, max_length: int = 100) -> str:
+        """Return a compact, single-line preview for diagnostic logging."""
+        compact = " ".join(text.split())
+        if len(compact) <= max_length:
+            return compact
+        return f"{compact[: max_length - 3]}..."
+
     def _locate_quote(
         self, passage: LLMExtractedPassage, content: str
-    ) -> tuple[int, int] | None:
+    ) -> GroundedQuote | None:
         """Locate the exact_quote in content, using context as an anchor.
 
         Strategy:
@@ -464,22 +501,33 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         # 1. anchored exact match
         anchored = before + quote + after
-        idx = content.find(anchored)
-        if idx != -1:
-            begin = idx + len(before)
-            return begin, begin + len(quote)
+        if before or after:
+            idx = content.find(anchored)
+            if idx != -1:
+                begin = idx + len(before)
+                return GroundedQuote(
+                    begin=begin,
+                    end=begin + len(quote),
+                    method=GroundingMethod.ANCHORED_EXACT,
+                    score=1.0,
+                )
 
         # 2. exact quote match (only if it occurs exactly once)
         first = content.find(quote)
         if first != -1 and content.find(quote, first + 1) == -1:
-            return first, first + len(quote)
+            return GroundedQuote(
+                begin=first,
+                end=first + len(quote),
+                method=GroundingMethod.QUOTE_EXACT,
+                score=1.0,
+            )
 
         # 3. fuzzy anchored match
         return self._fuzzy_locate(anchored, len(before), len(quote), content)
 
     def _fuzzy_locate(
         self, anchored: str, before_len: int, quote_len: int, content: str
-    ) -> tuple[int, int] | None:
+    ) -> GroundedQuote | None:
         """Slide a window of len(anchored) over content, score with difflib."""
         if not anchored or not content:
             return None
@@ -501,4 +549,9 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
             return None
 
         begin = best_start + before_len
-        return begin, begin + quote_len
+        return GroundedQuote(
+            begin=begin,
+            end=begin + quote_len,
+            method=GroundingMethod.FUZZY,
+            score=best_ratio,
+        )
