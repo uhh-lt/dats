@@ -1,25 +1,22 @@
-# Runs the autonomous ci-reviewer agent on every PR that is opened or updated.
+# Runs the autonomous PR Overview agent on every PR that is opened or updated.
 # The agent runs headlessly via the GitHub Copilot CLI on our self-hosted runners.
-# Inference is routed to our own OpenAI-compatible endpoint (BYOK) via the
-# COPILOT_PROVIDER_* / COPILOT_MODEL environment variables configured on the
-# runner fleet (see action-runner/.env.example) — no code leaves our network.
-name: agent-review
+name: agent-pr-overview
 on:
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "PR number to review"
+        description: "PR number to summarize"
         required: true
         type: number
 
 permissions:
   contents: read
-  pull-requests: write # required to post review comments
+  pull-requests: write # required to update PR body or post comments
 
 jobs:
-  review:
+  overview:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7
@@ -41,20 +38,21 @@ jobs:
 
       - name: Checkout PR branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ steps.pr.outputs.number }}
 
-      - name: Run ci-reviewer agent (headless)
+      - name: Run PR Overview agent (headless)
         env:
           # GitHub auth for the Copilot CLI and for posting PR comments.
-          # The PAT is injected into the runner container from action-runner/.env.
-          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+          # Uses the auto-generated GITHUB_TOKEN (scoped to this repo, expires after job).
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # All review instructions live in .github/agents/ci-reviewer.agent.md;
+          # All instructions live in .github/agents/pr-overview.agent.md;
           # the prompt only passes the per-run PR number.
-          copilot -p "Review pull request #${{ steps.pr.outputs.number }}." \
-            --agent ci-reviewer \
+          copilot -p "Generate an overview for pull request #${{ steps.pr.outputs.number }}." \
+            --agent "PR Overview" \
             --allow-tool='github' \
-            --deny-tool='shell' \
+            --allow-tool='read' \
+            --allow-tool='shell' \
             --deny-tool='write'

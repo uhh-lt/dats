@@ -1,0 +1,58 @@
+# Runs the autonomous pr-documentation agent on every PR that is opened or updated.
+# The agent runs headlessly via the GitHub Copilot CLI on our self-hosted runners.
+name: agent-pr-documentation
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to check for documentation impact"
+        required: true
+        type: number
+
+permissions:
+  contents: write # required to create branches and push docs changes
+  pull-requests: write # required to create PRs and post comments
+
+jobs:
+  documentation:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the agent reads full git history/diffs
+
+      - name: Resolve PR number
+        id: pr
+        env:
+          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          PR_NUMBER="${EVENT_PR_NUMBER:-${INPUT_PR_NUMBER}}"
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "No PR number available (neither pull_request event nor workflow_dispatch input)." >&2
+            exit 1
+          fi
+          echo "number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout PR branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ steps.pr.outputs.number }}
+
+      - name: Run pr-documentation agent (headless)
+        env:
+          # GitHub auth for the Copilot CLI and for creating docs PRs.
+          # Uses the auto-generated GITHUB_TOKEN (scoped to this repo, expires after job).
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # All instructions live in .github/agents/pr-documentation.agent.md;
+          # the prompt only passes the per-run PR number.
+          copilot -p "Check pull request #${{ steps.pr.outputs.number }} for documentation impact and create a docs PR if needed." \
+            --agent pr-documentation \
+            --allow-tool='github' \
+            --allow-tool='read' \
+            --allow-tool='edit' \
+            --allow-tool='shell'
