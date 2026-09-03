@@ -78,8 +78,8 @@ const llmAssistantSlice = createSlice({
       state.llmMethod = action.payload.method;
       state.llmStep = 1;
     },
-    // Step 2: Select tags, metadata, or codes -> Go to the strategy selection
-    llmDialogGoToStrategySelection: (
+    // Step 2: Select tags, metadata, or codes -> Go to the settings form
+    llmDialogGoToSettings: (
       state,
       action: PayloadAction<{
         approach: ApproachRecommendation;
@@ -95,20 +95,7 @@ const llmAssistantSlice = createSlice({
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
-    // Step 3: Select the strategy -> Go to the approach selection
-    llmDialogGoToApproachSelection: (
-      state,
-      action: PayloadAction<{
-        strategy: StrategyType;
-        strategyParams: LLMStrategyParams;
-      }>,
-    ) => {
-      state.llmStep = 3;
-      state.llmStrategy = action.payload.strategy;
-      state.llmStrategyParams = action.payload.strategyParams;
-    },
-    // Step 4: Select the approach (zero-shot, few-shot) and deletion strategy
-    // Then, go to the prompt editor
+    // Step 3: Save all settings and go to the prompt editor
     llmDialogGoToPromptEditor: (
       state,
       action: PayloadAction<{
@@ -116,13 +103,17 @@ const llmAssistantSlice = createSlice({
         prompts: LLMPromptTemplates[];
         deleteExistingAnnotations: boolean;
         modelId: string;
+        strategy: StrategyType;
+        strategyParams: LLMStrategyParams;
       }>,
     ) => {
-      state.llmStep = 4;
+      state.llmStep = 3;
       state.llmPrompts = action.payload.prompts;
       state.llmApproach = action.payload.approach;
       state.llmDeleteExistingAnnotations = action.payload.deleteExistingAnnotations;
       state.llmId = action.payload.modelId;
+      state.llmStrategy = action.payload.strategy;
+      state.llmStrategyParams = action.payload.strategyParams;
     },
     llmDialogUpdatePromptEditor: (
       state,
@@ -130,10 +121,10 @@ const llmAssistantSlice = createSlice({
         prompts: LLMPromptTemplates[];
       }>,
     ) => {
-      state.llmStep = 4;
+      state.llmStep = 3;
       state.llmPrompts = action.payload.prompts;
     },
-    // Step 5 Variant A: Edit the prompts -> start the job & go to the waiting screen
+    // Step 4 Variant A: Edit the prompts -> start the job & go to the waiting screen
     llmDialogGoToWaiting: (
       state,
       action: PayloadAction<{
@@ -142,14 +133,14 @@ const llmAssistantSlice = createSlice({
       }>,
     ) => {
       state.isLLMDialogOpen = true;
-      state.llmStep = 5;
+      state.llmStep = 4;
       state.llmJobId = action.payload.jobId;
       state.llmPrompts = action.payload.prompts;
     },
-    // Step 5 Variant B: We click on View Results from Background Tasks
+    // Step 4 Variant B: We click on View Results from Background Tasks
     llmDialogOpenFromBackgroundTask: (state, action: PayloadAction<LlmAssistantJobRead>) => {
       state.isLLMDialogOpen = true;
-      state.llmStep = 5;
+      state.llmStep = 4;
 
       state.llmProjectId = action.payload.input.project_id;
       state.llmJobId = action.payload.job_id;
@@ -158,10 +149,10 @@ const llmAssistantSlice = createSlice({
       state.llmStrategy = action.payload.input.llm_strategy_type;
       state.llmStrategyParams = action.payload.input.specific_strategy_parameters;
     },
-    // Step 6: Wait for the job to finish
+    // Step 5: Wait for the job to finish
     llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobOutput }>) => {
       state.llmJobResult = action.payload.result;
-      state.llmStep = 6;
+      state.llmStep = 5;
     },
     // close the dialog & reset
     closeLLMDialog: (state) => {
@@ -191,21 +182,17 @@ const llmAssistantSlice = createSlice({
       // user just selected the method, reset method selection
       if (state.llmStep === 0) {
         state.llmMethod = initialState.llmMethod;
-        // user just selected the data, reset data selection
+        // preserve the data choices for review and reset the downstream settings
       } else if (state.llmStep === 1) {
         state.llmPrompts = initialState.llmPrompts;
-        state.llmTags = initialState.llmTags;
-        state.llmMetadata = initialState.llmMetadata;
-        state.llmCodes = initialState.llmCodes;
-        // user just selected the strategy, reset strategy selection
-      } else if (state.llmStep === 2) {
         state.llmStrategy = initialState.llmStrategy;
         state.llmStrategyParams = initialState.llmStrategyParams;
-        // user just selected the approach, reset approach selection
-      } else if (state.llmStep === 3) {
         state.llmId = initialState.llmId;
         state.llmApproach = initialState.llmApproach;
         state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
+        // preserve settings when returning from Edit prompt
+      } else if (state.llmStep === 2) {
+        state.llmPrompts = initialState.llmPrompts;
       }
     },
   },
