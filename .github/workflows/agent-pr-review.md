@@ -6,14 +6,12 @@ intent: Give pull request authors and reviewers a focused, current assessment of
 on:
   pull_request:
     types: [opened, synchronize]
-    forks: ["*"]
   workflow_dispatch:
     inputs:
       pr_number:
         description: PR number to review
         required: true
         type: number
-  roles: all
 permissions:
   contents: read
   pull-requests: read
@@ -89,7 +87,7 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
 
 1. Use the GitHub context tools to identify the authenticated automation user.
 2. Use the GitHub pull request tools to read the target PR's title, body, complete head SHA, comments, changed files, commits, and diff. Confirm that its number and repository match the triggering context; otherwise call `noop` and stop.
-3. In comments authored by the authenticated automation user, look for `<!-- pr-review: <head-sha> -->`. If a marker contains the complete current head SHA, call `noop` with a duplicate reason and stop.
+3. In comments authored by the authenticated automation user, look for `Reviewed commit: \`<head-sha>\``. If a comment contains the complete current head SHA, call `noop` with a duplicate reason and stop.
 4. Review the diff and changed files. Read important files from the checked-out PR head only when the diff does not provide enough surrounding context. Follow `AGENTS.md`, `.github/copilot-instructions.md`, and applicable repository instruction files.
 5. Report only actionable findings introduced by the PR:
    - **Security:** hardcoded secrets, injection risks, missing authorization, unsafe deserialization, or exposed sensitive data.
@@ -112,8 +110,6 @@ Reviewed commit: `<complete-head-sha>`
 ### Findings
 
 - <severity, file path and line when available, concise impact, and actionable correction>
-
-<!-- pr-review: <complete-head-sha> -->
 ```
 
-Order findings by severity using `🔴 high`, `🟡 medium`, then `🔵 low`. If there are no actionable findings, replace the findings list with `No issues found. ✅`. Always end with the marker containing the complete current head SHA.
+Order findings by severity using `🔴 high`, `🟡 medium`, then `🔵 low`. If there are no actionable findings, replace the findings list with `No issues found. ✅`. Always end with the `Reviewed commit:` line containing the complete current head SHA.

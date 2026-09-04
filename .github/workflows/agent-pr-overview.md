@@ -6,14 +6,12 @@ intent: Keep every pull request's purpose and important changes easy for reviewe
 on:
   pull_request:
     types: [opened, synchronize]
-    forks: ["*"]
   workflow_dispatch:
     inputs:
       pr_number:
         description: PR number to summarize
         required: true
         type: number
-  roles: all
 permissions:
   contents: read
   issues: read
@@ -60,10 +58,10 @@ safe-outputs:
     operation: replace
     update-branch: false
     max: 1
-    target: "*"
+    target: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
   add-comment:
     max: 1
-    target: "*"
+    target: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
     issues: false
     pull-requests: true
   noop:
@@ -96,13 +94,13 @@ Generate an up-to-date overview for pull request `${{ github.event.pull_request.
 
 1. Use the GitHub pull request tools to read the target PR's title, body, head SHA, comments, changed files, commits, and diff. Read important changed files from the checked-out PR head only when the diff does not explain intent.
 2. Confirm the required PR data is complete and internally consistent. If it is not, call `noop` with a short reason and stop.
-3. Look for `<!-- pr-overview: <head-sha> -->` in the PR body and comments. If either contains the complete current head SHA, call `noop` with a short duplicate reason and stop without publishing.
+3. Look for `Commit: \`<head-sha>\``in the PR body and in comments authored by the authenticated automation user. If either contains the complete current head SHA, call`noop` with a short duplicate reason and stop without publishing.
 4. Write an overview that:
    - starts with a clear 2–4 sentence summary of the PR's purpose and effect;
    - is summary-only for a small, single-concern PR;
    - for a larger PR, adds grouped `##` sections, each with a short explanation and bullets for the important changes;
    - includes related issue references only when present in the PR title or body; and
-   - ends with `<!-- pr-overview: <head-sha> -->` using the complete current head SHA.
+   - ends with a visible `Commit: \`<complete-head-sha>\`` line using the complete current head SHA.
 5. Publish exactly once:
    - If the existing PR body is empty, use `update-pull-request` to replace only the body of the target PR with the overview.
    - Otherwise, use `add-comment` to post the overview once on the target PR.
@@ -123,7 +121,7 @@ Generate an up-to-date overview for pull request `${{ github.event.pull_request.
 
 - **<Change>** — <why it matters>
 
-<!-- pr-overview: <complete-head-sha> -->
+Commit: `<complete-head-sha>`
 ```
 
 If no publication is required, call `noop` with a concise explanation.

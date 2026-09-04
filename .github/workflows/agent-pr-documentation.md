@@ -6,7 +6,6 @@ intent: Keep user, developer, and administrator documentation accurate and make 
 on:
   pull_request:
     types: [opened, synchronize]
-    forks: ["*"]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -18,7 +17,6 @@ on:
         required: false
         default: main
         type: string
-  roles: all
 permissions:
   contents: read
   pull-requests: read
