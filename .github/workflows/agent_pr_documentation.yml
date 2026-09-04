@@ -63,10 +63,10 @@ jobs:
             --add-github-mcp-tool='push_files' \
             --add-github-mcp-tool='create_pull_request' \
             --add-github-mcp-tool='add_issue_comment' \
-            --available-tools='read/readFile,github/pull_request_read,github/search_pull_requests,github/create_branch,github/push_files,github/create_pull_request,github/add_issue_comment' \
-            --allow-tool='github(pull_request_read)' \
-            --allow-tool='github(search_pull_requests)' \
-            --allow-tool='github(create_branch)' \
-            --allow-tool='github(push_files)' \
-            --allow-tool='github(create_pull_request)' \
-            --allow-tool='github(add_issue_comment)'
+            --available-tools='view,github/*' \
+            --allow-tool='github-mcp-server(pull_request_read)' \
+            --allow-tool='github-mcp-server(search_pull_requests)' \
+            --allow-tool='github-mcp-server(create_branch)' \
+            --allow-tool='github-mcp-server(push_files)' \
+            --allow-tool='github-mcp-server(create_pull_request)' \
+            --allow-tool='github-mcp-server(add_issue_comment)'
