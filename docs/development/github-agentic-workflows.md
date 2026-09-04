@@ -62,6 +62,52 @@ Review and commit both resulting files:
 
 Generated lock files are intentionally tracked and marked as generated through `.gitattributes`.
 
+## Minimize agent access
+
+Every workflow must follow least privilege: give the agent only the tools, GitHub data, repository permissions, and network access required for its stated task. Extra capabilities increase the impact of a mistaken or manipulated tool call and make the workflow harder to review.
+
+Apply this rule across the complete workflow configuration:
+
+- Select the smallest GitHub `toolsets` list that covers the required reads. Do not use `default` or `all` merely for convenience.
+- Match `permissions` to those toolsets, using read access only. For example, `repos` generally needs `contents: read`, `issues` needs `issues: read`, and `pull_requests` needs `pull-requests: read`.
+- Restrict `bash` to the commands the task actually needs. An empty list disables shell commands entirely.
+- Set `edit: false` when the agent does not need to modify files.
+- Declare only the required `safe-outputs`. These are the controlled write operations available after agent execution; they do not require direct write permission in the agent job.
+- Allow only required network destinations. Network access is a separate capability and should not be broader than the configured tools and engine require.
+- For custom MCP servers, restrict their `allowed` tools instead of exposing the server's complete API.
+
+For example, a PR reporting workflow that reads repository files and PR conversations but never edits the checkout can use:
+
+```yaml
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+tools:
+  github:
+    mode: gh-proxy
+    toolsets: [repos, issues, pull_requests]
+  bash: [cat, find, grep, head, sed, tail, wc]
+  edit: false
+safe-outputs:
+  add-comment:
+    pull-requests: true
+```
+
+Tool availability and configuration are documented in two places:
+
+- The [tools reference](https://github.github.com/gh-aw/reference/tools/) lists built-in tools such as `bash`, `edit`, web access, Playwright, memory, and custom MCP integrations.
+- The [GitHub tools reference](https://github.github.com/gh-aw/reference/github-tools/) lists the available GitHub toolsets and the individual-tool `allowed` option. Common toolsets include `repos`, `issues`, `pull_requests`, and `actions`; consult the reference instead of assuming the list is stable.
+
+After choosing the tools, compile in strict mode and inspect the configured MCP tools:
+
+```bash
+gh aw compile <name> --strict
+gh aw mcp inspect <name>
+```
+
+Review tool access again whenever the workflow's prompt or responsibilities change. Remove capabilities that are no longer used.
+
 ## Update an existing workflow
 
 1. Edit only `.github/workflows/<name>.md`.
