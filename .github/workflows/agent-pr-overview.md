@@ -26,6 +26,14 @@ engine:
     COPILOT_MODEL: ${{ vars.COPILOT_MODEL }}
     COPILOT_PROVIDER_TYPE: ${{ vars.COPILOT_PROVIDER_TYPE }}
     COPILOT_PROVIDER_WIRE_API: ${{ vars.COPILOT_PROVIDER_WIRE_API }}
+models:
+  providers:
+    github-copilot:
+      models:
+        moonshotai/Kimi-K3:
+          cost:
+            input: "0"
+            output: "0"
 strict: true
 runs-on: ubuntu-latest
 runs-on-slim: ubuntu-slim

@@ -118,9 +118,9 @@ Review tool access again whenever the workflow's prompt or responsibilities chan
 
 If an Actions run reports `CONFIG_HASH_MISMATCH`, the committed lock file does not correspond to the committed Markdown source. Recompile and commit the regenerated lock file.
 
-## DATS engine configuration
+## BYOK engine configuration
 
-The PR overview uses the Copilot engine in BYOK mode. Here, Copilot is the agent harness managed by gh-aw; inference is routed to the configured OpenAI-compatible HCDS endpoint. These settings belong in **GitHub repository settings**.
+The Copilot engine can run in bring-your-own-key (BYOK) mode. Here, Copilot is the agent harness managed by gh-aw, while inference is routed to a configured external model provider. Provider settings belong in **GitHub repository settings**.
 
 Configure the following under **Settings → Secrets and variables → Actions**.
 
@@ -128,20 +128,33 @@ Repository variables:
 
 | Variable                    | Value                                                                         |
 | --------------------------- | ----------------------------------------------------------------------------- |
-| `COPILOT_PROVIDER_BASE_URL` | `https://llm.api.hcds.uni-hamburg.de/v1`                                      |
+| `COPILOT_PROVIDER_BASE_URL` | The provider's base URL, such as `https://llm-provider.example.com/v1`        |
 | `COPILOT_PROVIDER_TYPE`     | `openai`                                                                      |
 | `COPILOT_PROVIDER_WIRE_API` | The API supported by the selected model, such as `responses` or `completions` |
-| `COPILOT_MODEL`             | The model identifier exposed by HCDS                                          |
+| `COPILOT_MODEL`             | The model identifier exposed by the provider                                  |
 
 Repository secret:
 
-| Secret                     | Value            |
-| -------------------------- | ---------------- |
-| `COPILOT_PROVIDER_API_KEY` | The HCDS API key |
+| Secret                     | Value                      |
+| -------------------------- | -------------------------- |
+| `COPILOT_PROVIDER_API_KEY` | The model provider API key |
 
 Never store the API key as a repository variable or commit it to a workflow. GitHub variables are not secret.
 
-The workflow's network allowlist is compiled into the lock file. Changing the provider to a host outside the configured `*.uni-hamburg.de` scope requires updating the Markdown workflow and recompiling it.
+The workflow's network allowlist is compiled into the lock file. The concrete provider hostname must be allowed when the base URL comes from a GitHub variable. Changing the provider hostname therefore requires updating the Markdown workflow and recompiling it.
+
+Custom or private models may not be present in gh-aw's public pricing catalog. Register each selected model under `models.providers.github-copilot` with its input and output costs so gh-aw can enforce AI-credit limits. Use zero rates only for a model with no direct per-token charge. When `COPILOT_MODEL` changes to an unregistered identifier, add its pricing entry and recompile the workflow. See [custom model pricing](https://github.github.com/gh-aw/reference/faq/#how-do-i-supply-pricing-for-a-custom-or-private-model) for the schema and units.
+
+```yaml
+models:
+  providers:
+    github-copilot:
+      models:
+        moonshotai/Kimi-K3:
+          cost:
+            input: "0"
+            output: "0"
+```
 
 ## Running and debugging
 
