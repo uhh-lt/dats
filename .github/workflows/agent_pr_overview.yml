@@ -19,10 +19,6 @@ jobs:
   overview:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0 # the agent reads full git history/diffs
-
       - name: Resolve PR number
         id: pr
         env:
@@ -36,10 +32,11 @@ jobs:
           fi
           echo "number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
 
-      - name: Checkout PR branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr checkout ${{ steps.pr.outputs.number }}
+      - name: Checkout PR head
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: refs/pull/${{ steps.pr.outputs.number }}/head
 
       - name: Run PR Overview agent (headless)
         env:
@@ -48,11 +45,26 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # All instructions live in .github/agents/pr-overview.agent.md;
-          # the prompt only passes the per-run PR number.
+          # GitHub Copilot CLI has a built-in GitHub MCP server whose default tools are
+          # read-only. Enable only the additional tools required by this workflow:
+          # https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-copilot-cli.md
+          # Available GitHub MCP toolsets:
+          # https://github.com/github/github-mcp-server/blob/main/README.md#available-toolsets
+          # Exact GitHub MCP tool definitions:
+          # https://github.com/github/github-mcp-server/blob/main/README.md#tools
+          #
+          # --available-tools limits what the model can select. --allow-tool grants
+          # permission for each MCP call so this headless job never waits for approval:
+          # https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/allowing-tools#restricting-the-choice-of-tools-available-to-the-ai-model
+          # https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/allowing-tools#allowing-or-denying-permission-for-specific-tools
           copilot -p "Generate an overview for pull request #${{ steps.pr.outputs.number }}." \
             --agent pr-overview \
-            --allow-tool='read/readFile' \
-            --allow-tool='read/viewImage' \
-            --allow-tool='execute' \
-            --allow-tool='github'
+            --add-github-mcp-tool='get_me' \
+            --add-github-mcp-tool='pull_request_read' \
+            --add-github-mcp-tool='update_pull_request' \
+            --add-github-mcp-tool='add_issue_comment' \
+            --available-tools='read/readFile,github/get_me,github/pull_request_read,github/update_pull_request,github/add_issue_comment' \
+            --allow-tool='github(get_me)' \
+            --allow-tool='github(pull_request_read)' \
+            --allow-tool='github(update_pull_request)' \
+            --allow-tool='github(add_issue_comment)'
