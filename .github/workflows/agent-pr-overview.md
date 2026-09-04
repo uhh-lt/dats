@@ -16,6 +16,7 @@ on:
   roles: all
 permissions:
   contents: read
+  issues: read
   pull-requests: read
 engine:
   id: copilot
