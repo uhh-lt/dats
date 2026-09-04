@@ -38,33 +38,9 @@ checkout:
 tools:
   github:
     mode: gh-proxy
-    toolsets: [repos, pull_requests]
-  bash: [cat, find, gh, grep, head, jq, sed, tail, wc]
+    toolsets: [repos, issues, pull_requests]
+  bash: [cat, find, grep, head, sed, tail, wc]
   edit: false
-steps:
-  - name: Prepare pull request context
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
-    run: |
-      set -euo pipefail
-
-      if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
-        echo "A valid pull request number is required." >&2
-        exit 1
-      fi
-
-      CONTEXT_DIR="$RUNNER_TEMP/gh-aw/agent"
-      mkdir -p "$CONTEXT_DIR"
-
-      gh api user --jq '{login}' > "$CONTEXT_DIR/viewer.json"
-      gh pr view "$PR_NUMBER" \
-        --repo "$GITHUB_REPOSITORY" \
-        --json number,title,body,headRefOid,author,comments,files,commits \
-        > "$CONTEXT_DIR/pull-request.json"
-      gh pr diff "$PR_NUMBER" \
-        --repo "$GITHUB_REPOSITORY" \
-        > "$CONTEXT_DIR/pull-request.diff"
 safe-outputs:
   threat-detection: {}
   update-pull-request:
@@ -96,20 +72,20 @@ network:
 
 # Pull Request Overview
 
-Generate an up-to-date overview for the single pull request described in the prepared context for `${{ github.repository }}`.
+Generate an up-to-date overview for pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`.
 
 ## Constraints
 
-- Process only the pull request identified in the prepared context.
+- Process only pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`.
 - Do not modify repository files or the pull request's code, state, title, labels, reviews, or branch.
 - Use GitHub only for read operations. Use the configured safe outputs for the single permitted publication action.
 - Mention only issue references found in the pull request title or body; do not search for unrelated issues.
 
 ## Procedure
 
-1. Read `$RUNNER_TEMP/gh-aw/agent/viewer.json`, `pull-request.json`, and `pull-request.diff`. The JSON contains the authenticated login, PR number, metadata, current head SHA, comments, files, and commits. Treat that PR number as the only allowed target. Read important changed files from the checked-out PR head only when the diff does not explain intent.
-2. Confirm the required context is complete and internally consistent. If it is not, call `noop` with a short reason and stop.
-3. Look for `<!-- pr-overview: <head-sha> -->` in the PR body and in comments authored by the authenticated login. If either contains the complete current head SHA, call `noop` with a short duplicate reason and stop without publishing.
+1. Use the GitHub pull request tools to read the target PR's title, body, head SHA, comments, changed files, commits, and diff. Read important changed files from the checked-out PR head only when the diff does not explain intent.
+2. Confirm the required PR data is complete and internally consistent. If it is not, call `noop` with a short reason and stop.
+3. Look for `<!-- pr-overview: <head-sha> -->` in the PR body and comments. If either contains the complete current head SHA, call `noop` with a short duplicate reason and stop without publishing.
 4. Write an overview that:
    - starts with a clear 2–4 sentence summary of the PR's purpose and effect;
    - is summary-only for a small, single-concern PR;
@@ -117,8 +93,8 @@ Generate an up-to-date overview for the single pull request described in the pre
    - includes related issue references only when present in the PR title or body; and
    - ends with `<!-- pr-overview: <head-sha> -->` using the complete current head SHA.
 5. Publish exactly once:
-   - If the existing PR body is empty, use `update-pull-request` to replace only the body of the context PR with the overview.
-   - Otherwise, use `add-comment` to post the overview once on the context PR.
+   - If the existing PR body is empty, use `update-pull-request` to replace only the body of the target PR with the overview.
+   - Otherwise, use `add-comment` to post the overview once on the target PR.
    - Never overwrite a non-empty PR body and never publish to both locations.
 
 ## Output shape
