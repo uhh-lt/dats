@@ -18,6 +18,8 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+max-turns: 500
+max-turn-cache-misses: 500
 engine:
   id: copilot
   env:
