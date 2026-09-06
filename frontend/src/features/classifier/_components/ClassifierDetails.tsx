@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 import { dateToLocaleDate } from "@utils/DateUtils";
 import { Fragment, useMemo, useState } from "react";
+import { ClassifierConfusionMatrixPlot } from "./ClassifierConfusionMatrixPlot";
 import { ClassifierDataPlot } from "./ClassifierDataPlot";
 import { ClassifierLossPlot } from "./ClassifierLossPlot";
 
@@ -133,6 +134,7 @@ function EvaluationDetails({
       {evaluation.class_metrics && evaluation.class_metrics.length > 0 && (
         <PerClassMetrics classMetrics={evaluation.class_metrics} classifierModel={classifierModel} />
       )}
+      <ClassifierConfusionMatrixPlot evaluation={evaluation} classifierModel={classifierModel} />
     </Box>
   );
 }
