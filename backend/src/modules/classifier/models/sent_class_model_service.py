@@ -16,7 +16,11 @@ from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.utilities.types import OptimizerLRSchedulerConfig
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import batch_to_device
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    precision_recall_fscore_support,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
@@ -196,6 +200,9 @@ class SentClassificationLightningModel(pl.LightningModule):
         self._test_labels: list[int] = []
         # Per-class metrics of the most recent test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
+        # Confusion matrix of the most recent eval/test epoch, over all label
+        # ids including O_LABEL_ID (rows = gold, columns = predicted).
+        self._last_confusion_matrix: list[list[int]] = []
 
     def forward(
         self,
@@ -381,6 +388,14 @@ class SentClassificationLightningModel(pl.LightningModule):
                 }
                 for i, label_id in enumerate(entity_labels)
             ]
+
+            # Confusion matrix over all classes, including the "O" class
+            # (no annotation), which P/R/F1 exclude.
+            self._last_confusion_matrix = confusion_matrix(
+                labels,
+                preds,
+                labels=list(range(self.num_labels)),
+            ).tolist()
 
     def on_validation_epoch_end(self) -> None:
         self._compute_and_log_token_metrics("eval")
@@ -963,6 +978,10 @@ class SentClassificationModelService(TextClassificationModelService):
                     )
                     for m in best_model._last_class_metrics
                 ],
+                confusion_matrix=best_model._last_confusion_matrix,
+                confusion_matrix_class_ids=[
+                    labelid2codeid[label_id] for label_id in range(len(codeid2labelid))
+                ],
             ),
         )
 
@@ -1085,6 +1104,10 @@ class SentClassificationModelService(TextClassificationModelService):
                         support=m["support"],
                     )
                     for m in model._last_class_metrics
+                ],
+                confusion_matrix=model._last_confusion_matrix,
+                confusion_matrix_class_ids=[
+                    labelid2codeid[label_id] for label_id in range(len(codeid2labelid))
                 ],
             ),
         )

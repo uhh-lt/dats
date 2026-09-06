@@ -295,6 +295,22 @@ class ClassifierEvaluationCreate(BaseModel):
         default_factory=list,
         description="Per-class evaluation metrics (empty for older evaluations)",
     )
+    confusion_matrix: list[list[int]] = Field(
+        default_factory=list,
+        description=(
+            "Confusion matrix of raw counts (rows = gold, columns = predicted), "
+            "including the O (no-label) class. Parallel to confusion_matrix_class_ids. "
+            "Empty for older evaluations."
+        ),
+    )
+    confusion_matrix_class_ids: list[int] = Field(
+        default_factory=list,
+        description=(
+            "Class IDs (tag or code) labeling the rows/columns of the confusion "
+            "matrix. The O (no-label) class is represented by the id 0. "
+            "Empty for older evaluations."
+        ),
+    )
 
 
 class ClassifierEvaluationRead(ClassifierEvaluationCreate):

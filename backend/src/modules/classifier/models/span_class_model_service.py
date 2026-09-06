@@ -14,7 +14,11 @@ from peft import TaskType, get_peft_model
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.utilities.types import OptimizerLRSchedulerConfig
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    precision_recall_fscore_support,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
@@ -170,6 +174,9 @@ class SpanClassificationLightningModel(pl.LightningModule):
         self._test_labels: list[int] = []
         # Per-class metrics of the most recent eval/test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
+        # Confusion matrix of the most recent eval/test epoch, over all label
+        # ids including O_LABEL_ID (rows = gold, columns = predicted).
+        self._last_confusion_matrix: list[list[int]] = []
 
         # Define custom loss function. ignore_index=IGNORE_LABEL_ID makes the padding / special-token / subword labels (which are set to IGNORE_LABEL_ID) not contribute to the loss.
         self.loss_fn = nn.CrossEntropyLoss(
@@ -294,6 +301,14 @@ class SpanClassificationLightningModel(pl.LightningModule):
                 }
                 for i, label_id in enumerate(entity_labels)
             ]
+
+            # Confusion matrix over all classes, including the "O" class
+            # (no annotation), which P/R/F1 exclude.
+            self._last_confusion_matrix = confusion_matrix(
+                labels,
+                preds,
+                labels=list(range(self.num_labels)),
+            ).tolist()
 
     def get_last_class_metrics(self) -> list[dict]:
         """Per-class metrics of the most recent eval/test epoch."""
@@ -948,6 +963,10 @@ class SpanClassificationModelService(TextClassificationModelService):
                     )
                     for m in best_model.get_last_class_metrics()
                 ],
+                confusion_matrix=best_model._last_confusion_matrix,
+                confusion_matrix_class_ids=[
+                    labelid2codeid[label_id] for label_id in range(len(codeid2labelid))
+                ],
             ),
         )
 
@@ -1085,6 +1104,10 @@ class SpanClassificationModelService(TextClassificationModelService):
                         support=m["support"],
                     )
                     for m in model.get_last_class_metrics()
+                ],
+                confusion_matrix=model._last_confusion_matrix,
+                confusion_matrix_class_ids=[
+                    labelid2codeid[label_id] for label_id in range(len(codeid2labelid))
                 ],
             ),
         )
