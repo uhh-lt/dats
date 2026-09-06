@@ -34,6 +34,14 @@ export type ClassifierEvaluationRead = {
    */
   class_metrics?: Array<ClassifierClassMetrics>;
   /**
+   * Confusion matrix of raw counts (rows = gold, columns = predicted), including the O (no-label) class. Parallel to confusion_matrix_class_ids. Empty for older evaluations.
+   */
+  confusion_matrix?: Array<Array<number>>;
+  /**
+   * Class IDs (tag or code) labeling the rows/columns of the confusion matrix. The O (no-label) class is represented by the id 0. Empty for older evaluations.
+   */
+  confusion_matrix_class_ids?: Array<number>;
+  /**
    * ID of the Classifier Evaluation
    */
   id: number;
