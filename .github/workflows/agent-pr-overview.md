@@ -87,13 +87,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
         run: |
-          id=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" --paginate --jq '[.[] | select(.body | contains("gh-aw-workflow-id: agent-pr-overview"))][-1].id // empty')
+          id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '[.[] | select(.body | contains("gh-aw-workflow-id: agent-pr-overview"))][-1].id // empty')
           echo "comment_ids=${id}" >> "$GITHUB_OUTPUT"
 ---
 
 # Pull Request Overview
 
 Maintain a single, always-current overview comment on pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`.
+
+A prepare step has already looked up the previous overview comment for this pull request. Its numeric comment ID is: `${{ needs.prepare.outputs.comment_ids }}`
+
+- If that ID is not empty, a previous overview comment exists: fetch that comment by ID, and update it in place (step 7).
+- If that ID is empty, no previous overview comment exists: create a new one (step 7).
 
 ## Constraints
 
@@ -105,19 +110,17 @@ Maintain a single, always-current overview comment on pull request `${{ github.e
 
 ## Procedure
 
-1. Use the GitHub context tools to identify the authenticated automation user.
-2. Use the GitHub pull request tools to read the target PR's title, body, head SHA, comments, changed files, commits, and diff. Read important changed files from the checked-out PR head only when the diff does not explain intent.
-3. Confirm the required PR data is complete and internally consistent. If it is not, call `noop` with a short reason and stop.
-4. Among comments authored by the authenticated automation user, find the latest comment containing the `## 📝 Pull Request Overview` header. This is the overview comment. Note its comment ID and the complete SHA on its `Commit:` line.
-5. If the overview comment's `Commit:` line already contains the complete current head SHA, call `noop` with a short duplicate reason and stop without publishing.
-6. Write an overview of the PR at its current head that:
+1. Use the GitHub pull request tools to read the target PR's title, body, head SHA, changed files, commits, and diff. Read important changed files from the checked-out PR head only when the diff does not explain intent.
+2. Confirm the required PR data is complete and internally consistent. If it is not, call `noop` with a short reason and stop.
+3. If the prepare step reported a comment ID above, fetch that comment and read the complete SHA on its `Commit:` line. If it already matches the complete current head SHA, call `noop` with a short duplicate reason and stop without publishing.
+4. Write an overview of the PR at its current head that:
    - starts with a clear 2–4 sentence summary of the PR's purpose and effect;
    - is summary-only for a small, single-concern PR;
    - for a larger PR, adds grouped `##` sections, each with a short explanation and bullets for the important changes;
    - includes related issue references only when present in the PR title or body; and
    - ends with a visible `Commit: \`<complete-head-sha>\`` line using the complete current head SHA.
-7. Publish exactly once using `add-comment`:
-   - If an overview comment exists, update it by passing its comment ID as `comment_id` together with the PR number, replacing its whole body with the new overview.
+5. Publish exactly once using `add-comment`:
+   - If the prepare step reported a comment ID above, update that comment by passing the ID as `comment_id` together with the PR number, replacing its whole body with the new overview. Pass exactly this ID — it is the only one on the trusted allowlist; any other ID will be rejected.
    - Otherwise, create the overview comment on the target PR. In this case you must omit `comment_id` entirely — never guess, reuse, or invent a comment ID, because only IDs from the trusted prepare-step allowlist are accepted and an unlisted ID will be rejected.
 
 ## Output shape
