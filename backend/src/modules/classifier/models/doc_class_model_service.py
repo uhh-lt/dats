@@ -14,7 +14,11 @@ from peft import TaskType, get_peft_model
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.utilities.types import OptimizerLRSchedulerConfig
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    precision_recall_fscore_support,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
@@ -216,6 +220,9 @@ class DocClassificationLightningModel(pl.LightningModule):
         self._test_labels: list[int] = []
         # Per-class metrics of the most recent test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
+        # Confusion matrix of the most recent eval/test epoch, over all label
+        # ids including O_LABEL_ID (rows = gold, columns = predicted).
+        self._last_confusion_matrix: list[list[int]] = []
 
         self.loss_fn = nn.CrossEntropyLoss(
             weight=torch.tensor(class_weights, dtype=torch.float)
@@ -346,6 +353,14 @@ class DocClassificationLightningModel(pl.LightningModule):
                 }
                 for i, label_id in enumerate(entity_labels)
             ]
+
+            # Confusion matrix over all classes, including the "O" class
+            # (untagged documents), which P/R/F1 exclude.
+            self._last_confusion_matrix = confusion_matrix(
+                labels,
+                preds,
+                labels=list(range(self.num_labels)),
+            ).tolist()
 
     def on_validation_epoch_end(self) -> None:
         self._compute_and_log_document_metrics("eval")
@@ -842,6 +857,10 @@ class DocClassificationModelService(TextClassificationModelService):
                     )
                     for m in best_model._last_class_metrics
                 ],
+                confusion_matrix=best_model._last_confusion_matrix,
+                confusion_matrix_class_ids=[
+                    labelid2tagid[label_id] for label_id in range(len(tagid2labelid))
+                ],
             ),
         )
 
@@ -966,6 +985,10 @@ class DocClassificationModelService(TextClassificationModelService):
                         support=m["support"],
                     )
                     for m in model._last_class_metrics
+                ],
+                confusion_matrix=model._last_confusion_matrix,
+                confusion_matrix_class_ids=[
+                    labelid2tagid[label_id] for label_id in range(len(tagid2labelid))
                 ],
             ),
         )

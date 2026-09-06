@@ -99,6 +99,12 @@ class ClassifierEvaluationORM(ORMBase):
     class_metrics: Mapped[list[dict]] = mapped_column(
         JSON, nullable=False, server_default="[]"
     )
+    confusion_matrix: Mapped[list[list[int]]] = mapped_column(
+        JSON, nullable=False, server_default="[]"
+    )
+    confusion_matrix_class_ids: Mapped[list[int]] = mapped_column(
+        JSON, nullable=False, server_default="[]"
+    )
 
     # many to one
     classifier_id: Mapped[int] = mapped_column(
