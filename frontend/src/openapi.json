@@ -8307,6 +8307,18 @@
             "title": "Class Metrics",
             "description": "Per-class evaluation metrics (empty for older evaluations)"
           },
+          "confusion_matrix": {
+            "items": { "items": { "type": "integer" }, "type": "array" },
+            "type": "array",
+            "title": "Confusion Matrix",
+            "description": "Confusion matrix of raw counts (rows = gold, columns = predicted), including the O (no-label) class. Parallel to confusion_matrix_class_ids. Empty for older evaluations."
+          },
+          "confusion_matrix_class_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Confusion Matrix Class Ids",
+            "description": "Class IDs (tag or code) labeling the rows/columns of the confusion matrix. The O (no-label) class is represented by the id 0. Empty for older evaluations."
+          },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Classifier Evaluation" },
           "created": {
             "type": "string",
