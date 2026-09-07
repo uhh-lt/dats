@@ -55,7 +55,7 @@ safe-outputs:
   threat-detection: {}
   add-comment:
     max: 1
-    target: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+    target: "*"
     allows-comment-ids:
       - ${{ needs.prepare.outputs.comment_ids }}
     issues: false
