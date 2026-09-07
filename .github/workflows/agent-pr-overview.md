@@ -87,7 +87,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
         run: |
-          id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '[.[] | select(.body | contains("gh-aw-workflow-call-id: uhh-lt/dats/agent-pr-overview"))][-1].id // empty')
+          id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '[.[] | select(.body | contains("gh-aw-workflow-call-id: uhh-lt/dats/agent-pr-overview") and contains("## 📝 Pull Request Overview"))][-1].id // empty')
           echo "comment_ids=${id}" >> "$GITHUB_OUTPUT"
 ---
 
