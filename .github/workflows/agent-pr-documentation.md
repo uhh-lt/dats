@@ -60,7 +60,8 @@ safe-outputs:
     title-prefix: "docs: "
     branch-prefix: "docs/sync-pr-"
     preserve-branch-name: true
-    base-branch: ${{ github.event.pull_request.base.ref || github.event.inputs.base_branch || 'main' }}
+    recreate-ref: true
+    base-branch: ${{ github.event.pull_request.head.ref || github.event.inputs.base_branch || 'main' }}
     draft: false
     fallback-as-issue: false
     auto-close-issue: false
@@ -104,6 +105,7 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
 - Create a documentation PR only for a real, evidence-backed gap.
 - For every valid target PR assessment, call `add-comment` exactly once with the applicable status report below, whether or not a documentation PR is required.
 - Use `noop` only when the target PR cannot be identified or the assessment cannot be completed safely. Do not use `noop` merely because no documentation update is necessary.
+- Commit the documentation edit on top of the checked-out source PR head. Do not create a fresh branch off `main` and do not rebase.
 
 ## Procedure
 
@@ -118,7 +120,7 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
 6. Call `create-pull-request` exactly once with:
    - title `sync documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}`;
    - branch `${{ github.event.pull_request.number || github.event.inputs.pr_number }}`;
-   - body beginning `Syncs documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}.` and briefly explaining the documentation changes; and
+   - body beginning `Syncs documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}.` and briefly explaining the documentation changes. Note that this PR stacks on the source PR branch and must be merged after it; and
    - `draft: false`.
 7. Publish the update-created status report through `add-comment`. gh-aw will append a Related Items section containing the created documentation PR link.
 
