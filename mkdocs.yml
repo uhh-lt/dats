@@ -79,5 +79,6 @@ nav:
       - development/index.md
       - Getting Started: development/getting-started.md
       - Configure GitHub Action Runners: development/github-action-runner.md
+      - GitHub Agentic Workflows: development/github-agentic-workflows.md
   - Admin:
       - admin/index.md
