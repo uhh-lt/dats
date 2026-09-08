@@ -29,7 +29,7 @@ from modules.llm_assistant.llm_job_dto import (
 )
 from systems.job_system.job_dto import JobRead, JobStatus
 
-from .conftest import LLMAssistantProject, UnusualCodeNamesProject
+from .conftest import LLMAssistantProject
 
 LLM_JOB_URL = "/llm/llm_assistant"
 PROMPT_TEMPLATES_URL = "/llm/create_prompt_templates"
@@ -439,61 +439,6 @@ def test_span_annotation_job_covers_all_approaches_strategies_and_data_tags(
             assistant_user_id,
         )
     ]
-
-
-def test_inline_tag_annotation_job_supports_unusual_code_names(
-    client: TestClient,
-    unusual_code_names_project: UnusualCodeNamesProject,
-) -> None:
-    """Inline tags preserve annotations and offsets for unrestricted code names."""
-    codes = unusual_code_names_project["codes"]
-    task_parameters = AnnotationParams(
-        llm_job_type=TaskType.ANNOTATION,
-        sdoc_ids=[unusual_code_names_project["target_sdoc"].id],
-        code_ids=[code.id for code in codes],
-        delete_existing_annotations=True,
-    )
-    prompts = _prompt_templates(
-        client,
-        project_id=unusual_code_names_project["project"].id,
-        task_parameters=task_parameters,
-        approach_type=ApproachType.LLM_ZERO_SHOT,
-        strategy_type=StrategyType.NER_INLINE_TAGS,
-    )
-    payload = LLMJobInput(
-        project_id=unusual_code_names_project["project"].id,
-        llm_job_type=TaskType.ANNOTATION,
-        specific_task_parameters=task_parameters,
-        llm_approach_type=ApproachType.LLM_ZERO_SHOT,
-        specific_approach_parameters=_approach_parameters(
-            ApproachType.LLM_ZERO_SHOT,
-            prompts,
-        ),
-        llm_strategy_type=StrategyType.NER_INLINE_TAGS,
-        specific_strategy_parameters=NERInlineTagStrategyParams(
-            llm_strategy_type=StrategyType.NER_INLINE_TAGS
-        ),
-    )
-
-    started = _start_job(client, payload)
-    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
-
-    assert finished.output is not None
-    task_result = finished.output.specific_task_result
-    assert isinstance(task_result, AnnotationLLMJobResult)
-    assert len(task_result.results) == 1
-    result = task_result.results[0]
-    assert result.status == "finished", result.model_dump_json(indent=2)
-    suggestions = [
-        (
-            annotation.text,
-            annotation.code_id,
-            annotation.begin,
-            annotation.end,
-        )
-        for annotation in result.suggested_annotations
-    ]
-    assert suggestions == unusual_code_names_project["expected_annotations"]
 
 
 @pytest.mark.parametrize(

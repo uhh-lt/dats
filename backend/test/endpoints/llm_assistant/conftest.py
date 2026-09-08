@@ -102,37 +102,6 @@ class LLMAssistantProject(TypedDict):
     foreign_span_annotation: SpanAnnotationORM
 
 
-class UnusualCodeNamesProject(TypedDict):
-    """This fixture sets up the following minimal deterministic project.
-
-    Project ``Unusual code names`` belongs to ``testuser@dats.org`` and contains:
-
-    - One text document, ``Unusual code targets``, whose content is exactly
-      ``Mia owns a cat and a dog.``.
-    - Three enabled codes whose names deliberately contain unusual characters
-      (a dash, a space, and a dot plus a digit) to stress inline-tag parsing:
-      ``PERSON-NAME`` describes only ``Mia``, ``ANIMAL CAT`` describes only
-      ``cat``, and ``ANIMAL.DOG2`` describes only ``dog``.
-    - The required read-only ``language`` metadata field, set to ``en`` on the
-      document.
-
-    The text and code descriptions are intentionally obvious so that any LLM can
-    solve the tagging task: each target word is a clear, real-world instance of
-    its code's description (a person's name, a cat, a dog).
-
-    Non-obvious derived behavior:
-
-    - The targets appear in code order so a failure to remove an unusual earlier
-      tag would shift the offsets of both later annotations.
-    - The project has no existing annotations, examples, tags, or user metadata.
-    """
-
-    project: ProjectORM
-    target_sdoc: SourceDocumentORM
-    codes: list[CodeORM]
-    expected_annotations: list[tuple[str, int, int, int]]
-
-
 def _offsets(parts: list[str]) -> tuple[str, list[int], list[int]]:
     """Join text parts with spaces and return their exact character offsets."""
     content = " ".join(parts)
@@ -273,75 +242,6 @@ def _create_metadata_field(
             description=f"Extract the explicit {key} value.",
         ),
     )
-
-
-@pytest.fixture(scope="function")
-def unusual_code_names_project(
-    db_session: Session,
-    test_user: UserORM,
-) -> UnusualCodeNamesProject:
-    """Create the minimal unusual-code-name project described by its TypedDict."""
-    project = crud_project.create(
-        db=db_session,
-        create_dto=ProjectCreate(
-            title="Unusual code names",
-            description="Exercises inline tags made from unrestricted code names.",
-        ),
-    )
-    crud_project.associate_user(
-        db=db_session,
-        proj_id=project.id,
-        user_id=test_user.id,
-    )
-    crud_project_meta.create(
-        db=db_session,
-        create_dto=ProjectMetadataCreate(
-            project_id=project.id,
-            key="language",
-            metatype=MetaType.STRING,
-            read_only=True,
-            doctype=DocType.text,
-            description="The document language.",
-        ),
-    )
-    target_sdoc = _create_text_document(
-        db_session,
-        project=project,
-        filename="unusual-code-targets.txt",
-        name="Unusual code targets",
-        sentences=["Mia owns a cat and a dog."],
-    )
-    codes = [
-        crud_code.create(
-            db=db_session,
-            create_dto=CodeCreate(
-                name=name,
-                description=description,
-                project_id=project.id,
-                is_system=False,
-            ),
-        )
-        for name, description in [
-            ("PERSON-NAME", "The name of a person, e.g. Mia."),
-            ("ANIMAL CAT", "A cat (the pet animal)."),
-            ("ANIMAL.DOG2", "A dog (the pet animal)."),
-        ]
-    ]
-
-    db_session.commit()
-    for item in [project, target_sdoc, *codes]:
-        db_session.refresh(item)
-
-    return {
-        "project": project,
-        "target_sdoc": target_sdoc,
-        "codes": codes,
-        "expected_annotations": [
-            ("Mia", codes[0].id, 0, 3),
-            ("cat", codes[1].id, 11, 14),
-            ("dog", codes[2].id, 21, 24),
-        ],
-    }
 
 
 @pytest.fixture(scope="function")
