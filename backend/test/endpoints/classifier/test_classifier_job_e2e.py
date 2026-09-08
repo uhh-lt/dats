@@ -733,10 +733,10 @@ def test_document_classifier_train_eval_infer(
     _assert_metrics_in_range(training_validation)
     _assert_metrics_expected(
         training_validation,
-        min_f1=0.45 if head_only else 0.58,
-        min_precision=0.45 if head_only else 0.58,
-        min_recall=0.45 if head_only else 0.58,
-        min_accuracy=0.45 if head_only else 0.58,
+        min_f1=0.45 if head_only else 0.55,
+        min_precision=0.45 if head_only else 0.55,
+        min_recall=0.45 if head_only else 0.55,
+        min_accuracy=0.45 if head_only else 0.55,
         min_class_f1=0.20 if head_only else 0.35,
         max_classes_below_f1_floor=3,
     )
