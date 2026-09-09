@@ -1,8 +1,8 @@
 """add apikey table
 
 Revision ID: b6c6a1f6c0b9
-Revises: 16b735a5f8f5
-Create Date: 2026-08-12 12:38:48.139260
+Revises: a78b4d29b271
+Create Date: 2026-09-09 12:22:45.139260
 
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b6c6a1f6c0b9"
-down_revision: str | None = "16b735a5f8f5"
+down_revision: str | None = "a78b4d29b271"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
