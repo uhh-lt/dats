@@ -138,7 +138,7 @@ The CI's `prepare-env` step extracts the two digits, builds the port prefix as `
 
 The Docker image includes all tools required by CI workflows:
 
-- Docker CLI + Compose plugin
+- Docker CLI + Compose and Buildx plugins
 - `just` command runner
 - `uv` Python package manager
 - Node.js

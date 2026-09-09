@@ -34,6 +34,11 @@ RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
     -o /usr/local/lib/docker/cli-plugins/docker-compose && \
     chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
+# Install Docker Buildx CLI plugin. The release workflow uses
+# docker/build-push-action, which requires Buildx to be available on the runner.
+COPY --from=docker/buildx-bin:0.36.1 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+RUN docker buildx version
+
 # Install just (command runner)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
