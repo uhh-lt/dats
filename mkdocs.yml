@@ -78,6 +78,7 @@ nav:
   - Development:
       - development/index.md
       - Getting Started: development/getting-started.md
+      - MCP Server & API Keys: development/mcp-server.md
       - Configure GitHub Action Runners: development/github-action-runner.md
       - GitHub Agentic Workflows: development/github-agentic-workflows.md
   - Admin:
