@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import pytest
 from dateutil.relativedelta import relativedelta
 from fastapi.testclient import TestClient
@@ -12,28 +10,13 @@ from core.auth.api_key_dto import ApiKeyCreatedResponse, ApiKeyRead, ExpiryDurat
 
 
 def _create_api_key(
-    client: TestClient, name: str, expires_in: ExpiryDuration | None = None
+    client: TestClient, name: str, expires_in: ExpiryDuration
 ) -> ApiKeyCreatedResponse:
     """POST /api-keys/create and return the validated response."""
-    params: dict[str, str] = {"name": name}
-    if expires_in is not None:
-        params["expires_in"] = expires_in.value
+    params: dict[str, str] = {"name": name, "expires_in": expires_in.value}
     response = client.post("/api-keys/create", params=params)
     assert response.status_code == 200, response.text
     return ApiKeyCreatedResponse.model_validate(response.json())
-
-
-def test_create_api_key_with_default_expiry_returns_full_key_once(client: TestClient):
-    """Creating a key with default expiry returns the full key, a prefix derived
-    from it, and an expiry about one year in the future."""
-    created = _create_api_key(client, name="My New Key")
-
-    assert created.name == "My New Key"
-    assert created.api_key.startswith("dats_")
-    assert len(created.api_key) == len("dats_") + 64
-    assert created.prefix == f"{created.api_key[:10]}..."
-    assert created.expires_at is not None
-    assert created.expires_at - created.created_at > timedelta(days=364)
 
 
 @pytest.mark.parametrize(
@@ -76,7 +59,9 @@ def test_create_api_key_expiry_durations(
 def test_create_api_key_appears_in_list_without_full_key(client: TestClient):
     """A newly created key shows up in /api-keys/list, but the list response
     never contains the full key anywhere."""
-    created = _create_api_key(client, name="Listed Key")
+    created = _create_api_key(
+        client, name="Listed Key", expires_in=ExpiryDuration.NEVER
+    )
 
     response = client.get("/api-keys/list")
     assert response.status_code == 200, response.text
@@ -89,7 +74,16 @@ def test_create_api_key_appears_in_list_without_full_key(client: TestClient):
 
 def test_create_api_key_without_name_is_rejected(client: TestClient):
     """The required query parameter `name` is missing -> 422."""
-    response = client.post("/api-keys/create")
+    response = client.post(
+        "/api-keys/create", params={"expires_in": ExpiryDuration.NEVER.value}
+    )
+
+    assert response.status_code == 422, response.text
+
+
+def test_create_api_key_without_expires_in_is_rejected(client: TestClient):
+    """The required query parameter `expires_in` is missing -> 422."""
+    response = client.post("/api-keys/create", params={"name": "No Expiry Key"})
 
     assert response.status_code == 422, response.text
 
