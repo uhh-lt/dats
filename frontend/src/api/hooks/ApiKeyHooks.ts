@@ -24,6 +24,7 @@ const useCreateApiKey = () =>
       ApiKeyService.createApiKey({ name, expiresIn }),
     onSuccess: (createdKey) => {
       // strip the plaintext key before adding it to the cache - it must only live in the dialog state
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { api_key: _apiKey, ...apiKeyRead } = createdKey;
       queryClient.setQueryData<ApiKeyRead[]>([QueryKey.USER_API_KEYS], (oldData) =>
         oldData ? [...oldData, apiKeyRead] : [apiKeyRead],
