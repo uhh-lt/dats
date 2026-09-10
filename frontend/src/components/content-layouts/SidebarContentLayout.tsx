@@ -1,10 +1,17 @@
+import { PixelResizablePanel, useLayoutSize } from "@components/resizable-panels";
 import { Box } from "@mui/material";
 import { ReactNode, memo } from "react";
-import { PixelResizablePanel, useLayoutSize } from "@components/resizable-panels";
+
+interface SidebarContentLayoutProps {
+  sidebar: ReactNode;
+  content: ReactNode;
+  /** Key used to persist the sidebar width. Defaults to "sidebar-content-layout". */
+  layoutKey?: string;
+}
 
 export const SidebarContentLayout = memo(
-  ({ sidebar: leftSidebar, content }: { sidebar: ReactNode; content: ReactNode }) => {
-    const { size, handleResize } = useLayoutSize("sidebar-content-layout");
+  ({ sidebar: leftSidebar, content, layoutKey = "sidebar-content-layout" }: SidebarContentLayoutProps) => {
+    const { size, handleResize } = useLayoutSize(layoutKey);
 
     return (
       <Box sx={{ display: "flex", width: "100%", height: "100%", overflow: "hidden" }}>
