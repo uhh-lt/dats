@@ -241,8 +241,8 @@
           {
             "name": "expires_in",
             "in": "query",
-            "required": false,
-            "schema": { "$ref": "#/components/schemas/ExpiryDuration", "default": "1_year" }
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ExpiryDuration" }
           }
         ],
         "responses": {

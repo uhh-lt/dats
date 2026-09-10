@@ -29,7 +29,7 @@ def create_api_key(
     *,
     db: Session = Depends(get_db_session),
     name: str,
-    expires_in: ExpiryDuration = ExpiryDuration.ONE_YEAR,
+    expires_in: ExpiryDuration,
     current_user: UserORM = Depends(get_current_user),
 ) -> ApiKeyCreatedResponse:
     raw_api_key = generate_api_key()

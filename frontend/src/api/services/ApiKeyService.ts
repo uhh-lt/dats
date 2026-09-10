@@ -16,10 +16,10 @@ export class ApiKeyService {
    */
   public static createApiKey({
     name,
-    expiresIn = "1_year",
+    expiresIn,
   }: {
     name: string;
-    expiresIn?: ExpiryDuration;
+    expiresIn: ExpiryDuration;
   }): CancelablePromise<ApiKeyCreatedResponse> {
     return __request(OpenAPI, {
       method: "POST",
