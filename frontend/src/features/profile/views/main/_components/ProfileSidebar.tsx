@@ -32,10 +32,7 @@ const accountItems: ProfileMenuItem[] = [
   { section: "apiKeys", label: "API Keys", icon: Icon.KEY },
 ];
 
-const aboutItems: ProfileMenuItem[] = [
-  { section: "dataPrivacy", label: "Data and Privacy", icon: Icon.VISIBILITY },
-  { section: "support", label: "Support", icon: Icon.INFO },
-];
+const aboutItems: ProfileMenuItem[] = [{ section: "support", label: "Support", icon: Icon.INFO }];
 
 export const ProfileSidebar = memo(({ user, section, onSectionChange }: ProfileSidebarProps) => {
   return (

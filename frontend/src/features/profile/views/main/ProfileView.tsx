@@ -3,7 +3,6 @@ import { useAuth } from "@core/auth";
 import { Box, Container, Typography } from "@mui/material";
 import { useState } from "react";
 import { ApiKeysSection } from "./_components/ApiKeysSection";
-import { DataPrivacy } from "./_components/DataPrivacy";
 import { ProfileHome } from "./_components/ProfileHome";
 import { ProfileSidebar } from "./_components/ProfileSidebar";
 import { Support } from "./_components/Support";
@@ -36,7 +35,6 @@ export function ProfileView() {
             <Container maxWidth="lg" sx={{ py: 3 }}>
               {section === "home" && <ProfileHome user={user} />}
               {section === "apiKeys" && <ApiKeysSection />}
-              {section === "dataPrivacy" && <DataPrivacy />}
               {section === "support" && <Support />}
             </Container>
           </Box>
