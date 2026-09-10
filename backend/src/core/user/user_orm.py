@@ -7,9 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from auth.api_key_orm import ApiKeyORM
-
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
+    from core.auth.api_key_orm import ApiKeyORM
     from core.auth.refresh_token_orm import RefreshTokenORM
     from core.memo.memo_orm import MemoORM
     from core.memo.object_handle_orm import ObjectHandleORM
