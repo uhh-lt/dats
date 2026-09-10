@@ -29,8 +29,6 @@ interface ProfileMenuItem {
 
 const accountItems: ProfileMenuItem[] = [
   { section: "home", label: "Profile", icon: Icon.USER },
-  { section: "email", label: "Email", icon: Icon.MEMO_ALT },
-  { section: "password", label: "Password", icon: Icon.SETTINGS },
   { section: "apiKeys", label: "API Keys", icon: Icon.KEY },
 ];
 
