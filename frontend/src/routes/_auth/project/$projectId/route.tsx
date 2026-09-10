@@ -2,7 +2,6 @@ import { CodeCreateDialog, CodeEditDialog } from "@core/code";
 import { FolderCreateDialog, FolderEditDialog } from "@core/folder";
 import { MemoDialog } from "@core/memo";
 import { QuickCommandMenu, ShortcutManager } from "@core/navigation";
-import { ConfirmationDialog } from "@core/notification";
 import { TagCreateDialog, TagEditDialog } from "@core/tag";
 import { CodeShortcutManagerDialog, CodeShortcutSynchronizer } from "@features/annotation";
 // eslint-disable-next-line local/no-internal-modules-public-entry
@@ -79,7 +78,6 @@ function ProjectRouteLayout() {
       <CodeEditDialog onCodeUpdated={handleCodeUpdated} onCodeDeleted={handleCodeDeleted} />
       <CodeShortcutManagerDialog projectId={projectId} />
       <CodeShortcutSynchronizer projectId={projectId} />
-      <ConfirmationDialog />
       <ProjectSettingsDialog
         projectId={projectId}
         hiddenCodeIds={hiddenCodeIds}

@@ -2,6 +2,7 @@
 // This is a special route that does not render a feature. The functionality is directly implemented in this file. Hence, it needs access across boundaries.
 import { RouteErrorPanel } from "@components/error";
 import { LinkButton, SideBar, TabBar, TabSynchronizer } from "@core/navigation";
+import { ConfirmationDialog } from "@core/notification";
 import { WhatsNewDialog } from "@features/whats-new";
 import { useDebounce } from "@hooks/useDebounce";
 import { Box, Button, Container, LinearProgress, Typography } from "@mui/material";
@@ -124,6 +125,7 @@ function AuthRouteLayout() {
       <AuthRouteFrame projectId={projectId} showRouteProgress={isRouteTransitioningDebounced}>
         <Outlet />
       </AuthRouteFrame>
+      <ConfirmationDialog />
       <WhatsNewDialog />
     </>
   );
