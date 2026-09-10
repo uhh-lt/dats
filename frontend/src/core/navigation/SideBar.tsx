@@ -461,7 +461,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                   minHeight: 48,
                   justifyContent: isExpanded ? "initial" : "center",
                   px: 2.5,
-                  backgroundColor: "primary.main",
+                  bgcolor: isActive("/projects") ? selectedColor : "transparent",
                 }}
               >
                 <ListItemIcon
@@ -483,7 +483,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             <Tooltip title="Wiki (⌘⇧W)" placement="right" arrow disableHoverListener={isExpanded}>
               <ListItemButton
                 component="a"
-                href="https://github.com/uhh-lt/dats/wiki"
+                href="https://dats.science"
                 target="_blank"
                 sx={{
                   minHeight: 48,
@@ -553,7 +553,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    backgroundColor: "primary.main",
+                    bgcolor: isActive("/me") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -599,7 +599,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                   </CardContent>
                   <List disablePadding>
                     <ListItem disablePadding>
-                      <LinkListItemButton to={"/me"}>
+                      <LinkListItemButton to={"/me"} onClick={handleUserMenuClose}>
                         <ListItemIcon>
                           <AccountBoxIcon />
                         </ListItemIcon>
