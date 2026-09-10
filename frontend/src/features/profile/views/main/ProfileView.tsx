@@ -4,11 +4,9 @@ import { Box, Container, Typography } from "@mui/material";
 import { useState } from "react";
 import { ApiKeysSection } from "./_components/ApiKeysSection";
 import { DataPrivacy } from "./_components/DataPrivacy";
-import { PasswordReset } from "./_components/PasswordReset";
 import { ProfileHome } from "./_components/ProfileHome";
 import { ProfileSidebar } from "./_components/ProfileSidebar";
 import { Support } from "./_components/Support";
-import { UpdateEmail } from "./_components/UpdateEmail";
 import { ProfileSection } from "./ProfileSection";
 
 export function ProfileView() {
@@ -37,8 +35,6 @@ export function ProfileView() {
           <Box sx={{ bgcolor: "background.paper", minHeight: "100%" }}>
             <Container maxWidth="lg" sx={{ py: 3 }}>
               {section === "home" && <ProfileHome user={user} />}
-              {section === "email" && <UpdateEmail user={user} />}
-              {section === "password" && <PasswordReset />}
               {section === "apiKeys" && <ApiKeysSection />}
               {section === "dataPrivacy" && <DataPrivacy />}
               {section === "support" && <Support />}

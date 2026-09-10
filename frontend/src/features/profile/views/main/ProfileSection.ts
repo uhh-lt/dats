@@ -1,1 +1,1 @@
-export type ProfileSection = "home" | "email" | "password" | "apiKeys" | "dataPrivacy" | "support";
+export type ProfileSection = "home" | "apiKeys" | "dataPrivacy" | "support";
