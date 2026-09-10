@@ -126,7 +126,7 @@ export class ProjectService {
     });
   }
   /**
-   * Returns all Projects of the logged-in User
+   * Returns count of SourceDocuments with the given status in the given project.
    * @returns number Successful Response
    * @throws ApiError
    */
