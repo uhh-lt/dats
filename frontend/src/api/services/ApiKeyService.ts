@@ -16,7 +16,7 @@ export class ApiKeyService {
    */
   public static createApiKey({
     name,
-    expiresIn = "1_year" as ExpiryDuration,
+    expiresIn = "1_year",
   }: {
     name: string;
     expiresIn?: ExpiryDuration;
