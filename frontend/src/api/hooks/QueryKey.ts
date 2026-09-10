@@ -38,6 +38,9 @@ export const QueryKey = {
   // all ProjectRead[] of the logged-in user (no parameters)
   // managed by frontend/src/api/hooks/ProjectHooks.ts
   USER_PROJECTS: "userProjects",
+  // all ApiKeyRead[] of the logged-in user (no parameters)
+  // managed by frontend/src/api/hooks/ApiKeyHooks.ts
+  USER_API_KEYS: "userApiKeys",
   // count (int) of SourceDocuments with SDocStatus (by project id, sdoc status)
   // managed by frontend/src/api/hooks/ProjectHooks.ts
   PROJECT_SDOC_STATUS_COUNT: "projectSdocStatusCount",

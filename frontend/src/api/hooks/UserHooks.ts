@@ -1,7 +1,7 @@
-import { UserRead } from "@models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
+import { UserRead } from "@models/UserRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
@@ -47,6 +47,7 @@ const useUpdate = () =>
             oldData ? oldData.map((user) => (user.id === data.id ? data : user)) : oldData,
           );
         });
+      queryClient.setQueryData<UserRead>([QueryKey.ME], data);
     },
     meta: {
       successMessage: (user: UserRead) => `Updated user ${user.first_name} ${user.last_name}`,
