@@ -35,6 +35,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import InboxIcon from "@mui/icons-material/Inbox";
 import InfoIcon from "@mui/icons-material/Info";
+import KeyIcon from "@mui/icons-material/Key";
 import LabelIcon from "@mui/icons-material/Label";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -167,6 +168,7 @@ export enum Icon {
 
   // USER
   USER = "user",
+  KEY = "key",
 
   // Metadata types
   META_STRING = "meta_string",
@@ -304,6 +306,7 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // USER
   [Icon.USER]: (iconProps) => <AccountCircleIcon {...iconProps} />,
+  [Icon.KEY]: (iconProps) => <KeyIcon {...iconProps} />,
 
   // Metadata types
   [Icon.META_STRING]: (iconProps) => <NotesIcon {...iconProps} />,

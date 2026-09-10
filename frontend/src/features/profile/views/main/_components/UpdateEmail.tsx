@@ -4,7 +4,7 @@ import { useAuth } from "@core/auth";
 import { useOpenSnackbar } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import { UserRead } from "@models/UserRead";
-import { Button, Grid2, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "@utils/GlobalConstants";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
@@ -61,74 +61,56 @@ export function UpdateEmail({ user }: UpdateEmailProps) {
 
   return (
     <>
-      <Typography variant={"h5"} gutterBottom sx={{ pb: 1 }}>
+      <Typography variant="h5" sx={{ pb: 1 }}>
         Update Email
       </Typography>
-      <form onSubmit={handleSubmit(handleUpdate, handleError)}>
-        <Grid2 container spacing={1} sx={{ borderTop: 1, borderColor: "divider" }}>
-          <Grid2 size={{ xs: 12 }}>
-            <Typography variant={"body1"} gutterBottom>
-              <b> Current e-mail</b>
+      <Divider />
+      <Box component="form" onSubmit={handleSubmit(handleUpdate, handleError)} sx={{ pt: 3, maxWidth: 480 }}>
+        <Stack spacing={3}>
+          <TextField
+            label="Current e-mail"
+            value={user.email}
+            disabled
+            fullWidth
+            size="small"
+            sx={{
+              "& .MuiInputBase-input.Mui-disabled": {
+                WebkitTextFillColor: "#000000",
+              },
+            }}
+          />
+          <FormEmail
+            name="newemail"
+            control={control}
+            rules={{
+              required: "E-Mail is required",
+              validate: (value) => {
+                return [EMAIL_REGEX].every((pattern) => pattern.test(value)) || "Please enter a valid email address!";
+              },
+            }}
+            textFieldProps={{
+              label: "New e-mail",
+              variant: "outlined",
+              size: "small",
+              fullWidth: true,
+              placeholder: "Please enter the new e-mail here...",
+              error: Boolean(errors.newemail),
+              helperText: <ErrorMessage errors={errors} name="newemail" />,
+              slotProps: {
+                inputLabel: { shrink: true },
+              },
+            }}
+          />
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Button aria-label="Update Email" variant="contained" type="submit" loading={updateUserMutation.isPending}>
+              Update
+            </Button>
+            <Typography variant="body2" color="text.secondary">
+              <b>Note:</b> You will be logged out after updating your email.
             </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12 }}>
-            <TextField
-              value={user.email}
-              disabled
-              sx={{
-                width: "60%",
-                bgcolor: "divider",
-                borderRadius: 1,
-                "& .MuiInputBase-input.Mui-disabled": {
-                  WebkitTextFillColor: "#000000",
-                },
-              }}
-              size="small"
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12 }}>
-            <Typography variant={"body1"} gutterBottom>
-              <b> New e-mail</b>
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12 }}>
-            <FormEmail
-              name="newemail"
-              control={control}
-              rules={{
-                required: "E-Mail is required",
-                validate: (value) => {
-                  return [EMAIL_REGEX].every((pattern) => pattern.test(value)) || "Please enter a valid email address!";
-                },
-              }}
-              textFieldProps={{
-                sx: { width: "60%" },
-                variant: "outlined",
-                size: "small",
-                placeholder: "Please enter the new e-mail here...",
-                error: Boolean(errors.newemail),
-                helperText: <ErrorMessage errors={errors} name="newemail" />,
-              }}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12 }}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Button
-                aria-label="Update Email"
-                variant="contained"
-                size="small"
-                type="submit"
-                loading={updateUserMutation.isPending}
-              >
-                Update
-              </Button>
-              <Typography>
-                <b>Note:</b> You will be logged out after updating your email.
-              </Typography>
-            </Stack>
-          </Grid2>
-        </Grid2>
-      </form>
+          </Stack>
+        </Stack>
+      </Box>
     </>
   );
 }
