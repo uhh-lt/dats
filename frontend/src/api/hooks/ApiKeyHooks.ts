@@ -20,7 +20,7 @@ const useGetApiKeys = () => useQuery(apiKeysQueryOptions());
 
 const useCreateApiKey = () =>
   useMutation({
-    mutationFn: ({ name, expiresIn }: { name: string; expiresIn?: ExpiryDuration }) =>
+    mutationFn: ({ name, expiresIn }: { name: string; expiresIn: ExpiryDuration }) =>
       ApiKeyService.createApiKey({ name, expiresIn }),
     onSuccess: (createdKey) => {
       // strip the plaintext key before adding it to the cache - it must only live in the dialog state

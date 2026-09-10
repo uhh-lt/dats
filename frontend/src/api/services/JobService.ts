@@ -15,76 +15,6 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class JobService {
   /**
-   * Start DuplicateFinder job
-   * @returns DuplicateFinderJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startDuplicateFinderJob({
-    requestBody,
-  }: {
-    requestBody: DuplicateFinderInput;
-  }): CancelablePromise<DuplicateFinderJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/job/duplicate_finder",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get DuplicateFinder job
-   * @returns DuplicateFinderJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getDuplicateFinderJobById({ jobId }: { jobId: string }): CancelablePromise<DuplicateFinderJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/job/duplicate_finder/{job_id}",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Start Export job
-   * @returns ExportJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startExportJob({ requestBody }: { requestBody: ExportJobInput }): CancelablePromise<ExportJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/job/export",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get Export job
-   * @returns ExportJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getExportJobById({ jobId }: { jobId: string }): CancelablePromise<ExportJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/job/export/{job_id}",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Start Crawler job
    * @returns CrawlerJobRead Successful Response
    * @throws ApiError
@@ -250,6 +180,76 @@ export class JobService {
       url: "/job/ml/project/{project_id}",
       path: {
         project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Start DuplicateFinder job
+   * @returns DuplicateFinderJobRead Successful Response
+   * @throws ApiError
+   */
+  public static startDuplicateFinderJob({
+    requestBody,
+  }: {
+    requestBody: DuplicateFinderInput;
+  }): CancelablePromise<DuplicateFinderJobRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/duplicate_finder",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get DuplicateFinder job
+   * @returns DuplicateFinderJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getDuplicateFinderJobById({ jobId }: { jobId: string }): CancelablePromise<DuplicateFinderJobRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/duplicate_finder/{job_id}",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Start Export job
+   * @returns ExportJobRead Successful Response
+   * @throws ApiError
+   */
+  public static startExportJob({ requestBody }: { requestBody: ExportJobInput }): CancelablePromise<ExportJobRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/export",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get Export job
+   * @returns ExportJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getExportJobById({ jobId }: { jobId: string }): CancelablePromise<ExportJobRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/export/{job_id}",
+      path: {
+        job_id: jobId,
       },
       errors: {
         422: `Validation Error`,
