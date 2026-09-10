@@ -58,6 +58,7 @@ export const ApiKeyTable = memo(() => {
     (apiKey: ApiKeyRead) => {
       openConfirmationDialog({
         text: `Do you really want to delete the API key "${apiKey.name}"? This action cannot be undone!`,
+        type: "DELETE",
         onAccept: () => {
           deleteApiKey({ keyId: apiKey.id });
         },
