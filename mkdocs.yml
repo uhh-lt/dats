@@ -58,6 +58,7 @@ nav:
           - Timeline Analysis: feature-guides/analysis/timeline-analysis.md
           - Word Frequency: feature-guides/analysis/word-frequency-analysis.md
       - LLM Assistant: feature-guides/llm-assistant.md
+      - AI Tools via MCP: feature-guides/mcp-integration.md
       - Perspectives: feature-guides/perspectives.md
       - Classifier: feature-guides/classifier.md
       - Tools:
@@ -78,6 +79,7 @@ nav:
   - Development:
       - development/index.md
       - Getting Started: development/getting-started.md
+      - MCP Server & API Keys: development/mcp-server.md
       - Configure GitHub Action Runners: development/github-action-runner.md
       - GitHub Agentic Workflows: development/github-agentic-workflows.md
   - Admin:

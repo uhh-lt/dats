@@ -67,8 +67,8 @@ To help you manage complex information, the central workspace is highly flexible
 
 Clicking the **User Icon** at the very bottom left of the Navigation Bar opens your personal User View in the central workspace.
 
-Currently, this page allows you to manage your basic account security. You can use this view to:
+The profile page is organized into a sidebar with three sections:
 
-- View your account email.
-- Change your login email address.
-- Update your password.
+- **Profile:** View and update your first name, last name, email address, and password.
+- **API Keys:** Create and manage API keys for authenticating external tools and scripts with your DATS account. See [Connecting AI Tools via MCP](feature-guides/mcp-integration.md) for a step-by-step guide.
+- **Support:** Access support resources and contact information.
