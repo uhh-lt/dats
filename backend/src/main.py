@@ -11,13 +11,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.routing import APIRoute
 from loguru import logger
-from mcp_server import mcp_run
 from psycopg2.errors import UniqueViolation
 from rq.exceptions import NoSuchJobError
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import conf
+from mcp_server import mcp_run
 from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
 from utils.logger import setup_logging
