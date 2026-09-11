@@ -1,0 +1,12 @@
+/* Push the "Development" tab (and everything after it) to the right side of
+   the top navigation bar, visually separating the meta sections
+   (Development, Admin) from the content sections (Home … FAQ). */
+.md-tabs__list {
+  display: flex;
+  width: 100%;
+}
+
+/* The 6th top-level tab (Development) gets pushed right; Admin follows it. */
+.md-tabs__item:nth-child(6) {
+  margin-left: auto;
+}
