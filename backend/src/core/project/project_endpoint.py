@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
-from websocket import manager
 
 from common.dependencies import get_current_user, get_db_session
 from common.sdoc_status_enum import SDocStatus
@@ -17,6 +16,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
+from systems.websocket_system.websocket_manager import manager
 
 router = APIRouter(
     prefix="/project",
