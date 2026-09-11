@@ -29,6 +29,7 @@ import { useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { LinkListItemButton, LinkMenuItem } from "./links";
 import { useTabNavigate } from "./tabs";
+import { WebSocketStatusIndicator } from "./WebSocketStatusIndicator";
 
 interface SideBarProps {
   projectId?: number;
@@ -631,6 +632,9 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
               }}
               primary={`${OpenAPI.VERSION}`}
             />
+          </ListItem>
+          <ListItem disablePadding sx={{ display: "block" }}>
+            <WebSocketStatusIndicator isExpanded={isExpanded} />
           </ListItem>
         </List>
       </Stack>
