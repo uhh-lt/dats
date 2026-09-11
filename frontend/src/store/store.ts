@@ -29,6 +29,7 @@ import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist
 import { dialogBusReducer } from "./global/dialogBusSlice";
 import { layoutReducer } from "./global/layoutSlice";
 import { projectReducer } from "./global/projectSlice";
+import { websocketReducer } from "./global/websocketSlice";
 
 export const store = configureStore({
   reducer: {
@@ -65,6 +66,8 @@ export const store = configureStore({
     ...healthReducer,
     // dialog bus
     ...dialogBusReducer,
+    // websocket connection status
+    ...websocketReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
