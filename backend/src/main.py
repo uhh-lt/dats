@@ -17,8 +17,8 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import conf
-from mcp_server import mcp_run
 from repos.repo_base import RepoBase
+from systems.mcp_system.mcp_server import mcp_run
 from utils.import_utils import import_by_suffix
 from utils.logger import setup_logging
 
@@ -69,16 +69,29 @@ async def lifespan(app: FastAPI):
 
     JobService().initialize()
 
+    # Start the websocket Redis pub/sub backplane for this worker
+    from systems.websocket_system.websocket_manager import manager as ws_manager
+
+    await ws_manager.startup()
+
     yield
 
     # --- Worker Shutdown ---
     logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
 
+    # Stop the websocket Redis pub/sub backplane
+    await ws_manager.shutdown()
+
     from repos.filesystem_repo import FilesystemRepo
 
     FilesystemRepo().purge_temporary_files()
 
-    # Close all repo connections
+    # Close all repo connections (await async closes first, while the event
+    # loop is still running)
+    for repo in repos:
+        aclose = getattr(repo, "aclose_connection", None)
+        if aclose is not None:
+            await aclose()
     for repo in repos:
         repo.close_connection()
 
@@ -111,6 +124,7 @@ endpoint_modules = import_by_suffix("_endpoint.py")
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
     app.include_router(em.router)
+
 
 # 5. Dynamically Register Exception Handlers
 from common.exception_handler import exception_handler, exception_handlers

@@ -8,6 +8,7 @@ import ThemeProvider from "@mui/material/styles/ThemeProvider";
 import { theme } from "@plugins/mui";
 import { SentryProvider } from "@plugins/sentry";
 import { router } from "@plugins/tanstack";
+import "@plugins/websocket";
 import * as Sentry from "@sentry/react";
 import { store } from "@store/store";
 import "@styles/index.css";

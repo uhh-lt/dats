@@ -47,6 +47,7 @@ export default defineConfig(({ mode }) => {
             target: env.FRONTEND_API_URL,
             changeOrigin: true, // Required for virtual hosted sites
             rewrite: (path) => path.replace(/^\/api/, ""), // Optional: remove /api from the path
+            ws: true, // Proxy WebSocket connections (e.g. /api/ws) as well
           },
           "/content": {
             target: env.FRONTEND_CONTENT_URL,

@@ -77,6 +77,7 @@ redis:
   port: ${oc.env:REDIS_PORT, 13124}
   password: ${oc.env:REDIS_PASSWORD, "dats123"}
   rq_idx: ${oc.env:REDIS_INDEX, 10}
+  ws_idx: ${oc.env:REDIS_WS_INDEX, 11}
 
 elasticsearch:
   host: ${oc.env:ES_HOST, "127.0.0.1"}
