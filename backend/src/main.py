@@ -69,16 +69,29 @@ async def lifespan(app: FastAPI):
 
     JobService().initialize()
 
+    # Start the websocket Redis pub/sub backplane for this worker
+    from systems.websocket_system.websocket_manager import manager as ws_manager
+
+    await ws_manager.startup()
+
     yield
 
     # --- Worker Shutdown ---
     logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
 
+    # Stop the websocket Redis pub/sub backplane
+    await ws_manager.shutdown()
+
     from repos.filesystem_repo import FilesystemRepo
 
     FilesystemRepo().purge_temporary_files()
 
-    # Close all repo connections
+    # Close all repo connections (await async closes first, while the event
+    # loop is still running)
+    for repo in repos:
+        aclose = getattr(repo, "aclose_connection", None)
+        if aclose is not None:
+            await aclose()
     for repo in repos:
         repo.close_connection()
 

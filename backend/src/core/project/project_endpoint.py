@@ -16,6 +16,11 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
+from systems.websocket_system.websocket_dto import (
+    ProjectCreatedEvent,
+    ProjectDeletedEvent,
+    ProjectEventPayload,
+)
 from systems.websocket_system.websocket_manager import manager
 
 router = APIRouter(
@@ -43,8 +48,7 @@ def create_new_project(
     background_tasks.add_task(
         manager.send_personal_event,
         user_id=current_user.id,
-        event_type="PROJECT_CREATED",
-        payload={"project_id": db_obj.id},
+        event=ProjectCreatedEvent(payload=ProjectEventPayload(project_id=db_obj.id)),
     )
     return ProjectRead.model_validate(db_obj)
 
@@ -100,8 +104,7 @@ def delete_project(
     background_tasks.add_task(
         manager.broadcast_to_project_users,
         db=db,
-        event_type="PROJECT_DELETED",
-        payload={"project_id": db_obj.id},
+        event=ProjectDeletedEvent(payload=ProjectEventPayload(project_id=db_obj.id)),
         proj_db_obj=db_obj,
     )
     return ProjectRead.model_validate(db_obj)
