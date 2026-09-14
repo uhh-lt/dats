@@ -22,22 +22,28 @@ async def websocket_endpoint(
         token = auth_message.get("token")
 
         if not token:
+            logger.warning("Closing websocket: missing auth token")
             await websocket.close(
                 code=status.WS_1008_POLICY_VIOLATION, reason="Missing token"
             )
             return
         current_user = get_current_user(db, token)
 
-    except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
+    except (asyncio.TimeoutError, json.JSONDecodeError, Exception) as e:
+        logger.warning(f"Websocket authentication failed: {e}")
         await websocket.close(
             code=status.WS_1008_POLICY_VIOLATION, reason="Authentication failed"
         )
         return
 
     await manager.connect(websocket, current_user.id)
-    logger.info(f"User {current_user.id} connected to WebSocket.")
     try:
         while True:
             data = await websocket.receive_text()  # noqa: F841
     except WebSocketDisconnect:
+        manager.disconnect(websocket, current_user.id)
+    except Exception as e:
+        logger.error(
+            f"Unexpected error in websocket loop of user {current_user.id}: {e}"
+        )
         manager.disconnect(websocket, current_user.id)

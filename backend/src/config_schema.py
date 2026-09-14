@@ -261,6 +261,7 @@ class RedisConfig(BaseModel):
     port: int = Field(gt=0, lt=65536)
     password: SecretStr = Field(min_length=1)
     rq_idx: int = Field(ge=0)
+    ws_idx: int = Field(ge=0)
 
 
 class LoggingConfig(BaseModel):
