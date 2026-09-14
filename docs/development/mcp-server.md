@@ -12,7 +12,7 @@ Client (Claude, Copilot, ...) ──MCP──► FastMCP ──► FastAPI route
 
 Key files:
 
-- `backend/src/mcp_server.py` — MCP server setup, route mapping, and auth forwarding
+- `backend/src/systems/mcp_system/mcp_server.py` — MCP server setup, route mapping, and auth forwarding
 - `backend/src/core/auth/api_key_endpoint.py` — API key CRUD endpoints
 - `backend/src/core/auth/api_key_orm.py` — API key database model
 - `backend/src/core/auth/security.py` — Key generation and hashing
