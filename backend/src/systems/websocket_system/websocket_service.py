@@ -6,13 +6,13 @@ from fastapi import WebSocket
 from loguru import logger
 from pydantic import ValidationError
 from redis.asyncio.client import PubSub
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEventBase
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from repos.async_redis_repo import AsyncRedisRepo
+from repos.db.sql_repo import SQLRepo
 from systems.websocket_system.websocket_dto import WebSocketEnvelope
 
 # Redis Pub/Sub channel used to fan out websocket events across all API workers.
@@ -182,7 +182,6 @@ class WebsocketService(metaclass=SingletonMeta):
 
     async def broadcast_to_project_users(
         self,
-        db: Session,
         event: DATSEventBase,
         *,
         proj_id: int | None = None,
@@ -190,20 +189,26 @@ class WebsocketService(metaclass=SingletonMeta):
         exclude_user_id: int | None = None,
     ):
         """Send an event to all members of a project, optionally excluding one user."""
-        if not proj_db_obj and not proj_id:
+        if not proj_db_obj and proj_id is None:
             raise ValueError("You must provide either 'proj_id' or 'proj_db_obj'")
-        if not proj_db_obj and proj_id:
-            proj_db_obj = crud_project.read(db=db, id=proj_id)
-
-        assert proj_db_obj is not None
-        if exclude_user_id is not None:
-            user_ids = [
-                user.id for user in proj_db_obj.users if user.id != exclude_user_id
-            ]
+        if not proj_db_obj:
+            assert proj_id is not None
+            with SQLRepo().transaction() as db:
+                proj_db_obj = crud_project.read(db=db, id=proj_id)
+                user_ids = self._project_user_ids(proj_db_obj, exclude_user_id)
         else:
-            user_ids = [user.id for user in proj_db_obj.users]
+            user_ids = self._project_user_ids(proj_db_obj, exclude_user_id)
 
         await self.broadcast_to_multiple_users(user_ids=user_ids, event=event)
+
+    @staticmethod
+    def _project_user_ids(
+        proj_db_obj: ProjectORM, exclude_user_id: int | None
+    ) -> List[int]:
+        """Extract member user IDs from a project ORM object, honoring exclusion."""
+        if exclude_user_id is not None:
+            return [user.id for user in proj_db_obj.users if user.id != exclude_user_id]
+        return [user.id for user in proj_db_obj.users]
 
     # ─── Redis backplane ─────────────────────────────────────────────────────
 

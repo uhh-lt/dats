@@ -1,9 +1,7 @@
 from fastapi import BackgroundTasks, Depends
 from loguru import logger
-from sqlalchemy.orm import Session
 
 from common.dats_event import DATS_EVENT_TO_MODEL, DATSEvent, DATSEventBase
-from common.dependencies import get_db_session
 from core.auth.authz_user import AuthzUser
 from systems.websocket_system.websocket_service import WebsocketService
 
@@ -51,11 +49,9 @@ class WebsocketEmitter:
         self,
         *,
         authz_user: AuthzUser = Depends(),
-        db: Session = Depends(get_db_session),
         background_tasks: BackgroundTasks,
     ):
         self._authz_user = authz_user
-        self._db = db
         self._background_tasks = background_tasks
         self._websocket_service = WebsocketService()
 
@@ -76,7 +72,6 @@ class WebsocketEmitter:
         exclude_user_id = self._actor_exclusion()
         self._background_tasks.add_task(
             self._websocket_service.broadcast_to_project_users,
-            db=self._db,
             event=event,
             proj_id=project_id,
             exclude_user_id=exclude_user_id,
