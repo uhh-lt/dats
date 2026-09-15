@@ -37,6 +37,12 @@ class AuthzUser:
         self.user = user
         self.db = db
 
+    @property
+    def is_api_key(self) -> bool:
+        """Whether the current request was authenticated with an API key
+        (vs. a JWT from a human user). Recorded by `get_current_user`."""
+        return getattr(self.request.state, "auth_method", "jwt") == "api_key"
+
     def assert_in_same_project_as(self, crud: Crud, object_id: int | str):
         orm_object = self.read_crud(crud, object_id)
 

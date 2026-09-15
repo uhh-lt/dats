@@ -70,9 +70,10 @@ async def lifespan(app: FastAPI):
     JobService().initialize()
 
     # Start the websocket Redis pub/sub backplane for this worker
-    from systems.websocket_system.websocket_manager import manager as ws_manager
+    from systems.websocket_system.websocket_service import WebsocketService
 
-    await ws_manager.startup()
+    websocket_service = WebsocketService()
+    await websocket_service.startup()
 
     yield
 
@@ -80,7 +81,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
 
     # Stop the websocket Redis pub/sub backplane
-    await ws_manager.shutdown()
+    await websocket_service.shutdown()
 
     from repos.filesystem_repo import FilesystemRepo
 
@@ -124,6 +125,22 @@ endpoint_modules = import_by_suffix("_endpoint.py")
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
     app.include_router(em.router)
+
+
+# 4b. Register websocket events as OpenAPI webhooks so they appear in openapi.json.
+from common.dats_event import DATS_EVENT_TO_MODEL
+
+
+def _webhook_handler():  # no body; the event schema is carried by response_model
+    return None
+
+
+for _event_type, _event_cls in DATS_EVENT_TO_MODEL.items():
+    app.webhooks.post(
+        _event_type.value,
+        operation_id=f"ws_{_event_type.value.lower()}",
+        response_model=_event_cls,
+    )(_webhook_handler)
 
 
 # 5. Dynamically Register Exception Handlers

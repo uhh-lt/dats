@@ -5,10 +5,12 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session
-from systems.websocket_system.websocket_manager import manager
+from common.dependencies import get_db_session, resolve_user
+from systems.websocket_system.websocket_service import WebsocketService
 
 router = APIRouter(tags=["websocket"])
+
+websocket_service = WebsocketService()
 
 
 @router.websocket("/ws")
@@ -27,7 +29,7 @@ async def websocket_endpoint(
                 code=status.WS_1008_POLICY_VIOLATION, reason="Missing token"
             )
             return
-        current_user = get_current_user(db, token)
+        current_user = resolve_user(websocket, db, token)
 
     except (asyncio.TimeoutError, json.JSONDecodeError, Exception) as e:
         logger.warning(f"Websocket authentication failed: {e}")
@@ -36,14 +38,14 @@ async def websocket_endpoint(
         )
         return
 
-    await manager.connect(websocket, current_user.id)
+    await websocket_service.connect(websocket, current_user.id)
     try:
         while True:
             data = await websocket.receive_text()  # noqa: F841
     except WebSocketDisconnect:
-        manager.disconnect(websocket, current_user.id)
+        websocket_service.disconnect(websocket, current_user.id)
     except Exception as e:
         logger.error(
             f"Unexpected error in websocket loop of user {current_user.id}: {e}"
         )
-        manager.disconnect(websocket, current_user.id)
+        websocket_service.disconnect(websocket, current_user.id)

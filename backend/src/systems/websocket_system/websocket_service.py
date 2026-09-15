@@ -8,11 +8,12 @@ from pydantic import ValidationError
 from redis.asyncio.client import PubSub
 from sqlalchemy.orm import Session
 
+from common.dats_event import DATSEventBase
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from repos.async_redis_repo import AsyncRedisRepo
-from systems.websocket_system.websocket_dto import WebSocketEnvelope, WebSocketEvent
+from systems.websocket_system.websocket_dto import WebSocketEnvelope
 
 # Redis Pub/Sub channel used to fan out websocket events across all API workers.
 WEBSOCKET_CHANNEL = "dats:ws:events"
@@ -21,9 +22,9 @@ WEBSOCKET_CHANNEL = "dats:ws:events"
 REDIS_RECONNECT_DELAY_SECONDS = 5
 
 
-class ConnectionManager(metaclass=SingletonMeta):
+class WebsocketService(metaclass=SingletonMeta):
     """
-    Manages WebSocket connections for THIS worker process and bridges
+    Connection Manager - Manages WebSocket connections for THIS worker process and bridges
     events across all API worker processes via Redis Pub/Sub.
 
     Since the API runs with multiple uvicorn workers (independent OS
@@ -128,7 +129,7 @@ class ConnectionManager(metaclass=SingletonMeta):
     # ─── Public send API (local delivery + publish to other workers) ────────
 
     # sends an event to all active WebSocket connections of a specific user
-    async def send_personal_event(self, user_id: int, event: WebSocketEvent):
+    async def send_personal_event(self, user_id: int, event: DATSEventBase):
         """Send an event to one user, both locally and on all other workers."""
         await self._send_to_users_local([user_id], event)
         await self._publish(
@@ -136,25 +137,36 @@ class ConnectionManager(metaclass=SingletonMeta):
                 origin_worker=self.worker_pid,
                 kind="users",
                 user_ids=[user_id],
+                exclude_user_id=None,
                 message=event,
             )
         )
 
     # broadcasts an event to all connected users, regardless of their user_id (could be used in the future for admin notifications)
-    async def broadcast_event(self, event: WebSocketEvent):
-        """Broadcast an event to every connected user on all workers."""
-        await self._send_to_all_local(event)
+    async def broadcast_event(
+        self, event: DATSEventBase, exclude_user_id: int | None = None
+    ):
+        """Broadcast an event to every connected user on all workers.
+
+        Args:
+            event: The event to broadcast.
+            exclude_user_id: User to exclude from delivery (e.g. the actor who
+                triggered the mutation). For kind='all' envelopes the excluded
+                user is resolved at delivery time on each worker.
+        """
+        await self._send_to_all_local(event, exclude_user_id=exclude_user_id)
         await self._publish(
             WebSocketEnvelope(
                 origin_worker=self.worker_pid,
                 kind="all",
                 user_ids=None,
+                exclude_user_id=exclude_user_id,
                 message=event,
             )
         )
 
     async def broadcast_to_multiple_users(
-        self, user_ids: List[int], event: WebSocketEvent
+        self, user_ids: List[int], event: DATSEventBase
     ):
         """Send an event to the given users, both locally and on all other workers."""
         await self._send_to_users_local(user_ids, event)
@@ -163,6 +175,7 @@ class ConnectionManager(metaclass=SingletonMeta):
                 origin_worker=self.worker_pid,
                 kind="users",
                 user_ids=user_ids,
+                exclude_user_id=None,
                 message=event,
             )
         )
@@ -170,7 +183,7 @@ class ConnectionManager(metaclass=SingletonMeta):
     async def broadcast_to_project_users(
         self,
         db: Session,
-        event: WebSocketEvent,
+        event: DATSEventBase,
         *,
         proj_id: int | None = None,
         proj_db_obj: ProjectORM | None = None,
@@ -279,14 +292,16 @@ class ConnectionManager(metaclass=SingletonMeta):
             f"{envelope.origin_worker}"
         )
         if envelope.kind == "all":
-            await self._send_to_all_local(envelope.message)
+            await self._send_to_all_local(
+                envelope.message, exclude_user_id=envelope.exclude_user_id
+            )
         else:
             await self._send_to_users_local(envelope.user_ids or [], envelope.message)
 
     # ─── Local delivery helpers ──────────────────────────────────────────────
 
     async def _send_to_users_local(
-        self, user_ids: List[int], event: WebSocketEvent
+        self, user_ids: List[int], event: DATSEventBase
     ) -> None:
         """Deliver an event to the local connections of the given users."""
         for user_id in user_ids:
@@ -294,14 +309,18 @@ class ConnectionManager(metaclass=SingletonMeta):
             for connection in user_sockets:
                 await self._send_safe(connection, user_id, event)
 
-    async def _send_to_all_local(self, event: WebSocketEvent) -> None:
+    async def _send_to_all_local(
+        self, event: DATSEventBase, exclude_user_id: int | None = None
+    ) -> None:
         """Deliver an event to all local connections of this worker."""
         for user_id, user_sockets in list(self.active_connections.items()):
+            if user_id == exclude_user_id:
+                continue
             for connection in list(user_sockets):
                 await self._send_safe(connection, user_id, event)
 
     async def _send_safe(
-        self, connection: WebSocket, user_id: int, event: WebSocketEvent
+        self, connection: WebSocket, user_id: int, event: DATSEventBase
     ) -> None:
         """Send an event, removing the connection if it turns out to be dead."""
         try:
@@ -309,6 +328,3 @@ class ConnectionManager(metaclass=SingletonMeta):
         except Exception as e:
             logger.warning(f"Removing dead websocket of user {user_id}: {e}")
             self.disconnect(connection, user_id)
-
-
-manager = ConnectionManager()
