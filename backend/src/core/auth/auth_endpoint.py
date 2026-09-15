@@ -16,7 +16,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user, get_db_session, reusable_oauth2_scheme
+from common.dependencies import (
+    get_current_user,
+    get_current_user_from_cookie,
+    get_db_session,
+    reusable_oauth2_scheme,
+)
 from core.auth.auth_exceptions import credentials_exception
 from core.auth.authz_user import AuthzUser
 from core.auth.oauth_service import OAuthService
@@ -175,17 +180,17 @@ def refresh_access_token(
 def auth_content(
     request: Request,
     db: Session = Depends(get_db_session),
+    user: UserORM = Depends(get_current_user_from_cookie),
     x_original_uri: Annotated[str | None, Header()] = None,
 ) -> None:
     # returns None on purpose
-    token = request.cookies[AUTHORIZATION]
-    a = AuthzUser(request, get_current_user(db, token), db)
+    authz = AuthzUser(request, user, db)
     if x_original_uri is None or not x_original_uri.startswith(CONTENT_PREFIX):
         return
 
     index = x_original_uri.find("/", len(CONTENT_PREFIX))
     project = int(x_original_uri[len(CONTENT_PREFIX) : index])
-    a.assert_in_project(project)
+    authz.assert_in_project(project)
 
 
 @router.get("/oidc/login")
