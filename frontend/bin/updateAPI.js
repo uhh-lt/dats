@@ -14,6 +14,7 @@ const openapiFolderPath = "src/api";
 const openapiFolders = ["core", "models", "services"];
 const prettierCacheDir = "frontend/node_modules/.cache/prettier";
 const barrelFilePath = `${openapiFolderPath}/index.ts`;
+const websocketEventsFilePath = "src/models/websocketEvents.ts";
 
 // ---------------------------------------------------------------------------
 // Step 1: download + modify openapi.json from the running backend
@@ -180,6 +181,79 @@ function generateClient() {
 }
 
 // ---------------------------------------------------------------------------
-// Run: download openapi.json, then generate the client
+// Step 3: generate src/models/websocketEvents.ts from the openapi `webhooks`
+// section. The backend registers every websocket sync event as a webhook whose
+// RESPONSE (response_model) is the event envelope ({ type, payload }) — declared
+// as a response, not a request body, so payload DTOs serialize in output mode
+// (e.g. UserRead-Output, which omits the password field). We turn that into a
+// discriminated union + a WebSocketEventMap so the frontend's event contract is
+// generated from the backend (single source of truth) instead of hand-written.
 // ---------------------------------------------------------------------------
-downloadOpenapi(generateClient);
+function resolveRefName(ref) {
+  // "#/components/schemas/TagCreatedEvent" -> "TagCreatedEvent"
+  return ref.split("/").pop();
+}
+
+function generateWebsocketEvents() {
+  const openapi = JSON.parse(readFileSync(openapiFilePath, "utf-8"));
+  const webhooks = openapi.webhooks;
+  if (!webhooks) {
+    console.warn("No `webhooks` section in openapi.json — skipping websocketEvents.ts generation.");
+    return;
+  }
+
+  // Collect one entry per event: { eventType, eventName }.
+  const events = [];
+  for (const [eventType, operation] of Object.entries(webhooks)) {
+    const post = operation.post;
+    if (!post) continue;
+    // The event envelope is the webhook's 200-response schema (response_model).
+    const eventRef = post.responses?.["200"]?.content?.["application/json"]?.schema?.$ref;
+    if (!eventRef) continue;
+    events.push({ eventType, eventName: resolveRefName(eventRef) });
+  }
+
+  // Deterministic output.
+  events.sort((a, b) => a.eventType.localeCompare(b.eventType));
+
+  // The generator already emits one model per event (e.g. TagCreatedEvent.ts)
+  // because the event classes live in components/schemas. We reuse those models
+  // and only add the two things the generator does NOT produce: the
+  // event-type-string -> payload map, and a discriminated union keyed by `type`.
+  const lines = [];
+  lines.push("/* eslint-disable */");
+  lines.push("// GENERATED FILE — do not edit. Regenerate with `just update-api`.");
+  lines.push("// Derived from the backend's websocket sync events (OpenAPI `webhooks`).");
+  lines.push("");
+  for (const e of events) {
+    lines.push(`import type { ${e.eventName} } from "./${e.eventName}";`);
+  }
+  lines.push("");
+  lines.push("/** Payload type for each websocket event type. */");
+  lines.push("export interface WebSocketEventMap {");
+  for (const e of events) {
+    lines.push(`  ${e.eventType}: ${e.eventName}["payload"];`);
+  }
+  lines.push("}");
+  lines.push("");
+  lines.push("/** Discriminated union of all websocket events, keyed by `type`. */");
+  lines.push("export type WebSocketEvent =");
+  events.forEach((e, i) => {
+    const sep = i === events.length - 1 ? ";" : "";
+    lines.push(`  | (Omit<${e.eventName}, "type"> & { type: "${e.eventType}" })${sep}`);
+  });
+  lines.push("");
+
+  writeFileSync(websocketEventsFilePath, lines.join("\n"));
+  console.log(`Wrote ${events.length} websocket events to ${websocketEventsFilePath}`);
+
+  execSync(`npx prettier --write ${websocketEventsFilePath} --cache-location ${prettierCacheDir}`);
+}
+
+// ---------------------------------------------------------------------------
+// Run: download openapi.json, then generate the client + websocket events
+// ---------------------------------------------------------------------------
+downloadOpenapi(() => {
+  generateClient();
+  generateWebsocketEvents();
+});
