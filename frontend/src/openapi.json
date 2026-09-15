@@ -6926,6 +6926,626 @@
       }
     }
   },
+  "webhooks": {
+    "PROJECT_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "PROJECT_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "PROJECT_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "CODE_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_code_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "CODE_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_code_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "CODE_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_code_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "TAG_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_tag_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "TAG_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_tag_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "TAG_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_tag_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "MEMO_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_memo_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "MEMO_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_memo_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SDOC_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "SDOC_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SPAN_ANNOTATION_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_annotation_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SPAN_ANNOTATION_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_annotation_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SPAN_ANNOTATION_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_annotation_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "BBOX_ANNOTATION_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_bbox_annotation_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BboxAnnotationCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "BBOX_ANNOTATION_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_bbox_annotation_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BboxAnnotationUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "BBOX_ANNOTATION_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_bbox_annotation_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BboxAnnotationDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SENTENCE_ANNOTATION_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sentence_annotation_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SENTENCE_ANNOTATION_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sentence_annotation_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SENTENCE_ANNOTATION_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sentence_annotation_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "FOLDER_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_folder_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "FOLDER_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_folder_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "FOLDER_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_folder_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "PROJECT_METADATA_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_metadata_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "PROJECT_METADATA_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_metadata_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "PROJECT_METADATA_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_metadata_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SDOC_METADATA_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_metadata_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocMetadataUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "SDOC_METADATA_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_metadata_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocMetadataDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SPAN_GROUP_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_group_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "SPAN_GROUP_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_group_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "SPAN_GROUP_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_group_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "WHITEBOARD_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_whiteboard_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "WHITEBOARD_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_whiteboard_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "WHITEBOARD_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_whiteboard_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "TIMELINE_ANALYSIS_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_timeline_analysis_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "TIMELINE_ANALYSIS_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_timeline_analysis_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "TIMELINE_ANALYSIS_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_timeline_analysis_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "COTA_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_cota_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CotaCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "COTA_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_cota_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CotaUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "COTA_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_cota_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CotaDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "ASPECT_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_aspect_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "ASPECT_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_aspect_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "ASPECT_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_aspect_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "CLASSIFIER_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_classifier_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "CLASSIFIER_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_classifier_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "PROJECT_USER_ADDED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_user_added",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserAddedEvent" } } }
+          }
+        }
+      }
+    },
+    "PROJECT_USER_REMOVED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_user_removed",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserRemovedEvent" } } }
+          }
+        }
+      }
+    }
+  },
   "components": {
     "schemas": {
       "AddMissingDocsToAspectParams": {
@@ -7157,6 +7777,24 @@
         "required": ["name", "doc_embedding_prompt", "is_hierarchical", "modality", "pipeline_settings", "project_id"],
         "title": "AspectCreate"
       },
+      "AspectCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "ASPECT_CREATED", "title": "Type", "default": "ASPECT_CREATED" },
+          "payload": { "$ref": "#/components/schemas/AspectRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "AspectCreatedEvent"
+      },
+      "AspectDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "ASPECT_DELETED", "title": "Type", "default": "ASPECT_DELETED" },
+          "payload": { "$ref": "#/components/schemas/AspectRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "AspectDeletedEvent"
+      },
       "AspectRead": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
@@ -7222,6 +7860,15 @@
         },
         "type": "object",
         "title": "AspectUpdate"
+      },
+      "AspectUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "ASPECT_UPDATED", "title": "Type", "default": "ASPECT_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/AspectRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "AspectUpdatedEvent"
       },
       "AttachedObjectOperator": {
         "type": "string",
@@ -7562,6 +8209,48 @@
         },
         "type": "object",
         "title": "BBoxSearchViewUpdate"
+      },
+      "BboxAnnotationCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "BBOX_ANNOTATION_CREATED",
+            "title": "Type",
+            "default": "BBOX_ANNOTATION_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "BboxAnnotationCreatedEvent"
+      },
+      "BboxAnnotationDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "BBOX_ANNOTATION_DELETED",
+            "title": "Type",
+            "default": "BBOX_ANNOTATION_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "BboxAnnotationDeletedEvent"
+      },
+      "BboxAnnotationUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "BBOX_ANNOTATION_UPDATED",
+            "title": "Type",
+            "default": "BBOX_ANNOTATION_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "BboxAnnotationUpdatedEvent"
       },
       "Body_analysis-code_frequencies": {
         "properties": {
@@ -8360,6 +9049,15 @@
         "required": ["tag_ids", "user_ids", "merge_children_into_parent", "model", "base_model_name", "class_ids"],
         "title": "ClassifierDatasetStatisticsRequest"
       },
+      "ClassifierDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CLASSIFIER_DELETED", "title": "Type", "default": "CLASSIFIER_DELETED" },
+          "payload": { "$ref": "#/components/schemas/ClassifierRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ClassifierDeletedEvent"
+      },
       "ClassifierEvaluationOutput": {
         "properties": {
           "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
@@ -9100,6 +9798,15 @@
         "type": "object",
         "title": "ClassifierUpdate"
       },
+      "ClassifierUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CLASSIFIER_UPDATED", "title": "Type", "default": "CLASSIFIER_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/ClassifierRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ClassifierUpdatedEvent"
+      },
       "ClusterCreate": {
         "properties": {
           "parent_cluster_id": {
@@ -9219,6 +9926,24 @@
         "type": "object",
         "required": ["name", "project_id", "is_system"],
         "title": "CodeCreate"
+      },
+      "CodeCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CODE_CREATED", "title": "Type", "default": "CODE_CREATED" },
+          "payload": { "$ref": "#/components/schemas/CodeRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CodeCreatedEvent"
+      },
+      "CodeDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CODE_DELETED", "title": "Type", "default": "CODE_DELETED" },
+          "payload": { "$ref": "#/components/schemas/CodeRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CodeDeletedEvent"
       },
       "CodeFrequency": {
         "properties": {
@@ -9358,6 +10083,15 @@
         },
         "type": "object",
         "title": "CodeUpdate"
+      },
+      "CodeUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CODE_UPDATED", "title": "Type", "default": "CODE_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/CodeRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CodeUpdatedEvent"
       },
       "ColumnInfo_BBoxColumns_": {
         "properties": {
@@ -9510,6 +10244,33 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "CoreferenceResolutionParams"
+      },
+      "CotaCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "COTA_CREATED", "title": "Type", "default": "COTA_CREATED" },
+          "payload": { "$ref": "#/components/schemas/COTARead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CotaCreatedEvent"
+      },
+      "CotaDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "COTA_DELETED", "title": "Type", "default": "COTA_DELETED" },
+          "payload": { "$ref": "#/components/schemas/COTARead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CotaDeletedEvent"
+      },
+      "CotaUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "COTA_UPDATED", "title": "Type", "default": "COTA_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/COTARead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CotaUpdatedEvent"
       },
       "CrawlerJobInput": {
         "properties": {
@@ -10631,6 +11392,24 @@
         "required": ["name", "folder_type", "project_id"],
         "title": "FolderCreate"
       },
+      "FolderCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "FOLDER_CREATED", "title": "Type", "default": "FOLDER_CREATED" },
+          "payload": { "$ref": "#/components/schemas/FolderRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "FolderCreatedEvent"
+      },
+      "FolderDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "FOLDER_DELETED", "title": "Type", "default": "FOLDER_DELETED" },
+          "payload": { "$ref": "#/components/schemas/FolderRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "FolderDeletedEvent"
+      },
       "FolderRead": {
         "properties": {
           "name": { "type": "string", "maxLength": 231, "title": "Name", "description": "Name of the folder" },
@@ -10682,6 +11461,15 @@
         },
         "type": "object",
         "title": "FolderUpdate"
+      },
+      "FolderUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "FOLDER_UPDATED", "title": "Type", "default": "FOLDER_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/FolderRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "FolderUpdatedEvent"
       },
       "FuzzyGroundingStrategyParams": {
         "properties": {
@@ -11456,6 +12244,15 @@
         "required": ["title", "content", "content_json"],
         "title": "MemoCreate"
       },
+      "MemoDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "MEMO_DELETED", "title": "Type", "default": "MEMO_DELETED" },
+          "payload": { "$ref": "#/components/schemas/MemoRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "MemoDeletedEvent"
+      },
       "MemoNodeData": {
         "properties": {
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
@@ -11631,6 +12428,15 @@
         },
         "type": "object",
         "title": "MemoUpdate"
+      },
+      "MemoUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "MEMO_UPDATED", "title": "Type", "default": "MEMO_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/MemoRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "MemoUpdatedEvent"
       },
       "MergeClustersParams": {
         "properties": {
@@ -12303,6 +13109,24 @@
         "required": ["title", "description"],
         "title": "ProjectCreate"
       },
+      "ProjectCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "PROJECT_CREATED", "title": "Type", "default": "PROJECT_CREATED" },
+          "payload": { "$ref": "#/components/schemas/ProjectRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectCreatedEvent"
+      },
+      "ProjectDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "PROJECT_DELETED", "title": "Type", "default": "PROJECT_DELETED" },
+          "payload": { "$ref": "#/components/schemas/ProjectRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectDeletedEvent"
+      },
       "ProjectMetadataCreate": {
         "properties": {
           "key": { "type": "string", "title": "Key", "description": "Key of the ProjectMetadata" },
@@ -12331,6 +13155,34 @@
         "type": "object",
         "required": ["key", "metatype", "doctype", "description", "project_id"],
         "title": "ProjectMetadataCreate"
+      },
+      "ProjectMetadataCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROJECT_METADATA_CREATED",
+            "title": "Type",
+            "default": "PROJECT_METADATA_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/ProjectMetadataRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectMetadataCreatedEvent"
+      },
+      "ProjectMetadataDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROJECT_METADATA_DELETED",
+            "title": "Type",
+            "default": "PROJECT_METADATA_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/ProjectMetadataRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectMetadataDeletedEvent"
       },
       "ProjectMetadataRead": {
         "properties": {
@@ -12382,6 +13234,20 @@
         "type": "object",
         "title": "ProjectMetadataUpdate"
       },
+      "ProjectMetadataUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROJECT_METADATA_UPDATED",
+            "title": "Type",
+            "default": "PROJECT_METADATA_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/ProjectMetadataRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectMetadataUpdatedEvent"
+      },
       "ProjectRead": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Project" },
@@ -12419,6 +13285,38 @@
         },
         "type": "object",
         "title": "ProjectUpdate"
+      },
+      "ProjectUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "PROJECT_UPDATED", "title": "Type", "default": "PROJECT_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/ProjectRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectUpdatedEvent"
+      },
+      "ProjectUserAddedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "PROJECT_USER_ADDED", "title": "Type", "default": "PROJECT_USER_ADDED" },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectUserAddedEvent"
+      },
+      "ProjectUserRemovedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROJECT_USER_REMOVED",
+            "title": "Type",
+            "default": "PROJECT_USER_REMOVED"
+          },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectUserRemovedEvent"
       },
       "PublicUserRead": {
         "properties": {
@@ -12737,6 +13635,15 @@
         ],
         "title": "SdocColumns"
       },
+      "SdocDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SDOC_DELETED", "title": "Type", "default": "SDOC_DELETED" },
+          "payload": { "$ref": "#/components/schemas/SourceDocumentRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocDeletedEvent"
+      },
       "SdocHealthResult": {
         "properties": {
           "total_results": {
@@ -12763,6 +13670,34 @@
         "type": "object",
         "required": ["column", "direction"],
         "title": "SdocHealthSort"
+      },
+      "SdocMetadataDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SDOC_METADATA_DELETED",
+            "title": "Type",
+            "default": "SDOC_METADATA_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocMetadataDeletedEvent"
+      },
+      "SdocMetadataUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SDOC_METADATA_UPDATED",
+            "title": "Type",
+            "default": "SDOC_METADATA_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocMetadataUpdatedEvent"
       },
       "SdocNodeData": {
         "properties": {
@@ -12838,6 +13773,15 @@
         "type": "object",
         "required": ["timeline_analysis_type", "filter"],
         "title": "SdocTimelineAnalysisFilter"
+      },
+      "SdocUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SDOC_UPDATED", "title": "Type", "default": "SDOC_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/SourceDocumentRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocUpdatedEvent"
       },
       "SearchEntityType": {
         "type": "string",
@@ -12922,6 +13866,34 @@
         "type": "object",
         "required": ["sentence_id_start", "sentence_id_end", "code_id", "sdoc_id"],
         "title": "SentenceAnnotationCreate"
+      },
+      "SentenceAnnotationCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION_CREATED",
+            "title": "Type",
+            "default": "SENTENCE_ANNOTATION_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/SentenceAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SentenceAnnotationCreatedEvent"
+      },
+      "SentenceAnnotationDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION_DELETED",
+            "title": "Type",
+            "default": "SENTENCE_ANNOTATION_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/SentenceAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SentenceAnnotationDeletedEvent"
       },
       "SentenceAnnotationLLMJobResult": {
         "properties": {
@@ -13128,6 +14100,20 @@
         "type": "object",
         "required": ["sent_annotation_id", "code_id"],
         "title": "SentenceAnnotationUpdateBulk"
+      },
+      "SentenceAnnotationUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION_UPDATED",
+            "title": "Type",
+            "default": "SENTENCE_ANNOTATION_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/SentenceAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SentenceAnnotationUpdatedEvent"
       },
       "SentenceAnnotatorResult": {
         "properties": {
@@ -13888,6 +14874,20 @@
         "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id"],
         "title": "SpanAnnotationCreate"
       },
+      "SpanAnnotationCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SPAN_ANNOTATION_CREATED",
+            "title": "Type",
+            "default": "SPAN_ANNOTATION_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/SpanAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanAnnotationCreatedEvent"
+      },
       "SpanAnnotationDeleted": {
         "properties": {
           "begin": { "type": "integer", "title": "Begin", "description": "Begin of the SpanAnnotation in characters" },
@@ -13937,6 +14937,20 @@
           "updated"
         ],
         "title": "SpanAnnotationDeleted"
+      },
+      "SpanAnnotationDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SPAN_ANNOTATION_DELETED",
+            "title": "Type",
+            "default": "SPAN_ANNOTATION_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/SpanAnnotationDeleted" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanAnnotationDeletedEvent"
       },
       "SpanAnnotationHit": {
         "properties": {
@@ -14126,6 +15140,20 @@
         "required": ["span_annotation_id", "code_id"],
         "title": "SpanAnnotationUpdateBulk"
       },
+      "SpanAnnotationUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SPAN_ANNOTATION_UPDATED",
+            "title": "Type",
+            "default": "SPAN_ANNOTATION_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/SpanAnnotationRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanAnnotationUpdatedEvent"
+      },
       "SpanColumns": {
         "type": "string",
         "enum": [
@@ -14175,6 +15203,24 @@
         "required": ["name", "sdoc_id"],
         "title": "SpanGroupCreate"
       },
+      "SpanGroupCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SPAN_GROUP_CREATED", "title": "Type", "default": "SPAN_GROUP_CREATED" },
+          "payload": { "$ref": "#/components/schemas/SpanGroupRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanGroupCreatedEvent"
+      },
+      "SpanGroupDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SPAN_GROUP_DELETED", "title": "Type", "default": "SPAN_GROUP_DELETED" },
+          "payload": { "$ref": "#/components/schemas/SpanGroupRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanGroupDeletedEvent"
+      },
       "SpanGroupRead": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the SpanGroup" },
@@ -14208,6 +15254,15 @@
         },
         "type": "object",
         "title": "SpanGroupUpdate"
+      },
+      "SpanGroupUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SPAN_GROUP_UPDATED", "title": "Type", "default": "SPAN_GROUP_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/SpanGroupRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanGroupUpdatedEvent"
       },
       "SpanGroupWithAnnotationsRead": {
         "properties": {
@@ -14415,6 +15470,24 @@
         "required": ["name", "project_id"],
         "title": "TagCreate"
       },
+      "TagCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "TAG_CREATED", "title": "Type", "default": "TAG_CREATED" },
+          "payload": { "$ref": "#/components/schemas/TagRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TagCreatedEvent"
+      },
+      "TagDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "TAG_DELETED", "title": "Type", "default": "TAG_DELETED" },
+          "payload": { "$ref": "#/components/schemas/TagRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TagDeletedEvent"
+      },
       "TagNodeData": {
         "properties": {
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
@@ -14582,6 +15655,15 @@
         },
         "type": "object",
         "title": "TagUpdate"
+      },
+      "TagUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "TAG_UPDATED", "title": "Type", "default": "TAG_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/TagRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TagUpdatedEvent"
       },
       "TaggingLLMJobResult": {
         "properties": {
@@ -14793,6 +15875,34 @@
         "required": ["name", "timeline_analysis_type", "project_id"],
         "title": "TimelineAnalysisCreate"
       },
+      "TimelineAnalysisCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "TIMELINE_ANALYSIS_CREATED",
+            "title": "Type",
+            "default": "TIMELINE_ANALYSIS_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/TimelineAnalysisRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TimelineAnalysisCreatedEvent"
+      },
+      "TimelineAnalysisDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "TIMELINE_ANALYSIS_DELETED",
+            "title": "Type",
+            "default": "TIMELINE_ANALYSIS_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/TimelineAnalysisRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TimelineAnalysisDeletedEvent"
+      },
       "TimelineAnalysisRead": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the TimelineAnalysis" },
@@ -14901,6 +16011,20 @@
         },
         "type": "object",
         "title": "TimelineAnalysisUpdate"
+      },
+      "TimelineAnalysisUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "TIMELINE_ANALYSIS_UPDATED",
+            "title": "Type",
+            "default": "TIMELINE_ANALYSIS_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/TimelineAnalysisRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TimelineAnalysisUpdatedEvent"
       },
       "UserAuthorizationHeaderData": {
         "properties": {
@@ -15023,6 +16147,15 @@
         "required": ["title", "project_id"],
         "title": "WhiteboardCreate"
       },
+      "WhiteboardCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "WHITEBOARD_CREATED", "title": "Type", "default": "WHITEBOARD_CREATED" },
+          "payload": { "$ref": "#/components/schemas/WhiteboardRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "WhiteboardCreatedEvent"
+      },
       "WhiteboardData": {
         "properties": {
           "sdocs": {
@@ -15071,6 +16204,15 @@
         "type": "object",
         "required": ["sdocs", "codes", "tags", "span_annotations", "sent_annotations", "bbox_annotations", "memos"],
         "title": "WhiteboardData"
+      },
+      "WhiteboardDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "WHITEBOARD_DELETED", "title": "Type", "default": "WHITEBOARD_DELETED" },
+          "payload": { "$ref": "#/components/schemas/WhiteboardRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "WhiteboardDeletedEvent"
       },
       "WhiteboardEdge": {
         "properties": {
@@ -15298,6 +16440,15 @@
         },
         "type": "object",
         "title": "WhiteboardUpdate"
+      },
+      "WhiteboardUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "WHITEBOARD_UPDATED", "title": "Type", "default": "WHITEBOARD_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/WhiteboardRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "WhiteboardUpdatedEvent"
       },
       "WordFrequencyColumns": {
         "type": "string",
