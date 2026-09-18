@@ -60,9 +60,9 @@ router = APIRouter(
 
 ### HTTP Method Semantics
 
-- **PUT = create, GET = read, PATCH = update, DELETE = delete.** These four are _mutations_ and require sync (see below).
+- **PUT = create, PATCH = update, DELETE = delete.** PUT, PATCH, and DELETE are _mutations_ and require sync (see below).
+- **GET = read.** GET is a pure read and never syncs.
 - **POST = computation or job start.** A computation is a one-time operation whose result is not persisted (search, statistics, exports, suggestions). Computations do **not** need sync.
-- Known legacy deviations (do not copy): `folder_endpoint.py` and `search_view_endpoint.py` use POST for create; `api_key_endpoint.py` uses POST `/create` and DELETE `/delete/{key_id}`.
 
 ### Mutation & Sync
 
