@@ -22,6 +22,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/searchColumns/{doctype}",
     response_model=list[str],
@@ -81,6 +84,9 @@ def get_simple_sdoc_status_by_project_and_status(
             db=db, project_id=proj_id, status=status
         )
     ]
+
+
+# --- job operations
 
 
 @router.post(

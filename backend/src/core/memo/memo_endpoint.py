@@ -26,12 +26,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=MemoRead,
     summary="Adds a Memo to the Attached Object with the given ID if it exists",
 )
-def add_memo(
+def create_memo(
     *,
     db: Session = Depends(get_db_session),
     attached_object_id: int,
@@ -74,6 +77,9 @@ def add_memo(
     return result
 
 
+# --- read operations
+
+
 @router.get(
     "/recent",
     response_model=list[MemoRead],
@@ -97,22 +103,6 @@ def get_recent_memos(
         )
         for db_obj in db_objs
     ]
-
-
-@router.post(
-    "/{memo_id}/recent",
-    status_code=204,
-    summary="Records that the current user opened the Memo with the given ID",
-)
-def record_recent_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    memo_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> None:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-
-    crud_memo.record_recent(db=db, memo_id=memo_id, user_id=authz_user.user.id)
 
 
 @router.get(
@@ -160,6 +150,9 @@ def get_memos_by_attached_object_id(
     authz_user.assert_in_project(project_id=proj_id)
 
     return get_object_memos(db_obj=attached_object, db=db, user_id=authz_user.user.id)
+
+
+# --- update operations
 
 
 @router.patch(
@@ -240,6 +233,25 @@ def update_memos_bulk(
     return results
 
 
+@router.post(
+    "/{memo_id}/recent",
+    status_code=204,
+    summary="Records that the current user opened the Memo with the given ID",
+)
+def record_recent_memo(
+    *,
+    db: Session = Depends(get_db_session),
+    memo_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> None:
+    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
+
+    crud_memo.record_recent(db=db, memo_id=memo_id, user_id=authz_user.user.id)
+
+
+# --- delete operations
+
+
 @router.delete(
     "/{memo_id}",
     response_model=MemoRead,
@@ -262,6 +274,9 @@ def delete_by_id(
 
     ws.emit_to_project(DATSEvent.MEMO_DELETED, memo_read, project_id=memo.project_id)
     return memo_read
+
+
+# --- other operations
 
 
 @router.get(

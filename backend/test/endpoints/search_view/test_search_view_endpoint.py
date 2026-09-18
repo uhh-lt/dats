@@ -72,7 +72,7 @@ def _create_payload(entity_type: SearchEntityType, project_id: int, name: str) -
 
 
 # ===========================================================================
-# CREATE SEARCH VIEW (POST /searchView) TESTS
+# CREATE SEARCH VIEW (PUT /searchView) TESTS
 # ===========================================================================
 
 
@@ -86,7 +86,7 @@ def test_create_search_view(
     was actually persisted."""
     _, read_model, _ = ENTITY_CASES[entity_type]
 
-    response = client.post(
+    response = client.put(
         "/searchView", json=_create_payload(entity_type, test_project.id, "My view")
     )
     assert response.status_code == 200, response.text
@@ -112,14 +112,14 @@ def test_create_search_view_positions_increment_independently_per_entity(
     """Position is assigned per (project, user, entity_type): two memo views get
     positions 0 and 1, while a span view starts again at position 0."""
     for i in range(2):
-        response = client.post(
+        response = client.put(
             "/searchView",
             json=_create_payload(SearchEntityType.MEMO, test_project.id, f"memo-{i}"),
         )
         assert response.status_code == 200, response.text
         assert MemoSearchViewRead.model_validate(response.json()).position == i
 
-    span_response = client.post(
+    span_response = client.put(
         "/searchView",
         json=_create_payload(
             SearchEntityType.SPAN_ANNOTATION, test_project.id, "span-0"
@@ -135,13 +135,13 @@ def test_create_search_view_duplicate_name_rejected_within_same_entity(
     """The (user, project, entity_type, lower(name)) unique index rejects a second
     view with the same name for the same entity, but allows it for another entity."""
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "dup")
-    assert client.post("/searchView", json=payload).status_code == 200
+    assert client.put("/searchView", json=payload).status_code == 200
 
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code in (400, 409), response.text
 
     other = _create_payload(SearchEntityType.SPAN_ANNOTATION, test_project.id, "dup")
-    assert client.post("/searchView", json=other).status_code == 200
+    assert client.put("/searchView", json=other).status_code == 200
 
 
 # --- Board-group validation (HTTP 422 contracts) -----------------------------
@@ -155,7 +155,7 @@ def test_create_search_view_board_layout_without_group_is_rejected(
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "board-no-group")
     payload["layout"] = SearchViewLayout.BOARD.value
     payload["group_by"] = None
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -167,7 +167,7 @@ def test_create_search_view_board_layout_with_date_group_defaults_granularity(
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "board-grouped")
     payload["layout"] = SearchViewLayout.BOARD.value
     payload["group_by"] = {"field": "M_CREATED", "date_granularity": None}
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 200, response.text
     view = MemoSearchViewRead.model_validate(response.json())
     assert view.group_by is not None
@@ -189,7 +189,7 @@ def test_create_search_view_selected_properties_roundtrip(
 
     payload = _create_payload(entity_type, test_project.id, "with-props")
     payload["selected_properties"] = [column.value]
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 200, response.text
     view = read_model.model_validate(response.json())
     assert view.selected_properties == [column]
@@ -206,7 +206,7 @@ def test_create_search_view_selected_properties_defaults_to_none(
 
     payload = _create_payload(entity_type, test_project.id, "no-props")
     assert payload["selected_properties"] is None
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 200, response.text
     view = read_model.model_validate(response.json())
     assert view.selected_properties is None
@@ -223,7 +223,7 @@ def test_create_search_view_blank_name_rejected(
     the request is ever sent."""
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "valid")
     payload["name"] = "   "
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -232,7 +232,7 @@ def test_create_search_view_name_is_trimmed(
 ):
     """Leading/trailing whitespace is stripped from the name on create."""
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "  padded  ")
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 200, response.text
     assert MemoSearchViewRead.model_validate(response.json()).name == "padded"
 
@@ -247,7 +247,7 @@ def test_create_search_view_null_sorts_normalized_to_empty(
     """Sending `sorts: null` on create is stored as an empty sort list."""
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "null-sorts")
     payload["sorts"] = None
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 200, response.text
     assert MemoSearchViewRead.model_validate(response.json()).sorts == []
 
@@ -263,7 +263,7 @@ def test_create_search_view_non_groupable_column_rejected(
     """Grouping by a non-groupable column (memo CONTENT) fails validation (422)."""
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "bad-group")
     payload["group_by"] = {"field": MemoColumns.CONTENT.value, "date_granularity": None}
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 422, response.text
 
 
@@ -277,7 +277,7 @@ def test_create_search_view_non_date_group_forces_granularity_none(
         "field": MemoColumns.TITLE.value,
         "date_granularity": DateGranularity.DAY.value,
     }
-    response = client.post("/searchView", json=payload)
+    response = client.put("/searchView", json=payload)
     assert response.status_code == 200, response.text
     view = MemoSearchViewRead.model_validate(response.json())
     assert view.group_by is not None
@@ -292,7 +292,7 @@ def test_create_search_view_by_non_member_forbidden(
 ):
     """A non-member cannot create a view in the project (HTTP 403)."""
     payload = _create_payload(SearchEntityType.MEMO, test_project.id, "intruder")
-    response = non_member_client.post("/searchView", json=payload)
+    response = non_member_client.put("/searchView", json=payload)
     assert response.status_code == 403, response.text
 
 
@@ -630,7 +630,7 @@ def test_update_search_view_by_non_owner_forbidden(
 
 
 # ===========================================================================
-# REORDER SEARCH VIEWS (PUT /searchView/project/{project_id}/order) TESTS
+# REORDER SEARCH VIEWS (PATCH /searchView/project/{project_id}/order) TESTS
 # ===========================================================================
 
 
@@ -645,7 +645,7 @@ def test_reorder_search_views(
         search_view_project["memo_view_c"].id,
     ]
 
-    response = client.put(
+    response = client.patch(
         f"/searchView/project/{project.id}/order",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": list(reversed(ids))},
@@ -667,7 +667,7 @@ def test_reorder_search_views_rejects_incomplete_id_set(
         search_view_project["memo_view_b"].id,
     ]
 
-    response = client.put(
+    response = client.patch(
         f"/searchView/project/{project.id}/order",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": ids},
@@ -682,7 +682,7 @@ def test_reorder_search_views_rejects_duplicate_ids(
     project = search_view_project["project"]
     duplicate = search_view_project["memo_view_a"].id
 
-    response = client.put(
+    response = client.patch(
         f"/searchView/project/{project.id}/order",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": [duplicate, duplicate]},
@@ -697,7 +697,7 @@ def test_reorder_search_views_by_non_member_forbidden(
     client: TestClient, non_member_client: TestClient, test_project
 ):
     """A non-member cannot reorder the project's views (HTTP 403)."""
-    response = non_member_client.put(
+    response = non_member_client.patch(
         f"/searchView/project/{test_project.id}/order",
         params={"entity_type": SearchEntityType.MEMO.value},
         json={"view_ids": []},

@@ -23,12 +23,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=TagRead,
     summary="Creates a new Tag and returns it with the generated ID.",
 )
-def create_new_doc_tag(
+def create_doc_tag(
     *,
     db: Session = Depends(get_db_session),
     tag: TagCreate,
@@ -50,6 +53,105 @@ def create_new_doc_tag(
     db_obj = crud_tag.create(db=db, create_dto=tag)
     result = TagRead.model_validate(db_obj)
     ws.emit_to_project(DATSEvent.TAG_CREATED, result, project_id=tag.project_id)
+    return result
+
+
+# --- read operations
+
+
+@router.get(
+    "/{tag_id}",
+    response_model=TagRead,
+    summary="Returns the Tag with the given ID.",
+)
+def get_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> TagRead:
+    authz_user.assert_in_same_project_as(Crud.TAG, tag_id)
+
+    db_obj = crud_tag.read(db=db, id=tag_id)
+    return TagRead.model_validate(db_obj)
+
+
+@router.get(
+    "/project/{proj_id}",
+    response_model=list[TagRead],
+    summary="Returns all Tags of the Project with the given ID",
+)
+def get_by_project(
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> list[TagRead]:
+    authz_user.assert_in_project(proj_id)
+
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    return [TagRead.model_validate(tag) for tag in proj_db_obj.tags]
+
+
+@router.get(
+    "/sdoc/{sdoc_id}",
+    response_model=list[int],
+    summary="Returns all TagIDs linked with the SourceDocument.",
+)
+def get_by_sdoc(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[int]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    return [doc_tag_db_obj.id for doc_tag_db_obj in sdoc_db_obj.tags]
+
+
+@router.get(
+    "/{tag_id}/sdocs",
+    response_model=list[int],
+    summary=(
+        "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
+    ),
+)
+def get_sdoc_ids_by_tag_id(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[int]:
+    authz_user.assert_in_same_project_as(Crud.TAG, tag_id)
+
+    db_obj = crud_tag.read(db=db, id=tag_id)
+    return [sdoc.id for sdoc in db_obj.source_documents]
+
+
+# --- update operations
+
+
+@router.patch(
+    "/{tag_id}",
+    response_model=TagRead,
+    summary="Updates the Tag with the given ID.",
+)
+def update_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    tag: TagUpdate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> TagRead:
+    authz_user.assert_in_same_project_as(Crud.TAG, tag_id)
+
+    db_obj = crud_tag.update(db=db, id=tag_id, update_dto=tag)
+    result = TagRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TAG_UPDATED, result, project_id=db_obj.get_project_id()
+    )
     return result
 
 
@@ -77,43 +179,6 @@ def link_multiple_tags(
     )
 
     crud_tag.link_multiple_tags(
-        db=db,
-        sdoc_ids=multi_link.source_document_ids,
-        tag_ids=multi_link.tag_ids,
-    )
-
-    result = SdocTagLinks(
-        links=crud_sdoc.read_tags(db=db, sdoc_ids=multi_link.source_document_ids)
-    )
-    project_id = crud_sdoc.read(db=db, id=multi_link.source_document_ids[0]).project_id
-    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
-    return result
-
-
-@router.delete(
-    "/bulk/unlink",
-    response_model=SdocTagLinks,
-    summary="Unlinks all Tags with the SourceDocuments and returns the resulting tags per document",
-)
-def unlink_multiple_tags(
-    *,
-    db: Session = Depends(get_db_session),
-    multi_link: SourceDocumentTagMultiLink,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SdocTagLinks:
-    authz_user.assert_in_same_project_as_many(
-        Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
-    )
-    authz_user.assert_in_same_project_as_many(Crud.TAG, multi_link.tag_ids)
-
-    validate.validate_objects_in_same_project(
-        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in multi_link.source_document_ids]
-        + [(Crud.TAG, tag_id) for tag_id in multi_link.tag_ids]
-    )
-
-    crud_tag.unlink_multiple_tags(
         db=db,
         sdoc_ids=multi_link.source_document_ids,
         tag_ids=multi_link.tag_ids,
@@ -198,76 +263,7 @@ def update_tags_batch(
     return result
 
 
-@router.get(
-    "/{tag_id}",
-    response_model=TagRead,
-    summary="Returns the Tag with the given ID.",
-)
-def get_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    tag_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> TagRead:
-    authz_user.assert_in_same_project_as(Crud.TAG, tag_id)
-
-    db_obj = crud_tag.read(db=db, id=tag_id)
-    return TagRead.model_validate(db_obj)
-
-
-@router.get(
-    "/project/{proj_id}",
-    response_model=list[TagRead],
-    summary="Returns all Tags of the Project with the given ID",
-)
-def get_by_project(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> list[TagRead]:
-    authz_user.assert_in_project(proj_id)
-
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
-    return [TagRead.model_validate(tag) for tag in proj_db_obj.tags]
-
-
-@router.get(
-    "/sdoc/{sdoc_id}",
-    response_model=list[int],
-    summary="Returns all TagIDs linked with the SourceDocument.",
-)
-def get_by_sdoc(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[int]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return [doc_tag_db_obj.id for doc_tag_db_obj in sdoc_db_obj.tags]
-
-
-@router.patch(
-    "/{tag_id}",
-    response_model=TagRead,
-    summary="Updates the Tag with the given ID.",
-)
-def update_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    tag_id: int,
-    tag: TagUpdate,
-    ws: WebsocketEmitter = Depends(),
-) -> TagRead:
-    # TODO Flo: only if the user has access?
-    db_obj = crud_tag.update(db=db, id=tag_id, update_dto=tag)
-    result = TagRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.TAG_UPDATED, result, project_id=db_obj.get_project_id()
-    )
-    return result
+# --- delete operations
 
 
 @router.delete(
@@ -294,23 +290,44 @@ def delete_by_id(
     return tag_read
 
 
-@router.get(
-    "/{tag_id}/sdocs",
-    response_model=list[int],
-    summary=(
-        "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
-    ),
+@router.delete(
+    "/bulk/unlink",
+    response_model=SdocTagLinks,
+    summary="Unlinks all Tags with the SourceDocuments and returns the resulting tags per document",
 )
-def get_sdoc_ids_by_tag_id(
+def unlink_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
-    tag_id: int,
+    multi_link: SourceDocumentTagMultiLink,
     authz_user: AuthzUser = Depends(),
-) -> list[int]:
-    authz_user.assert_in_same_project_as(Crud.TAG, tag_id)
+    validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> SdocTagLinks:
+    authz_user.assert_in_same_project_as_many(
+        Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
+    )
+    authz_user.assert_in_same_project_as_many(Crud.TAG, multi_link.tag_ids)
 
-    db_obj = crud_tag.read(db=db, id=tag_id)
-    return [sdoc.id for sdoc in db_obj.source_documents]
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in multi_link.source_document_ids]
+        + [(Crud.TAG, tag_id) for tag_id in multi_link.tag_ids]
+    )
+
+    crud_tag.unlink_multiple_tags(
+        db=db,
+        sdoc_ids=multi_link.source_document_ids,
+        tag_ids=multi_link.tag_ids,
+    )
+
+    result = SdocTagLinks(
+        links=crud_sdoc.read_tags(db=db, sdoc_ids=multi_link.source_document_ids)
+    )
+    project_id = crud_sdoc.read(db=db, id=multi_link.source_document_ids[0]).project_id
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    return result
+
+
+# --- other operations
 
 
 @router.post(

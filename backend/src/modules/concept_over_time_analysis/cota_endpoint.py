@@ -29,7 +29,7 @@ router = APIRouter(
 )
 
 
-# --- Create Operations
+# --- create operations
 
 
 @router.put(
@@ -77,7 +77,7 @@ def duplicate_by_id(
     return result
 
 
-# --- Read Operations
+# --- read operations
 
 
 @router.get(
@@ -116,7 +116,7 @@ def get_by_project(
     return [COTARead.model_validate(db_obj) for db_obj in db_objs]
 
 
-# --- Update Operations
+# --- update operations
 
 
 @router.patch(
@@ -220,7 +220,7 @@ def reset_cota(
     return result
 
 
-# --- Delete Operations
+# --- delete operations
 
 
 @router.delete(
@@ -246,7 +246,7 @@ def delete_by_id(
     return result
 
 
-# --- Job Operations
+# --- job operations
 
 
 @router.post(

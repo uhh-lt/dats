@@ -16,6 +16,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/me",
     response_model=UserRead,
@@ -66,6 +69,9 @@ def get_all(
     return [PublicUserRead.model_validate(proj) for proj in db_objs]
 
 
+# --- update operations
+
+
 @router.patch(
     "/",
     response_model=UserRead,
@@ -81,23 +87,6 @@ def update_me(
     db_user = crud_user.update(db=db, id=authz_user.user.id, update_dto=user)
     result = UserRead.model_validate(db_user)
     ws.emit_to_user(DATSEvent.USER_UPDATED, result, user_id=authz_user.user.id)
-    return result
-
-
-@router.delete(
-    "/",
-    response_model=UserRead,
-    summary="Removes the logged-in User",
-)
-def delete_me(
-    *,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> UserRead:
-    db_user = crud_user.delete(db=db, id=authz_user.user.id)
-    result = UserRead.model_validate(db_user)
-    ws.emit_to_user(DATSEvent.USER_DELETED, result, user_id=authz_user.user.id)
     return result
 
 
@@ -122,6 +111,26 @@ def associate_user_to_project(
     )
     result = UserRead.model_validate(user_db_obj)
     ws.emit_to_project(DATSEvent.PROJECT_USER_ADDED, result, project_id=proj_id)
+    return result
+
+
+# --- delete operations
+
+
+@router.delete(
+    "/",
+    response_model=UserRead,
+    summary="Removes the logged-in User",
+)
+def delete_me(
+    *,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> UserRead:
+    db_user = crud_user.delete(db=db, id=authz_user.user.id)
+    result = UserRead.model_validate(db_user)
+    ws.emit_to_user(DATSEvent.USER_DELETED, result, user_id=authz_user.user.id)
     return result
 
 

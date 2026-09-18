@@ -19,6 +19,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/{sdoc_id}",
     response_model=SourceDocumentRead,
@@ -58,51 +61,6 @@ def get_by_id_with_data(
 
     sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
     return SourceDocumentDataRead.model_validate(sdoc_data)
-
-
-@router.delete(
-    "/{sdoc_id}",
-    response_model=SourceDocumentRead,
-    summary="Removes the SourceDocument with the given ID if it exists",
-)
-def delete_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    db_obj = crud_sdoc.delete(db=db, id=sdoc_id)
-    result = SourceDocumentRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SDOC_DELETED, result, project_id=db_obj.get_project_id()
-    )
-    return result
-
-
-@router.patch(
-    "/{sdoc_id}",
-    response_model=SourceDocumentRead,
-    summary="Updates the SourceDocument with the given ID.",
-)
-def update_sdoc(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    sdoc: SourceDocumentUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
-    result = SourceDocumentRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SDOC_UPDATED, result, project_id=db_obj.get_project_id()
-    )
-    return result
 
 
 @router.get(
@@ -166,3 +124,54 @@ def get_annotators(
     return [
         adoc.user_id for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
     ]
+
+
+# --- update operations
+
+
+@router.patch(
+    "/{sdoc_id}",
+    response_model=SourceDocumentRead,
+    summary="Updates the SourceDocument with the given ID.",
+)
+def update_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    sdoc: SourceDocumentUpdate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> SourceDocumentRead:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
+    result = SourceDocumentRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SDOC_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
+
+
+# --- delete operations
+
+
+@router.delete(
+    "/{sdoc_id}",
+    response_model=SourceDocumentRead,
+    summary="Removes the SourceDocument with the given ID if it exists",
+)
+def delete_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> SourceDocumentRead:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    db_obj = crud_sdoc.delete(db=db, id=sdoc_id)
+    result = SourceDocumentRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SDOC_DELETED, result, project_id=db_obj.get_project_id()
+    )
+    return result

@@ -27,6 +27,9 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=TimelineAnalysisRead,
@@ -55,6 +58,35 @@ def create(
         project_id=timeline_analysis.project_id,
     )
     return result
+
+
+@router.put(
+    "/duplicate/{timeline_analysis_id}",
+    response_model=TimelineAnalysisRead,
+    summary="Duplicates the TimelineAnalysis with the given ID if it exists",
+)
+def duplicate_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    timeline_analysis_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> TimelineAnalysisRead:
+    authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
+
+    db_obj = crud_timeline_analysis.duplicate_by_id(
+        db=db, timeline_analysis_id=timeline_analysis_id, user_id=authz_user.user.id
+    )
+    result = TimelineAnalysisRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TIMELINE_ANALYSIS_CREATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
+
+
+# --- read operations
 
 
 @router.get(
@@ -89,6 +121,9 @@ def get_by_project(
 
     db_objs = crud_timeline_analysis.read_by_project(db=db, project_id=project_id)
     return [TimelineAnalysisRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+# --- update operations
 
 
 @router.patch(
@@ -142,30 +177,7 @@ def recompute_by_id(
     return result
 
 
-@router.put(
-    "/duplicate/{timeline_analysis_id}",
-    response_model=TimelineAnalysisRead,
-    summary="Duplicates the TimelineAnalysis with the given ID if it exists",
-)
-def duplicate_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    timeline_analysis_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> TimelineAnalysisRead:
-    authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
-
-    db_obj = crud_timeline_analysis.duplicate_by_id(
-        db=db, timeline_analysis_id=timeline_analysis_id, user_id=authz_user.user.id
-    )
-    result = TimelineAnalysisRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.TIMELINE_ANALYSIS_CREATED,
-        result,
-        project_id=db_obj.get_project_id(),
-    )
-    return result
+# --- delete operations
 
 
 @router.delete(

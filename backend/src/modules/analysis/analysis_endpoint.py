@@ -78,7 +78,7 @@ def code_occurrences(
 
 
 @router.get(
-    "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}",
+    "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
     response_model=tuple[int, int],
     summary="Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
 )

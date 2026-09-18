@@ -26,12 +26,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=ProjectRead,
     summary="Creates a new Project",
 )
-def create_new_project(
+def create_project(
     *,
     db: Session = Depends(get_db_session),
     proj: ProjectCreate,
@@ -46,12 +49,15 @@ def create_new_project(
     return result
 
 
+# --- read operations
+
+
 @router.get(
     "/{proj_id}",
     response_model=ProjectRead,
     summary="Returns the Project with the given ID if it exists",
 )
-def read_project(
+def get_project(
     *,
     db: Session = Depends(get_db_session),
     proj_id: int,
@@ -61,45 +67,6 @@ def read_project(
 
     db_obj = crud_project.read(db=db, id=proj_id)
     return ProjectRead.model_validate(db_obj)
-
-
-@router.patch(
-    "/{proj_id}",
-    response_model=ProjectRead,
-    summary="Updates the Project with the given ID.",
-)
-def update_project(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    proj: ProjectUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> ProjectRead:
-    authz_user.assert_in_project(proj_id)
-    db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
-    result = ProjectRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=proj_id)
-    return result
-
-
-@router.delete(
-    "/{proj_id}",
-    response_model=ProjectRead,
-    summary="Removes the Project with the given ID.",
-)
-def delete_project(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> ProjectRead:
-    authz_user.assert_in_project(proj_id)
-    db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
-    result = ProjectRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.PROJECT_DELETED, result, project_id=db_obj.id)
-    return result
 
 
 @router.get(
@@ -144,7 +111,7 @@ def get_user_projects(
 
 
 @router.get(
-    "{project_id}/sdoc/status/{status}",
+    "/{project_id}/sdoc/status/{status}",
     response_model=int,
     summary="Returns count of SourceDocuments with the given status in the given project.",
 )
@@ -159,3 +126,48 @@ def count_sdocs_with_status(
     return crud_sdoc.count_by_project_and_status(
         db=db, proj_id=project_id, status=status
     )
+
+
+# --- update operations
+
+
+@router.patch(
+    "/{proj_id}",
+    response_model=ProjectRead,
+    summary="Updates the Project with the given ID.",
+)
+def update_project(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    proj: ProjectUpdate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> ProjectRead:
+    authz_user.assert_in_project(proj_id)
+    db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
+    result = ProjectRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=proj_id)
+    return result
+
+
+# --- delete operations
+
+
+@router.delete(
+    "/{proj_id}",
+    response_model=ProjectRead,
+    summary="Removes the Project with the given ID.",
+)
+def delete_project(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> ProjectRead:
+    authz_user.assert_in_project(proj_id)
+    db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
+    result = ProjectRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.PROJECT_DELETED, result, project_id=db_obj.id)
+    return result

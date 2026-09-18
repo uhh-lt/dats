@@ -22,12 +22,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=BBoxAnnotationRead,
     summary="Creates a BBoxAnnotation",
 )
-def add_bbox_annotation(
+def create_bbox_annotation(
     *,
     db: Session = Depends(get_db_session),
     bbox: BBoxAnnotationCreate,
@@ -45,6 +48,9 @@ def add_bbox_annotation(
         project_id=db_obj.get_project_id(),
     )
     return result
+
+
+# --- read operations
 
 
 @router.get(
@@ -84,6 +90,28 @@ def get_by_sdoc_and_user(
     return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
 
 
+@router.get(
+    "/code/{code_id}/user",
+    response_model=list[BBoxAnnotationRead],
+    summary=("Returns BBoxAnnotations with the given Code of the logged-in User"),
+)
+def get_by_user_code(
+    *,
+    db: Session = Depends(get_db_session),
+    code_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[BBoxAnnotationRead]:
+    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
+
+    db_objs = crud_bbox_anno.read_by_code_and_user(
+        db=db, code_id=code_id, user_id=authz_user.user.id
+    )
+    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+# --- update operations
+
+
 @router.patch(
     "/{bbox_id}",
     response_model=BBoxAnnotationRead,
@@ -120,7 +148,7 @@ def update_by_id(
     response_model=list[BBoxAnnotationRead],
     summary="Updates BBoxAnnotation in Bulk",
 )
-def update_bbox_anno_annotations_bulk(
+def update_bbox_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     bbox_annos: list[BBoxAnnotationUpdateBulk],
@@ -149,6 +177,9 @@ def update_bbox_anno_annotations_bulk(
             project_id=db_objs[0].get_project_id(),
         )
     return results
+
+
+# --- delete operations
 
 
 @router.delete(
@@ -183,7 +214,7 @@ def delete_by_id(
     response_model=list[BBoxAnnotationRead],
     summary="Deletes all BBoxAnnotations with the given IDs.",
 )
-def delete_bulk_by_id(
+def delete_bbox_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     bbox_anno_ids: list[int],
@@ -201,22 +232,3 @@ def delete_bulk_by_id(
             project_id=db_objs[0].get_project_id(),
         )
     return results
-
-
-@router.get(
-    "/code/{code_id}/user",
-    response_model=list[BBoxAnnotationRead],
-    summary=("Returns BBoxAnnotations with the given Code of the logged-in User"),
-)
-def get_by_user_code(
-    *,
-    db: Session = Depends(get_db_session),
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[BBoxAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_objs = crud_bbox_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=authz_user.user.id
-    )
-    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]

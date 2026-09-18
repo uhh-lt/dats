@@ -21,6 +21,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/{metadata_id}",
     response_model=SourceDocumentMetadataRead,
@@ -78,6 +81,9 @@ def get_by_sdoc_and_key(
     return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
 
 
+# --- update operations
+
+
 @router.patch(
     "/{metadata_id}",
     response_model=SourceDocumentMetadataRead,
@@ -127,6 +133,9 @@ def update_bulk(
             project_id=db_objs[0].get_project_id(),
         )
     return results
+
+
+# --- delete operations
 
 
 @router.delete(
