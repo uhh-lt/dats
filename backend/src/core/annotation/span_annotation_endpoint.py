@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
@@ -14,6 +15,7 @@ from core.annotation.span_annotation_dto import (
 from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/span",
@@ -33,6 +35,7 @@ def add_span_annotation(
     span: SpanAnnotationCreate,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
@@ -44,7 +47,13 @@ def add_span_annotation(
     )
 
     db_obj = crud_span_anno.create(db=db, user_id=authz_user.user.id, create_dto=span)
-    return SpanAnnotationRead.model_validate(db_obj)
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_CREATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.put(
@@ -58,6 +67,7 @@ def add_span_annotations_bulk(
     spans: list[SpanAnnotationCreate],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
     for span in spans:
         authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
@@ -72,7 +82,14 @@ def add_span_annotations_bulk(
     db_objs = crud_span_anno.create_bulk(
         db=db, user_id=authz_user.user.id, create_dtos=spans
     )
-    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SPAN_ANNOTATION_CREATED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.get(
@@ -124,6 +141,7 @@ def update_by_id(
     span_anno: SpanAnnotationUpdate,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
     if span_anno.code_id is not None:
@@ -133,7 +151,13 @@ def update_by_id(
         )
 
     db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
-    return SpanAnnotationRead.model_validate(db_obj)
+    result = SpanAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.patch(
@@ -147,6 +171,7 @@ def update_span_annotations_bulk(
     spans: list[SpanAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
     for span in spans:
         authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
@@ -161,7 +186,14 @@ def update_span_annotations_bulk(
         )
 
     db_objs = crud_span_anno.update_bulk(db=db, update_dtos=spans)
-    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.delete(
@@ -174,13 +206,20 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     span_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationDeleted:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     db_obj = crud_span_anno.read(db=db, id=span_id)
     anno_read = SpanAnnotationDeleted.model_validate(db_obj)
+    project_id = db_obj.get_project_id()
 
     crud_span_anno.delete(db=db, id=span_id)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_DELETED,
+        anno_read,
+        project_id=project_id,
+    )
     return anno_read
 
 
@@ -194,11 +233,19 @@ def delete_bulk_by_id(
     db: Session = Depends(get_db_session),
     span_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationDeleted]:
     authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
 
     db_objs = crud_span_anno.remove_bulk(db=db, ids=span_anno_ids)
-    return [SpanAnnotationDeleted.model_validate(db_obj) for db_obj in db_objs]
+    results = [SpanAnnotationDeleted.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SPAN_ANNOTATION_DELETED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.get(
@@ -231,10 +278,16 @@ def remove_from_all_groups(
     db: Session = Depends(get_db_session),
     span_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationDeleted:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_UPDATED,
+        SpanAnnotationRead.model_validate(span_db_obj),
+        project_id=span_db_obj.get_project_id(),
+    )
     return SpanAnnotationDeleted.model_validate(span_db_obj)
 
 
@@ -249,6 +302,7 @@ def add_to_group(
     span_id: int,
     group_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, group_id)
@@ -256,7 +310,13 @@ def add_to_group(
     sdoc_db_obj = crud_span_anno.add_to_span_group(
         db=db, span_id=span_id, group_id=group_id
     )
-    return SpanAnnotationRead.model_validate(sdoc_db_obj)
+    result = SpanAnnotationRead.model_validate(sdoc_db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_UPDATED,
+        result,
+        project_id=sdoc_db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.delete(
@@ -270,6 +330,7 @@ def remove_from_group(
     span_id: int,
     group_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, group_id)
@@ -277,7 +338,13 @@ def remove_from_group(
     sdoc_db_obj = crud_span_anno.remove_from_span_group(
         db=db, span_id=span_id, group_id=group_id
     )
-    return SpanAnnotationRead.model_validate(sdoc_db_obj)
+    result = SpanAnnotationRead.model_validate(sdoc_db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_UPDATED,
+        result,
+        project_id=sdoc_db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.get(

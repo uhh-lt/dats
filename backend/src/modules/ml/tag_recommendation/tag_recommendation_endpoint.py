@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.tag.tag_crud import crud_tag
@@ -18,6 +19,7 @@ from modules.ml.tag_recommendation.tag_recommendation_orm import (
 from modules.ml.tag_recommendation.tag_recommendation_service import (
     DocumentClassificationService,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 dcs: DocumentClassificationService = DocumentClassificationService()
 
@@ -109,6 +111,7 @@ def update_recommendations(
     db: Session = Depends(get_db_session),
     reviewd_recommendation_ids: list[int],
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[TagRecommendationLinkRead]:
     modifications = crud_tag_recommendation_link.update_multi(
         db=db,
@@ -118,4 +121,11 @@ def update_recommendations(
             for _ in reviewd_recommendation_ids
         ],
     )
-    return [TagRecommendationLinkRead.model_validate(m) for m in modifications]
+    results = [TagRecommendationLinkRead.model_validate(m) for m in modifications]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.TAG_RECOMMENDATION_REVIEWED_BATCH,
+            results,
+            project_id=modifications[0].get_project_id(),
+        )
+    return results

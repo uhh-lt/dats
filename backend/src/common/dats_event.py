@@ -10,6 +10,7 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationRead,
 )
 from core.annotation.span_group_dto import SpanGroupRead
+from core.auth.api_key_dto import ApiKeyRead
 from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
@@ -17,11 +18,15 @@ from core.memo.memo_dto import MemoRead
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRead
 from core.project.project_dto import ProjectRead
-from core.tag.tag_dto import TagRead
+from core.tag.tag_dto import SdocTagLinks, TagRead
 from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
 from modules.concept_over_time_analysis.cota_dto import COTARead
+from modules.ml.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationLinkRead,
+)
 from modules.perspectives.aspect_dto import AspectRead
+from modules.search_view.search_view_dto import SearchViewReadUnion
 from modules.timeline_analysis.timeline_analysis_dto import TimelineAnalysisRead
 from modules.whiteboard.whiteboard_dto import WhiteboardRead
 
@@ -39,27 +44,39 @@ class DATSEvent(StrEnum):
     TAG_UPDATED = "TAG_UPDATED"
     TAG_DELETED = "TAG_DELETED"
 
+    MEMO_CREATED = "MEMO_CREATED"
     MEMO_UPDATED = "MEMO_UPDATED"
     MEMO_DELETED = "MEMO_DELETED"
+    MEMO_UPDATED_BATCH = "MEMO_UPDATED_BATCH"
 
     SDOC_UPDATED = "SDOC_UPDATED"
     SDOC_DELETED = "SDOC_DELETED"
+    SDOC_TAGS_UPDATED = "SDOC_TAGS_UPDATED"
 
     SPAN_ANNOTATION_CREATED = "SPAN_ANNOTATION_CREATED"
     SPAN_ANNOTATION_UPDATED = "SPAN_ANNOTATION_UPDATED"
     SPAN_ANNOTATION_DELETED = "SPAN_ANNOTATION_DELETED"
+    SPAN_ANNOTATION_CREATED_BATCH = "SPAN_ANNOTATION_CREATED_BATCH"
+    SPAN_ANNOTATION_UPDATED_BATCH = "SPAN_ANNOTATION_UPDATED_BATCH"
+    SPAN_ANNOTATION_DELETED_BATCH = "SPAN_ANNOTATION_DELETED_BATCH"
 
     BBOX_ANNOTATION_CREATED = "BBOX_ANNOTATION_CREATED"
     BBOX_ANNOTATION_UPDATED = "BBOX_ANNOTATION_UPDATED"
     BBOX_ANNOTATION_DELETED = "BBOX_ANNOTATION_DELETED"
+    BBOX_ANNOTATION_UPDATED_BATCH = "BBOX_ANNOTATION_UPDATED_BATCH"
+    BBOX_ANNOTATION_DELETED_BATCH = "BBOX_ANNOTATION_DELETED_BATCH"
 
     SENTENCE_ANNOTATION_CREATED = "SENTENCE_ANNOTATION_CREATED"
     SENTENCE_ANNOTATION_UPDATED = "SENTENCE_ANNOTATION_UPDATED"
     SENTENCE_ANNOTATION_DELETED = "SENTENCE_ANNOTATION_DELETED"
+    SENTENCE_ANNOTATION_CREATED_BATCH = "SENTENCE_ANNOTATION_CREATED_BATCH"
+    SENTENCE_ANNOTATION_UPDATED_BATCH = "SENTENCE_ANNOTATION_UPDATED_BATCH"
+    SENTENCE_ANNOTATION_DELETED_BATCH = "SENTENCE_ANNOTATION_DELETED_BATCH"
 
     FOLDER_CREATED = "FOLDER_CREATED"
     FOLDER_UPDATED = "FOLDER_UPDATED"
     FOLDER_DELETED = "FOLDER_DELETED"
+    FOLDER_UPDATED_BATCH = "FOLDER_UPDATED_BATCH"
 
     PROJECT_METADATA_CREATED = "PROJECT_METADATA_CREATED"
     PROJECT_METADATA_UPDATED = "PROJECT_METADATA_UPDATED"
@@ -67,6 +84,7 @@ class DATSEvent(StrEnum):
 
     SDOC_METADATA_UPDATED = "SDOC_METADATA_UPDATED"
     SDOC_METADATA_DELETED = "SDOC_METADATA_DELETED"
+    SDOC_METADATA_UPDATED_BATCH = "SDOC_METADATA_UPDATED_BATCH"
 
     SPAN_GROUP_CREATED = "SPAN_GROUP_CREATED"
     SPAN_GROUP_UPDATED = "SPAN_GROUP_UPDATED"
@@ -94,6 +112,19 @@ class DATSEvent(StrEnum):
     PROJECT_USER_ADDED = "PROJECT_USER_ADDED"
     PROJECT_USER_REMOVED = "PROJECT_USER_REMOVED"
 
+    USER_UPDATED = "USER_UPDATED"
+    USER_DELETED = "USER_DELETED"
+
+    API_KEY_CREATED = "API_KEY_CREATED"
+    API_KEY_DELETED = "API_KEY_DELETED"
+
+    TAG_RECOMMENDATION_REVIEWED_BATCH = "TAG_RECOMMENDATION_REVIEWED_BATCH"
+
+    SEARCH_VIEW_CREATED = "SEARCH_VIEW_CREATED"
+    SEARCH_VIEW_UPDATED = "SEARCH_VIEW_UPDATED"
+    SEARCH_VIEW_DELETED = "SEARCH_VIEW_DELETED"
+    SEARCH_VIEW_UPDATED_BATCH = "SEARCH_VIEW_UPDATED_BATCH"
+
 
 class DATSEventBase(BaseModel):
     """Common base for all DATS domain events.
@@ -111,7 +142,9 @@ class DATSEventBase(BaseModel):
 # Single source of truth: event type -> payload type. The event classes are
 # generated from this table (see below), so adding an event is one enum member
 # plus one line here.
-_DATS_EVENT_PAYLOADS: dict[DATSEvent, type] = {
+# Payloads are pydantic field types: plain classes, `list[...]` generic aliases,
+# or `Union[...]` — hence the wide `object` value type.
+_DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.PROJECT_CREATED: ProjectRead,
     DATSEvent.PROJECT_UPDATED: ProjectRead,
     DATSEvent.PROJECT_DELETED: ProjectRead,
@@ -121,27 +154,40 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, type] = {
     DATSEvent.TAG_CREATED: TagRead,
     DATSEvent.TAG_UPDATED: TagRead,
     DATSEvent.TAG_DELETED: TagRead,
+    DATSEvent.MEMO_CREATED: MemoRead,
     DATSEvent.MEMO_UPDATED: MemoRead,
     DATSEvent.MEMO_DELETED: MemoRead,
+    DATSEvent.MEMO_UPDATED_BATCH: list[MemoRead],
     DATSEvent.SDOC_UPDATED: SourceDocumentRead,
     DATSEvent.SDOC_DELETED: SourceDocumentRead,
+    DATSEvent.SDOC_TAGS_UPDATED: SdocTagLinks,
     DATSEvent.SPAN_ANNOTATION_CREATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_UPDATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_DELETED: SpanAnnotationDeleted,
+    DATSEvent.SPAN_ANNOTATION_CREATED_BATCH: list[SpanAnnotationRead],
+    DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH: list[SpanAnnotationRead],
+    DATSEvent.SPAN_ANNOTATION_DELETED_BATCH: list[SpanAnnotationDeleted],
     DATSEvent.BBOX_ANNOTATION_CREATED: BBoxAnnotationRead,
     DATSEvent.BBOX_ANNOTATION_UPDATED: BBoxAnnotationRead,
     DATSEvent.BBOX_ANNOTATION_DELETED: BBoxAnnotationRead,
+    DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH: list[BBoxAnnotationRead],
+    DATSEvent.BBOX_ANNOTATION_DELETED_BATCH: list[BBoxAnnotationRead],
     DATSEvent.SENTENCE_ANNOTATION_CREATED: SentenceAnnotationRead,
     DATSEvent.SENTENCE_ANNOTATION_UPDATED: SentenceAnnotationRead,
     DATSEvent.SENTENCE_ANNOTATION_DELETED: SentenceAnnotationRead,
+    DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH: list[SentenceAnnotationRead],
+    DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH: list[SentenceAnnotationRead],
+    DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH: list[SentenceAnnotationRead],
     DATSEvent.FOLDER_CREATED: FolderRead,
     DATSEvent.FOLDER_UPDATED: FolderRead,
     DATSEvent.FOLDER_DELETED: FolderRead,
+    DATSEvent.FOLDER_UPDATED_BATCH: list[FolderRead],
     DATSEvent.PROJECT_METADATA_CREATED: ProjectMetadataRead,
     DATSEvent.PROJECT_METADATA_UPDATED: ProjectMetadataRead,
     DATSEvent.PROJECT_METADATA_DELETED: ProjectMetadataRead,
     DATSEvent.SDOC_METADATA_UPDATED: SourceDocumentMetadataRead,
     DATSEvent.SDOC_METADATA_DELETED: SourceDocumentMetadataRead,
+    DATSEvent.SDOC_METADATA_UPDATED_BATCH: list[SourceDocumentMetadataRead],
     DATSEvent.SPAN_GROUP_CREATED: SpanGroupRead,
     DATSEvent.SPAN_GROUP_UPDATED: SpanGroupRead,
     DATSEvent.SPAN_GROUP_DELETED: SpanGroupRead,
@@ -161,6 +207,15 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, type] = {
     DATSEvent.CLASSIFIER_DELETED: ClassifierRead,
     DATSEvent.PROJECT_USER_ADDED: UserRead,
     DATSEvent.PROJECT_USER_REMOVED: UserRead,
+    DATSEvent.USER_UPDATED: UserRead,
+    DATSEvent.USER_DELETED: UserRead,
+    DATSEvent.API_KEY_CREATED: ApiKeyRead,
+    DATSEvent.API_KEY_DELETED: ApiKeyRead,
+    DATSEvent.TAG_RECOMMENDATION_REVIEWED_BATCH: list[TagRecommendationLinkRead],
+    DATSEvent.SEARCH_VIEW_CREATED: SearchViewReadUnion,
+    DATSEvent.SEARCH_VIEW_UPDATED: SearchViewReadUnion,
+    DATSEvent.SEARCH_VIEW_DELETED: SearchViewReadUnion,
+    DATSEvent.SEARCH_VIEW_UPDATED_BATCH: list[SearchViewReadUnion],
 }
 
 
@@ -170,7 +225,7 @@ def _event_model_name(event_type: DATSEvent) -> str:
 
 
 def _make_event_model(
-    event_type: DATSEvent, payload_type: type[BaseModel]
+    event_type: DATSEvent, payload_type: object
 ) -> type[DATSEventBase]:
     return create_model(
         _event_model_name(event_type),

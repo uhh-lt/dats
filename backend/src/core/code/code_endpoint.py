@@ -2,11 +2,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
 from core.project.project_crud import crud_project
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/code", dependencies=[Depends(get_current_user)], tags=["code", "mcp"]
@@ -23,13 +25,16 @@ def create_new_code(
     db: Session = Depends(get_db_session),
     code: CodeCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> CodeRead:
     authz_user.assert_in_project(code.project_id)
     if code.parent_id is not None:
         authz_user.assert_in_same_project_as(Crud.CODE, code.parent_id)
 
     db_code = crud_code.create(db=db, create_dto=code)
-    return CodeRead.model_validate(db_code)
+    result = CodeRead.model_validate(db_code)
+    ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
+    return result
 
 
 @router.get(
@@ -79,10 +84,15 @@ def update_by_id(
     code_id: int,
     code: CodeUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> CodeRead:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
     db_obj = crud_code.update_with_children(db=db, code_id=code_id, update_dto=code)
-    return CodeRead.model_validate(db_obj)
+    result = CodeRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.CODE_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
 @router.delete(
@@ -95,6 +105,7 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     code_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> CodeRead:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
@@ -102,4 +113,7 @@ def delete_by_id(
     code_read = CodeRead.model_validate(db_obj)
 
     crud_code.delete(db=db, id=code_id)
+    ws.emit_to_project(
+        DATSEvent.CODE_DELETED, code_read, project_id=db_obj.get_project_id()
+    )
     return code_read

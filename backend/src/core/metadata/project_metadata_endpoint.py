@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.metadata.project_metadata_crud import crud_project_meta
@@ -10,6 +11,7 @@ from core.metadata.project_metadata_dto import (
     ProjectMetadataRead,
     ProjectMetadataUpdate,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/projmeta",
@@ -28,11 +30,18 @@ def create_new_metadata(
     db: Session = Depends(get_db_session),
     metadata: ProjectMetadataCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ProjectMetadataRead:
     authz_user.assert_in_project(metadata.project_id)
 
     db_metadata = crud_project_meta.create(db=db, create_dto=metadata)
-    return ProjectMetadataRead.model_validate(db_metadata)
+    result = ProjectMetadataRead.model_validate(db_metadata)
+    ws.emit_to_project(
+        DATSEvent.PROJECT_METADATA_CREATED,
+        result,
+        project_id=metadata.project_id,
+    )
+    return result
 
 
 @router.get(
@@ -81,13 +90,20 @@ def update_by_id(
     metadata_id: int,
     metadata: ProjectMetadataUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ProjectMetadataRead:
     authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
 
     db_obj = crud_project_meta.update(
         db=db, metadata_id=metadata_id, update_dto=metadata
     )
-    return ProjectMetadataRead.model_validate(db_obj)
+    result = ProjectMetadataRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.PROJECT_METADATA_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.delete(
@@ -100,8 +116,15 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     metadata_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ProjectMetadataRead:
     authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
 
+    metadata = crud_project_meta.read(db=db, id=metadata_id)
+    project_id = metadata.get_project_id()
     db_obj = crud_project_meta.delete(db=db, id=metadata_id)
-    return ProjectMetadataRead.model_validate(db_obj)
+    result = ProjectMetadataRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.PROJECT_METADATA_DELETED, result, project_id=project_id
+    )
+    return result

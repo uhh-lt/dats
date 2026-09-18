@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
@@ -11,6 +12,7 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/sdocmeta",
@@ -87,11 +89,18 @@ def update_by_id(
     metadata_id: int,
     metadata: SourceDocumentMetadataUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
 
     db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
-    return SourceDocumentMetadataRead.model_validate(db_obj)
+    result = SourceDocumentMetadataRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SDOC_METADATA_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.patch(
@@ -104,12 +113,20 @@ def update_bulk(
     db: Session = Depends(get_db_session),
     metadatas: list[SourceDocumentMetadataBulkUpdate],
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SourceDocumentMetadataRead]:
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
     )
     db_objs = crud_sdoc_meta.update_bulk(db=db, update_dtos=metadatas)
-    return [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
+    results = [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SDOC_METADATA_UPDATED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.delete(
@@ -122,7 +139,12 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     metadata_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
+    metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
+    project_id = metadata.get_project_id()
     db_obj = crud_sdoc_meta.delete(db=db, id=metadata_id)
-    return SourceDocumentMetadataRead.model_validate(db_obj)
+    result = SourceDocumentMetadataRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.SDOC_METADATA_DELETED, result, project_id=project_id)
+    return result

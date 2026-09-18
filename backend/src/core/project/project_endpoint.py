@@ -1,6 +1,7 @@
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
@@ -16,12 +17,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
-from systems.websocket_system.websocket_dto import (
-    ProjectCreatedEvent,
-    ProjectDeletedEvent,
-    ProjectEventPayload,
-)
-from systems.websocket_system.websocket_manager import manager
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/project",
@@ -40,17 +36,14 @@ def create_new_project(
     db: Session = Depends(get_db_session),
     proj: ProjectCreate,
     current_user: UserORM = Depends(get_current_user),
-    background_tasks: BackgroundTasks,
+    ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
     db_obj = ProjectService().create_project(
         db=db, create_dto=proj, creating_user_id=current_user.id
     )
-    background_tasks.add_task(
-        manager.send_personal_event,
-        user_id=current_user.id,
-        event=ProjectCreatedEvent(payload=ProjectEventPayload(project_id=db_obj.id)),
-    )
-    return ProjectRead.model_validate(db_obj)
+    result = ProjectRead.model_validate(db_obj)
+    ws.emit_to_user(DATSEvent.PROJECT_CREATED, result, user_id=current_user.id)
+    return result
 
 
 @router.get(
@@ -81,10 +74,13 @@ def update_project(
     proj_id: int,
     proj: ProjectUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
     db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
-    return ProjectRead.model_validate(db_obj)
+    result = ProjectRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=proj_id)
+    return result
 
 
 @router.delete(
@@ -97,17 +93,13 @@ def delete_project(
     db: Session = Depends(get_db_session),
     proj_id: int,
     authz_user: AuthzUser = Depends(),
-    background_tasks: BackgroundTasks,
+    ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
     db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
-    background_tasks.add_task(
-        manager.broadcast_to_project_users,
-        db=db,
-        event=ProjectDeletedEvent(payload=ProjectEventPayload(project_id=db_obj.id)),
-        proj_db_obj=db_obj,
-    )
-    return ProjectRead.model_validate(db_obj)
+    result = ProjectRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.PROJECT_DELETED, result, project_id=db_obj.id)
+    return result
 
 
 @router.get(

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.timeline_analysis.timeline_analysis_crud import (
@@ -17,6 +18,7 @@ from modules.timeline_analysis.timeline_analysis_service import (
     recompute_timeline_analysis,
     update_timeline_analysis,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/timelineAnalysis",
@@ -35,10 +37,11 @@ def create(
     db: Session = Depends(get_db_session),
     timeline_analysis: TimelineAnalysisCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_project(timeline_analysis.project_id)
 
-    return TimelineAnalysisRead.model_validate(
+    result = TimelineAnalysisRead.model_validate(
         crud_timeline_analysis.create(
             db=db,
             create_dto=TimelineAnalysisCreateIntern(
@@ -46,6 +49,12 @@ def create(
             ),
         )
     )
+    ws.emit_to_project(
+        DATSEvent.TIMELINE_ANALYSIS_CREATED,
+        result,
+        project_id=timeline_analysis.project_id,
+    )
+    return result
 
 
 @router.get(
@@ -93,16 +102,23 @@ def update_by_id(
     timeline_analysis_id: int,
     timeline_analysis: TimelineAnalysisUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
     db_obj = update_timeline_analysis(
         db=db, id=timeline_analysis_id, update_dto=timeline_analysis
     )
-    return TimelineAnalysisRead.model_validate(db_obj)
+    result = TimelineAnalysisRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TIMELINE_ANALYSIS_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
-@router.post(
+@router.patch(
     "/recompute/{timeline_analysis_id}",
     response_model=TimelineAnalysisRead,
     summary="Recomputes the TimelineAnalysis with the given ID if it exists",
@@ -112,14 +128,21 @@ def recompute_by_id(
     db: Session = Depends(get_db_session),
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
     db_obj = recompute_timeline_analysis(db=db, id=timeline_analysis_id)
-    return TimelineAnalysisRead.model_validate(db_obj)
+    result = TimelineAnalysisRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TIMELINE_ANALYSIS_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
-@router.post(
+@router.put(
     "/duplicate/{timeline_analysis_id}",
     response_model=TimelineAnalysisRead,
     summary="Duplicates the TimelineAnalysis with the given ID if it exists",
@@ -129,13 +152,20 @@ def duplicate_by_id(
     db: Session = Depends(get_db_session),
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
     db_obj = crud_timeline_analysis.duplicate_by_id(
         db=db, timeline_analysis_id=timeline_analysis_id, user_id=authz_user.user.id
     )
-    return TimelineAnalysisRead.model_validate(db_obj)
+    result = TimelineAnalysisRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TIMELINE_ANALYSIS_CREATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.delete(
@@ -148,8 +178,15 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     timeline_analysis_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
+    ta = crud_timeline_analysis.read(db=db, id=timeline_analysis_id)
+    project_id = ta.get_project_id()
     db_obj = crud_timeline_analysis.delete(db=db, id=timeline_analysis_id)
-    return TimelineAnalysisRead.model_validate(db_obj)
+    result = TimelineAnalysisRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TIMELINE_ANALYSIS_DELETED, result, project_id=project_id
+    )
+    return result

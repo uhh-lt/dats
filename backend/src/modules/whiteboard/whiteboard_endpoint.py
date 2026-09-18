@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
@@ -13,6 +14,7 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardUpdate,
     WhiteboardUpdateIntern,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/whiteboard",
@@ -31,15 +33,20 @@ def create(
     db: Session = Depends(get_db_session),
     whiteboard: WhiteboardCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> WhiteboardRead:
     authz_user.assert_in_project(whiteboard.project_id)
 
-    return WhiteboardRead.model_validate(
+    result = WhiteboardRead.model_validate(
         crud_whiteboard.create(
             db=db,
             create_dto=WhiteboardCreateIntern(**whiteboard.model_dump()),
         )
     )
+    ws.emit_to_project(
+        DATSEvent.WHITEBOARD_CREATED, result, project_id=whiteboard.project_id
+    )
+    return result
 
 
 @router.get(
@@ -103,6 +110,7 @@ def update_by_id(
     whiteboard_id: int,
     whiteboard: WhiteboardUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
@@ -117,10 +125,16 @@ def update_by_id(
         id=whiteboard_id,
         update_dto=update_dto,
     )
-    return WhiteboardRead.model_validate(db_obj)
+    result = WhiteboardRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.WHITEBOARD_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
-@router.post(
+@router.put(
     "/duplicate/{whiteboard_id}",
     response_model=WhiteboardRead,
     summary="Duplicates the Whiteboard with the given ID if it exists",
@@ -130,11 +144,18 @@ def duplicate_by_id(
     db: Session = Depends(get_db_session),
     whiteboard_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
     db_obj = crud_whiteboard.duplicate_by_id(db=db, whiteboard_id=whiteboard_id)
-    return WhiteboardRead.model_validate(db_obj)
+    result = WhiteboardRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.WHITEBOARD_CREATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.delete(
@@ -147,8 +168,13 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     whiteboard_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
+    whiteboard = crud_whiteboard.read(db=db, id=whiteboard_id)
+    project_id = whiteboard.get_project_id()
     db_obj = crud_whiteboard.delete(db=db, id=whiteboard_id)
-    return WhiteboardRead.model_validate(db_obj)
+    result = WhiteboardRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.WHITEBOARD_DELETED, result, project_id=project_id)
+    return result

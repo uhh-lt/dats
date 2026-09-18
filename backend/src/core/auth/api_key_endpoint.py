@@ -7,6 +7,7 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.api_key_crud import crud_api_key
 from core.auth.api_key_dto import (
@@ -16,6 +17,7 @@ from core.auth.api_key_dto import (
 )
 from core.auth.security import generate_api_key, hash_api_key
 from core.user.user_orm import UserORM
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(prefix="/api-keys", tags=["api-key"])
 
@@ -31,6 +33,7 @@ def create_api_key(
     name: str,
     expires_in: ExpiryDuration,
     current_user: UserORM = Depends(get_current_user),
+    ws: WebsocketEmitter = Depends(),
 ) -> ApiKeyCreatedResponse:
     raw_api_key = generate_api_key()
     hashed_key = hash_api_key(raw_api_key)
@@ -42,6 +45,12 @@ def create_api_key(
         hashed_key=hashed_key,
         prefix=f"{raw_api_key[:10]}...",
         expires_at=expires_in.to_datetime(),
+    )
+
+    ws.emit_to_user(
+        DATSEvent.API_KEY_CREATED,
+        ApiKeyRead.model_validate(db_key),
+        user_id=current_user.id,
     )
 
     return ApiKeyCreatedResponse(
@@ -97,6 +106,7 @@ def delete_api_key(
     db: Session = Depends(get_db_session),
     key_id: int,
     current_user: UserORM = Depends(get_current_user),
+    ws: WebsocketEmitter = Depends(),
 ) -> ApiKeyRead:
     db_key = crud_api_key.get_by_id(db=db, key_id=key_id)
 
@@ -107,4 +117,6 @@ def delete_api_key(
         )
 
     crud_api_key.delete(db=db, id=key_id)
-    return ApiKeyRead.model_validate(db_key)
+    result = ApiKeyRead.model_validate(db_key)
+    ws.emit_to_user(DATSEvent.API_KEY_DELETED, result, user_id=current_user.id)
+    return result

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud, attached_object_type_to_memo_crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_crud import crud_memo
@@ -14,9 +15,11 @@ from core.memo.memo_dto import (
     MemoInDB,
     MemoRead,
     MemoUpdate,
+    MemoUpdateBulk,
 )
 from core.memo.memo_generation_service import generate_memo_llm
 from core.memo.memo_utils import get_object_memos
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo", "mcp"]
@@ -35,6 +38,7 @@ def add_memo(
     attached_object_type: AttachedObjectType,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
     crud = attached_object_type_to_memo_crud.get(attached_object_type)
     if crud is None:
@@ -61,11 +65,13 @@ def add_memo(
         ),
     )
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    return MemoRead(
+    result = MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
     )
+    ws.emit_to_project(DATSEvent.MEMO_CREATED, result, project_id=proj_id)
+    return result
 
 
 @router.get(
@@ -167,14 +173,71 @@ def update_by_id(
     memo_id: int,
     memo: MemoUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
     existing_memo = crud_memo.read(db=db, id=memo_id)
     authz_user.assert_in_project(existing_memo.project_id)
     authz_user.assert_is_same_user(existing_memo.user_id)
-    db_obj = crud_memo.update(db=db, id=memo_id, update_dto=memo)
-    return crud_memo.get_memo_read_dto_from_orm(
+
+    db_obj = crud_memo.update(
+        db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
+    )
+    result = crud_memo.get_memo_read_dto_from_orm(
         db=db, db_obj=db_obj, user_id=authz_user.user.id
     )
+
+    # shared field changes are visible project-wide (which already reaches the
+    # requesting user); only send a user-scoped event when there are exclusively
+    # favorite changes, so we never emit twice.
+    if memo.shared_fields_set():
+        ws.emit_to_project(
+            DATSEvent.MEMO_UPDATED, result, project_id=existing_memo.project_id
+        )
+    elif memo.is_favorite is not None:
+        ws.emit_to_user(DATSEvent.MEMO_UPDATED, result, user_id=authz_user.user.id)
+    return result
+
+
+@router.patch(
+    "/bulk/update",
+    response_model=list[MemoRead],
+    summary="Updates Memos in Bulk",
+)
+def update_memos_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    memos: list[MemoUpdateBulk],
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> list[MemoRead]:
+    for memo in memos:
+        authz_user.assert_in_same_project_as(Crud.MEMO, memo.memo_id)
+
+    db_objs = crud_memo.update_bulk(
+        db=db, user_id=authz_user.user.id, update_dtos=memos
+    )
+    results = [
+        crud_memo.get_memo_read_dto_from_orm(
+            db=db, db_obj=db_obj, user_id=authz_user.user.id
+        )
+        for db_obj in db_objs
+    ]
+    if not results:
+        return results
+
+    # shared field changes are visible project-wide (which already reaches the
+    # requesting user); only send a user-scoped event when there are exclusively
+    # favorite changes, so we never emit twice.
+    has_shared_changes = any(m.shared_fields_set() for m in memos)
+    if has_shared_changes:
+        ws.emit_to_project(
+            DATSEvent.MEMO_UPDATED_BATCH, results, project_id=db_objs[0].project_id
+        )
+    elif any(m.is_favorite is not None for m in memos):
+        ws.emit_to_user(
+            DATSEvent.MEMO_UPDATED_BATCH, results, user_id=authz_user.user.id
+        )
+    return results
 
 
 @router.delete(
@@ -187,6 +250,7 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     memo_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
     memo = crud_memo.read(db=db, id=memo_id)
     authz_user.assert_in_project(memo.project_id)
@@ -196,45 +260,8 @@ def delete_by_id(
     )
     crud_memo.delete(db=db, id=memo_id)
 
+    ws.emit_to_project(DATSEvent.MEMO_DELETED, memo_read, project_id=memo.project_id)
     return memo_read
-
-
-@router.put(
-    "/{memo_id}/favorite",
-    response_model=MemoRead,
-    summary="Favorites a Memo for the current user",
-)
-def favorite_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    memo_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-    crud_memo.favorite(db=db, memo_id=memo_id, user_id=authz_user.user.id)
-    memo = crud_memo.read(db=db, id=memo_id)
-    return crud_memo.get_memo_read_dto_from_orm(
-        db=db, db_obj=memo, user_id=authz_user.user.id
-    )
-
-
-@router.delete(
-    "/{memo_id}/favorite",
-    response_model=MemoRead,
-    summary="Removes the current user's Memo favorite",
-)
-def unfavorite_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    memo_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-    crud_memo.unfavorite(db=db, memo_id=memo_id, user_id=authz_user.user.id)
-    memo = crud_memo.read(db=db, id=memo_id)
-    return crud_memo.get_memo_read_dto_from_orm(
-        db=db, db_obj=memo, user_id=authz_user.user.id
-    )
 
 
 @router.get(

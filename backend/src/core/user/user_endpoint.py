@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
@@ -8,6 +9,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
 from core.user.user_orm import UserORM
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user", "mcp"]
@@ -74,9 +76,12 @@ def update_me(
     db: Session = Depends(get_db_session),
     user: UserUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     db_user = crud_user.update(db=db, id=authz_user.user.id, update_dto=user)
-    return UserRead.model_validate(db_user)
+    result = UserRead.model_validate(db_user)
+    ws.emit_to_user(DATSEvent.USER_UPDATED, result, user_id=authz_user.user.id)
+    return result
 
 
 @router.delete(
@@ -88,9 +93,12 @@ def delete_me(
     *,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     db_user = crud_user.delete(db=db, id=authz_user.user.id)
-    return UserRead.model_validate(db_user)
+    result = UserRead.model_validate(db_user)
+    ws.emit_to_user(DATSEvent.USER_DELETED, result, user_id=authz_user.user.id)
+    return result
 
 
 @router.patch(
@@ -104,6 +112,7 @@ def associate_user_to_project(
     user: ProjectAddUser,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     authz_user.assert_in_project(proj_id)
 
@@ -111,7 +120,9 @@ def associate_user_to_project(
     user_db_obj = ProjectService().associate_user(
         db=db, proj_id=proj_id, user_id=user_db_obj.id
     )
-    return UserRead.model_validate(user_db_obj)
+    result = UserRead.model_validate(user_db_obj)
+    ws.emit_to_project(DATSEvent.PROJECT_USER_ADDED, result, project_id=proj_id)
+    return result
 
 
 @router.delete(
@@ -125,8 +136,11 @@ def dissociate_user_from_project(
     user_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     authz_user.assert_in_project(proj_id)
 
     user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
-    return UserRead.model_validate(user_db_obj)
+    result = UserRead.model_validate(user_db_obj)
+    ws.emit_to_project(DATSEvent.PROJECT_USER_REMOVED, result, project_id=proj_id)
+    return result

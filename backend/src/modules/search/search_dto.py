@@ -149,11 +149,6 @@ class PaginatedSDocHits(BaseModel):
             "A dictionary of sdoc_id and a list of tag IDs that are associated with the document."
         )
     )
-    memos: dict[int, list[int]] = Field(
-        description=(
-            "A dictionary of sdoc_id and a list of memo IDs that are attached to the document."
-        )
-    )
 
     total_results: int = Field(
         description="The total number of hits. Used for pagination."

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.concept_over_time_analysis.cota_crud import crud_cota
@@ -16,6 +17,7 @@ from modules.concept_over_time_analysis.cota_dto import (
 )
 from modules.concept_over_time_analysis.cota_service import COTAService
 from systems.job_system.job_service import JobService
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 cotas = COTAService()
 js = JobService()
@@ -25,6 +27,9 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
     tags=["conceptOverTimeAnalysis"],
 )
+
+
+# --- Create Operations
 
 
 @router.put(
@@ -38,13 +43,41 @@ def create(
     db: Session = Depends(get_db_session),
     cota: COTACreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> COTARead:
     authz_user.assert_in_project(cota.project_id)
 
-    return cotas.create(
+    result = cotas.create(
         db=db,
         cota_create=COTACreateIntern(name=cota.name, project_id=cota.project_id),
     )
+    ws.emit_to_project(DATSEvent.COTA_CREATED, result, project_id=cota.project_id)
+    return result
+
+
+@router.put(
+    "/duplicate/{cota_id}",
+    response_model=COTARead,
+    summary="Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
+)
+def duplicate_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    cota_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
+    db_obj = crud_cota.duplicate_by_id(db=db, cota_id=cota_id)
+    result = COTARead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.COTA_CREATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
+
+
+# --- Read Operations
 
 
 @router.get(
@@ -83,6 +116,9 @@ def get_by_project(
     return [COTARead.model_validate(db_obj) for db_obj in db_objs]
 
 
+# --- Update Operations
+
+
 @router.patch(
     "/{cota_id}",
     response_model=COTARead,
@@ -95,34 +131,23 @@ def update_by_id(
     cota_id: int,
     cota_upate: COTAUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
-    return cotas.update(
+    result = cotas.update(
         db=db,
         cota_id=cota_id,
         cota_update=cota_upate,
     )
+    db_obj = crud_cota.read(db=db, id=cota_id)
+    ws.emit_to_project(
+        DATSEvent.COTA_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
-@router.post(
-    "/duplicate/{cota_id}",
-    response_model=COTARead,
-    summary="Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
-)
-def duplicate_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    cota_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> COTARead:
-    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
-
-    db_obj = crud_cota.duplicate_by_id(db=db, cota_id=cota_id)
-    return COTARead.model_validate(db_obj)
-
-
-@router.post(
+@router.patch(
     "/annotate/{cota_id}",
     response_model=COTARead,
     summary="Annotate (multiple) COTASentences",
@@ -134,18 +159,21 @@ def annotate_cota_sentence(
     cota_sentence_ids: list[COTASentenceID],
     concept_id: str | None = None,
     authz_user: AuthzUser = Depends(),
-) -> COTARead:  # noqa: F821
+    ws: WebsocketEmitter = Depends(),
+) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
-    return cotas.annotate_sentences(
+    result = cotas.annotate_sentences(
         db=db,
         cota_id=cota_id,
         cota_sentence_ids=cota_sentence_ids,
         concept_id=concept_id,
     )
+    ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=result.project_id)
+    return result
 
 
-@router.post(
+@router.patch(
     "/remove/{cota_id}",
     response_model=COTARead,
     summary="Remove (multiple) COTASentences from the search space",
@@ -156,14 +184,43 @@ def remove_cota_sentence(
     cota_id: int,
     cota_sentence_ids: list[COTASentenceID],
     authz_user: AuthzUser = Depends(),
-) -> COTARead:  # noqa: F821
+    ws: WebsocketEmitter = Depends(),
+) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
-    return cotas.remove_sentences(
+    result = cotas.remove_sentences(
         db=db,
         cota_id=cota_id,
         cota_sentence_ids=cota_sentence_ids,
     )
+    ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=result.project_id)
+    return result
+
+
+@router.patch(
+    "/reset/{cota_id}",
+    response_model=COTARead,
+    summary="Resets the ConceptOverTimeAnalysis",
+    description="Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
+)
+def reset_cota(
+    *,
+    db: Session = Depends(get_db_session),
+    cota_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
+    result = cotas.reset(
+        db=db,
+        cota_id=cota_id,
+    )
+    ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=result.project_id)
+    return result
+
+
+# --- Delete Operations
 
 
 @router.delete(
@@ -177,31 +234,19 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     cota_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
+    cota = crud_cota.read(db=db, id=cota_id)
+    project_id = cota.get_project_id()
     db_obj = crud_cota.delete(db=db, id=cota_id)
-    return COTARead.model_validate(db_obj)
+    result = COTARead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.COTA_DELETED, result, project_id=project_id)
+    return result
 
 
-@router.post(
-    "/reset/{cota_id}",
-    response_model=COTARead,
-    summary="Resets the ConceptOverTimeAnalysis",
-    description="Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
-)
-def reset_cota(
-    *,
-    db: Session = Depends(get_db_session),
-    cota_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> COTARead:
-    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
-
-    return cotas.reset(
-        db=db,
-        cota_id=cota_id,
-    )
+# --- Job Operations
 
 
 @router.post(
@@ -217,6 +262,7 @@ def refine_cota(
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, payload.cota_id)
+    # SYNC-TODO: refine launches a refinement job; result is the COTA — handling TBD
     cota_orm = cotas.start_refinement_job(db=db, payload=payload)
     return COTARead.model_validate(cota_orm)
 
