@@ -25,6 +25,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/info/{project_id}",
     response_model=list[ColumnInfo[WordFrequencyColumns]],
@@ -42,6 +45,26 @@ def word_frequency_analysis_info(
         db=db,
         project_id=project_id,
     )
+
+
+@router.get(
+    "/sdoc/{sdoc_id}",
+    response_model=list[WordFrequencyRead],
+    summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
+)
+def get_word_frequencies(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[WordFrequencyRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    sdoc = Crud.SOURCE_DOCUMENT.value.read(db=db, id=sdoc_id)
+    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]
+
+
+# --- other operations
 
 
 @router.post(
@@ -91,20 +114,3 @@ def word_frequency_analysis_export(
         project_id=project_id,
         filter=filter,
     )
-
-
-@router.get(
-    "/sdoc/{sdoc_id}",
-    response_model=list[WordFrequencyRead],
-    summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
-)
-def get_word_frequencies(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[WordFrequencyRead]:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    sdoc = Crud.SOURCE_DOCUMENT.value.read(db=db, id=sdoc_id)
-    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]

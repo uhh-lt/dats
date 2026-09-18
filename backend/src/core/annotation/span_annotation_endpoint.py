@@ -24,12 +24,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=SpanAnnotationRead,
     summary="Creates a SpanAnnotation",
 )
-def add_span_annotation(
+def create_span_annotation(
     *,
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreate,
@@ -61,7 +64,7 @@ def add_span_annotation(
     response_model=list[SpanAnnotationRead],
     summary="Creates SpanAnnotations in Bulk",
 )
-def add_span_annotations_bulk(
+def create_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     spans: list[SpanAnnotationCreate],
@@ -90,6 +93,9 @@ def add_span_annotations_bulk(
             project_id=db_objs[0].get_project_id(),
         )
     return results
+
+
+# --- read operations
 
 
 @router.get(
@@ -127,6 +133,48 @@ def get_by_sdoc_and_user(
         db=db, user_id=user_id, sdoc_id=sdoc_id
     )
     return [SpanAnnotationRead.model_validate(span) for span in spans]
+
+
+@router.get(
+    "/{span_id}/groups",
+    response_model=list[SpanGroupRead],
+    summary="Returns all SpanGroups that contain the the SpanAnnotation.",
+)
+def get_all_groups(
+    *,
+    db: Session = Depends(get_db_session),
+    span_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[SpanGroupRead]:
+    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
+
+    span_db_obj = crud_span_anno.read(db=db, id=span_id)
+    return [
+        SpanGroupRead.model_validate(span_group_db_obj)
+        for span_group_db_obj in span_db_obj.span_groups
+    ]
+
+
+@router.get(
+    "/code/{code_id}/user",
+    response_model=list[SpanAnnotationRead],
+    summary=("Returns SpanAnnotations with the given Code of the logged-in User"),
+)
+def get_by_user_code(
+    *,
+    db: Session = Depends(get_db_session),
+    code_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[SpanAnnotationRead]:
+    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
+
+    db_objs = crud_span_anno.read_by_code_and_user(
+        db=db, code_id=code_id, user_id=authz_user.user.id
+    )
+    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+# --- update operations
 
 
 @router.patch(
@@ -196,6 +244,37 @@ def update_span_annotations_bulk(
     return results
 
 
+@router.patch(
+    "/{span_id}/group/{group_id}",
+    response_model=SpanAnnotationRead,
+    summary="Adds the SpanAnnotation to the SpanGroup",
+)
+def add_to_group(
+    *,
+    db: Session = Depends(get_db_session),
+    span_id: int,
+    group_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> SpanAnnotationRead:
+    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, group_id)
+
+    sdoc_db_obj = crud_span_anno.add_to_span_group(
+        db=db, span_id=span_id, group_id=group_id
+    )
+    result = SpanAnnotationRead.model_validate(sdoc_db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_ANNOTATION_UPDATED,
+        result,
+        project_id=sdoc_db_obj.get_project_id(),
+    )
+    return result
+
+
+# --- delete operations
+
+
 @router.delete(
     "/{span_id}",
     response_model=SpanAnnotationDeleted,
@@ -228,7 +307,7 @@ def delete_by_id(
     response_model=list[SpanAnnotationDeleted],
     summary="Deletes all SpanAnnotations with the given IDs.",
 )
-def delete_bulk_by_id(
+def delete_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     span_anno_ids: list[int],
@@ -246,26 +325,6 @@ def delete_bulk_by_id(
             project_id=db_objs[0].get_project_id(),
         )
     return results
-
-
-@router.get(
-    "/{span_id}/groups",
-    response_model=list[SpanGroupRead],
-    summary="Returns all SpanGroups that contain the the SpanAnnotation.",
-)
-def get_all_groups(
-    *,
-    db: Session = Depends(get_db_session),
-    span_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SpanGroupRead]:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-
-    span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    return [
-        SpanGroupRead.model_validate(span_group_db_obj)
-        for span_group_db_obj in span_db_obj.span_groups
-    ]
 
 
 @router.delete(
@@ -289,34 +348,6 @@ def remove_from_all_groups(
         project_id=span_db_obj.get_project_id(),
     )
     return SpanAnnotationDeleted.model_validate(span_db_obj)
-
-
-@router.patch(
-    "/{span_id}/group/{group_id}",
-    response_model=SpanAnnotationRead,
-    summary="Adds the SpanAnnotation to the SpanGroup",
-)
-def add_to_group(
-    *,
-    db: Session = Depends(get_db_session),
-    span_id: int,
-    group_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SpanAnnotationRead:
-    authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, group_id)
-
-    sdoc_db_obj = crud_span_anno.add_to_span_group(
-        db=db, span_id=span_id, group_id=group_id
-    )
-    result = SpanAnnotationRead.model_validate(sdoc_db_obj)
-    ws.emit_to_project(
-        DATSEvent.SPAN_ANNOTATION_UPDATED,
-        result,
-        project_id=sdoc_db_obj.get_project_id(),
-    )
-    return result
 
 
 @router.delete(
@@ -347,23 +378,7 @@ def remove_from_group(
     return result
 
 
-@router.get(
-    "/code/{code_id}/user",
-    response_model=list[SpanAnnotationRead],
-    summary=("Returns SpanAnnotations with the given Code of the logged-in User"),
-)
-def get_by_user_code(
-    *,
-    db: Session = Depends(get_db_session),
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SpanAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_objs = crud_span_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=authz_user.user.id
-    )
-    return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+# --- other operations
 
 
 @router.post(

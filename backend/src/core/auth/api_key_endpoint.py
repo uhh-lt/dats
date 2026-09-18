@@ -22,8 +22,11 @@ from systems.websocket_system.websocket_dependency import WebsocketEmitter
 router = APIRouter(prefix="/api-keys", tags=["api-key"])
 
 
-@router.post(
-    "/create",
+# --- create operations
+
+
+@router.put(
+    "",
     response_model=ApiKeyCreatedResponse,
     summary="Generate a new API key with optional expiration.",
 )
@@ -63,29 +66,11 @@ def create_api_key(
     )
 
 
-@router.get(
-    "/mcp-config",
-    summary="Get MCP Client configuration",
-)
-def get_mcp_config(
-    request: Request,
-) -> dict:
-    mcp_url = f"{str(request.base_url).rstrip('/')}/mcp"
-    return {
-        "dats-mcp-server": {
-            "command": "npx",
-            "args": [
-                "mcp-remote",
-                mcp_url,
-                "--header",
-                "Authorization: Bearer API_KEY_HERE",
-            ],
-        }
-    }
+# --- read operations
 
 
 @router.get(
-    "/list",
+    "",
     response_model=list[ApiKeyRead],
     summary="List all active API keys for the current user.",
 )
@@ -97,8 +82,11 @@ def list_api_keys(
     return crud_api_key.get_multi_by_user(db=db, user_id=current_user.id)
 
 
+# --- delete operations
+
+
 @router.delete(
-    "/delete/{key_id}",
+    "/{key_id}",
     summary="Revoke/Delete an API key.",
 )
 def delete_api_key(
@@ -120,3 +108,27 @@ def delete_api_key(
     result = ApiKeyRead.model_validate(db_key)
     ws.emit_to_user(DATSEvent.API_KEY_DELETED, result, user_id=current_user.id)
     return result
+
+
+# --- other operations
+
+
+@router.get(
+    "/mcp-config",
+    summary="Get MCP Client configuration",
+)
+def get_mcp_config(
+    request: Request,
+) -> dict:
+    mcp_url = f"{str(request.base_url).rstrip('/')}/mcp"
+    return {
+        "dats-mcp-server": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                mcp_url,
+                "--header",
+                "Authorization: Bearer API_KEY_HERE",
+            ],
+        }
+    }

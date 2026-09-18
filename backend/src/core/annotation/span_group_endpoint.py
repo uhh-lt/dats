@@ -22,12 +22,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=SpanGroupRead | None,
     summary="Creates a new SpanGroup and returns it with the generated ID.",
 )
-def create_new_span_group(
+def create_span_group(
     *,
     db: Session = Depends(get_db_session),
     span_group: SpanGroupCreate,
@@ -48,6 +51,9 @@ def create_new_span_group(
     return result
 
 
+# --- read operations
+
+
 @router.get(
     "/{span_group_id}",
     response_model=SpanGroupRead | None,
@@ -63,56 +69,6 @@ def get_by_id(
 
     db_obj = crud_span_group.read(db=db, id=span_group_id)
     return SpanGroupRead.model_validate(db_obj)
-
-
-@router.patch(
-    "/{span_group_id}",
-    response_model=SpanGroupRead | None,
-    summary="Updates the SpanGroup with the given ID.",
-)
-def update_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    span_group_id: int,
-    span_anno: SpanGroupUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SpanGroupRead | None:
-    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
-
-    db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
-    result = SpanGroupRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SPAN_GROUP_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
-    )
-    return result
-
-
-@router.delete(
-    "/{span_group_id}",
-    response_model=SpanGroupRead | None,
-    summary="Deletes the SpanGroup with the given ID.",
-)
-def delete_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    span_group_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> SpanGroupRead | None:
-    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
-
-    span_group = crud_span_group.read(db=db, id=span_group_id)
-    db_obj = crud_span_group.delete(db=db, id=span_group_id)
-    result = SpanGroupRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SPAN_GROUP_DELETED,
-        result,
-        project_id=span_group.get_project_id(),
-    )
-    return result
 
 
 @router.get(
@@ -145,6 +101,8 @@ def get_by_sdoc(
     skip_limit: dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
 ) -> list[SpanGroupRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     return [
         SpanGroupRead.model_validate(group)
         for group in crud_span_group.read_by_user_and_sdoc(
@@ -174,3 +132,59 @@ def get_by_sdoc_and_user(
         SpanGroupWithAnnotationsRead.model_validate(group)
         for group in span_group_db_obj
     ]
+
+
+# --- update operations
+
+
+@router.patch(
+    "/{span_group_id}",
+    response_model=SpanGroupRead | None,
+    summary="Updates the SpanGroup with the given ID.",
+)
+def update_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    span_group_id: int,
+    span_anno: SpanGroupUpdate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> SpanGroupRead | None:
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
+
+    db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
+    result = SpanGroupRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_GROUP_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
+
+
+# --- delete operations
+
+
+@router.delete(
+    "/{span_group_id}",
+    response_model=SpanGroupRead | None,
+    summary="Deletes the SpanGroup with the given ID.",
+)
+def delete_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    span_group_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> SpanGroupRead | None:
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
+
+    span_group = crud_span_group.read(db=db, id=span_group_id)
+    db_obj = crud_span_group.delete(db=db, id=span_group_id)
+    result = SpanGroupRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_GROUP_DELETED,
+        result,
+        project_id=span_group.get_project_id(),
+    )
+    return result

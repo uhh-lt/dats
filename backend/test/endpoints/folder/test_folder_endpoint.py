@@ -16,7 +16,7 @@ def test_create_folder(client: TestClient, test_project):
         parent_id=None,
         project_id=test_project.id,
     )
-    response = client.post("/folder/", json=payload.model_dump())
+    response = client.put("/folder", json=payload.model_dump())
 
     assert response.status_code == 200, response.text
     folder = FolderRead.model_validate(response.json())
@@ -37,9 +37,9 @@ def test_create_folder_if_not_exists(client: TestClient):
         parent_id=None,
         project_id=non_existing_project_id,
     )
-    response = client.put("/folder/", json=payload.model_dump())
+    response = client.put("/folder", json=payload.model_dump())
 
-    assert response.status_code == 405, response.text
+    assert response.status_code == 403, response.text
 
 
 def test_get_folder_by_id(client: TestClient, project_with_folder):
@@ -76,7 +76,7 @@ def test_update_folder_parametrized(
     folder = project_with_folder["folder"]
     project = project_with_folder["project"]
 
-    response = client.put(f"/folder/{folder.id}", json=payload)
+    response = client.patch(f"/folder/{folder.id}", json=payload)
 
     assert response.status_code == 200, response.text
     updated = FolderRead.model_validate(response.json())
@@ -93,7 +93,7 @@ def test_update_folder(client: TestClient, project_with_folder):
         name="Updated Name",
         parent_id=None,
     )
-    response = client.put(f"/folder/{folder.id}", json=update.model_dump())
+    response = client.patch(f"/folder/{folder.id}", json=update.model_dump())
 
     assert response.status_code == 200, response.text
     updated = FolderRead.model_validate(response.json())
@@ -107,7 +107,9 @@ def test_update_folder_if_not_exists(client: TestClient):
         name="Updated Name",
         parent_id=None,
     )
-    response = client.put(f"/folder/{non_existing_folder_id}", json=update.model_dump())
+    response = client.patch(
+        f"/folder/{non_existing_folder_id}", json=update.model_dump()
+    )
 
     assert response.status_code == 403, response.text
 

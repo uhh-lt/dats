@@ -27,6 +27,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/info",
     response_model=ClassifierInfo,
@@ -71,6 +74,9 @@ def get_by_project(
     return result
 
 
+# --- update operations
+
+
 @router.patch(
     "/{classifier_id}",
     response_model=ClassifierRead,
@@ -93,6 +99,9 @@ def update_by_id(
         project_id=db_obj.get_project_id(),
     )
     return result
+
+
+# --- delete operations
 
 
 @router.delete(
@@ -119,6 +128,9 @@ def delete_by_id(
         project_id=classifier.get_project_id(),
     )
     return result
+
+
+# --- other operations
 
 
 @router.post(

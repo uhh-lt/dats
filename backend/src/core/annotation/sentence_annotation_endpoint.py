@@ -25,12 +25,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=SentenceAnnotationRead,
     summary="Creates a SentenceAnnotation",
 )
-def add_sentence_annotation(
+def create_sentence_annotation(
     *,
     db: Session = Depends(get_db_session),
     sentence_annotation: SentenceAnnotationCreate,
@@ -59,7 +62,7 @@ def add_sentence_annotation(
     response_model=list[SentenceAnnotationRead],
     summary="Creates SentenceAnnotations in Bulk",
 )
-def add_sentence_annotations_bulk(
+def create_sentence_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sentence_annotations: list[SentenceAnnotationCreate],
@@ -88,6 +91,9 @@ def add_sentence_annotations_bulk(
             project_id=db_objs[0].get_project_id(),
         )
     return results
+
+
+# --- read operations
 
 
 @router.get(
@@ -152,6 +158,28 @@ def get_by_sdoc_and_user(
     )
 
 
+@router.get(
+    "/code/{code_id}/user",
+    response_model=list[SentenceAnnotationRead],
+    summary=("Returns SentenceAnnotations with the given Code of the logged-in User"),
+)
+def get_by_user_code(
+    *,
+    db: Session = Depends(get_db_session),
+    code_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[SentenceAnnotationRead]:
+    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
+
+    db_objs = crud_sentence_anno.read_by_code_and_user(
+        db=db, code_id=code_id, user_id=authz_user.user.id
+    )
+    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+# --- update operations
+
+
 @router.patch(
     "/{sentence_anno_id}",
     response_model=SentenceAnnotationRead,
@@ -195,7 +223,7 @@ def update_by_id(
     response_model=list[SentenceAnnotationRead],
     summary="Updates SentenceAnnotation in Bulk",
 )
-def update_sent_anno_annotations_bulk(
+def update_sentence_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sent_annos: list[SentenceAnnotationUpdateBulk],
@@ -224,6 +252,9 @@ def update_sent_anno_annotations_bulk(
             project_id=db_objs[0].get_project_id(),
         )
     return results
+
+
+# --- delete operations
 
 
 @router.delete(
@@ -258,7 +289,7 @@ def delete_by_id(
     response_model=list[SentenceAnnotationRead],
     summary="Deletes all SentenceAnnotations with the given IDs.",
 )
-def delete_bulk_by_id(
+def delete_sentence_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sentence_anno_ids: list[int],
@@ -280,23 +311,7 @@ def delete_bulk_by_id(
     return results
 
 
-@router.get(
-    "/code/{code_id}/user",
-    response_model=list[SentenceAnnotationRead],
-    summary=("Returns SentenceAnnotations with the given Code of the logged-in User"),
-)
-def get_by_user_code(
-    *,
-    db: Session = Depends(get_db_session),
-    code_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SentenceAnnotationRead]:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    db_objs = crud_sentence_anno.read_by_code_and_user(
-        db=db, code_id=code_id, user_id=authz_user.user.id
-    )
-    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+# --- other operations
 
 
 @router.post(

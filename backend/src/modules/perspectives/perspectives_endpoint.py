@@ -55,7 +55,216 @@ router = APIRouter(
 js = JobService()
 
 
-# --- Job Operations
+# --- create operations
+
+
+@router.put(
+    "/aspect",
+    response_model=AspectRead,
+    summary="Creates a new Aspect",
+)
+def create_aspect(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect: AspectCreate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> AspectRead:
+    authz_user.assert_in_project(aspect.project_id)
+
+    db_aspect = crud_aspect.create(db=db, create_dto=aspect)
+
+    params = CreateAspectParams()
+    job = js.start_job(
+        JobType.PERSPECTIVES,
+        payload=PerspectivesJobInput(
+            project_id=aspect.project_id,
+            aspect_id=db_aspect.id,
+            perspectives_job_type=params.perspectives_job_type,
+            parameters=params,
+        ),
+    )
+
+    db_aspect = crud_aspect.update(
+        db=db,
+        id=db_aspect.id,
+        update_dto=AspectUpdateIntern(
+            most_recent_job_id=job.get_id(),
+        ),
+    )
+
+    result = AspectRead.model_validate(db_aspect)
+    ws.emit_to_project(DATSEvent.ASPECT_CREATED, result, project_id=aspect.project_id)
+    return result
+
+
+# --- read operations
+
+
+@router.get(
+    "/project/{proj_id}/aspects",
+    response_model=list[AspectRead],
+    summary="Returns all Aspects of the Project with the given ID if it exists",
+)
+def get_all_aspects(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[AspectRead]:
+    authz_user.assert_in_project(proj_id)
+
+    project = crud_project.read(db=db, id=proj_id)
+    aspects = [AspectRead.model_validate(a) for a in project.aspects]
+    return aspects
+
+
+@router.get(
+    "/aspect/{aspect_id}",
+    response_model=AspectRead,
+    summary="Returns the Aspect with the given ID.",
+)
+def get_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> AspectRead:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    db_obj = crud_aspect.read(db=db, id=aspect_id)
+    return AspectRead.model_validate(db_obj)
+
+
+@router.get(
+    "/aspect/{aspect_id}/sdoc/{sdoc_id}",
+    response_model=str,
+    summary="Returns the Document Aspect Content for the given IDs.",
+)
+def get_docaspect_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> str:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    db_obj = crud_document_aspect.read(id=(sdoc_id, aspect_id), db=db)
+    return db_obj.content
+
+
+@router.get(
+    "/clusters/{aspect_id}/sdoc/{sdoc_id}",
+    response_model=list[ClusterRead],
+    summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
+)
+def get_clusters_for_sdoc(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[ClusterRead]:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    # Fetch the clusters for the given SourceDocument
+    document_clusters = crud_cluster.read_by_aspect_and_sdoc(
+        db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
+    )
+    return [ClusterRead.model_validate(dc) for dc in document_clusters]
+
+
+# --- update operations
+
+
+@router.patch(
+    "/aspect/{aspect_id}",
+    response_model=AspectRead,
+    summary="Updates the Aspect with the given ID.",
+)
+def update_aspect_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    aspect: AspectUpdate,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> AspectRead:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+    db_obj = crud_aspect.update(
+        db=db, id=aspect_id, update_dto=AspectUpdateIntern(**aspect.model_dump())
+    )
+    result = AspectRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.ASPECT_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
+
+
+@router.patch(
+    "/cluster/{cluster_id}/details",
+    response_model=ClusterRead,
+    summary="Updates the Cluster's name and description.",
+)
+def update_cluster_details(
+    *,
+    db: Session = Depends(get_db_session),
+    cluster_id: int,
+    cluster_update: ClusterUpdate,
+    authz_user: AuthzUser = Depends(),
+) -> ClusterRead:
+    cluster = crud_cluster.read(db=db, id=cluster_id)
+    authz_user.assert_in_same_project_as(Crud.ASPECT, cluster.aspect_id)
+
+    # Perform update
+    update_dto = ClusterUpdateIntern(
+        **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
+    )
+    updated_cluster = crud_cluster.update(
+        db=db,
+        id=cluster_id,
+        update_dto=update_dto,
+    )
+    result = ClusterRead.model_validate(updated_cluster)
+    # TODO: visualization is noch nicht richtig gehandelt! update cluster details ist eigentlich nur wichtig für die visualisierung... irgendwie muss die visualisierung noch richtig aufgetrennt werden, mit query keys für die Einzelteile!.
+    return result
+
+
+# --- delete operations
+
+
+@router.delete(
+    "/aspect/{aspect_id}",
+    response_model=AspectRead,
+    summary="Removes the Aspect with the given ID.",
+)
+def remove_aspect_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_client),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> AspectRead:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    aspect = crud_aspect.read(db=db, id=aspect_id)
+    project_id = aspect.get_project_id()
+
+    crud_cluster_embedding.delete_embeddings_by_aspect(
+        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
+    )
+    crud_aspect_embedding.delete_embeddings_by_aspect(
+        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
+    )
+    db_obj = crud_aspect.delete(db=db, id=aspect_id)
+    result = AspectRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.ASPECT_DELETED, result, project_id=project_id)
+    return result
+
+
+# --- job operations
 
 
 @router.post(
@@ -123,157 +332,7 @@ def get_perspectives_job(
     return PerspectivesJobRead.from_rq_job(job=job)
 
 
-# --- Aspect CRUD Operations
-
-
-@router.put(
-    "/aspect",
-    response_model=AspectRead,
-    summary="Creates a new Aspect",
-)
-def create_aspect(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect: AspectCreate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> AspectRead:
-    authz_user.assert_in_project(aspect.project_id)
-
-    db_aspect = crud_aspect.create(db=db, create_dto=aspect)
-
-    params = CreateAspectParams()
-    job = js.start_job(
-        JobType.PERSPECTIVES,
-        payload=PerspectivesJobInput(
-            project_id=aspect.project_id,
-            aspect_id=db_aspect.id,
-            perspectives_job_type=params.perspectives_job_type,
-            parameters=params,
-        ),
-    )
-
-    db_aspect = crud_aspect.update(
-        db=db,
-        id=db_aspect.id,
-        update_dto=AspectUpdateIntern(
-            most_recent_job_id=job.get_id(),
-        ),
-    )
-
-    result = AspectRead.model_validate(db_aspect)
-    ws.emit_to_project(DATSEvent.ASPECT_CREATED, result, project_id=aspect.project_id)
-    return result
-
-
-@router.get(
-    "/project/{proj_id}/aspects",
-    response_model=list[AspectRead],
-    summary="Returns all Aspects of the Project with the given ID if it exists",
-)
-def get_all_aspects(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[AspectRead]:
-    authz_user.assert_in_project(proj_id)
-
-    project = crud_project.read(db=db, id=proj_id)
-    aspects = [AspectRead.model_validate(a) for a in project.aspects]
-    return aspects
-
-
-@router.get(
-    "/aspect/{aspect_id}",
-    response_model=AspectRead,
-    summary="Returns the Aspect with the given ID.",
-)
-def get_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    db_obj = crud_aspect.read(db=db, id=aspect_id)
-    return AspectRead.model_validate(db_obj)
-
-
-@router.get(
-    "/aspect/{aspect_id}/sdoc/{sdoc_id}",
-    response_model=str,
-    summary="Returns the Document Aspect Content for the given IDs.",
-)
-def get_docaspect_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> str:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    db_obj = crud_document_aspect.read(id=(sdoc_id, aspect_id), db=db)
-    return db_obj.content
-
-
-@router.patch(
-    "/aspect/{aspect_id}",
-    response_model=AspectRead,
-    summary="Updates the Aspect with the given ID.",
-)
-def update_aspect_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    aspect: AspectUpdate,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-    db_obj = crud_aspect.update(
-        db=db, id=aspect_id, update_dto=AspectUpdateIntern(**aspect.model_dump())
-    )
-    result = AspectRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.ASPECT_UPDATED, result, project_id=db_obj.get_project_id()
-    )
-    return result
-
-
-@router.delete(
-    "/aspect/{aspect_id}",
-    response_model=AspectRead,
-    summary="Removes the Aspect with the given ID.",
-)
-def remove_aspect_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    weaviate: WeaviateClient = Depends(get_weaviate_client),
-    aspect_id: int,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    aspect = crud_aspect.read(db=db, id=aspect_id)
-    project_id = aspect.get_project_id()
-
-    crud_cluster_embedding.delete_embeddings_by_aspect(
-        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
-    )
-    crud_aspect_embedding.delete_embeddings_by_aspect(
-        client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
-    )
-    db_obj = crud_aspect.delete(db=db, id=aspect_id)
-    result = AspectRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.ASPECT_DELETED, result, project_id=project_id)
-    return result
-
-
-# --- Document Visualization Operations
+# --- other operations
 
 
 def _build_document_visualization(
@@ -473,62 +532,6 @@ def revert_label(
         sorts=sorts,
     )
     return result
-
-
-# --- Cluster Operations
-
-
-@router.get(
-    "/clusters/{aspect_id}/sdoc/{sdoc_id}",
-    response_model=list[ClusterRead],
-    summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
-)
-def get_clusters_for_sdoc(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[ClusterRead]:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    # Fetch the clusters for the given SourceDocument
-    document_clusters = crud_cluster.read_by_aspect_and_sdoc(
-        db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
-    )
-    return [ClusterRead.model_validate(dc) for dc in document_clusters]
-
-
-@router.patch(
-    "/cluster/{cluster_id}/details",
-    response_model=ClusterRead,
-    summary="Updates the Cluster's name and description.",
-)
-def update_cluster_details(
-    *,
-    db: Session = Depends(get_db_session),
-    cluster_id: int,
-    cluster_update: ClusterUpdate,
-    authz_user: AuthzUser = Depends(),
-) -> ClusterRead:
-    cluster = crud_cluster.read(db=db, id=cluster_id)
-    authz_user.assert_in_same_project_as(Crud.ASPECT, cluster.aspect_id)
-
-    # Perform update
-    update_dto = ClusterUpdateIntern(
-        **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
-    )
-    updated_cluster = crud_cluster.update(
-        db=db,
-        id=cluster_id,
-        update_dto=update_dto,
-    )
-    result = ClusterRead.model_validate(updated_cluster)
-    # TODO: visualization is noch nicht richtig gehandelt! update cluster details ist eigentlich nur wichtig für die visualisierung... irgendwie muss die visualisierung noch richtig aufgetrennt werden, mit query keys für die Einzelteile!.
-    return result
-
-
-# --- Cluster Similarity Visualization Operations
 
 
 @router.get(

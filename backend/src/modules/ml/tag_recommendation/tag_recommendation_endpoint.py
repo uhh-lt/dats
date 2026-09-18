@@ -30,6 +30,9 @@ router = APIRouter(
 )
 
 
+# --- read operations
+
+
 @router.get(
     "/{project_id}",
     response_model=list[int],
@@ -99,6 +102,9 @@ def get_all_tagrecommendations_from_job(
         for sdoc_id, recommendations in sdoc2recommendations.items()
     ]
     return results
+
+
+# --- update operations
 
 
 @router.patch(

@@ -15,12 +15,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=CodeRead,
     summary="Creates a new Code and returns it with the generated ID.",
 )
-def create_new_code(
+def create_code(
     *,
     db: Session = Depends(get_db_session),
     code: CodeCreate,
@@ -35,6 +38,9 @@ def create_new_code(
     result = CodeRead.model_validate(db_code)
     ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
     return result
+
+
+# --- read operations
 
 
 @router.get(
@@ -73,6 +79,9 @@ def get_by_project(
     return result
 
 
+# --- update operations
+
+
 @router.patch(
     "/{code_id}",
     response_model=CodeRead,
@@ -93,6 +102,9 @@ def update_by_id(
         DATSEvent.CODE_UPDATED, result, project_id=db_obj.get_project_id()
     )
     return result
+
+
+# --- delete operations
 
 
 @router.delete(

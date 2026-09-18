@@ -20,12 +20,15 @@ router = APIRouter(
 )
 
 
+# --- create operations
+
+
 @router.put(
     "",
     response_model=ProjectMetadataRead,
     summary="Creates a new Metadata and returns it with the generated ID.",
 )
-def create_new_metadata(
+def create_metadata(
     *,
     db: Session = Depends(get_db_session),
     metadata: ProjectMetadataCreate,
@@ -42,6 +45,9 @@ def create_new_metadata(
         project_id=metadata.project_id,
     )
     return result
+
+
+# --- read operations
 
 
 @router.get(
@@ -79,6 +85,9 @@ def get_by_project(
     return metadata
 
 
+# --- update operations
+
+
 @router.patch(
     "/{metadata_id}",
     response_model=ProjectMetadataRead,
@@ -104,6 +113,9 @@ def update_by_id(
         project_id=db_obj.get_project_id(),
     )
     return result
+
+
+# --- delete operations
 
 
 @router.delete(

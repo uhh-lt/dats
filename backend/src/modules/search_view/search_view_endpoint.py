@@ -22,7 +22,10 @@ router = APIRouter(
 )
 
 
-@router.post(
+# --- create operations
+
+
+@router.put(
     "",
     response_model=SearchViewReadUnion,
     summary="Creates a personal search view",
@@ -41,6 +44,9 @@ def create(
     result = search_view_read_from_orm(db_view)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_CREATED, result, user_id=result.user_id)
     return result
+
+
+# --- read operations
 
 
 @router.get(
@@ -63,6 +69,9 @@ def get_by_project(
         entity_type=entity_type,
     )
     return [search_view_read_from_orm(db_view) for db_view in db_views]
+
+
+# --- update operations
 
 
 @router.patch(
@@ -114,6 +123,9 @@ def update(
     result = search_view_read_from_orm(db_view)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_UPDATED, result, user_id=result.user_id)
     return result
+
+
+# --- delete operations
 
 
 @router.delete(

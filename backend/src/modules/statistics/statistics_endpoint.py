@@ -67,6 +67,7 @@ def filter_keyword_stats(
         return []
 
     # compute keyword stats
+    authz_user.assert_in_project(project_id)
     keyword_stats = compute_keyword_statistics(
         db=db, proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
@@ -94,6 +95,7 @@ def filter_tag_stats(
         return []
 
     # compute tag stats
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     tag_stats = compute_tag_statistics(db=db, sdoc_ids=set(sdoc_ids), top_k=top_k)
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)

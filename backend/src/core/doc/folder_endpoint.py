@@ -20,8 +20,38 @@ router = APIRouter(
 )
 
 
-@router.get("/{folder_id}", response_model=FolderRead)
-def get_folder_by_id(
+# --- create operations
+
+
+@router.put(
+    "",
+    response_model=FolderRead,
+    summary="Creates a new Folder and returns it with the generated ID.",
+)
+def create_folder(
+    *,
+    folder: FolderCreate,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> FolderRead:
+    authz_user.assert_in_project(folder.project_id)
+    db_obj = crud_folder.create(db=db, create_dto=folder)
+    result = FolderRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.FOLDER_CREATED, result, project_id=folder.project_id)
+    return result
+
+
+# --- read operations
+
+
+@router.get(
+    "/{folder_id}",
+    response_model=FolderRead,
+    summary="Returns the Folder with the given ID.",
+)
+def get_by_id(
+    *,
     folder_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
@@ -37,6 +67,7 @@ def get_folder_by_id(
     summary="Returns lists of source document ids per doctype in the specified sdoc folder",
 )
 def get_sdoc_ids_in_folder_by_doctype(
+    *,
     folder_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
@@ -57,6 +88,7 @@ def get_sdoc_ids_in_folder_by_doctype(
     summary="Returns the folders of the folder_type of the project with the given ID",
 )
 def get_folders_by_project_and_type(
+    *,
     project_id: int,
     folder_type: FolderType,
     db: Session = Depends(get_db_session),
@@ -69,20 +101,16 @@ def get_folders_by_project_and_type(
     return [FolderRead.model_validate(folder) for folder in folders]
 
 
-@router.post("/", response_model=FolderRead)
-def create_folder(
-    folder: FolderCreate,
-    db: Session = Depends(get_db_session),
-    ws: WebsocketEmitter = Depends(),
-) -> FolderRead:
-    db_obj = crud_folder.create(db=db, create_dto=folder)
-    result = FolderRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.FOLDER_CREATED, result, project_id=folder.project_id)
-    return result
+# --- update operations
 
 
-@router.put("/{folder_id}", response_model=FolderRead)
-def update_folder(
+@router.patch(
+    "/{folder_id}",
+    response_model=FolderRead,
+    summary="Updates the Folder with the given ID.",
+)
+def update_by_id(
+    *,
     folder_id: int,
     folder_update: FolderUpdate,
     db: Session = Depends(get_db_session),
@@ -98,8 +126,13 @@ def update_folder(
     return result
 
 
-@router.post("/move_folders", response_model=list[FolderRead])
+@router.patch(
+    "/move_folders",
+    response_model=list[FolderRead],
+    summary="Moves the Folders with the given IDs to the target folder.",
+)
 def move_folders(
+    *,
     folder_ids: list[int],
     target_folder_id: int,  # -1 means root folder (parent_id is None)
     db: Session = Depends(get_db_session),
@@ -122,8 +155,16 @@ def move_folders(
     return results
 
 
-@router.delete("/{folder_id}", response_model=FolderRead)
-def delete_folder(
+# --- delete operations
+
+
+@router.delete(
+    "/{folder_id}",
+    response_model=FolderRead,
+    summary="Deletes the Folder with the given ID.",
+)
+def delete_by_id(
+    *,
     folder_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
