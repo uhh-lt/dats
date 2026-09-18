@@ -21,6 +21,10 @@ router = APIRouter(
 
 job_service = JobService()
 
+# SYNC-TODO: routes are generated dynamically per JobType and job mutations happen
+# asynchronously in the worker — job lifecycle events belong in the job system
+# itself, not the HTTP layer (abort/retry also return plain bool) — handling TBD
+
 
 def register_job_endpoints(
     job_type: JobType,

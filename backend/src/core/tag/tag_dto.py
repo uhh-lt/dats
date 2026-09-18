@@ -44,12 +44,15 @@ class SourceDocumentTagLink(BaseModel):
     tag_id: int = Field(description="ID of the Tag")
 
 
-# To link multiple SourceDocuments with multiple Tag
+# To link multiple SourceDocuments with multiple Tags
 class SourceDocumentTagMultiLink(BaseModel):
     source_document_ids: list[int] = Field(description="List of IDs of SourceDocuments")
     tag_ids: list[int] = Field(description="List of IDs of Tags")
 
 
-class SourceDocumentTagLinks(BaseModel):
-    source_document_id: int = Field(description="ID of SourceDocument")
-    tag_ids: list[int] = Field(description="List of IDs of Tags")
+# The tag IDs per SourceDocument, either as desired state (set operation input)
+# or as the resulting state after a link/unlink/set operation
+class SdocTagLinks(BaseModel):
+    links: dict[int, list[int]] = Field(
+        description="Map of sdoc_id to its complete list of tag IDs"
+    )

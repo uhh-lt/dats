@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, get_weaviate_client
 from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
@@ -43,6 +44,7 @@ from systems.job_system.job_dto import RUNNING_JOB_STATUS, JobStatus
 from systems.job_system.job_service import JobService
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/perspectives",
@@ -50,9 +52,10 @@ router = APIRouter(
     tags=["perspectives"],
 )
 
-# --- START JOBS --- #
-
 js = JobService()
+
+
+# --- Job Operations
 
 
 @router.post(
@@ -120,7 +123,7 @@ def get_perspectives_job(
     return PerspectivesJobRead.from_rq_job(job=job)
 
 
-# --- START ASPECTS --- #
+# --- Aspect CRUD Operations
 
 
 @router.put(
@@ -133,6 +136,7 @@ def create_aspect(
     db: Session = Depends(get_db_session),
     aspect: AspectCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> AspectRead:
     authz_user.assert_in_project(aspect.project_id)
 
@@ -157,7 +161,9 @@ def create_aspect(
         ),
     )
 
-    return AspectRead.model_validate(db_aspect)
+    result = AspectRead.model_validate(db_aspect)
+    ws.emit_to_project(DATSEvent.ASPECT_CREATED, result, project_id=aspect.project_id)
+    return result
 
 
 @router.get(
@@ -224,12 +230,17 @@ def update_aspect_by_id(
     aspect_id: int,
     aspect: AspectUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> AspectRead:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
     db_obj = crud_aspect.update(
         db=db, id=aspect_id, update_dto=AspectUpdateIntern(**aspect.model_dump())
     )
-    return AspectRead.model_validate(db_obj)
+    result = AspectRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.ASPECT_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
 @router.delete(
@@ -243,10 +254,12 @@ def remove_aspect_by_id(
     weaviate: WeaviateClient = Depends(get_weaviate_client),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> AspectRead:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
     aspect = crud_aspect.read(db=db, id=aspect_id)
+    project_id = aspect.get_project_id()
 
     crud_cluster_embedding.delete_embeddings_by_aspect(
         client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
@@ -255,73 +268,23 @@ def remove_aspect_by_id(
         client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
     db_obj = crud_aspect.delete(db=db, id=aspect_id)
-    return AspectRead.model_validate(db_obj)
+    result = AspectRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.ASPECT_DELETED, result, project_id=project_id)
+    return result
 
 
-# --- START LABELING --- #
+# --- Document Visualization Operations
 
 
-@router.post(
-    "/label_accept/{aspect_id}",
-    response_model=int,
-    summary="Accept the label of the provided SourceDocuments (by ID).",
-)
-def accept_label(
+def _build_document_visualization(
     *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    sdoc_ids: list[int],
-    authz_user: AuthzUser = Depends(),
-) -> int:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-    return crud_document_cluster.set_labels(
-        db=db,
-        aspect_id=aspect_id,
-        sdoc_ids=sdoc_ids,
-        is_accepted=True,
-    )
-
-
-@router.post(
-    "/label_revert/{aspect_id}",
-    response_model=int,
-    summary="Reverts the label of the provided SourceDocuments (by ID).",
-)
-def revert_label(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    sdoc_ids: list[int],
-    authz_user: AuthzUser = Depends(),
-) -> int:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-    return crud_document_cluster.set_labels(
-        db=db,
-        aspect_id=aspect_id,
-        sdoc_ids=sdoc_ids,
-        is_accepted=False,
-    )
-
-
-# --- START VISUALIZATIONS --- #
-
-
-@router.post(
-    "/visualize_documents/{aspect_id}",
-    response_model=PerspectivesVisualization,
-    summary="Returns data for visualizing the documents of the given aspect.",
-)
-def visualize_documents(
-    *,
-    db: Session = Depends(get_db_session),
+    db: Session,
     aspect_id: int,
     search_query: str,
     filter: Filter[SdocColumns],
     sorts: list[Sort[SdocColumns]],
-    authz_user: AuthzUser = Depends(),
 ) -> PerspectivesVisualization:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
+    """Build the document visualization for the given aspect."""
     # Fetch data for visualization
     aspect = crud_aspect.read(db=db, id=aspect_id)
     document_aspects = aspect.document_aspects
@@ -365,7 +328,7 @@ def visualize_documents(
             page_number=None,
             page_size=None,
         )
-        sdoc_id_in_search_result: dict[int, bool] = {hit.id: True for hit in hits.hits}
+        sdoc_id_in_search_result = {hit.id: True for hit in hits.hits}
         docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
@@ -382,7 +345,7 @@ def visualize_documents(
                 )
             )
     else:
-        docs: list[PerspectivesDoc] = []
+        docs = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
             cluster_id2cluster[dc.cluster_id]
@@ -409,10 +372,6 @@ def visualize_documents(
         and not np.isinf(cluster.y)
     ]
 
-    print(
-        f"Filtered {len(filtered_clusters)} clusters from {len(clusters)} total clusters."
-    )
-
     # sort the clusters by their ID
     filtered_clusters.sort(key=lambda c: c.id)
 
@@ -421,6 +380,155 @@ def visualize_documents(
         clusters=[ClusterRead.model_validate(t) for t in filtered_clusters],
         docs=docs,
     )
+
+
+@router.post(
+    "/visualize_documents/{aspect_id}",
+    response_model=PerspectivesVisualization,
+    summary="Returns data for visualizing the documents of the given aspect.",
+)
+def visualize_documents(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    search_query: str,
+    filter: Filter[SdocColumns],
+    sorts: list[Sort[SdocColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> PerspectivesVisualization:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    return _build_document_visualization(
+        db=db,
+        aspect_id=aspect_id,
+        search_query=search_query,
+        filter=filter,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/label_accept/{aspect_id}",
+    response_model=PerspectivesVisualization,
+    summary="Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
+)
+def accept_label(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_ids: list[int],
+    search_query: str,
+    filter: Filter[SdocColumns],
+    sorts: list[Sort[SdocColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> PerspectivesVisualization:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    crud_document_cluster.set_labels(
+        db=db,
+        aspect_id=aspect_id,
+        sdoc_ids=sdoc_ids,
+        is_accepted=True,
+    )
+
+    result = _build_document_visualization(
+        db=db,
+        aspect_id=aspect_id,
+        search_query=search_query,
+        filter=filter,
+        sorts=sorts,
+    )
+    return result
+
+
+@router.post(
+    "/label_revert/{aspect_id}",
+    response_model=PerspectivesVisualization,
+    summary="Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
+)
+def revert_label(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_ids: list[int],
+    search_query: str,
+    filter: Filter[SdocColumns],
+    sorts: list[Sort[SdocColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> PerspectivesVisualization:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    crud_document_cluster.set_labels(
+        db=db,
+        aspect_id=aspect_id,
+        sdoc_ids=sdoc_ids,
+        is_accepted=False,
+    )
+
+    result = _build_document_visualization(
+        db=db,
+        aspect_id=aspect_id,
+        search_query=search_query,
+        filter=filter,
+        sorts=sorts,
+    )
+    return result
+
+
+# --- Cluster Operations
+
+
+@router.get(
+    "/clusters/{aspect_id}/sdoc/{sdoc_id}",
+    response_model=list[ClusterRead],
+    summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
+)
+def get_clusters_for_sdoc(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[ClusterRead]:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    # Fetch the clusters for the given SourceDocument
+    document_clusters = crud_cluster.read_by_aspect_and_sdoc(
+        db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
+    )
+    return [ClusterRead.model_validate(dc) for dc in document_clusters]
+
+
+@router.patch(
+    "/cluster/{cluster_id}/details",
+    response_model=ClusterRead,
+    summary="Updates the Cluster's name and description.",
+)
+def update_cluster_details(
+    *,
+    db: Session = Depends(get_db_session),
+    cluster_id: int,
+    cluster_update: ClusterUpdate,
+    authz_user: AuthzUser = Depends(),
+) -> ClusterRead:
+    cluster = crud_cluster.read(db=db, id=cluster_id)
+    authz_user.assert_in_same_project_as(Crud.ASPECT, cluster.aspect_id)
+
+    # Perform update
+    update_dto = ClusterUpdateIntern(
+        **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
+    )
+    updated_cluster = crud_cluster.update(
+        db=db,
+        id=cluster_id,
+        update_dto=update_dto,
+    )
+    result = ClusterRead.model_validate(updated_cluster)
+    # TODO: visualization is noch nicht richtig gehandelt! update cluster details ist eigentlich nur wichtig für die visualisierung... irgendwie muss die visualisierung noch richtig aufgetrennt werden, mit query keys für die Einzelteile!.
+    return result
+
+
+# --- Cluster Similarity Visualization Operations
 
 
 @router.get(
@@ -471,68 +579,3 @@ def get_cluster_similarities(
         clusters=[ClusterRead.model_validate(t) for t in clusters],
         similarities=similarities,
     )
-
-
-@router.get(
-    "/visualize_clusters/{aspect_id}",
-    response_model=AspectRead,
-    summary="Returns data for visualizing the clusters of the given aspect.",
-)
-def visualize_clusters(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> AspectRead:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    # TODO: implement
-    raise NotImplementedError("visualize_clusters not implemented yet")
-
-
-@router.get(
-    "/clusters/{aspect_id}/sdoc/{sdoc_id}",
-    response_model=list[ClusterRead],
-    summary="Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).",
-)
-def get_clusters_for_sdoc(
-    *,
-    db: Session = Depends(get_db_session),
-    aspect_id: int,
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[ClusterRead]:
-    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
-
-    # Fetch the clusters for the given SourceDocument
-    document_clusters = crud_cluster.read_by_aspect_and_sdoc(
-        db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
-    )
-    return [ClusterRead.model_validate(dc) for dc in document_clusters]
-
-
-@router.patch(
-    "/cluster/{cluster_id}/details",
-    response_model=ClusterRead,
-    summary="Updates the Cluster's name and description.",
-)
-def update_cluster_details(
-    *,
-    db: Session = Depends(get_db_session),
-    cluster_id: int,
-    cluster_update: ClusterUpdate,
-    authz_user: AuthzUser = Depends(),
-) -> ClusterRead:
-    cluster = crud_cluster.read(db=db, id=cluster_id)
-    authz_user.assert_in_same_project_as(Crud.ASPECT, cluster.aspect_id)
-
-    # Perform update
-    update_dto = ClusterUpdateIntern(
-        **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
-    )
-    updated_cluster = crud_cluster.update(
-        db=db,
-        id=cluster_id,
-        update_dto=update_dto,
-    )
-    return ClusterRead.model_validate(updated_cluster)

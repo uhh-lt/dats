@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
@@ -9,6 +10,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_dto import SourceDocumentRead, SourceDocumentUpdate
 from repos.filesystem_repo import FilesystemRepo
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/sdoc",
@@ -68,11 +70,16 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     db_obj = crud_sdoc.delete(db=db, id=sdoc_id)
-    return SourceDocumentRead.model_validate(db_obj)
+    result = SourceDocumentRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SDOC_DELETED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
 @router.patch(
@@ -86,11 +93,16 @@ def update_sdoc(
     sdoc_id: int,
     sdoc: SourceDocumentUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
-    return SourceDocumentRead.model_validate(db_obj)
+    result = SourceDocumentRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SDOC_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
 @router.get(

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from config import conf
 from core.auth.authz_user import AuthzUser
@@ -17,6 +18,7 @@ from modules.classifier.classifier_dto import (
     ClassifierUpdate,
 )
 from modules.classifier.classifier_service import ClassifierService
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/classifier",
@@ -80,10 +82,17 @@ def update_by_id(
     classifier_id: int,
     classifier: ClassifierUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ClassifierRead:
     authz_user.assert_in_same_project_as(Crud.CLASSIFIER, classifier_id)
     db_obj = crud_classifier.update(db=db, id=classifier_id, update_dto=classifier)
-    return ClassifierRead.model_validate(db_obj)
+    result = ClassifierRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.CLASSIFIER_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.delete(
@@ -96,12 +105,20 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     classifier_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ClassifierRead:
     authz_user.assert_in_same_project_as(Crud.CLASSIFIER, classifier_id)
 
-    return ClassifierService().delete_classifier_by_id(
+    classifier = crud_classifier.read(db=db, id=classifier_id)
+    result = ClassifierService().delete_classifier_by_id(
         db=db, classifier_id=classifier_id
     )
+    ws.emit_to_project(
+        DATSEvent.CLASSIFIER_DELETED,
+        result,
+        project_id=classifier.get_project_id(),
+    )
+    return result
 
 
 @router.post(

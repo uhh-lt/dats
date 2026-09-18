@@ -83,7 +83,7 @@ def get_simple_sdoc_status_by_project_and_status(
     ]
 
 
-@router.put(
+@router.post(
     "/project/{proj_id}",
     response_model=int,
     summary="Uploads one or multiple files to the Project with the given ID if it exists",
@@ -100,6 +100,7 @@ def upload_files(
     ),
     authz_user: AuthzUser = Depends(),
 ) -> int:
+    # SYNC-TODO: file upload triggering async preprocessing jobs; returns int (job count), no DTO payload — handling TBD
     try:
         settings_obj = ProcessingSettings.model_validate_json(settings)
     except Exception as e:
@@ -123,6 +124,7 @@ def retry_failed_sdocs(
     sdoc_ids: list[int],
     authz_user: AuthzUser = Depends(),
 ) -> str:
+    # SYNC-TODO: job-based async operation; returns str, no entity payload — handling TBD
     authz_user.assert_in_project(proj_id)
     return DocProcessingService().retry_jobs(
         project_id=proj_id,
@@ -145,6 +147,7 @@ def recompute_processing_step(
     settings: ProcessingSettings,
     authz_user: AuthzUser = Depends(),
 ) -> int:
+    # SYNC-TODO: job-based async operation; returns int (job count), no entity payload — handling TBD
     authz_user.assert_in_project(proj_id)
     jobs = DocProcessingService().recompute_processing_step(
         db=db,

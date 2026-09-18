@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from common.doc_type import DocType
 from core.auth.authz_user import AuthzUser
@@ -12,6 +13,7 @@ from core.doc.folder_dto import (
     FolderType,
     FolderUpdate,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/folder", dependencies=[Depends(get_current_user)], tags=["folder", "mcp"]
@@ -71,9 +73,12 @@ def get_folders_by_project_and_type(
 def create_folder(
     folder: FolderCreate,
     db: Session = Depends(get_db_session),
+    ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
     db_obj = crud_folder.create(db=db, create_dto=folder)
-    return FolderRead.model_validate(db_obj)
+    result = FolderRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.FOLDER_CREATED, result, project_id=folder.project_id)
+    return result
 
 
 @router.put("/{folder_id}", response_model=FolderRead)
@@ -82,10 +87,15 @@ def update_folder(
     folder_update: FolderUpdate,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
     db_obj = crud_folder.update(db=db, id=folder_id, update_dto=folder_update)
-    return FolderRead.model_validate(db_obj)
+    result = FolderRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.FOLDER_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
 @router.post("/move_folders", response_model=list[FolderRead])
@@ -94,14 +104,22 @@ def move_folders(
     target_folder_id: int,  # -1 means root folder (parent_id is None)
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[FolderRead]:
     for folder_id in folder_ids:
         authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
 
-    db_obj = crud_folder.move_folders(
+    db_objs = crud_folder.move_folders(
         db=db, folder_ids=folder_ids, target_folder_id=target_folder_id
     )
-    return [FolderRead.model_validate(folder) for folder in db_obj]
+    results = [FolderRead.model_validate(folder) for folder in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.FOLDER_UPDATED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.delete("/{folder_id}", response_model=FolderRead)
@@ -109,7 +127,12 @@ def delete_folder(
     folder_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
+    folder = crud_folder.read(db=db, id=folder_id)
+    project_id = folder.get_project_id()
     db_obj = crud_folder.delete(db=db, id=folder_id)
-    return FolderRead.model_validate(db_obj)
+    result = FolderRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.FOLDER_DELETED, result, project_id=project_id)
+    return result

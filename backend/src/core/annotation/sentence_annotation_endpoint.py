@@ -3,6 +3,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
@@ -15,6 +16,7 @@ from core.annotation.sentence_annotation_dto import (
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 from core.doc.source_document_data_crud import crud_sdoc_data
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/sentence",
@@ -33,6 +35,7 @@ def add_sentence_annotation(
     db: Session = Depends(get_db_session),
     sentence_annotation: SentenceAnnotationCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
     authz_user.assert_in_same_project_as(
         Crud.SOURCE_DOCUMENT, sentence_annotation.sdoc_id
@@ -42,7 +45,13 @@ def add_sentence_annotation(
     db_obj = crud_sentence_anno.create(
         db=db, user_id=authz_user.user.id, create_dto=sentence_annotation
     )
-    return SentenceAnnotationRead.model_validate(db_obj)
+    result = SentenceAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SENTENCE_ANNOTATION_CREATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.put(
@@ -56,6 +65,7 @@ def add_sentence_annotations_bulk(
     sentence_annotations: list[SentenceAnnotationCreate],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SentenceAnnotationRead]:
     for sa in sentence_annotations:
         authz_user.assert_in_same_project_as(Crud.CODE, sa.code_id)
@@ -70,7 +80,14 @@ def add_sentence_annotations_bulk(
     db_objs = crud_sentence_anno.create_bulk(
         db=db, user_id=authz_user.user.id, create_dtos=sentence_annotations
     )
-    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.get(
@@ -147,6 +164,7 @@ def update_by_id(
     sentence_annotation_anno: SentenceAnnotationUpdate,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
     if sentence_annotation_anno.code_id is not None:
@@ -163,7 +181,13 @@ def update_by_id(
     db_obj = crud_sentence_anno.update(
         db=db, id=sentence_anno_id, update_dto=sentence_annotation_anno
     )
-    return SentenceAnnotationRead.model_validate(db_obj)
+    result = SentenceAnnotationRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SENTENCE_ANNOTATION_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.patch(
@@ -177,6 +201,7 @@ def update_sent_anno_annotations_bulk(
     sent_annos: list[SentenceAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SentenceAnnotationRead]:
     for sent_anno in sent_annos:
         authz_user.assert_in_same_project_as(Crud.CODE, sent_anno.code_id)
@@ -191,7 +216,14 @@ def update_sent_anno_annotations_bulk(
         )
 
     db_objs = crud_sentence_anno.update_bulk(db=db, update_dtos=sent_annos)
-    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.delete(
@@ -204,13 +236,20 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     sentence_anno_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
 
     db_obj = crud_sentence_anno.read(db=db, id=sentence_anno_id)
     sentence_anno_read = SentenceAnnotationRead.model_validate(db_obj)
+    project_id = db_obj.get_project_id()
 
     crud_sentence_anno.delete(db=db, id=sentence_anno_id)
+    ws.emit_to_project(
+        DATSEvent.SENTENCE_ANNOTATION_DELETED,
+        sentence_anno_read,
+        project_id=project_id,
+    )
     return sentence_anno_read
 
 
@@ -224,13 +263,21 @@ def delete_bulk_by_id(
     db: Session = Depends(get_db_session),
     sentence_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> list[SentenceAnnotationRead]:
     authz_user.assert_in_same_project_as_many(
         Crud.SENTENCE_ANNOTATION, sentence_anno_ids
     )
 
     db_objs = crud_sentence_anno.delete_bulk(db=db, ids=sentence_anno_ids)
-    return [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
 
 
 @router.get(

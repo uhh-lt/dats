@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
@@ -9,12 +10,13 @@ from core.doc.source_document_crud import crud_sdoc
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import (
-    SourceDocumentTagLinks,
+    SdocTagLinks,
     SourceDocumentTagMultiLink,
     TagCreate,
     TagRead,
     TagUpdate,
 )
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/tag", dependencies=[Depends(get_current_user)], tags=["tag", "mcp"]
@@ -32,6 +34,7 @@ def create_new_doc_tag(
     tag: TagCreate,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TagRead:
     authz_user.assert_in_project(tag.project_id)
 
@@ -45,13 +48,15 @@ def create_new_doc_tag(
         )
 
     db_obj = crud_tag.create(db=db, create_dto=tag)
-    return TagRead.model_validate(db_obj)
+    result = TagRead.model_validate(db_obj)
+    ws.emit_to_project(DATSEvent.TAG_CREATED, result, project_id=tag.project_id)
+    return result
 
 
 @router.patch(
     "/bulk/link",
-    response_model=int,
-    summary="Links multiple Tags with the SourceDocuments and returns the number of new Links",
+    response_model=SdocTagLinks,
+    summary="Links multiple Tags with the SourceDocuments and returns the resulting tags per document",
 )
 def link_multiple_tags(
     *,
@@ -59,9 +64,8 @@ def link_multiple_tags(
     multi_link: SourceDocumentTagMultiLink,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> int:
-    # TODO this is a little inefficient, but at the moment
-    # the fronend is never sending more than one id at a time
+    ws: WebsocketEmitter = Depends(),
+) -> SdocTagLinks:
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
     )
@@ -72,17 +76,24 @@ def link_multiple_tags(
         + [(Crud.TAG, tag_id) for tag_id in multi_link.tag_ids]
     )
 
-    return crud_tag.link_multiple_tags(
+    crud_tag.link_multiple_tags(
         db=db,
         sdoc_ids=multi_link.source_document_ids,
         tag_ids=multi_link.tag_ids,
     )
 
+    result = SdocTagLinks(
+        links=crud_sdoc.read_tags(db=db, sdoc_ids=multi_link.source_document_ids)
+    )
+    project_id = crud_sdoc.read(db=db, id=multi_link.source_document_ids[0]).project_id
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    return result
+
 
 @router.delete(
     "/bulk/unlink",
-    response_model=int,
-    summary="Unlinks all Tags with the SourceDocuments and returns the number of removed Links.",
+    response_model=SdocTagLinks,
+    summary="Unlinks all Tags with the SourceDocuments and returns the resulting tags per document",
 )
 def unlink_multiple_tags(
     *,
@@ -90,7 +101,8 @@ def unlink_multiple_tags(
     multi_link: SourceDocumentTagMultiLink,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> int:
+    ws: WebsocketEmitter = Depends(),
+) -> SdocTagLinks:
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
     )
@@ -101,29 +113,35 @@ def unlink_multiple_tags(
         + [(Crud.TAG, tag_id) for tag_id in multi_link.tag_ids]
     )
 
-    return crud_tag.unlink_multiple_tags(
+    crud_tag.unlink_multiple_tags(
         db=db,
         sdoc_ids=multi_link.source_document_ids,
         tag_ids=multi_link.tag_ids,
     )
 
+    result = SdocTagLinks(
+        links=crud_sdoc.read_tags(db=db, sdoc_ids=multi_link.source_document_ids)
+    )
+    project_id = crud_sdoc.read(db=db, id=multi_link.source_document_ids[0]).project_id
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    return result
+
 
 @router.patch(
     "/bulk/set",
-    response_model=int,
-    summary="Sets SourceDocuments' tags to the provided tags",
+    response_model=SdocTagLinks,
+    summary="Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document",
 )
 def set_tags_batch(
     *,
     db: Session = Depends(get_db_session),
-    links: list[SourceDocumentTagLinks],
+    links: SdocTagLinks,
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> int:
-    sdoc_ids = [link.source_document_id for link in links]
-    tag_ids = list(set([tag_id for link in links for tag_id in link.tag_ids]))
-    # TODO this is a little inefficient, but at the moment
-    # the fronend is never sending more than one id at a time
+    ws: WebsocketEmitter = Depends(),
+) -> SdocTagLinks:
+    sdoc_ids = list(links.links.keys())
+    tag_ids = list({tag_id for ids in links.links.values() for tag_id in ids})
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     authz_user.assert_in_same_project_as_many(Crud.TAG, tag_ids)
 
@@ -132,16 +150,18 @@ def set_tags_batch(
         + [(Crud.TAG, tag_id) for tag_id in tag_ids]
     )
 
-    return crud_tag.set_tags_batch(
-        db=db,
-        links={link.source_document_id: link.tag_ids for link in links},
-    )
+    crud_tag.set_tags_batch(db=db, links=links.links)
+
+    result = SdocTagLinks(links=crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids))
+    project_id = crud_sdoc.read(db=db, id=sdoc_ids[0]).project_id
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    return result
 
 
 @router.patch(
     "/bulk/update",
-    response_model=int,
-    summary="Updates SourceDocuments' tags",
+    response_model=SdocTagLinks,
+    summary="Updates SourceDocuments' tags and returns the resulting tags per document",
 )
 def update_tags_batch(
     *,
@@ -151,7 +171,8 @@ def update_tags_batch(
     link_tag_ids: list[int],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> int:
+    ws: WebsocketEmitter = Depends(),
+) -> SdocTagLinks:
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     authz_user.assert_in_same_project_as_many(Crud.TAG, link_tag_ids)
 
@@ -160,17 +181,21 @@ def update_tags_batch(
         + [(Crud.TAG, tag_id) for tag_id in link_tag_ids]
     )
 
-    modifications = crud_tag.link_multiple_tags(
+    crud_tag.link_multiple_tags(
         db=db,
         sdoc_ids=sdoc_ids,
         tag_ids=link_tag_ids,
     )
-    modifications += crud_tag.unlink_multiple_tags(
+    crud_tag.unlink_multiple_tags(
         db=db,
         sdoc_ids=sdoc_ids,
         tag_ids=unlink_tag_ids,
     )
-    return modifications
+
+    result = SdocTagLinks(links=crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids))
+    project_id = crud_sdoc.read(db=db, id=sdoc_ids[0]).project_id
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    return result
 
 
 @router.get(
@@ -230,11 +255,19 @@ def get_by_sdoc(
     summary="Updates the Tag with the given ID.",
 )
 def update_by_id(
-    *, db: Session = Depends(get_db_session), tag_id: int, tag: TagUpdate
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    tag: TagUpdate,
+    ws: WebsocketEmitter = Depends(),
 ) -> TagRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_tag.update(db=db, id=tag_id, update_dto=tag)
-    return TagRead.model_validate(db_obj)
+    result = TagRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.TAG_UPDATED, result, project_id=db_obj.get_project_id()
+    )
+    return result
 
 
 @router.delete(
@@ -247,6 +280,7 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     tag_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> TagRead:
     authz_user.assert_in_same_project_as(Crud.TAG, tag_id)
 
@@ -254,6 +288,9 @@ def delete_by_id(
     tag_read = TagRead.model_validate(db_obj)
 
     crud_tag.delete(db=db, id=tag_id)
+    ws.emit_to_project(
+        DATSEvent.TAG_DELETED, tag_read, project_id=db_obj.get_project_id()
+    )
     return tag_read
 
 

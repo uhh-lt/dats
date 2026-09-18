@@ -13,6 +13,7 @@ from core.memo.memo_dto import (
     MemoInDB,
     MemoRead,
     MemoUpdate,
+    MemoUpdateBulk,
 )
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
@@ -131,6 +132,36 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
 
     ### UPDATE OPERATIONS ###
+
+    def update(
+        self, db: Session, *, user_id: int, id: int, update_dto: MemoUpdate
+    ) -> MemoORM:
+        """Update a memo's shared fields and/or the requesting user's per-user favorite flag."""
+        # is_favorite is per-user state (a link-table row), not an ORM column,
+        # so handle it separately from the shared fields.
+        if update_dto.is_favorite is not None:
+            if update_dto.is_favorite:
+                self.favorite(db=db, memo_id=id, user_id=user_id)
+            else:
+                self.unfavorite(db=db, memo_id=id, user_id=user_id)
+
+        shared_update = MemoUpdate.model_validate(
+            update_dto.model_dump(exclude={"is_favorite"}, exclude_unset=True)
+        )
+        if shared_update.model_fields_set:
+            return super().update(db=db, id=id, update_dto=shared_update)
+        return self.read(db=db, id=id)
+
+    def update_bulk(
+        self, db: Session, *, user_id: int, update_dtos: list[MemoUpdateBulk]
+    ) -> list[MemoORM]:
+        """Update multiple memos, each identified by its memo_id."""
+        return [
+            self.update(
+                db=db, user_id=user_id, id=update_dto.memo_id, update_dto=update_dto
+            )
+            for update_dto in update_dtos
+        ]
 
     ### DELETE OPERATIONS ###
 

@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -48,6 +49,20 @@ class MemoUpdate(BaseModel):
     content_json: str | None = Field(
         description="JSON content of the Memo", default=None
     )
+    is_favorite: bool | None = Field(
+        default=None,
+        description=(
+            "Favorite the Memo for the requesting user only. "
+            "This is per-user state: it does not change the Memo for other users."
+        ),
+    )
+
+    # Fields that are per-user state rather than shared/project-visible memo data.
+    PER_USER_FIELDS: ClassVar[frozenset[str]] = frozenset({"is_favorite"})
+
+    def shared_fields_set(self) -> set[str]:
+        """Return the set of shared (project-visible) fields that were provided."""
+        return set(self.model_fields_set) - self.PER_USER_FIELDS
 
     @model_validator(mode="after")
     def check_at_least_one_field_is_set(self) -> "MemoUpdate":
@@ -64,6 +79,20 @@ class MemoUpdate(BaseModel):
             raise ValueError(
                 f"Fields cannot be null: {', '.join(sorted(invalid_fields))}"
             )
+        return self
+
+
+# Properties to update in bulk
+class MemoUpdateBulk(MemoUpdate):
+    memo_id: int = Field(description="ID of the Memo to update")
+
+    @model_validator(mode="after")
+    def check_at_least_one_updatable_field(self) -> "MemoUpdateBulk":
+        # memo_id is always set, so the inherited "at least one field" check would
+        # pass trivially; require at least one actual updatable field instead.
+        updatable = {"title", "icon", "content", "content_json", "is_favorite"}
+        if not updatable.intersection(self.model_fields_set):
+            raise ValueError("At least one updatable field has to be provided")
         return self
 
 

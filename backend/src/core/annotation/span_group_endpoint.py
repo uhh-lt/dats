@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_crud import crud_span_group
@@ -12,6 +13,7 @@ from core.annotation.span_group_dto import (
     SpanGroupWithAnnotationsRead,
 )
 from core.auth.authz_user import AuthzUser
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/spangroup",
@@ -30,13 +32,20 @@ def create_new_span_group(
     db: Session = Depends(get_db_session),
     span_group: SpanGroupCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span_group.sdoc_id)
 
     db_obj = crud_span_group.create(
         db=db, user_id=authz_user.user.id, create_dto=span_group
     )
-    return SpanGroupRead.model_validate(db_obj)
+    result = SpanGroupRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_GROUP_CREATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.get(
@@ -67,11 +76,18 @@ def update_by_id(
     span_group_id: int,
     span_anno: SpanGroupUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
     db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
-    return SpanGroupRead.model_validate(db_obj)
+    result = SpanGroupRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_GROUP_UPDATED,
+        result,
+        project_id=db_obj.get_project_id(),
+    )
+    return result
 
 
 @router.delete(
@@ -84,11 +100,19 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
+    span_group = crud_span_group.read(db=db, id=span_group_id)
     db_obj = crud_span_group.delete(db=db, id=span_group_id)
-    return SpanGroupRead.model_validate(db_obj)
+    result = SpanGroupRead.model_validate(db_obj)
+    ws.emit_to_project(
+        DATSEvent.SPAN_GROUP_DELETED,
+        result,
+        project_id=span_group.get_project_id(),
+    )
+    return result
 
 
 @router.get(
