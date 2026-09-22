@@ -1,0 +1,48 @@
+[project]
+name = "llm-file-converter"
+version = "0.1.0"
+description = "Convert text-based files to basic HTML, plain text, and metadata using an OpenAI-compatible LLM."
+authors = [
+    { name = "Tim Fischer", email = "tim.fischer@uni-hamburg.de" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "jinja2>=3.1.6",
+    "openai>=3.17.0",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.3",
+    "rich>=15.0.0",
+    "typer>=0.27.2",
+]
+
+[project.scripts]
+llm-file-converter = "llm_file_converter.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_file_converter"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/llm_file_converter/templates" = "llm_file_converter/templates"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.8",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
