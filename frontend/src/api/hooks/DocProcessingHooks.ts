@@ -1,13 +1,13 @@
-import { Body_docprocessing_recompute_processing_step } from "@models/Body_docprocessing_recompute_processing_step";
-import { CrawlerJobRead } from "@models/CrawlerJobRead";
-import { JobStatus } from "@models/JobStatus";
-import { SDocStatus } from "@models/SDocStatus";
-import { SourceDocumentStatusSimple } from "@models/SourceDocumentStatusSimple";
 import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
+import { Body_docprocessing_recompute_processing_step } from "@models/Body_docprocessing_recompute_processing_step";
+import { CrawlerJobRead } from "@models/CrawlerJobRead";
+import { SDocStatus } from "@models/SDocStatus";
+import { SourceDocumentStatusSimple } from "@models/SourceDocumentStatusSimple";
 import { Query, useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
+import { useJobRefetchInterval } from "./jobPolling";
 import { QueryKey } from "./QueryKey";
 
 const useStartCrawlerJob = () =>
@@ -25,6 +25,7 @@ const useStartCrawlerJob = () =>
   });
 
 const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
+  const jobRefetchInterval = useJobRefetchInterval<CrawlerJobRead>();
   return useQuery<CrawlerJobRead, Error>({
     queryKey: [QueryKey.CRAWLER_JOB, crawlerJobId],
     queryFn: () =>
@@ -32,26 +33,7 @@ const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
         jobId: crawlerJobId!,
       }),
     enabled: !!crawlerJobId,
-    refetchInterval: (query) => {
-      if (!query.state.data) {
-        return 1000;
-      }
-
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
     initialData,
   });
 };

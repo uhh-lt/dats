@@ -1,9 +1,9 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import { COTARead } from "@models/COTARead";
 import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
-import { JobStatus } from "@models/JobStatus";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
@@ -116,35 +116,18 @@ export const useDeleteCota = () =>
     },
   });
 
-export const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) =>
-  useQuery<COTARefinementJobRead | null, Error>({
+export const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
+  const jobRefetchInterval = useJobRefetchInterval<COTARefinementJobRead>();
+  return useQuery<COTARefinementJobRead | null, Error>({
     queryKey: [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJobId],
     queryFn: () =>
       ConceptOverTimeAnalysisService.getCotaJob({
         cotaJobId: cotaRefinementJobId!,
       }),
     enabled: !!cotaRefinementJobId,
-    refetchInterval: (query) => {
-      if (!query.state.data) {
-        return 1000;
-      }
-
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
   });
+};
 
 export const useRefineCota = () =>
   useMutation({

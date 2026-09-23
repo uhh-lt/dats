@@ -1,16 +1,13 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
-import { ClassifierInfo } from "@models/ClassifierInfo";
 import { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
-import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
+import { ClassifierInfo } from "@models/ClassifierInfo";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierRead } from "@models/ClassifierRead";
-import { ClassifierTask } from "@models/ClassifierTask";
-import { JobStatus } from "@models/JobStatus";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { dateToLocaleDate } from "@utils/DateUtils";
 
 export type ClassifierMap = Record<number, ClassifierRead>;
 
@@ -62,7 +59,11 @@ const useStartClassifierJob = () =>
     },
   });
 
+// Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
+// (classifier list + sdoc tag invalidations) live in the JOB_UPDATED handler in
+// frontend/src/plugins/websocket/websocketEventHandlers.ts.
 const usePollClassifierJob = (classifierJobId: string | undefined, initialData: ClassifierJobRead | undefined) => {
+  const jobRefetchInterval = useJobRefetchInterval<ClassifierJobRead>();
   return useQuery<ClassifierJobRead, Error>({
     queryKey: [QueryKey.CLASSIFIER_JOB, classifierJobId],
     queryFn: () =>
@@ -70,43 +71,7 @@ const usePollClassifierJob = (classifierJobId: string | undefined, initialData: 
         jobId: classifierJobId!,
       }),
     enabled: !!classifierJobId,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (!data) {
-        return 1000;
-      }
-
-      const localDate = new Date();
-      if (data.finished && localDate.getTime() - dateToLocaleDate(data.finished).getTime() < 3 * 60 * 1000) {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIER_JOBS, data.project_id] });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, data.project_id] });
-
-        if (
-          data.input.model_type === ClassifierModel.DOCUMENT &&
-          data.input.task_type === ClassifierTask.INFERENCE &&
-          data.output
-        ) {
-          (data.input.task_parameters as ClassifierInferenceParams).sdoc_ids.forEach((sdocId) => {
-            queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
-          });
-        }
-      }
-
-      switch (data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
     initialData,
   });
 };
