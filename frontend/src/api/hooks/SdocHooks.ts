@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
-import { queryClient } from "@api/queryClient";
+import { handleEntityEvent } from "@api/entity-events/brain";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
@@ -91,8 +91,10 @@ const useDeleteDocuments = () =>
       const promises = sdocIds.map((sdocId) => SourceDocumentService.deleteById({ sdocId: sdocId }));
       return Promise.all(promises);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+    onSuccess: (data) => {
+      // Bulk delete returns an array; dispatch one event per deleted sdoc so the
+      // brain can drop each from the cache.
+      data.forEach((sdoc) => handleEntityEvent({ type: "SDOC_DELETED", payload: sdoc }, "mutation"));
     },
     meta: {
       successMessage: (_data: SourceDocumentRead[], variables: { sdocIds: number[] }) =>
@@ -103,11 +105,8 @@ const useDeleteDocuments = () =>
 const useUpdateName = () =>
   useMutation({
     mutationFn: SourceDocumentService.updateById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, data.id], data);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-    },
     meta: {
+      entityEvent: "SDOC_UPDATED",
       successMessage: (sdoc: SourceDocumentRead) => `Updated document "${sdoc.filename}"`,
     },
   });

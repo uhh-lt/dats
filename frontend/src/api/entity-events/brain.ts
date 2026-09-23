@@ -1,12 +1,15 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
+import { SearchEntityType } from "@models/SearchEntityType";
 import type { UserRead } from "@models/UserRead";
 import type { WebSocketEventMap } from "@models/websocketEvents";
 import {
   appendListItem,
   removeListItem,
   removeMapItem,
+  removeSingle,
   replaceListItem,
+  setSingle,
   sweepPrefix,
   upsertMapItem,
 } from "./cacheWriterUtils";
@@ -66,6 +69,12 @@ export type EntityEventMap = Pick<
   | "USER_DELETED"
   | "API_KEY_CREATED"
   | "API_KEY_DELETED"
+  | "SDOC_UPDATED"
+  | "SDOC_DELETED"
+  | "SEARCH_VIEW_CREATED"
+  | "SEARCH_VIEW_UPDATED"
+  | "SEARCH_VIEW_DELETED"
+  | "SEARCH_VIEW_UPDATED_BATCH"
 >;
 
 export type EntityEventType = keyof EntityEventMap;
@@ -269,9 +278,58 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
       removeListItem([QueryKey.USER_API_KEYS], event.payload.id);
       break;
 
+    // ── Source documents ────────────────────────────────────────────────────
+    case "SDOC_UPDATED":
+      setSingle([QueryKey.SDOC, event.payload.id], event.payload);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
+    case "SDOC_DELETED":
+      removeSingle([QueryKey.SDOC, event.payload.id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
+
+    // ── Search views ────────────────────────────────────────────────────────
+    case "SEARCH_VIEW_CREATED": {
+      const view = event.payload;
+      const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
+      if (!viewKey) break;
+      appendListItem([viewKey, view.entity_type, view.project_id], view);
+      break;
+    }
+    case "SEARCH_VIEW_UPDATED": {
+      const view = event.payload;
+      const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
+      if (!viewKey) break;
+      replaceListItem([viewKey, view.entity_type, view.project_id], view);
+      break;
+    }
+    case "SEARCH_VIEW_DELETED": {
+      const view = event.payload;
+      const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
+      if (!viewKey) break;
+      removeListItem([viewKey, view.entity_type, view.project_id], view.id);
+      break;
+    }
+    case "SEARCH_VIEW_UPDATED_BATCH":
+      event.payload.forEach((view) => {
+        const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
+        if (!viewKey) return;
+        replaceListItem([viewKey, view.entity_type, view.project_id], view);
+      });
+      break;
+
     default: {
       const _exhaustive: never = event;
       console.warn("Unhandled entity event", _exhaustive);
     }
   }
 }
+
+// Each entity's views live under their own query key; the payload's entity_type
+// selects which one to write into.
+const SEARCH_VIEW_QUERY_KEYS: Record<SearchEntityType, (typeof QueryKey)[keyof typeof QueryKey]> = {
+  [SearchEntityType.MEMO]: QueryKey.MEMO_VIEWS,
+  [SearchEntityType.SPAN_ANNOTATION]: QueryKey.SPAN_ANNO_VIEWS,
+  [SearchEntityType.SENTENCE_ANNOTATION]: QueryKey.SENTENCE_ANNO_VIEWS,
+  [SearchEntityType.BBOX_ANNOTATION]: QueryKey.BBOX_ANNO_VIEWS,
+};
