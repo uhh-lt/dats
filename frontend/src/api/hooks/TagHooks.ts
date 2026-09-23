@@ -1,22 +1,9 @@
-import { queryClient } from "@api/queryClient";
 import { TagService } from "@api/services/TagService";
 import { SdocTagLinks } from "@models/SdocTagLinks";
 import { TagRead } from "@models/TagRead";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
-
-/**
- * Write the authoritative per-sdoc tag lists from a bulk tag operation
- * (`SdocTagLinks`) and invalidate the tag statistics that depend on them.
- */
-function applySdocTagLinks(links: Record<string, number[]>): void {
-  Object.entries(links).forEach(([sdocId, tagIds]) => {
-    queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
-  });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
-}
 
 // TAG QUERIES
 export const projectTagsQueryOptions = (projectId: number | undefined) =>
@@ -103,10 +90,8 @@ const useDeleteTag = () =>
 const useBulkSetTags = () =>
   useMutation({
     mutationFn: TagService.setTagsBatch,
-    onSuccess: (data) => {
-      applySdocTagLinks(data.links);
-    },
     meta: {
+      entityEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -114,10 +99,8 @@ const useBulkSetTags = () =>
 const useBulkLinkTags = () =>
   useMutation({
     mutationFn: TagService.linkMultipleTags,
-    onSuccess: (data) => {
-      applySdocTagLinks(data.links);
-    },
     meta: {
+      entityEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -125,10 +108,8 @@ const useBulkLinkTags = () =>
 const useBulkUnlinkTags = () =>
   useMutation({
     mutationFn: TagService.unlinkMultipleTags,
-    onSuccess: (data) => {
-      applySdocTagLinks(data.links);
-    },
     meta: {
+      entityEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -136,10 +117,8 @@ const useBulkUnlinkTags = () =>
 const useBulkUpdateTags = () =>
   useMutation({
     mutationFn: TagService.updateTagsBatch,
-    onSuccess: (data) => {
-      applySdocTagLinks(data.links);
-    },
     meta: {
+      entityEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
