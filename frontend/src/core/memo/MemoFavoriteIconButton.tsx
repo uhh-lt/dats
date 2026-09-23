@@ -13,14 +13,14 @@ interface MemoFavoriteIconButtonProps {
  * surrounding clickable row/card does not also trigger selection.
  */
 export const MemoFavoriteIconButton = memo(({ memo }: MemoFavoriteIconButtonProps) => {
-  const favorite = MemoHooks.useFavoriteMemos();
+  const { mutate: updateMemos } = MemoHooks.useUpdateMemos();
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation();
-      favorite.mutate({ memoIds: [memo.id], isFavorite: !memo.is_favorite });
+      updateMemos({ requestBody: [{ memo_id: memo.id, is_favorite: !memo.is_favorite }] });
     },
-    [favorite, memo.id, memo.is_favorite],
+    [updateMemos, memo.id, memo.is_favorite],
   );
 
   return (

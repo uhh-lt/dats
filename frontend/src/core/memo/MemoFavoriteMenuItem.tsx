@@ -11,18 +11,18 @@ interface MemoFavoriteMenuItemProps {
 
 export const MemoFavoriteMenuItem = memo(
   ({ memoId, isFavorite, onClick, ...props }: MemoFavoriteMenuItemProps & MenuItemProps) => {
-    const { mutate: favoriteMemos, isPending } = MemoHooks.useFavoriteMemos();
+    const { mutate: updateMemos, isPending } = MemoHooks.useUpdateMemos();
 
     const handleClick = useCallback(
       (event: React.MouseEvent) => {
         if (memoId === undefined || isFavorite === undefined) return;
         event.stopPropagation();
-        favoriteMemos({ memoIds: [memoId], isFavorite: !isFavorite });
+        updateMemos({ requestBody: [{ memo_id: memoId, is_favorite: !isFavorite }] });
         if (onClick) {
           onClick();
         }
       },
-      [memoId, isFavorite, favoriteMemos, onClick],
+      [memoId, isFavorite, updateMemos, onClick],
     );
 
     return (

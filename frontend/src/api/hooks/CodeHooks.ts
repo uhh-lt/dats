@@ -1,6 +1,6 @@
-import { CodeRead } from "@models/CodeRead";
 import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
+import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -55,7 +55,7 @@ const useGetEnabledCodes = () => {
 // CODE MUTATIONS
 const useCreateCode = () => {
   return useMutation({
-    mutationFn: CodeService.createNewCode,
+    mutationFn: CodeService.createCode,
     onSuccess: (data, variables) => {
       queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, variables.requestBody.project_id], (oldData) =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },

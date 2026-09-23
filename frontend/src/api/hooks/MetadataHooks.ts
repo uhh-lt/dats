@@ -1,8 +1,8 @@
-import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
-import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { queryClient } from "@api/queryClient";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
@@ -51,7 +51,7 @@ const useGetProjectMetadataList = () => useProjectMetadataQuery({ select: (data)
 // PROJECT METADATA MUTATIONS
 const useCreateProjectMetadata = () =>
   useMutation({
-    mutationFn: ProjectMetadataService.createNewMetadata,
+    mutationFn: ProjectMetadataService.createMetadata,
     onSuccess: (data) => {
       queryClient.setQueryData<ProjectMetadataMap>([QueryKey.PROJECT_METADATAS, data.project_id], (old) =>
         old ? { ...old, [data.id]: data } : { [data.id]: data },
