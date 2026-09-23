@@ -283,12 +283,15 @@ def build_job_event_models() -> None:
 
     job_read_models: list[type[BaseModel]] = []
     for job_type, registered_job in JobService().job_registry.items():
+        if not registered_job["publish_updates"]:
+            continue
         job_name = "".join([x.capitalize() for x in job_type.split("_")])
         model = create_model(
             f"{job_name}JobRead",
             __base__=JobRead[
                 registered_job["input_type"], registered_job["output_type"]
             ],
+            job_type=(Literal[job_type.value], job_type.value),
         )
         job_read_models.append(model)
         JOB_TYPE_TO_JOB_READ_MODEL[job_type] = model

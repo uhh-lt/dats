@@ -35,6 +35,7 @@ class RegisteredJob(TypedDict):
     input_type: type[JobInputBase]
     output_type: type[JobOutputBase] | None
     generate_endpoints: EndpointGeneration
+    publish_updates: bool
     priority: JobPriority
     device: Literal["gpu", "cpu", "api"]
     router: APIRouter | None
@@ -88,6 +89,7 @@ class JobService(metaclass=SingletonMeta):
         priority: JobPriority,
         device: Literal["gpu", "cpu", "api"],
         generate_endpoints: EndpointGeneration,
+        publish_updates: bool,
         router: APIRouter | None,
         result_ttl: int,
         retry: tuple[int, int] | None,
@@ -115,6 +117,7 @@ class JobService(metaclass=SingletonMeta):
             "input_type": input_type,
             "output_type": output_type,
             "generate_endpoints": generate_endpoints,
+            "publish_updates": publish_updates,
             "priority": priority,
             "device": device,
             "router": router,
@@ -174,6 +177,7 @@ class JobService(metaclass=SingletonMeta):
                 "created": datetime.now(),
                 "finished": None,
                 "device": job_info["device"],
+                "publish_updates": job_info["publish_updates"],
             },
             result_ttl=job_info["result_ttl"],
             retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,

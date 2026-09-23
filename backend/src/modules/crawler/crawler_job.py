@@ -41,6 +41,7 @@ class CrawlerJobOutput(JobOutputBase):
     input_type=CrawlerJobInput,
     output_type=CrawlerJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
+    publish_updates=True,
     result_ttl=JobTiming.NINETY_DAYS,
 )
 def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:

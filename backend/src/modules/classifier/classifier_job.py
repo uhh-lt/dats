@@ -13,6 +13,7 @@ sqlr = SQLRepo()
     input_type=ClassifierJobInput,
     output_type=ClassifierJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
+    publish_updates=True,
     router=router,
     device="gpu",
     result_ttl=JobTiming.NINETY_DAYS,

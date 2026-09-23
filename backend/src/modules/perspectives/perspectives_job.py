@@ -10,6 +10,7 @@ sqlr = SQLRepo()
 @register_job(
     job_type=JobType.PERSPECTIVES,
     input_type=PerspectivesJobInput,
+    publish_updates=True,
     device="gpu",
     result_ttl=JobTiming.INFINITY,
     timeout=JobTiming.ONE_DAY,

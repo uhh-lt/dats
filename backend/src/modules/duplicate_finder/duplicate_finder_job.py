@@ -41,6 +41,7 @@ class DuplicateFinderOutput(JobOutputBase):
     input_type=DuplicateFinderInput,
     output_type=DuplicateFinderOutput,
     generate_endpoints=EndpointGeneration.MINIMAL,
+    publish_updates=True,
     device="gpu",
 )
 def find_duplicates_job(

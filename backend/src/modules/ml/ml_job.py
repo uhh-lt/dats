@@ -27,6 +27,7 @@ sqlr = SQLRepo()
     job_type=JobType.ML,
     input_type=MLJobInput,
     generate_endpoints=EndpointGeneration.ALL,
+    publish_updates=True,
     device="api",
     result_ttl=JobTiming.NINETY_DAYS,
 )
