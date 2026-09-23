@@ -1,5 +1,3 @@
-import { handleDATSEvent } from "@api/cache-sync";
-import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
@@ -97,21 +95,14 @@ const useUpdateFolder = () =>
     },
   });
 
-const useMoveFolders = () => {
-  return useMutation({
-    mutationFn: FolderService.moveFolders,
-    onSuccess: (datas) => {
-      handleDATSEvent({ type: "FOLDER_UPDATED_BATCH", payload: datas }, "mutation");
-      // Moving folders changes which sdocs are where → refresh search results.
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.SEARCH_TABLE],
-      });
-    },
+const useUpdateFoldersBulk = () =>
+  useMutation({
+    mutationFn: FolderService.updateFoldersBulk,
     meta: {
-      successMessage: (data: FolderRead[]) => `Moved ${data.length} folder${data.length === 1 ? "" : "s"}!`,
+      datsEvent: "FOLDER_UPDATED_BATCH",
+      successMessage: (data: FolderRead[]) => `Updated ${data.length} folder${data.length === 1 ? "" : "s"}!`,
     },
   });
-};
 
 const useDeleteFolder = () =>
   useMutation({
@@ -132,6 +123,6 @@ export const FolderHooks = {
   useGetSdocIdsPerDoctypeInSdocFolder,
   useCreateFolder,
   useUpdateFolder,
-  useMoveFolders,
+  useUpdateFoldersBulk,
   useDeleteFolder,
 };

@@ -1,6 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
+import type { CodeRead } from "@models/CodeRead";
 import type { DATSEvent } from "@models/datsEvents";
+import type { FolderRead } from "@models/FolderRead";
 import { SearchEntityType } from "@models/SearchEntityType";
 import type { UserRead } from "@models/UserRead";
 import {
@@ -50,9 +52,19 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "CODE_CREATED":
       upsertMapItem([QueryKey.PROJECT_CODES, event.payload.project_id], event.payload);
       break;
-    case "CODE_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_CODES, event.payload.project_id], event.payload);
+    case "CODE_UPDATED": {
+      const code = event.payload;
+      const queryKey = [QueryKey.PROJECT_CODES, code.project_id] as const;
+      // Read the previous value before writing to detect an `enabled` flip.
+      const previous = queryClient.getQueryData<Record<number, CodeRead>>(queryKey)?.[code.id];
+      upsertMapItem(queryKey, code);
+      // Enabling/disabling a code cascades to its ancestors in the DB, which the
+      // single CodeRead payload cannot capture — refetch all codes on a flip.
+      if (previous && previous.enabled !== code.enabled) {
+        queryClient.invalidateQueries({ queryKey });
+      }
       break;
+    }
     case "CODE_DELETED": {
       const code = event.payload;
       removeMapItem([QueryKey.PROJECT_CODES, code.project_id], code.id);
@@ -145,11 +157,24 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "FOLDER_UPDATED":
       upsertMapItem([QueryKey.PROJECT_FOLDERS, event.payload.project_id, event.payload.folder_type], event.payload);
       break;
-    case "FOLDER_UPDATED_BATCH":
+    case "FOLDER_UPDATED_BATCH": {
+      // Read previous values before writing to detect actual moves (parent_id
+      // changes). Only a move changes which sdocs are where → only then refresh
+      // search results. Pure renames leave SEARCH_TABLE untouched.
+      let anyMoved = false;
       event.payload.forEach((folder) => {
-        upsertMapItem([QueryKey.PROJECT_FOLDERS, folder.project_id, folder.folder_type], folder);
+        const queryKey = [QueryKey.PROJECT_FOLDERS, folder.project_id, folder.folder_type] as const;
+        const previous = queryClient.getQueryData<Record<number, FolderRead>>(queryKey)?.[folder.id];
+        upsertMapItem(queryKey, folder);
+        if (previous && previous.parent_id !== folder.parent_id) {
+          anyMoved = true;
+        }
       });
+      if (anyMoved) {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      }
       break;
+    }
     case "FOLDER_DELETED":
       removeMapItem([QueryKey.PROJECT_FOLDERS, event.payload.project_id, event.payload.folder_type], event.payload.id);
       break;

@@ -6,6 +6,7 @@ import type { FolderCreate } from "@models/FolderCreate";
 import type { FolderRead } from "@models/FolderRead";
 import type { FolderType } from "@models/FolderType";
 import type { FolderUpdate } from "@models/FolderUpdate";
+import type { FolderUpdateBulk } from "@models/FolderUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -131,23 +132,18 @@ export class FolderService {
     });
   }
   /**
-   * Moves the Folders with the given IDs to the target folder.
+   * Updates the Folders with the given IDs.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static moveFolders({
-    targetFolderId,
+  public static updateFoldersBulk({
     requestBody,
   }: {
-    targetFolderId: number;
-    requestBody: Array<number>;
+    requestBody: Array<FolderUpdateBulk>;
   }): CancelablePromise<Array<FolderRead>> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/folder/move_folders",
-      query: {
-        target_folder_id: targetFolderId,
-      },
+      url: "/folder/bulk/update",
       body: requestBody,
       mediaType: "application/json",
       errors: {

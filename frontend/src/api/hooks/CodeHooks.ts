@@ -1,5 +1,3 @@
-import { handleDATSEvent } from "@api/cache-sync";
-import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
 import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
@@ -67,14 +65,8 @@ const useCreateCode = () => {
 const useUpdateCode = () =>
   useMutation({
     mutationFn: CodeService.updateById,
-    onSuccess: (data, variables) => {
-      handleDATSEvent({ type: "CODE_UPDATED", payload: data }, "mutation");
-      // if the user changed the enabled status, refetch all codes
-      if (!(variables.requestBody.enabled === undefined || variables.requestBody.enabled === null)) {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
-      }
-    },
     meta: {
+      datsEvent: "CODE_UPDATED",
       successMessage: (data: CodeRead) => `Updated code ${data.name}`,
     },
   });

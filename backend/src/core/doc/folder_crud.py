@@ -1,12 +1,13 @@
-from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from config import conf
-from core.doc.folder_dto import FolderCreate, FolderType, FolderUpdate
+from core.doc.folder_dto import (
+    FolderCreate,
+    FolderType,
+    FolderUpdate,
+    FolderUpdateBulk,
+)
 from core.doc.folder_orm import FolderORM
 from repos.db.crud_base import CRUDBase
-
-BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
@@ -63,45 +64,61 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             query = query.filter(self.model.folder_type == folder_type)
         return query.all()
 
-    def move_folders(
-        self, db: Session, *, folder_ids: list[int], target_folder_id: int
-    ) -> list[FolderORM]:
-        """
-        Moves the specified folders to the target folder.
-
-        Args:
-            db (Session): The current database session used for querying.
-            folder_ids (list[int]): A list of folder IDs to be moved.
-            target_folder_id (int): The ID of the target folder where the folders will be moved. Special case: -1 means the root folder (parent_id is None).
-
-        Returns:
-            list[FolderORM]: A list of FolderORM objects representing the moved folders.
-        """
-        # 1. Determine the Parent ID (tfid)
-        if target_folder_id == -1:
-            tfid = None
-        else:
-            # Ensure the target folder is of type NORMAL
-            target_folder = self.read(db=db, id=target_folder_id)
-            if target_folder.folder_type != FolderType.NORMAL:
-                raise ValueError("Target folder must be of type NORMAL")
-            tfid = target_folder_id
-
-        # 2. Batch UPDATE Operations
-        update_payload = {self.model.parent_id: tfid}
-        for i in range(0, len(folder_ids), BATCH_SIZE):
-            batch_ids = folder_ids[i : i + BATCH_SIZE]
-            stmt = (
-                update(self.model)
-                .where(self.model.id.in_(batch_ids))
-                .values(update_payload)
+    def _assert_valid_move(
+        self, db: Session, *, folder: FolderORM, update_dto: FolderUpdate
+    ) -> None:
+        # Guard every move (single or bulk): when parent_id is being set to a
+        # real folder, the target must be a NORMAL folder in the same project.
+        # parent_id=None (move to root) needs no target check.
+        if (
+            "parent_id" not in update_dto.model_fields_set
+            or update_dto.parent_id is None
+        ):
+            return
+        target_folder = self.read(db=db, id=update_dto.parent_id)
+        if target_folder.folder_type != FolderType.NORMAL:
+            raise ValueError("Target folder must be of type NORMAL")
+        if target_folder.project_id != folder.project_id:
+            raise ValueError("Cannot move a folder to a different project")
+        # Cycle prevention: the target must not be the folder itself or one of its
+        # descendants. Walk up the ancestor chain from the target; if we reach the
+        # folder being moved, the move would create a cycle.
+        ancestor: FolderORM | None = target_folder
+        while ancestor is not None:
+            if ancestor.id == folder.id:
+                raise ValueError("Cannot move a folder into itself or its descendants")
+            ancestor = (
+                self.read(db=db, id=ancestor.parent_id)
+                if ancestor.parent_id is not None
+                else None
             )
-            db.execute(stmt)
-        # Flush all batched updates at once
-        db.flush()
 
-        # 3. Retrieve and Return Updated Folders
-        return self.read_by_ids(db=db, ids=folder_ids)
+    def update(self, db: Session, *, id: int, update_dto: FolderUpdate) -> FolderORM:
+        folder = self.read(db=db, id=id)
+        self._assert_valid_move(db=db, folder=folder, update_dto=update_dto)
+        return super().update(db=db, id=id, update_dto=update_dto)
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: list[FolderUpdateBulk]
+    ) -> list[FolderORM]:
+        """Update multiple folders, each identified by its folder_id."""
+        folders = {
+            f.id: f for f in self.read_by_ids(db, [u.folder_id for u in update_dtos])
+        }
+        for update_dto in update_dtos:
+            self._assert_valid_move(
+                db=db, folder=folders[update_dto.folder_id], update_dto=update_dto
+            )
+        # Delegate to the base bulk update: one read_by_ids + one flush. Strip the
+        # bulk wrapper down to a plain FolderUpdate (drops the folder_id helper field).
+        return self.update_multi(
+            db,
+            ids=[u.folder_id for u in update_dtos],
+            update_dtos=[
+                FolderUpdate.model_validate(u.model_dump(exclude_unset=True))
+                for u in update_dtos
+            ],
+        )
 
 
 crud_folder = CRUDFolder(FolderORM)

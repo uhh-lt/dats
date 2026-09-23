@@ -68,3 +68,62 @@ def project_with_multiple_folders(
         db_session.refresh(folder)
 
     return {"project": test_project, "folders": folders}
+
+
+class ProjectWithNestedFolders(TypedDict):
+    project: ProjectORM
+    parent: FolderORM
+    child: FolderORM
+    grandchild: FolderORM
+
+
+@pytest.fixture(scope="function")
+def project_with_nested_folders(db_session, test_project) -> ProjectWithNestedFolders:
+    """Create a project with a 3-level folder chain: parent > child > grandchild.
+
+    This fixture sets up the following project:
+    - A project for the test user.
+    - Folder "Parent" (NORMAL, root), "Child" (NORMAL, parent=Parent),
+      "Grandchild" (NORMAL, parent=Child). All belong to the project.
+    """
+
+    parent = crud_folder.create(
+        db=db_session,
+        create_dto=FolderCreate(
+            name="Parent",
+            folder_type=FolderType.NORMAL,
+            parent_id=None,
+            project_id=test_project.id,
+        ),
+    )
+    child = crud_folder.create(
+        db=db_session,
+        create_dto=FolderCreate(
+            name="Child",
+            folder_type=FolderType.NORMAL,
+            parent_id=parent.id,
+            project_id=test_project.id,
+        ),
+    )
+    grandchild = crud_folder.create(
+        db=db_session,
+        create_dto=FolderCreate(
+            name="Grandchild",
+            folder_type=FolderType.NORMAL,
+            parent_id=child.id,
+            project_id=test_project.id,
+        ),
+    )
+
+    # Commit the changes to the database and refresh the objects
+    db_session.commit()
+    db_session.refresh(test_project)
+    for folder in (parent, child, grandchild):
+        db_session.refresh(folder)
+
+    return {
+        "project": test_project,
+        "parent": parent,
+        "child": child,
+        "grandchild": grandchild,
+    }
