@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 
 import srsly
 from pydantic import BaseModel, ConfigDict, Field
@@ -322,4 +323,6 @@ class COTARefinementJobInput(JobInputBase):
 
 
 class COTARefinementJobRead(JobRead[COTARefinementJobInput, None]):
-    pass
+    job_type: Literal["cota_refinement"] = Field(
+        description="Type of the job", json_schema_extra={"enum": ["cota_refinement"]}
+    )

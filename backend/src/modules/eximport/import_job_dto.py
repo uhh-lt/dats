@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 from pydantic import Field
 
@@ -33,4 +34,6 @@ class ImportJobInput(JobInputBase):
 
 
 class ImportJobRead(JobRead[ImportJobInput, None]):
-    pass
+    job_type: Literal["import"] = Field(
+        description="Type of the job", json_schema_extra={"enum": ["import"]}
+    )

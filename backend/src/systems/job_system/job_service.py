@@ -5,6 +5,7 @@ from typing import Callable, Dict, Literal, TypedDict, TypeVar
 import rq
 from fastapi import APIRouter
 from loguru import logger
+from pydantic import Field, create_model
 from redis import Redis
 from rq.registry import (
     BaseRegistry,
@@ -24,6 +25,7 @@ from systems.job_system.job_dto import (
     JobInputBase,
     JobOutputBase,
     JobPriority,
+    JobRead,
 )
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -34,6 +36,7 @@ class RegisteredJob(TypedDict):
     handler: Callable
     input_type: type[JobInputBase]
     output_type: type[JobOutputBase] | None
+    read_model: type[JobRead]  # the ONE concrete JobRead model for this job type
     generate_endpoints: EndpointGeneration
     publish_updates: bool
     priority: JobPriority
@@ -95,6 +98,7 @@ class JobService(metaclass=SingletonMeta):
         retry: tuple[int, int] | None,
         timeout: int,
         enricher: Callable[[InputT], InputT] | None = None,
+        read_model: type[JobRead] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -112,10 +116,28 @@ class JobService(metaclass=SingletonMeta):
         if self.job_registry.get(job_type) is not None:
             raise ValueError(f"JobType {job_type} is already registered!")
 
+        # The ONE concrete JobRead model for this job type. Modules with
+        # hand-written endpoints pass their own subclass (e.g. ImportJobRead);
+        # all other jobs get an auto-generated model.
+        if read_model is None:
+            job_name = "".join([x.capitalize() for x in job_type.split("_")])
+            read_model = create_model(
+                f"{job_name}JobRead",
+                __base__=JobRead[input_type, output_type],
+                job_type=(
+                    Literal[job_type.value],
+                    Field(
+                        description="Type of the job",
+                        json_schema_extra={"enum": [job_type.value]},
+                    ),
+                ),
+            )
+
         self.job_registry[job_type] = {
             "handler": handler_func,
             "input_type": input_type,
             "output_type": output_type,
+            "read_model": read_model,
             "generate_endpoints": generate_endpoints,
             "publish_updates": publish_updates,
             "priority": priority,

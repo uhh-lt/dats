@@ -6,6 +6,7 @@ from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
     COTARefinementJobInput,
+    COTARefinementJobRead,
     COTAUpdateIntern,
 )
 from modules.concept_over_time_analysis.refinement_steps.finetune_apply_compute import (
@@ -29,6 +30,7 @@ sqlr = SQLRepo()
     device="gpu",
     result_ttl=JobTiming.INFINITY,
     timeout=JobTiming.ONE_DAY,
+    read_model=COTARefinementJobRead,
 )
 def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
     # init steps / current_step

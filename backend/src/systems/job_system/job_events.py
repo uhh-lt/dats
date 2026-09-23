@@ -126,27 +126,15 @@ def publish_job_update(
     Never raises.
     """
     try:
-        from common.dats_event import (
-            DATS_EVENT_TO_MODEL,
-            JOB_TYPE_TO_JOB_READ_MODEL,
-        )
-        from common.job_type import JobType
+        from common.dats_event import DATS_EVENT_TO_MODEL
+        from systems.job_system.job_service import JobService
 
         # Internal jobs (e.g. doc-processing pipeline steps) are not published:
         if not job.publishes_updates():
             return
 
-        # Build the payload with the concrete per-type JobRead model so it is a
-        # member of the JOB_UPDATED union (a parametrized generic alias
-        # instance is not).
-        job_type = JobType(job.job.meta.get("type"))
-        concrete_model = JOB_TYPE_TO_JOB_READ_MODEL.get(job_type)
-        if concrete_model is None:
-            logger.warning(
-                f"No JobRead model for job type '{job_type}' "
-                "(build_job_event_models() not called?), skipping job event"
-            )
-            return
+        # Build the payload with the concrete per-type JobRead model
+        concrete_model = JobService().job_registry[job.get_type()]["read_model"]
         job_read = concrete_model.from_rq_job(job)
         if output_override is not None:
             job_read.output = output_override
