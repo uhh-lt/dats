@@ -5,6 +5,7 @@ from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectUserLinks
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
@@ -92,7 +93,7 @@ def update_me(
 
 @router.patch(
     "/{proj_id}/user",
-    response_model=UserRead,
+    response_model=ProjectUserLinks,
     summary="Associates an existing User to the Project with the given ID if it exists",
 )
 def associate_user_to_project(
@@ -102,15 +103,19 @@ def associate_user_to_project(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
-) -> UserRead:
+) -> ProjectUserLinks:
     authz_user.assert_in_project(proj_id)
 
     user_db_obj = crud_user.read_by_email(db=db, email=user.email)
-    user_db_obj = ProjectService().associate_user(
-        db=db, proj_id=proj_id, user_id=user_db_obj.id
+    ProjectService().associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
+    result = ProjectUserLinks(
+        project_id=proj_id,
+        users=[
+            UserRead.model_validate(u)
+            for u in crud_project.read(db=db, id=proj_id).users
+        ],
     )
-    result = UserRead.model_validate(user_db_obj)
-    ws.emit_to_project(DATSEvent.PROJECT_USER_ADDED, result, project_id=proj_id)
+    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=proj_id)
     return result
 
 
@@ -136,7 +141,7 @@ def delete_me(
 
 @router.delete(
     "/{proj_id}/user/{user_id}",
-    response_model=UserRead,
+    response_model=ProjectUserLinks,
     summary="Dissociates the Users with the Project with the given ID if it exists",
 )
 def dissociate_user_from_project(
@@ -146,10 +151,16 @@ def dissociate_user_from_project(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
-) -> UserRead:
+) -> ProjectUserLinks:
     authz_user.assert_in_project(proj_id)
 
-    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
-    result = UserRead.model_validate(user_db_obj)
-    ws.emit_to_project(DATSEvent.PROJECT_USER_REMOVED, result, project_id=proj_id)
+    crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
+    result = ProjectUserLinks(
+        project_id=proj_id,
+        users=[
+            UserRead.model_validate(u)
+            for u in crud_project.read(db=db, id=proj_id).users
+        ],
+    )
+    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=proj_id)
     return result

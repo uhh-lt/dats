@@ -91,7 +91,7 @@ const useBulkSetTags = () =>
   useMutation({
     mutationFn: TagService.setTagsBatch,
     meta: {
-      datsEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -100,7 +100,7 @@ const useBulkLinkTags = () =>
   useMutation({
     mutationFn: TagService.linkMultipleTags,
     meta: {
-      datsEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -109,7 +109,7 @@ const useBulkUnlinkTags = () =>
   useMutation({
     mutationFn: TagService.unlinkMultipleTags,
     meta: {
-      datsEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -118,7 +118,7 @@ const useBulkUpdateTags = () =>
   useMutation({
     mutationFn: TagService.updateTagsBatch,
     meta: {
-      datsEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_LINKED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });

@@ -188,7 +188,7 @@ def link_multiple_tags(
         links=crud_sdoc.read_tags(db=db, sdoc_ids=multi_link.source_document_ids)
     )
     project_id = crud_sdoc.read(db=db, id=multi_link.source_document_ids[0]).project_id
-    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
     return result
 
 
@@ -219,7 +219,7 @@ def set_tags_batch(
 
     result = SdocTagLinks(links=crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids))
     project_id = crud_sdoc.read(db=db, id=sdoc_ids[0]).project_id
-    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
     return result
 
 
@@ -259,7 +259,7 @@ def update_tags_batch(
 
     result = SdocTagLinks(links=crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids))
     project_id = crud_sdoc.read(db=db, id=sdoc_ids[0]).project_id
-    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
     return result
 
 
@@ -323,7 +323,7 @@ def unlink_multiple_tags(
         links=crud_sdoc.read_tags(db=db, sdoc_ids=multi_link.source_document_ids)
     )
     project_id = crud_sdoc.read(db=db, id=multi_link.source_document_ids[0]).project_id
-    ws.emit_to_project(DATSEvent.SDOC_TAGS_UPDATED, result, project_id=project_id)
+    ws.emit_to_project(DATSEvent.SDOC_TAGS_LINKED, result, project_id=project_id)
     return result
 
 

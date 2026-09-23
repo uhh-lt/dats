@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.user.user_dto import UserRead
 from repos.db.dto_base import UpdateDTOBase
 
 
@@ -30,3 +31,12 @@ class ProjectRead(ProjectBaseDTO):
     created: datetime = Field(description="Created timestamp of the Project")
     updated: datetime = Field(description="Updated timestamp of the Project")
     model_config = ConfigDict(from_attributes=True)
+
+
+class ProjectUserLinks(BaseModel):
+    """The complete resulting member list of a Project after a link/unlink operation."""
+
+    project_id: int = Field(description="ID of the Project")
+    users: list[UserRead] = Field(
+        description="Complete list of Users linked to the Project"
+    )

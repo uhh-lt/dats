@@ -18,7 +18,7 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRead
-from core.project.project_dto import ProjectRead
+from core.project.project_dto import ProjectRead, ProjectUserLinks
 from core.tag.tag_dto import SdocTagLinks, TagRead
 from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
@@ -53,7 +53,7 @@ class DATSEvent(StrEnum):
 
     SDOC_UPDATED = "SDOC_UPDATED"
     SDOC_DELETED = "SDOC_DELETED"
-    SDOC_TAGS_UPDATED = "SDOC_TAGS_UPDATED"
+    SDOC_TAGS_LINKED = "SDOC_TAGS_LINKED"
 
     SPAN_ANNOTATION_CREATED = "SPAN_ANNOTATION_CREATED"
     SPAN_ANNOTATION_UPDATED = "SPAN_ANNOTATION_UPDATED"
@@ -111,8 +111,7 @@ class DATSEvent(StrEnum):
     CLASSIFIER_UPDATED = "CLASSIFIER_UPDATED"
     CLASSIFIER_DELETED = "CLASSIFIER_DELETED"
 
-    PROJECT_USER_ADDED = "PROJECT_USER_ADDED"
-    PROJECT_USER_REMOVED = "PROJECT_USER_REMOVED"
+    PROJECT_USERS_LINKED = "PROJECT_USERS_LINKED"
 
     USER_UPDATED = "USER_UPDATED"
     USER_DELETED = "USER_DELETED"
@@ -165,7 +164,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.MEMO_DELETED_BATCH: list[MemoRead],
     DATSEvent.SDOC_UPDATED: SourceDocumentRead,
     DATSEvent.SDOC_DELETED: SourceDocumentRead,
-    DATSEvent.SDOC_TAGS_UPDATED: SdocTagLinks,
+    DATSEvent.SDOC_TAGS_LINKED: SdocTagLinks,
     DATSEvent.SPAN_ANNOTATION_CREATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_UPDATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_DELETED: SpanAnnotationDeleted,
@@ -210,8 +209,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.ASPECT_DELETED: AspectRead,
     DATSEvent.CLASSIFIER_UPDATED: ClassifierRead,
     DATSEvent.CLASSIFIER_DELETED: ClassifierRead,
-    DATSEvent.PROJECT_USER_ADDED: UserRead,
-    DATSEvent.PROJECT_USER_REMOVED: UserRead,
+    DATSEvent.PROJECT_USERS_LINKED: ProjectUserLinks,
     DATSEvent.USER_UPDATED: UserRead,
     DATSEvent.USER_DELETED: UserRead,
     DATSEvent.API_KEY_CREATED: ApiKeyRead,

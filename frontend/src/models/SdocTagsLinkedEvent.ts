@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UserRead } from "./UserRead";
-export type ProjectUserRemovedEvent = {
+import type { SdocTagLinks } from "./SdocTagLinks";
+export type SdocTagsLinkedEvent = {
   type?: string;
-  payload: UserRead;
+  payload: SdocTagLinks;
 };
