@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectUserLinks
 from core.user.user_crud import crud_user
 from core.user.user_dto import (
     PublicUserRead,
@@ -13,6 +14,12 @@ from core.user.user_dto import (
 def _model_validate_user_read(data: dict) -> UserRead:
     data["password"] = "hidden"  # because of exclude=True
     return UserRead.model_validate(data)
+
+
+def _model_validate_project_user_links(data: dict) -> ProjectUserLinks:
+    for user in data["users"]:
+        user["password"] = "hidden"  # because of exclude=True
+    return ProjectUserLinks.model_validate(data)
 
 
 def test_get_me(client: TestClient, test_user: UserRead):
@@ -142,18 +149,18 @@ def test_associate_user_to_project(client: TestClient, db_session, test_project)
     )
 
     # 3. Validate: check response and DB state
-    # 3.1 check response - ensure the returned user is the new user
+    # 3.1 check response - the payload is the complete resulting member list
     assert resp.status_code == 200, resp.text
-    data = _model_validate_user_read(resp.json())
-    assert data.id == new_user.id
-    assert data.email == new_user.email
-    assert data.first_name == new_user.first_name
-    assert data.last_name == new_user.last_name
+    data = _model_validate_project_user_links(resp.json())
+    assert data.project_id == test_project.id
+    assert new_user.id in [u.id for u in data.users]
 
     # 3.2 check DB state - ensure the user is associated with the project
     db_project = crud_project.read(db=db_session, id=test_project.id)
     project_user_ids = [u.id for u in db_project.users]
     assert new_user.id in project_user_ids
+    # the payload reflects the full member list
+    assert len(data.users) == len(project_user_ids)
 
 
 def test_dissociate_user_from_project(
@@ -168,14 +175,14 @@ def test_dissociate_user_from_project(
 
     # 3. Validate: check response and DB state
     assert resp.status_code == 200, resp.text
-    # 3.1 check response - ensure the returned user is the new_user
-    data = _model_validate_user_read(resp.json())
-    assert data.id == new_user.id
-    assert data.email == new_user.email
-    assert data.first_name == new_user.first_name
-    assert data.last_name == new_user.last_name
+    # 3.1 check response - the payload is the complete resulting member list
+    data = _model_validate_project_user_links(resp.json())
+    assert data.project_id == project.id
+    assert new_user.id not in [u.id for u in data.users]
 
     # 3.2 check DB state - ensure the user is dissociated from the project
     db_project = crud_project.read(db=db_session, id=project.id)
     project_user_ids = [u.id for u in db_project.users]
     assert new_user.id not in project_user_ids
+    # the payload reflects the full member list
+    assert len(data.users) == len(project_user_ids)

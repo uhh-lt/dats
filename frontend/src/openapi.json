@@ -6495,7 +6495,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserLinks" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6601,7 +6601,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserLinks" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -7132,14 +7132,14 @@
         }
       }
     },
-    "SDOC_TAGS_UPDATED": {
+    "SDOC_TAGS_LINKED": {
       "post": {
         "summary": " Webhook Handler",
-        "operationId": "ws_sdoc_tags_updated",
+        "operationId": "ws_sdoc_tags_linked",
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagsUpdatedEvent" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagsLinkedEvent" } } }
           }
         }
       }
@@ -7720,26 +7720,14 @@
         }
       }
     },
-    "PROJECT_USER_ADDED": {
+    "PROJECT_USERS_LINKED": {
       "post": {
         "summary": " Webhook Handler",
-        "operationId": "ws_project_user_added",
+        "operationId": "ws_project_users_linked",
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserAddedEvent" } } }
-          }
-        }
-      }
-    },
-    "PROJECT_USER_REMOVED": {
-      "post": {
-        "summary": " Webhook Handler",
-        "operationId": "ws_project_user_removed",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUserRemovedEvent" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectUsersLinkedEvent" } } }
           }
         }
       }
@@ -13847,28 +13835,34 @@
         "required": ["payload"],
         "title": "ProjectUpdatedEvent"
       },
-      "ProjectUserAddedEvent": {
+      "ProjectUserLinks": {
         "properties": {
-          "type": { "type": "string", "const": "PROJECT_USER_ADDED", "title": "Type", "default": "PROJECT_USER_ADDED" },
-          "payload": { "$ref": "#/components/schemas/UserRead" }
+          "project_id": { "type": "integer", "title": "Project Id", "description": "ID of the Project" },
+          "users": {
+            "items": { "$ref": "#/components/schemas/UserRead" },
+            "type": "array",
+            "title": "Users",
+            "description": "Complete list of Users linked to the Project"
+          }
         },
         "type": "object",
-        "required": ["payload"],
-        "title": "ProjectUserAddedEvent"
+        "required": ["project_id", "users"],
+        "title": "ProjectUserLinks",
+        "description": "The complete resulting member list of a Project after a link/unlink operation."
       },
-      "ProjectUserRemovedEvent": {
+      "ProjectUsersLinkedEvent": {
         "properties": {
           "type": {
             "type": "string",
-            "const": "PROJECT_USER_REMOVED",
+            "const": "PROJECT_USERS_LINKED",
             "title": "Type",
-            "default": "PROJECT_USER_REMOVED"
+            "default": "PROJECT_USERS_LINKED"
           },
-          "payload": { "$ref": "#/components/schemas/UserRead" }
+          "payload": { "$ref": "#/components/schemas/ProjectUserLinks" }
         },
         "type": "object",
         "required": ["payload"],
-        "title": "ProjectUserRemovedEvent"
+        "title": "ProjectUsersLinkedEvent"
       },
       "PublicUserRead": {
         "properties": {
@@ -14333,14 +14327,14 @@
         "required": ["links"],
         "title": "SdocTagLinks"
       },
-      "SdocTagsUpdatedEvent": {
+      "SdocTagsLinkedEvent": {
         "properties": {
-          "type": { "type": "string", "const": "SDOC_TAGS_UPDATED", "title": "Type", "default": "SDOC_TAGS_UPDATED" },
+          "type": { "type": "string", "const": "SDOC_TAGS_LINKED", "title": "Type", "default": "SDOC_TAGS_LINKED" },
           "payload": { "$ref": "#/components/schemas/SdocTagLinks" }
         },
         "type": "object",
         "required": ["payload"],
-        "title": "SdocTagsUpdatedEvent"
+        "title": "SdocTagsLinkedEvent"
       },
       "SdocTimelineAnalysisFilter-Input": {
         "properties": {

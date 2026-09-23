@@ -1,6 +1,6 @@
-import { appendListItem, removeListItem } from "@api/cache-sync/_utils/cacheWriterUtils";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
+import { ProjectUserLinks } from "@models/ProjectUserLinks";
 import { UserRead } from "@models/UserRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -47,24 +47,18 @@ const useUpdate = () =>
 const useAddUserToProject = () =>
   useMutation({
     mutationFn: UserService.associateUserToProject,
-    onSuccess: (data, variables) => {
-      // PROJECT_USER_ADDED's ws payload is a bare UserRead (no project_id), so
-      // the brain can't target the list — append via the mutation variables.
-      appendListItem([QueryKey.PROJECT_USERS, variables.projId], data);
-    },
     meta: {
-      successMessage: (user: UserRead) => `Added user ${user.first_name} ${user.last_name} to project`,
+      datsEvent: "PROJECT_USERS_LINKED",
+      successMessage: (data: ProjectUserLinks) => `Added user to project (${data.users.length} members)`,
     },
   });
 
 const useRemoveUserFromProject = () =>
   useMutation({
     mutationFn: UserService.dissociateUserFromProject,
-    onSuccess: (data, variables) => {
-      removeListItem([QueryKey.PROJECT_USERS, variables.projId], data.id);
-    },
     meta: {
-      successMessage: (user: UserRead) => `Removed user ${user.first_name} ${user.last_name} from project`,
+      datsEvent: "PROJECT_USERS_LINKED",
+      successMessage: (data: ProjectUserLinks) => `Removed user from project (${data.users.length} members)`,
     },
   });
 

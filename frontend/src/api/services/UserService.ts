@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ProjectAddUser } from "@models/ProjectAddUser";
+import type { ProjectUserLinks } from "@models/ProjectUserLinks";
 import type { PublicUserRead } from "@models/PublicUserRead";
 import type { UserRead } from "@models/UserRead";
 import type { UserUpdate } from "@models/UserUpdate";
@@ -57,7 +58,7 @@ export class UserService {
   }
   /**
    * Associates an existing User to the Project with the given ID if it exists
-   * @returns UserRead Successful Response
+   * @returns ProjectUserLinks Successful Response
    * @throws ApiError
    */
   public static associateUserToProject({
@@ -66,7 +67,7 @@ export class UserService {
   }: {
     projId: number;
     requestBody: ProjectAddUser;
-  }): CancelablePromise<UserRead> {
+  }): CancelablePromise<ProjectUserLinks> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/user/{proj_id}/user",
@@ -139,7 +140,7 @@ export class UserService {
   }
   /**
    * Dissociates the Users with the Project with the given ID if it exists
-   * @returns UserRead Successful Response
+   * @returns ProjectUserLinks Successful Response
    * @throws ApiError
    */
   public static dissociateUserFromProject({
@@ -148,7 +149,7 @@ export class UserService {
   }: {
     projId: number;
     userId: number;
-  }): CancelablePromise<UserRead> {
+  }): CancelablePromise<ProjectUserLinks> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/user/{proj_id}/user/{user_id}",

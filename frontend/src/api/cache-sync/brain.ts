@@ -425,7 +425,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // The payload carries the complete new tag list per sdoc — write it
     // directly. Tag-count aggregates cannot be derived from the links, so
     // those are invalidated.
-    case "SDOC_TAGS_UPDATED":
+    case "SDOC_TAGS_LINKED":
       Object.entries(event.payload.links).forEach(([sdocId, tagIds]) => {
         queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
       });
@@ -457,11 +457,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     }
 
     // ── Project membership ──────────────────────────────────────────────────
-    // PROJECT_USERS is keyed by project id, but the payload carries no
-    // project_id — the membership changed, so invalidate all project-user lists.
-    case "PROJECT_USER_ADDED":
-    case "PROJECT_USER_REMOVED":
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS] });
+    // The payload carries the complete resulting member list — write it
+    // directly into the project-keyed user list.
+    case "PROJECT_USERS_LINKED":
+      queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, event.payload.project_id], event.payload.users);
       break;
 
     default: {

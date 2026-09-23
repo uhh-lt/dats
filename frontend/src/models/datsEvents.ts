@@ -36,13 +36,12 @@ import type { ProjectMetadataCreatedEvent } from "./ProjectMetadataCreatedEvent"
 import type { ProjectMetadataDeletedEvent } from "./ProjectMetadataDeletedEvent";
 import type { ProjectMetadataUpdatedEvent } from "./ProjectMetadataUpdatedEvent";
 import type { ProjectUpdatedEvent } from "./ProjectUpdatedEvent";
-import type { ProjectUserAddedEvent } from "./ProjectUserAddedEvent";
-import type { ProjectUserRemovedEvent } from "./ProjectUserRemovedEvent";
+import type { ProjectUsersLinkedEvent } from "./ProjectUsersLinkedEvent";
 import type { SdocDeletedEvent } from "./SdocDeletedEvent";
 import type { SdocMetadataDeletedEvent } from "./SdocMetadataDeletedEvent";
 import type { SdocMetadataUpdatedEvent } from "./SdocMetadataUpdatedEvent";
 import type { SdocMetadataUpdatedBatchEvent } from "./SdocMetadataUpdatedBatchEvent";
-import type { SdocTagsUpdatedEvent } from "./SdocTagsUpdatedEvent";
+import type { SdocTagsLinkedEvent } from "./SdocTagsLinkedEvent";
 import type { SdocUpdatedEvent } from "./SdocUpdatedEvent";
 import type { SearchViewCreatedEvent } from "./SearchViewCreatedEvent";
 import type { SearchViewDeletedEvent } from "./SearchViewDeletedEvent";
@@ -112,13 +111,12 @@ export interface DATSEventMap {
   PROJECT_METADATA_DELETED: ProjectMetadataDeletedEvent["payload"];
   PROJECT_METADATA_UPDATED: ProjectMetadataUpdatedEvent["payload"];
   PROJECT_UPDATED: ProjectUpdatedEvent["payload"];
-  PROJECT_USER_ADDED: ProjectUserAddedEvent["payload"];
-  PROJECT_USER_REMOVED: ProjectUserRemovedEvent["payload"];
+  PROJECT_USERS_LINKED: ProjectUsersLinkedEvent["payload"];
   SDOC_DELETED: SdocDeletedEvent["payload"];
   SDOC_METADATA_DELETED: SdocMetadataDeletedEvent["payload"];
   SDOC_METADATA_UPDATED: SdocMetadataUpdatedEvent["payload"];
   SDOC_METADATA_UPDATED_BATCH: SdocMetadataUpdatedBatchEvent["payload"];
-  SDOC_TAGS_UPDATED: SdocTagsUpdatedEvent["payload"];
+  SDOC_TAGS_LINKED: SdocTagsLinkedEvent["payload"];
   SDOC_UPDATED: SdocUpdatedEvent["payload"];
   SEARCH_VIEW_CREATED: SearchViewCreatedEvent["payload"];
   SEARCH_VIEW_DELETED: SearchViewDeletedEvent["payload"];
@@ -189,13 +187,12 @@ export type DATSEvent =
   | (Omit<ProjectMetadataDeletedEvent, "type"> & { type: "PROJECT_METADATA_DELETED" })
   | (Omit<ProjectMetadataUpdatedEvent, "type"> & { type: "PROJECT_METADATA_UPDATED" })
   | (Omit<ProjectUpdatedEvent, "type"> & { type: "PROJECT_UPDATED" })
-  | (Omit<ProjectUserAddedEvent, "type"> & { type: "PROJECT_USER_ADDED" })
-  | (Omit<ProjectUserRemovedEvent, "type"> & { type: "PROJECT_USER_REMOVED" })
+  | (Omit<ProjectUsersLinkedEvent, "type"> & { type: "PROJECT_USERS_LINKED" })
   | (Omit<SdocDeletedEvent, "type"> & { type: "SDOC_DELETED" })
   | (Omit<SdocMetadataDeletedEvent, "type"> & { type: "SDOC_METADATA_DELETED" })
   | (Omit<SdocMetadataUpdatedEvent, "type"> & { type: "SDOC_METADATA_UPDATED" })
   | (Omit<SdocMetadataUpdatedBatchEvent, "type"> & { type: "SDOC_METADATA_UPDATED_BATCH" })
-  | (Omit<SdocTagsUpdatedEvent, "type"> & { type: "SDOC_TAGS_UPDATED" })
+  | (Omit<SdocTagsLinkedEvent, "type"> & { type: "SDOC_TAGS_LINKED" })
   | (Omit<SdocUpdatedEvent, "type"> & { type: "SDOC_UPDATED" })
   | (Omit<SearchViewCreatedEvent, "type"> & { type: "SEARCH_VIEW_CREATED" })
   | (Omit<SearchViewDeletedEvent, "type"> & { type: "SEARCH_VIEW_DELETED" })
