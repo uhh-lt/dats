@@ -35,13 +35,13 @@ export function WhiteboardDashboardView() {
     mutate: deleteWhiteboard,
     isPending: isDeletingWhiteboard,
     variables: deletingVariables,
-  } = useDeleteWhiteboard(projectId);
+  } = useDeleteWhiteboard();
   const { mutate: updateWhiteboard, isPending: isUpdatingWhiteboard } = useUpdateWhiteboard();
   const {
     mutate: duplicateWhiteboard,
     isPending: isDuplicatingWhiteboard,
     variables: duplicatingVariables,
-  } = useDuplicateWhiteboard(projectId);
+  } = useDuplicateWhiteboard();
 
   // CRUD actions
   const handleDuplicateClick = (row: MRT_Row<AnalysisDashboardRow>) => {

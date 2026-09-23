@@ -183,24 +183,21 @@ const websocketEventHandlers: {
 
   // ── Whiteboards ────────────────────────────────────────────────────────────
   WHITEBOARD_CREATED: (whiteboard) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, whiteboard.project_id] }),
+    handleEntityEvent({ type: "WHITEBOARD_CREATED", payload: whiteboard }, "websocket"),
   WHITEBOARD_UPDATED: (whiteboard) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, whiteboard.project_id] }),
+    handleEntityEvent({ type: "WHITEBOARD_UPDATED", payload: whiteboard }, "websocket"),
   WHITEBOARD_DELETED: (whiteboard) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, whiteboard.project_id] }),
+    handleEntityEvent({ type: "WHITEBOARD_DELETED", payload: whiteboard }, "websocket"),
 
   // ── Timeline analyses ──────────────────────────────────────────────────────
-  TIMELINE_ANALYSIS_CREATED: (ta) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, ta.project_id] }),
-  TIMELINE_ANALYSIS_UPDATED: (ta) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, ta.project_id] }),
-  TIMELINE_ANALYSIS_DELETED: (ta) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, ta.project_id] }),
+  TIMELINE_ANALYSIS_CREATED: (ta) => handleEntityEvent({ type: "TIMELINE_ANALYSIS_CREATED", payload: ta }, "websocket"),
+  TIMELINE_ANALYSIS_UPDATED: (ta) => handleEntityEvent({ type: "TIMELINE_ANALYSIS_UPDATED", payload: ta }, "websocket"),
+  TIMELINE_ANALYSIS_DELETED: (ta) => handleEntityEvent({ type: "TIMELINE_ANALYSIS_DELETED", payload: ta }, "websocket"),
 
   // ── Concept-over-time analyses ─────────────────────────────────────────────
-  COTA_CREATED: (cota) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, cota.project_id] }),
-  COTA_UPDATED: (cota) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, cota.project_id] }),
-  COTA_DELETED: (cota) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, cota.project_id] }),
+  COTA_CREATED: (cota) => handleEntityEvent({ type: "COTA_CREATED", payload: cota }, "websocket"),
+  COTA_UPDATED: (cota) => handleEntityEvent({ type: "COTA_UPDATED", payload: cota }, "websocket"),
+  COTA_DELETED: (cota) => handleEntityEvent({ type: "COTA_DELETED", payload: cota }, "websocket"),
 
   // ── Perspectives (aspects) ─────────────────────────────────────────────────
   ASPECT_CREATED: (aspect) =>

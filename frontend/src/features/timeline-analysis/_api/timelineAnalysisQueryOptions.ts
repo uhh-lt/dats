@@ -1,5 +1,4 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { queryClient } from "@api/queryClient";
 import { TimelineAnalysisService } from "@api/services/TimelineAnalysisService";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { useAppSelector } from "@store/storeHooks";
@@ -23,12 +22,8 @@ export const projectTimelineAnalysisQueryOptions = (projectId: number) =>
 export const useCreateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.create,
-    onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "TIMELINE_ANALYSIS_CREATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Created Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -36,12 +31,8 @@ export const useCreateTimelineAnalysis = () =>
 export const useUpdateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.updateById,
-    onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "TIMELINE_ANALYSIS_UPDATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Updated Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -49,12 +40,8 @@ export const useUpdateTimelineAnalysis = () =>
 export const useRecomputeTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.recomputeById,
-    onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "TIMELINE_ANALYSIS_UPDATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Recomputed Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -62,12 +49,8 @@ export const useRecomputeTimelineAnalysis = () =>
 export const useDuplicateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.duplicateById,
-    onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "TIMELINE_ANALYSIS_CREATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Duplicated Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -75,15 +58,8 @@ export const useDuplicateTimelineAnalysis = () =>
 export const useDeleteTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.deleteById,
-    onSuccess(data) {
-      queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) => {
-        if (!prev) return prev;
-        const next = { ...prev };
-        delete next[data.id];
-        return next;
-      });
-    },
     meta: {
+      entityEvent: "TIMELINE_ANALYSIS_DELETED",
       successMessage: (timeline: TimelineAnalysisRead) => `Deleted Timeline Analysis "${timeline.name}"`,
     },
   });
