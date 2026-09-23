@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Literal, Type
 
 from fastapi import APIRouter, Depends
 from pydantic import create_model
@@ -38,10 +38,11 @@ def register_job_endpoints(
 
     job_name = "".join([x.capitalize() for x in job_type.split("_")])
 
-    # Dynamically create a concrete JobRead model using create_model and JobRead as base
+    # Dynamically create a concrete JobRead model using create_model and JobRead as base.
     JobReadModel = create_model(
         f"{job_name}JobRead",
         __base__=JobRead[input_model, output_model],
+        job_type=(Literal[job_type.value], job_type.value),
     )
 
     # Start job

@@ -94,6 +94,9 @@ class Job:
     def get_status(self) -> JobStatus:
         return JobStatus(self.job.get_status())
 
+    def publishes_updates(self) -> bool:
+        return bool(self.job.meta.get("publish_updates", False))
+
 
 class JobInputBase(BaseModel):
     project_id: int = Field(description="Project ID associated with the job")

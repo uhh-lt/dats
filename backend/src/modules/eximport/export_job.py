@@ -10,6 +10,7 @@ from systems.job_system.job_register_decorator import register_job
     input_type=ExportJobInput,
     output_type=ExportJobOutput,
     generate_endpoints=EndpointGeneration.MINIMAL,
+    publish_updates=True,
 )
 def export_data(payload: ExportJobInput, job: Job) -> ExportJobOutput:
     from modules.eximport.export_service import ExportService

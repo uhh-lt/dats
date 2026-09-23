@@ -25,6 +25,7 @@ sqlr = SQLRepo()
     job_type=JobType.COTA_REFINEMENT,
     input_type=COTARefinementJobInput,
     output_type=None,
+    publish_updates=True,
     device="gpu",
     result_ttl=JobTiming.INFINITY,
     timeout=JobTiming.ONE_DAY,

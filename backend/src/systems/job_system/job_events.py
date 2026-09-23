@@ -132,6 +132,10 @@ def publish_job_update(
         )
         from common.job_type import JobType
 
+        # Internal jobs (e.g. doc-processing pipeline steps) are not published:
+        if not job.publishes_updates():
+            return
+
         # Build the payload with the concrete per-type JobRead model so it is a
         # member of the JOB_UPDATED union (a parametrized generic alias
         # instance is not).

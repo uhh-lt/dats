@@ -20,6 +20,7 @@ sqlr = SQLRepo()
     input_type=LLMJobInput,
     output_type=LLMJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
+    publish_updates=True,
     router=router,
     device="api",
     result_ttl=JobTiming.NINETY_DAYS,
