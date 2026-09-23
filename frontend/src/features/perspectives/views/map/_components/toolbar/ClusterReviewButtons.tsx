@@ -38,22 +38,17 @@ export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterRevie
   }, [sdocId2Doc, selectedSdocIds]);
 
   // event handlers
-  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesQueryOptions.useLabelDocs();
+  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesQueryOptions.useLabelDocs(aspectId);
   const handleLabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
-    labelDocsMutation({
-      aspectId: aspectId,
-      requestBody: selectedSdocIds,
-    });
+    labelDocsMutation(selectedSdocIds);
   };
 
-  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = PerspectivesQueryOptions.useUnlabelDocs();
+  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } =
+    PerspectivesQueryOptions.useUnlabelDocs(aspectId);
   const handleUnlabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
-    unlabelDocsMutation({
-      aspectId: aspectId,
-      requestBody: selectedSdocIds,
-    });
+    unlabelDocsMutation(selectedSdocIds);
   };
 
   return (

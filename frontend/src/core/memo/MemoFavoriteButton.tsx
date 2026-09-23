@@ -10,14 +10,13 @@ interface MemoFavoriteButtonProps {
 
 export const MemoFavoriteButton = memo(
   ({ memoIds, isFavorite, ...props }: MemoFavoriteButtonProps & IconButtonProps) => {
-    const { mutate: favoriteMemos, isPending } = MemoHooks.useFavoriteMemos();
+    const { mutate: updateMemos, isPending } = MemoHooks.useUpdateMemos();
 
     const handleClick = useCallback(() => {
-      favoriteMemos({
-        memoIds,
-        isFavorite: !isFavorite,
+      updateMemos({
+        requestBody: memoIds.map((memoId) => ({ memo_id: memoId, is_favorite: !isFavorite })),
       });
-    }, [memoIds, isFavorite, favoriteMemos]);
+    }, [memoIds, isFavorite, updateMemos]);
 
     return (
       <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>

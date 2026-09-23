@@ -2,10 +2,10 @@ import { queryClient } from "@api/queryClient";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
+import { ProjectService } from "@api/services/ProjectService";
 import { ProjectCreate } from "@models/ProjectCreate";
 import { ProjectRead } from "@models/ProjectRead";
 import { SDocStatus } from "@models/SDocStatus";
-import { ProjectService } from "@api/services/ProjectService";
 
 // PROJECT QUERIES
 export const userProjectsQueryOptions = () =>
@@ -39,7 +39,7 @@ const useGetProject = (projectId: number | null | undefined) =>
 const useCreateProject = () => {
   return useMutation({
     mutationFn: async ({ requestBody }: { requestBody: ProjectCreate }) => {
-      return await ProjectService.createNewProject({ requestBody });
+      return await ProjectService.createProject({ requestBody });
     },
     onSuccess: (data) => {
       queryClient.setQueryData<ProjectRead[]>([QueryKey.USER_PROJECTS], (oldData) =>

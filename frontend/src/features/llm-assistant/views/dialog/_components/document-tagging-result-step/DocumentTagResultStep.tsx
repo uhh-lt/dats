@@ -74,10 +74,9 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation(
       {
-        requestBody: rows.map((row) => ({
-          source_document_id: row.sdocId,
-          tag_ids: row.merged_tags.map((tag) => tag.id),
-        })),
+        requestBody: {
+          links: Object.fromEntries(rows.map((row) => [row.sdocId, row.merged_tags.map((tag) => tag.id)])),
+        },
       },
       {
         onSuccess() {

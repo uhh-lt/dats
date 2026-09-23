@@ -1,7 +1,7 @@
-import { FolderRead } from "@models/FolderRead";
-import { FolderType } from "@models/FolderType";
 import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
+import { FolderRead } from "@models/FolderRead";
+import { FolderType } from "@models/FolderType";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
@@ -93,7 +93,7 @@ const useCreateFolder = () =>
 
 const useUpdateFolder = () =>
   useMutation({
-    mutationFn: FolderService.updateFolder,
+    mutationFn: FolderService.updateById,
     onSuccess: (data) => {
       queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
@@ -132,7 +132,7 @@ const useMoveFolders = () => {
 
 const useDeleteFolder = () =>
   useMutation({
-    mutationFn: FolderService.deleteFolder,
+    mutationFn: FolderService.deleteById,
     onSuccess: (data) => {
       queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) => {
         if (!oldData) return oldData;

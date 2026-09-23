@@ -34,7 +34,7 @@ const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
 // SENTENCE MUTATIONS
 const useCreateSentenceAnnotation = () =>
   useMutation({
-    mutationFn: SentenceAnnotationService.addSentenceAnnotation,
+    mutationFn: SentenceAnnotationService.createSentenceAnnotation,
     onSuccess: (data) => {
       queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, data.id], data);
       queryClient.setQueryData<SentenceAnnotatorResult>(
@@ -61,7 +61,7 @@ const useCreateSentenceAnnotation = () =>
 
 const useCreateBulkSentenceAnnotation = () =>
   useMutation({
-    mutationFn: SentenceAnnotationService.addSentenceAnnotationsBulk,
+    mutationFn: SentenceAnnotationService.createSentenceAnnotationsBulk,
     onSuccess: (data) => {
       if (data.length === 0) return;
       const sdocId = data[0].sdoc_id;
@@ -203,7 +203,7 @@ const useUpdateSentenceAnnotation = () =>
 
 const useUpdateBulkSentenceAnno = () =>
   useMutation({
-    mutationFn: SentenceAnnotationService.updateSentAnnoAnnotationsBulk,
+    mutationFn: SentenceAnnotationService.updateSentenceAnnotationsBulk,
     onSuccess(data) {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
       data.forEach((annotation) => {
@@ -257,7 +257,7 @@ const useDeleteSentenceAnnotation = () =>
 
 const useDeleteBulkSentenceAnnotation = () =>
   useMutation({
-    mutationFn: SentenceAnnotationService.deleteBulkById,
+    mutationFn: SentenceAnnotationService.deleteSentenceAnnotationsBulk,
     onSuccess(data) {
       if (data.length === 0) return;
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of SentenceAnnotationTable
@@ -283,7 +283,7 @@ const useDeleteBulkSentenceAnnotation = () =>
 const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
     mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
-      SentenceAnnotationService.deleteBulkById({
+      SentenceAnnotationService.deleteSentenceAnnotationsBulk({
         requestBody: sentAnnosToDelete.map((anno) => anno.id),
       }),
     // optimistic updates

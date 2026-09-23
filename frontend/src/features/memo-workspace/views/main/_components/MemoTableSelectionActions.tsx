@@ -12,13 +12,16 @@ interface MemoTableSelectionActionsProps {
 
 /** Bulk actions for selected memos in the TABLE layout: favorite, unfavorite, and delete. */
 export function MemoTableSelectionActions({ selectedIds, clearSelection }: MemoTableSelectionActionsProps): ReactNode {
-  const { mutate: favoriteMemos, isPending: isFavoriting } = MemoHooks.useFavoriteMemos();
+  const { mutate: updateMemos, isPending: isFavoriting } = MemoHooks.useUpdateMemos();
 
   const handleFavorite = useCallback(
     (isFavorite: boolean) => {
-      favoriteMemos({ memoIds: selectedIds, isFavorite }, { onSuccess: clearSelection });
+      updateMemos(
+        { requestBody: selectedIds.map((memoId) => ({ memo_id: memoId, is_favorite: isFavorite })) },
+        { onSuccess: clearSelection },
+      );
     },
-    [favoriteMemos, selectedIds, clearSelection],
+    [updateMemos, selectedIds, clearSelection],
   );
 
   return (

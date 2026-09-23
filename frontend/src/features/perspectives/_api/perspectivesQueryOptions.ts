@@ -8,6 +8,7 @@ import { ClusterRead } from "@models/ClusterRead";
 import { CodeRead } from "@models/CodeRead";
 import { JobStatus } from "@models/JobStatus";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { dateToLocaleDate } from "@utils/DateUtils";
@@ -158,27 +159,51 @@ const usePollPerspectivesJob = (
     initialData,
   });
 
-const useLabelDocs = () =>
-  useMutation({
-    mutationFn: PerspectivesService.acceptLabel,
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
+const useLabelDocs = (aspectId: number) => {
+  const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
+  const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
+  return useMutation({
+    mutationFn: (sdocIds: number[]) =>
+      PerspectivesService.acceptLabel({
+        aspectId,
+        searchQuery,
+        requestBody: {
+          sdoc_ids: sdocIds,
+          filter: filter as Body_perspectives_visualize_documents["filter"],
+          sorts: [],
+        },
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData([QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter], data);
     },
     meta: {
-      successMessage: (data: number) => `Accepted cluster(s) for ${data} documents`,
+      successMessage: (data: PerspectivesVisualization) => `Accepted cluster(s) for ${data.docs.length} documents`,
     },
   });
+};
 
-const useUnlabelDocs = () =>
-  useMutation({
-    mutationFn: PerspectivesService.revertLabel,
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
+const useUnlabelDocs = (aspectId: number) => {
+  const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
+  const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
+  return useMutation({
+    mutationFn: (sdocIds: number[]) =>
+      PerspectivesService.revertLabel({
+        aspectId,
+        searchQuery,
+        requestBody: {
+          sdoc_ids: sdocIds,
+          filter: filter as Body_perspectives_visualize_documents["filter"],
+          sorts: [],
+        },
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData([QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter], data);
     },
     meta: {
-      successMessage: (data: number) => `Reverted cluster(s) for ${data} documents`,
+      successMessage: (data: PerspectivesVisualization) => `Reverted cluster(s) for ${data.docs.length} documents`,
     },
   });
+};
 
 const useGetDocVisualization = (
   aspectId: number,

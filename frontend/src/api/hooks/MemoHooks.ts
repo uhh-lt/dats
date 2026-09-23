@@ -96,7 +96,6 @@ const invalidateAttachedObjectMemoIds = (attachedObjectType: AttachedObjectType,
   switch (attachedObjectType) {
     case AttachedObjectType.SOURCE_DOCUMENT:
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, attachedObjectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, attachedObjectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       break;
     case AttachedObjectType.TAG:
@@ -125,7 +124,7 @@ const invalidateAttachedObjectMemoIds = (attachedObjectType: AttachedObjectType,
 // MEMO MUTATIONS
 const useCreateMemo = () =>
   useMutation({
-    mutationFn: MemoService.addMemo,
+    mutationFn: MemoService.createMemo,
     onSuccess: (data) => {
       queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
       queryClient.setQueryData<MemoRead[]>(
@@ -160,14 +159,9 @@ const useUpdateMemo = () =>
     },
   });
 
-const useFavoriteMemos = () =>
+const useUpdateMemos = () =>
   useMutation({
-    mutationFn: ({ memoIds, isFavorite }: { memoIds: number[]; isFavorite: boolean }) => {
-      const promises = memoIds.map((memoId) =>
-        isFavorite ? MemoService.favoriteById({ memoId }) : MemoService.unfavoriteById({ memoId }),
-      );
-      return Promise.all(promises);
-    },
+    mutationFn: MemoService.updateMemosBulk,
     onSuccess: (memos) => {
       memos.forEach((memo) => {
         updateInvalidation(memo);
@@ -175,8 +169,7 @@ const useFavoriteMemos = () =>
       invalidateWorkspaceQueries();
     },
     meta: {
-      successMessage: (memos: MemoRead[], variables: { memoIds: number[]; isFavorite: boolean }) =>
-        `${variables.isFavorite ? "Favorited" : "Unfavorited"} ${memos.length} memo(s)`,
+      successMessage: (memos: MemoRead[]) => `Updated ${memos.length} memo(s)`,
     },
   });
 
@@ -235,7 +228,7 @@ export const MemoHooks = {
   useMemoSearchInfo,
   useCreateMemo,
   useUpdateMemo,
-  useFavoriteMemos,
+  useUpdateMemos,
   useDeleteMemo,
   useDeleteMemos,
   useRecordRecentMemo,

@@ -109,10 +109,9 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
     TagRecommendationHooks.useReviewTagRecommendations();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation({
-      requestBody: rows.map((row) => ({
-        source_document_id: row.sdocId,
-        tag_ids: row.merged_tags.map((tag) => tag.id),
-      })),
+      requestBody: {
+        links: Object.fromEntries(rows.map((row) => [row.sdocId, row.merged_tags.map((tag) => tag.id)])),
+      },
     });
     reviewTagsMutation({
       requestBody: rows.map((row) => row.recommendation_ids).flat(),

@@ -44,7 +44,7 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: n
 const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationFn: (variables: BBoxAnnotationCreate) =>
-      BboxAnnotationService.addBboxAnnotation({ requestBody: variables }),
+      BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
     onSuccess: (data) => {
       queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
       queryClient.setQueryData<BBoxAnnotationRead[]>(
@@ -111,7 +111,7 @@ const useUpdateBBoxAnnotation = () =>
 
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
-    mutationFn: BboxAnnotationService.updateBboxAnnoAnnotationsBulk,
+    mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
     onSuccess(data) {
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of BBoxAnnotationTable
       data.forEach((annotation) => {
@@ -162,7 +162,7 @@ const useDeleteBBoxAnnotation = () =>
 
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
-    mutationFn: BboxAnnotationService.deleteBulkById,
+    mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
     onSuccess(data) {
       if (data.length === 0) return;
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of BBoxAnnotationTable

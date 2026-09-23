@@ -1,11 +1,11 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
-import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
-import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { queryClient } from "@api/queryClient";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { QueryKey } from "./QueryKey";
 
 // SDOC QUERIES
@@ -102,7 +102,7 @@ const useDeleteDocuments = () =>
 
 const useUpdateName = () =>
   useMutation({
-    mutationFn: SourceDocumentService.updateSdoc,
+    mutationFn: SourceDocumentService.updateById,
     onSuccess: (data) => {
       queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, data.id], data);
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });

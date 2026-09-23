@@ -44,7 +44,7 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: n
 // SPAN MUTATIONS
 const useCreateBulkAnnotations = () =>
   useMutation({
-    mutationFn: SpanAnnotationService.addSpanAnnotationsBulk,
+    mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
     onSuccess: (data) => {
       if (data.length === 0) return;
       const sdocId = data[0].sdoc_id;
@@ -61,7 +61,7 @@ const useCreateBulkAnnotations = () =>
 const useCreateSpanAnnotation = () =>
   useMutation({
     mutationFn: (variables: SpanAnnotationCreate) =>
-      SpanAnnotationService.addSpanAnnotation({ requestBody: variables }),
+      SpanAnnotationService.createSpanAnnotation({ requestBody: variables }),
     onSuccess: (data) => {
       queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, data.id], data);
       queryClient.setQueryData<SpanAnnotationRead[]>(
@@ -220,7 +220,7 @@ const useDeleteSpanAnnotation = () =>
 
 const useDeleteBulkSpanAnnotation = () =>
   useMutation({
-    mutationFn: SpanAnnotationService.deleteBulkById,
+    mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
     onSuccess(data) {
       if (data.length === 0) return;
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
