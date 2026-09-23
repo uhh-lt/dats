@@ -72,6 +72,10 @@ class Job:
             self.job.meta["finished"] = finished
         self.job.save_meta()
 
+        from systems.job_system.job_events import publish_job_update
+
+        publish_job_update(self)
+
     def get_id(self) -> str:
         return self.job.id
 

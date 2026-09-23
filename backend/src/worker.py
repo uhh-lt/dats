@@ -44,6 +44,11 @@ def init_repos_and_services() -> list[RepoBase]:
 
     JobService().initialize()
 
+    # Build the JOB_UPDATED event model so job emission works in worker processes
+    from common.dats_event import build_job_event_models
+
+    build_job_event_models()
+
     return repos
 
 

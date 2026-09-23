@@ -9,14 +9,12 @@ from redis.asyncio.client import PubSub
 
 from common.dats_event import DATSEventBase
 from common.singleton_meta import SingletonMeta
+from config import conf
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from repos.async_redis_repo import AsyncRedisRepo
 from repos.db.sql_repo import SQLRepo
 from systems.websocket_system.websocket_dto import WebSocketEnvelope
-
-# Redis Pub/Sub channel used to fan out websocket events across all API workers.
-WEBSOCKET_CHANNEL = "dats:ws:events"
 
 # Delay before attempting to re-establish the Redis listener after a failure.
 REDIS_RECONNECT_DELAY_SECONDS = 5
@@ -59,13 +57,13 @@ class WebsocketService(metaclass=SingletonMeta):
             return
 
         pubsub = AsyncRedisRepo().redis_connection().pubsub()
-        await pubsub.subscribe(WEBSOCKET_CHANNEL)
+        await pubsub.subscribe(conf.redis.ws_fanout_channel)
         self._pubsub = pubsub
         self._listener_task = asyncio.create_task(
             self._redis_listener(), name=f"ws-redis-listener-{self.worker_pid}"
         )
         logger.info(
-            f"WS subscribed to Redis channel '{WEBSOCKET_CHANNEL}' and started listener task"
+            f"WS subscribed to Redis fan-out channel '{conf.redis.ws_fanout_channel}' and started listener task"
         )
 
     async def shutdown(self) -> None:
@@ -87,7 +85,7 @@ class WebsocketService(metaclass=SingletonMeta):
 
         if self._pubsub is not None:
             try:
-                await self._pubsub.unsubscribe(WEBSOCKET_CHANNEL)
+                await self._pubsub.unsubscribe(conf.redis.ws_fanout_channel)
                 await self._pubsub.close()
             except Exception as e:
                 logger.warning(f"Error while closing websocket pub/sub: {e}")
@@ -216,11 +214,13 @@ class WebsocketService(metaclass=SingletonMeta):
         """Publish an event envelope to Redis so other workers can deliver it."""
         try:
             redis_conn = AsyncRedisRepo().redis_connection()
-            await redis_conn.publish(WEBSOCKET_CHANNEL, envelope.model_dump_json())
+            await redis_conn.publish(
+                conf.redis.ws_fanout_channel, envelope.model_dump_json()
+            )
             logger.debug(
                 f"Published websocket event '{envelope.message.type}' "
                 f"(kind={envelope.kind}, user_ids={envelope.user_ids}) "
-                f"to channel '{WEBSOCKET_CHANNEL}'"
+                f"to channel '{conf.redis.ws_fanout_channel}'"
             )
         except Exception as e:
             # Local delivery already happened; other workers will miss this
@@ -268,10 +268,10 @@ class WebsocketService(metaclass=SingletonMeta):
                 except Exception:
                     pass
             pubsub = AsyncRedisRepo().redis_connection().pubsub()
-            await pubsub.subscribe(WEBSOCKET_CHANNEL)
+            await pubsub.subscribe(conf.redis.ws_fanout_channel)
             self._pubsub = pubsub
             logger.info(
-                f"Re-subscribed to websocket Redis channel '{WEBSOCKET_CHANNEL}'"
+                f"Re-subscribed to websocket Redis fan-out channel '{conf.redis.ws_fanout_channel}'"
             )
         except Exception as e:
             logger.error(f"Failed to re-subscribe to websocket Redis channel: {e}")
@@ -283,7 +283,7 @@ class WebsocketService(metaclass=SingletonMeta):
         except ValidationError:
             logger.warning(
                 f"Received malformed websocket envelope on channel "
-                f"'{WEBSOCKET_CHANNEL}': {data!r}"
+                f"'{conf.redis.ws_fanout_channel}': {data!r}"
             )
             return
 

@@ -179,7 +179,13 @@ class JobService(metaclass=SingletonMeta):
             retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
             job_timeout=job_info["timeout"],
         )
-        return Job(rq_job)
+        job = Job(rq_job)
+
+        from systems.job_system.job_events import publish_job_update
+
+        publish_job_update(job)
+
+        return job
 
     def get_job(self, job_id: str) -> Job:
         return Job(rq.job.Job.fetch(job_id, connection=self.redis_conn))
@@ -245,6 +251,11 @@ class JobService(metaclass=SingletonMeta):
         job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
         if job and job.is_started:
             job.cancel()
+
+            # Push the CANCELED state to websocket clients (never raises)
+            from systems.job_system.job_events import publish_job_update
+
+            publish_job_update(Job(job))
             return True
         return False
 
@@ -252,6 +263,11 @@ class JobService(metaclass=SingletonMeta):
         job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
         if job and job.is_failed:
             job.requeue()
+
+            # Push the QUEUED state to websocket clients (never raises)
+            from systems.job_system.job_events import publish_job_update
+
+            publish_job_update(Job(job))
             return True
         return False
 

@@ -20,7 +20,7 @@ Design goals:
   messages.
 - **Multi-worker safe** — the API runs with several uvicorn workers; events
   fan out across all of them via Redis Pub/Sub.
-- **No phantom events** — events are delivered *after* the request's database
+- **No phantom events** — events are delivered _after_ the request's database
   commit, never from inside the transaction.
 
 ## Architecture Overview
@@ -33,7 +33,7 @@ flowchart LR
         SVC -->|local delivery| CA[Clients of A]
     end
     subgraph Redis
-        CH[(channel: dats:ws:events)]
+        CH[(channel: dats:ws:fanout)]
     end
     subgraph Worker B (uvicorn)
         SVC2[WebsocketService] -->|local delivery| CB[Clients of B]
@@ -44,14 +44,14 @@ flowchart LR
 
 The system has four parts:
 
-| File | Role |
-| --- | --- |
-| [websocket_endpoint.py](websocket_endpoint.py) | The `/ws` endpoint clients connect to. Authenticates and registers connections. |
-| [websocket_service.py](websocket_service.py) | `WebsocketService` — per-process connection registry + Redis Pub/Sub backplane. |
-| [websocket_dependency.py](websocket_dependency.py) | `WebsocketEmitter` — the FastAPI dependency endpoints use to emit events. |
-| [websocket_dto.py](websocket_dto.py) | Wire types: the `WebSocketEvent` union and the internal Redis `WebSocketEnvelope`. |
+| File                                               | Role                                                                               |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [websocket_endpoint.py](websocket_endpoint.py)     | The `/ws` endpoint clients connect to. Authenticates and registers connections.    |
+| [websocket_service.py](websocket_service.py)       | `WebsocketService` — per-process connection registry + Redis Pub/Sub backplane.    |
+| [websocket_dependency.py](websocket_dependency.py) | `WebsocketEmitter` — the FastAPI dependency endpoints use to emit events.          |
+| [websocket_dto.py](websocket_dto.py)               | Wire types: the `WebSocketEvent` union and the internal Redis `WebSocketEnvelope`. |
 
-Event *definitions* live outside this folder in
+Event _definitions_ live outside this folder in
 [common/dats_event.py](../../common/dats_event.py), because they are domain
 events, not websocket-specific machinery.
 
@@ -98,20 +98,20 @@ def create_new_code(
 
 The emitter provides four audience scopes:
 
-| Method | Audience |
-| --- | --- |
+| Method                                            | Audience                                    |
+| ------------------------------------------------- | ------------------------------------------- |
 | `emit_to_project(event, payload, project_id=...)` | All members of a project (the common case). |
-| `emit_to_user(event, payload, user_id=...)` | A single user. |
-| `emit_to_users(event, payload, user_ids=[...])` | An explicit set of users. |
-| `emit_to_all(event, payload)` | Every connected client (global events). |
+| `emit_to_user(event, payload, user_id=...)`       | A single user.                              |
+| `emit_to_users(event, payload, user_ids=[...])`   | An explicit set of users.                   |
+| `emit_to_all(event, payload)`                     | Every connected client (global events).     |
 
 Two rules make this safe and ergonomic:
 
 1. **Deferred delivery.** Every `emit_*` call schedules the actual send as a
-   FastAPI `BackgroundTask`, so the event fires *after* the request's
+   FastAPI `BackgroundTask`, so the event fires _after_ the request's
    database commit. If the transaction rolls back, no event leaks.
 2. **Actor exclusion.** A JWT (human) triggerer already has the mutation
-   result — it *is* the HTTP response — so they are excluded from the
+   result — it _is_ the HTTP response — so they are excluded from the
    audience; their clients learn nothing new. An API-key triggerer has no
    human session, so the event is sent to everyone, including the actor's own
    connected clients. This rule applies to all four scopes; e.g.
@@ -166,7 +166,7 @@ checkers cannot see it as a valid type expression — annotate with
 `DATSEventBase` instead; the single `pyright: ignore` lives at the union's
 usage site.)
 
-Every event is also registered as an OpenAPI *webhook* in `main.py`, so the
+Every event is also registered as an OpenAPI _webhook_ in `main.py`, so the
 generated `openapi.json` (and thus the frontend's API client) contains the
 full schema of every event the server can push.
 
@@ -175,14 +175,14 @@ full schema of every event the server can push.
 The API runs with multiple uvicorn workers — independent OS processes, each
 with its own connection registry. A mutation handled by worker A must still
 reach clients connected to worker B. This is solved with a Redis Pub/Sub
-backplane (channel `dats:ws:events`):
+backplane (channel `dats:ws:fanout`):
 
 1. Every public send method of `WebsocketService` first delivers the event to
    the matching **local** connections, then publishes a `WebSocketEnvelope`
    to Redis.
 2. Each worker runs a background listener task (started in the FastAPI
    lifespan `startup`, stopped in `shutdown`) that receives envelopes and
-   delivers them to *its* local connections.
+   delivers them to _its_ local connections.
 3. Each envelope carries `origin_worker` (the publisher's PID); a worker
    skips envelopes it published itself, since it already delivered them
    locally.

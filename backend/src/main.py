@@ -121,6 +121,13 @@ app.add_middleware(SessionMiddleware, secret_key=conf.auth.session.secret)
 
 # 4. Dynamically Include Endpoints
 import_by_suffix("_job.py")
+
+# 4a. Build the JOB_UPDATED websocket event model (needs all jobs registered,
+# must run before websocket_dto.py is first imported via the endpoints below)
+from common.dats_event import build_job_event_models
+
+build_job_event_models()
+
 endpoint_modules = import_by_suffix("_endpoint.py")
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
