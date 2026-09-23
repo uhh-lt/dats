@@ -27,6 +27,7 @@ import type { FolderUpdatedBatchEvent } from "./FolderUpdatedBatchEvent";
 import type { JobUpdatedEvent } from "./JobUpdatedEvent";
 import type { MemoCreatedEvent } from "./MemoCreatedEvent";
 import type { MemoDeletedEvent } from "./MemoDeletedEvent";
+import type { MemoDeletedBatchEvent } from "./MemoDeletedBatchEvent";
 import type { MemoUpdatedEvent } from "./MemoUpdatedEvent";
 import type { MemoUpdatedBatchEvent } from "./MemoUpdatedBatchEvent";
 import type { ProjectCreatedEvent } from "./ProjectCreatedEvent";
@@ -102,6 +103,7 @@ export interface DATSEventMap {
   JOB_UPDATED: JobUpdatedEvent["payload"];
   MEMO_CREATED: MemoCreatedEvent["payload"];
   MEMO_DELETED: MemoDeletedEvent["payload"];
+  MEMO_DELETED_BATCH: MemoDeletedBatchEvent["payload"];
   MEMO_UPDATED: MemoUpdatedEvent["payload"];
   MEMO_UPDATED_BATCH: MemoUpdatedBatchEvent["payload"];
   PROJECT_CREATED: ProjectCreatedEvent["payload"];
@@ -178,6 +180,7 @@ export type DATSEvent =
   | (Omit<JobUpdatedEvent, "type"> & { type: "JOB_UPDATED" })
   | (Omit<MemoCreatedEvent, "type"> & { type: "MEMO_CREATED" })
   | (Omit<MemoDeletedEvent, "type"> & { type: "MEMO_DELETED" })
+  | (Omit<MemoDeletedBatchEvent, "type"> & { type: "MEMO_DELETED_BATCH" })
   | (Omit<MemoUpdatedEvent, "type"> & { type: "MEMO_UPDATED" })
   | (Omit<MemoUpdatedBatchEvent, "type"> & { type: "MEMO_UPDATED_BATCH" })
   | (Omit<ProjectCreatedEvent, "type"> & { type: "PROJECT_CREATED" })

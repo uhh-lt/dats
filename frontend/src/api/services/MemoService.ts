@@ -184,6 +184,22 @@ export class MemoService {
     });
   }
   /**
+   * Deletes all Memos with the given IDs.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteMemosBulk({ requestBody }: { requestBody: Array<number> }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/memo/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Generates a 1–2 sentence memo suggestion using LLM based on the attached object
    * @returns string Successful Response
    * @throws ApiError

@@ -351,6 +351,20 @@ def test_update_memo_not_existing(client: TestClient):
     assert response.status_code == 404, response.text
 
 
+def test_update_memo_of_other_project_member(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A project member may update another member's memo (project membership is
+    the only gate; ownership is not required). `code_memo_other` is owned by
+    `other_user`, while the client authenticates as `user`."""
+    memo = memo_project["code_memo_other"]
+
+    response = client.patch(f"/memo/{memo.id}", json={"title": "Edited by member"})
+
+    assert response.status_code == 200, response.text
+    assert MemoRead.model_validate(response.json()).title == "Edited by member"
+
+
 # ===========================================================================
 # DELETE MEMO (DELETE /memo/{memo_id}) TESTS
 # ===========================================================================
@@ -374,6 +388,77 @@ def test_delete_memo_not_existing(client: TestClient):
     """delete_by_id reads the memo before authorizing, so an unknown id -> 404."""
     response = client.delete("/memo/99999")
     assert response.status_code == 404, response.text
+
+
+def test_delete_memo_of_other_project_member(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A project member may delete another member's memo (project membership is
+    the only gate; ownership is not required). `code_memo_other` is owned by
+    `other_user`, while the client authenticates as `user`."""
+    memo = memo_project["code_memo_other"]
+
+    response = client.delete(f"/memo/{memo.id}")
+
+    assert response.status_code == 200, response.text
+    assert MemoRead.model_validate(response.json()).id == memo.id
+    follow_up = client.get(f"/memo/{memo.id}")
+    assert follow_up.status_code == 403, follow_up.text
+
+
+# ===========================================================================
+# BULK DELETE MEMOS (DELETE /memo/bulk/delete) TESTS
+# ===========================================================================
+
+
+def test_delete_memos_bulk(client: TestClient, memo_project: MemoProjectState):
+    """Bulk delete removes all given memos and returns them as MemoRead list."""
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+
+    response = client.request(
+        "DELETE", "/memo/bulk/delete", json=[memo_a.id, memo_b.id]
+    )
+
+    assert response.status_code == 200, response.text
+    returned_ids = {MemoRead.model_validate(item).id for item in response.json()}
+    assert returned_ids == {memo_a.id, memo_b.id}
+    # Confirm deletion: the by-id reads now hit the authz/existence path -> 403.
+    for memo_id in (memo_a.id, memo_b.id):
+        assert client.get(f"/memo/{memo_id}").status_code == 403
+
+
+def test_delete_memos_bulk_includes_other_members_memo(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Bulk delete may include another project member's memo (no owner check)."""
+    own = memo_project["code_memo_a"]
+    others = memo_project["code_memo_other"]
+
+    response = client.request("DELETE", "/memo/bulk/delete", json=[own.id, others.id])
+
+    assert response.status_code == 200, response.text
+    returned_ids = {MemoRead.model_validate(item).id for item in response.json()}
+    assert returned_ids == {own.id, others.id}
+
+
+def test_delete_memos_bulk_not_existing(client: TestClient):
+    """assert_in_same_project_as_many authorizes first, so an unknown id -> 403."""
+    response = client.request("DELETE", "/memo/bulk/delete", json=[999999])
+    assert response.status_code == 403, response.text
+
+
+def test_delete_memos_bulk_rejects_memo_from_non_member_project(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """All-or-nothing: an unknown/unauthorized id in the batch rejects the whole
+    request (403 via assert_in_same_project_as_many) and deletes nothing."""
+    response = client.request(
+        "DELETE", "/memo/bulk/delete", json=[memo_project["code_memo_a"].id, 999999]
+    )
+    assert response.status_code == 403, response.text
+    # All-or-nothing: the valid memo must NOT have been deleted.
+    assert client.get(f"/memo/{memo_project['code_memo_a'].id}").status_code == 200
 
 
 # ===========================================================================

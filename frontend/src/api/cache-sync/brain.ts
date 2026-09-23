@@ -17,6 +17,7 @@ import { writeJobUpdate } from "./_utils/jobCacheUtils";
 import {
   appendMemo,
   invalidateAttachedObjectMemoIds,
+  invalidateMemoRecents,
   invalidateMemoWorkspace,
   removeMemo,
   writeMemo,
@@ -104,6 +105,12 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "MEMO_DELETED":
       removeMemo(event.payload);
       invalidateMemoWorkspace();
+      invalidateMemoRecents([event.payload.project_id]);
+      break;
+    case "MEMO_DELETED_BATCH":
+      event.payload.forEach(removeMemo);
+      invalidateMemoWorkspace();
+      invalidateMemoRecents(event.payload.map((memo) => memo.project_id));
       break;
 
     // ── Whiteboards ─────────────────────────────────────────────────────────

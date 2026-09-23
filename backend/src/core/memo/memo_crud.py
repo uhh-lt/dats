@@ -165,6 +165,10 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     ### DELETE OPERATIONS ###
 
+    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[MemoORM]:
+        """Delete multiple memos by ID, returning the deleted ORM objects."""
+        return [self.delete(db=db, id=memo_id) for memo_id in ids]
+
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
     def get_memo_read_dto_from_orm(

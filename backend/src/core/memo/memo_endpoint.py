@@ -170,7 +170,6 @@ def update_by_id(
 ) -> MemoRead:
     existing_memo = crud_memo.read(db=db, id=memo_id)
     authz_user.assert_in_project(existing_memo.project_id)
-    authz_user.assert_is_same_user(existing_memo.user_id)
 
     db_obj = crud_memo.update(
         db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
@@ -266,7 +265,6 @@ def delete_by_id(
 ) -> MemoRead:
     memo = crud_memo.read(db=db, id=memo_id)
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_is_same_user(memo.user_id)
     memo_read = crud_memo.get_memo_read_dto_from_orm(
         db, memo, user_id=authz_user.user.id
     )
@@ -274,6 +272,41 @@ def delete_by_id(
 
     ws.emit_to_project(DATSEvent.MEMO_DELETED, memo_read, project_id=memo.project_id)
     return memo_read
+
+
+@router.delete(
+    "/bulk/delete",
+    response_model=list[MemoRead],
+    summary="Deletes all Memos with the given IDs.",
+)
+def delete_memos_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    memo_ids: list[int],
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> list[MemoRead]:
+    authz_user.assert_in_same_project_as_many(Crud.MEMO, memo_ids)
+
+    memos = crud_memo.read_by_ids(db, memo_ids)
+    project_ids = {memo.project_id for memo in memos}
+    if len(project_ids) > 1:
+        raise ValueError("All memos must belong to the same project")
+
+    # build the DTOs before deleting: the attached object must still exist
+    results = [
+        crud_memo.get_memo_read_dto_from_orm(
+            db=db, db_obj=memo, user_id=authz_user.user.id
+        )
+        for memo in memos
+    ]
+    crud_memo.delete_bulk(db=db, ids=memo_ids)
+
+    if results:
+        ws.emit_to_project(
+            DATSEvent.MEMO_DELETED_BATCH, results, project_id=memos[0].project_id
+        )
+    return results
 
 
 # --- other operations
