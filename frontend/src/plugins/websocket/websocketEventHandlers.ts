@@ -85,27 +85,38 @@ const websocketEventHandlers: {
   },
 
   // ── Span annotations ───────────────────────────────────────────────────────
-  SPAN_ANNOTATION_CREATED: (anno) => invalidateSpanAnnotations(anno),
-  SPAN_ANNOTATION_CREATED_BATCH: (annos) => annos.forEach(invalidateSpanAnnotations),
-  SPAN_ANNOTATION_UPDATED: (anno) => invalidateSpanAnnotations(anno),
-  SPAN_ANNOTATION_UPDATED_BATCH: (annos) => annos.forEach(invalidateSpanAnnotations),
-  SPAN_ANNOTATION_DELETED: (anno) => invalidateSpanAnnotations(anno),
-  SPAN_ANNOTATION_DELETED_BATCH: (annos) => annos.forEach(invalidateSpanAnnotations),
+  SPAN_ANNOTATION_CREATED: (anno) => handleEntityEvent({ type: "SPAN_ANNOTATION_CREATED", payload: anno }, "websocket"),
+  SPAN_ANNOTATION_CREATED_BATCH: (annos) =>
+    handleEntityEvent({ type: "SPAN_ANNOTATION_CREATED_BATCH", payload: annos }, "websocket"),
+  SPAN_ANNOTATION_UPDATED: (anno) => handleEntityEvent({ type: "SPAN_ANNOTATION_UPDATED", payload: anno }, "websocket"),
+  SPAN_ANNOTATION_UPDATED_BATCH: (annos) =>
+    handleEntityEvent({ type: "SPAN_ANNOTATION_UPDATED_BATCH", payload: annos }, "websocket"),
+  SPAN_ANNOTATION_DELETED: (anno) => handleEntityEvent({ type: "SPAN_ANNOTATION_DELETED", payload: anno }, "websocket"),
+  SPAN_ANNOTATION_DELETED_BATCH: (annos) =>
+    handleEntityEvent({ type: "SPAN_ANNOTATION_DELETED_BATCH", payload: annos }, "websocket"),
 
   // ── BBox annotations ───────────────────────────────────────────────────────
-  BBOX_ANNOTATION_CREATED: (anno) => invalidateBBoxAnnotations(anno),
-  BBOX_ANNOTATION_UPDATED: (anno) => invalidateBBoxAnnotations(anno),
-  BBOX_ANNOTATION_UPDATED_BATCH: (annos) => annos.forEach(invalidateBBoxAnnotations),
-  BBOX_ANNOTATION_DELETED: (anno) => invalidateBBoxAnnotations(anno),
-  BBOX_ANNOTATION_DELETED_BATCH: (annos) => annos.forEach(invalidateBBoxAnnotations),
+  BBOX_ANNOTATION_CREATED: (anno) => handleEntityEvent({ type: "BBOX_ANNOTATION_CREATED", payload: anno }, "websocket"),
+  BBOX_ANNOTATION_UPDATED: (anno) => handleEntityEvent({ type: "BBOX_ANNOTATION_UPDATED", payload: anno }, "websocket"),
+  BBOX_ANNOTATION_UPDATED_BATCH: (annos) =>
+    handleEntityEvent({ type: "BBOX_ANNOTATION_UPDATED_BATCH", payload: annos }, "websocket"),
+  BBOX_ANNOTATION_DELETED: (anno) => handleEntityEvent({ type: "BBOX_ANNOTATION_DELETED", payload: anno }, "websocket"),
+  BBOX_ANNOTATION_DELETED_BATCH: (annos) =>
+    handleEntityEvent({ type: "BBOX_ANNOTATION_DELETED_BATCH", payload: annos }, "websocket"),
 
   // ── Sentence annotations ───────────────────────────────────────────────────
-  SENTENCE_ANNOTATION_CREATED: (anno) => invalidateSentenceAnnotations(anno),
-  SENTENCE_ANNOTATION_CREATED_BATCH: (annos) => annos.forEach(invalidateSentenceAnnotations),
-  SENTENCE_ANNOTATION_UPDATED: (anno) => invalidateSentenceAnnotations(anno),
-  SENTENCE_ANNOTATION_UPDATED_BATCH: (annos) => annos.forEach(invalidateSentenceAnnotations),
-  SENTENCE_ANNOTATION_DELETED: (anno) => invalidateSentenceAnnotations(anno),
-  SENTENCE_ANNOTATION_DELETED_BATCH: (annos) => annos.forEach(invalidateSentenceAnnotations),
+  SENTENCE_ANNOTATION_CREATED: (anno) =>
+    handleEntityEvent({ type: "SENTENCE_ANNOTATION_CREATED", payload: anno }, "websocket"),
+  SENTENCE_ANNOTATION_CREATED_BATCH: (annos) =>
+    handleEntityEvent({ type: "SENTENCE_ANNOTATION_CREATED_BATCH", payload: annos }, "websocket"),
+  SENTENCE_ANNOTATION_UPDATED: (anno) =>
+    handleEntityEvent({ type: "SENTENCE_ANNOTATION_UPDATED", payload: anno }, "websocket"),
+  SENTENCE_ANNOTATION_UPDATED_BATCH: (annos) =>
+    handleEntityEvent({ type: "SENTENCE_ANNOTATION_UPDATED_BATCH", payload: annos }, "websocket"),
+  SENTENCE_ANNOTATION_DELETED: (anno) =>
+    handleEntityEvent({ type: "SENTENCE_ANNOTATION_DELETED", payload: anno }, "websocket"),
+  SENTENCE_ANNOTATION_DELETED_BATCH: (annos) =>
+    handleEntityEvent({ type: "SENTENCE_ANNOTATION_DELETED_BATCH", payload: annos }, "websocket"),
 
   // ── Folders ────────────────────────────────────────────────────────────────
   FOLDER_CREATED: (folder) => handleEntityEvent({ type: "FOLDER_CREATED", payload: folder }, "websocket"),
@@ -139,9 +150,9 @@ const websocketEventHandlers: {
 
   // ── Span groups ────────────────────────────────────────────────────────────
   // Span-group queries are keyed by sdoc; the payload carries sdoc_id.
-  SPAN_GROUP_CREATED: (group) => invalidateSpanGroups(group),
-  SPAN_GROUP_UPDATED: (group) => invalidateSpanGroups(group),
-  SPAN_GROUP_DELETED: (group) => invalidateSpanGroups(group),
+  SPAN_GROUP_CREATED: (group) => handleEntityEvent({ type: "SPAN_GROUP_CREATED", payload: group }, "websocket"),
+  SPAN_GROUP_UPDATED: (group) => handleEntityEvent({ type: "SPAN_GROUP_UPDATED", payload: group }, "websocket"),
+  SPAN_GROUP_DELETED: (group) => handleEntityEvent({ type: "SPAN_GROUP_DELETED", payload: group }, "websocket"),
 
   // ── Whiteboards ────────────────────────────────────────────────────────────
   WHITEBOARD_CREATED: (whiteboard) =>
@@ -329,33 +340,6 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
 function handlePerspectivesJobFinished(job: PerspectivesJobRead) {
   queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, job.input.aspect_id] });
   queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, job.input.aspect_id] });
-}
-
-// Span groups have no dedicated query key — the annotation feature derives them
-// from the sdoc's span annotations (useComputeTokenData). Invalidate those.
-function invalidateSpanGroups(group: { sdoc_id: number }) {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, group.sdoc_id] });
-}
-
-// Annotation queries are keyed by sdoc/code/user in various combinations; the
-// payload always carries sdoc_id + code_id, so invalidate every related slice.
-function invalidateSpanAnnotations(anno: { id?: number; sdoc_id: number; code_id: number }) {
-  if (anno.id !== undefined) {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, anno.id] });
-  }
-  queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
-}
-
-function invalidateBBoxAnnotations(anno: { id: number; sdoc_id: number; code_id: number }) {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, anno.id] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
-}
-
-function invalidateSentenceAnnotations(anno: { id: number; sdoc_id: number; code_id: number }) {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, anno.id] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, anno.sdoc_id] });
 }
 
 export function handleWebSocketEvent(type: string, payload: unknown): void {

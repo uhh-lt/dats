@@ -20,6 +20,7 @@ import {
   removeMemo,
   writeMemo,
 } from "./memoInvalidationUtils";
+import { removeSentenceAnnotation, upsertSentenceAnnotation } from "./sentenceAnnoCacheUtils";
 
 /**
  * The entity events the brain knows how to apply to the cache. This is a
@@ -75,6 +76,26 @@ export type EntityEventMap = Pick<
   | "SEARCH_VIEW_UPDATED"
   | "SEARCH_VIEW_DELETED"
   | "SEARCH_VIEW_UPDATED_BATCH"
+  | "SPAN_ANNOTATION_CREATED"
+  | "SPAN_ANNOTATION_CREATED_BATCH"
+  | "SPAN_ANNOTATION_UPDATED"
+  | "SPAN_ANNOTATION_UPDATED_BATCH"
+  | "SPAN_ANNOTATION_DELETED"
+  | "SPAN_ANNOTATION_DELETED_BATCH"
+  | "BBOX_ANNOTATION_CREATED"
+  | "BBOX_ANNOTATION_UPDATED"
+  | "BBOX_ANNOTATION_UPDATED_BATCH"
+  | "BBOX_ANNOTATION_DELETED"
+  | "BBOX_ANNOTATION_DELETED_BATCH"
+  | "SENTENCE_ANNOTATION_CREATED"
+  | "SENTENCE_ANNOTATION_CREATED_BATCH"
+  | "SENTENCE_ANNOTATION_UPDATED"
+  | "SENTENCE_ANNOTATION_UPDATED_BATCH"
+  | "SENTENCE_ANNOTATION_DELETED"
+  | "SENTENCE_ANNOTATION_DELETED_BATCH"
+  | "SPAN_GROUP_CREATED"
+  | "SPAN_GROUP_UPDATED"
+  | "SPAN_GROUP_DELETED"
 >;
 
 export type EntityEventType = keyof EntityEventMap;
@@ -316,6 +337,156 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
         if (!viewKey) return;
         replaceListItem([viewKey, view.entity_type, view.project_id], view);
       });
+      break;
+
+    // ── Span annotations ────────────────────────────────────────────────────
+    case "SPAN_ANNOTATION_CREATED": {
+      const anno = event.payload;
+      setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno);
+      appendListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      break;
+    }
+    case "SPAN_ANNOTATION_CREATED_BATCH": {
+      const annos = event.payload;
+      if (annos.length === 0) break;
+      annos.forEach((anno) => setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno));
+      // Bulk creates are always for one sdoc+user pair.
+      const first = annos[0];
+      annos.forEach((anno) => appendListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno));
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, first.code_id] });
+      break;
+    }
+    case "SPAN_ANNOTATION_UPDATED": {
+      const anno = event.payload;
+      setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno);
+      replaceListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      break;
+    }
+    case "SPAN_ANNOTATION_UPDATED_BATCH": {
+      const annos = event.payload;
+      annos.forEach((anno) => {
+        setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno);
+        replaceListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      break;
+    }
+    case "SPAN_ANNOTATION_DELETED": {
+      const anno = event.payload;
+      removeSingle([QueryKey.SPAN_ANNOTATION, anno.id]);
+      removeListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      break;
+    }
+    case "SPAN_ANNOTATION_DELETED_BATCH": {
+      const annos = event.payload;
+      annos.forEach((anno) => {
+        removeSingle([QueryKey.SPAN_ANNOTATION, anno.id]);
+        removeListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      break;
+    }
+
+    // ── BBox annotations ────────────────────────────────────────────────────
+    case "BBOX_ANNOTATION_CREATED": {
+      const anno = event.payload;
+      setSingle([QueryKey.BBOX_ANNOTATION, anno.id], anno);
+      appendListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      break;
+    }
+    case "BBOX_ANNOTATION_UPDATED": {
+      const anno = event.payload;
+      setSingle([QueryKey.BBOX_ANNOTATION, anno.id], anno);
+      replaceListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
+      break;
+    }
+    case "BBOX_ANNOTATION_UPDATED_BATCH": {
+      const annos = event.payload;
+      annos.forEach((anno) => {
+        setSingle([QueryKey.BBOX_ANNOTATION, anno.id], anno);
+        replaceListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
+        queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
+      break;
+    }
+    case "BBOX_ANNOTATION_DELETED": {
+      const anno = event.payload;
+      removeSingle([QueryKey.BBOX_ANNOTATION, anno.id]);
+      removeListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      break;
+    }
+    case "BBOX_ANNOTATION_DELETED_BATCH": {
+      const annos = event.payload;
+      annos.forEach((anno) => {
+        removeSingle([QueryKey.BBOX_ANNOTATION, anno.id]);
+        removeListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
+        queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
+      break;
+    }
+
+    // ── Sentence annotations ────────────────────────────────────────────────
+    // The annotator cache groups annotations by sentence index, with each
+    // annotation duplicated across every sentence it covers.
+    case "SENTENCE_ANNOTATION_CREATED": {
+      const anno = event.payload;
+      setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+      upsertSentenceAnnotation(anno);
+      break;
+    }
+    case "SENTENCE_ANNOTATION_CREATED_BATCH":
+      event.payload.forEach((anno) => {
+        setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+        upsertSentenceAnnotation(anno);
+      });
+      break;
+    case "SENTENCE_ANNOTATION_UPDATED": {
+      const anno = event.payload;
+      setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+      upsertSentenceAnnotation(anno);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
+      break;
+    }
+    case "SENTENCE_ANNOTATION_UPDATED_BATCH":
+      event.payload.forEach((anno) => {
+        setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+        upsertSentenceAnnotation(anno);
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
+      break;
+    case "SENTENCE_ANNOTATION_DELETED": {
+      const anno = event.payload;
+      removeSingle([QueryKey.SENTENCE_ANNOTATION, anno.id]);
+      removeSentenceAnnotation(anno);
+      break;
+    }
+    case "SENTENCE_ANNOTATION_DELETED_BATCH":
+      event.payload.forEach((anno) => {
+        removeSingle([QueryKey.SENTENCE_ANNOTATION, anno.id]);
+        removeSentenceAnnotation(anno);
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
+      break;
+
+    // ── Span groups ─────────────────────────────────────────────────────────
+    // Span groups have no dedicated query key — the annotation feature derives
+    // them from the sdoc's span annotations (useComputeTokenData).
+    case "SPAN_GROUP_CREATED":
+    case "SPAN_GROUP_UPDATED":
+    case "SPAN_GROUP_DELETED":
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, event.payload.sdoc_id] });
       break;
 
     default: {
