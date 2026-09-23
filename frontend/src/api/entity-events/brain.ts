@@ -96,6 +96,13 @@ export type EntityEventMap = Pick<
   | "SPAN_GROUP_CREATED"
   | "SPAN_GROUP_UPDATED"
   | "SPAN_GROUP_DELETED"
+  | "SDOC_TAGS_UPDATED"
+  | "SDOC_METADATA_UPDATED"
+  | "SDOC_METADATA_DELETED"
+  | "SDOC_METADATA_UPDATED_BATCH"
+  | "TAG_RECOMMENDATION_REVIEWED_BATCH"
+  | "PROJECT_USER_ADDED"
+  | "PROJECT_USER_REMOVED"
 >;
 
 export type EntityEventType = keyof EntityEventMap;
@@ -487,6 +494,47 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
     case "SPAN_GROUP_UPDATED":
     case "SPAN_GROUP_DELETED":
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, event.payload.sdoc_id] });
+      break;
+
+    // ── Source document tags ────────────────────────────────────────────────
+    // The complete tag set of one or more sdocs changed; refresh the affected
+    // sdoc-tag queries and any tag-count aggregates.
+    case "SDOC_TAGS_UPDATED":
+      Object.keys(event.payload.links).forEach((sdocId) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, Number(sdocId)] });
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      break;
+
+    // ── Source document metadata ────────────────────────────────────────────
+    case "SDOC_METADATA_UPDATED":
+    case "SDOC_METADATA_DELETED":
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, event.payload.source_document_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, event.payload.source_document_id] });
+      break;
+    case "SDOC_METADATA_UPDATED_BATCH":
+      event.payload.forEach((metadata) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, metadata.source_document_id] });
+      });
+      break;
+
+    // ── Tag recommendations ─────────────────────────────────────────────────
+    // Reviewed recommendations are grouped by their ML job; refresh those lists.
+    case "TAG_RECOMMENDATION_REVIEWED_BATCH": {
+      const mlJobIds = new Set(event.payload.map((link) => link.ml_job_id));
+      mlJobIds.forEach((mlJobId) => {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_RECOMMENDATIONS, mlJobId] });
+      });
+      break;
+    }
+
+    // ── Project membership ──────────────────────────────────────────────────
+    // PROJECT_USERS is keyed by project id, but the payload carries no
+    // project_id — the membership changed, so invalidate all project-user lists.
+    case "PROJECT_USER_ADDED":
+    case "PROJECT_USER_REMOVED":
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS] });
       break;
 
     default: {

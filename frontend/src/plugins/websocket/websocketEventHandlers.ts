@@ -59,12 +59,8 @@ const websocketEventHandlers: {
   TAG_UPDATED: (tag) => handleEntityEvent({ type: "TAG_UPDATED", payload: tag }, "websocket"),
   TAG_DELETED: (tag) => handleEntityEvent({ type: "TAG_DELETED", payload: tag }, "websocket"),
   // Reviewed recommendations are grouped by their ML job; refresh those lists.
-  TAG_RECOMMENDATION_REVIEWED_BATCH: (links) => {
-    const mlJobIds = new Set(links.map((link) => link.ml_job_id));
-    mlJobIds.forEach((mlJobId) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_RECOMMENDATIONS, mlJobId] });
-    });
-  },
+  TAG_RECOMMENDATION_REVIEWED_BATCH: (links) =>
+    handleEntityEvent({ type: "TAG_RECOMMENDATION_REVIEWED_BATCH", payload: links }, "websocket"),
 
   // ── Memos ──────────────────────────────────────────────────────────────────
   MEMO_CREATED: (memo) => handleEntityEvent({ type: "MEMO_CREATED", payload: memo }, "websocket"),
@@ -77,12 +73,7 @@ const websocketEventHandlers: {
   SDOC_DELETED: (sdoc) => handleEntityEvent({ type: "SDOC_DELETED", payload: sdoc }, "websocket"),
   // The complete tag set of one or more sdocs changed; refresh the affected
   // sdoc-tag queries and any tag-count aggregates.
-  SDOC_TAGS_UPDATED: ({ links }) => {
-    Object.keys(links).forEach((sdocId) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, Number(sdocId)] });
-    });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
-  },
+  SDOC_TAGS_UPDATED: (payload) => handleEntityEvent({ type: "SDOC_TAGS_UPDATED", payload }, "websocket"),
 
   // ── Span annotations ───────────────────────────────────────────────────────
   SPAN_ANNOTATION_CREATED: (anno) => handleEntityEvent({ type: "SPAN_ANNOTATION_CREATED", payload: anno }, "websocket"),
@@ -133,20 +124,12 @@ const websocketEventHandlers: {
     handleEntityEvent({ type: "PROJECT_METADATA_DELETED", payload: metadata }, "websocket"),
 
   // ── Source document metadata ───────────────────────────────────────────────
-  SDOC_METADATA_UPDATED: (metadata) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, metadata.source_document_id] });
-  },
-  SDOC_METADATA_DELETED: (metadata) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, metadata.source_document_id] });
-  },
-  SDOC_METADATA_UPDATED_BATCH: (metadatas) => {
-    metadatas.forEach((metadata) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, metadata.source_document_id] });
-    });
-  },
+  SDOC_METADATA_UPDATED: (metadata) =>
+    handleEntityEvent({ type: "SDOC_METADATA_UPDATED", payload: metadata }, "websocket"),
+  SDOC_METADATA_DELETED: (metadata) =>
+    handleEntityEvent({ type: "SDOC_METADATA_DELETED", payload: metadata }, "websocket"),
+  SDOC_METADATA_UPDATED_BATCH: (metadatas) =>
+    handleEntityEvent({ type: "SDOC_METADATA_UPDATED_BATCH", payload: metadatas }, "websocket"),
 
   // ── Span groups ────────────────────────────────────────────────────────────
   // Span-group queries are keyed by sdoc; the payload carries sdoc_id.
@@ -184,10 +167,10 @@ const websocketEventHandlers: {
     handleEntityEvent({ type: "CLASSIFIER_DELETED", payload: classifier }, "websocket"),
 
   // ── Project membership ─────────────────────────────────────────────────────
-  // PROJECT_USERS is keyed by project id, but UserRead has no project_id — the
-  // membership changed, so invalidate all project-user lists.
-  PROJECT_USER_ADDED: () => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS] }),
-  PROJECT_USER_REMOVED: () => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS] }),
+  // PROJECT_USERS is keyed by project id, but the payload carries no project_id
+  // — the membership changed, so invalidate all project-user lists.
+  PROJECT_USER_ADDED: (user) => handleEntityEvent({ type: "PROJECT_USER_ADDED", payload: user }, "websocket"),
+  PROJECT_USER_REMOVED: (user) => handleEntityEvent({ type: "PROJECT_USER_REMOVED", payload: user }, "websocket"),
 
   // ── Jobs ───────────────────────────────────────────────────────────────────
   // The payload is the full concrete JobRead — write it directly into the
