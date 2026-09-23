@@ -1,5 +1,8 @@
 from common.job_type import JobType
-from modules.perspectives.perspectives_job_dto import PerspectivesJobInput
+from modules.perspectives.perspectives_job_dto import (
+    PerspectivesJobInput,
+    PerspectivesJobRead,
+)
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobTiming
 from systems.job_system.job_register_decorator import register_job
@@ -14,6 +17,7 @@ sqlr = SQLRepo()
     device="gpu",
     result_ttl=JobTiming.INFINITY,
     timeout=JobTiming.ONE_DAY,
+    read_model=PerspectivesJobRead,
 )
 def perspectives_job(payload: PerspectivesJobInput, job: Job) -> None:
     from modules.perspectives.perspectives_service import PerspectivesService

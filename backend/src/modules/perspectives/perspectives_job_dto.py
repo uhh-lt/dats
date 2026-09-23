@@ -170,4 +170,6 @@ class PerspectivesJobInput(JobInputBase):
 
 
 class PerspectivesJobRead(JobRead[PerspectivesJobInput, None]):
-    pass
+    job_type: Literal["perspectives"] = Field(
+        description="Type of the job", json_schema_extra={"enum": ["perspectives"]}
+    )

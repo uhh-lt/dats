@@ -5,6 +5,8 @@ from typing import Generic, TypeVar
 import rq
 from pydantic import BaseModel, Field
 
+from common.job_type import JobType
+
 
 # See https://python-rq.org/docs/jobs/
 class JobStatus(str, enum.Enum):
@@ -78,6 +80,9 @@ class Job:
 
     def get_id(self) -> str:
         return self.job.id
+
+    def get_type(self) -> JobType:
+        return JobType(self.job.meta["type"])
 
     def get_project_id(self) -> int:
         return self.job.meta["project_id"]

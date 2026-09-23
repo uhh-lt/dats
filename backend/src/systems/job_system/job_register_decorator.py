@@ -9,6 +9,7 @@ from systems.job_system.job_dto import (
     JobInputBase,
     JobOutputBase,
     JobPriority,
+    JobRead,
     JobTiming,
 )
 
@@ -29,6 +30,7 @@ def register_job(
     retry: tuple[int, int] | None = None,
     timeout: JobTiming = JobTiming.ONE_HOUR,  # (RQ default is 3 min [180])
     enricher: Callable[[InputT], InputT] | None = None,
+    read_model: type[JobRead] | None = None,
 ):
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
         from systems.job_system.job_service import JobService
@@ -47,6 +49,7 @@ def register_job(
             retry=retry,
             timeout=timeout,
             enricher=enricher,
+            read_model=read_model,
         )
         return func
 

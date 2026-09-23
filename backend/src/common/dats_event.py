@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Any, Literal, Union
+from typing import Literal, Union
 
 from loguru import logger
 from pydantic import BaseModel, create_model
@@ -254,47 +254,32 @@ DATS_EVENT_TO_MODEL: dict[DATSEvent, type[DATSEventBase]] = {
     et: globals()[_event_model_name(et)] for et in _DATS_EVENT_PAYLOADS
 }
 
-# Per-JobType concrete JobRead models, populated by build_job_event_models().
-# Used by job_events.publish_job_update to build a payload that is a member of
-# the JOB_UPDATED union (a parametrized generic alias instance is not).
-# Value type is `type[JobRead]` (JobRead imported lazily to avoid cycles).
-JOB_TYPE_TO_JOB_READ_MODEL: dict[object, Any] = {}
-
 
 def build_job_event_models() -> None:
     """Build and register the JOB_UPDATED event model.
 
-    The payload is a Union over one concrete JobRead model per registered
-    JobType (mirroring the per-type models generated for the REST endpoints in
-    job_endpoint.py). Must be called once at startup AFTER all jobs are
-    registered (i.e. after `import_by_suffix("_job.py")`) and BEFORE
-    websocket_dto.py is first imported, since that module builds its
-    WebSocketEvent union from DATS_EVENT_TO_MODEL at import time.
+    The payload is a Union over the concrete JobRead model of each registered
+    JobType that publishes updates (the models live in the job registry, so
+    the OpenAPI schema contains exactly ONE model per job type). Must be
+    called once at startup AFTER all jobs are registered (i.e. after
+    `import_by_suffix("_job.py")`) and BEFORE websocket_dto.py is first
+    imported, since that module builds its WebSocketEvent union from
+    DATS_EVENT_TO_MODEL at import time.
 
     Idempotent: subsequent calls are no-ops.
     """
     if DATSEvent.JOB_UPDATED in DATS_EVENT_TO_MODEL:
         return
 
-    # Lazy imports: this module must not import JobService / job_dto at module
-    # level (import cycle: dats_event -> classifier_dto -> job_dto).
-    from systems.job_system.job_dto import JobRead
+    # Lazy import: this module must not import JobService at module level
+    # (import cycle: dats_event -> classifier_dto -> job_dto).
     from systems.job_system.job_service import JobService
 
-    job_read_models: list[type[BaseModel]] = []
-    for job_type, registered_job in JobService().job_registry.items():
-        if not registered_job["publish_updates"]:
-            continue
-        job_name = "".join([x.capitalize() for x in job_type.split("_")])
-        model = create_model(
-            f"{job_name}JobRead",
-            __base__=JobRead[
-                registered_job["input_type"], registered_job["output_type"]
-            ],
-            job_type=(Literal[job_type.value], job_type.value),
-        )
-        job_read_models.append(model)
-        JOB_TYPE_TO_JOB_READ_MODEL[job_type] = model
+    job_read_models: list[type[BaseModel]] = [
+        registered_job["read_model"]
+        for registered_job in JobService().job_registry.values()
+        if registered_job["publish_updates"]
+    ]
 
     if not job_read_models:
         logger.warning(

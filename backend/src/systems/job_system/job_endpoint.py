@@ -1,7 +1,6 @@
-from typing import Literal, Type
+from typing import Type
 
 from fastapi import APIRouter, Depends
-from pydantic import create_model
 
 from common.dependencies import get_current_user
 from common.job_type import JobType
@@ -30,6 +29,7 @@ def register_job_endpoints(
     job_type: JobType,
     input_model: Type[JobInputBase],
     output_model: Type[JobOutputBase] | None,
+    read_model: Type[JobRead],
     endpoint_generation: EndpointGeneration,
     router: APIRouter,
 ):
@@ -38,12 +38,9 @@ def register_job_endpoints(
 
     job_name = "".join([x.capitalize() for x in job_type.split("_")])
 
-    # Dynamically create a concrete JobRead model using create_model and JobRead as base.
-    JobReadModel = create_model(
-        f"{job_name}JobRead",
-        __base__=JobRead[input_model, output_model],
-        job_type=(Literal[job_type.value], job_type.value),
-    )
+    # The concrete JobRead model for this job type, created once at
+    # registration time and stored in the registry (single source of truth).
+    JobReadModel = read_model
 
     # Start job
     def start_job(
@@ -134,6 +131,7 @@ for job_type, job_info in job_service.job_registry.items():
         job_type=job_type,
         input_model=job_info["input_type"],
         output_model=job_info["output_type"],
+        read_model=job_info["read_model"],
         endpoint_generation=job_info["generate_endpoints"],
         router=job_info["router"] or router,
     )
