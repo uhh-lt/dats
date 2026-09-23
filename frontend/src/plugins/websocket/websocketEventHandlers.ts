@@ -19,7 +19,6 @@ import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { MlJobRead } from "@models/MlJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
-import { SearchEntityType } from "@models/SearchEntityType";
 import type { WebSocketEventMap } from "@models/websocketEvents";
 
 // The event contract (WebSocketEventMap / WebSocketEvent) is GENERATED from the
@@ -74,8 +73,8 @@ const websocketEventHandlers: {
   MEMO_DELETED: (memo) => handleEntityEvent({ type: "MEMO_DELETED", payload: memo }, "websocket"),
 
   // ── Source documents ───────────────────────────────────────────────────────
-  SDOC_UPDATED: (sdoc) => queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, sdoc.id] }),
-  SDOC_DELETED: (sdoc) => queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, sdoc.id] }),
+  SDOC_UPDATED: (sdoc) => handleEntityEvent({ type: "SDOC_UPDATED", payload: sdoc }, "websocket"),
+  SDOC_DELETED: (sdoc) => handleEntityEvent({ type: "SDOC_DELETED", payload: sdoc }, "websocket"),
   // The complete tag set of one or more sdocs changed; refresh the affected
   // sdoc-tag queries and any tag-count aggregates.
   SDOC_TAGS_UPDATED: ({ links }) => {
@@ -225,10 +224,11 @@ const websocketEventHandlers: {
   // ── Search views ───────────────────────────────────────────────────────────
   // Views are personal per-user state; these events only reach the owner's
   // other sessions. View queries are keyed by [viewQueryKey, entityType, projectId].
-  SEARCH_VIEW_CREATED: (view) => invalidateSearchViews(view),
-  SEARCH_VIEW_UPDATED: (view) => invalidateSearchViews(view),
-  SEARCH_VIEW_DELETED: (view) => invalidateSearchViews(view),
-  SEARCH_VIEW_UPDATED_BATCH: (views) => views.forEach(invalidateSearchViews),
+  SEARCH_VIEW_CREATED: (view) => handleEntityEvent({ type: "SEARCH_VIEW_CREATED", payload: view }, "websocket"),
+  SEARCH_VIEW_UPDATED: (view) => handleEntityEvent({ type: "SEARCH_VIEW_UPDATED", payload: view }, "websocket"),
+  SEARCH_VIEW_DELETED: (view) => handleEntityEvent({ type: "SEARCH_VIEW_DELETED", payload: view }, "websocket"),
+  SEARCH_VIEW_UPDATED_BATCH: (views) =>
+    handleEntityEvent({ type: "SEARCH_VIEW_UPDATED_BATCH", payload: views }, "websocket"),
 };
 
 // ── Job helpers ──────────────────────────────────────────────────────────────
@@ -356,23 +356,6 @@ function invalidateBBoxAnnotations(anno: { id: number; sdoc_id: number; code_id:
 function invalidateSentenceAnnotations(anno: { id: number; sdoc_id: number; code_id: number }) {
   queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, anno.id] });
   queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, anno.sdoc_id] });
-}
-
-// Each entity's views live under their own query key; the payload's entity_type
-// selects which one to invalidate.
-const SEARCH_VIEW_QUERY_KEYS: Record<SearchEntityType, (typeof QueryKey)[keyof typeof QueryKey]> = {
-  [SearchEntityType.MEMO]: QueryKey.MEMO_VIEWS,
-  [SearchEntityType.SPAN_ANNOTATION]: QueryKey.SPAN_ANNO_VIEWS,
-  [SearchEntityType.SENTENCE_ANNOTATION]: QueryKey.SENTENCE_ANNO_VIEWS,
-  [SearchEntityType.BBOX_ANNOTATION]: QueryKey.BBOX_ANNO_VIEWS,
-};
-
-function invalidateSearchViews(view: { entity_type?: string; project_id: number }) {
-  const queryKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
-  if (!queryKey) return;
-  queryClient.invalidateQueries({
-    queryKey: [queryKey, view.entity_type, view.project_id],
-  });
 }
 
 export function handleWebSocketEvent(type: string, payload: unknown): void {

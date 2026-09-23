@@ -34,12 +34,8 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
   const useCreateView = () =>
     useMutation({
       mutationFn: SearchViewService.create,
-      onSuccess: (view) => {
-        const typedView = view as unknown as TView;
-        queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) => [
-          ...(views ?? []),
-          typedView,
-        ]);
+      meta: {
+        entityEvent: "SEARCH_VIEW_CREATED",
       },
     });
 
@@ -69,11 +65,8 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
         }
         console.error("Failed to update search view:", error);
       },
-      onSuccess: (view) => {
-        const typedView = view as unknown as TView;
-        queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) =>
-          (views ?? []).map((candidate) => (candidate.id === view.id ? typedView : candidate)),
-        );
+      meta: {
+        entityEvent: "SEARCH_VIEW_UPDATED",
       },
     });
 
@@ -113,10 +106,8 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
   const useDeleteView = () =>
     useMutation({
       mutationFn: SearchViewService.delete,
-      onSuccess: (view) => {
-        queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) =>
-          (views ?? []).filter((candidate) => candidate.id !== view.id),
-        );
+      meta: {
+        entityEvent: "SEARCH_VIEW_DELETED",
       },
     });
 
