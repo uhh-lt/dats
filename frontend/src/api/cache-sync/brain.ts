@@ -12,18 +12,17 @@ import {
   setSingle,
   sweepPrefix,
   upsertMapItem,
-} from "./cacheWriterUtils";
-import { writeJobUpdate } from "./jobCacheUtils";
+} from "./_utils/cacheWriterUtils";
+import { writeJobUpdate } from "./_utils/jobCacheUtils";
 import {
   appendMemo,
   invalidateAttachedObjectMemoIds,
   invalidateMemoWorkspace,
   removeMemo,
   writeMemo,
-} from "./memoInvalidationUtils";
-import { removeSentenceAnnotation, upsertSentenceAnnotation } from "./sentenceAnnoCacheUtils";
+} from "./_utils/memoCacheUtils";
+import { removeSentenceAnnotation, upsertSentenceAnnotation } from "./_utils/sentenceAnnoCacheUtils";
 
-/** Where an event originated. Currently informational (logging/debugging). */
 export type DATSEventSource = "mutation" | "websocket";
 
 // ── The brain ────────────────────────────────────────────────────────────────
@@ -35,7 +34,7 @@ export type DATSEventSource = "mutation" | "websocket";
  * src/models/datsEvents.ts); the backend emits the same DTO that the mutation
  * endpoint returns, so one handler serves both sources.
  *
- * Entity caches are written directly (zero refetch); derived/search/statistics
+ * Caches are written directly (zero refetch); derived/search/statistics
  * caches are invalidated. The `source` is currently only used for debugging.
  */
 export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void {
@@ -459,8 +458,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     default: {
-      const _exhaustive: never = event;
-      console.warn("Unhandled entity event", _exhaustive);
+      console.warn("Unhandled dats event");
     }
   }
 }

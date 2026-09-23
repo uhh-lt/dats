@@ -1,4 +1,4 @@
-import { appendListItem, removeListItem } from "@api/entity-events/cacheWriterUtils";
+import { appendListItem, removeListItem } from "@api/cache-sync/_utils/cacheWriterUtils";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
 import { UserRead } from "@models/UserRead";

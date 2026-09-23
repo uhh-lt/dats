@@ -1,4 +1,4 @@
-import { handleDATSEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
