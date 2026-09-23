@@ -35,26 +35,8 @@ const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
 const useCreateSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.createSentenceAnnotation,
-    onSuccess: (data) => {
-      queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, data.id], data);
-      queryClient.setQueryData<SentenceAnnotatorResult>(
-        [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id, data.user_id],
-        (old) => {
-          if (!old) return old;
-          const sentAnnos = { ...old.sentence_annotations };
-          for (let sentenceId = data.sentence_id_start; sentenceId <= data.sentence_id_end; sentenceId++) {
-            if (!sentAnnos[sentenceId]) {
-              sentAnnos[sentenceId] = [];
-            }
-            if (!sentAnnos[sentenceId].some((a) => a.id === data.id)) {
-              sentAnnos[sentenceId] = [...sentAnnos[sentenceId], data];
-            }
-          }
-          return { sentence_annotations: sentAnnos };
-        },
-      );
-    },
     meta: {
+      entityEvent: "SENTENCE_ANNOTATION_CREATED",
       successMessage: (data: SentenceAnnotationRead) => `Created Sentence Annotation ${data.id}`,
     },
   });
@@ -62,27 +44,8 @@ const useCreateSentenceAnnotation = () =>
 const useCreateBulkSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.createSentenceAnnotationsBulk,
-    onSuccess: (data) => {
-      if (data.length === 0) return;
-      const sdocId = data[0].sdoc_id;
-      const userId = data[0].user_id;
-      queryClient.setQueryData<SentenceAnnotatorResult>([QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId], (old) => {
-        if (!old) return old;
-        const sentAnnos = { ...old.sentence_annotations };
-        data.forEach((annotation) => {
-          for (let sentenceId = annotation.sentence_id_start; sentenceId <= annotation.sentence_id_end; sentenceId++) {
-            if (!sentAnnos[sentenceId]) {
-              sentAnnos[sentenceId] = [];
-            }
-            if (!sentAnnos[sentenceId].some((a) => a.id === annotation.id)) {
-              sentAnnos[sentenceId] = [...sentAnnos[sentenceId], annotation];
-            }
-          }
-        });
-        return { sentence_annotations: sentAnnos };
-      });
-    },
     meta: {
+      entityEvent: "SENTENCE_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Created ${data.length} Sentence Annotations`,
     },
   });
@@ -170,33 +133,8 @@ const useUpdateSentenceAnnotation = () =>
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousAnnos);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
-      queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, data.id], data);
-      queryClient.setQueryData<SentenceAnnotatorResult>(
-        [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id, data.user_id],
-        (old) => {
-          if (!old) return old;
-          const sentAnnos = { ...old.sentence_annotations };
-          Object.keys(sentAnnos).forEach((key) => {
-            const sentenceId = Number(key);
-            const coversSentence = data.sentence_id_start <= sentenceId && sentenceId <= data.sentence_id_end;
-            const isListed = sentAnnos[sentenceId].some((annotation) => annotation.id === data.id);
-            if (coversSentence && !isListed) {
-              sentAnnos[sentenceId] = [...sentAnnos[sentenceId], data];
-            } else if (!coversSentence && isListed) {
-              sentAnnos[sentenceId] = sentAnnos[sentenceId].filter((annotation) => annotation.id !== data.id);
-            } else if (isListed) {
-              sentAnnos[sentenceId] = sentAnnos[sentenceId].map((annotation) =>
-                annotation.id === data.id ? data : annotation,
-              );
-            }
-          });
-          return { sentence_annotations: sentAnnos };
-        },
-      );
-    },
     meta: {
+      entityEvent: "SENTENCE_ANNOTATION_UPDATED",
       successMessage: (data: SentenceAnnotationRead) => `Updated Sentence Annotation ${data.id}`,
     },
   });
@@ -204,16 +142,8 @@ const useUpdateSentenceAnnotation = () =>
 const useUpdateBulkSentenceAnno = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.updateSentenceAnnotationsBulk,
-    onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
-      data.forEach((annotation) => {
-        queryClient.invalidateQueries({
-          queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id, annotation.user_id],
-        });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
-      });
-    },
     meta: {
+      entityEvent: "SENTENCE_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Updated ${data.length} Sentence Annotations`,
     },
   });
@@ -251,6 +181,7 @@ const useDeleteSentenceAnnotation = () =>
       queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousSentenceAnnotator);
     },
     meta: {
+      entityEvent: "SENTENCE_ANNOTATION_DELETED",
       successMessage: (data: SentenceAnnotationRead) => `Deleted Sentence Annotation ${data.id}`,
     },
   });
@@ -258,24 +189,8 @@ const useDeleteSentenceAnnotation = () =>
 const useDeleteBulkSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.deleteSentenceAnnotationsBulk,
-    onSuccess(data) {
-      if (data.length === 0) return;
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of SentenceAnnotationTable
-
-      // Invalidate each unique (sdoc_id, user_id) pair once
-      const uniquePairs = new Set<string>();
-      data.forEach((annotation) => {
-        const key = `${annotation.sdoc_id}-${annotation.user_id}`;
-        if (!uniquePairs.has(key)) {
-          uniquePairs.add(key);
-          queryClient.invalidateQueries({
-            queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, annotation.sdoc_id, annotation.user_id],
-          });
-        }
-        queryClient.removeQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
-      });
-    },
     meta: {
+      entityEvent: "SENTENCE_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Deleted ${data.length} Sentence Annotations`,
     },
   });

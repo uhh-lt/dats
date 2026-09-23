@@ -45,15 +45,8 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: n
 const useCreateBulkAnnotations = () =>
   useMutation({
     mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
-    onSuccess: (data) => {
-      if (data.length === 0) return;
-      const sdocId = data[0].sdoc_id;
-      const userId = data[0].user_id;
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
-      });
-    },
     meta: {
+      entityEvent: "SPAN_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Created ${data.length} Span Annotations`,
     },
   });
@@ -62,17 +55,8 @@ const useCreateSpanAnnotation = () =>
   useMutation({
     mutationFn: (variables: SpanAnnotationCreate) =>
       SpanAnnotationService.createSpanAnnotation({ requestBody: variables }),
-    onSuccess: (data) => {
-      queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, data.id], data);
-      queryClient.setQueryData<SpanAnnotationRead[]>(
-        [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => {
-          if (!old) return [data];
-          return old.some((span) => span.id === data.id) ? old : [...old, data];
-        },
-      );
-    },
     meta: {
+      entityEvent: "SPAN_ANNOTATION_CREATED",
       successMessage: (data: SpanAnnotationRead) => `Created Span Annotation ${data.id}`,
     },
   });
@@ -125,15 +109,8 @@ const useUpdateSpanAnnotation = () =>
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousAnnos);
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, data.id], data);
-      queryClient.setQueryData<SpanAnnotationRead[]>(
-        [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => (old ? old.map((span) => (span.id === data.id ? data : span)) : [data]),
-      );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
-    },
     meta: {
+      entityEvent: "SPAN_ANNOTATION_UPDATED",
       successMessage: (data: SpanAnnotationRead) => `Updated Span Annotation ${data.id}`,
     },
   });
@@ -141,38 +118,8 @@ const useUpdateSpanAnnotation = () =>
 const useUpdateBulkSpan = () =>
   useMutation({
     mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
-    onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
-      data.forEach((annotation) => {
-        queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, annotation.id], annotation);
-      });
-
-      // Update SDOC_SPAN_ANNOTATIONS queries
-      // 1. Group annotations by sdoc_id and user_id
-      const annotationsByDocAndUser = data.reduce(
-        (acc, annotation) => {
-          const key = `${annotation.sdoc_id}-${annotation.user_id}`;
-          if (!acc[key]) {
-            acc[key] = [];
-          }
-          acc[key].push(annotation);
-          return acc;
-        },
-        {} as Record<string, SpanAnnotationRead[]>,
-      );
-      // 2. Update the queries
-      Object.entries(annotationsByDocAndUser).forEach(([key, annotations]) => {
-        const [sdoc_id, user_id] = key.split("-").map(Number);
-        queryClient.setQueryData<SpanAnnotationRead[]>([QueryKey.SDOC_SPAN_ANNOTATIONS, sdoc_id, user_id], (old) => {
-          const oldMap = old ? new Map(old.map((span) => [span.id, span])) : new Map();
-          annotations.forEach((annotation) => {
-            oldMap.set(annotation.id, annotation);
-          });
-          return Array.from(oldMap.values());
-        });
-      });
-    },
     meta: {
+      entityEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Updated ${data.length} Span Annotations`,
     },
   });
@@ -206,14 +153,8 @@ const useDeleteSpanAnnotation = () =>
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousSpanAnnotations);
     },
-    onSuccess: (data) => {
-      queryClient.removeQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, data.id] });
-      queryClient.setQueryData<SpanAnnotationRead[]>(
-        [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => (old ? old.filter((span) => span.id !== data.id) : old),
-      );
-    },
     meta: {
+      entityEvent: "SPAN_ANNOTATION_DELETED",
       successMessage: (data: SpanAnnotationRead) => `Deleted Span Annotation ${data.id}`,
     },
   });
@@ -221,24 +162,8 @@ const useDeleteSpanAnnotation = () =>
 const useDeleteBulkSpanAnnotation = () =>
   useMutation({
     mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
-    onSuccess(data) {
-      if (data.length === 0) return;
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
-
-      // Invalidate each unique (sdoc_id, user_id) pair once
-      const uniquePairs = new Set<string>();
-      data.forEach((annotation) => {
-        const key = `${annotation.sdoc_id}-${annotation.user_id}`;
-        if (!uniquePairs.has(key)) {
-          uniquePairs.add(key);
-          queryClient.invalidateQueries({
-            queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
-          });
-        }
-        queryClient.removeQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, annotation.id] });
-      });
-    },
     meta: {
+      entityEvent: "SPAN_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SpanAnnotationDeleted[]) => `Deleted ${data.length} Span Annotations`,
     },
   });

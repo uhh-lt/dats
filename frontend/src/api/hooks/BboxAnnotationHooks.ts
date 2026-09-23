@@ -45,17 +45,8 @@ const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
-    onSuccess: (data) => {
-      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
-      queryClient.setQueryData<BBoxAnnotationRead[]>(
-        [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => {
-          if (!old) return [data];
-          return old.some((bbox) => bbox.id === data.id) ? old : [...old, data];
-        },
-      );
-    },
     meta: {
+      entityEvent: "BBOX_ANNOTATION_CREATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
     },
   });
@@ -97,14 +88,8 @@ const useUpdateBBoxAnnotation = () =>
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
-      queryClient.setQueryData<BBoxAnnotationRead[]>(
-        [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => (old ? old.map((bbox) => (bbox.id === data.id ? data : bbox)) : [data]),
-      );
-    },
     meta: {
+      entityEvent: "BBOX_ANNOTATION_UPDATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Updated Bounding Box Annotation ${bbox.id}`,
     },
   });
@@ -112,16 +97,8 @@ const useUpdateBBoxAnnotation = () =>
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
-    onSuccess(data) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of BBoxAnnotationTable
-      data.forEach((annotation) => {
-        queryClient.invalidateQueries({
-          queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
-        });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, annotation.id] });
-      });
-    },
     meta: {
+      entityEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Updated ${data.length} BBox Annotations`,
     },
   });
@@ -148,14 +125,8 @@ const useDeleteBBoxAnnotation = () =>
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
     },
-    onSuccess: (data) => {
-      queryClient.removeQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, data.id] });
-      queryClient.setQueryData<BBoxAnnotationRead[]>(
-        [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => (old ? old.filter((bbox) => bbox.id !== data.id) : old),
-      );
-    },
     meta: {
+      entityEvent: "BBOX_ANNOTATION_DELETED",
       successMessage: (bbox: BBoxAnnotationRead) => `Deleted Bounding Box Annotation ${bbox.id}`,
     },
   });
@@ -163,24 +134,8 @@ const useDeleteBBoxAnnotation = () =>
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
-    onSuccess(data) {
-      if (data.length === 0) return;
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of BBoxAnnotationTable
-
-      // Invalidate each unique (sdoc_id, user_id) pair once
-      const uniquePairs = new Set<string>();
-      data.forEach((annotation) => {
-        const key = `${annotation.sdoc_id}-${annotation.user_id}`;
-        if (!uniquePairs.has(key)) {
-          uniquePairs.add(key);
-          queryClient.invalidateQueries({
-            queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
-          });
-        }
-        queryClient.removeQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, annotation.id] });
-      });
-    },
     meta: {
+      entityEvent: "BBOX_ANNOTATION_DELETED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,
     },
   });
