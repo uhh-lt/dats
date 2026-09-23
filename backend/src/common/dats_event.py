@@ -53,6 +53,7 @@ class DATSEvent(StrEnum):
 
     SDOC_UPDATED = "SDOC_UPDATED"
     SDOC_DELETED = "SDOC_DELETED"
+    SDOC_DELETED_BATCH = "SDOC_DELETED_BATCH"
     SDOC_TAGS_LINKED = "SDOC_TAGS_LINKED"
 
     SPAN_ANNOTATION_CREATED = "SPAN_ANNOTATION_CREATED"
@@ -164,6 +165,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.MEMO_DELETED_BATCH: list[MemoRead],
     DATSEvent.SDOC_UPDATED: SourceDocumentRead,
     DATSEvent.SDOC_DELETED: SourceDocumentRead,
+    DATSEvent.SDOC_DELETED_BATCH: list[SourceDocumentRead],
     DATSEvent.SDOC_TAGS_LINKED: SdocTagLinks,
     DATSEvent.SPAN_ANNOTATION_CREATED: SpanAnnotationRead,
     DATSEvent.SPAN_ANNOTATION_UPDATED: SpanAnnotationRead,

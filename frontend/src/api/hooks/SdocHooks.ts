@@ -1,6 +1,5 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
-import { handleDATSEvent } from "@api/cache-sync";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
@@ -87,16 +86,9 @@ const useGetSdocIdsByTagId = (tagId: number | null | undefined) =>
 // SDOC MUTATIONS
 const useDeleteDocuments = () =>
   useMutation({
-    mutationFn: ({ sdocIds }: { sdocIds: number[] }) => {
-      const promises = sdocIds.map((sdocId) => SourceDocumentService.deleteById({ sdocId: sdocId }));
-      return Promise.all(promises);
-    },
-    onSuccess: (data) => {
-      // Bulk delete returns an array; dispatch one event per deleted sdoc so the
-      // brain can drop each from the cache.
-      data.forEach((sdoc) => handleDATSEvent({ type: "SDOC_DELETED", payload: sdoc }, "mutation"));
-    },
+    mutationFn: ({ sdocIds }: { sdocIds: number[] }) => SourceDocumentService.deleteSdocsBulk({ requestBody: sdocIds }),
     meta: {
+      datsEvent: "SDOC_DELETED_BATCH",
       successMessage: (_data: SourceDocumentRead[], variables: { sdocIds: number[] }) =>
         `Successfully deleted ${variables.sdocIds.length} document(s)`,
     },

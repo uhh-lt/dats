@@ -272,6 +272,9 @@ class CRUDSourceDocument(
 
         return sdoc_db_obj
 
+    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[SourceDocumentORM]:
+        return [self.delete(db=db, id=id) for id in ids]
+
     ### OTHER OPERATIONS ###
 
     def count_by_project_and_status(

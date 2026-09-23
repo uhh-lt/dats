@@ -93,6 +93,34 @@ def test_delete_source_document_by_id_short_if_not_exists(
     assert response.status_code == 403, response.text
 
 
+# NOTE: No happy-path bulk delete test — deleting an sdoc touches the filesystem
+# and Elasticsearch, which the test environment does not support (same reason the
+# single-delete test above is commented out). Only the authz paths are tested.
+
+
+def test_delete_sdocs_bulk_if_not_exists(
+    client: TestClient,
+):
+    """assert_in_same_project_as_many authorizes first, so an unknown id -> 403."""
+    response = client.request("DELETE", "/sdoc/bulk/delete", json=[999999])
+
+    assert response.status_code == 403, response.text
+
+
+def test_delete_sdocs_bulk_rejects_batch_with_unknown_id(
+    client: TestClient, project_with_sdoc
+):
+    """All-or-nothing: an unknown id in the batch rejects the whole request (403)
+    and deletes nothing."""
+    sdoc = project_with_sdoc["source_document"]
+
+    response = client.request("DELETE", "/sdoc/bulk/delete", json=[sdoc.id, 999999])
+
+    assert response.status_code == 403, response.text
+    # All-or-nothing: the valid sdoc must NOT have been deleted.
+    assert client.get(f"/sdoc/{sdoc.id}").status_code == 200
+
+
 testdata_sdoc_update = [
     pytest.param({"name": "New Title"}, id="update_name"),
 ]

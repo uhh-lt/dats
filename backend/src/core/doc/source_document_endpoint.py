@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
@@ -175,3 +175,36 @@ def delete_by_id(
         DATSEvent.SDOC_DELETED, result, project_id=db_obj.get_project_id()
     )
     return result
+
+
+@router.delete(
+    "/bulk/delete",
+    response_model=list[SourceDocumentRead],
+    summary="Removes all SourceDocuments with the given IDs if they exist",
+)
+def delete_sdocs_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_ids: list[int],
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> list[SourceDocumentRead]:
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+
+    sdocs = crud_sdoc.read_by_ids(db, sdoc_ids)
+    project_ids = {sdoc.project_id for sdoc in sdocs}
+    if len(project_ids) > 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="All SourceDocuments must belong to the same project",
+        )
+
+    db_objs = crud_sdoc.delete_bulk(db=db, ids=sdoc_ids)
+    results = [SourceDocumentRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_to_project(
+            DATSEvent.SDOC_DELETED_BATCH,
+            results,
+            project_id=db_objs[0].get_project_id(),
+        )
+    return results
