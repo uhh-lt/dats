@@ -32,6 +32,7 @@ import type { GroupQueryRequest_SpanColumns_ } from "@models/GroupQueryRequest_S
 import type { MemoCreate } from "@models/MemoCreate";
 import type { MemoRead } from "@models/MemoRead";
 import type { MemoUpdate } from "@models/MemoUpdate";
+import type { MemoUpdateBulk } from "@models/MemoUpdateBulk";
 import type { Page_BBoxAnnotationRow_ } from "@models/Page_BBoxAnnotationRow_";
 import type { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import type { Page_SentenceAnnotationRow_ } from "@models/Page_SentenceAnnotationRow_";
@@ -50,6 +51,7 @@ import type { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns
 import type { QueryRequest_SentAnnoColumns_ } from "@models/QueryRequest_SentAnnoColumns_";
 import type { QueryRequest_SpanColumns_ } from "@models/QueryRequest_SpanColumns_";
 import type { SDocStatus } from "@models/SDocStatus";
+import type { SdocTagLinks } from "@models/SdocTagLinks";
 import type { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
@@ -60,7 +62,6 @@ import type { SourceDocumentMetadataBulkUpdate } from "@models/SourceDocumentMet
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "@models/SourceDocumentRead";
-import type { SourceDocumentTagLinks } from "@models/SourceDocumentTagLinks";
 import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
 import type { SourceDocumentUpdate } from "@models/SourceDocumentUpdate";
 import type { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
@@ -83,7 +84,7 @@ export class McpService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addBboxAnnotation({
+  public static createBboxAnnotation({
     requestBody,
   }: {
     requestBody: BBoxAnnotationCreate;
@@ -182,11 +183,28 @@ export class McpService {
     });
   }
   /**
+   * Returns BBoxAnnotations with the given Code of the logged-in User
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/bbox/code/{code_id}/user",
+      path: {
+        code_id: codeId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates BBoxAnnotation in Bulk
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateBboxAnnoAnnotationsBulk({
+  public static updateBboxAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<BBoxAnnotationUpdateBulk>;
@@ -206,7 +224,7 @@ export class McpService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteBulkById({
+  public static deleteBboxAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<number>;
@@ -222,28 +240,11 @@ export class McpService {
     });
   }
   /**
-   * Returns BBoxAnnotations with the given Code of the logged-in User
-   * @returns BBoxAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<BBoxAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Creates a new Code and returns it with the generated ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static createNewCode({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
+  public static createCode({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/code",
@@ -331,11 +332,27 @@ export class McpService {
     });
   }
   /**
-   * Get Folder By Id
+   * Creates a new Folder and returns it with the generated ID.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static getFolderById({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
+  public static createFolder({ requestBody }: { requestBody: FolderCreate }): CancelablePromise<FolderRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/folder",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Folder with the given ID.
+   * @returns FolderRead Successful Response
+   * @throws ApiError
+   */
+  public static getById2({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/folder/{folder_id}",
@@ -348,11 +365,11 @@ export class McpService {
     });
   }
   /**
-   * Update Folder
+   * Updates the Folder with the given ID.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static updateFolder({
+  public static updateById2({
     folderId,
     requestBody,
   }: {
@@ -360,7 +377,7 @@ export class McpService {
     requestBody: FolderUpdate;
   }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
-      method: "PUT",
+      method: "PATCH",
       url: "/folder/{folder_id}",
       path: {
         folder_id: folderId,
@@ -373,11 +390,11 @@ export class McpService {
     });
   }
   /**
-   * Delete Folder
+   * Deletes the Folder with the given ID.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static deleteFolder({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
+  public static deleteById2({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/folder/{folder_id}",
@@ -435,23 +452,7 @@ export class McpService {
     });
   }
   /**
-   * Create Folder
-   * @returns FolderRead Successful Response
-   * @throws ApiError
-   */
-  public static createFolder({ requestBody }: { requestBody: FolderCreate }): CancelablePromise<FolderRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/folder/",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Move Folders
+   * Moves the Folders with the given IDs to the target folder.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
@@ -463,7 +464,7 @@ export class McpService {
     requestBody: Array<number>;
   }): CancelablePromise<Array<FolderRead>> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/folder/move_folders",
       query: {
         target_folder_id: targetFolderId,
@@ -480,7 +481,7 @@ export class McpService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemo({
+  public static createMemo({
     attachedObjectId,
     attachedObjectType,
     requestBody,
@@ -528,28 +529,11 @@ export class McpService {
     });
   }
   /**
-   * Records that the current user opened the Memo with the given ID
-   * @returns void
-   * @throws ApiError
-   */
-  public static recordRecentMemo({ memoId }: { memoId: number }): CancelablePromise<void> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/memo/{memo_id}/recent",
-      path: {
-        memo_id: memoId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getById2({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static getById3({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/memo/{memo_id}",
@@ -566,7 +550,7 @@ export class McpService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static updateById2({
+  public static updateById3({
     memoId,
     requestBody,
   }: {
@@ -591,7 +575,7 @@ export class McpService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static deleteById2({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static deleteById3({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/memo/{memo_id}",
@@ -628,31 +612,34 @@ export class McpService {
     });
   }
   /**
-   * Favorites a Memo for the current user
+   * Updates Memos in Bulk
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static favoriteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static updateMemosBulk({
+    requestBody,
+  }: {
+    requestBody: Array<MemoUpdateBulk>;
+  }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/memo/{memo_id}/favorite",
-      path: {
-        memo_id: memoId,
-      },
+      method: "PATCH",
+      url: "/memo/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Removes the current user's Memo favorite
-   * @returns MemoRead Successful Response
+   * Records that the current user opened the Memo with the given ID
+   * @returns void
    * @throws ApiError
    */
-  public static unfavoriteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static recordRecentMemo({ memoId }: { memoId: number }): CancelablePromise<void> {
     return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/memo/{memo_id}/favorite",
+      method: "POST",
+      url: "/memo/{memo_id}/recent",
       path: {
         memo_id: memoId,
       },
@@ -695,7 +682,7 @@ export class McpService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static createNewProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
+  public static createProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/project",
@@ -711,7 +698,7 @@ export class McpService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static readProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static getProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}",
@@ -819,7 +806,7 @@ export class McpService {
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project{project_id}/sdoc/status/{status}",
+      url: "/project/{project_id}/sdoc/status/{status}",
       path: {
         project_id: projectId,
         status: status,
@@ -834,7 +821,7 @@ export class McpService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static createNewMetadata({
+  public static createMetadata({
     requestBody,
   }: {
     requestBody: ProjectMetadataCreate;
@@ -854,7 +841,7 @@ export class McpService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getById3({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
+  public static getById4({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/projmeta/{metadata_id}",
@@ -871,7 +858,7 @@ export class McpService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static updateById3({
+  public static updateById4({
     metadataId,
     requestBody,
   }: {
@@ -896,7 +883,7 @@ export class McpService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static deleteById3({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
+  public static deleteById4({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/projmeta/{metadata_id}",
@@ -1244,7 +1231,7 @@ export class McpService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addSentenceAnnotation({
+  public static createSentenceAnnotation({
     requestBody,
   }: {
     requestBody: SentenceAnnotationCreate;
@@ -1264,7 +1251,7 @@ export class McpService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addSentenceAnnotationsBulk({
+  public static createSentenceAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<SentenceAnnotationCreate>;
@@ -1284,7 +1271,7 @@ export class McpService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getById4({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
+  public static getById5({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sentence/{sentence_anno_id}",
@@ -1301,7 +1288,7 @@ export class McpService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateById4({
+  public static updateById5({
     sentenceAnnoId,
     requestBody,
   }: {
@@ -1326,7 +1313,7 @@ export class McpService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteById4({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
+  public static deleteById5({ sentenceAnnoId }: { sentenceAnnoId: number }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sentence/{sentence_anno_id}",
@@ -1363,11 +1350,28 @@ export class McpService {
     });
   }
   /**
+   * Returns SentenceAnnotations with the given Code of the logged-in User
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode1({ codeId }: { codeId: number }): CancelablePromise<Array<SentenceAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sentence/code/{code_id}/user",
+      path: {
+        code_id: codeId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates SentenceAnnotation in Bulk
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateSentAnnoAnnotationsBulk({
+  public static updateSentenceAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<SentenceAnnotationUpdateBulk>;
@@ -1387,7 +1391,7 @@ export class McpService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteBulkById1({
+  public static deleteSentenceAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<number>;
@@ -1397,23 +1401,6 @@ export class McpService {
       url: "/sentence/bulk/delete",
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns SentenceAnnotations with the given Code of the logged-in User
-   * @returns SentenceAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getByUserCode1({ codeId }: { codeId: number }): CancelablePromise<Array<SentenceAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
       errors: {
         422: `Validation Error`,
       },
@@ -1449,7 +1436,7 @@ export class McpService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getById5({
+  public static getById6({
     sdocId,
     onlyIfFinished = true,
   }: {
@@ -1471,28 +1458,11 @@ export class McpService {
     });
   }
   /**
-   * Removes the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById5({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Updates the SourceDocument with the given ID.
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static updateSdoc({
+  public static updateById6({
     sdocId,
     requestBody,
   }: {
@@ -1507,6 +1477,23 @@ export class McpService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById6({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -1609,7 +1596,7 @@ export class McpService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getById6({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+  public static getById7({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdocmeta/{metadata_id}",
@@ -1626,7 +1613,7 @@ export class McpService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static updateById5({
+  public static updateById7({
     metadataId,
     requestBody,
   }: {
@@ -1651,7 +1638,7 @@ export class McpService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static deleteById6({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+  public static deleteById7({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sdocmeta/{metadata_id}",
@@ -1729,7 +1716,7 @@ export class McpService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addSpanAnnotation({
+  public static createSpanAnnotation({
     requestBody,
   }: {
     requestBody: SpanAnnotationCreate;
@@ -1749,7 +1736,7 @@ export class McpService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addSpanAnnotationsBulk({
+  public static createSpanAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<SpanAnnotationCreate>;
@@ -1769,7 +1756,7 @@ export class McpService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static getById7({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationRead> {
+  public static getById8({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/span/{span_id}",
@@ -1786,7 +1773,7 @@ export class McpService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateById6({
+  public static updateById8({
     spanId,
     requestBody,
   }: {
@@ -1811,7 +1798,7 @@ export class McpService {
    * @returns SpanAnnotationDeleted Successful Response
    * @throws ApiError
    */
-  public static deleteById7({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationDeleted> {
+  public static deleteById8({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationDeleted> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/span/{span_id}",
@@ -1848,46 +1835,6 @@ export class McpService {
     });
   }
   /**
-   * Updates SpanAnnotations in Bulk
-   * @returns SpanAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static updateSpanAnnotationsBulk({
-    requestBody,
-  }: {
-    requestBody: Array<SpanAnnotationUpdateBulk>;
-  }): CancelablePromise<Array<SpanAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/span/bulk/update",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Deletes all SpanAnnotations with the given IDs.
-   * @returns SpanAnnotationDeleted Successful Response
-   * @throws ApiError
-   */
-  public static deleteBulkById2({
-    requestBody,
-  }: {
-    requestBody: Array<number>;
-  }): CancelablePromise<Array<SpanAnnotationDeleted>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/span/bulk/delete",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns all SpanGroups that contain the the SpanAnnotation.
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
@@ -1916,6 +1863,43 @@ export class McpService {
       path: {
         span_id: spanId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns SpanAnnotations with the given Code of the logged-in User
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode2({ codeId }: { codeId: number }): CancelablePromise<Array<SpanAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/span/code/{code_id}/user",
+      path: {
+        code_id: codeId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates SpanAnnotations in Bulk
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static updateSpanAnnotationsBulk({
+    requestBody,
+  }: {
+    requestBody: Array<SpanAnnotationUpdateBulk>;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/span/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -1970,17 +1954,20 @@ export class McpService {
     });
   }
   /**
-   * Returns SpanAnnotations with the given Code of the logged-in User
-   * @returns SpanAnnotationRead Successful Response
+   * Deletes all SpanAnnotations with the given IDs.
+   * @returns SpanAnnotationDeleted Successful Response
    * @throws ApiError
    */
-  public static getByUserCode2({ codeId }: { codeId: number }): CancelablePromise<Array<SpanAnnotationRead>> {
+  public static deleteSpanAnnotationsBulk({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<SpanAnnotationDeleted>> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/span/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
+      method: "DELETE",
+      url: "/span/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -2016,90 +2003,10 @@ export class McpService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static createNewDocTag({ requestBody }: { requestBody: TagCreate }): CancelablePromise<TagRead> {
+  public static createDocTag({ requestBody }: { requestBody: TagCreate }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/tag",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Links multiple Tags with the SourceDocuments and returns the number of new Links
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static linkMultipleTags({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/link",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Unlinks all Tags with the SourceDocuments and returns the number of removed Links.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static unlinkMultipleTags({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/tag/bulk/unlink",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Sets SourceDocuments' tags to the provided tags
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static setTagsBatch({
-    requestBody,
-  }: {
-    requestBody: Array<SourceDocumentTagLinks>;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/set",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates SourceDocuments' tags
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static updateTagsBatch({
-    requestBody,
-  }: {
-    requestBody: Body_tag_update_tags_batch;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/update",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -2112,7 +2019,7 @@ export class McpService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static getById8({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
+  public static getById9({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/tag/{tag_id}",
@@ -2129,7 +2036,7 @@ export class McpService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static updateById7({
+  public static updateById9({
     tagId,
     requestBody,
   }: {
@@ -2154,7 +2061,7 @@ export class McpService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static deleteById8({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
+  public static deleteById9({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/tag/{tag_id}",
@@ -2212,6 +2119,82 @@ export class McpService {
       path: {
         tag_id: tagId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Links multiple Tags with the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static linkMultipleTags({
+    requestBody,
+  }: {
+    requestBody: SourceDocumentTagMultiLink;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/link",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static setTagsBatch({ requestBody }: { requestBody: SdocTagLinks }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/set",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates SourceDocuments' tags and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static updateTagsBatch({
+    requestBody,
+  }: {
+    requestBody: Body_tag_update_tags_batch;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Unlinks all Tags with the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static unlinkMultipleTags({
+    requestBody,
+  }: {
+    requestBody: SourceDocumentTagMultiLink;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/tag/bulk/unlink",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -2283,7 +2266,7 @@ export class McpService {
    * @returns PublicUserRead Successful Response
    * @throws ApiError
    */
-  public static getById9({ userId }: { userId: number }): CancelablePromise<PublicUserRead> {
+  public static getById10({ userId }: { userId: number }): CancelablePromise<PublicUserRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/by_id/{user_id}",

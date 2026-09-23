@@ -12,7 +12,7 @@ export type COTARefinementJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: COTARefinementJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -50,3 +50,11 @@ export type COTARefinementJobRead = {
    */
   finished?: string | null;
 };
+export namespace COTARefinementJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    COTA_REFINEMENT = "cota_refinement",
+  }
+}

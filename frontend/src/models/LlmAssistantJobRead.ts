@@ -13,7 +13,7 @@ export type LlmAssistantJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: LlmAssistantJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -51,3 +51,11 @@ export type LlmAssistantJobRead = {
    */
   finished?: string | null;
 };
+export namespace LlmAssistantJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    LLM_ASSISTANT = "llm_assistant",
+  }
+}

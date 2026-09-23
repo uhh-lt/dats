@@ -17,7 +17,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addSentenceAnnotation({
+  public static createSentenceAnnotation({
     requestBody,
   }: {
     requestBody: SentenceAnnotationCreate;
@@ -37,7 +37,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addSentenceAnnotationsBulk({
+  public static createSentenceAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<SentenceAnnotationCreate>;
@@ -136,11 +136,28 @@ export class SentenceAnnotationService {
     });
   }
   /**
+   * Returns SentenceAnnotations with the given Code of the logged-in User
+   * @returns SentenceAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<SentenceAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sentence/code/{code_id}/user",
+      path: {
+        code_id: codeId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates SentenceAnnotation in Bulk
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateSentAnnoAnnotationsBulk({
+  public static updateSentenceAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<SentenceAnnotationUpdateBulk>;
@@ -160,7 +177,7 @@ export class SentenceAnnotationService {
    * @returns SentenceAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteBulkById({
+  public static deleteSentenceAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<number>;
@@ -170,23 +187,6 @@ export class SentenceAnnotationService {
       url: "/sentence/bulk/delete",
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns SentenceAnnotations with the given Code of the logged-in User
-   * @returns SentenceAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<SentenceAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sentence/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
       errors: {
         422: `Validation Error`,
       },

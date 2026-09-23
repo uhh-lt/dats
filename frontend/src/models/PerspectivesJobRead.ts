@@ -12,7 +12,7 @@ export type PerspectivesJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: PerspectivesJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -50,3 +50,11 @@ export type PerspectivesJobRead = {
    */
   finished?: string | null;
 };
+export namespace PerspectivesJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    PERSPECTIVES = "perspectives",
+  }
+}

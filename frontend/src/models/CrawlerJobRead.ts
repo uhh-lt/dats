@@ -13,7 +13,7 @@ export type CrawlerJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: CrawlerJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -51,3 +51,11 @@ export type CrawlerJobRead = {
    */
   finished?: string | null;
 };
+export namespace CrawlerJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    CRAWLER = "crawler",
+  }
+}

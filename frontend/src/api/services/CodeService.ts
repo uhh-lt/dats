@@ -14,7 +14,7 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static createNewCode({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
+  public static createCode({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/code",

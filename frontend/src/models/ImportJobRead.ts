@@ -12,7 +12,7 @@ export type ImportJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: ImportJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -50,3 +50,11 @@ export type ImportJobRead = {
    */
   finished?: string | null;
 };
+export namespace ImportJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    IMPORT = "import",
+  }
+}

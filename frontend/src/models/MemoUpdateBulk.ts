@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type MemoUpdate = {
+export type MemoUpdateBulk = {
   /**
    * Title of the Memo
    */
@@ -23,4 +23,8 @@ export type MemoUpdate = {
    * Favorite the Memo for the requesting user only. This is per-user state: it does not change the Memo for other users.
    */
   is_favorite?: boolean | null;
+  /**
+   * ID of the Memo to update
+   */
+  memo_id: number;
 };

@@ -13,7 +13,7 @@ export type ExportJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: ExportJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -51,3 +51,11 @@ export type ExportJobRead = {
    */
   finished?: string | null;
 };
+export namespace ExportJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    EXPORT = "export",
+  }
+}

@@ -30,6 +30,27 @@ export class TimelineAnalysisService {
     });
   }
   /**
+   * Duplicates the TimelineAnalysis with the given ID if it exists
+   * @returns TimelineAnalysisRead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({
+    timelineAnalysisId,
+  }: {
+    timelineAnalysisId: number;
+  }): CancelablePromise<TimelineAnalysisRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/timelineAnalysis/duplicate/{timeline_analysis_id}",
+      path: {
+        timeline_analysis_id: timelineAnalysisId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the TimelineAnalysis with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response
    * @throws ApiError
@@ -124,29 +145,8 @@ export class TimelineAnalysisService {
     timelineAnalysisId: number;
   }): CancelablePromise<TimelineAnalysisRead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/timelineAnalysis/recompute/{timeline_analysis_id}",
-      path: {
-        timeline_analysis_id: timelineAnalysisId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Duplicates the TimelineAnalysis with the given ID if it exists
-   * @returns TimelineAnalysisRead Successful Response
-   * @throws ApiError
-   */
-  public static duplicateById({
-    timelineAnalysisId,
-  }: {
-    timelineAnalysisId: number;
-  }): CancelablePromise<TimelineAnalysisRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/timelineAnalysis/duplicate/{timeline_analysis_id}",
       path: {
         timeline_analysis_id: timelineAnalysisId,
       },

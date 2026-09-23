@@ -81,7 +81,7 @@ export class AnalysisService {
   }): CancelablePromise<any[]> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}",
+      url: "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}",
       path: {
         project_id: projectId,
         date_metadata_id: dateMetadataId,

@@ -103,7 +103,7 @@ export class DocprocessingService {
     formData: Body_docprocessing_upload_files;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
-      method: "PUT",
+      method: "POST",
       url: "/docprocessing/project/{proj_id}",
       path: {
         proj_id: projId,

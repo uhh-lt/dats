@@ -6,6 +6,8 @@ import type { AddMissingDocsToAspectParams } from "@models/AddMissingDocsToAspec
 import type { AspectCreate } from "@models/AspectCreate";
 import type { AspectRead } from "@models/AspectRead";
 import type { AspectUpdate } from "@models/AspectUpdate";
+import type { Body_perspectives_accept_label } from "@models/Body_perspectives_accept_label";
+import type { Body_perspectives_revert_label } from "@models/Body_perspectives_revert_label";
 import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import type { ChangeClusterParams } from "@models/ChangeClusterParams";
 import type { ClusterRead } from "@models/ClusterRead";
@@ -25,62 +27,6 @@ import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class PerspectivesService {
-  /**
-   * Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.
-   * @returns PerspectivesJobRead Successful Response
-   * @throws ApiError
-   */
-  public static startPerspectivesJob({
-    aspectId,
-    requestBody,
-  }: {
-    aspectId: number;
-    requestBody:
-      | AddMissingDocsToAspectParams
-      | CreateClusterWithNameParams
-      | CreateClusterWithSdocsParams
-      | RemoveClusterParams
-      | MergeClustersParams
-      | SplitClusterParams
-      | ChangeClusterParams
-      | RefineModelParams
-      | ResetModelParams
-      | RecomputeClusterTitleAndDescriptionParams;
-  }): CancelablePromise<PerspectivesJobRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/perspectives/job/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the PerspectivesJob for the given ID if it exists
-   * @returns PerspectivesJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getPerspectivesJob({
-    perspectivesJobId,
-  }: {
-    perspectivesJobId: string;
-  }): CancelablePromise<PerspectivesJobRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/job/{perspectives_job_id}",
-      path: {
-        perspectives_job_id: perspectivesJobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
   /**
    * Creates a new Aspect
    * @returns AspectRead Successful Response
@@ -198,124 +144,6 @@ export class PerspectivesService {
     });
   }
   /**
-   * Accept the label of the provided SourceDocuments (by ID).
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static acceptLabel({
-    aspectId,
-    requestBody,
-  }: {
-    aspectId: number;
-    requestBody: Array<number>;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/perspectives/label_accept/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Reverts the label of the provided SourceDocuments (by ID).
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static revertLabel({
-    aspectId,
-    requestBody,
-  }: {
-    aspectId: number;
-    requestBody: Array<number>;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/perspectives/label_revert/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns data for visualizing the documents of the given aspect.
-   * @returns PerspectivesVisualization Successful Response
-   * @throws ApiError
-   */
-  public static visualizeDocuments({
-    aspectId,
-    searchQuery,
-    requestBody,
-  }: {
-    aspectId: number;
-    searchQuery: string;
-    requestBody: Body_perspectives_visualize_documents;
-  }): CancelablePromise<PerspectivesVisualization> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/perspectives/visualize_documents/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      query: {
-        search_query: searchQuery,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns data for visualizing the cluster similarities of the given aspect.
-   * @returns PerspectivesClusterSimilarities Successful Response
-   * @throws ApiError
-   */
-  public static getClusterSimilarities({
-    aspectId,
-  }: {
-    aspectId: number;
-  }): CancelablePromise<PerspectivesClusterSimilarities> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/cluster_similarities/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns data for visualizing the clusters of the given aspect.
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static visualizeClusters({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/visualize_clusters/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
    * @returns ClusterRead Successful Response
    * @throws ApiError
@@ -359,6 +187,173 @@ export class PerspectivesService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.
+   * @returns PerspectivesJobRead Successful Response
+   * @throws ApiError
+   */
+  public static startPerspectivesJob({
+    aspectId,
+    requestBody,
+  }: {
+    aspectId: number;
+    requestBody:
+      | AddMissingDocsToAspectParams
+      | CreateClusterWithNameParams
+      | CreateClusterWithSdocsParams
+      | RemoveClusterParams
+      | MergeClustersParams
+      | SplitClusterParams
+      | ChangeClusterParams
+      | RefineModelParams
+      | ResetModelParams
+      | RecomputeClusterTitleAndDescriptionParams;
+  }): CancelablePromise<PerspectivesJobRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/perspectives/job/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the PerspectivesJob for the given ID if it exists
+   * @returns PerspectivesJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getPerspectivesJob({
+    perspectivesJobId,
+  }: {
+    perspectivesJobId: string;
+  }): CancelablePromise<PerspectivesJobRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/perspectives/job/{perspectives_job_id}",
+      path: {
+        perspectives_job_id: perspectivesJobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns data for visualizing the documents of the given aspect.
+   * @returns PerspectivesVisualization Successful Response
+   * @throws ApiError
+   */
+  public static visualizeDocuments({
+    aspectId,
+    searchQuery,
+    requestBody,
+  }: {
+    aspectId: number;
+    searchQuery: string;
+    requestBody: Body_perspectives_visualize_documents;
+  }): CancelablePromise<PerspectivesVisualization> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/perspectives/visualize_documents/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      query: {
+        search_query: searchQuery,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.
+   * @returns PerspectivesVisualization Successful Response
+   * @throws ApiError
+   */
+  public static acceptLabel({
+    aspectId,
+    searchQuery,
+    requestBody,
+  }: {
+    aspectId: number;
+    searchQuery: string;
+    requestBody: Body_perspectives_accept_label;
+  }): CancelablePromise<PerspectivesVisualization> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/perspectives/label_accept/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      query: {
+        search_query: searchQuery,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.
+   * @returns PerspectivesVisualization Successful Response
+   * @throws ApiError
+   */
+  public static revertLabel({
+    aspectId,
+    searchQuery,
+    requestBody,
+  }: {
+    aspectId: number;
+    searchQuery: string;
+    requestBody: Body_perspectives_revert_label;
+  }): CancelablePromise<PerspectivesVisualization> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/perspectives/label_revert/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      query: {
+        search_query: searchQuery,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns data for visualizing the cluster similarities of the given aspect.
+   * @returns PerspectivesClusterSimilarities Successful Response
+   * @throws ApiError
+   */
+  public static getClusterSimilarities({
+    aspectId,
+  }: {
+    aspectId: number;
+  }): CancelablePromise<PerspectivesClusterSimilarities> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/perspectives/cluster_similarities/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
       errors: {
         422: `Validation Error`,
       },

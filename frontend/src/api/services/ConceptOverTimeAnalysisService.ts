@@ -30,6 +30,23 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
+   * Duplicates the ConceptOverTimeAnalysis with the given ID if it exists
+   * @returns COTARead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/cota/duplicate/{cota_id}",
+      path: {
+        cota_id: cotaId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the ConceptOverTimeAnalysis
    * Returns the ConceptOverTimeAnalysis with the given ID if it exists
    * @returns COTARead Successful Response
@@ -110,23 +127,6 @@ export class ConceptOverTimeAnalysisService {
     });
   }
   /**
-   * Duplicates the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns COTARead Successful Response
-   * @throws ApiError
-   */
-  public static duplicateById({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/cota/duplicate/{cota_id}",
-      path: {
-        cota_id: cotaId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Annotate (multiple) COTASentences
    * @returns COTARead Successful Response
    * @throws ApiError
@@ -141,7 +141,7 @@ export class ConceptOverTimeAnalysisService {
     conceptId?: string | null;
   }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/cota/annotate/{cota_id}",
       path: {
         cota_id: cotaId,
@@ -169,7 +169,7 @@ export class ConceptOverTimeAnalysisService {
     requestBody: Array<COTASentenceID>;
   }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/cota/remove/{cota_id}",
       path: {
         cota_id: cotaId,
@@ -189,7 +189,7 @@ export class ConceptOverTimeAnalysisService {
    */
   public static resetCota({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/cota/reset/{cota_id}",
       path: {
         cota_id: cotaId,

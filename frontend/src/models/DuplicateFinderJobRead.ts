@@ -13,7 +13,7 @@ export type DuplicateFinderJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: DuplicateFinderJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -51,3 +51,11 @@ export type DuplicateFinderJobRead = {
    */
   finished?: string | null;
 };
+export namespace DuplicateFinderJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    DUPLICATE_FINDER = "duplicate_finder",
+  }
+}

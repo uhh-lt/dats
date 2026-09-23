@@ -13,7 +13,7 @@ export type ClassifierJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: ClassifierJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -51,3 +51,11 @@ export type ClassifierJobRead = {
    */
   finished?: string | null;
 };
+export namespace ClassifierJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    CLASSIFIER = "classifier",
+  }
+}

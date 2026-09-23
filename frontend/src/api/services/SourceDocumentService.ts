@@ -36,28 +36,11 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Removes the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Updates the SourceDocument with the given ID.
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static updateSdoc({
+  public static updateById({
     sdocId,
     requestBody,
   }: {
@@ -72,6 +55,23 @@ export class SourceDocumentService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
       errors: {
         422: `Validation Error`,
       },

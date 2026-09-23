@@ -89,7 +89,7 @@
         }
       }
     },
-    "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}": {
+    "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}": {
       "get": {
         "tags": ["analysis"],
         "summary": "Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
@@ -230,8 +230,8 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/api-keys/create": {
-      "post": {
+    "/api-keys": {
+      "put": {
         "tags": ["api-key"],
         "summary": "Generate a new API key with optional expiration.",
         "operationId": "create_api_key",
@@ -255,48 +255,29 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      }
-    },
-    "/api-keys/mcp-config": {
-      "get": {
-        "tags": ["api-key"],
-        "summary": "Get MCP Client configuration",
-        "operationId": "get_mcp_config",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "additionalProperties": true, "type": "object", "title": "Response Api-Key-Get Mcp Config" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api-keys/list": {
+      },
       "get": {
         "tags": ["api-key"],
         "summary": "List all active API keys for the current user.",
         "operationId": "list_api_keys",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/ApiKeyRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/ApiKeyRead" },
                   "title": "Response Api-Key-List Api Keys"
                 }
               }
             }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/api-keys/delete/{key_id}": {
+    "/api-keys/{key_id}": {
       "delete": {
         "tags": ["api-key"],
         "summary": "Revoke/Delete an API key.",
@@ -313,6 +294,23 @@
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/api-keys/mcp-config": {
+      "get": {
+        "tags": ["api-key"],
+        "summary": "Get MCP Client configuration",
+        "operationId": "get_mcp_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "additionalProperties": true, "type": "object", "title": "Response Api-Key-Get Mcp Config" }
+              }
+            }
           }
         }
       }
@@ -491,7 +489,7 @@
       "put": {
         "tags": ["bboxAnnotation", "mcp"],
         "summary": "Creates a BBoxAnnotation",
-        "operationId": "add_bbox_annotation",
+        "operationId": "create_bbox_annotation",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } },
           "required": true
@@ -602,78 +600,6 @@
         }
       }
     },
-    "/bbox/bulk/update": {
-      "patch": {
-        "tags": ["bboxAnnotation", "mcp"],
-        "summary": "Updates BBoxAnnotation in Bulk",
-        "operationId": "update_bbox_anno_annotations_bulk",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": { "$ref": "#/components/schemas/BBoxAnnotationUpdateBulk" },
-                "type": "array",
-                "title": "Bbox Annos"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                  "type": "array",
-                  "title": "Response Bboxannotation-Update Bbox Anno Annotations Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/bbox/bulk/delete": {
-      "delete": {
-        "tags": ["bboxAnnotation", "mcp"],
-        "summary": "Deletes all BBoxAnnotations with the given IDs.",
-        "operationId": "delete_bulk_by_id",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Bbox Anno Ids" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                  "type": "array",
-                  "title": "Response Bboxannotation-Delete Bulk By Id"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/bbox/code/{code_id}/user": {
       "get": {
         "tags": ["bboxAnnotation", "mcp"],
@@ -701,6 +627,78 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/bbox/bulk/update": {
+      "patch": {
+        "tags": ["bboxAnnotation", "mcp"],
+        "summary": "Updates BBoxAnnotation in Bulk",
+        "operationId": "update_bbox_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/BBoxAnnotationUpdateBulk" },
+                "type": "array",
+                "title": "Bbox Annos"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Bboxannotation-Update Bbox Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/bbox/bulk/delete": {
+      "delete": {
+        "tags": ["bboxAnnotation", "mcp"],
+        "summary": "Deletes all BBoxAnnotations with the given IDs.",
+        "operationId": "delete_bbox_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Bbox Anno Ids" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Bboxannotation-Delete Bbox Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/classifier/info": {
@@ -960,7 +958,7 @@
       "put": {
         "tags": ["code", "mcp"],
         "summary": "Creates a new Code and returns it with the generated ID.",
-        "operationId": "create_new_code",
+        "operationId": "create_code",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeCreate" } } },
           "required": true
@@ -1093,6 +1091,27 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/cota/duplicate/{cota_id}": {
+      "put": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/cota/{cota_id}": {
       "get": {
         "tags": ["conceptOverTimeAnalysis"],
@@ -1194,29 +1213,8 @@
         }
       }
     },
-    "/cota/duplicate/{cota_id}": {
-      "post": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
-        "operationId": "duplicate_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/cota/annotate/{cota_id}": {
-      "post": {
+      "patch": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Annotate (multiple) COTASentences",
         "operationId": "annotate_cota_sentence",
@@ -1255,7 +1253,7 @@
       }
     },
     "/cota/remove/{cota_id}": {
-      "post": {
+      "patch": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Remove (multiple) COTASentences from the search space",
         "operationId": "remove_cota_sentence",
@@ -1288,7 +1286,7 @@
       }
     },
     "/cota/reset/{cota_id}": {
-      "post": {
+      "patch": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Resets the ConceptOverTimeAnalysis",
         "description": "Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
@@ -1460,7 +1458,7 @@
       }
     },
     "/docprocessing/project/{proj_id}": {
-      "put": {
+      "post": {
         "tags": ["docprocessing"],
         "summary": "Uploads one or multiple files to the Project with the given ID if it exists",
         "operationId": "upload_files",
@@ -1559,11 +1557,33 @@
         }
       }
     },
+    "/folder": {
+      "put": {
+        "tags": ["folder", "mcp"],
+        "summary": "Creates a new Folder and returns it with the generated ID.",
+        "operationId": "create_folder",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/folder/{folder_id}": {
       "get": {
         "tags": ["folder", "mcp"],
-        "summary": "Get Folder By Id",
-        "operationId": "get_folder_by_id",
+        "summary": "Returns the Folder with the given ID.",
+        "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
@@ -1579,10 +1599,10 @@
           }
         }
       },
-      "put": {
+      "patch": {
         "tags": ["folder", "mcp"],
-        "summary": "Update Folder",
-        "operationId": "update_folder",
+        "summary": "Updates the Folder with the given ID.",
+        "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
@@ -1604,8 +1624,8 @@
       },
       "delete": {
         "tags": ["folder", "mcp"],
-        "summary": "Delete Folder",
-        "operationId": "delete_folder",
+        "summary": "Deletes the Folder with the given ID.",
+        "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
@@ -1692,32 +1712,10 @@
         }
       }
     },
-    "/folder/": {
-      "post": {
-        "tags": ["folder", "mcp"],
-        "summary": "Create Folder",
-        "operationId": "create_folder",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/folder/move_folders": {
-      "post": {
+      "patch": {
         "tags": ["folder", "mcp"],
-        "summary": "Move Folders",
+        "summary": "Moves the Folders with the given IDs to the target folder.",
         "operationId": "move_folders",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2490,7 +2488,7 @@
       "put": {
         "tags": ["memo", "mcp"],
         "summary": "Adds a Memo to the Attached Object with the given ID if it exists",
-        "operationId": "add_memo",
+        "operationId": "create_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -2555,24 +2553,6 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/memo/{memo_id}/recent": {
-      "post": {
-        "tags": ["memo", "mcp"],
-        "summary": "Records that the current user opened the Memo with the given ID",
-        "operationId": "record_recent_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
-        ],
-        "responses": {
-          "204": { "description": "Successful Response" },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -2683,39 +2663,55 @@
         }
       }
     },
-    "/memo/{memo_id}/favorite": {
-      "put": {
+    "/memo/bulk/update": {
+      "patch": {
         "tags": ["memo", "mcp"],
-        "summary": "Favorites a Memo for the current user",
-        "operationId": "favorite_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
-        ],
+        "summary": "Updates Memos in Bulk",
+        "operationId": "update_memos_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/MemoUpdateBulk" },
+                "type": "array",
+                "title": "Memos"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "type": "array",
+                  "title": "Response Memo-Update Memos Bulk"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
-      },
-      "delete": {
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/memo/{memo_id}/recent": {
+      "post": {
         "tags": ["memo", "mcp"],
-        "summary": "Removes the current user's Memo favorite",
-        "operationId": "unfavorite_by_id",
+        "summary": "Records that the current user opened the Memo with the given ID",
+        "operationId": "record_recent_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
         ],
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
+          "204": { "description": "Successful Response" },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -2750,75 +2746,6 @@
             "content": {
               "application/json": { "schema": { "type": "string", "title": "Response Memo-Generate Memo Suggestion" } }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/job/{aspect_id}": {
-      "post": {
-        "tags": ["perspectives"],
-        "summary": "Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.",
-        "operationId": "start_perspectives_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
-                  { "$ref": "#/components/schemas/CreateClusterWithNameParams" },
-                  { "$ref": "#/components/schemas/CreateClusterWithSdocsParams" },
-                  { "$ref": "#/components/schemas/RemoveClusterParams" },
-                  { "$ref": "#/components/schemas/MergeClustersParams" },
-                  { "$ref": "#/components/schemas/SplitClusterParams" },
-                  { "$ref": "#/components/schemas/ChangeClusterParams" },
-                  { "$ref": "#/components/schemas/RefineModelParams" },
-                  { "$ref": "#/components/schemas/ResetModelParams" },
-                  { "$ref": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams" }
-                ],
-                "title": "Perspectives Job Params"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/job/{perspectives_job_id}": {
-      "get": {
-        "tags": ["perspectives"],
-        "summary": "Returns the PerspectivesJob for the given ID if it exists",
-        "operationId": "get_perspectives_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "perspectives_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Perspectives Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -2972,148 +2899,6 @@
         }
       }
     },
-    "/perspectives/label_accept/{aspect_id}": {
-      "post": {
-        "tags": ["perspectives"],
-        "summary": "Accept the label of the provided SourceDocuments (by ID).",
-        "operationId": "accept_label",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Perspectives-Accept Label" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/label_revert/{aspect_id}": {
-      "post": {
-        "tags": ["perspectives"],
-        "summary": "Reverts the label of the provided SourceDocuments (by ID).",
-        "operationId": "revert_label",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Perspectives-Revert Label" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/visualize_documents/{aspect_id}": {
-      "post": {
-        "tags": ["perspectives"],
-        "summary": "Returns data for visualizing the documents of the given aspect.",
-        "operationId": "visualize_documents",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "aspect_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Aspect Id" }
-          },
-          {
-            "name": "search_query",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Search Query" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_perspectives-visualize_documents" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/cluster_similarities/{aspect_id}": {
-      "get": {
-        "tags": ["perspectives"],
-        "summary": "Returns data for visualizing the cluster similarities of the given aspect.",
-        "operationId": "get_cluster_similarities",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesClusterSimilarities" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/perspectives/visualize_clusters/{aspect_id}": {
-      "get": {
-        "tags": ["perspectives"],
-        "summary": "Returns data for visualizing the clusters of the given aspect.",
-        "operationId": "visualize_clusters",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/perspectives/clusters/{aspect_id}/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["perspectives"],
@@ -3179,11 +2964,223 @@
         }
       }
     },
+    "/perspectives/job/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Starts the PerspectivesJob for the given Parameters. If a job is already running, this will raise an error.",
+        "operationId": "start_perspectives_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  { "$ref": "#/components/schemas/AddMissingDocsToAspectParams" },
+                  { "$ref": "#/components/schemas/CreateClusterWithNameParams" },
+                  { "$ref": "#/components/schemas/CreateClusterWithSdocsParams" },
+                  { "$ref": "#/components/schemas/RemoveClusterParams" },
+                  { "$ref": "#/components/schemas/MergeClustersParams" },
+                  { "$ref": "#/components/schemas/SplitClusterParams" },
+                  { "$ref": "#/components/schemas/ChangeClusterParams" },
+                  { "$ref": "#/components/schemas/RefineModelParams" },
+                  { "$ref": "#/components/schemas/ResetModelParams" },
+                  { "$ref": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams" }
+                ],
+                "title": "Perspectives Job Params"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/job/{perspectives_job_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns the PerspectivesJob for the given ID if it exists",
+        "operationId": "get_perspectives_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "perspectives_job_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Perspectives Job Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/visualize_documents/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Returns data for visualizing the documents of the given aspect.",
+        "operationId": "visualize_documents",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_perspectives-visualize_documents" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/label_accept/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Accept the label of the provided SourceDocuments (by ID) and return the updated visualization.",
+        "operationId": "accept_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_perspectives-accept_label" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/label_revert/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Reverts the label of the provided SourceDocuments (by ID) and return the updated visualization.",
+        "operationId": "revert_label",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "aspect_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Aspect Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_perspectives-revert_label" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesVisualization" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/cluster_similarities/{aspect_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns data for visualizing the cluster similarities of the given aspect.",
+        "operationId": "get_cluster_similarities",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PerspectivesClusterSimilarities" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/project": {
       "put": {
         "tags": ["project", "mcp"],
         "summary": "Creates a new Project",
-        "operationId": "create_new_project",
+        "operationId": "create_project",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectCreate" } } },
           "required": true
@@ -3205,7 +3202,7 @@
       "get": {
         "tags": ["project", "mcp"],
         "summary": "Returns the Project with the given ID if it exists",
-        "operationId": "read_project",
+        "operationId": "get_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
@@ -3316,7 +3313,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/project{project_id}/sdoc/status/{status}": {
+    "/project/{project_id}/sdoc/status/{status}": {
       "get": {
         "tags": ["project", "mcp"],
         "summary": "Returns count of SourceDocuments with the given status in the given project.",
@@ -3351,7 +3348,7 @@
       "put": {
         "tags": ["projectMetadata", "mcp"],
         "summary": "Creates a new Metadata and returns it with the generated ID.",
-        "operationId": "create_new_metadata",
+        "operationId": "create_metadata",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataCreate" } } },
           "required": true
@@ -4031,7 +4028,7 @@
       }
     },
     "/searchView": {
-      "post": {
+      "put": {
         "tags": ["searchView"],
         "summary": "Creates a personal search view",
         "operationId": "create",
@@ -4124,7 +4121,7 @@
       }
     },
     "/searchView/project/{project_id}/order": {
-      "put": {
+      "patch": {
         "tags": ["searchView"],
         "summary": "Reorders the current user's search views of an entity type in a project",
         "operationId": "reorder",
@@ -4258,7 +4255,7 @@
       "put": {
         "tags": ["sentenceAnnotation", "mcp"],
         "summary": "Creates a SentenceAnnotation",
-        "operationId": "add_sentence_annotation",
+        "operationId": "create_sentence_annotation",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } },
           "required": true
@@ -4280,7 +4277,7 @@
       "put": {
         "tags": ["sentenceAnnotation", "mcp"],
         "summary": "Creates SentenceAnnotations in Bulk",
-        "operationId": "add_sentence_annotations_bulk",
+        "operationId": "create_sentence_annotations_bulk",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4301,7 +4298,7 @@
                 "schema": {
                   "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
                   "type": "array",
-                  "title": "Response Sentenceannotation-Add Sentence Annotations Bulk"
+                  "title": "Response Sentenceannotation-Create Sentence Annotations Bulk"
                 }
               }
             }
@@ -4414,78 +4411,6 @@
         }
       }
     },
-    "/sentence/bulk/update": {
-      "patch": {
-        "tags": ["sentenceAnnotation", "mcp"],
-        "summary": "Updates SentenceAnnotation in Bulk",
-        "operationId": "update_sent_anno_annotations_bulk",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": { "$ref": "#/components/schemas/SentenceAnnotationUpdateBulk" },
-                "type": "array",
-                "title": "Sent Annos"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-                  "type": "array",
-                  "title": "Response Sentenceannotation-Update Sent Anno Annotations Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/sentence/bulk/delete": {
-      "delete": {
-        "tags": ["sentenceAnnotation", "mcp"],
-        "summary": "Deletes all SentenceAnnotations with the given IDs.",
-        "operationId": "delete_bulk_by_id",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sentence Anno Ids" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
-                  "type": "array",
-                  "title": "Response Sentenceannotation-Delete Bulk By Id"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/sentence/code/{code_id}/user": {
       "get": {
         "tags": ["sentenceAnnotation", "mcp"],
@@ -4513,6 +4438,78 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/sentence/bulk/update": {
+      "patch": {
+        "tags": ["sentenceAnnotation", "mcp"],
+        "summary": "Updates SentenceAnnotation in Bulk",
+        "operationId": "update_sentence_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/SentenceAnnotationUpdateBulk" },
+                "type": "array",
+                "title": "Sent Annos"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Sentenceannotation-Update Sentence Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/sentence/bulk/delete": {
+      "delete": {
+        "tags": ["sentenceAnnotation", "mcp"],
+        "summary": "Deletes all SentenceAnnotations with the given IDs.",
+        "operationId": "delete_sentence_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sentence Anno Ids" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Sentenceannotation-Delete Sentence Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/sentence/count_annotations/{user_id}": {
@@ -4652,14 +4649,18 @@
           }
         }
       },
-      "delete": {
+      "patch": {
         "tags": ["sourceDocument", "mcp"],
-        "summary": "Removes the SourceDocument with the given ID if it exists",
-        "operationId": "delete_by_id",
+        "summary": "Updates the SourceDocument with the given ID.",
+        "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentUpdate" } } }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -4671,18 +4672,14 @@
           }
         }
       },
-      "patch": {
+      "delete": {
         "tags": ["sourceDocument", "mcp"],
-        "summary": "Updates the SourceDocument with the given ID.",
-        "operationId": "update_sdoc",
+        "summary": "Removes the SourceDocument with the given ID if it exists",
+        "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
         ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentUpdate" } } }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5007,7 +5004,7 @@
       "put": {
         "tags": ["spanAnnotation", "mcp"],
         "summary": "Creates a SpanAnnotation",
-        "operationId": "add_span_annotation",
+        "operationId": "create_span_annotation",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } },
           "required": true
@@ -5029,7 +5026,7 @@
       "put": {
         "tags": ["spanAnnotation", "mcp"],
         "summary": "Creates SpanAnnotations in Bulk",
-        "operationId": "add_span_annotations_bulk",
+        "operationId": "create_span_annotations_bulk",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5050,7 +5047,7 @@
                 "schema": {
                   "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "type": "array",
-                  "title": "Response Spanannotation-Add Span Annotations Bulk"
+                  "title": "Response Spanannotation-Create Span Annotations Bulk"
                 }
               }
             }
@@ -5156,78 +5153,6 @@
         }
       }
     },
-    "/span/bulk/update": {
-      "patch": {
-        "tags": ["spanAnnotation", "mcp"],
-        "summary": "Updates SpanAnnotations in Bulk",
-        "operationId": "update_span_annotations_bulk",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": { "$ref": "#/components/schemas/SpanAnnotationUpdateBulk" },
-                "type": "array",
-                "title": "Spans"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                  "type": "array",
-                  "title": "Response Spanannotation-Update Span Annotations Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/span/bulk/delete": {
-      "delete": {
-        "tags": ["spanAnnotation", "mcp"],
-        "summary": "Deletes all SpanAnnotations with the given IDs.",
-        "operationId": "delete_bulk_by_id",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Span Anno Ids" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationDeleted" },
-                  "type": "array",
-                  "title": "Response Spanannotation-Delete Bulk By Id"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/span/{span_id}/groups": {
       "get": {
         "tags": ["spanAnnotation", "mcp"],
@@ -5276,6 +5201,73 @@
         }
       }
     },
+    "/span/code/{code_id}/user": {
+      "get": {
+        "tags": ["spanAnnotation", "mcp"],
+        "summary": "Returns SpanAnnotations with the given Code of the logged-in User",
+        "operationId": "get_by_user_code",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+                  "title": "Response Spanannotation-Get By User Code"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/span/bulk/update": {
+      "patch": {
+        "tags": ["spanAnnotation", "mcp"],
+        "summary": "Updates SpanAnnotations in Bulk",
+        "operationId": "update_span_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/SpanAnnotationUpdateBulk" },
+                "type": "array",
+                "title": "Spans"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Spanannotation-Update Span Annotations Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/span/{span_id}/group/{group_id}": {
       "patch": {
         "tags": ["spanAnnotation", "mcp"],
@@ -5318,24 +5310,28 @@
         }
       }
     },
-    "/span/code/{code_id}/user": {
-      "get": {
+    "/span/bulk/delete": {
+      "delete": {
         "tags": ["spanAnnotation", "mcp"],
-        "summary": "Returns SpanAnnotations with the given Code of the logged-in User",
-        "operationId": "get_by_user_code",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
-        ],
+        "summary": "Deletes all SpanAnnotations with the given IDs.",
+        "operationId": "delete_span_annotations_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Span Anno Ids" }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationDeleted" },
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                  "title": "Response Spanannotation-Get By User Code"
+                  "title": "Response Spanannotation-Delete Span Annotations Bulk"
                 }
               }
             }
@@ -5344,7 +5340,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/span/count_annotations/{user_id}": {
@@ -5386,7 +5383,7 @@
       "put": {
         "tags": ["spanGroup"],
         "summary": "Creates a new SpanGroup and returns it with the generated ID.",
-        "operationId": "create_new_span_group",
+        "operationId": "create_span_group",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupCreate" } } },
           "required": true
@@ -5398,7 +5395,7 @@
               "application/json": {
                 "schema": {
                   "anyOf": [{ "$ref": "#/components/schemas/SpanGroupRead" }, { "type": "null" }],
-                  "title": "Response Spangroup-Create New Span Group"
+                  "title": "Response Spangroup-Create Span Group"
                 }
               }
             }
@@ -5774,7 +5771,7 @@
       "put": {
         "tags": ["tag", "mcp"],
         "summary": "Creates a new Tag and returns it with the generated ID.",
-        "operationId": "create_new_doc_tag",
+        "operationId": "create_doc_tag",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagCreate" } } },
           "required": true
@@ -5783,116 +5780,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/link": {
-      "patch": {
-        "tags": ["tag", "mcp"],
-        "summary": "Links multiple Tags with the SourceDocuments and returns the number of new Links",
-        "operationId": "link_multiple_tags",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Link Multiple Tags" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/unlink": {
-      "delete": {
-        "tags": ["tag", "mcp"],
-        "summary": "Unlinks all Tags with the SourceDocuments and returns the number of removed Links.",
-        "operationId": "unlink_multiple_tags",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Unlink Multiple Tags" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/set": {
-      "patch": {
-        "tags": ["tag", "mcp"],
-        "summary": "Sets SourceDocuments' tags to the provided tags",
-        "operationId": "set_tags_batch",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": { "$ref": "#/components/schemas/SourceDocumentTagLinks" },
-                "type": "array",
-                "title": "Links"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Set Tags Batch" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/tag/bulk/update": {
-      "patch": {
-        "tags": ["tag", "mcp"],
-        "summary": "Updates SourceDocuments' tags",
-        "operationId": "update_tags_batch",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_tag-update_tags_batch" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Update Tags Batch" } }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -6046,6 +5933,100 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/tag/bulk/link": {
+      "patch": {
+        "tags": ["tag", "mcp"],
+        "summary": "Links multiple Tags with the SourceDocuments and returns the resulting tags per document",
+        "operationId": "link_multiple_tags",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/set": {
+      "patch": {
+        "tags": ["tag", "mcp"],
+        "summary": "Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document",
+        "operationId": "set_tags_batch",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/update": {
+      "patch": {
+        "tags": ["tag", "mcp"],
+        "summary": "Updates SourceDocuments' tags and returns the resulting tags per document",
+        "operationId": "update_tags_batch",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_tag-update_tags_batch" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/unlink": {
+      "delete": {
+        "tags": ["tag", "mcp"],
+        "summary": "Unlinks all Tags with the SourceDocuments and returns the resulting tags per document",
+        "operationId": "unlink_multiple_tags",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagLinks" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/tag/sdoc_counts/{project_id}": {
@@ -6240,6 +6221,32 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/timelineAnalysis/duplicate/{timeline_analysis_id}": {
+      "put": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Duplicates the TimelineAnalysis with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/timelineAnalysis/{timeline_analysis_id}": {
       "get": {
         "tags": ["timelineAnalysis"],
@@ -6353,36 +6360,10 @@
       }
     },
     "/timelineAnalysis/recompute/{timeline_analysis_id}": {
-      "post": {
+      "patch": {
         "tags": ["timelineAnalysis"],
         "summary": "Recomputes the TimelineAnalysis with the given ID if it exists",
         "operationId": "recompute_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "timeline_analysis_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/timelineAnalysis/duplicate/{timeline_analysis_id}": {
-      "post": {
-        "tags": ["timelineAnalysis"],
-        "summary": "Duplicates the TimelineAnalysis with the given ID if it exists",
-        "operationId": "duplicate_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -6619,6 +6600,32 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/whiteboard/duplicate/{whiteboard_id}": {
+      "put": {
+        "tags": ["whiteboard"],
+        "summary": "Duplicates the Whiteboard with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "whiteboard_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Whiteboard Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/whiteboard/{whiteboard_id}": {
       "get": {
         "tags": ["whiteboard"],
@@ -6757,32 +6764,6 @@
         }
       }
     },
-    "/whiteboard/duplicate/{whiteboard_id}": {
-      "post": {
-        "tags": ["whiteboard"],
-        "summary": "Duplicates the Whiteboard with the given ID if it exists",
-        "operationId": "duplicate_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "whiteboard_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Whiteboard Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/word_frequency/info/{project_id}": {
       "get": {
         "tags": ["word_frequency"],
@@ -6806,6 +6787,35 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_WordFrequencyColumns_" },
                   "title": "Response Word Frequency-Word Frequency Analysis Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/word_frequency/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["word_frequency"],
+        "summary": "Returns the SourceDocument's word frequencies with the given ID if it exists",
+        "operationId": "get_word_frequencies",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WordFrequencyRead" },
+                  "title": "Response Word Frequency-Get Word Frequencies"
                 }
               }
             }
@@ -6886,35 +6896,6 @@
             "content": {
               "application/json": {
                 "schema": { "type": "string", "title": "Response Word Frequency-Word Frequency Analysis Export" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/word_frequency/sdoc/{sdoc_id}": {
-      "get": {
-        "tags": ["word_frequency"],
-        "summary": "Returns the SourceDocument's word frequencies with the given ID if it exists",
-        "operationId": "get_word_frequencies",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/WordFrequencyRead" },
-                  "title": "Response Word Frequency-Get Word Frequencies"
-                }
               }
             }
           },
@@ -7035,6 +7016,18 @@
         }
       }
     },
+    "MEMO_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_memo_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoCreatedEvent" } } }
+          }
+        }
+      }
+    },
     "MEMO_UPDATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -7059,6 +7052,18 @@
         }
       }
     },
+    "MEMO_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_memo_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoUpdatedBatchEvent" } } }
+          }
+        }
+      }
+    },
     "SDOC_UPDATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -7079,6 +7084,18 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SDOC_TAGS_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_tags_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocTagsUpdatedEvent" } } }
           }
         }
       }
@@ -7120,6 +7137,48 @@
             "description": "Successful Response",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SPAN_ANNOTATION_CREATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_annotation_created_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreatedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SPAN_ANNOTATION_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_annotation_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationUpdatedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SPAN_ANNOTATION_DELETED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_span_annotation_deleted_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationDeletedBatchEvent" } }
             }
           }
         }
@@ -7167,6 +7226,34 @@
         }
       }
     },
+    "BBOX_ANNOTATION_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_bbox_annotation_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BboxAnnotationUpdatedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "BBOX_ANNOTATION_DELETED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_bbox_annotation_deleted_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BboxAnnotationDeletedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
     "SENTENCE_ANNOTATION_CREATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -7209,6 +7296,48 @@
         }
       }
     },
+    "SENTENCE_ANNOTATION_CREATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sentence_annotation_created_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreatedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SENTENCE_ANNOTATION_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sentence_annotation_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationUpdatedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SENTENCE_ANNOTATION_DELETED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sentence_annotation_deleted_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationDeletedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
     "FOLDER_CREATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -7241,6 +7370,18 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "FOLDER_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_folder_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderUpdatedBatchEvent" } } }
           }
         }
       }
@@ -7307,6 +7448,20 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocMetadataDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SDOC_METADATA_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_metadata_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SdocMetadataUpdatedBatchEvent" } }
+            }
           }
         }
       }
@@ -7544,6 +7699,130 @@
           }
         }
       }
+    },
+    "USER_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_user_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "USER_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_user_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "API_KEY_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_api_key_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiKeyCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "API_KEY_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_api_key_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiKeyDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "TAG_RECOMMENDATION_REVIEWED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_tag_recommendation_reviewed_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationReviewedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "SEARCH_VIEW_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_search_view_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchViewCreatedEvent" } } }
+          }
+        }
+      }
+    },
+    "SEARCH_VIEW_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_search_view_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchViewUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "SEARCH_VIEW_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_search_view_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchViewDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SEARCH_VIEW_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_search_view_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SearchViewUpdatedBatchEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "JOB_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_job_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JobUpdatedEvent" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7685,6 +7964,15 @@
         "required": ["status", "status_message", "sdoc_id", "suggested_annotations"],
         "title": "AnnotationResult"
       },
+      "ApiKeyCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "API_KEY_CREATED", "title": "Type", "default": "API_KEY_CREATED" },
+          "payload": { "$ref": "#/components/schemas/ApiKeyRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ApiKeyCreatedEvent"
+      },
       "ApiKeyCreatedResponse": {
         "properties": {
           "id": { "type": "integer", "title": "Id" },
@@ -7700,6 +7988,15 @@
         "type": "object",
         "required": ["id", "name", "prefix", "expires_at", "created_at", "api_key"],
         "title": "ApiKeyCreatedResponse"
+      },
+      "ApiKeyDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "API_KEY_DELETED", "title": "Type", "default": "API_KEY_DELETED" },
+          "payload": { "$ref": "#/components/schemas/ApiKeyRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ApiKeyDeletedEvent"
       },
       "ApiKeyRead": {
         "properties": {
@@ -8224,6 +8521,24 @@
         "required": ["payload"],
         "title": "BboxAnnotationCreatedEvent"
       },
+      "BboxAnnotationDeletedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "BBOX_ANNOTATION_DELETED_BATCH",
+            "title": "Type",
+            "default": "BBOX_ANNOTATION_DELETED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "BboxAnnotationDeletedBatchEvent"
+      },
       "BboxAnnotationDeletedEvent": {
         "properties": {
           "type": {
@@ -8237,6 +8552,24 @@
         "type": "object",
         "required": ["payload"],
         "title": "BboxAnnotationDeletedEvent"
+      },
+      "BboxAnnotationUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "BBOX_ANNOTATION_UPDATED_BATCH",
+            "title": "Type",
+            "default": "BBOX_ANNOTATION_UPDATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "BboxAnnotationUpdatedBatchEvent"
       },
       "BboxAnnotationUpdatedEvent": {
         "properties": {
@@ -8346,6 +8679,32 @@
         "type": "object",
         "required": ["llm_job_params"],
         "title": "Body_llm-create_prompt_templates"
+      },
+      "Body_perspectives-accept_label": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
+            "description": "The filter of the Concept"
+          },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "filter", "sorts"],
+        "title": "Body_perspectives-accept_label"
+      },
+      "Body_perspectives-revert_label": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
+            "description": "The filter of the Concept"
+          },
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "filter", "sorts"],
+        "title": "Body_perspectives-revert_label"
       },
       "Body_perspectives-visualize_documents": {
         "properties": {
@@ -8671,7 +9030,13 @@
       "COTARefinementJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["cota_refinement"],
+            "const": "cota_refinement",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -9297,7 +9662,13 @@
       "ClassifierJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["classifier"],
+            "const": "classifier",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -10300,7 +10671,13 @@
       "CrawlerJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["crawler"],
+            "const": "crawler",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -10491,7 +10868,13 @@
       "DuplicateFinderJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["duplicate_finder"],
+            "const": "duplicate_finder",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -10615,7 +10998,13 @@
       "ExportJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["export"],
+            "const": "export",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -11462,6 +11851,20 @@
         "type": "object",
         "title": "FolderUpdate"
       },
+      "FolderUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "FOLDER_UPDATED_BATCH",
+            "title": "Type",
+            "default": "FOLDER_UPDATED_BATCH"
+          },
+          "payload": { "items": { "$ref": "#/components/schemas/FolderRead" }, "type": "array", "title": "Payload" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "FolderUpdatedBatchEvent"
+      },
       "FolderUpdatedEvent": {
         "properties": {
           "type": { "type": "string", "const": "FOLDER_UPDATED", "title": "Type", "default": "FOLDER_UPDATED" },
@@ -11842,7 +12245,13 @@
       "ImportJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["import"],
+            "const": "import",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -11927,6 +12336,28 @@
         "type": "string",
         "enum": ["queued", "finished", "failed", "started", "deferred", "scheduled", "stopped", "canceled"],
         "title": "JobStatus"
+      },
+      "JobUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "JOB_UPDATED", "title": "Type", "default": "JOB_UPDATED" },
+          "payload": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/LlmAssistantJobRead" },
+              { "$ref": "#/components/schemas/CrawlerJobRead" },
+              { "$ref": "#/components/schemas/PerspectivesJobRead" },
+              { "$ref": "#/components/schemas/MlJobRead" },
+              { "$ref": "#/components/schemas/DuplicateFinderJobRead" },
+              { "$ref": "#/components/schemas/COTARefinementJobRead" },
+              { "$ref": "#/components/schemas/ClassifierJobRead" },
+              { "$ref": "#/components/schemas/ImportJobRead" },
+              { "$ref": "#/components/schemas/ExportJobRead" }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "JobUpdatedEvent"
       },
       "KeywordStat": {
         "properties": {
@@ -12119,7 +12550,13 @@
       "LlmAssistantJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["llm_assistant"],
+            "const": "llm_assistant",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -12243,6 +12680,15 @@
         "type": "object",
         "required": ["title", "content", "content_json"],
         "title": "MemoCreate"
+      },
+      "MemoCreatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "MEMO_CREATED", "title": "Type", "default": "MEMO_CREATED" },
+          "payload": { "$ref": "#/components/schemas/MemoRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "MemoCreatedEvent"
       },
       "MemoDeletedEvent": {
         "properties": {
@@ -12424,10 +12870,57 @@
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Content Json",
             "description": "JSON content of the Memo"
+          },
+          "is_favorite": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Favorite",
+            "description": "Favorite the Memo for the requesting user only. This is per-user state: it does not change the Memo for other users."
           }
         },
         "type": "object",
         "title": "MemoUpdate"
+      },
+      "MemoUpdateBulk": {
+        "properties": {
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title",
+            "description": "Title of the Memo"
+          },
+          "icon": {
+            "anyOf": [{ "type": "string", "maxLength": 64 }, { "type": "null" }],
+            "title": "Icon",
+            "description": "Optional Unicode emoji used as the Memo icon"
+          },
+          "content": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content",
+            "description": "Textual content of the Memo"
+          },
+          "content_json": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content Json",
+            "description": "JSON content of the Memo"
+          },
+          "is_favorite": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Favorite",
+            "description": "Favorite the Memo for the requesting user only. This is per-user state: it does not change the Memo for other users."
+          },
+          "memo_id": { "type": "integer", "title": "Memo Id", "description": "ID of the Memo to update" }
+        },
+        "type": "object",
+        "required": ["memo_id"],
+        "title": "MemoUpdateBulk"
+      },
+      "MemoUpdatedBatchEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "MEMO_UPDATED_BATCH", "title": "Type", "default": "MEMO_UPDATED_BATCH" },
+          "payload": { "items": { "$ref": "#/components/schemas/MemoRead" }, "type": "array", "title": "Payload" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "MemoUpdatedBatchEvent"
       },
       "MemoUpdatedEvent": {
         "properties": {
@@ -12530,7 +13023,13 @@
       "MlJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["ml"],
+            "const": "ml",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -12736,12 +13235,6 @@
             "title": "Tags",
             "description": "A dictionary of sdoc_id and a list of tag IDs that are associated with the document."
           },
-          "memos": {
-            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
-            "type": "object",
-            "title": "Memos",
-            "description": "A dictionary of sdoc_id and a list of memo IDs that are attached to the document."
-          },
           "total_results": {
             "type": "integer",
             "title": "Total Results",
@@ -12749,7 +13242,7 @@
           }
         },
         "type": "object",
-        "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "memos", "total_results"],
+        "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "total_results"],
         "title": "PaginatedSDocHits"
       },
       "PaginatedSpanAnnotationHits": {
@@ -12881,7 +13374,13 @@
       "PerspectivesJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "job_type": {
+            "type": "string",
+            "enum": ["perspectives"],
+            "const": "perspectives",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -13685,6 +14184,24 @@
         "required": ["payload"],
         "title": "SdocMetadataDeletedEvent"
       },
+      "SdocMetadataUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SDOC_METADATA_UPDATED_BATCH",
+            "title": "Type",
+            "default": "SDOC_METADATA_UPDATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocMetadataUpdatedBatchEvent"
+      },
       "SdocMetadataUpdatedEvent": {
         "properties": {
           "type": {
@@ -13750,6 +14267,28 @@
         "required": ["sdoc_id", "name", "status", "failed_job_uuids", "failed_job_status_msgs"],
         "title": "SdocStatusRow"
       },
+      "SdocTagLinks": {
+        "properties": {
+          "links": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Links",
+            "description": "Map of sdoc_id to its complete list of tag IDs"
+          }
+        },
+        "type": "object",
+        "required": ["links"],
+        "title": "SdocTagLinks"
+      },
+      "SdocTagsUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SDOC_TAGS_UPDATED", "title": "Type", "default": "SDOC_TAGS_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/SdocTagLinks" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocTagsUpdatedEvent"
+      },
       "SdocTimelineAnalysisFilter-Input": {
         "properties": {
           "timeline_analysis_type": { "type": "string", "const": "document", "title": "Timeline Analysis Type" },
@@ -13789,6 +14328,50 @@
         "title": "SearchEntityType",
         "description": "The searchable entity a saved view is for.\n\nEach value maps to one column enum (`MemoColumns`, `SpanColumns`, ...). The\nvalue is stored in `SearchViewORM.entity_type` and used as the discriminator\nfor the create/read/update unions below. Sdoc is deliberately omitted: it is\nElasticSearch-backed and not part of the unified search flow yet."
       },
+      "SearchViewCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SEARCH_VIEW_CREATED",
+            "title": "Type",
+            "default": "SEARCH_VIEW_CREATED"
+          },
+          "payload": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/MemoSearchViewRead" },
+              { "$ref": "#/components/schemas/SpanSearchViewRead" },
+              { "$ref": "#/components/schemas/SentenceSearchViewRead" },
+              { "$ref": "#/components/schemas/BBoxSearchViewRead" }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SearchViewCreatedEvent"
+      },
+      "SearchViewDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SEARCH_VIEW_DELETED",
+            "title": "Type",
+            "default": "SEARCH_VIEW_DELETED"
+          },
+          "payload": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/MemoSearchViewRead" },
+              { "$ref": "#/components/schemas/SpanSearchViewRead" },
+              { "$ref": "#/components/schemas/SentenceSearchViewRead" },
+              { "$ref": "#/components/schemas/BBoxSearchViewRead" }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SearchViewDeletedEvent"
+      },
       "SearchViewLayout": {
         "type": "string",
         "enum": ["table", "list", "board", "gallery", "feed"],
@@ -13799,6 +14382,53 @@
         "type": "object",
         "required": ["view_ids"],
         "title": "SearchViewReorder"
+      },
+      "SearchViewUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SEARCH_VIEW_UPDATED_BATCH",
+            "title": "Type",
+            "default": "SEARCH_VIEW_UPDATED_BATCH"
+          },
+          "payload": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/MemoSearchViewRead" },
+                { "$ref": "#/components/schemas/SpanSearchViewRead" },
+                { "$ref": "#/components/schemas/SentenceSearchViewRead" },
+                { "$ref": "#/components/schemas/BBoxSearchViewRead" }
+              ]
+            },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SearchViewUpdatedBatchEvent"
+      },
+      "SearchViewUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SEARCH_VIEW_UPDATED",
+            "title": "Type",
+            "default": "SEARCH_VIEW_UPDATED"
+          },
+          "payload": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/MemoSearchViewRead" },
+              { "$ref": "#/components/schemas/SpanSearchViewRead" },
+              { "$ref": "#/components/schemas/SentenceSearchViewRead" },
+              { "$ref": "#/components/schemas/BBoxSearchViewRead" }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SearchViewUpdatedEvent"
       },
       "SentAnnoColumns": {
         "type": "string",
@@ -13867,6 +14497,24 @@
         "required": ["sentence_id_start", "sentence_id_end", "code_id", "sdoc_id"],
         "title": "SentenceAnnotationCreate"
       },
+      "SentenceAnnotationCreatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION_CREATED_BATCH",
+            "title": "Type",
+            "default": "SENTENCE_ANNOTATION_CREATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SentenceAnnotationCreatedBatchEvent"
+      },
       "SentenceAnnotationCreatedEvent": {
         "properties": {
           "type": {
@@ -13880,6 +14528,24 @@
         "type": "object",
         "required": ["payload"],
         "title": "SentenceAnnotationCreatedEvent"
+      },
+      "SentenceAnnotationDeletedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION_DELETED_BATCH",
+            "title": "Type",
+            "default": "SENTENCE_ANNOTATION_DELETED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SentenceAnnotationDeletedBatchEvent"
       },
       "SentenceAnnotationDeletedEvent": {
         "properties": {
@@ -14100,6 +14766,24 @@
         "type": "object",
         "required": ["sent_annotation_id", "code_id"],
         "title": "SentenceAnnotationUpdateBulk"
+      },
+      "SentenceAnnotationUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION_UPDATED_BATCH",
+            "title": "Type",
+            "default": "SENTENCE_ANNOTATION_UPDATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SentenceAnnotationUpdatedBatchEvent"
       },
       "SentenceAnnotationUpdatedEvent": {
         "properties": {
@@ -14695,24 +15379,6 @@
         ],
         "title": "SourceDocumentStatusSimple"
       },
-      "SourceDocumentTagLinks": {
-        "properties": {
-          "source_document_id": {
-            "type": "integer",
-            "title": "Source Document Id",
-            "description": "ID of SourceDocument"
-          },
-          "tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Tag Ids",
-            "description": "List of IDs of Tags"
-          }
-        },
-        "type": "object",
-        "required": ["source_document_id", "tag_ids"],
-        "title": "SourceDocumentTagLinks"
-      },
       "SourceDocumentTagMultiLink": {
         "properties": {
           "source_document_ids": {
@@ -14874,6 +15540,24 @@
         "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "sdoc_id"],
         "title": "SpanAnnotationCreate"
       },
+      "SpanAnnotationCreatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SPAN_ANNOTATION_CREATED_BATCH",
+            "title": "Type",
+            "default": "SPAN_ANNOTATION_CREATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanAnnotationCreatedBatchEvent"
+      },
       "SpanAnnotationCreatedEvent": {
         "properties": {
           "type": {
@@ -14937,6 +15621,24 @@
           "updated"
         ],
         "title": "SpanAnnotationDeleted"
+      },
+      "SpanAnnotationDeletedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SPAN_ANNOTATION_DELETED_BATCH",
+            "title": "Type",
+            "default": "SPAN_ANNOTATION_DELETED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationDeleted" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanAnnotationDeletedBatchEvent"
       },
       "SpanAnnotationDeletedEvent": {
         "properties": {
@@ -15139,6 +15841,24 @@
         "type": "object",
         "required": ["span_annotation_id", "code_id"],
         "title": "SpanAnnotationUpdateBulk"
+      },
+      "SpanAnnotationUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "SPAN_ANNOTATION_UPDATED_BATCH",
+            "title": "Type",
+            "default": "SPAN_ANNOTATION_UPDATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SpanAnnotationUpdatedBatchEvent"
       },
       "SpanAnnotationUpdatedEvent": {
         "properties": {
@@ -15612,6 +16332,24 @@
         "required": ["sdoc_id", "recommendation_ids", "current_tag_ids", "suggested_tag_ids", "scores"],
         "title": "TagRecommendationResult"
       },
+      "TagRecommendationReviewedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "TAG_RECOMMENDATION_REVIEWED_BATCH",
+            "title": "Type",
+            "default": "TAG_RECOMMENDATION_REVIEWED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/TagRecommendationLinkRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TagRecommendationReviewedBatchEvent"
+      },
       "TagStat": {
         "properties": {
           "tag": { "$ref": "#/components/schemas/TagRead", "description": "The counted document tag." },
@@ -16053,6 +16791,15 @@
         "required": ["email", "first_name", "last_name", "password"],
         "title": "UserCreate"
       },
+      "UserDeletedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "USER_DELETED", "title": "Type", "default": "USER_DELETED" },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "UserDeletedEvent"
+      },
       "UserRead": {
         "properties": {
           "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
@@ -16101,6 +16848,15 @@
         },
         "type": "object",
         "title": "UserUpdate"
+      },
+      "UserUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "USER_UPDATED", "title": "Type", "default": "USER_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "UserUpdatedEvent"
       },
       "ValidationError": {
         "properties": {

@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { Body_tag_count_tags } from "@models/Body_tag_count_tags";
 import type { Body_tag_update_tags_batch } from "@models/Body_tag_update_tags_batch";
-import type { SourceDocumentTagLinks } from "@models/SourceDocumentTagLinks";
+import type { SdocTagLinks } from "@models/SdocTagLinks";
 import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
 import type { TagCreate } from "@models/TagCreate";
 import type { TagRead } from "@models/TagRead";
@@ -18,90 +18,10 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static createNewDocTag({ requestBody }: { requestBody: TagCreate }): CancelablePromise<TagRead> {
+  public static createDocTag({ requestBody }: { requestBody: TagCreate }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/tag",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Links multiple Tags with the SourceDocuments and returns the number of new Links
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static linkMultipleTags({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/link",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Unlinks all Tags with the SourceDocuments and returns the number of removed Links.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static unlinkMultipleTags({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentTagMultiLink;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/tag/bulk/unlink",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Sets SourceDocuments' tags to the provided tags
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static setTagsBatch({
-    requestBody,
-  }: {
-    requestBody: Array<SourceDocumentTagLinks>;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/set",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Updates SourceDocuments' tags
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static updateTagsBatch({
-    requestBody,
-  }: {
-    requestBody: Body_tag_update_tags_batch;
-  }): CancelablePromise<number> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/tag/bulk/update",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -214,6 +134,82 @@ export class TagService {
       path: {
         tag_id: tagId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Links multiple Tags with the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static linkMultipleTags({
+    requestBody,
+  }: {
+    requestBody: SourceDocumentTagMultiLink;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/link",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static setTagsBatch({ requestBody }: { requestBody: SdocTagLinks }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/set",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates SourceDocuments' tags and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static updateTagsBatch({
+    requestBody,
+  }: {
+    requestBody: Body_tag_update_tags_batch;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Unlinks all Tags with the SourceDocuments and returns the resulting tags per document
+   * @returns SdocTagLinks Successful Response
+   * @throws ApiError
+   */
+  public static unlinkMultipleTags({
+    requestBody,
+  }: {
+    requestBody: SourceDocumentTagMultiLink;
+  }): CancelablePromise<SdocTagLinks> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/tag/bulk/unlink",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
