@@ -46,6 +46,18 @@ export type EntityEventMap = Pick<
   | "COTA_CREATED"
   | "COTA_UPDATED"
   | "COTA_DELETED"
+  | "FOLDER_CREATED"
+  | "FOLDER_UPDATED"
+  | "FOLDER_UPDATED_BATCH"
+  | "FOLDER_DELETED"
+  | "PROJECT_METADATA_CREATED"
+  | "PROJECT_METADATA_UPDATED"
+  | "PROJECT_METADATA_DELETED"
+  | "CLASSIFIER_UPDATED"
+  | "CLASSIFIER_DELETED"
+  | "ASPECT_CREATED"
+  | "ASPECT_UPDATED"
+  | "ASPECT_DELETED"
 >;
 
 export type EntityEventType = keyof EntityEventMap;
@@ -72,14 +84,14 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
   switch (event.type) {
     // ── Codes ─────────────────────────────────────────────────────────────
     case "CODE_CREATED":
-      upsertMapItem(QueryKey.PROJECT_CODES, event.payload.project_id, event.payload);
+      upsertMapItem([QueryKey.PROJECT_CODES, event.payload.project_id], event.payload);
       break;
     case "CODE_UPDATED":
-      upsertMapItem(QueryKey.PROJECT_CODES, event.payload.project_id, event.payload);
+      upsertMapItem([QueryKey.PROJECT_CODES, event.payload.project_id], event.payload);
       break;
     case "CODE_DELETED": {
       const code = event.payload;
-      removeMapItem(QueryKey.PROJECT_CODES, code.project_id, code.id);
+      removeMapItem([QueryKey.PROJECT_CODES, code.project_id], code.id);
       // Deleting a code cascades to its annotations in the DB, which the
       // frontend cannot observe directly — invalidate annotation queries.
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION] });
@@ -97,17 +109,17 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
 
     // ── Tags ──────────────────────────────────────────────────────────────
     case "TAG_CREATED":
-      appendListItem(QueryKey.PROJECT_TAGS, event.payload.project_id, event.payload);
+      appendListItem([QueryKey.PROJECT_TAGS, event.payload.project_id], event.payload);
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
       break;
     case "TAG_UPDATED":
-      replaceListItem(QueryKey.PROJECT_TAGS, event.payload.project_id, event.payload);
+      replaceListItem([QueryKey.PROJECT_TAGS, event.payload.project_id], event.payload);
       break;
     case "TAG_DELETED": {
       const tag = event.payload;
       // Sweep the tag out of every cached per-sdoc tag list.
-      sweepPrefix<number[]>(QueryKey.SDOC_TAGS, (old) => (old ? old.filter((tagId) => tagId !== tag.id) : old));
-      removeListItem(QueryKey.PROJECT_TAGS, tag.project_id, tag.id);
+      sweepPrefix<number[]>([QueryKey.SDOC_TAGS], (old) => (old ? old.filter((tagId) => tagId !== tag.id) : old));
+      removeListItem([QueryKey.PROJECT_TAGS, tag.project_id], tag.id);
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
       break;
     }
@@ -134,28 +146,86 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
     // ── Whiteboards ─────────────────────────────────────────────────────────
     case "WHITEBOARD_CREATED":
     case "WHITEBOARD_UPDATED":
-      upsertMapItem(QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id, event.payload);
+      upsertMapItem([QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id], event.payload);
       break;
     case "WHITEBOARD_DELETED":
-      removeMapItem(QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id, event.payload.id);
+      removeMapItem([QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id], event.payload.id);
       break;
 
     // ── Timeline analyses ───────────────────────────────────────────────────
     case "TIMELINE_ANALYSIS_CREATED":
     case "TIMELINE_ANALYSIS_UPDATED":
-      upsertMapItem(QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id, event.payload);
+      upsertMapItem([QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id], event.payload);
       break;
     case "TIMELINE_ANALYSIS_DELETED":
-      removeMapItem(QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id, event.payload.id);
+      removeMapItem([QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id], event.payload.id);
       break;
 
     // ── Concept-over-time analyses ──────────────────────────────────────────
     case "COTA_CREATED":
     case "COTA_UPDATED":
-      upsertMapItem(QueryKey.PROJECT_COTAS, event.payload.project_id, event.payload);
+      upsertMapItem([QueryKey.PROJECT_COTAS, event.payload.project_id], event.payload);
       break;
     case "COTA_DELETED":
-      removeMapItem(QueryKey.PROJECT_COTAS, event.payload.project_id, event.payload.id);
+      removeMapItem([QueryKey.PROJECT_COTAS, event.payload.project_id], event.payload.id);
+      break;
+
+    // ── Folders ─────────────────────────────────────────────────────────────
+    case "FOLDER_CREATED":
+    case "FOLDER_UPDATED":
+      upsertMapItem([QueryKey.PROJECT_FOLDERS, event.payload.project_id, event.payload.folder_type], event.payload);
+      break;
+    case "FOLDER_UPDATED_BATCH":
+      event.payload.forEach((folder) => {
+        upsertMapItem([QueryKey.PROJECT_FOLDERS, folder.project_id, folder.folder_type], folder);
+      });
+      break;
+    case "FOLDER_DELETED":
+      removeMapItem([QueryKey.PROJECT_FOLDERS, event.payload.project_id, event.payload.folder_type], event.payload.id);
+      break;
+
+    // ── Project metadata ────────────────────────────────────────────────────
+    case "PROJECT_METADATA_CREATED":
+      upsertMapItem([QueryKey.PROJECT_METADATAS, event.payload.project_id], event.payload);
+      // New metadata key → sdoc metadata + table info queries may change.
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] });
+      break;
+    case "PROJECT_METADATA_UPDATED":
+      upsertMapItem([QueryKey.PROJECT_METADATAS, event.payload.project_id], event.payload);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
+      break;
+    case "PROJECT_METADATA_DELETED": {
+      const metadata = event.payload;
+      removeMapItem([QueryKey.PROJECT_METADATAS, metadata.project_id], metadata.id);
+      // Sweep the deleted metadata key out of every per-sdoc metadata map.
+      sweepPrefix<Record<number, unknown>>([QueryKey.SDOC_METADATAS], (old) => {
+        if (!old) return old;
+        const next = { ...old };
+        delete next[metadata.id];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] });
+      break;
+    }
+
+    // ── Classifiers ─────────────────────────────────────────────────────────
+    // (No CLASSIFIER_CREATED — creation is job-driven; the list refreshes when
+    // the classifier job finishes.)
+    case "CLASSIFIER_UPDATED":
+      upsertMapItem([QueryKey.PROJECT_CLASSIFIERS, event.payload.project_id], event.payload);
+      break;
+    case "CLASSIFIER_DELETED":
+      removeMapItem([QueryKey.PROJECT_CLASSIFIERS, event.payload.project_id], event.payload.id);
+      break;
+
+    // ── Aspects (perspectives) ──────────────────────────────────────────────
+    case "ASPECT_CREATED":
+    case "ASPECT_UPDATED":
+      upsertMapItem([QueryKey.PROJECT_ASPECTS, event.payload.project_id], event.payload);
+      break;
+    case "ASPECT_DELETED":
+      removeMapItem([QueryKey.PROJECT_ASPECTS, event.payload.project_id], event.payload.id);
       break;
 
     default: {

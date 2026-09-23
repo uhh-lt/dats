@@ -52,14 +52,8 @@ const useGetProjectMetadataList = () => useProjectMetadataQuery({ select: (data)
 const useCreateProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.createMetadata,
-    onSuccess: (data) => {
-      queryClient.setQueryData<ProjectMetadataMap>([QueryKey.PROJECT_METADATAS, data.project_id], (old) =>
-        old ? { ...old, [data.id]: data } : { [data.id]: data },
-      );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] }); // sdoc metadata queries need to be refetched, as there is new metadata now!
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] }); // tableInfo queries need to be refetched, as there is new metadata now!
-    },
     meta: {
+      entityEvent: "PROJECT_METADATA_CREATED",
       successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
       errorMessage: (error: { status: number }) =>
         error.status === 409 ? "Key already exists" : "Could not add metadata",
@@ -69,12 +63,8 @@ const useCreateProjectMetadata = () =>
 const useUpdateProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.updateById,
-    onSuccess: (metadata) => {
-      queryClient.setQueryData<ProjectMetadataMap>([QueryKey.PROJECT_METADATAS, metadata.project_id], (old) =>
-        old ? { ...old, [metadata.id]: metadata } : { [metadata.id]: metadata },
-      );
-    },
     meta: {
+      entityEvent: "PROJECT_METADATA_UPDATED",
       successMessage: (projectMetadata: ProjectMetadataRead) =>
         `Updated projectMetadata ${projectMetadata.id} for project ${projectMetadata.project_id}`,
     },
@@ -83,27 +73,8 @@ const useUpdateProjectMetadata = () =>
 const useDeleteProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.deleteById,
-    onSuccess: (data) => {
-      queryClient
-        .getQueryCache()
-        .findAll({ queryKey: [QueryKey.SDOC_METADATAS] })
-        .forEach((query) => {
-          queryClient.setQueryData<SdocMetadataMap>(query.queryKey, (oldData) => {
-            const newData = { ...oldData };
-            delete newData[data.id];
-            return newData;
-          });
-        });
-
-      queryClient.setQueryData<ProjectMetadataMap>([QueryKey.PROJECT_METADATAS, data.project_id], (old) => {
-        const newData = { ...old };
-        delete newData[data.id];
-        return newData;
-      });
-
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] }); // tableInfo queries need to be refetched, as metadata was deleted
-    },
     meta: {
+      entityEvent: "PROJECT_METADATA_DELETED",
       successMessage: (data: ProjectMetadataRead) => `Deleted metadata "${data.key}"`,
     },
   });

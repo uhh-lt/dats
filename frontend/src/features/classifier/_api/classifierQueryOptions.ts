@@ -85,12 +85,8 @@ const useGetAllClassifiers = (projectId: number) =>
 const useUpdateClassifier = () =>
   useMutation({
     mutationFn: ClassifierService.updateById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<ClassifierMap>([QueryKey.PROJECT_CLASSIFIERS, data.project_id], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "CLASSIFIER_UPDATED",
       successMessage: (data: ClassifierRead) => `Updated classifier ${data.name}`,
     },
   });
@@ -98,15 +94,8 @@ const useUpdateClassifier = () =>
 const useDeleteClassifier = () =>
   useMutation({
     mutationFn: ClassifierService.deleteById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<ClassifierMap>([QueryKey.PROJECT_CLASSIFIERS, data.project_id], (oldData) => {
-        if (!oldData) return oldData;
-        const newData = { ...oldData };
-        delete newData[data.id];
-        return newData;
-      });
-    },
     meta: {
+      entityEvent: "CLASSIFIER_DELETED",
       successMessage: (data: ClassifierRead) => `Deleted classifier ${data.name}`,
     },
   });

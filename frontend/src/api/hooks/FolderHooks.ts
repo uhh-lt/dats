@@ -1,3 +1,4 @@
+import { handleEntityEvent } from "@api/entity-events/brain";
 import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
 import { FolderRead } from "@models/FolderRead";
@@ -81,12 +82,8 @@ const useGetSdocIdsPerDoctypeInSdocFolder = (sdocFolderId: number | null | undef
 const useCreateFolder = () =>
   useMutation({
     mutationFn: FolderService.createFolder,
-    onSuccess: (data) => {
-      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "FOLDER_CREATED",
       successMessage: (folder: FolderRead) => `Created folder ${folder.name}`,
     },
   });
@@ -94,12 +91,8 @@ const useCreateFolder = () =>
 const useUpdateFolder = () =>
   useMutation({
     mutationFn: FolderService.updateById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "FOLDER_UPDATED",
       successMessage: (folder: FolderRead) => `Updated folder ${folder.name}`,
     },
   });
@@ -108,18 +101,8 @@ const useMoveFolders = () => {
   return useMutation({
     mutationFn: FolderService.moveFolders,
     onSuccess: (datas) => {
-      queryClient.setQueryData<FolderMap>(
-        [QueryKey.PROJECT_FOLDERS, datas[0].project_id, datas[0].folder_type],
-        (oldData) => {
-          if (!oldData) return oldData;
-          const newData = { ...oldData };
-          datas.forEach((data) => {
-            newData[data.id] = data;
-          });
-          return newData;
-        },
-      );
-      // query
+      handleEntityEvent({ type: "FOLDER_UPDATED_BATCH", payload: datas }, "mutation");
+      // Moving folders changes which sdocs are where → refresh search results.
       queryClient.invalidateQueries({
         queryKey: [QueryKey.SEARCH_TABLE],
       });
@@ -133,15 +116,8 @@ const useMoveFolders = () => {
 const useDeleteFolder = () =>
   useMutation({
     mutationFn: FolderService.deleteById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) => {
-        if (!oldData) return oldData;
-        const newData = { ...oldData };
-        delete newData[data.id];
-        return newData;
-      });
-    },
     meta: {
+      entityEvent: "FOLDER_DELETED",
       successMessage: (folder: FolderRead) => `Deleted folder ${folder.name}`,
     },
   });

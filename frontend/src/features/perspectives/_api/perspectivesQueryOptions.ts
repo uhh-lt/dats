@@ -62,12 +62,8 @@ const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: numbe
 const useCreateAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.createAspect,
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, variables.requestBody.project_id], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "ASPECT_CREATED",
       successMessage: (data: AspectRead) => `Created aspect ${data.name}`,
     },
   });
@@ -75,12 +71,8 @@ const useCreateAspect = () =>
 const useUpdateAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.updateAspectById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, data.project_id], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "ASPECT_UPDATED",
       successMessage: (data: CodeRead) => `Updated aspect ${data.name}`,
     },
   });
@@ -88,15 +80,8 @@ const useUpdateAspect = () =>
 const useDeleteAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.removeAspectById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, data.project_id], (oldData) => {
-        if (!oldData) return oldData;
-        const newData = { ...oldData };
-        delete newData[data.id];
-        return newData;
-      });
-    },
     meta: {
+      entityEvent: "ASPECT_DELETED",
       successMessage: (data: AspectRead) => `Deleted aspect ${data.name}`,
     },
   });
