@@ -1,7 +1,7 @@
-import { MlJobRead } from "@models/MlJobRead";
-import { TagRecommendationResult } from "@models/TagRecommendationResult";
 import { queryClient } from "@api/queryClient";
 import { TagRecommendationService } from "@api/services/TagRecommendationService";
+import { MlJobRead } from "@models/MlJobRead";
+import { TagRecommendationResult } from "@models/TagRecommendationResult";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
