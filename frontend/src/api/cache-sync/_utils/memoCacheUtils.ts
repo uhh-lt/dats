@@ -17,6 +17,16 @@ export function invalidateMemoWorkspace(): void {
 }
 
 /**
+ * Invalidate the "recently opened memos" lists for the given projects, so
+ * deleted memos disappear from recent-memos views.
+ */
+export function invalidateMemoRecents(projectIds: Iterable<number>): void {
+  for (const projectId of new Set(projectIds)) {
+    queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_RECENT, projectId] });
+  }
+}
+
+/**
  * Invalidate the caches that hold the memo_ids of the attached object, so memo
  * indicators across the UI react to memo creation/deletion.
  */

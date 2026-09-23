@@ -49,6 +49,7 @@ class DATSEvent(StrEnum):
     MEMO_UPDATED = "MEMO_UPDATED"
     MEMO_DELETED = "MEMO_DELETED"
     MEMO_UPDATED_BATCH = "MEMO_UPDATED_BATCH"
+    MEMO_DELETED_BATCH = "MEMO_DELETED_BATCH"
 
     SDOC_UPDATED = "SDOC_UPDATED"
     SDOC_DELETED = "SDOC_DELETED"
@@ -161,6 +162,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.MEMO_UPDATED: MemoRead,
     DATSEvent.MEMO_DELETED: MemoRead,
     DATSEvent.MEMO_UPDATED_BATCH: list[MemoRead],
+    DATSEvent.MEMO_DELETED_BATCH: list[MemoRead],
     DATSEvent.SDOC_UPDATED: SourceDocumentRead,
     DATSEvent.SDOC_DELETED: SourceDocumentRead,
     DATSEvent.SDOC_TAGS_UPDATED: SdocTagLinks,

@@ -1,4 +1,3 @@
-import { handleDATSEvent } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
@@ -125,16 +124,9 @@ const useDeleteMemo = () =>
 
 const useDeleteMemos = () =>
   useMutation({
-    mutationFn: ({ memoIds }: { memoIds: number[] }) => {
-      const promises = memoIds.map((memoId) => MemoService.deleteById({ memoId }));
-      return Promise.all(promises);
-    },
-    onSuccess: (memos) => {
-      memos.forEach((memo) => {
-        handleDATSEvent({ type: "MEMO_DELETED", payload: memo }, "mutation");
-      });
-    },
+    mutationFn: ({ memoIds }: { memoIds: number[] }) => MemoService.deleteMemosBulk({ requestBody: memoIds }),
     meta: {
+      datsEvent: "MEMO_DELETED_BATCH",
       successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,
     },
   });

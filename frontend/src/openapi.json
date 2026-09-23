@@ -2719,6 +2719,38 @@
         }
       }
     },
+    "/memo/bulk/delete": {
+      "delete": {
+        "tags": ["memo"],
+        "summary": "Deletes all Memos with the given IDs.",
+        "operationId": "delete_memos_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Memo Ids" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "type": "array",
+                  "title": "Response Memo-Delete Memos Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
       "get": {
         "tags": ["memo"],
@@ -7060,6 +7092,18 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoUpdatedBatchEvent" } } }
+          }
+        }
+      }
+    },
+    "MEMO_DELETED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_memo_deleted_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoDeletedBatchEvent" } } }
           }
         }
       }
@@ -12689,6 +12733,15 @@
         "type": "object",
         "required": ["payload"],
         "title": "MemoCreatedEvent"
+      },
+      "MemoDeletedBatchEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "MEMO_DELETED_BATCH", "title": "Type", "default": "MEMO_DELETED_BATCH" },
+          "payload": { "items": { "$ref": "#/components/schemas/MemoRead" }, "type": "array", "title": "Payload" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "MemoDeletedBatchEvent"
       },
       "MemoDeletedEvent": {
         "properties": {
