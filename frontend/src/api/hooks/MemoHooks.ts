@@ -1,3 +1,4 @@
+import { handleEntityEvent } from "@api/entity-events/brain";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
@@ -85,76 +86,21 @@ const useMemoSearchInfo = (projectId: number) =>
     staleTime: Infinity,
   });
 
-const invalidateWorkspaceQueries = () => {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_QUERY] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_GROUPS] });
-};
-
-// Invalidate the caches that hold the memo_ids of the attached object,
-// so that memo indicators across the UI react to memo creation/deletion.
-const invalidateAttachedObjectMemoIds = (attachedObjectType: AttachedObjectType, attachedObjectId: number) => {
-  switch (attachedObjectType) {
-    case AttachedObjectType.SOURCE_DOCUMENT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, attachedObjectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-      break;
-    case AttachedObjectType.TAG:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS] });
-      break;
-    case AttachedObjectType.CODE:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES] });
-      break;
-    case AttachedObjectType.SPAN_ANNOTATION:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-      break;
-    case AttachedObjectType.SENTENCE_ANNOTATION:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-      break;
-    case AttachedObjectType.BBOX_ANNOTATION:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
-      break;
-    default:
-      break;
-  }
-};
-
 // MEMO MUTATIONS
 const useCreateMemo = () =>
   useMutation({
     mutationFn: MemoService.createMemo,
-    onSuccess: (data) => {
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
-      queryClient.setQueryData<MemoRead[]>(
-        [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
-        (oldData) => (oldData ? [...oldData, data] : [data]),
-      );
-      invalidateAttachedObjectMemoIds(data.attached_object_type, data.attached_object_id);
-      invalidateWorkspaceQueries();
-    },
     meta: {
+      entityEvent: "MEMO_CREATED",
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
     },
   });
 
-const updateInvalidation = (data: MemoRead) => {
-  queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
-  queryClient.setQueryData<MemoRead[]>(
-    [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
-    (oldData) => (oldData ? oldData.map((memo) => (memo.id === data.id ? data : memo)) : [data]),
-  );
-};
-
 const useUpdateMemo = () =>
   useMutation({
     mutationFn: MemoService.updateById,
-    onSuccess: (data) => {
-      updateInvalidation(data);
-      invalidateWorkspaceQueries();
-    },
     meta: {
+      entityEvent: "MEMO_UPDATED",
       successMessage: (memo: MemoRead) => `Updated memo "${memo.title}"`,
     },
   });
@@ -162,34 +108,17 @@ const useUpdateMemo = () =>
 const useUpdateMemos = () =>
   useMutation({
     mutationFn: MemoService.updateMemosBulk,
-    onSuccess: (memos) => {
-      memos.forEach((memo) => {
-        updateInvalidation(memo);
-      });
-      invalidateWorkspaceQueries();
-    },
     meta: {
+      entityEvent: "MEMO_UPDATED_BATCH",
       successMessage: (memos: MemoRead[]) => `Updated ${memos.length} memo(s)`,
     },
   });
 
-const deleteInvalidation = (data: MemoRead) => {
-  queryClient.removeQueries({ queryKey: [QueryKey.MEMO, data.id] });
-  queryClient.setQueryData<MemoRead[]>(
-    [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
-    (oldData) => (oldData ? oldData.filter((memo) => memo.id !== data.id) : oldData),
-  );
-  invalidateAttachedObjectMemoIds(data.attached_object_type, data.attached_object_id);
-};
-
 const useDeleteMemo = () =>
   useMutation({
     mutationFn: MemoService.deleteById,
-    onSuccess: (data) => {
-      deleteInvalidation(data);
-      invalidateWorkspaceQueries();
-    },
     meta: {
+      entityEvent: "MEMO_DELETED",
       successMessage: (memo: MemoRead) => `Deleted memo "${memo.title}"`,
     },
   });
@@ -201,10 +130,9 @@ const useDeleteMemos = () =>
       return Promise.all(promises);
     },
     onSuccess: (memos) => {
-      memos.forEach((data) => {
-        deleteInvalidation(data);
+      memos.forEach((memo) => {
+        handleEntityEvent({ type: "MEMO_DELETED", payload: memo }, "mutation");
       });
-      invalidateWorkspaceQueries();
     },
     meta: {
       successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,

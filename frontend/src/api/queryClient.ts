@@ -1,4 +1,6 @@
 import { ApiError } from "@api/core/ApiError";
+import type { EntityEvent } from "@api/entity-events/brain";
+import { handleEntityEvent } from "@api/entity-events/brain";
 // eslint-disable-next-line boundaries/element-types
 import { SnackbarActions } from "@core/notification";
 import { store } from "@store/store";
@@ -58,7 +60,13 @@ export const queryClient = new QueryClient({
       );
     },
     onSuccess: (data, variables, _context, mutation) => {
-      const text = messageFromStringOrFunction(mutation.meta?.successMessage, data, variables);
+      // Forward the mutation result to the cache-update brain. The backend
+      // returns the affected entity DTO, so `data` is the event payload.
+      if (mutation?.meta?.entityEvent !== undefined && data !== undefined) {
+        handleEntityEvent({ type: mutation.meta.entityEvent, payload: data } as EntityEvent, "mutation");
+      }
+
+      const text = messageFromStringOrFunction(mutation?.meta?.successMessage, data, variables);
       if (text === undefined) {
         return;
       }

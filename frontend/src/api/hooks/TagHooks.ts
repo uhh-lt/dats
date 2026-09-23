@@ -6,6 +6,18 @@ import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
+/**
+ * Write the authoritative per-sdoc tag lists from a bulk tag operation
+ * (`SdocTagLinks`) and invalidate the tag statistics that depend on them.
+ */
+function applySdocTagLinks(links: Record<string, number[]>): void {
+  Object.entries(links).forEach(([sdocId, tagIds]) => {
+    queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
+  });
+  queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
+  queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+}
+
 // TAG QUERIES
 export const projectTagsQueryOptions = (projectId: number | undefined) =>
   queryOptions({
@@ -64,13 +76,8 @@ const useGetTagDocumentCounts = (projectId: number, sdocIds: number[]) =>
 const useCreateTag = () =>
   useMutation({
     mutationFn: TagService.createDocTag,
-    onSuccess: (tag) => {
-      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
-        oldData ? [...oldData, tag] : [tag],
-      );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
-    },
     meta: {
+      entityEvent: "TAG_CREATED",
       successMessage: (tag: TagRead) => `Created tag ${tag.name}`,
     },
   });
@@ -78,12 +85,8 @@ const useCreateTag = () =>
 const useUpdateTag = () =>
   useMutation({
     mutationFn: TagService.updateById,
-    onSuccess: (tag) => {
-      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
-        oldData ? oldData.map((t) => (t.id === tag.id ? tag : t)) : oldData,
-      );
-    },
     meta: {
+      entityEvent: "TAG_UPDATED",
       successMessage: (tag: TagRead) => `Updated tag ${tag.name}`,
     },
   });
@@ -91,21 +94,8 @@ const useUpdateTag = () =>
 const useDeleteTag = () =>
   useMutation({
     mutationFn: TagService.deleteById,
-    onSuccess: (data) => {
-      queryClient
-        .getQueryCache()
-        .findAll({ queryKey: [QueryKey.SDOC_TAGS] })
-        .forEach((query) => {
-          queryClient.setQueryData<number[]>(query.queryKey, (oldData) =>
-            oldData ? oldData.filter((tagId) => tagId !== data.id) : oldData,
-          );
-        });
-      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, data.project_id], (oldData) =>
-        oldData ? oldData.filter((tag) => tag.id !== data.id) : oldData,
-      );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
-    },
     meta: {
+      entityEvent: "TAG_DELETED",
       successMessage: (tag: TagRead) => `Deleted tag ${tag.name}`,
     },
   });
@@ -114,13 +104,7 @@ const useBulkSetTags = () =>
   useMutation({
     mutationFn: TagService.setTagsBatch,
     onSuccess: (data) => {
-      // write the authoritative resulting tags for every updated document
-      Object.entries(data.links).forEach(([sdocId, tagIds]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
-      });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] }); // todo: zu unspezifisch!
-      // Invalidate cache of tag statistics query
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      applySdocTagLinks(data.links);
     },
     meta: {
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -131,13 +115,7 @@ const useBulkLinkTags = () =>
   useMutation({
     mutationFn: TagService.linkMultipleTags,
     onSuccess: (data) => {
-      // write the authoritative resulting tags for every updated document
-      Object.entries(data.links).forEach(([sdocId, tagIds]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
-      });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
-      // Invalidate cache of tag statistics query
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      applySdocTagLinks(data.links);
     },
     meta: {
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -148,13 +126,7 @@ const useBulkUnlinkTags = () =>
   useMutation({
     mutationFn: TagService.unlinkMultipleTags,
     onSuccess: (data) => {
-      // write the authoritative resulting tags for every updated document
-      Object.entries(data.links).forEach(([sdocId, tagIds]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
-      });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
-      // Invalidate cache of tag statistics query
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      applySdocTagLinks(data.links);
     },
     meta: {
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
@@ -165,13 +137,7 @@ const useBulkUpdateTags = () =>
   useMutation({
     mutationFn: TagService.updateTagsBatch,
     onSuccess: (data) => {
-      // write the authoritative resulting tags for every updated document
-      Object.entries(data.links).forEach(([sdocId, tagIds]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
-      });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
-      // Invalidate cache of tag statistics query
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      applySdocTagLinks(data.links);
     },
     meta: {
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
