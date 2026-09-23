@@ -1,4 +1,4 @@
-import { handleEntityEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/entity-events/brain";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
@@ -91,7 +91,7 @@ const useCreateMemo = () =>
   useMutation({
     mutationFn: MemoService.createMemo,
     meta: {
-      entityEvent: "MEMO_CREATED",
+      datsEvent: "MEMO_CREATED",
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
     },
   });
@@ -100,7 +100,7 @@ const useUpdateMemo = () =>
   useMutation({
     mutationFn: MemoService.updateById,
     meta: {
-      entityEvent: "MEMO_UPDATED",
+      datsEvent: "MEMO_UPDATED",
       successMessage: (memo: MemoRead) => `Updated memo "${memo.title}"`,
     },
   });
@@ -109,7 +109,7 @@ const useUpdateMemos = () =>
   useMutation({
     mutationFn: MemoService.updateMemosBulk,
     meta: {
-      entityEvent: "MEMO_UPDATED_BATCH",
+      datsEvent: "MEMO_UPDATED_BATCH",
       successMessage: (memos: MemoRead[]) => `Updated ${memos.length} memo(s)`,
     },
   });
@@ -118,7 +118,7 @@ const useDeleteMemo = () =>
   useMutation({
     mutationFn: MemoService.deleteById,
     meta: {
-      entityEvent: "MEMO_DELETED",
+      datsEvent: "MEMO_DELETED",
       successMessage: (memo: MemoRead) => `Deleted memo "${memo.title}"`,
     },
   });
@@ -131,7 +131,7 @@ const useDeleteMemos = () =>
     },
     onSuccess: (memos) => {
       memos.forEach((memo) => {
-        handleEntityEvent({ type: "MEMO_DELETED", payload: memo }, "mutation");
+        handleDATSEvent({ type: "MEMO_DELETED", payload: memo }, "mutation");
       });
     },
     meta: {

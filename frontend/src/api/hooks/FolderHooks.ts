@@ -1,4 +1,4 @@
-import { handleEntityEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/entity-events/brain";
 import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
 import { FolderRead } from "@models/FolderRead";
@@ -83,7 +83,7 @@ const useCreateFolder = () =>
   useMutation({
     mutationFn: FolderService.createFolder,
     meta: {
-      entityEvent: "FOLDER_CREATED",
+      datsEvent: "FOLDER_CREATED",
       successMessage: (folder: FolderRead) => `Created folder ${folder.name}`,
     },
   });
@@ -92,7 +92,7 @@ const useUpdateFolder = () =>
   useMutation({
     mutationFn: FolderService.updateById,
     meta: {
-      entityEvent: "FOLDER_UPDATED",
+      datsEvent: "FOLDER_UPDATED",
       successMessage: (folder: FolderRead) => `Updated folder ${folder.name}`,
     },
   });
@@ -101,7 +101,7 @@ const useMoveFolders = () => {
   return useMutation({
     mutationFn: FolderService.moveFolders,
     onSuccess: (datas) => {
-      handleEntityEvent({ type: "FOLDER_UPDATED_BATCH", payload: datas }, "mutation");
+      handleDATSEvent({ type: "FOLDER_UPDATED_BATCH", payload: datas }, "mutation");
       // Moving folders changes which sdocs are where → refresh search results.
       queryClient.invalidateQueries({
         queryKey: [QueryKey.SEARCH_TABLE],
@@ -117,7 +117,7 @@ const useDeleteFolder = () =>
   useMutation({
     mutationFn: FolderService.deleteById,
     meta: {
-      entityEvent: "FOLDER_DELETED",
+      datsEvent: "FOLDER_DELETED",
       successMessage: (folder: FolderRead) => `Deleted folder ${folder.name}`,
     },
   });

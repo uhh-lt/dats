@@ -63,7 +63,7 @@ const useCreateAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.createAspect,
     meta: {
-      entityEvent: "ASPECT_CREATED",
+      datsEvent: "ASPECT_CREATED",
       successMessage: (data: AspectRead) => `Created aspect ${data.name}`,
     },
   });
@@ -72,7 +72,7 @@ const useUpdateAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.updateAspectById,
     meta: {
-      entityEvent: "ASPECT_UPDATED",
+      datsEvent: "ASPECT_UPDATED",
       successMessage: (data: CodeRead) => `Updated aspect ${data.name}`,
     },
   });
@@ -81,7 +81,7 @@ const useDeleteAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.removeAspectById,
     meta: {
-      entityEvent: "ASPECT_DELETED",
+      datsEvent: "ASPECT_DELETED",
       successMessage: (data: AspectRead) => `Deleted aspect ${data.name}`,
     },
   });

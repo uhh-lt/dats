@@ -35,7 +35,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
     useMutation({
       mutationFn: SearchViewService.create,
       meta: {
-        entityEvent: "SEARCH_VIEW_CREATED",
+        datsEvent: "SEARCH_VIEW_CREATED",
       },
     });
 
@@ -66,7 +66,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
         console.error("Failed to update search view:", error);
       },
       meta: {
-        entityEvent: "SEARCH_VIEW_UPDATED",
+        datsEvent: "SEARCH_VIEW_UPDATED",
       },
     });
 
@@ -107,7 +107,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
     useMutation({
       mutationFn: SearchViewService.delete,
       meta: {
-        entityEvent: "SEARCH_VIEW_DELETED",
+        datsEvent: "SEARCH_VIEW_DELETED",
       },
     });
 

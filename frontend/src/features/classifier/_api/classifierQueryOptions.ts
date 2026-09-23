@@ -86,7 +86,7 @@ const useUpdateClassifier = () =>
   useMutation({
     mutationFn: ClassifierService.updateById,
     meta: {
-      entityEvent: "CLASSIFIER_UPDATED",
+      datsEvent: "CLASSIFIER_UPDATED",
       successMessage: (data: ClassifierRead) => `Updated classifier ${data.name}`,
     },
   });
@@ -95,7 +95,7 @@ const useDeleteClassifier = () =>
   useMutation({
     mutationFn: ClassifierService.deleteById,
     meta: {
-      entityEvent: "CLASSIFIER_DELETED",
+      datsEvent: "CLASSIFIER_DELETED",
       successMessage: (data: ClassifierRead) => `Deleted classifier ${data.name}`,
     },
   });

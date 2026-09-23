@@ -1,6 +1,6 @@
 /* eslint-disable */
 // GENERATED FILE — do not edit. Regenerate with `just update-api`.
-// Derived from the backend's websocket sync events (OpenAPI `webhooks`).
+// Derived from the backend's DATS sync events (OpenAPI `webhooks`).
 
 import type { ApiKeyCreatedEvent } from "./ApiKeyCreatedEvent";
 import type { ApiKeyDeletedEvent } from "./ApiKeyDeletedEvent";
@@ -75,8 +75,8 @@ import type { WhiteboardCreatedEvent } from "./WhiteboardCreatedEvent";
 import type { WhiteboardDeletedEvent } from "./WhiteboardDeletedEvent";
 import type { WhiteboardUpdatedEvent } from "./WhiteboardUpdatedEvent";
 
-/** Payload type for each websocket event type. */
-export interface WebSocketEventMap {
+/** Payload type for each DATS event type. */
+export interface DATSEventMap {
   API_KEY_CREATED: ApiKeyCreatedEvent["payload"];
   API_KEY_DELETED: ApiKeyDeletedEvent["payload"];
   ASPECT_CREATED: AspectCreatedEvent["payload"];
@@ -151,8 +151,8 @@ export interface WebSocketEventMap {
   WHITEBOARD_UPDATED: WhiteboardUpdatedEvent["payload"];
 }
 
-/** Discriminated union of all websocket events, keyed by `type`. */
-export type WebSocketEvent =
+/** Discriminated union of all DATS events, keyed by `type`. */
+export type DATSEvent =
   | (Omit<ApiKeyCreatedEvent, "type"> & { type: "API_KEY_CREATED" })
   | (Omit<ApiKeyDeletedEvent, "type"> & { type: "API_KEY_DELETED" })
   | (Omit<AspectCreatedEvent, "type"> & { type: "ASPECT_CREATED" })

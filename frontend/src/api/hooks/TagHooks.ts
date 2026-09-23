@@ -64,7 +64,7 @@ const useCreateTag = () =>
   useMutation({
     mutationFn: TagService.createDocTag,
     meta: {
-      entityEvent: "TAG_CREATED",
+      datsEvent: "TAG_CREATED",
       successMessage: (tag: TagRead) => `Created tag ${tag.name}`,
     },
   });
@@ -73,7 +73,7 @@ const useUpdateTag = () =>
   useMutation({
     mutationFn: TagService.updateById,
     meta: {
-      entityEvent: "TAG_UPDATED",
+      datsEvent: "TAG_UPDATED",
       successMessage: (tag: TagRead) => `Updated tag ${tag.name}`,
     },
   });
@@ -82,7 +82,7 @@ const useDeleteTag = () =>
   useMutation({
     mutationFn: TagService.deleteById,
     meta: {
-      entityEvent: "TAG_DELETED",
+      datsEvent: "TAG_DELETED",
       successMessage: (tag: TagRead) => `Deleted tag ${tag.name}`,
     },
   });
@@ -91,7 +91,7 @@ const useBulkSetTags = () =>
   useMutation({
     mutationFn: TagService.setTagsBatch,
     meta: {
-      entityEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -100,7 +100,7 @@ const useBulkLinkTags = () =>
   useMutation({
     mutationFn: TagService.linkMultipleTags,
     meta: {
-      entityEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -109,7 +109,7 @@ const useBulkUnlinkTags = () =>
   useMutation({
     mutationFn: TagService.unlinkMultipleTags,
     meta: {
-      entityEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });
@@ -118,7 +118,7 @@ const useBulkUpdateTags = () =>
   useMutation({
     mutationFn: TagService.updateTagsBatch,
     meta: {
-      entityEvent: "SDOC_TAGS_UPDATED",
+      datsEvent: "SDOC_TAGS_UPDATED",
       successMessage: (data: SdocTagLinks) => `Updated tags for ${Object.keys(data.links).length} documents`,
     },
   });

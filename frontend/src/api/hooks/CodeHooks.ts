@@ -1,4 +1,4 @@
-import { handleEntityEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/entity-events/brain";
 import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
 import { CodeRead } from "@models/CodeRead";
@@ -58,7 +58,7 @@ const useCreateCode = () => {
   return useMutation({
     mutationFn: CodeService.createCode,
     meta: {
-      entityEvent: "CODE_CREATED",
+      datsEvent: "CODE_CREATED",
       successMessage: (data: CodeRead) => `Created code ${data.name}`,
     },
   });
@@ -68,7 +68,7 @@ const useUpdateCode = () =>
   useMutation({
     mutationFn: CodeService.updateById,
     onSuccess: (data, variables) => {
-      handleEntityEvent({ type: "CODE_UPDATED", payload: data }, "mutation");
+      handleDATSEvent({ type: "CODE_UPDATED", payload: data }, "mutation");
       // if the user changed the enabled status, refetch all codes
       if (!(variables.requestBody.enabled === undefined || variables.requestBody.enabled === null)) {
         queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
@@ -83,7 +83,7 @@ const useDeleteCode = () => {
   return useMutation({
     mutationFn: CodeService.deleteById,
     meta: {
-      entityEvent: "CODE_DELETED",
+      datsEvent: "CODE_DELETED",
       successMessage: (data: CodeRead) => `Deleted code ${data.name}`,
     },
   });

@@ -46,7 +46,7 @@ const useCreateBulkAnnotations = () =>
   useMutation({
     mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
     meta: {
-      entityEvent: "SPAN_ANNOTATION_CREATED_BATCH",
+      datsEvent: "SPAN_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Created ${data.length} Span Annotations`,
     },
   });
@@ -56,7 +56,7 @@ const useCreateSpanAnnotation = () =>
     mutationFn: (variables: SpanAnnotationCreate) =>
       SpanAnnotationService.createSpanAnnotation({ requestBody: variables }),
     meta: {
-      entityEvent: "SPAN_ANNOTATION_CREATED",
+      datsEvent: "SPAN_ANNOTATION_CREATED",
       successMessage: (data: SpanAnnotationRead) => `Created Span Annotation ${data.id}`,
     },
   });
@@ -110,7 +110,7 @@ const useUpdateSpanAnnotation = () =>
       queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousAnnos);
     },
     meta: {
-      entityEvent: "SPAN_ANNOTATION_UPDATED",
+      datsEvent: "SPAN_ANNOTATION_UPDATED",
       successMessage: (data: SpanAnnotationRead) => `Updated Span Annotation ${data.id}`,
     },
   });
@@ -119,7 +119,7 @@ const useUpdateBulkSpan = () =>
   useMutation({
     mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
     meta: {
-      entityEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
+      datsEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SpanAnnotationRead[]) => `Updated ${data.length} Span Annotations`,
     },
   });
@@ -154,7 +154,7 @@ const useDeleteSpanAnnotation = () =>
       queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousSpanAnnotations);
     },
     meta: {
-      entityEvent: "SPAN_ANNOTATION_DELETED",
+      datsEvent: "SPAN_ANNOTATION_DELETED",
       successMessage: (data: SpanAnnotationRead) => `Deleted Span Annotation ${data.id}`,
     },
   });
@@ -163,7 +163,7 @@ const useDeleteBulkSpanAnnotation = () =>
   useMutation({
     mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
     meta: {
-      entityEvent: "SPAN_ANNOTATION_DELETED_BATCH",
+      datsEvent: "SPAN_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SpanAnnotationDeleted[]) => `Deleted ${data.length} Span Annotations`,
     },
   });

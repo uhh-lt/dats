@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
-import { handleEntityEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/entity-events/brain";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
@@ -94,7 +94,7 @@ const useDeleteDocuments = () =>
     onSuccess: (data) => {
       // Bulk delete returns an array; dispatch one event per deleted sdoc so the
       // brain can drop each from the cache.
-      data.forEach((sdoc) => handleEntityEvent({ type: "SDOC_DELETED", payload: sdoc }, "mutation"));
+      data.forEach((sdoc) => handleDATSEvent({ type: "SDOC_DELETED", payload: sdoc }, "mutation"));
     },
     meta: {
       successMessage: (_data: SourceDocumentRead[], variables: { sdocIds: number[] }) =>
@@ -106,7 +106,7 @@ const useUpdateName = () =>
   useMutation({
     mutationFn: SourceDocumentService.updateById,
     meta: {
-      entityEvent: "SDOC_UPDATED",
+      datsEvent: "SDOC_UPDATED",
       successMessage: (sdoc: SourceDocumentRead) => `Updated document "${sdoc.filename}"`,
     },
   });

@@ -41,7 +41,7 @@ const useCreateProject = () => {
       return await ProjectService.createProject({ requestBody });
     },
     meta: {
-      entityEvent: "PROJECT_CREATED",
+      datsEvent: "PROJECT_CREATED",
       successMessage: (project: ProjectRead) => `Successfully Created Project "${project.title}" (ID: ${project.id})`,
     },
   });
@@ -51,7 +51,7 @@ const useUpdateProject = () =>
   useMutation({
     mutationFn: ProjectService.updateProject,
     meta: {
-      entityEvent: "PROJECT_UPDATED",
+      datsEvent: "PROJECT_UPDATED",
       successMessage: (data: ProjectRead) => `Successfully Updated Project "${data.title}"`,
     },
   });
@@ -60,7 +60,7 @@ const useDeleteProject = () =>
   useMutation({
     mutationFn: ProjectService.deleteProject,
     meta: {
-      entityEvent: "PROJECT_DELETED",
+      datsEvent: "PROJECT_DELETED",
       successMessage: (data: ProjectRead) => `Successfully Deleted Project "${data.title}"`,
     },
   });

@@ -23,7 +23,7 @@ export const useCreateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.create,
     meta: {
-      entityEvent: "WHITEBOARD_CREATED",
+      datsEvent: "WHITEBOARD_CREATED",
       successMessage: (whiteboard: WhiteboardRead) => `Created Whiteboard "${whiteboard.title}"`,
     },
   });
@@ -32,7 +32,7 @@ export const useUpdateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.updateById,
     meta: {
-      entityEvent: "WHITEBOARD_UPDATED",
+      datsEvent: "WHITEBOARD_UPDATED",
       successMessage: (whiteboard: WhiteboardRead) => `Updated Whiteboard "${whiteboard.title}"`,
     },
   });
@@ -41,7 +41,7 @@ export const useDuplicateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.duplicateById,
     meta: {
-      entityEvent: "WHITEBOARD_CREATED",
+      datsEvent: "WHITEBOARD_CREATED",
       successMessage: (whiteboard: WhiteboardRead) => `Duplicated Whiteboard "${whiteboard.title}"`,
     },
   });
@@ -50,7 +50,7 @@ export const useDeleteWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.deleteById,
     meta: {
-      entityEvent: "WHITEBOARD_DELETED",
+      datsEvent: "WHITEBOARD_DELETED",
       successMessage: (whiteboard: WhiteboardRead) => `Deleted Whiteboard "${whiteboard.title}"`,
     },
   });

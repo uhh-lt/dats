@@ -26,7 +26,7 @@ export const useCreateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.create,
     meta: {
-      entityEvent: "COTA_CREATED",
+      datsEvent: "COTA_CREATED",
       successMessage: (cota: COTARead) => `Created new Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -35,7 +35,7 @@ export const useDuplicateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     meta: {
-      entityEvent: "COTA_CREATED",
+      datsEvent: "COTA_CREATED",
       successMessage: (cota: COTARead) => `Duplicated Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -44,7 +44,7 @@ export const useUpdateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.updateById,
     meta: {
-      entityEvent: "COTA_UPDATED",
+      datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Updated Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -53,7 +53,7 @@ export const useAnnotateCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
     meta: {
-      entityEvent: "COTA_UPDATED",
+      datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Updated annotations in Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -62,7 +62,7 @@ export const useRemoveCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
     meta: {
-      entityEvent: "COTA_UPDATED",
+      datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Removed sentences from Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -71,7 +71,7 @@ export const useResetCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
     meta: {
-      entityEvent: "COTA_UPDATED",
+      datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Reset Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -80,7 +80,7 @@ export const useDeleteCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
     meta: {
-      entityEvent: "COTA_DELETED",
+      datsEvent: "COTA_DELETED",
       successMessage: (cota: COTARead) => `Deleted Concept Over Time Analysis "${cota.name}"`,
     },
   });
