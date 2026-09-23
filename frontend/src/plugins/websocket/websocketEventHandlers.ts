@@ -3,7 +3,6 @@
 // websocket event type in one place, so it's simpler to keep everything here
 // rather than splitting into multiple files.
 import { handleEntityEvent } from "@api/entity-events/brain";
-import { userProjectsQueryOptions } from "@api/hooks/ProjectHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
 import type { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
@@ -39,38 +38,17 @@ export type { WebSocketEventMap } from "@models/websocketEvents";
 const websocketEventHandlers: {
   [K in keyof WebSocketEventMap]: (payload: WebSocketEventMap[K]) => void;
 } = {
-  PROJECT_CREATED: () =>
-    queryClient.invalidateQueries({
-      queryKey: userProjectsQueryOptions().queryKey,
-    }),
-  // A single project is derived from the USER_PROJECTS list (useGetProject), so
-  // invalidating that list refreshes both the list and the detail view.
-  PROJECT_UPDATED: () =>
-    queryClient.invalidateQueries({
-      queryKey: userProjectsQueryOptions().queryKey,
-    }),
-  PROJECT_DELETED: () =>
-    queryClient.invalidateQueries({
-      queryKey: userProjectsQueryOptions().queryKey,
-    }),
+  PROJECT_CREATED: (project) => handleEntityEvent({ type: "PROJECT_CREATED", payload: project }, "websocket"),
+  PROJECT_UPDATED: (project) => handleEntityEvent({ type: "PROJECT_UPDATED", payload: project }, "websocket"),
+  PROJECT_DELETED: (project) => handleEntityEvent({ type: "PROJECT_DELETED", payload: project }, "websocket"),
 
   // ── API keys ───────────────────────────────────────────────────────────────
-  // Api keys are personal per-user state; these events only reach the owner's
-  // other sessions. The list is keyed by [USER_API_KEYS].
-  API_KEY_CREATED: () => queryClient.invalidateQueries({ queryKey: [QueryKey.USER_API_KEYS] }),
-  API_KEY_DELETED: () => queryClient.invalidateQueries({ queryKey: [QueryKey.USER_API_KEYS] }),
+  API_KEY_CREATED: (apiKey) => handleEntityEvent({ type: "API_KEY_CREATED", payload: apiKey }, "websocket"),
+  API_KEY_DELETED: (apiKey) => handleEntityEvent({ type: "API_KEY_DELETED", payload: apiKey }, "websocket"),
 
   // ── Users ──────────────────────────────────────────────────────────────────
-  // The logged-in user is keyed by [ME]; other user lists by [PROJECT_USERS].
-  USER_UPDATED: (user) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.ME] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_ANNOTATORS] });
-    void user;
-  },
-  USER_DELETED: () => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS] });
-  },
+  USER_UPDATED: (user) => handleEntityEvent({ type: "USER_UPDATED", payload: user }, "websocket"),
+  USER_DELETED: (user) => handleEntityEvent({ type: "USER_DELETED", payload: user }, "websocket"),
 
   // ── Codes ──────────────────────────────────────────────────────────────────
   CODE_CREATED: (code) => handleEntityEvent({ type: "CODE_CREATED", payload: code }, "websocket"),

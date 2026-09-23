@@ -1,4 +1,4 @@
-import { queryClient } from "@api/queryClient";
+import { appendListItem, removeListItem } from "@api/entity-events/cacheWriterUtils";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
 import { UserRead } from "@models/UserRead";
@@ -38,18 +38,8 @@ const useGetUser = (userId: number | null | undefined) =>
 const useUpdate = () =>
   useMutation({
     mutationFn: UserService.updateMe,
-    onSuccess: (data) => {
-      queryClient
-        .getQueryCache()
-        .findAll({ queryKey: [QueryKey.PROJECT_USERS] })
-        .forEach((query) => {
-          queryClient.setQueryData<UserRead[]>(query.queryKey, (oldData) =>
-            oldData ? oldData.map((user) => (user.id === data.id ? data : user)) : oldData,
-          );
-        });
-      queryClient.setQueryData<UserRead>([QueryKey.ME], data);
-    },
     meta: {
+      entityEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Updated user ${user.first_name} ${user.last_name}`,
     },
   });
@@ -58,9 +48,9 @@ const useAddUserToProject = () =>
   useMutation({
     mutationFn: UserService.associateUserToProject,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, variables.projId], (oldData) =>
-        oldData ? [...oldData, data] : [data],
-      );
+      // PROJECT_USER_ADDED's ws payload is a bare UserRead (no project_id), so
+      // the brain can't target the list — append via the mutation variables.
+      appendListItem([QueryKey.PROJECT_USERS, variables.projId], data);
     },
     meta: {
       successMessage: (user: UserRead) => `Added user ${user.first_name} ${user.last_name} to project`,
@@ -71,9 +61,7 @@ const useRemoveUserFromProject = () =>
   useMutation({
     mutationFn: UserService.dissociateUserFromProject,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, variables.projId], (oldData) =>
-        oldData ? oldData.filter((user) => user.id !== data.id) : oldData,
-      );
+      removeListItem([QueryKey.PROJECT_USERS, variables.projId], data.id);
     },
     meta: {
       successMessage: (user: UserRead) => `Removed user ${user.first_name} ${user.last_name} from project`,
