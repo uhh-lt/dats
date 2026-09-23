@@ -11,11 +11,27 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class FolderService {
   /**
-   * Get Folder By Id
+   * Creates a new Folder and returns it with the generated ID.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static getFolderById({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
+  public static createFolder({ requestBody }: { requestBody: FolderCreate }): CancelablePromise<FolderRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/folder",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the Folder with the given ID.
+   * @returns FolderRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/folder/{folder_id}",
@@ -28,11 +44,11 @@ export class FolderService {
     });
   }
   /**
-   * Update Folder
+   * Updates the Folder with the given ID.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static updateFolder({
+  public static updateById({
     folderId,
     requestBody,
   }: {
@@ -40,7 +56,7 @@ export class FolderService {
     requestBody: FolderUpdate;
   }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
-      method: "PUT",
+      method: "PATCH",
       url: "/folder/{folder_id}",
       path: {
         folder_id: folderId,
@@ -53,11 +69,11 @@ export class FolderService {
     });
   }
   /**
-   * Delete Folder
+   * Deletes the Folder with the given ID.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static deleteFolder({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
+  public static deleteById({ folderId }: { folderId: number }): CancelablePromise<FolderRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/folder/{folder_id}",
@@ -115,23 +131,7 @@ export class FolderService {
     });
   }
   /**
-   * Create Folder
-   * @returns FolderRead Successful Response
-   * @throws ApiError
-   */
-  public static createFolder({ requestBody }: { requestBody: FolderCreate }): CancelablePromise<FolderRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/folder/",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Move Folders
+   * Moves the Folders with the given IDs to the target folder.
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
@@ -143,7 +143,7 @@ export class FolderService {
     requestBody: Array<number>;
   }): CancelablePromise<Array<FolderRead>> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PATCH",
       url: "/folder/move_folders",
       query: {
         target_folder_id: targetFolderId,

@@ -16,7 +16,7 @@ export class SpanGroupService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static createNewSpanGroup({
+  public static createSpanGroup({
     requestBody,
   }: {
     requestBody: SpanGroupCreate;

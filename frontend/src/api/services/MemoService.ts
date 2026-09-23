@@ -6,6 +6,7 @@ import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { MemoCreate } from "@models/MemoCreate";
 import type { MemoRead } from "@models/MemoRead";
 import type { MemoUpdate } from "@models/MemoUpdate";
+import type { MemoUpdateBulk } from "@models/MemoUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -15,7 +16,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemo({
+  public static createMemo({
     attachedObjectId,
     attachedObjectType,
     requestBody,
@@ -56,23 +57,6 @@ export class MemoService {
       query: {
         project_id: projectId,
         limit: limit,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Records that the current user opened the Memo with the given ID
-   * @returns void
-   * @throws ApiError
-   */
-  public static recordRecentMemo({ memoId }: { memoId: number }): CancelablePromise<void> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/memo/{memo_id}/recent",
-      path: {
-        memo_id: memoId,
       },
       errors: {
         422: `Validation Error`,
@@ -163,31 +147,34 @@ export class MemoService {
     });
   }
   /**
-   * Favorites a Memo for the current user
+   * Updates Memos in Bulk
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static favoriteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static updateMemosBulk({
+    requestBody,
+  }: {
+    requestBody: Array<MemoUpdateBulk>;
+  }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/memo/{memo_id}/favorite",
-      path: {
-        memo_id: memoId,
-      },
+      method: "PATCH",
+      url: "/memo/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
     });
   }
   /**
-   * Removes the current user's Memo favorite
-   * @returns MemoRead Successful Response
+   * Records that the current user opened the Memo with the given ID
+   * @returns void
    * @throws ApiError
    */
-  public static unfavoriteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static recordRecentMemo({ memoId }: { memoId: number }): CancelablePromise<void> {
     return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/memo/{memo_id}/favorite",
+      method: "POST",
+      url: "/memo/{memo_id}/recent",
       path: {
         memo_id: memoId,
       },

@@ -31,7 +31,7 @@ export class SearchViewService {
     requestBody: MemoSearchViewCreate | SpanSearchViewCreate | SentenceSearchViewCreate | BBoxSearchViewCreate;
   }): CancelablePromise<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "PUT",
       url: "/searchView",
       body: requestBody,
       mediaType: "application/json",
@@ -81,7 +81,7 @@ export class SearchViewService {
     requestBody: SearchViewReorder;
   }): CancelablePromise<Array<MemoSearchViewRead | SpanSearchViewRead | SentenceSearchViewRead | BBoxSearchViewRead>> {
     return __request(OpenAPI, {
-      method: "PUT",
+      method: "PATCH",
       url: "/searchView/project/{project_id}/order",
       path: {
         project_id: projectId,

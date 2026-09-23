@@ -33,6 +33,23 @@ export class WordFrequencyService {
     });
   }
   /**
+   * Returns the SourceDocument's word frequencies with the given ID if it exists
+   * @returns WordFrequencyRead Successful Response
+   * @throws ApiError
+   */
+  public static getWordFrequencies({ sdocId }: { sdocId: number }): CancelablePromise<Array<WordFrequencyRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/word_frequency/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Perform word frequency analysis.
    * @returns WordFrequencyResult Successful Response
    * @throws ApiError
@@ -83,23 +100,6 @@ export class WordFrequencyService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the SourceDocument's word frequencies with the given ID if it exists
-   * @returns WordFrequencyRead Successful Response
-   * @throws ApiError
-   */
-  public static getWordFrequencies({ sdocId }: { sdocId: number }): CancelablePromise<Array<WordFrequencyRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/word_frequency/sdoc/{sdoc_id}",
-      path: {
-        sdoc_id: sdocId,
-      },
       errors: {
         422: `Validation Error`,
       },

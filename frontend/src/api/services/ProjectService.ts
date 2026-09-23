@@ -15,7 +15,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static createNewProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
+  public static createProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/project",
@@ -31,7 +31,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static readProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static getProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}",
@@ -139,7 +139,7 @@ export class ProjectService {
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project{project_id}/sdoc/status/{status}",
+      url: "/project/{project_id}/sdoc/status/{status}",
       path: {
         project_id: projectId,
         status: status,

@@ -14,7 +14,7 @@ export class ProjectMetadataService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static createNewMetadata({
+  public static createMetadata({
     requestBody,
   }: {
     requestBody: ProjectMetadataCreate;

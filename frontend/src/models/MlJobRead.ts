@@ -12,7 +12,7 @@ export type MlJobRead = {
   /**
    * Type of the job
    */
-  job_type: string;
+  job_type: MlJobRead.job_type;
   /**
    * Project ID associated with the job
    */
@@ -50,3 +50,11 @@ export type MlJobRead = {
    */
   finished?: string | null;
 };
+export namespace MlJobRead {
+  /**
+   * Type of the job
+   */
+  export enum job_type {
+    ML = "ml",
+  }
+}

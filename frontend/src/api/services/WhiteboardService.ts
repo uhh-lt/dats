@@ -27,6 +27,23 @@ export class WhiteboardService {
     });
   }
   /**
+   * Duplicates the Whiteboard with the given ID if it exists
+   * @returns WhiteboardRead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/whiteboard/duplicate/{whiteboard_id}",
+      path: {
+        whiteboard_id: whiteboardId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
@@ -113,23 +130,6 @@ export class WhiteboardService {
       url: "/whiteboard/project/{project_id}",
       path: {
         project_id: projectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Duplicates the Whiteboard with the given ID if it exists
-   * @returns WhiteboardRead Successful Response
-   * @throws ApiError
-   */
-  public static duplicateById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/whiteboard/duplicate/{whiteboard_id}",
-      path: {
-        whiteboard_id: whiteboardId,
       },
       errors: {
         422: `Validation Error`,

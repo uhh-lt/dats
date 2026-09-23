@@ -22,11 +22,39 @@ export class ApiKeyService {
     expiresIn: ExpiryDuration;
   }): CancelablePromise<ApiKeyCreatedResponse> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api-keys/create",
+      method: "PUT",
+      url: "/api-keys",
       query: {
         name: name,
         expires_in: expiresIn,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * List all active API keys for the current user.
+   * @returns ApiKeyRead Successful Response
+   * @throws ApiError
+   */
+  public static listApiKeys(): CancelablePromise<Array<ApiKeyRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api-keys",
+    });
+  }
+  /**
+   * Revoke/Delete an API key.
+   * @returns ApiKeyRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteApiKey({ keyId }: { keyId: number }): CancelablePromise<ApiKeyRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api-keys/{key_id}",
+      path: {
+        key_id: keyId,
       },
       errors: {
         422: `Validation Error`,
@@ -42,34 +70,6 @@ export class ApiKeyService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api-keys/mcp-config",
-    });
-  }
-  /**
-   * List all active API keys for the current user.
-   * @returns ApiKeyRead Successful Response
-   * @throws ApiError
-   */
-  public static listApiKeys(): CancelablePromise<Array<ApiKeyRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/api-keys/list",
-    });
-  }
-  /**
-   * Revoke/Delete an API key.
-   * @returns ApiKeyRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteApiKey({ keyId }: { keyId: number }): CancelablePromise<ApiKeyRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/api-keys/delete/{key_id}",
-      path: {
-        key_id: keyId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
     });
   }
 }

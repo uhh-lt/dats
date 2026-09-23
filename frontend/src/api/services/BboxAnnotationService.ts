@@ -15,7 +15,7 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addBboxAnnotation({
+  public static createBboxAnnotation({
     requestBody,
   }: {
     requestBody: BBoxAnnotationCreate;
@@ -114,11 +114,28 @@ export class BboxAnnotationService {
     });
   }
   /**
+   * Returns BBoxAnnotations with the given Code of the logged-in User
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/bbox/code/{code_id}/user",
+      path: {
+        code_id: codeId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates BBoxAnnotation in Bulk
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static updateBboxAnnoAnnotationsBulk({
+  public static updateBboxAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<BBoxAnnotationUpdateBulk>;
@@ -138,7 +155,7 @@ export class BboxAnnotationService {
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static deleteBulkById({
+  public static deleteBboxAnnotationsBulk({
     requestBody,
   }: {
     requestBody: Array<number>;
@@ -148,23 +165,6 @@ export class BboxAnnotationService {
       url: "/bbox/bulk/delete",
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns BBoxAnnotations with the given Code of the logged-in User
-   * @returns BBoxAnnotationRead Successful Response
-   * @throws ApiError
-   */
-  public static getByUserCode({ codeId }: { codeId: number }): CancelablePromise<Array<BBoxAnnotationRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/code/{code_id}/user",
-      path: {
-        code_id: codeId,
-      },
       errors: {
         422: `Validation Error`,
       },
