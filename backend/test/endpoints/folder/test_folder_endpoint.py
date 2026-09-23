@@ -159,15 +159,14 @@ def test_get_folders_by_project_and_type_if_not_exists(client: TestClient):
 
 
 # --- move cycle prevention ------------------------------------------------------
-# A ValueError raised in CRUD is not registered in the exception handlers, so it
-# surfaces as HTTP 500.
+# Invalid moves raise dedicated folder exceptions registered as HTTP 400.
 def test_move_folder_into_itself_fails(client: TestClient, project_with_nested_folders):
     """Moving a folder under itself must be rejected (direct self-cycle)."""
     parent = project_with_nested_folders["parent"]
 
     response = client.patch(f"/folder/{parent.id}", json={"parent_id": parent.id})
 
-    assert response.status_code == 500, response.text
+    assert response.status_code == 400, response.text
 
 
 def test_move_folder_into_descendant_fails(
@@ -179,7 +178,7 @@ def test_move_folder_into_descendant_fails(
 
     response = client.patch(f"/folder/{parent.id}", json={"parent_id": grandchild.id})
 
-    assert response.status_code == 500, response.text
+    assert response.status_code == 400, response.text
 
 
 def test_move_folder_to_valid_parent_succeeds(

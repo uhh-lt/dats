@@ -6,6 +6,11 @@ from core.doc.folder_dto import (
     FolderUpdate,
     FolderUpdateBulk,
 )
+from core.doc.folder_exceptions import (
+    FolderMoveAcrossProjectsError,
+    FolderMoveCycleError,
+    FolderMoveToNonNormalFolderError,
+)
 from core.doc.folder_orm import FolderORM
 from repos.db.crud_base import CRUDBase
 
@@ -77,16 +82,16 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             return
         target_folder = self.read(db=db, id=update_dto.parent_id)
         if target_folder.folder_type != FolderType.NORMAL:
-            raise ValueError("Target folder must be of type NORMAL")
+            raise FolderMoveToNonNormalFolderError(target_folder.id)
         if target_folder.project_id != folder.project_id:
-            raise ValueError("Cannot move a folder to a different project")
+            raise FolderMoveAcrossProjectsError(folder.id, target_folder.id)
         # Cycle prevention: the target must not be the folder itself or one of its
         # descendants. Walk up the ancestor chain from the target; if we reach the
         # folder being moved, the move would create a cycle.
         ancestor: FolderORM | None = target_folder
         while ancestor is not None:
             if ancestor.id == folder.id:
-                raise ValueError("Cannot move a folder into itself or its descendants")
+                raise FolderMoveCycleError(folder.id, target_folder.id)
             ancestor = (
                 self.read(db=db, id=ancestor.parent_id)
                 if ancestor.parent_id is not None
