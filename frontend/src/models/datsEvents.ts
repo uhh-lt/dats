@@ -38,6 +38,7 @@ import type { ProjectMetadataUpdatedEvent } from "./ProjectMetadataUpdatedEvent"
 import type { ProjectUpdatedEvent } from "./ProjectUpdatedEvent";
 import type { ProjectUsersLinkedEvent } from "./ProjectUsersLinkedEvent";
 import type { SdocDeletedEvent } from "./SdocDeletedEvent";
+import type { SdocDeletedBatchEvent } from "./SdocDeletedBatchEvent";
 import type { SdocMetadataDeletedEvent } from "./SdocMetadataDeletedEvent";
 import type { SdocMetadataUpdatedEvent } from "./SdocMetadataUpdatedEvent";
 import type { SdocMetadataUpdatedBatchEvent } from "./SdocMetadataUpdatedBatchEvent";
@@ -113,6 +114,7 @@ export interface DATSEventMap {
   PROJECT_UPDATED: ProjectUpdatedEvent["payload"];
   PROJECT_USERS_LINKED: ProjectUsersLinkedEvent["payload"];
   SDOC_DELETED: SdocDeletedEvent["payload"];
+  SDOC_DELETED_BATCH: SdocDeletedBatchEvent["payload"];
   SDOC_METADATA_DELETED: SdocMetadataDeletedEvent["payload"];
   SDOC_METADATA_UPDATED: SdocMetadataUpdatedEvent["payload"];
   SDOC_METADATA_UPDATED_BATCH: SdocMetadataUpdatedBatchEvent["payload"];
@@ -189,6 +191,7 @@ export type DATSEvent =
   | (Omit<ProjectUpdatedEvent, "type"> & { type: "PROJECT_UPDATED" })
   | (Omit<ProjectUsersLinkedEvent, "type"> & { type: "PROJECT_USERS_LINKED" })
   | (Omit<SdocDeletedEvent, "type"> & { type: "SDOC_DELETED" })
+  | (Omit<SdocDeletedBatchEvent, "type"> & { type: "SDOC_DELETED_BATCH" })
   | (Omit<SdocMetadataDeletedEvent, "type"> & { type: "SDOC_METADATA_DELETED" })
   | (Omit<SdocMetadataUpdatedEvent, "type"> & { type: "SDOC_METADATA_UPDATED" })
   | (Omit<SdocMetadataUpdatedBatchEvent, "type"> & { type: "SDOC_METADATA_UPDATED_BATCH" })

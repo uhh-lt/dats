@@ -169,4 +169,24 @@ export class SourceDocumentService {
       },
     });
   }
+  /**
+   * Removes all SourceDocuments with the given IDs if they exist
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteSdocsBulk({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<SourceDocumentRead>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdoc/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

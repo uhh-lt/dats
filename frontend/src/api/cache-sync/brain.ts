@@ -265,6 +265,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       removeSingle([QueryKey.SDOC, event.payload.id]);
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       break;
+    case "SDOC_DELETED_BATCH":
+      event.payload.forEach((sdoc) => removeSingle([QueryKey.SDOC, sdoc.id]));
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
 
     // ── Search views ────────────────────────────────────────────────────────
     case "SEARCH_VIEW_CREATED": {

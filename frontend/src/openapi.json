@@ -4848,6 +4848,38 @@
         }
       }
     },
+    "/sdoc/bulk/delete": {
+      "delete": {
+        "tags": ["sourceDocument"],
+        "summary": "Removes all SourceDocuments with the given IDs if they exist",
+        "operationId": "delete_sdocs_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" },
+                  "type": "array",
+                  "title": "Response Sourcedocument-Delete Sdocs Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/sdocmeta/{metadata_id}": {
       "get": {
         "tags": ["sdocMetadata"],
@@ -7126,6 +7158,18 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "SDOC_DELETED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_sdoc_deleted_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocDeletedBatchEvent" } } }
           }
         }
       }
@@ -14196,6 +14240,19 @@
           "SD_SPAN_ANNOTATIONS"
         ],
         "title": "SdocColumns"
+      },
+      "SdocDeletedBatchEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "SDOC_DELETED_BATCH", "title": "Type", "default": "SDOC_DELETED_BATCH" },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/SourceDocumentRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "SdocDeletedBatchEvent"
       },
       "SdocDeletedEvent": {
         "properties": {
