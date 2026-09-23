@@ -1,8 +1,8 @@
+import { JobService } from "@api/services/JobService";
 import { DuplicateFinderJobRead } from "@models/DuplicateFinderJobRead";
 import { ExportJobRead } from "@models/ExportJobRead";
-import { JobStatus } from "@models/JobStatus";
-import { JobService } from "@api/services/JobService";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useJobRefetchInterval } from "./jobPolling";
 import { QueryKey } from "./QueryKey";
 
 const useStartDuplicateFinderJob = () =>
@@ -17,6 +17,7 @@ const usePollDuplicateFinderJob = (
   duplicateFinderJobId: string | undefined,
   initialData: DuplicateFinderJobRead | undefined,
 ) => {
+  const jobRefetchInterval = useJobRefetchInterval<DuplicateFinderJobRead>();
   return useQuery<DuplicateFinderJobRead, Error>({
     queryKey: [QueryKey.DUPLICATE_FINDER_JOB, duplicateFinderJobId],
     queryFn: () =>
@@ -24,28 +25,7 @@ const usePollDuplicateFinderJob = (
         jobId: duplicateFinderJobId!,
       }),
     enabled: !!duplicateFinderJobId,
-    refetchInterval: (query) => {
-      if (query.state.error) {
-        return false;
-      }
-      if (!query.state.data) {
-        return 1000;
-      }
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
     initialData,
   });
 };
@@ -60,6 +40,7 @@ const useStartExportJob = () =>
   });
 
 const usePollExportJob = (exportJobId: string | undefined) => {
+  const jobRefetchInterval = useJobRefetchInterval<ExportJobRead>();
   return useQuery<ExportJobRead, Error>({
     queryKey: [QueryKey.EXPORT_JOB, exportJobId],
     queryFn: () =>
@@ -67,28 +48,7 @@ const usePollExportJob = (exportJobId: string | undefined) => {
         jobId: exportJobId!,
       }),
     enabled: !!exportJobId,
-    refetchInterval: (query) => {
-      if (query.state.error) {
-        return false;
-      }
-      if (!query.state.data) {
-        return 1000;
-      }
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
   });
 };
 

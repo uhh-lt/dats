@@ -1,4 +1,5 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
@@ -6,12 +7,10 @@ import { AspectRead } from "@models/AspectRead";
 import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@models/ClusterRead";
 import { CodeRead } from "@models/CodeRead";
-import { JobStatus } from "@models/JobStatus";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { dateToLocaleDate } from "@utils/DateUtils";
 
 export type AspectMap = Record<number, AspectRead>;
 
@@ -114,50 +113,25 @@ const useStartPerspectivesJob = () =>
     },
   });
 
+// Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
+// (visualization invalidations) live in the JOB_UPDATED handler in
+// frontend/src/plugins/websocket/websocketEventHandlers.ts.
 const usePollPerspectivesJob = (
   perspectivesJobId: string | null | undefined,
   initialData: PerspectivesJobRead | undefined,
-) =>
-  useQuery<PerspectivesJobRead, Error>({
+) => {
+  const jobRefetchInterval = useJobRefetchInterval<PerspectivesJobRead>();
+  return useQuery<PerspectivesJobRead, Error>({
     queryKey: [QueryKey.PERSPECTIVES_JOB, perspectivesJobId],
     queryFn: () =>
       PerspectivesService.getPerspectivesJob({
         perspectivesJobId: perspectivesJobId!,
       }),
     enabled: !!perspectivesJobId,
-    refetchInterval: (query) => {
-      if (!query.state.data) {
-        return 1000;
-      }
-
-      const localDate = new Date();
-      if (
-        query.state.data.finished &&
-        localDate.getTime() - dateToLocaleDate(query.state.data.finished).getTime() < 3 * 60 * 1000
-      ) {
-        queryClient.invalidateQueries({
-          queryKey: [QueryKey.DOCUMENT_VISUALIZATION, query.state.data.input.aspect_id],
-        });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, query.state.data.input.aspect_id] });
-      }
-
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
     initialData,
   });
+};
 
 const useLabelDocs = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);

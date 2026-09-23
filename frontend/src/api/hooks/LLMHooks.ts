@@ -2,11 +2,11 @@ import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
 import { RagService } from "@api/services/RagService";
 import { ApproachType } from "@models/ApproachType";
-import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { StrategyInfo } from "@models/StrategyInfo";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useJobRefetchInterval } from "./jobPolling";
 import { QueryKey } from "./QueryKey";
 
 const useStartLLMJob = () =>
@@ -22,6 +22,7 @@ const useStartLLMJob = () =>
   });
 
 const usePollLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJobRead | undefined) => {
+  const jobRefetchInterval = useJobRefetchInterval<LlmAssistantJobRead>();
   return useQuery<LlmAssistantJobRead, Error>({
     queryKey: [QueryKey.LLM_JOB, llmJobId],
     queryFn: () =>
@@ -29,25 +30,7 @@ const usePollLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJo
         jobId: llmJobId!,
       }),
     enabled: !!llmJobId,
-    refetchInterval: (query) => {
-      if (!query.state.data) {
-        return 1000;
-      }
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
     initialData,
   });
 };

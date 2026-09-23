@@ -1,7 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { queryClient } from "@api/queryClient";
 import { JobService } from "@api/services/JobService";
-import { JobStatus } from "@models/JobStatus";
 import { MlJobRead } from "@models/MlJobRead";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
@@ -27,6 +27,7 @@ export const useStartMLJob = () =>
   });
 
 export const usePollMLJob = (mlJobId: string | undefined, initialData: MlJobRead | undefined) => {
+  const jobRefetchInterval = useJobRefetchInterval<MlJobRead>();
   return useQuery<MlJobRead, Error>({
     queryKey: [QueryKey.ML_JOB, mlJobId],
     queryFn: () =>
@@ -34,28 +35,7 @@ export const usePollMLJob = (mlJobId: string | undefined, initialData: MlJobRead
         jobId: mlJobId!,
       }),
     enabled: !!mlJobId,
-    refetchInterval: (query) => {
-      if (query.state.error) {
-        return false;
-      }
-      if (!query.state.data) {
-        return 1000;
-      }
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
+    refetchInterval: jobRefetchInterval,
     initialData,
   });
 };
