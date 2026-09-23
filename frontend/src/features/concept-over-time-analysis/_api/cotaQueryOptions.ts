@@ -25,12 +25,8 @@ export const projectCotasQueryOptions = (projectId: number) =>
 export const useCreateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.create,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      entityEvent: "COTA_CREATED",
       successMessage: (cota: COTARead) => `Created new Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -38,12 +34,8 @@ export const useCreateCota = () =>
 export const useDuplicateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      entityEvent: "COTA_CREATED",
       successMessage: (cota: COTARead) => `Duplicated Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -51,12 +43,8 @@ export const useDuplicateCota = () =>
 export const useUpdateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.updateById,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      entityEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Updated Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -64,12 +52,8 @@ export const useUpdateCota = () =>
 export const useAnnotateCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      entityEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Updated annotations in Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -77,12 +61,8 @@ export const useAnnotateCotaSentences = () =>
 export const useRemoveCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      entityEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Removed sentences from Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -90,12 +70,8 @@ export const useRemoveCotaSentences = () =>
 export const useResetCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      entityEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Reset Concept Over Time Analysis "${cota.name}"`,
     },
   });
@@ -103,15 +79,8 @@ export const useResetCota = () =>
 export const useDeleteCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
-    onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) => {
-        if (!prev) return prev;
-        const next = { ...prev };
-        delete next[cota.id];
-        return next;
-      });
-    },
     meta: {
+      entityEvent: "COTA_DELETED",
       successMessage: (cota: COTARead) => `Deleted Concept Over Time Analysis "${cota.name}"`,
     },
   });

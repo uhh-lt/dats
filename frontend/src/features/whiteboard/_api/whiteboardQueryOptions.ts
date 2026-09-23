@@ -1,5 +1,4 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { queryClient } from "@api/queryClient";
 import { WhiteboardService } from "@api/services/WhiteboardService";
 import { WhiteboardRead } from "@models/WhiteboardRead";
 import { useAppSelector } from "@store/storeHooks";
@@ -23,12 +22,8 @@ export const projectWhiteboardsQueryOptions = (projectId: number) =>
 export const useCreateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.create,
-    onSuccess(data) {
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, data.project_id], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "WHITEBOARD_CREATED",
       successMessage: (whiteboard: WhiteboardRead) => `Created Whiteboard "${whiteboard.title}"`,
     },
   });
@@ -36,41 +31,26 @@ export const useCreateWhiteboard = () =>
 export const useUpdateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.updateById,
-    onSuccess(data) {
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, data.project_id], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "WHITEBOARD_UPDATED",
       successMessage: (whiteboard: WhiteboardRead) => `Updated Whiteboard "${whiteboard.title}"`,
     },
   });
 
-export const useDuplicateWhiteboard = (projectId: number) =>
+export const useDuplicateWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.duplicateById,
-    onSuccess(data) {
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, projectId], (prev) =>
-        prev ? { ...prev, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "WHITEBOARD_CREATED",
       successMessage: (whiteboard: WhiteboardRead) => `Duplicated Whiteboard "${whiteboard.title}"`,
     },
   });
 
-export const useDeleteWhiteboard = (projectId: number) =>
+export const useDeleteWhiteboard = () =>
   useMutation({
     mutationFn: WhiteboardService.deleteById,
-    onSuccess(data) {
-      queryClient.setQueryData<WhiteboardMap>([QueryKey.PROJECT_WHITEBOARDS, projectId], (prev) => {
-        if (!prev) return prev;
-        const next = { ...prev };
-        delete next[data.id];
-        return next;
-      });
-    },
     meta: {
+      entityEvent: "WHITEBOARD_DELETED",
       successMessage: (whiteboard: WhiteboardRead) => `Deleted Whiteboard "${whiteboard.title}"`,
     },
   });

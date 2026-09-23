@@ -37,6 +37,15 @@ export type EntityEventMap = Pick<
   | "MEMO_UPDATED"
   | "MEMO_UPDATED_BATCH"
   | "MEMO_DELETED"
+  | "WHITEBOARD_CREATED"
+  | "WHITEBOARD_UPDATED"
+  | "WHITEBOARD_DELETED"
+  | "TIMELINE_ANALYSIS_CREATED"
+  | "TIMELINE_ANALYSIS_UPDATED"
+  | "TIMELINE_ANALYSIS_DELETED"
+  | "COTA_CREATED"
+  | "COTA_UPDATED"
+  | "COTA_DELETED"
 >;
 
 export type EntityEventType = keyof EntityEventMap;
@@ -120,6 +129,33 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
     case "MEMO_DELETED":
       removeMemo(event.payload);
       invalidateMemoWorkspace();
+      break;
+
+    // ── Whiteboards ─────────────────────────────────────────────────────────
+    case "WHITEBOARD_CREATED":
+    case "WHITEBOARD_UPDATED":
+      upsertMapItem(QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id, event.payload);
+      break;
+    case "WHITEBOARD_DELETED":
+      removeMapItem(QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id, event.payload.id);
+      break;
+
+    // ── Timeline analyses ───────────────────────────────────────────────────
+    case "TIMELINE_ANALYSIS_CREATED":
+    case "TIMELINE_ANALYSIS_UPDATED":
+      upsertMapItem(QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id, event.payload);
+      break;
+    case "TIMELINE_ANALYSIS_DELETED":
+      removeMapItem(QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id, event.payload.id);
+      break;
+
+    // ── Concept-over-time analyses ──────────────────────────────────────────
+    case "COTA_CREATED":
+    case "COTA_UPDATED":
+      upsertMapItem(QueryKey.PROJECT_COTAS, event.payload.project_id, event.payload);
+      break;
+    case "COTA_DELETED":
+      removeMapItem(QueryKey.PROJECT_COTAS, event.payload.project_id, event.payload.id);
       break;
 
     default: {
