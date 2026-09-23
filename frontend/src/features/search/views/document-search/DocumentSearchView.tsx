@@ -181,13 +181,15 @@ export function DocumentSearchView() {
   );
 
   // folder handler
-  const { mutate: moveFoldersMutation } = FolderHooks.useMoveFolders();
+  const { mutate: updateFoldersBulkMutation } = FolderHooks.useUpdateFoldersBulk();
   const handleMoveFolders = useCallback(
     (folderIds: number[], targetFolderId: number) => {
-      moveFoldersMutation(
+      updateFoldersBulkMutation(
         {
-          targetFolderId,
-          requestBody: folderIds,
+          requestBody: folderIds.map((folderId) => ({
+            folder_id: folderId,
+            parent_id: targetFolderId === -1 ? null : targetFolderId,
+          })),
         },
         {
           onSuccess: () => {
@@ -196,7 +198,7 @@ export function DocumentSearchView() {
         },
       );
     },
-    [dispatch, moveFoldersMutation],
+    [dispatch, updateFoldersBulkMutation],
   );
 
   // Drag and drop handler for moving sdoc_folders into normal folders (dnd-kit)

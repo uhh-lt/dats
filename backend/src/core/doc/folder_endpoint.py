@@ -12,6 +12,7 @@ from core.doc.folder_dto import (
     FolderRead,
     FolderType,
     FolderUpdate,
+    FolderUpdateBulk,
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -127,24 +128,21 @@ def update_by_id(
 
 
 @router.patch(
-    "/move_folders",
+    "/bulk/update",
     response_model=list[FolderRead],
-    summary="Moves the Folders with the given IDs to the target folder.",
+    summary="Updates the Folders with the given IDs.",
 )
-def move_folders(
+def update_folders_bulk(
     *,
-    folder_ids: list[int],
-    target_folder_id: int,  # -1 means root folder (parent_id is None)
+    folder_updates: list[FolderUpdateBulk],
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[FolderRead]:
-    for folder_id in folder_ids:
-        authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
+    for folder_update in folder_updates:
+        authz_user.assert_in_same_project_as(Crud.FOLDER, folder_update.folder_id)
 
-    db_objs = crud_folder.move_folders(
-        db=db, folder_ids=folder_ids, target_folder_id=target_folder_id
-    )
+    db_objs = crud_folder.update_bulk(db=db, update_dtos=folder_updates)
     results = [FolderRead.model_validate(folder) for folder in db_objs]
     if results:
         ws.emit_to_project(

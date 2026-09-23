@@ -1712,25 +1712,22 @@
         }
       }
     },
-    "/folder/move_folders": {
+    "/folder/bulk/update": {
       "patch": {
         "tags": ["folder"],
-        "summary": "Moves the Folders with the given IDs to the target folder.",
-        "operationId": "move_folders",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "target_folder_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Target Folder Id" }
-          }
-        ],
+        "summary": "Updates the Folders with the given IDs.",
+        "operationId": "update_folders_bulk",
         "requestBody": {
-          "required": true,
           "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Folder Ids" } }
-          }
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/FolderUpdateBulk" },
+                "type": "array",
+                "title": "Folder Updates"
+              }
+            }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1738,9 +1735,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": { "$ref": "#/components/schemas/FolderRead" },
-                  "title": "Response Folder-Move Folders"
+                  "type": "array",
+                  "title": "Response Folder-Update Folders Bulk"
                 }
               }
             }
@@ -1749,7 +1746,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/import/{project_id}/type/{import_job_type}": {
@@ -11882,6 +11880,24 @@
         },
         "type": "object",
         "title": "FolderUpdate"
+      },
+      "FolderUpdateBulk": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Updated name of the folder"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Updated parent folder ID"
+          },
+          "folder_id": { "type": "integer", "title": "Folder Id", "description": "ID of the Folder to update" }
+        },
+        "type": "object",
+        "required": ["folder_id"],
+        "title": "FolderUpdateBulk"
       },
       "FolderUpdatedBatchEvent": {
         "properties": {

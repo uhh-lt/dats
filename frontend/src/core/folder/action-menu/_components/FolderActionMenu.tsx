@@ -134,7 +134,7 @@ function FolderMenuContent({
   };
 
   // actions
-  const { mutate: moveFoldersMutation, isPending } = FolderHooks.useMoveFolders();
+  const { mutate: updateFoldersBulkMutation, isPending } = FolderHooks.useUpdateFoldersBulk();
   const handleMoveToFolder = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedFolders = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);
@@ -142,10 +142,13 @@ function FolderMenuContent({
       console.error("Expected exactly one folder to be checked, but found:", checkedFolders.length);
       return;
     }
-    moveFoldersMutation(
+    const targetFolderId = checkedFolders[0][0];
+    updateFoldersBulkMutation(
       {
-        targetFolderId: checkedFolders[0][0],
-        requestBody: folderIds,
+        requestBody: folderIds.map((folderId) => ({
+          folder_id: folderId,
+          parent_id: targetFolderId === -1 ? null : targetFolderId,
+        })),
       },
       {
         onSuccess: () => {
@@ -154,7 +157,7 @@ function FolderMenuContent({
         },
       },
     );
-  }, [checked, moveFoldersMutation, folderIds, onMoveFolder, handleClose]);
+  }, [checked, updateFoldersBulkMutation, folderIds, onMoveFolder, handleClose]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {
