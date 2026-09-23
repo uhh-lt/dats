@@ -53,7 +53,7 @@ export function invalidateAttachedObjectMemoIds(
 }
 
 export function writeMemo(memo: MemoRead): void {
-  setSingle(QueryKey.MEMO, memo.id, memo);
+  setSingle([QueryKey.MEMO, memo.id], memo);
   queryClient.setQueryData<MemoRead[]>(
     [QueryKey.OBJECT_MEMOS, memo.attached_object_type, memo.attached_object_id],
     (old) => (old ? old.map((m) => (m.id === memo.id ? memo : m)) : [memo]),
@@ -61,7 +61,7 @@ export function writeMemo(memo: MemoRead): void {
 }
 
 export function appendMemo(memo: MemoRead): void {
-  setSingle(QueryKey.MEMO, memo.id, memo);
+  setSingle([QueryKey.MEMO, memo.id], memo);
   queryClient.setQueryData<MemoRead[]>(
     [QueryKey.OBJECT_MEMOS, memo.attached_object_type, memo.attached_object_id],
     (old) => (old ? [...old, memo] : [memo]),
@@ -69,7 +69,7 @@ export function appendMemo(memo: MemoRead): void {
 }
 
 export function removeMemo(memo: MemoRead): void {
-  removeSingle(QueryKey.MEMO, memo.id);
+  removeSingle([QueryKey.MEMO, memo.id]);
   queryClient.setQueryData<MemoRead[]>(
     [QueryKey.OBJECT_MEMOS, memo.attached_object_type, memo.attached_object_id],
     (old) => (old ? old.filter((m) => m.id !== memo.id) : old),

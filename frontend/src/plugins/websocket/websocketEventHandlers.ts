@@ -131,33 +131,18 @@ const websocketEventHandlers: {
   SENTENCE_ANNOTATION_DELETED_BATCH: (annos) => annos.forEach(invalidateSentenceAnnotations),
 
   // ── Folders ────────────────────────────────────────────────────────────────
-  // Folder queries are keyed by (project_id, folder_type); invalidate all types.
-  FOLDER_CREATED: (folder) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, folder.project_id] }),
-  FOLDER_UPDATED: (folder) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, folder.project_id] }),
-  FOLDER_DELETED: (folder) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, folder.project_id] }),
-  FOLDER_UPDATED_BATCH: (folders) => {
-    folders.forEach((folder) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, folder.project_id] });
-    });
-  },
+  FOLDER_CREATED: (folder) => handleEntityEvent({ type: "FOLDER_CREATED", payload: folder }, "websocket"),
+  FOLDER_UPDATED: (folder) => handleEntityEvent({ type: "FOLDER_UPDATED", payload: folder }, "websocket"),
+  FOLDER_DELETED: (folder) => handleEntityEvent({ type: "FOLDER_DELETED", payload: folder }, "websocket"),
+  FOLDER_UPDATED_BATCH: (folders) => handleEntityEvent({ type: "FOLDER_UPDATED_BATCH", payload: folders }, "websocket"),
 
   // ── Project metadata ───────────────────────────────────────────────────────
-  PROJECT_METADATA_CREATED: (metadata) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, metadata.project_id] });
-    // New project metadata means sdoc metadata queries may change too.
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
-  },
-  PROJECT_METADATA_UPDATED: (metadata) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, metadata.project_id] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
-  },
-  PROJECT_METADATA_DELETED: (metadata) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, metadata.project_id] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
-  },
+  PROJECT_METADATA_CREATED: (metadata) =>
+    handleEntityEvent({ type: "PROJECT_METADATA_CREATED", payload: metadata }, "websocket"),
+  PROJECT_METADATA_UPDATED: (metadata) =>
+    handleEntityEvent({ type: "PROJECT_METADATA_UPDATED", payload: metadata }, "websocket"),
+  PROJECT_METADATA_DELETED: (metadata) =>
+    handleEntityEvent({ type: "PROJECT_METADATA_DELETED", payload: metadata }, "websocket"),
 
   // ── Source document metadata ───────────────────────────────────────────────
   SDOC_METADATA_UPDATED: (metadata) => {
@@ -200,18 +185,15 @@ const websocketEventHandlers: {
   COTA_DELETED: (cota) => handleEntityEvent({ type: "COTA_DELETED", payload: cota }, "websocket"),
 
   // ── Perspectives (aspects) ─────────────────────────────────────────────────
-  ASPECT_CREATED: (aspect) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, aspect.project_id] }),
-  ASPECT_UPDATED: (aspect) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, aspect.project_id] }),
-  ASPECT_DELETED: (aspect) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, aspect.project_id] }),
+  ASPECT_CREATED: (aspect) => handleEntityEvent({ type: "ASPECT_CREATED", payload: aspect }, "websocket"),
+  ASPECT_UPDATED: (aspect) => handleEntityEvent({ type: "ASPECT_UPDATED", payload: aspect }, "websocket"),
+  ASPECT_DELETED: (aspect) => handleEntityEvent({ type: "ASPECT_DELETED", payload: aspect }, "websocket"),
 
   // ── Classifiers ────────────────────────────────────────────────────────────
   CLASSIFIER_UPDATED: (classifier) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, classifier.project_id] }),
+    handleEntityEvent({ type: "CLASSIFIER_UPDATED", payload: classifier }, "websocket"),
   CLASSIFIER_DELETED: (classifier) =>
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, classifier.project_id] }),
+    handleEntityEvent({ type: "CLASSIFIER_DELETED", payload: classifier }, "websocket"),
 
   // ── Project membership ─────────────────────────────────────────────────────
   // PROJECT_USERS is keyed by project id, but UserRead has no project_id — the
