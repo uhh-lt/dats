@@ -2,6 +2,7 @@
 // This file is the central websocket event management system. It handles every
 // websocket event type in one place, so it's simpler to keep everything here
 // rather than splitting into multiple files.
+import { handleEntityEvent } from "@api/entity-events/brain";
 import { userProjectsQueryOptions } from "@api/hooks/ProjectHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
@@ -72,26 +73,14 @@ const websocketEventHandlers: {
   },
 
   // ── Codes ──────────────────────────────────────────────────────────────────
-  CODE_CREATED: (code) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, code.project_id] }),
-  CODE_UPDATED: (code) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, code.project_id] }),
-  CODE_DELETED: (code) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, code.project_id] });
-    // Deleting a code cascades to its annotations in the DB, which the frontend
-    // cannot observe directly — invalidate annotation queries too.
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
-  },
+  CODE_CREATED: (code) => handleEntityEvent({ type: "CODE_CREATED", payload: code }, "websocket"),
+  CODE_UPDATED: (code) => handleEntityEvent({ type: "CODE_UPDATED", payload: code }, "websocket"),
+  CODE_DELETED: (code) => handleEntityEvent({ type: "CODE_DELETED", payload: code }, "websocket"),
 
   // ── Tags ───────────────────────────────────────────────────────────────────
-  TAG_CREATED: (tag) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, tag.project_id] }),
-  TAG_UPDATED: (tag) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, tag.project_id] }),
-  TAG_DELETED: (tag) => queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, tag.project_id] }),
+  TAG_CREATED: (tag) => handleEntityEvent({ type: "TAG_CREATED", payload: tag }, "websocket"),
+  TAG_UPDATED: (tag) => handleEntityEvent({ type: "TAG_UPDATED", payload: tag }, "websocket"),
+  TAG_DELETED: (tag) => handleEntityEvent({ type: "TAG_DELETED", payload: tag }, "websocket"),
   // Reviewed recommendations are grouped by their ML job; refresh those lists.
   TAG_RECOMMENDATION_REVIEWED_BATCH: (links) => {
     const mlJobIds = new Set(links.map((link) => link.ml_job_id));
@@ -101,24 +90,10 @@ const websocketEventHandlers: {
   },
 
   // ── Memos ──────────────────────────────────────────────────────────────────
-  MEMO_CREATED: (memo) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
-    void memo;
-  },
-  MEMO_UPDATED: (memo) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO, memo.id] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
-  },
-  MEMO_UPDATED_BATCH: (memos) => {
-    memos.forEach((memo) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO, memo.id] });
-    });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
-  },
-  MEMO_DELETED: (memo) => {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO, memo.id] });
-    queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
-  },
+  MEMO_CREATED: (memo) => handleEntityEvent({ type: "MEMO_CREATED", payload: memo }, "websocket"),
+  MEMO_UPDATED: (memo) => handleEntityEvent({ type: "MEMO_UPDATED", payload: memo }, "websocket"),
+  MEMO_UPDATED_BATCH: (memos) => handleEntityEvent({ type: "MEMO_UPDATED_BATCH", payload: memos }, "websocket"),
+  MEMO_DELETED: (memo) => handleEntityEvent({ type: "MEMO_DELETED", payload: memo }, "websocket"),
 
   // ── Source documents ───────────────────────────────────────────────────────
   SDOC_UPDATED: (sdoc) => queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, sdoc.id] }),

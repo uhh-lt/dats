@@ -1,3 +1,4 @@
+import { handleEntityEvent } from "@api/entity-events/brain";
 import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
 import { CodeRead } from "@models/CodeRead";
@@ -56,12 +57,8 @@ const useGetEnabledCodes = () => {
 const useCreateCode = () => {
   return useMutation({
     mutationFn: CodeService.createCode,
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, variables.requestBody.project_id], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
-    },
     meta: {
+      entityEvent: "CODE_CREATED",
       successMessage: (data: CodeRead) => `Created code ${data.name}`,
     },
   });
@@ -71,9 +68,7 @@ const useUpdateCode = () =>
   useMutation({
     mutationFn: CodeService.updateById,
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) =>
-        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
-      );
+      handleEntityEvent({ type: "CODE_UPDATED", payload: data }, "mutation");
       // if the user changed the enabled status, refetch all codes
       if (!(variables.requestBody.enabled === undefined || variables.requestBody.enabled === null)) {
         queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
@@ -87,21 +82,8 @@ const useUpdateCode = () =>
 const useDeleteCode = () => {
   return useMutation({
     mutationFn: CodeService.deleteById,
-    onSuccess: (data) => {
-      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) => {
-        if (!oldData) return oldData;
-        const newData = { ...oldData };
-        delete newData[data.id];
-        return newData;
-      });
-      // reset global server state: invalidate everything that could be affected by a code
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, data.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, data.id] });
-    },
     meta: {
+      entityEvent: "CODE_DELETED",
       successMessage: (data: CodeRead) => `Deleted code ${data.name}`,
     },
   });
