@@ -487,7 +487,7 @@
     },
     "/bbox": {
       "put": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Creates a BBoxAnnotation",
         "operationId": "create_bbox_annotation",
         "requestBody": {
@@ -509,7 +509,7 @@
     },
     "/bbox/{bbox_id}": {
       "get": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Returns the BBoxAnnotation with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -528,7 +528,7 @@
         }
       },
       "patch": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Updates the BBoxAnnotation with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -551,7 +551,7 @@
         }
       },
       "delete": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Deletes the BBoxAnnotation with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -572,7 +572,7 @@
     },
     "/bbox/sdoc/{sdoc_id}/user/{user_id}": {
       "get": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Returns all BBoxAnnotations of the User for the SourceDocument",
         "operationId": "get_by_sdoc_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -602,7 +602,7 @@
     },
     "/bbox/code/{code_id}/user": {
       "get": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Returns BBoxAnnotations with the given Code of the logged-in User",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -631,7 +631,7 @@
     },
     "/bbox/bulk/update": {
       "patch": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Updates BBoxAnnotation in Bulk",
         "operationId": "update_bbox_annotations_bulk",
         "requestBody": {
@@ -669,7 +669,7 @@
     },
     "/bbox/bulk/delete": {
       "delete": {
-        "tags": ["bboxAnnotation", "mcp"],
+        "tags": ["bboxAnnotation"],
         "summary": "Deletes all BBoxAnnotations with the given IDs.",
         "operationId": "delete_bbox_annotations_bulk",
         "requestBody": {
@@ -956,7 +956,7 @@
     },
     "/code": {
       "put": {
-        "tags": ["code", "mcp"],
+        "tags": ["code"],
         "summary": "Creates a new Code and returns it with the generated ID.",
         "operationId": "create_code",
         "requestBody": {
@@ -978,7 +978,7 @@
     },
     "/code/{code_id}": {
       "get": {
-        "tags": ["code", "mcp"],
+        "tags": ["code"],
         "summary": "Returns the Code with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -997,7 +997,7 @@
         }
       },
       "patch": {
-        "tags": ["code", "mcp"],
+        "tags": ["code"],
         "summary": "Updates the Code with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1020,7 +1020,7 @@
         }
       },
       "delete": {
-        "tags": ["code", "mcp"],
+        "tags": ["code"],
         "summary": "Deletes the Code with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1041,7 +1041,7 @@
     },
     "/code/project/{proj_id}": {
       "get": {
-        "tags": ["code", "mcp"],
+        "tags": ["code"],
         "summary": "Returns all Codes of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1559,7 +1559,7 @@
     },
     "/folder": {
       "put": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Creates a new Folder and returns it with the generated ID.",
         "operationId": "create_folder",
         "requestBody": {
@@ -1581,7 +1581,7 @@
     },
     "/folder/{folder_id}": {
       "get": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Returns the Folder with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1600,7 +1600,7 @@
         }
       },
       "patch": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Updates the Folder with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1623,7 +1623,7 @@
         }
       },
       "delete": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Deletes the Folder with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1644,7 +1644,7 @@
     },
     "/folder/sdocids/{folder_id}": {
       "get": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Returns lists of source document ids per doctype in the specified sdoc folder",
         "operationId": "get_sdoc_ids_in_folder_by_doctype",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1674,7 +1674,7 @@
     },
     "/folder/project/{project_id}/folder/{folder_type}": {
       "get": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Returns the folders of the folder_type of the project with the given ID",
         "operationId": "get_folders_by_project_and_type",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -1714,7 +1714,7 @@
     },
     "/folder/move_folders": {
       "patch": {
-        "tags": ["folder", "mcp"],
+        "tags": ["folder"],
         "summary": "Moves the Folders with the given IDs to the target folder.",
         "operationId": "move_folders",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2486,7 +2486,7 @@
     },
     "/memo": {
       "put": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Adds a Memo to the Attached Object with the given ID if it exists",
         "operationId": "create_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2522,7 +2522,7 @@
     },
     "/memo/recent": {
       "get": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Returns the current user's most recently opened Memos in the project",
         "operationId": "get_recent_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2562,7 +2562,7 @@
     },
     "/memo/{memo_id}": {
       "get": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Returns the Memo with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2581,7 +2581,7 @@
         }
       },
       "patch": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Updates the Memo with the given ID if it exists",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2604,7 +2604,7 @@
         }
       },
       "delete": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Removes the Memo with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2625,7 +2625,7 @@
     },
     "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}": {
       "get": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Returns all Memos attached to the object if it exists",
         "operationId": "get_memos_by_attached_object_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2665,7 +2665,7 @@
     },
     "/memo/bulk/update": {
       "patch": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Updates Memos in Bulk",
         "operationId": "update_memos_bulk",
         "requestBody": {
@@ -2703,7 +2703,7 @@
     },
     "/memo/{memo_id}/recent": {
       "post": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Records that the current user opened the Memo with the given ID",
         "operationId": "record_recent_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2721,7 +2721,7 @@
     },
     "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
       "get": {
-        "tags": ["memo", "mcp"],
+        "tags": ["memo"],
         "summary": "Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
         "operationId": "generate_memo_suggestion",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3178,7 +3178,7 @@
     },
     "/project": {
       "put": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Creates a new Project",
         "operationId": "create_project",
         "requestBody": {
@@ -3200,7 +3200,7 @@
     },
     "/project/{proj_id}": {
       "get": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Returns the Project with the given ID if it exists",
         "operationId": "get_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3219,7 +3219,7 @@
         }
       },
       "patch": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Updates the Project with the given ID.",
         "operationId": "update_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3242,7 +3242,7 @@
         }
       },
       "delete": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Removes the Project with the given ID.",
         "operationId": "delete_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3263,7 +3263,7 @@
     },
     "/project/{proj_id}/resolve_filename/{filename}": {
       "get": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
         "operationId": "resolve_filename",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3293,7 +3293,7 @@
     },
     "/project/user/projects": {
       "get": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Returns all Projects of the logged-in User",
         "operationId": "get_user_projects",
         "responses": {
@@ -3315,7 +3315,7 @@
     },
     "/project/{project_id}/sdoc/status/{status}": {
       "get": {
-        "tags": ["project", "mcp"],
+        "tags": ["project"],
         "summary": "Returns count of SourceDocuments with the given status in the given project.",
         "operationId": "count_sdocs_with_status",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3346,7 +3346,7 @@
     },
     "/projmeta": {
       "put": {
-        "tags": ["projectMetadata", "mcp"],
+        "tags": ["projectMetadata"],
         "summary": "Creates a new Metadata and returns it with the generated ID.",
         "operationId": "create_metadata",
         "requestBody": {
@@ -3368,7 +3368,7 @@
     },
     "/projmeta/{metadata_id}": {
       "get": {
-        "tags": ["projectMetadata", "mcp"],
+        "tags": ["projectMetadata"],
         "summary": "Returns the Metadata with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3392,7 +3392,7 @@
         }
       },
       "patch": {
-        "tags": ["projectMetadata", "mcp"],
+        "tags": ["projectMetadata"],
         "summary": "Updates the Metadata with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3420,7 +3420,7 @@
         }
       },
       "delete": {
-        "tags": ["projectMetadata", "mcp"],
+        "tags": ["projectMetadata"],
         "summary": "Deletes the Metadata with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3446,7 +3446,7 @@
     },
     "/projmeta/project/{proj_id}": {
       "get": {
-        "tags": ["projectMetadata", "mcp"],
+        "tags": ["projectMetadata"],
         "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3593,7 +3593,7 @@
     },
     "/search/sdoc_info": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns Search Info.",
         "operationId": "search_sdoc_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3627,7 +3627,7 @@
     },
     "/search/sdoc": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
         "operationId": "search_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3705,7 +3705,7 @@
     },
     "/search/memo_info": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns Memo Table Info.",
         "operationId": "search_memo_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3739,7 +3739,7 @@
     },
     "/search/memo": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Queries Memo summaries for a workspace view",
         "operationId": "search_memos",
         "requestBody": {
@@ -3761,7 +3761,7 @@
     },
     "/search/memo/groups": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Queries paginated Memo groups for a workspace view",
         "operationId": "search_memo_groups",
         "requestBody": {
@@ -3785,7 +3785,7 @@
     },
     "/search/span_annotation_info": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns SpanAnnotationSearch Info.",
         "operationId": "search_span_annotation_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3819,7 +3819,7 @@
     },
     "/search/span_annotation": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns SpanAnnotationSearch.",
         "operationId": "search_span_annotations",
         "requestBody": {
@@ -3841,7 +3841,7 @@
     },
     "/search/span_annotation/groups": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns paginated SpanAnnotation groups.",
         "operationId": "search_span_annotation_groups",
         "requestBody": {
@@ -3865,7 +3865,7 @@
     },
     "/search/sentence_annotation_info": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns SentenceAnnotationSearch Info.",
         "operationId": "search_sentence_annotation_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3899,7 +3899,7 @@
     },
     "/search/sentence_annotation": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns Sentence Annotations.",
         "operationId": "search_sentence_annotations",
         "requestBody": {
@@ -3925,7 +3925,7 @@
     },
     "/search/sentence_annotation/groups": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns paginated Sentence Annotation groups.",
         "operationId": "search_sentence_annotation_groups",
         "requestBody": {
@@ -3949,7 +3949,7 @@
     },
     "/search/bbox_annotation_info": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns BBoxAnnotationSearch Info.",
         "operationId": "search_bbox_annotation_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -3983,7 +3983,7 @@
     },
     "/search/bbox_annotation": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns BBox Annotations.",
         "operationId": "search_bbox_annotations",
         "requestBody": {
@@ -4005,7 +4005,7 @@
     },
     "/search/bbox_annotation/groups": {
       "post": {
-        "tags": ["search", "mcp"],
+        "tags": ["search"],
         "summary": "Returns paginated BBox Annotation groups.",
         "operationId": "search_bbox_annotation_groups",
         "requestBody": {
@@ -4253,7 +4253,7 @@
     },
     "/sentence": {
       "put": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Creates a SentenceAnnotation",
         "operationId": "create_sentence_annotation",
         "requestBody": {
@@ -4275,7 +4275,7 @@
     },
     "/sentence/bulk/create": {
       "put": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Creates SentenceAnnotations in Bulk",
         "operationId": "create_sentence_annotations_bulk",
         "requestBody": {
@@ -4313,7 +4313,7 @@
     },
     "/sentence/{sentence_anno_id}": {
       "get": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Returns the SentenceAnnotation with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4337,7 +4337,7 @@
         }
       },
       "patch": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Updates the SentenceAnnotation with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4365,7 +4365,7 @@
         }
       },
       "delete": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Deletes the SentenceAnnotation with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4391,7 +4391,7 @@
     },
     "/sentence/sdoc/{sdoc_id}/user/{user_id}": {
       "get": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Returns all SentenceAnnotations of the User for the SourceDocument",
         "operationId": "get_by_sdoc_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4413,7 +4413,7 @@
     },
     "/sentence/code/{code_id}/user": {
       "get": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Returns SentenceAnnotations with the given Code of the logged-in User",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4442,7 +4442,7 @@
     },
     "/sentence/bulk/update": {
       "patch": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Updates SentenceAnnotation in Bulk",
         "operationId": "update_sentence_annotations_bulk",
         "requestBody": {
@@ -4480,7 +4480,7 @@
     },
     "/sentence/bulk/delete": {
       "delete": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Deletes all SentenceAnnotations with the given IDs.",
         "operationId": "delete_sentence_annotations_bulk",
         "requestBody": {
@@ -4514,7 +4514,7 @@
     },
     "/sentence/count_annotations/{user_id}": {
       "post": {
-        "tags": ["sentenceAnnotation", "mcp"],
+        "tags": ["sentenceAnnotation"],
         "summary": "Counts the SentenceAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)",
         "operationId": "count_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4625,7 +4625,7 @@
     },
     "/sdoc/{sdoc_id}": {
       "get": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Returns the SourceDocument with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4650,7 +4650,7 @@
         }
       },
       "patch": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Updates the SourceDocument with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4673,7 +4673,7 @@
         }
       },
       "delete": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Removes the SourceDocument with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4694,7 +4694,7 @@
     },
     "/sdoc/data/{sdoc_id}": {
       "get": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Returns the SourceDocumentData with the given ID if it exists",
         "operationId": "get_by_id_with_data",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4721,7 +4721,7 @@
     },
     "/sdoc/{sdoc_id}/same_folder": {
       "get": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.",
         "operationId": "get_same_folder_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4750,7 +4750,7 @@
     },
     "/sdoc/{sdoc_id}/url": {
       "get": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
         "operationId": "get_file_url",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4791,7 +4791,7 @@
     },
     "/sdoc/{sdoc_id}/annotators": {
       "get": {
-        "tags": ["sourceDocument", "mcp"],
+        "tags": ["sourceDocument"],
         "summary": "Returns IDs of users that annotated that SourceDocument.",
         "operationId": "get_annotators",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4820,7 +4820,7 @@
     },
     "/sdocmeta/{metadata_id}": {
       "get": {
-        "tags": ["sdocMetadata", "mcp"],
+        "tags": ["sdocMetadata"],
         "summary": "Returns the Metadata with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4846,7 +4846,7 @@
         }
       },
       "patch": {
-        "tags": ["sdocMetadata", "mcp"],
+        "tags": ["sdocMetadata"],
         "summary": "Updates the Metadata with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4878,7 +4878,7 @@
         }
       },
       "delete": {
-        "tags": ["sdocMetadata", "mcp"],
+        "tags": ["sdocMetadata"],
         "summary": "Deletes the Metadata with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4906,7 +4906,7 @@
     },
     "/sdocmeta/sdoc/{sdoc_id}": {
       "get": {
-        "tags": ["sdocMetadata", "mcp"],
+        "tags": ["sdocMetadata"],
         "summary": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
         "operationId": "get_by_sdoc",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4935,7 +4935,7 @@
     },
     "/sdocmeta/sdoc/{sdoc_id}/metadata/{metadata_key}": {
       "get": {
-        "tags": ["sdocMetadata", "mcp"],
+        "tags": ["sdocMetadata"],
         "summary": "Returns the SourceDocumentMetadata with the given Key if it exists.",
         "operationId": "get_by_sdoc_and_key",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -4964,7 +4964,7 @@
     },
     "/sdocmeta/bulk/update": {
       "patch": {
-        "tags": ["sdocMetadata", "mcp"],
+        "tags": ["sdocMetadata"],
         "summary": "Updates multiple metadata objects at once.",
         "operationId": "update_bulk",
         "requestBody": {
@@ -5002,7 +5002,7 @@
     },
     "/span": {
       "put": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Creates a SpanAnnotation",
         "operationId": "create_span_annotation",
         "requestBody": {
@@ -5024,7 +5024,7 @@
     },
     "/span/bulk/create": {
       "put": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Creates SpanAnnotations in Bulk",
         "operationId": "create_span_annotations_bulk",
         "requestBody": {
@@ -5062,7 +5062,7 @@
     },
     "/span/{span_id}": {
       "get": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Returns the SpanAnnotation with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5081,7 +5081,7 @@
         }
       },
       "patch": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Updates the SpanAnnotation with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5104,7 +5104,7 @@
         }
       },
       "delete": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Deletes the SpanAnnotation with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5125,7 +5125,7 @@
     },
     "/span/sdoc/{sdoc_id}/user/{user_id}": {
       "get": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Returns all SpanAnnotations of the User for the SourceDocument",
         "operationId": "get_by_sdoc_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5155,7 +5155,7 @@
     },
     "/span/{span_id}/groups": {
       "get": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Returns all SpanGroups that contain the the SpanAnnotation.",
         "operationId": "get_all_groups",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5182,7 +5182,7 @@
         }
       },
       "delete": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Removes the SpanAnnotation from all SpanGroups",
         "operationId": "remove_from_all_groups",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5203,7 +5203,7 @@
     },
     "/span/code/{code_id}/user": {
       "get": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Returns SpanAnnotations with the given Code of the logged-in User",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5232,7 +5232,7 @@
     },
     "/span/bulk/update": {
       "patch": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Updates SpanAnnotations in Bulk",
         "operationId": "update_span_annotations_bulk",
         "requestBody": {
@@ -5270,7 +5270,7 @@
     },
     "/span/{span_id}/group/{group_id}": {
       "patch": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Adds the SpanAnnotation to the SpanGroup",
         "operationId": "add_to_group",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5290,7 +5290,7 @@
         }
       },
       "delete": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Removes the SpanAnnotation from the SpanGroup",
         "operationId": "remove_from_group",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5312,7 +5312,7 @@
     },
     "/span/bulk/delete": {
       "delete": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Deletes all SpanAnnotations with the given IDs.",
         "operationId": "delete_span_annotations_bulk",
         "requestBody": {
@@ -5346,7 +5346,7 @@
     },
     "/span/count_annotations/{user_id}": {
       "post": {
-        "tags": ["spanAnnotation", "mcp"],
+        "tags": ["spanAnnotation"],
         "summary": "Counts the SpanAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)",
         "operationId": "count_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5769,7 +5769,7 @@
     },
     "/tag": {
       "put": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Creates a new Tag and returns it with the generated ID.",
         "operationId": "create_doc_tag",
         "requestBody": {
@@ -5791,7 +5791,7 @@
     },
     "/tag/{tag_id}": {
       "get": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Returns the Tag with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5810,7 +5810,7 @@
         }
       },
       "patch": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Updates the Tag with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5833,7 +5833,7 @@
         }
       },
       "delete": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Deletes the Tag with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5854,7 +5854,7 @@
     },
     "/tag/project/{proj_id}": {
       "get": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Returns all Tags of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5883,7 +5883,7 @@
     },
     "/tag/sdoc/{sdoc_id}": {
       "get": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Returns all TagIDs linked with the SourceDocument.",
         "operationId": "get_by_sdoc",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5908,7 +5908,7 @@
     },
     "/tag/{tag_id}/sdocs": {
       "get": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
         "operationId": "get_sdoc_ids_by_tag_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -5937,7 +5937,7 @@
     },
     "/tag/bulk/link": {
       "patch": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Links multiple Tags with the SourceDocuments and returns the resulting tags per document",
         "operationId": "link_multiple_tags",
         "requestBody": {
@@ -5961,7 +5961,7 @@
     },
     "/tag/bulk/set": {
       "patch": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document",
         "operationId": "set_tags_batch",
         "requestBody": {
@@ -5983,7 +5983,7 @@
     },
     "/tag/bulk/update": {
       "patch": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Updates SourceDocuments' tags and returns the resulting tags per document",
         "operationId": "update_tags_batch",
         "requestBody": {
@@ -6007,7 +6007,7 @@
     },
     "/tag/bulk/unlink": {
       "delete": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Unlinks all Tags with the SourceDocuments and returns the resulting tags per document",
         "operationId": "unlink_multiple_tags",
         "requestBody": {
@@ -6031,7 +6031,7 @@
     },
     "/tag/sdoc_counts/{project_id}": {
       "post": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
         "operationId": "get_sdoc_counts",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -6071,7 +6071,7 @@
     },
     "/tag/count_tags/{user_id}": {
       "post": {
-        "tags": ["tag", "mcp"],
+        "tags": ["tag"],
         "summary": "Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)",
         "operationId": "count_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -6387,7 +6387,7 @@
     },
     "/user/me": {
       "get": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Returns the current (logged in) user",
         "operationId": "get_me",
         "responses": {
@@ -6401,7 +6401,7 @@
     },
     "/user/by_id/{user_id}": {
       "get": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Returns the User with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -6422,7 +6422,7 @@
     },
     "/user/{proj_id}/user": {
       "get": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Returns all Users of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -6449,7 +6449,7 @@
         }
       },
       "patch": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Associates an existing User to the Project with the given ID if it exists",
         "operationId": "associate_user_to_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -6474,7 +6474,7 @@
     },
     "/user/all": {
       "get": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Returns all Users that exist in the system",
         "operationId": "get_all",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -6524,7 +6524,7 @@
     },
     "/user/": {
       "delete": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Removes the logged-in User",
         "operationId": "delete_me",
         "responses": {
@@ -6536,7 +6536,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       },
       "patch": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Updates the logged-in User",
         "operationId": "update_me",
         "requestBody": {
@@ -6558,7 +6558,7 @@
     },
     "/user/{proj_id}/user/{user_id}": {
       "delete": {
-        "tags": ["user", "mcp"],
+        "tags": ["user"],
         "summary": "Dissociates the Users with the Project with the given ID if it exists",
         "operationId": "dissociate_user_from_project",
         "security": [{ "OAuth2PasswordBearer": [] }],

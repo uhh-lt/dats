@@ -58,7 +58,14 @@ function downloadOpenapi(onDone) {
         const openapi = JSON.parse(rawData);
         console.log("Downloaded new openapi.json");
 
-        // modify openapi file: strip the "<tag>-" prefix from operationIds
+        // modify openapi file:
+        // 1. strip the "<tag>-" prefix from operationIds
+        // 2. keep only the FIRST tag per operation. The generator
+        //    (openapi-typescript-codegen) emits one service per tag and
+        //    duplicates multi-tag operations into each of them. The backend
+        //    uses secondary tags purely as markers (e.g. "mcp" marks routes
+        //    exposed as MCP tools), so we group by the first tag only.
+        const strippedTags = new Map(); // stripped tag -> operation count
         Object.values(openapi.paths).forEach((pathData) => {
           Object.values(pathData).forEach((operation) => {
             let tag = operation.tags[0];
@@ -66,6 +73,11 @@ function downloadOpenapi(onDone) {
             let toRemove = `${tag}-`;
             let newOperationId = operationId.replace(toRemove, "");
             operation.operationId = newOperationId;
+
+            operation.tags.slice(1).forEach((stripped) => {
+              strippedTags.set(stripped, (strippedTags.get(stripped) ?? 0) + 1);
+            });
+            operation.tags = [tag];
           });
         });
         console.log("Modified openapi.json");
@@ -83,6 +95,12 @@ function downloadOpenapi(onDone) {
           }
           console.log(stdout);
           console.log(stderr);
+          if (strippedTags.size > 0) {
+            console.log("Stripped secondary tags (services NOT generated, would duplicate first-tag services):");
+            for (const [tag, count] of [...strippedTags.entries()].sort()) {
+              console.log(`  - "${tag}" (${count} operations)`);
+            }
+          }
           onDone();
         });
       } catch (e) {
