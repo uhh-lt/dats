@@ -1,5 +1,6 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
+import type { UserRead } from "@models/UserRead";
 import type { WebSocketEventMap } from "@models/websocketEvents";
 import {
   appendListItem,
@@ -58,6 +59,13 @@ export type EntityEventMap = Pick<
   | "ASPECT_CREATED"
   | "ASPECT_UPDATED"
   | "ASPECT_DELETED"
+  | "PROJECT_CREATED"
+  | "PROJECT_UPDATED"
+  | "PROJECT_DELETED"
+  | "USER_UPDATED"
+  | "USER_DELETED"
+  | "API_KEY_CREATED"
+  | "API_KEY_DELETED"
 >;
 
 export type EntityEventType = keyof EntityEventMap;
@@ -226,6 +234,39 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
       break;
     case "ASPECT_DELETED":
       removeMapItem([QueryKey.PROJECT_ASPECTS, event.payload.project_id], event.payload.id);
+      break;
+
+    // ── Projects ────────────────────────────────────────────────────────────
+    case "PROJECT_CREATED":
+      appendListItem([QueryKey.USER_PROJECTS], event.payload);
+      break;
+    case "PROJECT_UPDATED":
+      replaceListItem([QueryKey.USER_PROJECTS], event.payload);
+      break;
+    case "PROJECT_DELETED":
+      removeListItem([QueryKey.USER_PROJECTS], event.payload.id);
+      break;
+
+    // ── Users ───────────────────────────────────────────────────────────────
+    case "USER_UPDATED":
+      sweepPrefix<UserRead[]>([QueryKey.PROJECT_USERS], (old) =>
+        old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
+      );
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ME] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_ANNOTATORS] });
+      break;
+    case "USER_DELETED":
+      sweepPrefix<UserRead[]>([QueryKey.PROJECT_USERS], (old) =>
+        old ? old.filter((user) => user.id !== event.payload.id) : old,
+      );
+      break;
+
+    // ── API keys ────────────────────────────────────────────────────────────
+    case "API_KEY_CREATED":
+      appendListItem([QueryKey.USER_API_KEYS], event.payload);
+      break;
+    case "API_KEY_DELETED":
+      removeListItem([QueryKey.USER_API_KEYS], event.payload.id);
       break;
 
     default: {

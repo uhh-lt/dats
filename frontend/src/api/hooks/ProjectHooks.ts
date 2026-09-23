@@ -1,4 +1,3 @@
-import { queryClient } from "@api/queryClient";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
@@ -41,12 +40,8 @@ const useCreateProject = () => {
     mutationFn: async ({ requestBody }: { requestBody: ProjectCreate }) => {
       return await ProjectService.createProject({ requestBody });
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<ProjectRead[]>([QueryKey.USER_PROJECTS], (oldData) =>
-        oldData ? [...oldData, data] : [data],
-      );
-    },
     meta: {
+      entityEvent: "PROJECT_CREATED",
       successMessage: (project: ProjectRead) => `Successfully Created Project "${project.title}" (ID: ${project.id})`,
     },
   });
@@ -55,12 +50,8 @@ const useCreateProject = () => {
 const useUpdateProject = () =>
   useMutation({
     mutationFn: ProjectService.updateProject,
-    onSuccess: (data) => {
-      queryClient.setQueryData<ProjectRead[]>([QueryKey.USER_PROJECTS], (oldData) =>
-        oldData ? oldData.map((project) => (project.id === data.id ? data : project)) : oldData,
-      );
-    },
     meta: {
+      entityEvent: "PROJECT_UPDATED",
       successMessage: (data: ProjectRead) => `Successfully Updated Project "${data.title}"`,
     },
   });
@@ -68,12 +59,8 @@ const useUpdateProject = () =>
 const useDeleteProject = () =>
   useMutation({
     mutationFn: ProjectService.deleteProject,
-    onSuccess: (data) => {
-      queryClient.setQueryData<ProjectRead[]>([QueryKey.USER_PROJECTS], (oldData) =>
-        oldData ? oldData.filter((project) => project.id !== data.id) : oldData,
-      );
-    },
     meta: {
+      entityEvent: "PROJECT_DELETED",
       successMessage: (data: ProjectRead) => `Successfully Deleted Project "${data.title}"`,
     },
   });
