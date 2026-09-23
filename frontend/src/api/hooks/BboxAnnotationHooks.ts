@@ -46,7 +46,7 @@ const useCreateBBoxAnnotation = () =>
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
     meta: {
-      entityEvent: "BBOX_ANNOTATION_CREATED",
+      datsEvent: "BBOX_ANNOTATION_CREATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
     },
   });
@@ -89,7 +89,7 @@ const useUpdateBBoxAnnotation = () =>
       queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
     },
     meta: {
-      entityEvent: "BBOX_ANNOTATION_UPDATED",
+      datsEvent: "BBOX_ANNOTATION_UPDATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Updated Bounding Box Annotation ${bbox.id}`,
     },
   });
@@ -98,7 +98,7 @@ const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
     meta: {
-      entityEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
+      datsEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Updated ${data.length} BBox Annotations`,
     },
   });
@@ -126,7 +126,7 @@ const useDeleteBBoxAnnotation = () =>
       queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
     },
     meta: {
-      entityEvent: "BBOX_ANNOTATION_DELETED",
+      datsEvent: "BBOX_ANNOTATION_DELETED",
       successMessage: (bbox: BBoxAnnotationRead) => `Deleted Bounding Box Annotation ${bbox.id}`,
     },
   });
@@ -135,7 +135,7 @@ const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
     meta: {
-      entityEvent: "BBOX_ANNOTATION_DELETED_BATCH",
+      datsEvent: "BBOX_ANNOTATION_DELETED_BATCH",
       successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,
     },
   });

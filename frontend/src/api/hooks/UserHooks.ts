@@ -39,7 +39,7 @@ const useUpdate = () =>
   useMutation({
     mutationFn: UserService.updateMe,
     meta: {
-      entityEvent: "USER_UPDATED",
+      datsEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Updated user ${user.first_name} ${user.last_name}`,
     },
   });

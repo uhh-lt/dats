@@ -36,7 +36,7 @@ const useCreateSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.createSentenceAnnotation,
     meta: {
-      entityEvent: "SENTENCE_ANNOTATION_CREATED",
+      datsEvent: "SENTENCE_ANNOTATION_CREATED",
       successMessage: (data: SentenceAnnotationRead) => `Created Sentence Annotation ${data.id}`,
     },
   });
@@ -45,7 +45,7 @@ const useCreateBulkSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.createSentenceAnnotationsBulk,
     meta: {
-      entityEvent: "SENTENCE_ANNOTATION_CREATED_BATCH",
+      datsEvent: "SENTENCE_ANNOTATION_CREATED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Created ${data.length} Sentence Annotations`,
     },
   });
@@ -134,7 +134,7 @@ const useUpdateSentenceAnnotation = () =>
       queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousAnnos);
     },
     meta: {
-      entityEvent: "SENTENCE_ANNOTATION_UPDATED",
+      datsEvent: "SENTENCE_ANNOTATION_UPDATED",
       successMessage: (data: SentenceAnnotationRead) => `Updated Sentence Annotation ${data.id}`,
     },
   });
@@ -143,7 +143,7 @@ const useUpdateBulkSentenceAnno = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.updateSentenceAnnotationsBulk,
     meta: {
-      entityEvent: "SENTENCE_ANNOTATION_UPDATED_BATCH",
+      datsEvent: "SENTENCE_ANNOTATION_UPDATED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Updated ${data.length} Sentence Annotations`,
     },
   });
@@ -181,7 +181,7 @@ const useDeleteSentenceAnnotation = () =>
       queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousSentenceAnnotator);
     },
     meta: {
-      entityEvent: "SENTENCE_ANNOTATION_DELETED",
+      datsEvent: "SENTENCE_ANNOTATION_DELETED",
       successMessage: (data: SentenceAnnotationRead) => `Deleted Sentence Annotation ${data.id}`,
     },
   });
@@ -190,7 +190,7 @@ const useDeleteBulkSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.deleteSentenceAnnotationsBulk,
     meta: {
-      entityEvent: "SENTENCE_ANNOTATION_DELETED_BATCH",
+      datsEvent: "SENTENCE_ANNOTATION_DELETED_BATCH",
       successMessage: (data: SentenceAnnotationRead[]) => `Deleted ${data.length} Sentence Annotations`,
     },
   });

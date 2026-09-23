@@ -1,8 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
+import type { DATSEvent } from "@models/datsEvents";
 import { SearchEntityType } from "@models/SearchEntityType";
 import type { UserRead } from "@models/UserRead";
-import type { WebSocketEventMap } from "@models/websocketEvents";
 import {
   appendListItem,
   removeListItem,
@@ -13,6 +13,7 @@ import {
   sweepPrefix,
   upsertMapItem,
 } from "./cacheWriterUtils";
+import { writeJobUpdate } from "./jobCacheUtils";
 import {
   appendMemo,
   invalidateAttachedObjectMemoIds,
@@ -22,111 +23,29 @@ import {
 } from "./memoInvalidationUtils";
 import { removeSentenceAnnotation, upsertSentenceAnnotation } from "./sentenceAnnoCacheUtils";
 
-/**
- * The entity events the brain knows how to apply to the cache. This is a
- * subset of the generated `WebSocketEventMap` — the backend emits the same
- * DTO that the mutation endpoint returns, so one handler serves both sources.
- *
- * When adding a new entity, extend this Pick, add a case to the brain's
- * switch, and tag the mutation with `meta.entityEvent`.
- */
-export type EntityEventMap = Pick<
-  WebSocketEventMap,
-  | "CODE_CREATED"
-  | "CODE_UPDATED"
-  | "CODE_DELETED"
-  | "TAG_CREATED"
-  | "TAG_UPDATED"
-  | "TAG_DELETED"
-  | "MEMO_CREATED"
-  | "MEMO_UPDATED"
-  | "MEMO_UPDATED_BATCH"
-  | "MEMO_DELETED"
-  | "WHITEBOARD_CREATED"
-  | "WHITEBOARD_UPDATED"
-  | "WHITEBOARD_DELETED"
-  | "TIMELINE_ANALYSIS_CREATED"
-  | "TIMELINE_ANALYSIS_UPDATED"
-  | "TIMELINE_ANALYSIS_DELETED"
-  | "COTA_CREATED"
-  | "COTA_UPDATED"
-  | "COTA_DELETED"
-  | "FOLDER_CREATED"
-  | "FOLDER_UPDATED"
-  | "FOLDER_UPDATED_BATCH"
-  | "FOLDER_DELETED"
-  | "PROJECT_METADATA_CREATED"
-  | "PROJECT_METADATA_UPDATED"
-  | "PROJECT_METADATA_DELETED"
-  | "CLASSIFIER_UPDATED"
-  | "CLASSIFIER_DELETED"
-  | "ASPECT_CREATED"
-  | "ASPECT_UPDATED"
-  | "ASPECT_DELETED"
-  | "PROJECT_CREATED"
-  | "PROJECT_UPDATED"
-  | "PROJECT_DELETED"
-  | "USER_UPDATED"
-  | "USER_DELETED"
-  | "API_KEY_CREATED"
-  | "API_KEY_DELETED"
-  | "SDOC_UPDATED"
-  | "SDOC_DELETED"
-  | "SEARCH_VIEW_CREATED"
-  | "SEARCH_VIEW_UPDATED"
-  | "SEARCH_VIEW_DELETED"
-  | "SEARCH_VIEW_UPDATED_BATCH"
-  | "SPAN_ANNOTATION_CREATED"
-  | "SPAN_ANNOTATION_CREATED_BATCH"
-  | "SPAN_ANNOTATION_UPDATED"
-  | "SPAN_ANNOTATION_UPDATED_BATCH"
-  | "SPAN_ANNOTATION_DELETED"
-  | "SPAN_ANNOTATION_DELETED_BATCH"
-  | "BBOX_ANNOTATION_CREATED"
-  | "BBOX_ANNOTATION_UPDATED"
-  | "BBOX_ANNOTATION_UPDATED_BATCH"
-  | "BBOX_ANNOTATION_DELETED"
-  | "BBOX_ANNOTATION_DELETED_BATCH"
-  | "SENTENCE_ANNOTATION_CREATED"
-  | "SENTENCE_ANNOTATION_CREATED_BATCH"
-  | "SENTENCE_ANNOTATION_UPDATED"
-  | "SENTENCE_ANNOTATION_UPDATED_BATCH"
-  | "SENTENCE_ANNOTATION_DELETED"
-  | "SENTENCE_ANNOTATION_DELETED_BATCH"
-  | "SPAN_GROUP_CREATED"
-  | "SPAN_GROUP_UPDATED"
-  | "SPAN_GROUP_DELETED"
-  | "SDOC_TAGS_UPDATED"
-  | "SDOC_METADATA_UPDATED"
-  | "SDOC_METADATA_DELETED"
-  | "SDOC_METADATA_UPDATED_BATCH"
-  | "TAG_RECOMMENDATION_REVIEWED_BATCH"
-  | "PROJECT_USER_ADDED"
-  | "PROJECT_USER_REMOVED"
->;
-
-export type EntityEventType = keyof EntityEventMap;
-
-/** Discriminated union of all entity events. */
-export type EntityEvent = {
-  [K in EntityEventType]: { type: K; payload: EntityEventMap[K] };
-}[EntityEventType];
-
 /** Where an event originated. Currently informational (logging/debugging). */
-export type EntityEventSource = "mutation" | "websocket";
+export type DATSEventSource = "mutation" | "websocket";
 
 // ── The brain ────────────────────────────────────────────────────────────────
 
 /**
- * Central cache-update brain. Every entity event — whether it arrived as a
+ * Central cache-update brain. Every DATS event — whether it arrived as a
  * mutation response or a websocket push — is handled here exactly once.
+ * The event contract is the generated `DATSEvent` union (see
+ * src/models/datsEvents.ts); the backend emits the same DTO that the mutation
+ * endpoint returns, so one handler serves both sources.
  *
  * Entity caches are written directly (zero refetch); derived/search/statistics
  * caches are invalidated. The `source` is currently only used for debugging.
  */
-export function handleEntityEvent(event: EntityEvent, source: EntityEventSource): void {
+export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void {
   void source;
   switch (event.type) {
+    // ── Jobs ──────────────────────────────────────────────────────────────
+    case "JOB_UPDATED":
+      writeJobUpdate(event.payload);
+      break;
+
     // ── Codes ─────────────────────────────────────────────────────────────
     case "CODE_CREATED":
       upsertMapItem([QueryKey.PROJECT_CODES, event.payload.project_id], event.payload);

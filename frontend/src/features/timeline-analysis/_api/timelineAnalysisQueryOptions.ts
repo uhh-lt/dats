@@ -23,7 +23,7 @@ export const useCreateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.create,
     meta: {
-      entityEvent: "TIMELINE_ANALYSIS_CREATED",
+      datsEvent: "TIMELINE_ANALYSIS_CREATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Created Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -32,7 +32,7 @@ export const useUpdateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.updateById,
     meta: {
-      entityEvent: "TIMELINE_ANALYSIS_UPDATED",
+      datsEvent: "TIMELINE_ANALYSIS_UPDATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Updated Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -41,7 +41,7 @@ export const useRecomputeTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.recomputeById,
     meta: {
-      entityEvent: "TIMELINE_ANALYSIS_UPDATED",
+      datsEvent: "TIMELINE_ANALYSIS_UPDATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Recomputed Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -50,7 +50,7 @@ export const useDuplicateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.duplicateById,
     meta: {
-      entityEvent: "TIMELINE_ANALYSIS_CREATED",
+      datsEvent: "TIMELINE_ANALYSIS_CREATED",
       successMessage: (timeline: TimelineAnalysisRead) => `Duplicated Timeline Analysis "${timeline.name}"`,
     },
   });
@@ -59,7 +59,7 @@ export const useDeleteTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.deleteById,
     meta: {
-      entityEvent: "TIMELINE_ANALYSIS_DELETED",
+      datsEvent: "TIMELINE_ANALYSIS_DELETED",
       successMessage: (timeline: TimelineAnalysisRead) => `Deleted Timeline Analysis "${timeline.name}"`,
     },
   });

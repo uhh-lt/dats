@@ -53,7 +53,7 @@ const useCreateProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.createMetadata,
     meta: {
-      entityEvent: "PROJECT_METADATA_CREATED",
+      datsEvent: "PROJECT_METADATA_CREATED",
       successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
       errorMessage: (error: { status: number }) =>
         error.status === 409 ? "Key already exists" : "Could not add metadata",
@@ -64,7 +64,7 @@ const useUpdateProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.updateById,
     meta: {
-      entityEvent: "PROJECT_METADATA_UPDATED",
+      datsEvent: "PROJECT_METADATA_UPDATED",
       successMessage: (projectMetadata: ProjectMetadataRead) =>
         `Updated projectMetadata ${projectMetadata.id} for project ${projectMetadata.project_id}`,
     },
@@ -74,7 +74,7 @@ const useDeleteProjectMetadata = () =>
   useMutation({
     mutationFn: ProjectMetadataService.deleteById,
     meta: {
-      entityEvent: "PROJECT_METADATA_DELETED",
+      datsEvent: "PROJECT_METADATA_DELETED",
       successMessage: (data: ProjectMetadataRead) => `Deleted metadata "${data.key}"`,
     },
   });
