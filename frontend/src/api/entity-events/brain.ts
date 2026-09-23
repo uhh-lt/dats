@@ -497,13 +497,15 @@ export function handleEntityEvent(event: EntityEvent, source: EntityEventSource)
       break;
 
     // ── Source document tags ────────────────────────────────────────────────
-    // The complete tag set of one or more sdocs changed; refresh the affected
-    // sdoc-tag queries and any tag-count aggregates.
+    // The payload carries the complete new tag list per sdoc — write it
+    // directly. Tag-count aggregates cannot be derived from the links, so
+    // those are invalidated.
     case "SDOC_TAGS_UPDATED":
-      Object.keys(event.payload.links).forEach((sdocId) => {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, Number(sdocId)] });
+      Object.entries(event.payload.links).forEach(([sdocId, tagIds]) => {
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       break;
 
     // ── Source document metadata ────────────────────────────────────────────
