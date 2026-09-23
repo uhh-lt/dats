@@ -268,6 +268,12 @@ def build_app(test_user: UserORM) -> FastAPI:
     # Import jobs first because they register generated routes on endpoint routers.
     import_by_suffix("_job.py")
 
+    # Build the JOB_UPDATED event models now that all jobs are registered
+    # (mirrors main.py). Idempotent, so safe across tests sharing the process.
+    from common.dats_event import build_job_event_models
+
+    build_job_event_models()
+
     # import & register all endpoints dynamically
     modules = import_by_suffix("_endpoint.py")
     modules.sort(key=lambda m: m.__name__)

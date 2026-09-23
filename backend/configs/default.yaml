@@ -78,6 +78,7 @@ redis:
   password: ${oc.env:REDIS_PASSWORD, "dats123"}
   rq_idx: ${oc.env:REDIS_INDEX, 10}
   ws_idx: ${oc.env:REDIS_WS_INDEX, 11}
+  ws_fanout_channel: ${oc.env:REDIS_WS_FANOUT_CHANNEL, "dats:ws:fanout"}
 
 elasticsearch:
   host: ${oc.env:ES_HOST, "127.0.0.1"}

@@ -1,6 +1,7 @@
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal, Union
 
+from loguru import logger
 from pydantic import BaseModel, create_model
 
 from core.annotation.bbox_annotation_dto import BBoxAnnotationRead
@@ -125,6 +126,8 @@ class DATSEvent(StrEnum):
     SEARCH_VIEW_DELETED = "SEARCH_VIEW_DELETED"
     SEARCH_VIEW_UPDATED_BATCH = "SEARCH_VIEW_UPDATED_BATCH"
 
+    JOB_UPDATED = "JOB_UPDATED"
+
 
 class DATSEventBase(BaseModel):
     """Common base for all DATS domain events.
@@ -216,6 +219,9 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.SEARCH_VIEW_UPDATED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_DELETED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_UPDATED_BATCH: list[SearchViewReadUnion],
+    # NOTE: DATSEvent.JOB_UPDATED is intentionally absent — its payload is a
+    # per-JobType union of concrete JobRead models, built lazily by
+    # build_job_event_models() once all jobs are registered.
 }
 
 
@@ -247,3 +253,53 @@ globals().update(
 DATS_EVENT_TO_MODEL: dict[DATSEvent, type[DATSEventBase]] = {
     et: globals()[_event_model_name(et)] for et in _DATS_EVENT_PAYLOADS
 }
+
+# Per-JobType concrete JobRead models, populated by build_job_event_models().
+# Used by job_events.publish_job_update to build a payload that is a member of
+# the JOB_UPDATED union (a parametrized generic alias instance is not).
+# Value type is `type[JobRead]` (JobRead imported lazily to avoid cycles).
+JOB_TYPE_TO_JOB_READ_MODEL: dict[object, Any] = {}
+
+
+def build_job_event_models() -> None:
+    """Build and register the JOB_UPDATED event model.
+
+    The payload is a Union over one concrete JobRead model per registered
+    JobType (mirroring the per-type models generated for the REST endpoints in
+    job_endpoint.py). Must be called once at startup AFTER all jobs are
+    registered (i.e. after `import_by_suffix("_job.py")`) and BEFORE
+    websocket_dto.py is first imported, since that module builds its
+    WebSocketEvent union from DATS_EVENT_TO_MODEL at import time.
+
+    Idempotent: subsequent calls are no-ops.
+    """
+    if DATSEvent.JOB_UPDATED in DATS_EVENT_TO_MODEL:
+        return
+
+    # Lazy imports: this module must not import JobService / job_dto at module
+    # level (import cycle: dats_event -> classifier_dto -> job_dto).
+    from systems.job_system.job_dto import JobRead
+    from systems.job_system.job_service import JobService
+
+    job_read_models: list[type[BaseModel]] = []
+    for job_type, registered_job in JobService().job_registry.items():
+        job_name = "".join([x.capitalize() for x in job_type.split("_")])
+        model = create_model(
+            f"{job_name}JobRead",
+            __base__=JobRead[
+                registered_job["input_type"], registered_job["output_type"]
+            ],
+        )
+        job_read_models.append(model)
+        JOB_TYPE_TO_JOB_READ_MODEL[job_type] = model
+
+    if not job_read_models:
+        logger.warning(
+            "build_job_event_models: no jobs registered, skipping JOB_UPDATED event model"
+        )
+        return
+
+    payload_union = Union[tuple(job_read_models)]
+    event_model = _make_event_model(DATSEvent.JOB_UPDATED, payload_union)
+    globals()[_event_model_name(DATSEvent.JOB_UPDATED)] = event_model
+    DATS_EVENT_TO_MODEL[DATSEvent.JOB_UPDATED] = event_model

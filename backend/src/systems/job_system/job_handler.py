@@ -11,12 +11,14 @@ from modules.doc_processing.doc_processing_pipeline import (
 )
 from systems.job_system.cuda_utils import ensure_cuda_available
 from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_events import publish_job_update
 from utils.gpu_utils import find_unused_cuda_device, set_cuda_memory_limit
 
 
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
     handle_job_started(jobtype, input=payload)
+    publish_job_update(job)
     try:
         # figure whether to run the job on gpu
         if job.job.origin.startswith("gpu"):
@@ -42,4 +44,5 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
 
     # successfully finished job:
     handle_job_finished(jobtype, input=payload, output=output)
+    publish_job_update(job, output_override=output)
     return output

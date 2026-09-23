@@ -262,6 +262,7 @@ class RedisConfig(BaseModel):
     password: SecretStr = Field(min_length=1)
     rq_idx: int = Field(ge=0)
     ws_idx: int = Field(ge=0)
+    ws_fanout_channel: str = Field(min_length=1)
 
 
 class LoggingConfig(BaseModel):
