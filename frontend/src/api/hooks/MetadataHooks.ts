@@ -1,4 +1,3 @@
-import { queryClient } from "@api/queryClient";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -201,14 +200,8 @@ const useGetSdocMetadataByKey = (sdocId: number | null | undefined, key: string)
 const useUpdateBulkSdocMetadata = () =>
   useMutation({
     mutationFn: SdocMetadataService.updateBulk,
-    onSuccess: (metadatas) => {
-      metadatas.forEach((metadata) => {
-        queryClient.setQueryData<SdocMetadataMap>([QueryKey.SDOC_METADATAS, metadata.source_document_id], (old) =>
-          old ? { ...old, [metadata.project_metadata_id]: metadata } : { [metadata.project_metadata_id]: metadata },
-        );
-      });
-    },
     meta: {
+      datsEvent: "SDOC_METADATA_UPDATED_BATCH",
       successMessage: (data: SourceDocumentMetadataRead[]) => `Updated ${data.length} document metadata values`,
     },
   });

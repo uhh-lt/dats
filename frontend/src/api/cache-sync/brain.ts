@@ -24,6 +24,7 @@ import {
   removeMemo,
   writeMemo,
 } from "./_utils/memoCacheUtils";
+import { removeSdocMetadata, upsertSdocMetadata } from "./_utils/sdocMetadataCacheUtils";
 import { removeSentenceAnnotation, upsertSentenceAnnotation } from "./_utils/sentenceAnnoCacheUtils";
 
 export type DATSEventSource = "mutation" | "websocket";
@@ -463,20 +464,29 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     // ── Source document metadata ────────────────────────────────────────────
+    // The SDOC_METADATAS cache is a per-sdoc map keyed by project_metadata_id —
+    // the payload carries both ids, so write it directly. SDOC_METADATA_BY_KEY
+    // is keyed by the metadata key string (absent from the payload) and is a
+    // legacy hook (TODO: REMOVE) — keep invalidating it.
     case "SDOC_METADATA_UPDATED":
+      upsertSdocMetadata(event.payload);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, event.payload.source_document_id] });
+      break;
     case "SDOC_METADATA_DELETED":
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, event.payload.source_document_id] });
+      removeSdocMetadata(event.payload);
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, event.payload.source_document_id] });
       break;
     case "SDOC_METADATA_UPDATED_BATCH":
       event.payload.forEach((metadata) => {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
+        upsertSdocMetadata(metadata);
         queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, metadata.source_document_id] });
       });
       break;
 
     // ── Tag recommendations ─────────────────────────────────────────────────
-    // Reviewed recommendations are grouped by their ML job; refresh those lists.
+    // The cached query holds per-sdoc aggregates (TagRecommendationResult)
+    // grouped from links + joined current tags — the flat link payload cannot
+    // be mapped onto it, so invalidate the affected job lists.
     case "TAG_RECOMMENDATION_REVIEWED_BATCH": {
       const mlJobIds = new Set(event.payload.map((link) => link.ml_job_id));
       mlJobIds.forEach((mlJobId) => {
