@@ -1,4 +1,4 @@
-import { handleDATSEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
 import { CodeRead } from "@models/CodeRead";

@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
-import { handleDATSEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/cache-sync";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";

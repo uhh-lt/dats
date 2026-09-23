@@ -1,5 +1,5 @@
+import { handleDATSEvent } from "@api/cache-sync";
 import { ApiError } from "@api/core/ApiError";
-import { handleDATSEvent } from "@api/entity-events/brain";
 // eslint-disable-next-line boundaries/element-types
 import { SnackbarActions } from "@core/notification";
 import type { DATSEvent } from "@models/datsEvents";

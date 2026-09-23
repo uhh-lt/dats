@@ -1,4 +1,4 @@
-import { handleDATSEvent } from "@api/entity-events/brain";
+import { handleDATSEvent } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
 import { FolderRead } from "@models/FolderRead";
