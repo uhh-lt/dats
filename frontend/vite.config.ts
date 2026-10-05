@@ -54,6 +54,10 @@ export default defineConfig(({ mode }) => {
             changeOrigin: true, // Required for virtual hosted sites
             rewrite: (path) => path.replace(/^\/content/, ""), // Optional: remove /content from the path
           },
+          "/mcp": {
+            target: env.FRONTEND_API_URL,
+            changeOrigin: true, // Required for virtual hosted sites
+          },
         },
       },
     };
