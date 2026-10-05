@@ -1,3 +1,9 @@
+---
+name: add-config
+description: add-config
+disable-model-invocation: true
+---
+
 ## Backend Configuration Details
 
 The backend configuration is managed using Omegaconf, allowing for flexible and hierarchical settings management:
