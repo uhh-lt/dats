@@ -14,7 +14,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { useAppSelector, useReduxConnector } from "@store/storeHooks";
-import { dateToLocaleDate } from "@utils/DateUtils";
+import { parseLocalYYYYMMDD } from "@utils/DateUtils";
 import { padStart } from "lodash";
 import {
   MRT_ColumnDef,
@@ -115,7 +115,8 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     const result: COTASentenceRow[] = [];
     cota.search_space.forEach((cotaSentence) => {
       // prepare date
-      const date = dateToLocaleDate(cotaSentence.date);
+      const date = parseLocalYYYYMMDD(cotaSentence.date);
+      if (!date) return;
       let dateStr = "";
       switch (cota.timeline_settings.group_by) {
         case DateGroupBy.DAY:

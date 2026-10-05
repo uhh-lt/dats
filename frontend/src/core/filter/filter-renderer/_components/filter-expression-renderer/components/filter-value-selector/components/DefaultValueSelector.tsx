@@ -1,6 +1,6 @@
 import { FilterOperator } from "@models/FilterOperator";
 import { Autocomplete, Button, ButtonGroup, Chip, TextField } from "@mui/material";
-import { dateToLocaleYYYYMMDDString, isValidDateString } from "@utils/DateUtils";
+import { isValidDateString, toLocalYYYYMMDD } from "@utils/DateUtils";
 import { ChangeEvent, KeyboardEvent, SyntheticEvent, memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
@@ -110,7 +110,7 @@ export const DefaultValueSelector = memo(({ filterExpression, onChangeValue, ope
           value={
             typeof filterExpression.value === "string" && isValidDateString(filterExpression.value)
               ? filterExpression.value
-              : dateToLocaleYYYYMMDDString(new Date())
+              : toLocalYYYYMMDD(new Date())
           }
           onChange={handleDateChange}
           fullWidth

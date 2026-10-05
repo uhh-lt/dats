@@ -3,7 +3,7 @@ import { JobListItem } from "@core/job";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
 
 interface CrawlerJobListItemProps {
@@ -15,7 +15,7 @@ export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListIte
   const crawlerJob = DocProcessingHooks.useLiveCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
 
   const dateString = useMemo(() => {
-    return dateToLocaleString(initialCrawlerJob.created);
+    return formatDateTime(initialCrawlerJob.created);
   }, [initialCrawlerJob.created]);
 
   if (crawlerJob.isSuccess) {

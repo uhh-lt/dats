@@ -28,10 +28,12 @@ class MemoORM(ORMBase):
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     content_json: Mapped[str] = mapped_column(String, nullable=False, index=False)
     created: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     updated: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
     # one to one
@@ -129,7 +131,10 @@ class MemoRecentORM(ORMBase):
         primary_key=True,
     )
     last_opened: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
     # many to one

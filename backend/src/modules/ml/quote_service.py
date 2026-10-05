@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import NamedTuple
 from uuid import uuid4
 
@@ -223,7 +223,7 @@ class QuoteService(metaclass=SingletonMeta):
                     id=doc.id,
                     type=JobType.QUOTATION_ATTRIBUTION,
                     status=JobStatus.FINISHED,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(UTC),
                 )
                 for doc in quote_output.documents
             ],

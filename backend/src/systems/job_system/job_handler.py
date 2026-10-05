@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from loguru import logger
 
@@ -40,7 +40,7 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
         raise e
     finally:
         # always set the time the job ended
-        job.update(finished=datetime.now())
+        job.update(finished=datetime.now(UTC))
 
     # successfully finished job:
     handle_job_finished(jobtype, input=payload, output=output)

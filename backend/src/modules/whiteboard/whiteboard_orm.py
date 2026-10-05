@@ -13,10 +13,12 @@ if TYPE_CHECKING:
 class WhiteboardORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     created: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     updated: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
     title: Mapped[str] = mapped_column(String, nullable=False, index=False)

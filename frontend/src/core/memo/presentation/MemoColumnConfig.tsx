@@ -3,7 +3,7 @@ import { leafColumn, WorkspaceTableRow } from "@core/workspace";
 import { MemoColumns } from "@models/MemoColumns";
 import { MemoRead } from "@models/MemoRead";
 import { Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { formatOptionLabel } from "@utils/StringUtils";
 import { MRT_ColumnDef } from "material-react-table";
 import { MemoFavoriteIconButton } from "../MemoFavoriteIconButton";
@@ -109,13 +109,13 @@ export const memoTableColumns: MRT_ColumnDef<WorkspaceTableRow<MemoRead>>[] = ((
       id: MemoColumns.M_CREATED,
       header: "Created",
       size: 180,
-      cell: (memo) => dateToLocaleString(memo.created),
+      cell: (memo) => formatDateTime(memo.created),
     }),
     [MemoColumns.M_UPDATED]: leafColumn<MemoRead>({
       id: MemoColumns.M_UPDATED,
       header: "Updated",
       size: 180,
-      cell: (memo) => dateToLocaleString(memo.updated),
+      cell: (memo) => formatDateTime(memo.updated),
     }),
     [MemoColumns.M_FAVORITE]: leafColumn<MemoRead>({
       id: MemoColumns.M_FAVORITE,

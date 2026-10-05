@@ -22,7 +22,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { dateToLocaleDate } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { Fragment, useMemo, useState } from "react";
 import { ClassifierConfusionMatrixPlot } from "./ClassifierConfusionMatrixPlot";
 import { ClassifierDataPlot } from "./ClassifierDataPlot";
@@ -94,7 +94,7 @@ function EvaluationDetails({
   return (
     <Box width="100%">
       <Typography variant="h6" mb={1}>
-        Evaluation ({dateToLocaleDate(evaluation.created).toLocaleString()})
+        Evaluation ({formatDateTime(evaluation.created)})
       </Typography>
       <Stack direction="row" spacing={4} alignItems="flex-start" width="100%">
         <Box width="100%">

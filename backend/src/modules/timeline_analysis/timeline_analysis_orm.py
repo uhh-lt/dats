@@ -30,10 +30,10 @@ class TimelineAnalysisORM(ORMBase):
     )
 
     created: Mapped[datetime | None] = mapped_column(
-        DateTime, server_default=func.now(), index=False
+        DateTime(timezone=True), server_default=func.now(), index=False
     )
     updated: Mapped[datetime | None] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.current_timestamp(),
         index=False,

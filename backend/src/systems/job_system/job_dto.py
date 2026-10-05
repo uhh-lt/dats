@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Generic, TypeVar
 
 import rq
@@ -140,6 +140,6 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
             steps=job.job.meta.get("steps", ["Initial step"]),
             input=job.job.kwargs["payload"],
             output=job.job.return_value(),
-            created=job.job.meta.get("created", datetime.now()),
+            created=job.job.meta.get("created", datetime.now(UTC)),
             finished=job.job.meta.get("finished", None),
         )

@@ -10,7 +10,6 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { Box, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { dateToLocaleYYYYMMDDString } from "@utils/DateUtils";
 import { isValidHttpUrl } from "@utils/URLUtils";
 import { memo, useCallback, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -60,7 +59,7 @@ function SdocMetadataRowContent({
     values: {
       str_value: metadata.str_value,
       int_value: metadata.int_value,
-      date_value: metadata.date_value ? dateToLocaleYYYYMMDDString(metadata.date_value) : metadata.date_value,
+      date_value: metadata.date_value,
       boolean_value: metadata.boolean_value,
       list_value: metadata.list_value,
     },
@@ -83,7 +82,7 @@ function SdocMetadataRowContent({
         onUpdateMetadata({
           str_value: data.str_value,
           int_value: data.int_value,
-          date_value: data.date_value ? new Date(data.date_value).toISOString() : data.date_value,
+          date_value: data.date_value,
           boolean_value: data.boolean_value,
           list_value: data.list_value,
         });

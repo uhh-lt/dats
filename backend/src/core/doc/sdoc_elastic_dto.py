@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import Field
 
@@ -15,7 +15,8 @@ class ElasticSearchDocument(ElasticSearchModelBase):
         description="The ID of the Project the SourceDocument belongs to"
     )
     created: datetime = Field(
-        description="The created date of the SourceDocument", default=datetime.now()
+        description="The created date of the SourceDocument",
+        default_factory=lambda: datetime.now(UTC),
     )
 
     def get_id(self) -> int:

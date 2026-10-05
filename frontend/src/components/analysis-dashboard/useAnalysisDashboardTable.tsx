@@ -1,6 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { Box, Button, CircularProgress, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import {
   createRow,
   MRT_ColumnDef,
@@ -74,7 +74,7 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
       {
         id: "updated",
         header: "Last modified",
-        accessorFn: (params) => dateToLocaleString(params.updated as string),
+        accessorFn: (params) => formatDateTime(params.updated as string),
         enableEditing: false,
       },
       ...(props.additionalColumns ?? []),

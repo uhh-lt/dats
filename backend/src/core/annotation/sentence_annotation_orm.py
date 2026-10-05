@@ -19,10 +19,12 @@ class SentenceAnnotationORM(ORMBase):
     sentence_id_start: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     sentence_id_end: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     updated: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
     # one to one

@@ -2,7 +2,7 @@ import { MemoHooks } from "@api/hooks/MemoHooks";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { Box, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
-import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
+import { formatDate, formatRelativeTime } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
@@ -104,9 +104,9 @@ const MemoListItemWithData = memo(
                 )}
                 {(renderUpdatedDate || renderCreatedDate) && (
                   <Typography variant="caption" color="text.secondary" noWrap>
-                    {renderUpdatedDate && `Updated: ${dateToRelativeString(memo.updated)}`}
+                    {renderUpdatedDate && `Updated: ${formatRelativeTime(memo.updated)}`}
                     {renderUpdatedDate && renderCreatedDate && " | "}
-                    {renderCreatedDate && `Created: ${dateToLocaleDateString(memo.created)}`}
+                    {renderCreatedDate && `Created: ${formatDate(memo.created)}`}
                   </Typography>
                 )}
                 {renderAttachedObject && attachedObject.data && (

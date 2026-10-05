@@ -33,10 +33,10 @@ class SearchViewORM(ORMBase):
     )
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     created: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), nullable=False
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.current_timestamp(),
         nullable=False,

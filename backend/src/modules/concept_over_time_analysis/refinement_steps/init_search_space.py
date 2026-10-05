@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -67,7 +67,7 @@ def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
                     },
                     x=0.0,
                     y=0.0,
-                    date=datetime.now(),
+                    date=date.today(),
                     text="",
                 ),
             )
@@ -121,7 +121,7 @@ def __add_dates_to_search_space(
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # 2. find the date for every sdoc that is in the search space
-    sdoc_id_to_date: dict[int, datetime] = dict()
+    sdoc_id_to_date: dict[int, date] = dict()
 
     # this is only possible if the cota has a date_metadata_id
     if date_metadata_id is not None:
@@ -146,7 +146,7 @@ def __add_dates_to_search_space(
     # otherwise, we set the date to today for every sdoc
     else:
         for sdoc_id in sdoc_ids:
-            sdoc_id_to_date[sdoc_id] = datetime.now()
+            sdoc_id_to_date[sdoc_id] = date.today()
 
     # 3. update search_space with the date
     for sentence in search_space:

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 
 from sqlalchemy.orm import QueryableAttribute
@@ -16,7 +16,7 @@ class MetaType(str, Enum):
 
     def get_metadata_column(
         self,
-    ) -> QueryableAttribute[str | int | bool | datetime | list[str] | None]:
+    ) -> QueryableAttribute[str | int | bool | date | list[str] | None]:
         match self:
             case MetaType.STRING:
                 return SourceDocumentMetadataORM.str_value
@@ -58,6 +58,8 @@ class MetaType(str, Enum):
                 return False
             case MetaType.DATE:
                 if isinstance(value, datetime):
+                    return True
+                if isinstance(value, date):
                     return True
                 if isinstance(value, str):
                     from dateutil.parser import parse

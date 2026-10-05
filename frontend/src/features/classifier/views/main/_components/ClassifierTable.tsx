@@ -9,7 +9,7 @@ import { ClassifierTask } from "@models/ClassifierTask";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Box, Button, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { dateToLocaleDate } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import {
   MRT_ColumnDef,
   MRT_LinearProgressBar,
@@ -78,7 +78,7 @@ const columns: MRT_ColumnDef<ClassifierRead>[] = [
     id: "created",
     header: "Created",
     accessorFn: (row) => row.created,
-    Cell: ({ row }) => dateToLocaleDate(row.original.created).toLocaleString(),
+    Cell: ({ row }) => formatDateTime(row.original.created),
     enableEditing: false,
   },
 ];
