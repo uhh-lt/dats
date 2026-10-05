@@ -145,10 +145,13 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             else:
                 self.unfavorite(db=db, memo_id=id, user_id=user_id)
 
-        shared_update = MemoUpdate.model_validate(
-            update_dto.model_dump(exclude={"is_favorite"}, exclude_unset=True)
-        )
-        if shared_update.model_fields_set:
+        # Only the shared (project-visible) fields go through the ORM update.
+        # A favorite-only update has no shared fields, so there is nothing to
+        # update — return the memo as-is. We must not re-validate an empty
+        # MemoUpdate (its validator requires at least one field).
+        shared_data = update_dto.model_dump(exclude={"is_favorite"}, exclude_unset=True)
+        if shared_data:
+            shared_update = MemoUpdate.model_validate(shared_data)
             return super().update(db=db, id=id, update_dto=shared_update)
         return self.read(db=db, id=id)
 

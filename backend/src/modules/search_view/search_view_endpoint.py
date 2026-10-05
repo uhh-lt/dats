@@ -13,6 +13,7 @@ from modules.search_view.search_view_dto import (
     SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
+from repos.db.crud_base import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -116,7 +117,10 @@ def update(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    view = crud_search_view.read(db=db, id=view_id)
+    try:
+        view = crud_search_view.read(db=db, id=view_id)
+    except NoSuchElementError:
+        authz_user.deny_access("Search view does not exist")
     authz_user.assert_in_project(view.project_id)
     authz_user.assert_is_same_user(view.user_id)
     db_view = crud_search_view.update(db=db, id=view_id, update_dto=view_update)
@@ -140,7 +144,10 @@ def delete(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
-    view = crud_search_view.read(db=db, id=view_id)
+    try:
+        view = crud_search_view.read(db=db, id=view_id)
+    except NoSuchElementError:
+        authz_user.deny_access("Search view does not exist")
     authz_user.assert_in_project(view.project_id)
     authz_user.assert_is_same_user(view.user_id)
     result = search_view_read_from_orm(view)

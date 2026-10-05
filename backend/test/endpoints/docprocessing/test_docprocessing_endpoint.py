@@ -18,7 +18,7 @@ def test_upload_file_to_project(client: TestClient, test_project):
     files = [
         ("uploaded_files", ("test.txt", file_content, "text/plain")),
     ]
-    response = client.put(
+    response = client.post(
         f"/docprocessing/project/{test_project.id}",
         data={"settings": settings_json},
         files=files,

@@ -66,8 +66,12 @@ def test_link_multiple_tags(
     resp = client.patch("/tag/bulk/link", json=payload.model_dump(exclude_none=True))
 
     assert resp.status_code == 200, resp.text
-    # We assert 1 because the first tag is already linked to the source document, so only the second tag is newly linked.
-    assert resp.json() == 1
+    # The endpoint returns the resulting tags per document. sdoc2 already had tag1
+    # linked, so after linking tag1 and tag2 it ends up with both. Compare as a set
+    # because the returned tag id order is not deterministic.
+    body = resp.json()
+    assert set(body["links"].keys()) == {str(sdoc.id)}
+    assert set(body["links"][str(sdoc.id)]) == {tag1.id, tag2.id}
 
 
 def test_link_multiple_tags_not_exist(client: TestClient):
@@ -78,7 +82,7 @@ def test_link_multiple_tags_not_exist(client: TestClient):
 
     resp = client.patch("/tag/bulk/link", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_unlink_multiple_tags(
@@ -93,7 +97,7 @@ def test_unlink_multiple_tags(
     resp = client.request("DELETE", "/tag/bulk/unlink", json=payload)
 
     assert resp.status_code == 200, resp.text
-    assert resp.json() == 2
+    assert resp.json() == {"links": {str(sdoc.id): []}}
 
 
 def test_unlink_multiple_tags_not_exist(client: TestClient):
@@ -101,7 +105,7 @@ def test_unlink_multiple_tags_not_exist(client: TestClient):
 
     resp = client.request("DELETE", "/tag/bulk/unlink", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_set_tags_batch(
@@ -112,56 +116,50 @@ def test_set_tags_batch(
     tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
     tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
 
-    payload = [
-        {"source_document_id": sdoc.id, "tag_ids": [tag1.id, tag2.id]},
-    ]
+    payload = {"links": {str(sdoc.id): [tag1.id, tag2.id]}}
     resp = client.patch("/tag/bulk/set", json=payload)
 
     assert resp.status_code == 200, resp.text
-    # We assert 1 because the first tag is already linked to the source document, so only the second tag is newly linked.
-    assert resp.json() == 1
+    # The endpoint sets the document's tags to exactly the provided ones and returns
+    # the resulting tags per document. Compare as a set because order is not deterministic.
+    body = resp.json()
+    assert set(body["links"].keys()) == {str(sdoc.id)}
+    assert set(body["links"][str(sdoc.id)]) == {tag1.id, tag2.id}
 
 
 def test_set_tags_batch_not_exist(client: TestClient):
-    payload = [{"source_document_id": 999, "tag_ids": [882, 881]}]
+    payload = {"links": {"999": [882, 881]}}
 
     resp = client.patch("/tag/bulk/set", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
+# The source document starts with both tags (param ids 1 and 2) linked. Each case
+# lists the param ids to unlink and to link, and the expected resulting set of linked
+# tag param ids. The endpoint returns the resulting tags per document (not a count).
 testdata = [
-    pytest.param(
-        [1, 2], [], 2, id="unlink_both"
-    ),  # we expect 2 because both tags are linked to the source document, so both will be unlinked.
-    pytest.param(
-        [], [1], 0, id="link_tag1"
-    ),  # we expect 0 because the first tag is already linked to the source document, so no new link is created.
-    pytest.param(
-        [], [2], 0, id="link_tag2"
-    ),  # we expect 0 because the second tag is already linked to the source document, so no new link is created.
-    pytest.param(
-        [], [1, 2], 0, id="link_both"
-    ),  # we expect 0 because both tags are already linked to the source document, so no new link is created.
-    pytest.param(
-        [1], [], 1, id="unlink_tag1"
-    ),  # we expect 1 because the first tag is linked to the source document, so it will be unlinked.
-    pytest.param(
-        [2], [], 1, id="unlink_tag2"
-    ),  # we expect 1 because the second tag is linked to the source document, so it will be unlinked.
-    pytest.param(
-        [], [], 0, id="nothing"
-    ),  # we expect 0 because no tags are linked or unlinked, so no modifications are made.
+    # Unlinking both tags leaves the document with no tags.
+    pytest.param([1, 2], [], set(), id="unlink_both"),
+    # Linking an already-linked tag changes nothing: both remain linked.
+    pytest.param([], [1], {1, 2}, id="link_tag1"),
+    pytest.param([], [2], {1, 2}, id="link_tag2"),
+    pytest.param([], [1, 2], {1, 2}, id="link_both"),
+    # Unlinking one tag leaves the other linked.
+    pytest.param([1], [], {2}, id="unlink_tag1"),
+    pytest.param([2], [], {1}, id="unlink_tag2"),
+    # Linking and unlinking nothing leaves both tags linked.
+    pytest.param([], [], {1, 2}, id="nothing"),
 ]
 
 
-@pytest.mark.parametrize("unlink_ids, link_ids, expected_count", testdata)
+@pytest.mark.parametrize("unlink_ids, link_ids, expected_tag_param_ids", testdata)
 def test_update_tags_batch_parametrize(
     client: TestClient,
     project_with_sdoc_and_multiple_tags,
     unlink_ids: list[int],
     link_ids: list[int],
-    expected_count: int,
+    expected_tag_param_ids: set[int],
 ):
     sdoc = project_with_sdoc_and_multiple_tags["source_document"]
     tag1 = project_with_sdoc_and_multiple_tags["tag"]
@@ -176,7 +174,12 @@ def test_update_tags_batch_parametrize(
     resp = client.patch("/tag/bulk/update", json=payload)
 
     assert resp.status_code == 200, resp.text
-    assert resp.json() == expected_count
+    # The endpoint returns the resulting tags per document. Compare as a set because
+    # the returned tag id order is not deterministic.
+    expected_tag_ids = {param_id2tag[i].id for i in expected_tag_param_ids}
+    body = resp.json()
+    assert set(body["links"].keys()) == {str(sdoc.id)}
+    assert set(body["links"][str(sdoc.id)]) == expected_tag_ids
 
 
 def test_update_tags_batch(
@@ -195,8 +198,9 @@ def test_update_tags_batch(
     resp = client.patch("/tag/bulk/update", json=payload)
 
     assert resp.status_code == 200, resp.text
-    # Both tags are linked to the source document, so only one modification is made (one tag is unlinked).
-    assert resp.json() == 1
+    # The endpoint returns the resulting tags per document. tag1 is unlinked and tag2
+    # is (already) linked, so the document ends up with only tag2.
+    assert resp.json() == {"links": {str(sdoc.id): [tag2.id]}}
 
 
 def test_update_tags_batch_not_exists(client: TestClient):
@@ -207,7 +211,7 @@ def test_update_tags_batch_not_exists(client: TestClient):
     }
     resp = client.patch("/tag/bulk/update", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_id(
@@ -331,8 +335,7 @@ def test_update_tag_not_exists(client: TestClient):
     )
     resp = client.patch("/tag/999999", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 404, resp.text
-    assert "There exists no Tag" in resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_tag_by_id(
@@ -443,4 +446,4 @@ def test_count_tags_not_exists(client: TestClient):
     payload = {"sdoc_ids": [999999], "class_ids": [999999]}
     resp = client.post(f"/tag/count_tags/{not_exists_id}", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text

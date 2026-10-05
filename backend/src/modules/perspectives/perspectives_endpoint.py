@@ -214,8 +214,7 @@ def update_cluster_details(
     cluster_update: ClusterUpdate,
     authz_user: AuthzUser = Depends(),
 ) -> ClusterRead:
-    cluster = crud_cluster.read(db=db, id=cluster_id)
-    authz_user.assert_in_same_project_as(Crud.ASPECT, cluster.aspect_id)
+    authz_user.assert_in_same_project_as(Crud.CLUSTER, cluster_id)
 
     # Perform update
     update_dto = ClusterUpdateIntern(

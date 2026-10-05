@@ -113,8 +113,8 @@ def test_add_memo_allows_multiple_memos_per_user_per_object(
     assert memo.attached_object_id == code.id
 
 
-def test_add_memo_to_nonexistent_object_returns_404(client: TestClient):
-    """The attached object is resolved first, so an unknown id yields 404."""
+def test_add_memo_to_nonexistent_object_returns_403(client: TestClient):
+    """A nonexistent attached object is indistinguishable from an unauthorized one -> 403."""
     response = client.put(
         "/memo",
         params={
@@ -123,7 +123,7 @@ def test_add_memo_to_nonexistent_object_returns_404(client: TestClient):
         },
         json=_create_payload("Should fail"),
     )
-    assert response.status_code == 404, response.text
+    assert response.status_code == 403, response.text
 
 
 # ===========================================================================
@@ -257,11 +257,11 @@ def test_get_memos_by_attached_object_marks_requesting_user_favorites(
 
 
 def test_get_memos_by_attached_object_not_existing(client: TestClient):
-    """The attached object is resolved first, so an unknown id yields 404."""
+    """A nonexistent attached object is indistinguishable from an unauthorized one -> 403."""
     response = client.get(
         f"/memo/attached_obj/{AttachedObjectType.code.value}/to/99999"
     )
-    assert response.status_code == 404, response.text
+    assert response.status_code == 403, response.text
 
 
 # ===========================================================================
@@ -346,9 +346,9 @@ def test_update_memo_with_null_required_field_is_rejected(
 
 
 def test_update_memo_not_existing(client: TestClient):
-    """update_by_id reads the memo before authorizing, so an unknown id -> 404."""
+    """update_by_id authorizes before reading, so an unknown id -> 403."""
     response = client.patch("/memo/99999", json={"title": "x"})
-    assert response.status_code == 404, response.text
+    assert response.status_code == 403, response.text
 
 
 def test_update_memo_of_other_project_member(
@@ -385,9 +385,9 @@ def test_delete_memo(client: TestClient, memo_project: MemoProjectState):
 
 
 def test_delete_memo_not_existing(client: TestClient):
-    """delete_by_id reads the memo before authorizing, so an unknown id -> 404."""
+    """delete_by_id authorizes before reading, so an unknown id -> 403."""
     response = client.delete("/memo/99999")
-    assert response.status_code == 404, response.text
+    assert response.status_code == 403, response.text
 
 
 def test_delete_memo_of_other_project_member(
@@ -462,18 +462,21 @@ def test_delete_memos_bulk_rejects_memo_from_non_member_project(
 
 
 # ===========================================================================
-# FAVORITE / UNFAVORITE MEMO (PUT|DELETE /memo/{memo_id}/favorite) TESTS
+# FAVORITE / UNFAVORITE MEMO (PATCH /memo/{memo_id} with is_favorite) TESTS
 # ===========================================================================
+#
+# Favoriting is per-user state, updated through the normal update endpoint by
+# setting `is_favorite`. There is no dedicated /favorite route.
 
 
 def test_favorite_memo_marks_is_favorite_for_requesting_user(
     client: TestClient, memo_project: MemoProjectState
 ):
-    """Favoriting a memo flips `is_favorite` to True for the requesting user."""
+    """Setting `is_favorite` True flips it for the requesting user."""
     # `user` has NOT favorited code_memo_b (only other_user has).
     memo = memo_project["code_memo_b"]
 
-    response = client.put(f"/memo/{memo.id}/favorite")
+    response = client.patch(f"/memo/{memo.id}", json={"is_favorite": True})
 
     assert response.status_code == 200, response.text
     assert MemoRead.model_validate(response.json()).is_favorite is True
@@ -482,11 +485,11 @@ def test_favorite_memo_marks_is_favorite_for_requesting_user(
 def test_unfavorite_memo_clears_is_favorite_for_requesting_user(
     client: TestClient, memo_project: MemoProjectState
 ):
-    """Unfavoriting removes only the requesting user's favorite link."""
+    """Setting `is_favorite` False removes only the requesting user's favorite."""
     # `user` HAS favorited code_memo_a.
     memo = memo_project["code_memo_a"]
 
-    response = client.delete(f"/memo/{memo.id}/favorite")
+    response = client.patch(f"/memo/{memo.id}", json={"is_favorite": False})
 
     assert response.status_code == 200, response.text
     assert MemoRead.model_validate(response.json()).is_favorite is False
@@ -499,15 +502,15 @@ def test_favorite_is_idempotent_for_same_user(
     # `user` already favorited code_memo_a in the fixture.
     memo = memo_project["code_memo_a"]
 
-    response = client.put(f"/memo/{memo.id}/favorite")
+    response = client.patch(f"/memo/{memo.id}", json={"is_favorite": True})
 
     assert response.status_code == 200, response.text
     assert MemoRead.model_validate(response.json()).is_favorite is True
 
 
 def test_favorite_memo_not_existing(client: TestClient):
-    """Authorization runs before the existence check, so an unknown id -> 403."""
-    response = client.put("/memo/99999/favorite")
+    """update_by_id authorizes before reading, so an unknown id -> 403."""
+    response = client.patch("/memo/99999", json={"is_favorite": True})
     assert response.status_code == 403, response.text
 
 

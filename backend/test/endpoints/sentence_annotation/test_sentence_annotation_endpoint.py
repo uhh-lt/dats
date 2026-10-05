@@ -386,7 +386,7 @@ def test_delete_bulk_by_id_if_not_exists(
         json=[sa.id, not_existsing_id],
     )
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_user_code(
@@ -436,4 +436,4 @@ def test_count_annotation_if_not_exists(client: TestClient):
 
     resp = client.post(f"/sentence/count_annotations/{not_existing_id}", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text

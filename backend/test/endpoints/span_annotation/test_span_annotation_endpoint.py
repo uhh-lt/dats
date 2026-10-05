@@ -441,7 +441,7 @@ def test_delete_span_annotations_bulk(
 def test_delete_span_annotations_bulk_not_exists(client: TestClient) -> None:
     resp = client.request("DELETE", "/span/bulk/delete", json=[999999])
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_user_code(
@@ -488,7 +488,7 @@ def test_count_annotation_if_not_exists(client: TestClient) -> None:
 
     resp = client.post(f"/span/count_annotations/{not_existing_id}", json=payload)
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_add_to_group_ok(
