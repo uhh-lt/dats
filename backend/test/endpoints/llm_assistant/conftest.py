@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import date
 from typing import TypedDict
 
 import pytest
@@ -360,7 +360,7 @@ def llm_assistant_project(
     stale_values = [
         "Unknown",
         1999,
-        datetime(1999, 1, 1, tzinfo=UTC),
+        date(1999, 1, 1),
         False,
         ["unknown"],
     ]
