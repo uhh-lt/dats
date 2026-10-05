@@ -5,8 +5,8 @@
 // 3) The `managed by` comment must point to the canonical definition path.
 // 4) If a key is temporarily defined in multiple places, list every path in one comment with `and`.
 // 5) Cache WRITES (setQueryData/removeQueries/invalidateQueries in response to entity
-//    changes) are centralized in frontend/src/api/entity-events/brain.ts — mutations tag
-//    `meta.entityEvent`, websocket events forward there. Do not write entity caches elsewhere.
+//    changes) are centralized in frontend/src/api/cache-sync/brain.ts — mutations tag
+//    `meta.datsEvent`, websocket events forward there. Do not write entity caches elsewhere.
 export const QueryKey = {
   // the logged-in user (by access token)
   // managed by frontend/src/core/auth/provider/AuthProvider.tsx
