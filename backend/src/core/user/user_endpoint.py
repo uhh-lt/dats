@@ -87,7 +87,9 @@ def update_me(
 ) -> UserRead:
     db_user = crud_user.update(db=db, id=authz_user.user.id, update_dto=user)
     result = UserRead.model_validate(db_user)
-    ws.emit_to_user(DATSEvent.USER_UPDATED, result, user_id=authz_user.user.id)
+    # Notify all collaborators across every project the user belongs to
+    member_ids = {member.id for project in db_user.projects for member in project.users}
+    ws.emit_to_users(DATSEvent.USER_UPDATED, result, user_ids=list(member_ids))
     return result
 
 
@@ -133,9 +135,16 @@ def delete_me(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
+    # Capture collaborators BEFORE deletion: deleting the user cascades the
+    # membership rows, so they cannot be re-read afterwards.
+    member_ids = {
+        member.id
+        for project in crud_user.read(db=db, id=authz_user.user.id).projects
+        for member in project.users
+    }
     db_user = crud_user.delete(db=db, id=authz_user.user.id)
     result = UserRead.model_validate(db_user)
-    ws.emit_to_user(DATSEvent.USER_DELETED, result, user_id=authz_user.user.id)
+    ws.emit_to_users(DATSEvent.USER_DELETED, result, user_ids=list(member_ids))
     return result
 
 

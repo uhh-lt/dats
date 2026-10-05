@@ -1,11 +1,11 @@
 import asyncio
 import json
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from loguru import logger
-from sqlalchemy.orm import Session
 
-from common.dependencies import get_db_session, resolve_user
+from common.dependencies import resolve_user
+from repos.db.sql_repo import SQLRepo
 from systems.websocket_system.websocket_service import WebsocketService
 
 router = APIRouter(tags=["websocket"])
@@ -14,9 +14,7 @@ websocket_service = WebsocketService()
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(
-    websocket: WebSocket, db: Session = Depends(get_db_session)
-):
+async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         # Wait up to 5 seconds for the authentication message
@@ -29,7 +27,10 @@ async def websocket_endpoint(
                 code=status.WS_1008_POLICY_VIOLATION, reason="Missing token"
             )
             return
-        current_user = resolve_user(websocket, db, token)
+
+        # Open a short-lived session only for the auth handshake
+        with SQLRepo().transaction() as db:
+            current_user = resolve_user(websocket, db, token)
 
     except (asyncio.TimeoutError, json.JSONDecodeError, Exception) as e:
         logger.warning(f"Websocket authentication failed: {e}")

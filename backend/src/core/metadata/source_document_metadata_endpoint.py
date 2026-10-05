@@ -127,10 +127,10 @@ def update_bulk(
     db_objs = crud_sdoc_meta.update_bulk(db=db, update_dtos=metadatas)
     results = [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.SDOC_METADATA_UPDATED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=SourceDocumentMetadataRead.model_validate,
         )
     return results
 

@@ -129,9 +129,9 @@ def update_recommendations(
     )
     results = [TagRecommendationLinkRead.model_validate(m) for m in modifications]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.TAG_RECOMMENDATION_REVIEWED_BATCH,
-            results,
-            project_id=modifications[0].get_project_id(),
+            modifications,
+            to_dto=TagRecommendationLinkRead.model_validate,
         )
     return results

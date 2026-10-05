@@ -1,5 +1,6 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
+import type { ApiKeyRead } from "@models/ApiKeyRead";
 import type { CodeRead } from "@models/CodeRead";
 import type { DATSEvent } from "@models/datsEvents";
 import type { FolderRead } from "@models/FolderRead";
@@ -250,9 +251,16 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     // ── API keys ────────────────────────────────────────────────────────────
-    case "API_KEY_CREATED":
-      appendListItem([QueryKey.USER_API_KEYS], event.payload);
+    case "API_KEY_CREATED": {
+      // Strip the plaintext api_key: it must only live in the dialog state,
+      // never in the shared query cache.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { api_key: _api_key, ...apiKeyRead } = event.payload as ApiKeyRead & {
+        api_key?: string;
+      };
+      appendListItem([QueryKey.USER_API_KEYS], apiKeyRead);
       break;
+    }
     case "API_KEY_DELETED":
       removeListItem([QueryKey.USER_API_KEYS], event.payload.id);
       break;

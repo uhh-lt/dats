@@ -145,10 +145,10 @@ def update_folders_bulk(
     db_objs = crud_folder.update_bulk(db=db, update_dtos=folder_updates)
     results = [FolderRead.model_validate(folder) for folder in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.FOLDER_UPDATED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=FolderRead.model_validate,
         )
     return results
 
