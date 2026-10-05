@@ -15,7 +15,7 @@ import {
   sweepPrefix,
   upsertMapItem,
 } from "./_utils/cacheWriterUtils";
-import { writeJobUpdate } from "./_utils/jobCacheUtils";
+import { handleJobUpdate } from "./_utils/jobCacheUtils";
 import {
   appendMemo,
   invalidateAttachedObjectMemoIds,
@@ -46,7 +46,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
   switch (event.type) {
     // ── Jobs ──────────────────────────────────────────────────────────────
     case "JOB_UPDATED":
-      writeJobUpdate(event.payload);
+      handleJobUpdate(event.payload);
       break;
 
     // ── Codes ─────────────────────────────────────────────────────────────
