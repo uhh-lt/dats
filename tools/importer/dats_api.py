@@ -278,7 +278,7 @@ class DATSAPI:
 
         # upload files
         if len(files) > 0:
-            r = requests.put(
+            r = requests.post(
                 self.BASE_PATH + f"docprocessing/project/{proj_id}",
                 files=files,
                 data=data,
@@ -364,7 +364,12 @@ class DATSAPI:
             },
         )
         r.raise_for_status()
-        logger.info(f"Applied tags {tag_ids} to documents {sdoc_ids}!")
+        # Response is SdocTagLinks: {"links": {sdoc_id: [tag_id, ...], ...}}
+        links: dict[str, list[int]] = r.json().get("links", {})
+        logger.info(
+            f"Applied tags {tag_ids} to documents {sdoc_ids}! Resulting links: {links}"
+        )
+        return links
 
     # METADATA
     def create_project_metadata(
