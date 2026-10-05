@@ -19,7 +19,7 @@ Server communication is centralized in `perspectivesQueryOptions.ts`, which prov
 
 - **Fetching Data**: `useGetAllAspectsList`, `useGetAspect`, `useGetDocVisualization`.
 - **Mutations**: `useCreateAspect` (triggering generation), `useUpdateAspect`, `useDeleteAspect`.
-- **Job Polling**: `usePollPerspectivesJob` monitors the backend job status for perspective generation (Queued -> Started -> Finished).
+- **Job Polling**: `useLivePerspectivesJob` monitors the backend job status for perspective generation (Queued -> Started -> Finished).
 - **Caching**: Automatically invalidates queries (e.g., `PROJECT_ASPECTS`) upon successful mutations to keep the UI in sync.
 
 ### React Query Cache Keys
@@ -86,7 +86,7 @@ The landing page for a specific perspective, providing analytics and status.
 - **Server Communication**:
   - **Fetching**:
     - `PerspectivesQueryOptions.useGetAspect(aspectId)`: Gets metadata.
-    - `PerspectivesQueryOptions.usePollPerspectivesJob(...)`: Polls the status of the generation job.
+    - `PerspectivesQueryOptions.useLivePerspectivesJob(...)`: Polls the status of the generation job.
 - **Sub Components**:
   - `DocumentClusterScatterPlot` (Preview)
   - `ClusterList`
@@ -144,4 +144,4 @@ A modal wrapper for the progress card.
 - **Functionality**: Automatically appears to show the progress of an active job associated with the current perspective.
 - **Interactions**: It is modal but generally non-interactive (dismissal is handled by completion or explicit close if enabled).
 - **Server Communication**:
-  - **Fetching**: `PerspectivesQueryOptions.usePollPerspectivesJob` is used to check if the dialog should be open (i.e., if a job is running).
+  - **Fetching**: `PerspectivesQueryOptions.useLivePerspectivesJob` is used to check if the dialog should be open (i.e., if a job is running).

@@ -21,7 +21,7 @@ const useStartLLMJob = () =>
     },
   });
 
-const usePollLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJobRead | undefined) => {
+const useLiveLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<LlmAssistantJobRead>();
   return useQuery<LlmAssistantJobRead, Error>({
     queryKey: [QueryKey.LLM_JOB, llmJobId],
@@ -102,7 +102,7 @@ const useListStrategies = (taskType: TaskType | undefined) =>
   });
 
 export const LLMHooks = {
-  usePollLLMJob,
+  useLiveLLMJob,
   useStartLLMJob,
   useGetAllLLMJobs,
   useDetermineApproach,

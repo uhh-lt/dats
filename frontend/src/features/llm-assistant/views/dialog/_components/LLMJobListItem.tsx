@@ -22,7 +22,7 @@ interface LLMJobListItemProps {
 
 export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   // global server state (react-query)
-  const llmJob = LLMHooks.usePollLLMJob(initialLLMJob.job_id, initialLLMJob);
+  const llmJob = LLMHooks.useLiveLLMJob(initialLLMJob.job_id, initialLLMJob);
 
   // actions
   const dispatch = useAppDispatch();

@@ -50,7 +50,7 @@ interface PerspectiveCardProps {
 }
 
 export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
-  const perspectivesJob = PerspectivesQueryOptions.usePollPerspectivesJob(aspect.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesQueryOptions.useLivePerspectivesJob(aspect.most_recent_job_id, undefined);
   const openConfirmationDialog = useOpenConfirmationDialog();
   const { mutate: deleteMutation, isPending } = PerspectivesQueryOptions.useDeleteAspect();
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {

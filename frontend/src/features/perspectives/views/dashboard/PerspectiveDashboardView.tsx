@@ -43,7 +43,7 @@ export function PerspectiveDashboardView() {
     ...projectAspectsQueryOptions(projectId),
     select: (data) => data[aspectId],
   });
-  const perspectivesJob = PerspectivesQueryOptions.usePollPerspectivesJob(aspect?.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesQueryOptions.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);
   const vis = useGetDocVisualization(aspectId);
 
   // computed

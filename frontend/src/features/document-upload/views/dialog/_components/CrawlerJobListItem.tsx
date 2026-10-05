@@ -12,7 +12,7 @@ interface CrawlerJobListItemProps {
 
 export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListItemProps) => {
   // global server state (react-query)
-  const crawlerJob = DocProcessingHooks.usePollCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
+  const crawlerJob = DocProcessingHooks.useLiveCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
 
   const dateString = useMemo(() => {
     return dateToLocaleString(initialCrawlerJob.created);

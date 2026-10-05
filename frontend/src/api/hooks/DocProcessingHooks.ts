@@ -24,7 +24,7 @@ const useStartCrawlerJob = () =>
     },
   });
 
-const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
+const useLiveCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<CrawlerJobRead>();
   return useQuery<CrawlerJobRead, Error>({
     queryKey: [QueryKey.CRAWLER_JOB, crawlerJobId],
@@ -128,7 +128,7 @@ const useRecomputeDocProcessingJobs = () =>
 export const DocProcessingHooks = {
   // crawler
   useStartCrawlerJob,
-  usePollCrawlerJob,
+  useLiveCrawlerJob,
   useGetAllCrawlerJobs,
   useUploadDocument,
   usePollProcessingSimpleSdocStatus,

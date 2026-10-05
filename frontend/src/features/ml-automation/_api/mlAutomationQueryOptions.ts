@@ -26,7 +26,7 @@ export const useStartMLJob = () =>
     },
   });
 
-export const usePollMLJob = (mlJobId: string | undefined, initialData: MlJobRead | undefined) => {
+export const useLiveMLJob = (mlJobId: string | undefined, initialData: MlJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<MlJobRead>();
   return useQuery<MlJobRead, Error>({
     queryKey: [QueryKey.ML_JOB, mlJobId],

@@ -20,7 +20,7 @@ const useStartImportJob = () =>
 // Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
 // (per-import-type invalidations) live in the JOB_UPDATED handler in
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
-const usePollImportJob = (importJobId: string | undefined, initialData: ImportJobRead | undefined) => {
+const useLiveImportJob = (importJobId: string | undefined, initialData: ImportJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<ImportJobRead>();
   return useQuery<ImportJobRead, Error>({
     queryKey: [QueryKey.IMPORT_JOB, importJobId],
@@ -47,6 +47,6 @@ const useGetAllImportJobs = (projectId: number | null | undefined) => {
 
 export const ImportHooks = {
   useStartImportJob,
-  usePollImportJob,
+  useLiveImportJob,
   useGetAllImportJobs,
 };

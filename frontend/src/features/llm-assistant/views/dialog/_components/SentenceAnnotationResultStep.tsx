@@ -20,7 +20,7 @@ const approach2AssistantID: Record<ApproachType, number> = {
 export function SentenceAnnotationResultStep() {
   // get the job
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
+  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output) {
     return (

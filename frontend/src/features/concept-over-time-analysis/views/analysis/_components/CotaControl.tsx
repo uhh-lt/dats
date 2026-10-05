@@ -20,7 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { usePollCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "../../../_api/cotaQueryOptions";
+import { useLiveCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "../../../_api/cotaQueryOptions";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";
@@ -41,7 +41,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const refinementJob = usePollCOTARefinementJob(cota.last_refinement_job_id);
+  const refinementJob = useLiveCOTARefinementJob(cota.last_refinement_job_id);
 
   // actions
   const refineCota = useRefineCota();

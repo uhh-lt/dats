@@ -101,7 +101,7 @@ const useStartPerspectivesJob = () =>
 // Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
 // (visualization invalidations) live in the JOB_UPDATED handler in
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
-const usePollPerspectivesJob = (
+const useLivePerspectivesJob = (
   perspectivesJobId: string | null | undefined,
   initialData: PerspectivesJobRead | undefined,
 ) => {
@@ -226,7 +226,7 @@ export const PerspectivesQueryOptions = {
   useUpdateAspect,
   useDeleteAspect,
   useStartPerspectivesJob,
-  usePollPerspectivesJob,
+  useLivePerspectivesJob,
   useLabelDocs,
   useUnlabelDocs,
   useGetDocVisualization,

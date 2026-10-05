@@ -10,7 +10,7 @@ interface ClusterJobProgressDialog {
 
 export const ClusterJobProgressDialog = memo(({ aspectId }: ClusterJobProgressDialog) => {
   const aspect = PerspectivesQueryOptions.useGetAspect(aspectId);
-  const job = PerspectivesQueryOptions.usePollPerspectivesJob(aspect.data?.most_recent_job_id, undefined);
+  const job = PerspectivesQueryOptions.useLivePerspectivesJob(aspect.data?.most_recent_job_id, undefined);
 
   if (!job.data) {
     return null;
