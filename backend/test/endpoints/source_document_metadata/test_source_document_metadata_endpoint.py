@@ -247,7 +247,7 @@ def test_update_bulk_if_id_not_exists(
         json=[payload.model_dump()],
     )
 
-    assert resp.status_code == 404, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_by_id(

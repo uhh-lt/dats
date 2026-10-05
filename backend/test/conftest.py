@@ -9,6 +9,8 @@ os.environ["FILESYSTEM_ROOT_DIRECTORY"] = "docker/test_repo"
 os.environ["WEAVIATE_COLLECTION_POSTFIX"] = "test"
 os.environ["POSTGRES_DB"] = "datstest"
 os.environ["REDIS_INDEX"] = "9"
+os.environ["REDIS_WS_INDEX"] = "12"
+os.environ["REDIS_WS_FANOUT_CHANNEL"] = "dats:ws:fanout:test"
 os.environ["ES_INDEX_PREFIX"] = "datstest"
 
 # Use one worker per type for testing:

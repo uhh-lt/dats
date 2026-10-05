@@ -605,10 +605,10 @@ def test_update_search_view_explicit_date_granularity_preserved(
 # --- error paths (HTTP 404) --------------------------------------------------------
 
 
-def test_update_search_view_unknown_id_returns_404(client: TestClient, test_project):
-    """PATCH on a nonexistent view id returns HTTP 404."""
+def test_update_search_view_unknown_id_returns_403(client: TestClient, test_project):
+    """PATCH on a nonexistent view id returns HTTP 403 (existence is not leaked)."""
     response = client.patch("/searchView/999999", json={"name": "x"})
-    assert response.status_code == 404, response.text
+    assert response.status_code == 403, response.text
 
 
 # --- authorization (HTTP 403) ------------------------------------------------------
@@ -736,10 +736,10 @@ def test_delete_search_view(
 # --- error paths (HTTP 404) --------------------------------------------------------
 
 
-def test_delete_search_view_unknown_id_returns_404(client: TestClient, test_project):
-    """DELETE on a nonexistent view id returns HTTP 404."""
+def test_delete_search_view_unknown_id_returns_403(client: TestClient, test_project):
+    """DELETE on a nonexistent view id returns HTTP 403 (existence is not leaked)."""
     response = client.delete("/searchView/999999")
-    assert response.status_code == 404, response.text
+    assert response.status_code == 403, response.text
 
 
 # --- authorization (HTTP 403) ------------------------------------------------------

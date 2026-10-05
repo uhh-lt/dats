@@ -19,6 +19,7 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_generation_service import generate_memo_llm
 from core.memo.memo_utils import get_object_memos
+from repos.db.crud_base import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -48,7 +49,10 @@ def create_memo(
         raise ValueError("Invalid attached_object_type")
 
     # get project id of the attached object
-    attached_object = crud.value.read(db=db, id=attached_object_id)
+    try:
+        attached_object = crud.value.read(db=db, id=attached_object_id)
+    except NoSuchElementError:
+        authz_user.deny_access("Attached object does not exist")
     proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
@@ -141,7 +145,10 @@ def get_memos_by_attached_object_id(
         raise ValueError("Invalid attached_object_type")
 
     # get project id of the attached object
-    attached_object = crud.value.read(db=db, id=attached_obj_id)
+    try:
+        attached_object = crud.value.read(db=db, id=attached_obj_id)
+    except NoSuchElementError:
+        authz_user.deny_access("Attached object does not exist")
     proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
@@ -168,8 +175,8 @@ def update_by_id(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
     existing_memo = crud_memo.read(db=db, id=memo_id)
-    authz_user.assert_in_project(existing_memo.project_id)
 
     db_obj = crud_memo.update(
         db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
@@ -263,8 +270,8 @@ def delete_by_id(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
     memo = crud_memo.read(db=db, id=memo_id)
-    authz_user.assert_in_project(memo.project_id)
     memo_read = crud_memo.get_memo_read_dto_from_orm(
         db, memo, user_id=authz_user.user.id
     )
@@ -329,7 +336,10 @@ def generate_memo_suggestion(
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
-    attached_object = crud.value.read(db=db, id=attached_obj_id)
+    try:
+        attached_object = crud.value.read(db=db, id=attached_obj_id)
+    except NoSuchElementError:
+        authz_user.deny_access("Attached object does not exist")
     proj_id = attached_object.get_project_id()
     if proj_id is None:
         raise ValueError("Attached object has no project")
