@@ -108,7 +108,7 @@ export function DuplicateFinderView() {
   };
 
   // job data
-  const duplicateFinderJob = JobHooks.usePollDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
+  const duplicateFinderJob = JobHooks.useLiveDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
 
   // computed
   const { data, rowCount } = useMemo(() => {

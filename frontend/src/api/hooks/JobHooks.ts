@@ -13,7 +13,7 @@ const useStartDuplicateFinderJob = () =>
     },
   });
 
-const usePollDuplicateFinderJob = (
+const useLiveDuplicateFinderJob = (
   duplicateFinderJobId: string | undefined,
   initialData: DuplicateFinderJobRead | undefined,
 ) => {
@@ -39,7 +39,7 @@ const useStartExportJob = () =>
     },
   });
 
-const usePollExportJob = (exportJobId: string | undefined) => {
+const useLiveExportJob = (exportJobId: string | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<ExportJobRead>();
   return useQuery<ExportJobRead, Error>({
     queryKey: [QueryKey.EXPORT_JOB, exportJobId],
@@ -54,7 +54,7 @@ const usePollExportJob = (exportJobId: string | undefined) => {
 
 export const JobHooks = {
   useStartDuplicateFinderJob,
-  usePollDuplicateFinderJob,
+  useLiveDuplicateFinderJob,
   useStartExportJob,
-  usePollExportJob,
+  useLiveExportJob,
 };

@@ -14,7 +14,7 @@ export const StatusStep = memo(() => {
   const dispatch = useAppDispatch();
 
   // poll the job
-  const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
+  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
 
   const handleClose = useCallback(() => {
     dispatch(LLMAssistantActions.closeLLMDialog());

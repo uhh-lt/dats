@@ -62,7 +62,7 @@ const useStartClassifierJob = () =>
 // Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
 // (classifier list + sdoc tag invalidations) live in the JOB_UPDATED handler in
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
-const usePollClassifierJob = (classifierJobId: string | undefined, initialData: ClassifierJobRead | undefined) => {
+const useLiveClassifierJob = (classifierJobId: string | undefined, initialData: ClassifierJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<ClassifierJobRead>();
   return useQuery<ClassifierJobRead, Error>({
     queryKey: [QueryKey.CLASSIFIER_JOB, classifierJobId],
@@ -159,7 +159,7 @@ const useComputeDatasetStatistics = ({
   });
 
 export const ClassifierHooks = {
-  usePollClassifierJob,
+  useLiveClassifierJob,
   useStartClassifierJob,
   useGetAllClassifiers,
   useUpdateClassifier,

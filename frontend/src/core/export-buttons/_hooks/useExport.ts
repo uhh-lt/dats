@@ -13,7 +13,7 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
 
   // mutations
   const { mutate: startExportMutation, reset: resetExport, data, isPending } = JobHooks.useStartExportJob();
-  const exportJob = JobHooks.usePollExportJob(data?.job_id);
+  const exportJob = JobHooks.useLiveExportJob(data?.job_id);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

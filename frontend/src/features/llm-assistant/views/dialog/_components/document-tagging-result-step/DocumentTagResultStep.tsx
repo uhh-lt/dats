@@ -16,7 +16,7 @@ export const DocumentTagResultStep = memo(() => {
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   // global server state
   const documentTags = TagHooks.useGetAllTags();
-  const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
+  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output && documentTags.isSuccess) {
     return (

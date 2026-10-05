@@ -18,7 +18,7 @@ interface ClassifierJobListItemProps {
 
 export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJobListItemProps) => {
   // global server state (react-query)
-  const cj = ClassifierHooks.usePollClassifierJob(initialClassifierJob.job_id, initialClassifierJob);
+  const cj = ClassifierHooks.useLiveClassifierJob(initialClassifierJob.job_id, initialClassifierJob);
 
   // compute subtitle
   const subTitle = useMemo(() => {

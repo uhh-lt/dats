@@ -12,7 +12,7 @@ export const StatusStep = memo(() => {
   const dispatch = useAppDispatch();
 
   // poll the job
-  const classifierJob = ClassifierHooks.usePollClassifierJob(classifierJobId, undefined);
+  const classifierJob = ClassifierHooks.useLiveClassifierJob(classifierJobId, undefined);
 
   const handleClose = useCallback(() => {
     dispatch(ClassifierActions.closeClassifierDialog());

@@ -85,7 +85,7 @@ export const useDeleteCota = () =>
     },
   });
 
-export const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
+export const useLiveCOTARefinementJob = (cotaRefinementJobId: string | null) => {
   const jobRefetchInterval = useJobRefetchInterval<COTARefinementJobRead>();
   return useQuery<COTARefinementJobRead | null, Error>({
     queryKey: [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJobId],

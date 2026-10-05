@@ -15,7 +15,7 @@ export function ResultStep() {
   const dispatch = useAppDispatch();
 
   // get the job
-  const cj = ClassifierHooks.usePollClassifierJob(classifierJobId, undefined);
+  const cj = ClassifierHooks.useLiveClassifierJob(classifierJobId, undefined);
 
   // dialog actions
   const handleClose = useCallback(() => {

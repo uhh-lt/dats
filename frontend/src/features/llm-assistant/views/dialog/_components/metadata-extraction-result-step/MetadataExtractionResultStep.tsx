@@ -9,7 +9,7 @@ import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultSte
 export const MetadataExtractionResultStep = memo(() => {
   // get the job
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
+  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
 
   return (
     <>
