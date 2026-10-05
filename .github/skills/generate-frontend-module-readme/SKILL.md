@@ -1,5 +1,7 @@
 ---
+name: generate-frontend-module-readme
 description: Create a detailed overview in a README.md file for a specific frontend module
+disable-model-invocation: true
 ---
 
 # Goal
