@@ -262,7 +262,6 @@ def refine_cota(
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, payload.cota_id)
-    # SYNC-TODO: refine launches a refinement job; result is the COTA — handling TBD
     cota_orm = cotas.start_refinement_job(db=db, payload=payload)
     return COTARead.model_validate(cota_orm)
 

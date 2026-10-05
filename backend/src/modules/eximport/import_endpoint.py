@@ -82,7 +82,6 @@ def start_import_job(
     uploaded_file: UploadFile,
     authz_user: AuthzUser = Depends(),
 ) -> ImportJobRead:
-    # SYNC-TODO: job-based async op — the actual import mutations happen later in the worker; no import/job DATSEvent exists — handling TBD
     authz_user.assert_in_project(project_id)
 
     file_format = import_job_file_formats[import_job_type]
