@@ -1,9 +1,6 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { queryClient } from "@api/queryClient";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { COTARead } from "@models/COTARead";
 import { COTATrainingSettings } from "@models/COTATrainingSettings";
-import { JobStatus } from "@models/JobStatus";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import InfoIcon from "@mui/icons-material/Info";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -23,7 +20,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { useEffect } from "react";
 import { usePollCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "../../../_api/cotaQueryOptions";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
@@ -46,14 +42,6 @@ export function CotaControl({ cota }: CotaControlProps) {
 
   // global server state (react-query)
   const refinementJob = usePollCOTARefinementJob(cota.last_refinement_job_id);
-
-  // track the status of the refinement job and refetch cota once it is finished
-  useEffect(() => {
-    if (!refinementJob.data) return;
-    if (refinementJob.data.status === JobStatus.FINISHED) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, refinementJob.data.input.project_id] });
-    }
-  }, [refinementJob.data]);
 
   // actions
   const refineCota = useRefineCota();

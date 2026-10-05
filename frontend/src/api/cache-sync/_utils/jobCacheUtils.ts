@@ -24,7 +24,7 @@ type JobRead = DATSEventMap["JOB_UPDATED"];
  * project job list (no invalidation for job data). Derived-data side-effects
  * of a finished job are invalidated below.
  */
-export function writeJobUpdate(job: JobRead): void {
+export function handleJobUpdate(job: JobRead): void {
   switch (job.job_type) {
     case ExportJobRead.job_type.EXPORT:
       upsertJob(job, QueryKey.EXPORT_JOB);
@@ -51,6 +51,7 @@ export function writeJobUpdate(job: JobRead): void {
       break;
     case COTARefinementJobRead.job_type.COTA_REFINEMENT:
       upsertJob(job, QueryKey.COTA_REFINEMENT_JOB);
+      if (job.status === JobStatus.FINISHED) handleCOTARefinementJobFinished(job);
       break;
     case PerspectivesJobRead.job_type.PERSPECTIVES:
       upsertJob(job, QueryKey.PERSPECTIVES_JOB);
@@ -160,4 +161,9 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
 function handlePerspectivesJobFinished(job: PerspectivesJobRead) {
   queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, job.input.aspect_id] });
   queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, job.input.aspect_id] });
+}
+
+// A finished COTA refinement job updated the COTA — refresh the project's COTAs.
+function handleCOTARefinementJobFinished(job: COTARefinementJobRead) {
+  queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, job.input.project_id] });
 }
