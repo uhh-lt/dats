@@ -171,10 +171,10 @@ def update_bbox_annotations_bulk(
     db_objs = crud_bbox_anno.update_bulk(db=db, update_dtos=bbox_annos)
     results = [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=BBoxAnnotationRead.model_validate,
         )
     return results
 
@@ -226,9 +226,9 @@ def delete_bbox_annotations_bulk(
     db_objs = crud_bbox_anno.delete_bulk(db=db, ids=bbox_anno_ids)
     results = [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.BBOX_ANNOTATION_DELETED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=BBoxAnnotationRead.model_validate,
         )
     return results

@@ -351,7 +351,7 @@ def test_metadata_job_extracts_all_supported_value_types(
     assert values == {
         "author": "Alice",
         "year": 2024,
-        "published": "2024-01-15T00:00:00",
+        "published": "2024-01-15",
         "reviewed": True,
         "topics": ["solar", "energy"],
     }

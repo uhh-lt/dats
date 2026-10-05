@@ -18,6 +18,7 @@ from core.memo.memo_dto import (
     MemoUpdateBulk,
 )
 from core.memo.memo_generation_service import generate_memo_llm
+from core.memo.memo_orm import MemoORM
 from core.memo.memo_utils import get_object_memos
 from repos.db.crud_base import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -229,8 +230,16 @@ def update_memos_bulk(
     # favorite changes, so we never emit twice.
     has_shared_changes = any(m.shared_fields_set() for m in memos)
     if has_shared_changes:
-        ws.emit_to_project(
-            DATSEvent.MEMO_UPDATED_BATCH, results, project_id=db_objs[0].project_id
+
+        def to_dto(db_obj: MemoORM) -> MemoRead:
+            return crud_memo.get_memo_read_dto_from_orm(
+                db=db, db_obj=db_obj, user_id=authz_user.user.id
+            )
+
+        ws.emit_to_projects_grouped(
+            DATSEvent.MEMO_UPDATED_BATCH,
+            db_objs,
+            to_dto=to_dto,
         )
     elif any(m.is_favorite is not None for m in memos):
         ws.emit_to_user(
@@ -296,23 +305,31 @@ def delete_memos_bulk(
     authz_user.assert_in_same_project_as_many(Crud.MEMO, memo_ids)
 
     memos = crud_memo.read_by_ids(db, memo_ids)
-    project_ids = {memo.project_id for memo in memos}
-    if len(project_ids) > 1:
-        raise ValueError("All memos must belong to the same project")
 
-    # build the DTOs before deleting: the attached object must still exist
-    results = [
-        crud_memo.get_memo_read_dto_from_orm(
-            db=db, db_obj=memo, user_id=authz_user.user.id
-        )
-        for memo in memos
-    ]
+    # Build the DTOs grouped by project BEFORE deleting: the attached object must
+    # still exist. A bulk delete may span multiple projects, so emit one event per
+    # project, each carrying only that project's memos.
+    groups: dict[int, list] = {}
+    for memo in memos:
+        groups.setdefault(memo.project_id, []).append(memo)
+    results_by_project = {
+        project_id: [
+            crud_memo.get_memo_read_dto_from_orm(
+                db=db, db_obj=memo, user_id=authz_user.user.id
+            )
+            for memo in group
+        ]
+        for project_id, group in groups.items()
+    }
+
     crud_memo.delete_bulk(db=db, ids=memo_ids)
 
-    if results:
+    for project_id, group_results in results_by_project.items():
         ws.emit_to_project(
-            DATSEvent.MEMO_DELETED_BATCH, results, project_id=memos[0].project_id
+            DATSEvent.MEMO_DELETED_BATCH, group_results, project_id=project_id
         )
+
+    results = [dto for group in results_by_project.values() for dto in group]
     return results
 
 

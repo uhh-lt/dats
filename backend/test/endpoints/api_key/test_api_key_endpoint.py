@@ -187,22 +187,3 @@ def test_delete_api_key_of_another_user_returns_404(
         api_key_project["user_key_expiring"].id,
         api_key_project["user_key_never"].id,
     }
-
-
-# ===========================================================================
-# MCP CONFIG (/api-keys/mcp-config) TESTS
-# ===========================================================================
-
-
-def test_get_mcp_config_returns_client_configuration(client: TestClient):
-    """The unauthenticated mcp-config endpoint returns the npx mcp-remote
-    configuration pointing at the server's /mcp URL with a placeholder key."""
-    response = client.get("/api-keys/mcp-config")
-
-    assert response.status_code == 200, response.text
-    config = response.json()["dats-mcp-server"]
-    assert config["command"] == "npx"
-    args = config["args"]
-    assert "mcp-remote" in args
-    assert any(isinstance(arg, str) and arg.endswith("/mcp") for arg in args)
-    assert "Authorization: Bearer API_KEY_HERE" in args

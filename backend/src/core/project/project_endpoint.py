@@ -167,7 +167,10 @@ def delete_project(
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
+    # Capture the member ids and payload BEFORE deletion: the delete cascades the
+    # membership rows, so the post-commit background task cannot re-read them.
+    member_ids = [user.id for user in crud_project.read(db=db, id=proj_id).users]
     db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
     result = ProjectRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.PROJECT_DELETED, result, project_id=db_obj.id)
+    ws.emit_to_users(DATSEvent.PROJECT_DELETED, result, user_ids=member_ids)
     return result

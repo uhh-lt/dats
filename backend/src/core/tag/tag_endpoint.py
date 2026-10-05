@@ -168,6 +168,9 @@ def link_multiple_tags(
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinks:
+    if not multi_link.source_document_ids:
+        return SdocTagLinks(links={})
+
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
     )
@@ -206,6 +209,9 @@ def set_tags_batch(
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinks:
     sdoc_ids = list(links.links.keys())
+    if not sdoc_ids:
+        return SdocTagLinks(links={})
+
     tag_ids = list({tag_id for ids in links.links.values() for tag_id in ids})
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     authz_user.assert_in_same_project_as_many(Crud.TAG, tag_ids)
@@ -238,6 +244,9 @@ def update_tags_batch(
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinks:
+    if not sdoc_ids:
+        return SdocTagLinks(links={})
+
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     authz_user.assert_in_same_project_as_many(Crud.TAG, link_tag_ids)
 
@@ -303,6 +312,9 @@ def unlink_multiple_tags(
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SdocTagLinks:
+    if not multi_link.source_document_ids:
+        return SdocTagLinks(links={})
+
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
     )

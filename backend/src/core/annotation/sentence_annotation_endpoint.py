@@ -85,10 +85,10 @@ def create_sentence_annotations_bulk(
     )
     results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=SentenceAnnotationRead.model_validate,
         )
     return results
 
@@ -246,10 +246,10 @@ def update_sentence_annotations_bulk(
     db_objs = crud_sentence_anno.update_bulk(db=db, update_dtos=sent_annos)
     results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=SentenceAnnotationRead.model_validate,
         )
     return results
 
@@ -303,10 +303,10 @@ def delete_sentence_annotations_bulk(
     db_objs = crud_sentence_anno.delete_bulk(db=db, ids=sentence_anno_ids)
     results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_project(
+        ws.emit_to_projects_grouped(
             DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH,
-            results,
-            project_id=db_objs[0].get_project_id(),
+            db_objs,
+            to_dto=SentenceAnnotationRead.model_validate,
         )
     return results
 
