@@ -24,7 +24,7 @@ class SourceDocumentJobStatusORM(ORMBase):
         Integer, nullable=False, index=False, primary_key=True
     )
     status: Mapped[JobStatus] = mapped_column(Integer, nullable=False, index=False)
-    timestamp: Mapped[datetime | None] = mapped_column(DateTime)
+    timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     def get_project_id(self) -> int:
         return self.source_document.get_project_id()

@@ -9161,7 +9161,7 @@
           },
           "x": { "type": "number", "title": "X", "description": "X coordinate of the Sentence in the search space" },
           "y": { "type": "number", "title": "Y", "description": "Y coordinate of the Sentence in the search space" },
-          "date": { "type": "string", "format": "date-time", "title": "Date", "description": "date of the sdoc" },
+          "date": { "type": "string", "format": "date", "title": "Date", "description": "date of the sdoc" },
           "text": { "type": "string", "title": "Text", "description": "text of the sentence" }
         },
         "type": "object",
@@ -15236,7 +15236,7 @@
             "description": "Boolean Value of the SourceDocumentMetadata"
           },
           "date_value": {
-            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
             "title": "Date Value",
             "description": "Date Value of the SourceDocumentMetadata"
           },
@@ -15269,7 +15269,7 @@
             "description": "Boolean Value of the SourceDocumentMetadata"
           },
           "date_value": {
-            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
             "title": "Date Value",
             "description": "Date Value of the SourceDocumentMetadata"
           },
@@ -15321,7 +15321,7 @@
             "description": "Boolean Value of the SourceDocumentMetadata"
           },
           "date_value": {
-            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
             "title": "Date Value",
             "description": "Date Value of the SourceDocumentMetadata"
           },
@@ -15372,7 +15372,7 @@
             "description": "Boolean Value of the SourceDocumentMetadata"
           },
           "date_value": {
-            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
             "title": "Date Value",
             "description": "Date Value of the SourceDocumentMetadata"
           },

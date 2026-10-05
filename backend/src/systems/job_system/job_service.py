@@ -1,5 +1,5 @@
 import inspect
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Callable, Dict, Literal, TypedDict, TypeVar
 
 import rq
@@ -196,7 +196,7 @@ class JobService(metaclass=SingletonMeta):
                 "project_id": input_obj.project_id,
                 "current_step": 0,
                 "steps": ["Initial step"],
-                "created": datetime.now(),
+                "created": datetime.now(UTC),
                 "finished": None,
                 "device": job_info["device"],
                 "publish_updates": job_info["publish_updates"],

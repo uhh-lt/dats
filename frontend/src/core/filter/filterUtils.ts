@@ -12,7 +12,7 @@ import { LogicalOperator } from "@models/LogicalOperator";
 import { NumberOperator } from "@models/NumberOperator";
 import { SpanAnnotationOperator } from "@models/SpanAnnotationOperator";
 import { StringOperator } from "@models/StringOperator";
-import { dateToLocaleYYYYMMDDString } from "@utils/DateUtils";
+import { toLocalYYYYMMDD } from "@utils/DateUtils";
 
 // TYPES
 
@@ -91,7 +91,7 @@ export const filterOperator2defaultValue: Record<FilterOperator, boolean | strin
   [FilterOperator.ID_LIST]: [],
   [FilterOperator.ID_LIST_RECURSIVE]: [],
   [FilterOperator.LIST]: [],
-  [FilterOperator.DATE]: dateToLocaleYYYYMMDDString(new Date()),
+  [FilterOperator.DATE]: toLocalYYYYMMDD(new Date()),
   [FilterOperator.ATTACHED_OBJECT_TYPE]: "project",
   [FilterOperator.ATTACHED_OBJECT]: ["code", "-1"],
   [FilterOperator.SPAN_ANNOTATION]: ["-1", ""],

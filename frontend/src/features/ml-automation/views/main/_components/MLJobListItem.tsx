@@ -2,7 +2,7 @@ import { JobListItem } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { MlJobRead } from "@models/MlJobRead";
 import { Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
 import { useLiveMLJob } from "../../../_api/mlAutomationQueryOptions";
 
@@ -19,10 +19,10 @@ export const MLJobListItem = memo(({ initialMLJob }: MLJobListItemProps) => {
     if (!mlJob.data) {
       return "";
     }
-    const createdDate = dateToLocaleString(mlJob.data.created);
+    const createdDate = formatDateTime(mlJob.data.created);
     let title = `${mlJob.data.input.ml_job_type}, started at ${createdDate}`;
     if (mlJob.data.status === JobStatus.FINISHED && mlJob.data.finished) {
-      const finishedDate = dateToLocaleString(mlJob.data.finished);
+      const finishedDate = formatDateTime(mlJob.data.finished);
       title += `, finished at ${finishedDate}`;
     }
     return title;

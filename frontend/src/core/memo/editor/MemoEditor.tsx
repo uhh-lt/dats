@@ -4,7 +4,7 @@ import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { Box, Divider, InputBase, Stack, Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { memo } from "react";
 import { AttachedObjectRenderer } from "../renderer";
 import { MemoBlockNoteEditor } from "./_components/MemoBlockNoteEditor";
@@ -42,7 +42,7 @@ export const MemoEditor = memo(
 
     const isEditable = !memo || user?.id === memo.user_id;
     const authorId = memo?.user_id ?? user?.id;
-    const lastModified = memo?.updated ? dateToLocaleString(memo.updated) : "Not saved yet";
+    const lastModified = memo?.updated ? formatDateTime(memo.updated) : "Not saved yet";
 
     if (!user || !authorId) {
       return null;

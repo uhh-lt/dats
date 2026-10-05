@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from sqlalchemy import ColumnElement, and_
@@ -186,7 +186,7 @@ class CorefService(metaclass=SingletonMeta):
                     id=doc.id,
                     type=JobType.COREFERENCE_RESOLUTION,
                     status=JobStatus.FINISHED,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(UTC),
                 )
                 for doc in coref_output.documents
             ],

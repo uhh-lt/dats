@@ -2,7 +2,7 @@ import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
-import { dateToLocaleDateString } from "@utils/DateUtils";
+import { formatDateOnly } from "@utils/DateUtils";
 import { memo } from "react";
 
 interface SdocMetadataRendererProps {
@@ -38,7 +38,7 @@ export function SdocMetadataRendererWithData({
     case MetaType.NUMBER:
       return <>{sdocMetadata.int_value ? sdocMetadata.int_value : <i>empty</i>}</>;
     case MetaType.DATE:
-      return <>{sdocMetadata.date_value ? dateToLocaleDateString(sdocMetadata.date_value) : <i>empty</i>}</>;
+      return <>{sdocMetadata.date_value ? formatDateOnly(sdocMetadata.date_value) : <i>empty</i>}</>;
     case MetaType.BOOLEAN:
       return <>{sdocMetadata.boolean_value ? sdocMetadata.boolean_value : <i>empty</i>}</>;
     case MetaType.LIST:

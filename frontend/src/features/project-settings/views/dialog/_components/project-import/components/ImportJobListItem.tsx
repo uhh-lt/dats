@@ -3,7 +3,7 @@ import { JobListItem } from "@core/job";
 import { ImportJobRead } from "@models/ImportJobRead";
 import { JobStatus } from "@models/JobStatus";
 import { Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
 
 interface ImportJobListItemProps {
@@ -19,10 +19,10 @@ export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemPr
     if (!importJob.data) {
       return "";
     }
-    const createdDate = dateToLocaleString(importJob.data.created);
+    const createdDate = formatDateTime(importJob.data.created);
     let title = `${importJob.data.input.import_job_type}, started at ${createdDate}`;
     if (importJob.data.status === JobStatus.FINISHED && importJob.data.finished) {
-      const finishedDate = dateToLocaleString(importJob.data.finished);
+      const finishedDate = formatDateTime(importJob.data.finished);
       title += `, finished at ${finishedDate}`;
     }
     return title;

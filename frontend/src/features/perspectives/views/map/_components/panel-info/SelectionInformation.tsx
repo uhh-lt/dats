@@ -2,13 +2,13 @@ import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { getIconComponent, Icon } from "@components/icons";
+import { LinkButton } from "@core/navigation";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
 import { TagMenuButton, TagRow } from "@core/tag";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { LinkButton } from "@core/navigation";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useEffect } from "react";
@@ -67,7 +67,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
             id: metadataId,
             str_value: data.str_value,
             int_value: data.int_value,
-            date_value: data.date_value ? new Date(data.date_value).toISOString() : data.date_value,
+            date_value: data.date_value,
             boolean_value: data.boolean_value,
             list_value: data.list_value,
           },

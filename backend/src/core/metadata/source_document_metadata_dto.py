@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,7 +16,7 @@ class SourceDocumentMetadataBaseDTO(BaseModel):
     boolean_value: bool | None = Field(
         description="Boolean Value of the SourceDocumentMetadata"
     )
-    date_value: datetime | None = Field(
+    date_value: date | None = Field(
         description="Date Value of the SourceDocumentMetadata"
     )
     list_value: list[str] | None = Field(
@@ -63,7 +63,7 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
                 return SourceDocumentMetadataCreate(
                     str_value=None,
                     boolean_value=None,
-                    date_value=value if value is not None else datetime.now(),
+                    date_value=value if value is not None else date.today(),
                     int_value=None,
                     list_value=None,
                     source_document_id=source_document_id,
@@ -131,7 +131,7 @@ class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase)
                 return SourceDocumentMetadataUpdate(
                     str_value=None,
                     boolean_value=None,
-                    date_value=value if value is not None else datetime.now(),
+                    date_value=value if value is not None else date.today(),
                     int_value=None,
                     list_value=None,
                 )
@@ -187,7 +187,7 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
     )
     model_config = ConfigDict(from_attributes=True)
 
-    def get_value(self) -> str | int | datetime | bool | list | None:
+    def get_value(self) -> str | int | date | bool | list | None:
         match self.project_metadata.metatype:
             case MetaType.STRING:
                 return self.str_value
@@ -250,7 +250,7 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
                     id=sdoc_metadata_id,
                     str_value=None,
                     boolean_value=None,
-                    date_value=datetime.fromisoformat(value),
+                    date_value=date.fromisoformat(value),
                     int_value=None,
                     list_value=None,
                     source_document_id=source_document_id,

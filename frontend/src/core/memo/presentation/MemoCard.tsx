@@ -3,7 +3,7 @@ import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { Box, Card, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
-import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
+import { formatDate, formatRelativeTime } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -136,12 +136,12 @@ const MemoCardWithData = memo(
             )}
             {renderUpdatedDate && (
               <Typography variant="caption" color="text.secondary" noWrap>
-                Edited {dateToRelativeString(memo.updated)}
+                Edited {formatRelativeTime(memo.updated)}
               </Typography>
             )}
             {renderCreatedDate && (
               <Typography variant="caption" color="text.secondary" noWrap>
-                {dateToLocaleDateString(memo.created)}
+                {formatDate(memo.created)}
               </Typography>
             )}
           </Stack>

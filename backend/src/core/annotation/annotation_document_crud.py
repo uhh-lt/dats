@@ -47,12 +47,14 @@ class CRUDAnnotationDocument(
         self.update(
             db=db,
             id=id,
-            update_dto=AnnotationDocumentUpdate(updated=datetime.datetime.now()),
+            update_dto=AnnotationDocumentUpdate(
+                updated=datetime.datetime.now(datetime.UTC)
+            ),
         )
 
     def update_timestamps(self, db: Session, *, ids: list[int]) -> None:
         """Update annotation-document timestamps using batched SQL statements."""
-        updated = datetime.datetime.now()
+        updated = datetime.datetime.now(datetime.UTC)
         for i in range(0, len(ids), conf.postgres.batch_size):
             batch_ids = ids[i : i + conf.postgres.batch_size]
             db.execute(

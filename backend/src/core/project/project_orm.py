@@ -29,10 +29,12 @@ class ProjectORM(ORMBase):
     title: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     description: Mapped[str] = mapped_column(String, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     updated: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
     object_handle: Mapped["ObjectHandleORM"] = relationship(

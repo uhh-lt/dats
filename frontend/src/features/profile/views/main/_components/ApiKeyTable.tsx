@@ -3,7 +3,7 @@ import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ApiKeyRead } from "@models/ApiKeyRead";
 import { Box, Chip, IconButton, Tooltip, Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 
@@ -27,7 +27,7 @@ const columns: MRT_ColumnDef<ApiKeyRead>[] = [
   {
     accessorKey: "created_at",
     header: "Created",
-    Cell: ({ row }) => dateToLocaleString(row.original.created_at),
+    Cell: ({ row }) => formatDateTime(row.original.created_at),
   },
   {
     accessorKey: "expires_at",
@@ -38,9 +38,9 @@ const columns: MRT_ColumnDef<ApiKeyRead>[] = [
         return <Typography variant="body2">Never</Typography>;
       }
       if (isExpired(row.original)) {
-        return <Chip label={`Expired (${dateToLocaleString(expires_at)})`} color="error" size="small" />;
+        return <Chip label={`Expired (${formatDateTime(expires_at)})`} color="error" size="small" />;
       }
-      return dateToLocaleString(expires_at);
+      return formatDateTime(expires_at);
     },
   },
 ];

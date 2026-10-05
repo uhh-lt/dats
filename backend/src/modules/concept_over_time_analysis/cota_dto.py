@@ -1,3 +1,4 @@
+from datetime import date as date_type
 from datetime import datetime
 from enum import Enum
 from typing import Literal
@@ -34,7 +35,7 @@ class COTASentence(COTASentenceID):
     )
     x: float = Field(description="X coordinate of the Sentence in the search space")
     y: float = Field(description="Y coordinate of the Sentence in the search space")
-    date: datetime = Field(description="date of the sdoc")
+    date: date_type = Field(description="date of the sdoc")
     text: str = Field(description="text of the sentence")
 
 

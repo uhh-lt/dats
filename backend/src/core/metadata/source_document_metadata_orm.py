@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
-    DateTime,
+    Date,
     ForeignKey,
     Integer,
     String,
@@ -26,7 +26,7 @@ class SourceDocumentMetadataORM(ORMBase):
     int_value: Mapped[int | None] = mapped_column(Integer)
     str_value: Mapped[str | None] = mapped_column(String)
     boolean_value: Mapped[bool | None] = mapped_column(Boolean)
-    date_value: Mapped[datetime | None] = mapped_column(DateTime)
+    date_value: Mapped[date | None] = mapped_column(Date)
     list_value: Mapped[list[str] | None] = mapped_column(ARRAY(String))
 
     # many to one

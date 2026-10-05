@@ -21,10 +21,12 @@ class TagORM(ORMBase):
     description: Mapped[str | None] = mapped_column(String, index=False)
     color: Mapped[str | None] = mapped_column(String, index=False)
     created: Mapped[datetime | None] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     updated: Mapped[datetime | None] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
     # one to one

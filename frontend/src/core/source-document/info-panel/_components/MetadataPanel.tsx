@@ -34,7 +34,7 @@ function MetadataPanelContent({ sdocId, onAddFilterClick }: MetadataPanelProps) 
             id: metadataId,
             str_value: data.str_value,
             int_value: data.int_value,
-            date_value: data.date_value ? new Date(data.date_value).toISOString() : data.date_value,
+            date_value: data.date_value,
             boolean_value: data.boolean_value,
             list_value: data.list_value,
           },

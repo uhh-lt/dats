@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import List
 
@@ -50,7 +50,7 @@ class DateGroupBy(Enum):
     MONTH = "MONTH"
     DAY = "DAY"
 
-    def apply(self, column: InstrumentedAttribute[datetime]) -> List:
+    def apply(self, column: InstrumentedAttribute[datetime | date]) -> List:
         match self:
             case DateGroupBy.YEAR:
                 return [func.extract("year", column)]

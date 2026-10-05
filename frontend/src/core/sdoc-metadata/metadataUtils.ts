@@ -1,7 +1,6 @@
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
-import { dateToLocaleYYYYMMDDString } from "@utils/DateUtils";
 
 export const getMetadataValue = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
   switch (projectMetadata.metatype) {
@@ -10,7 +9,7 @@ export const getMetadataValue = (metadata: SourceDocumentMetadataUpdate, project
     case MetaType.NUMBER:
       return metadata.int_value;
     case MetaType.DATE:
-      return metadata.date_value ? dateToLocaleYYYYMMDDString(metadata.date_value) : metadata.date_value;
+      return metadata.date_value;
     case MetaType.LIST:
       return metadata.list_value;
     case MetaType.BOOLEAN:

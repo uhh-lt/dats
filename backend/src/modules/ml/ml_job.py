@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import and_, or_
 
@@ -32,7 +32,7 @@ sqlr = SQLRepo()
     result_ttl=JobTiming.NINETY_DAYS,
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:
-    start_time = datetime.now()
+    start_time = datetime.now(UTC)
 
     with sqlr.transaction() as db:
         match payload.ml_job_type:

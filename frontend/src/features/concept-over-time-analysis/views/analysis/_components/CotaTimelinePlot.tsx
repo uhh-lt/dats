@@ -4,7 +4,7 @@ import { COTARead } from "@models/COTARead";
 import { DateGroupBy } from "@models/DateGroupBy";
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { dateToLocaleDate } from "@utils/DateUtils";
+import { parseLocalYYYYMMDD } from "@utils/DateUtils";
 import { padStart } from "lodash";
 import { ReactNode, useMemo } from "react";
 import {
@@ -39,7 +39,8 @@ export function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {
     const result: Record<string, any> = {};
     cota.search_space.forEach((cotaSentence) => {
       // prepare date
-      const date = dateToLocaleDate(cotaSentence.date);
+      const date = parseLocalYYYYMMDD(cotaSentence.date);
+      if (!date) return;
       let dateStr = "";
       switch (cota.timeline_settings.group_by) {
         case DateGroupBy.DAY:

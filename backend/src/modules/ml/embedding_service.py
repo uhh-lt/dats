@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 import numpy as np
 from sqlalchemy import ColumnElement, and_
@@ -140,7 +140,7 @@ class EmbeddingService(metaclass=SingletonMeta):
                     id=id,
                     type=JobType.SENTENCE_EMBEDDING,
                     status=JobStatus.FINISHED,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(UTC),
                 )
                 for id in sdoc_ids
             ],
@@ -221,7 +221,7 @@ class EmbeddingService(metaclass=SingletonMeta):
                     id=id,
                     type=JobType.DOCUMENT_EMBEDDING,
                     status=JobStatus.FINISHED,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(UTC),
                 )
                 for id in sdoc_ids
             ],

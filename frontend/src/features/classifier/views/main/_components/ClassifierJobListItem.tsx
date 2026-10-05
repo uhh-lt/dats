@@ -6,7 +6,7 @@ import { ClassifierTask } from "@models/ClassifierTask";
 import { ClassifierTrainingOutput } from "@models/ClassifierTrainingOutput";
 import { JobStatus } from "@models/JobStatus";
 import { Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
@@ -25,10 +25,10 @@ export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJ
     if (!cj.data) {
       return "";
     }
-    const createdDate = dateToLocaleString(cj.data.created);
+    const createdDate = formatDateTime(cj.data.created);
     let title = `${cj.data.input.model_type} - ${cj.data.input.task_type}, started at ${createdDate}`;
     if (cj.data.status === JobStatus.FINISHED && cj.data.finished) {
-      const finishedDate = dateToLocaleString(cj.data.finished);
+      const finishedDate = formatDateTime(cj.data.finished);
       title += `, finished at ${finishedDate}`;
     }
     return title;

@@ -12,7 +12,7 @@ import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItem, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { formatDateTime } from "@utils/DateUtils";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
@@ -35,10 +35,10 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   const subTitle = useMemo(() => {
     if (!llmJob.data) return "";
     const count = llmJob.data.input.specific_task_parameters.sdoc_ids.length;
-    const createdDate = dateToLocaleString(llmJob.data.created);
+    const createdDate = formatDateTime(llmJob.data.created);
     let title = `Processes ${count} document${count !== 1 ? "s" : ""}, started at ${createdDate}`;
     if (llmJob.data.status === JobStatus.FINISHED && llmJob.data.finished) {
-      title += `, finished at ${dateToLocaleString(llmJob.data.finished)}`;
+      title += `, finished at ${formatDateTime(llmJob.data.finished)}`;
     }
     return title;
   }, [llmJob.data]);
