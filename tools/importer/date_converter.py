@@ -4,7 +4,7 @@ date_converter.py
 
 Scan a directory of JSON metadata files and add a date field composed from
 the `year` and `month` fields. The produced date string is always in the
-exact format: YYYY-MM-DDT00:00:00 (day is set to 1).
+exact format: YYYY-MM-DD (day is set to 1).
 
 Usage:
     python date_converter.py /path/to/jsons --date-field date
@@ -79,9 +79,9 @@ def parse_month(month_field: Optional[str]) -> int:
 
 
 def build_iso_date(year: int, month: int, day: int = 1) -> str:
-    dt = _datetime.datetime(year, month, day)
-    # Ensure the format exactly matches YYYY-MM-DDT00:00:00
-    return dt.strftime("%Y-%m-%dT%H:%M:%S")
+    dt = _datetime.date(year, month, day)
+    # Ensure the format exactly matches YYYY-MM-DD
+    return dt.strftime("%Y-%m-%d")
 
 
 def process_file(path: Path, date_field: str) -> bool:

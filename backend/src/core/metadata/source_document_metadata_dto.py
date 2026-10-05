@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -246,11 +246,16 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
                     project_metadata=project_metadata,
                 )
             case MetaType.DATE:
+                # tolerate datetime strings (e.g. from the LLM)
+                try:
+                    parsed_date = date.fromisoformat(value)
+                except ValueError:
+                    parsed_date = datetime.fromisoformat(value).date()
                 return SourceDocumentMetadataReadResolved(
                     id=sdoc_metadata_id,
                     str_value=None,
                     boolean_value=None,
-                    date_value=date.fromisoformat(value),
+                    date_value=parsed_date,
                     int_value=None,
                     list_value=None,
                     source_document_id=source_document_id,
