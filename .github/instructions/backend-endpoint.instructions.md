@@ -15,11 +15,11 @@ Endpoint modules define the REST API surface of the backend. Each file owns exac
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.example.example_dto import ExampleCreate, ExampleRead, ExampleUpdate
-from systems.event_system.datsevent import DATSEvent
-from systems.event_system.websocket_emitter import WebsocketEmitter
+from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 # 2. Router: one per file, prefix = resource name, auth enforced router-wide.
 router = APIRouter(
