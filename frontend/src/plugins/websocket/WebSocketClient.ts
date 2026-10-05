@@ -17,6 +17,11 @@ class WebSocketClient {
       return;
     }
 
+    // Never open an unauthenticated socket: the handshake requires a token.
+    if (!this.getToken()) {
+      return;
+    }
+
     this.intentionallyClosed = false;
     store.dispatch(WebsocketActions.setConnectionStatus("connecting"));
 
@@ -27,7 +32,7 @@ class WebSocketClient {
     this.socket.onopen = () => {
       // Read the token fresh on every (re)connect: it is proactively refreshed
       // while the app is running, so a cached token would eventually be stale.
-      const token = OpenAPI.TOKEN ?? localStorage.getItem("dats-access");
+      const token = this.getToken();
       this.socket?.send(JSON.stringify({ token }));
       this.reconnectAttempt = 0;
       store.dispatch(WebsocketActions.setConnectionStatus("connected"));
@@ -69,13 +74,23 @@ class WebSocketClient {
     if (this.intentionallyClosed) {
       return;
     }
+    // Don't keep retrying a handshake that will fail without a token.
+    if (!this.getToken()) {
+      return;
+    }
     const delay = RECONNECT_DELAYS_MS[Math.min(this.reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)];
     this.reconnectAttempt += 1;
     this.reconnectTimeout = setTimeout(() => this.connect(), delay);
   }
+
+  private getToken(): string | undefined {
+    const token = OpenAPI.TOKEN;
+    // OpenAPI.TOKEN may be a resolver; only use it when it's a plain string.
+    if (typeof token === "string" && token.length > 0) {
+      return token;
+    }
+    return localStorage.getItem("dats-access") ?? undefined;
+  }
 }
 
 export const webSocketClient = new WebSocketClient();
-
-// Establish the connection immediately when this module is imported.
-webSocketClient.connect();

@@ -6,6 +6,7 @@ import { ConfirmationDialog } from "@core/notification";
 import { WhatsNewDialog } from "@features/whats-new";
 import { useDebounce } from "@hooks/useDebounce";
 import { Box, Button, Container, LinearProgress, Typography } from "@mui/material";
+import { webSocketClient } from "@plugins/websocket";
 import { ProjectActions } from "@store/global/projectSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import {
@@ -119,6 +120,16 @@ function AuthRouteLayout() {
       dispatch(ProjectActions.changeProject(projectId));
     }
   }, [currentProjectId, dispatch, projectId]);
+
+  // The websocket connection is tied to the authenticated app shell: it only
+  // exists while the user is logged in. This layout mounts only when
+  // authenticated and unmounts on logout/redirect to login, so we connect on
+  // mount and disconnect on unmount. `connect()` is a no-op when already
+  // connected or when no token is available.
+  useEffect(() => {
+    webSocketClient.connect();
+    return () => webSocketClient.disconnect();
+  }, []);
 
   return (
     <>
