@@ -298,23 +298,6 @@
         }
       }
     },
-    "/api-keys/mcp-config": {
-      "get": {
-        "tags": ["api-key"],
-        "summary": "Get MCP Client configuration",
-        "operationId": "get_mcp_config",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "additionalProperties": true, "type": "object", "title": "Response Api-Key-Get Mcp Config" }
-              }
-            }
-          }
-        }
-      }
-    },
     "/authentication/register": {
       "post": {
         "tags": ["authentication"],

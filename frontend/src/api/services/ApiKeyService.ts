@@ -61,15 +61,4 @@ export class ApiKeyService {
       },
     });
   }
-  /**
-   * Get MCP Client configuration
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static getMcpConfig(): CancelablePromise<Record<string, any>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/api-keys/mcp-config",
-    });
-  }
 }

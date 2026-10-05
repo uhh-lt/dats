@@ -2,7 +2,6 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Request,
     status,
 )
 from sqlalchemy.orm import Session
@@ -108,27 +107,3 @@ def delete_api_key(
     result = ApiKeyRead.model_validate(db_key)
     ws.emit_to_user(DATSEvent.API_KEY_DELETED, result, user_id=current_user.id)
     return result
-
-
-# --- other operations
-
-
-@router.get(
-    "/mcp-config",
-    summary="Get MCP Client configuration",
-)
-def get_mcp_config(
-    request: Request,
-) -> dict:
-    mcp_url = f"{str(request.base_url).rstrip('/')}/mcp"
-    return {
-        "dats-mcp-server": {
-            "command": "npx",
-            "args": [
-                "mcp-remote",
-                mcp_url,
-                "--header",
-                "Authorization: Bearer API_KEY_HERE",
-            ],
-        }
-    }

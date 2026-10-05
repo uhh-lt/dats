@@ -1,4 +1,3 @@
-import { ApiKeyService } from "@api/services/ApiKeyService";
 import { useOpenSnackbar } from "@core/notification";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -6,6 +5,15 @@ import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import { ApiKeyCreateDialog } from "./ApiKeyCreateDialog";
 import { ApiKeyTable } from "./ApiKeyTable";
+
+function buildMcpConfig(): Record<string, unknown> {
+  return {
+    "dats-mcp-server": {
+      command: "npx",
+      args: ["mcp-remote", `${window.location.origin}/mcp`, "--header", "Authorization: Bearer API_KEY_HERE"],
+    },
+  };
+}
 
 export function ApiKeysSection() {
   // local client state
@@ -19,12 +27,9 @@ export function ApiKeysSection() {
   const handleCloseCreateDialog = useCallback(() => setIsCreateDialogOpen(false), []);
 
   const handleCopyMcpConfig = useCallback(() => {
-    ApiKeyService.getMcpConfig()
-      .then((config) =>
-        navigator.clipboard
-          .writeText(JSON.stringify(config, null, 2))
-          .then(() => openSnackbar({ text: "Copied MCP config to clipboard", severity: "success" })),
-      )
+    navigator.clipboard
+      .writeText(JSON.stringify(buildMcpConfig(), null, 2))
+      .then(() => openSnackbar({ text: "Copied MCP config to clipboard", severity: "success" }))
       .catch(() => openSnackbar({ text: "Failed to copy MCP config", severity: "error" }));
   }, [openSnackbar]);
 
