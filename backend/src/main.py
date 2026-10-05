@@ -129,7 +129,6 @@ from common.dats_event import build_job_event_models
 build_job_event_models()
 
 endpoint_modules = import_by_suffix("_endpoint.py")
-endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
     app.include_router(em.router)
 
