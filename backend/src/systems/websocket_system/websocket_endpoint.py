@@ -28,9 +28,13 @@ async def websocket_endpoint(websocket: WebSocket):
             )
             return
 
-        # Open a short-lived session only for the auth handshake
+        # Open a short-lived session only for the auth handshake. Capture the
+        # user id inside the block: on exit the transaction commits (expiring
+        # ORM attributes) and closes (detaching the instance), so reading
+        # current_user.id afterwards would raise DetachedInstanceError.
         with SQLRepo().transaction() as db:
             current_user = resolve_user(websocket, db, token)
+            user_id = current_user.id
 
     except (asyncio.TimeoutError, json.JSONDecodeError, Exception) as e:
         logger.warning(f"Websocket authentication failed: {e}")
@@ -39,14 +43,12 @@ async def websocket_endpoint(websocket: WebSocket):
         )
         return
 
-    await websocket_service.connect(websocket, current_user.id)
+    await websocket_service.connect(websocket, user_id)
     try:
         while True:
             data = await websocket.receive_text()  # noqa: F841
     except WebSocketDisconnect:
-        websocket_service.disconnect(websocket, current_user.id)
+        websocket_service.disconnect(websocket, user_id)
     except Exception as e:
-        logger.error(
-            f"Unexpected error in websocket loop of user {current_user.id}: {e}"
-        )
-        websocket_service.disconnect(websocket, current_user.id)
+        logger.error(f"Unexpected error in websocket loop of user {user_id}: {e}")
+        websocket_service.disconnect(websocket, user_id)
