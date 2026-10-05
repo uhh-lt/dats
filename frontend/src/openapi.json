@@ -1987,6 +1987,92 @@
         }
       }
     },
+    "/job/duplicate_finder": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start DuplicateFinder job",
+        "operationId": "start_duplicate_finder_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/duplicate_finder/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get DuplicateFinder job",
+        "operationId": "get_duplicate_finder_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/export": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start Export job",
+        "operationId": "start_export_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/export/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Export job",
+        "operationId": "get_export_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/job/ml": {
       "post": {
         "tags": ["job"],
@@ -2098,92 +2184,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/duplicate_finder": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start DuplicateFinder job",
-        "operationId": "start_duplicate_finder_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/duplicate_finder/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get DuplicateFinder job",
-        "operationId": "get_duplicate_finder_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/export": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start Export job",
-        "operationId": "start_export_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/export/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get Export job",
-        "operationId": "get_export_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -12417,15 +12417,15 @@
           "type": { "type": "string", "const": "JOB_UPDATED", "title": "Type", "default": "JOB_UPDATED" },
           "payload": {
             "anyOf": [
-              { "$ref": "#/components/schemas/LlmAssistantJobRead" },
-              { "$ref": "#/components/schemas/CrawlerJobRead" },
-              { "$ref": "#/components/schemas/PerspectivesJobRead" },
-              { "$ref": "#/components/schemas/MlJobRead" },
-              { "$ref": "#/components/schemas/DuplicateFinderJobRead" },
-              { "$ref": "#/components/schemas/COTARefinementJobRead" },
               { "$ref": "#/components/schemas/ClassifierJobRead" },
+              { "$ref": "#/components/schemas/COTARefinementJobRead" },
+              { "$ref": "#/components/schemas/CrawlerJobRead" },
+              { "$ref": "#/components/schemas/DuplicateFinderJobRead" },
+              { "$ref": "#/components/schemas/ExportJobRead" },
               { "$ref": "#/components/schemas/ImportJobRead" },
-              { "$ref": "#/components/schemas/ExportJobRead" }
+              { "$ref": "#/components/schemas/LlmAssistantJobRead" },
+              { "$ref": "#/components/schemas/MlJobRead" },
+              { "$ref": "#/components/schemas/PerspectivesJobRead" }
             ],
             "title": "Payload"
           }

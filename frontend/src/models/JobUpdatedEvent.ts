@@ -14,13 +14,13 @@ import type { PerspectivesJobRead } from "./PerspectivesJobRead";
 export type JobUpdatedEvent = {
   type?: string;
   payload:
-    | LlmAssistantJobRead
-    | CrawlerJobRead
-    | PerspectivesJobRead
-    | MlJobRead
-    | DuplicateFinderJobRead
-    | COTARefinementJobRead
     | ClassifierJobRead
+    | COTARefinementJobRead
+    | CrawlerJobRead
+    | DuplicateFinderJobRead
+    | ExportJobRead
     | ImportJobRead
-    | ExportJobRead;
+    | LlmAssistantJobRead
+    | MlJobRead
+    | PerspectivesJobRead;
 };
