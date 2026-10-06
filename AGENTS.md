@@ -22,6 +22,16 @@ You're an expert in the following areas:
 
 Find more information in the [Copilot Instructions](.github/copilot-instructions.md) files!
 
+## Working in Git Worktrees
+
+Each worktree has its own isolated dev stack (own compose project, own port block, own databases). Ray, vLLM and Docling are shared hosted services and are never started locally.
+
+- First thing in a fresh worktree: run `just worktree-up` (inside an existing linked worktree) or `just worktree-up <branch>` (from the main checkout, creates the worktree). It clones the env files from the main checkout, installs dependencies and starts and verifies postgres, redis, elasticsearch and weaviate. Do not run any other command (tests, dev servers, migrations) before it succeeded.
+- Use `just` recipes only. Never hardcode ports or hostnames: they live in this worktree's `docker/.env`, `backend/.env` and `frontend/.env`.
+- Only touch this worktree's compose project; never run docker commands against other projects or containers.
+- Tests (`just test backend`) reset the `datstest` database of this worktree's own postgres, which is safe.
+- When finished, `just worktree-down` removes the stack, its volumes and the worktree (it refuses on uncommitted or unpushed work).
+
 ## General Guidelines
 
 - Use early returns for readability.
