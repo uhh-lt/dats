@@ -26,6 +26,8 @@ Run `just --list` to see all available commands.
 | `just precommit`                                      | Run all pre-commit hooks over all files                            |
 | `just update-api`                                     | Regenerate the frontend API client from the running backend        |
 | `just alembic migrate\|check\|revision "msg"`         | Database migrations                                                |
+| `just worktree-up [branch]`                           | Create/set up a worktree with its own isolated dev stack           |
+| `just worktree-down [branch] [--force]`               | Remove a worktree, its docker stack and volumes                    |
 
 ## Architecture
 
@@ -45,6 +47,16 @@ Client-server app. In development, we run the application processes ourselves (`
   - **Docling** — document conversion (`backend/src/repos/docling_repo.py`)
 
 Ports follow a prefix scheme: `<port_prefix>00` = frontend, `<port_prefix>20` = API.
+
+## Git Worktrees
+
+Each worktree has its own isolated dev stack (own compose project, port block and databases); ray, vLLM and docling are shared hosted services.
+
+- First thing in a fresh worktree: run `just worktree-up` (inside an existing linked worktree) or `just worktree-up <branch>` (from the main checkout). Run no tests, dev servers or migrations before it succeeded.
+- Use `just` recipes only. Never hardcode ports or hostnames; read them from the worktree's `docker/.env`, `backend/.env` and `frontend/.env`.
+- Only touch this worktree's compose project; never run docker commands against other projects.
+- Run dev servers (`just dev ...`) in the background and check their logs; do not block on them.
+- When finished, `just worktree-down` removes the stack and the worktree.
 
 ## Core Concepts
 
