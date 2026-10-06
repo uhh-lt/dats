@@ -169,3 +169,20 @@ alembic action *args:
 [group("7. Release")]
 release version:
     ./bin/dev/release.sh "$1"
+
+# --- 8. Worktrees ---------------------------------------------------------------
+
+[arg("base", help="Optional base ref for a new branch (default: HEAD)")]
+[arg("branch", help="Branch to create a worktree for; omit inside an existing linked worktree to set it up in place")]
+[doc("Create an isolated worktree with its own env, ports and docker stack, and start the stack")]
+[group("8. Worktrees")]
+worktree-up branch="" base="":
+    if [ -z "$1" ]; then ./bin/dev/worktree-up.sh
+    elif [ -z "${2:-}" ]; then ./bin/dev/worktree-up.sh "$1"
+    else ./bin/dev/worktree-up.sh "$1" "$2"; fi
+
+[arg("args", help="Optional branch (omit inside a linked worktree) and --force to discard uncommitted or unpushed work")]
+[doc("Stop a worktree's servers and docker stack (deleting its volumes) and remove the worktree")]
+[group("8. Worktrees")]
+worktree-down *args:
+    ./bin/dev/worktree-down.sh "$@"

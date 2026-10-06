@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure that the script is run from the root directory of the project
-if [ ! -d ".git" ]; then
+if [ ! -e ".git" ]; then
 	echo "This script must be run from the root directory of the project."
 	exit 1
 fi
