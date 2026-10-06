@@ -12,6 +12,8 @@
 # Environment:
 #   DATS_ENV_SOURCE              checkout to clone env files from (default: main checkout)
 #   DATS_WORKTREE_PORT_RANGE     "<first>-<last>" 3-digit port prefixes (default: 200-299)
+#   DATS_WORKTREE_CLAIMS_DIR     shared directory where developers on this machine claim
+#                                port prefixes (default: /var/tmp/dats-worktree-ports)
 set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
@@ -27,10 +29,11 @@ slugify() {
 	echo "${slug:0:30}"
 }
 
-# Print the first port prefix whose whole block is unused by sibling worktrees and the host.
+# Print the first port prefix whose whole block is unclaimed, unused by sibling worktrees and
+# not listened on by the host. Claims of worktrees that no longer exist are reclaimed.
 allocate_prefix() {
 	local first="${PORT_RANGE%-*}" last="${PORT_RANGE#*-}"
-	local used_prefixes listening candidate port busy
+	local used_prefixes listening candidate claim port busy
 	used_prefixes="$(
 		git -C "${MAIN_CHECKOUT}" worktree list --porcelain | sed -n 's/^worktree //p' |
 			while read -r wt; do
@@ -40,6 +43,11 @@ allocate_prefix() {
 	listening="$(ss -ltnH | awk '{n=split($4, a, ":"); print a[n]}')"
 	for ((candidate = first; candidate <= last; candidate++)); do
 		if grep -qx "${candidate}" <<<"${used_prefixes}"; then continue; fi
+		claim="${DATS_CLAIMS_DIR}/${candidate}"
+		if [[ -f "${claim}" ]]; then
+			if [[ -d "$(cat "${claim}")" ]]; then continue; fi
+			rm -f "${claim}"
+		fi
 		busy=0
 		for port in $(seq "${candidate}00" "${candidate}99"); do
 			if grep -qx "${port}" <<<"${listening}"; then
@@ -56,8 +64,10 @@ allocate_prefix() {
 	return 1
 }
 
-# Allocation and env creation happen under one lock, so parallel runs cannot pick the same prefix.
-exec 9>"${XDG_RUNTIME_DIR:-/tmp}/dats-worktree.lock"
+# Allocation, env creation and claiming happen under one machine-wide lock, so parallel runs
+# (also of different developers) cannot pick the same prefix.
+dats_claims_init
+exec 9>"${DATS_CLAIMS_DIR}/.lock"
 flock 9
 
 if [ "$#" -ge 1 ]; then
@@ -90,6 +100,7 @@ fi
 PREFIX="$(allocate_prefix)"
 "${DATS_ROOT}/bin/setup/setup-worktree-envs.sh" \
 	--source "${SOURCE}" --target "${TARGET}" --slug "${SLUG}" --prefix "${PREFIX}"
+(umask 000 && printf '%s\n' "${TARGET}" >"${DATS_CLAIMS_DIR}/${PREFIX}")
 exec 9>&-
 
 cd "${TARGET}"
