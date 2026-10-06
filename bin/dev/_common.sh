@@ -34,7 +34,7 @@ dats_maybe_debug() {
 	fi
 }
 
-# Shared claims directory for worktree port prefixes. It is writable by every developer on the
+# Shared claims directory for worktree port prefixes (see docs/development/worktrees.md). It is writable by every developer on the
 # machine (a claim of a removed worktree must be reclaimable by anyone, so no sticky bit).
 # Each claim is a file named after the prefix and containing the worktree path.
 DATS_CLAIMS_DIR="${DATS_WORKTREE_CLAIMS_DIR:-/var/tmp/dats-worktree-ports}"
