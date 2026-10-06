@@ -116,5 +116,5 @@ cd "${TARGET}"
 echo
 echo "Worktree ready: ${TARGET}"
 echo "  project:  $(sed -n 's/^COMPOSE_PROJECT_NAME=//p' docker/.env)"
-echo "  backend:  http://localhost:${PREFIX}20   frontend: http://localhost:${PREFIX}00"
+echo "  backend:  http://localhost:${PREFIX}20   frontend: https://localhost:${PREFIX}00"
 echo "  start servers with: just dev backend | just dev worker | just dev frontend"
