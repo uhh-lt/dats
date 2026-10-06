@@ -67,4 +67,5 @@ fi
 
 cd "${MAIN_CHECKOUT}"
 git worktree remove --force "${TARGET}"
+dats_claims_release "${TARGET}"
 echo "Removed worktree ${TARGET} (branch kept)."

@@ -29,12 +29,13 @@ When it finishes it prints the project name and the backend and frontend URLs. S
 
 ## Ports
 
-Each worktree gets a free three-digit port prefix `NNN`, so its services run on `NNN00`-`NNN99` (for example `20022` for PostgreSQL). Prefixes are allocated from `200-299` by default; prefixes already used by sibling worktrees or with listening ports are skipped. Allocation is locked, so creating several worktrees in parallel is safe. The prefix `101` is reserved for the hosted services.
+Each worktree gets a free three-digit port prefix `NNN`, so its services run on `NNN00`-`NNN99` (for example `20022` for PostgreSQL). Prefixes are allocated from `200-299` by default. A prefix is skipped if a sibling worktree uses it, if any of its ports is listening, or if another developer on the machine has claimed it. Claims are files in the shared directory `/var/tmp/dats-worktree-ports/`, writable by everyone; `worktree-down` releases them, and claims of worktrees that no longer exist are reclaimed automatically. Allocation is locked machine-wide, so creating several worktrees in parallel is safe, also across developers. The prefix `101` is reserved for the hosted services.
 
-| Variable                   | Default       | Purpose                                              |
-| -------------------------- | ------------- | ---------------------------------------------------- |
-| `DATS_ENV_SOURCE`          | main checkout | Checkout whose `.env` files are cloned               |
-| `DATS_WORKTREE_PORT_RANGE` | `200-299`     | Range of port prefixes (keep them at or below `327`) |
+| Variable                   | Default                        | Purpose                                              |
+| -------------------------- | ------------------------------ | ---------------------------------------------------- |
+| `DATS_ENV_SOURCE`          | main checkout                  | Checkout whose `.env` files are cloned               |
+| `DATS_WORKTREE_PORT_RANGE` | `200-299`                      | Range of port prefixes (keep them at or below `327`) |
+| `DATS_WORKTREE_CLAIMS_DIR` | `/var/tmp/dats-worktree-ports` | Shared directory for port prefix claims              |
 
 Never hardcode ports; read them from the worktree's `docker/.env`, `backend/.env` and `frontend/.env`.
 
