@@ -29,7 +29,17 @@ When it finishes it prints the project name and the backend and frontend URLs. S
 
 ## Ports
 
-Each worktree gets a free three-digit port prefix `NNN`, so its services run on `NNN00`-`NNN99` (for example `20022` for PostgreSQL). Prefixes are allocated from `200-299` by default. A prefix is skipped if a sibling worktree uses it, if any of its ports is listening, or if another developer on the machine has claimed it. Claims are files in the shared directory `/var/tmp/dats-worktree-ports/`, writable by everyone; `worktree-down` releases them, and claims of worktrees that no longer exist are reclaimed automatically. Allocation is locked machine-wide, so creating several worktrees in parallel is safe, also across developers. The prefix `101` is reserved for the hosted services.
+Each worktree gets a free three-digit port prefix `NNN`, so its services run on `NNN00`-`NNN99` (for example `20022` for PostgreSQL). Prefixes are allocated from `200-299` by default. The prefix `101` is reserved for the hosted services, and your main checkout keeps the prefix chosen during `just bootstrap`.
+
+### How port claims work
+
+Several developers share one machine, and a stopped stack no longer listens on its ports. Checking for listening ports alone could therefore hand the same prefix to two developers. To prevent this, every worktree **claims** its prefix in a directory shared by everyone on the machine, `/var/tmp/dats-worktree-ports/`:
+
+- A claim is a file named after the prefix (for example `201`) that contains the path of the worktree that owns it.
+- `just worktree-up` takes the first prefix in the range that is not claimed, is not used by a sibling worktree's `docker/.env`, and has no listening port in its block. It writes its claim only after the worktree's `.env` files were created.
+- Allocation runs under a machine-wide lock (`.lock` in the same directory), so parallel runs, also of different developers, get different prefixes.
+- `just worktree-down` releases the claim. A claim whose worktree directory no longer exists (for example after `rm -rf` instead of `worktree-down`) is stale and is reclaimed automatically by the next allocation.
+- The directory and its files are writable by every user, deliberately without a sticky bit, so anyone can reclaim a stale claim. Trust between developers is assumed. To look at the current claims, run `head /var/tmp/dats-worktree-ports/*`.
 
 | Variable                   | Default                        | Purpose                                              |
 | -------------------------- | ------------------------------ | ---------------------------------------------------- |

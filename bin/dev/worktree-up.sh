@@ -9,6 +9,10 @@
 # folders, dependencies, then the backing services (postgres, redis, elasticsearch,
 # weaviate, lighttpd) are started and verified. Fails loudly if any step fails.
 #
+# Port prefixes are claimed in a shared directory (see DATS_WORKTREE_CLAIMS_DIR) under a
+# machine-wide lock, so developers sharing this machine never get the same prefix, even
+# while a stack is down; worktree-down releases the claim and stale claims are reclaimed.
+#
 # Environment:
 #   DATS_ENV_SOURCE              checkout to clone env files from (default: main checkout)
 #   DATS_WORKTREE_PORT_RANGE     "<first>-<last>" 3-digit port prefixes (default: 200-299)

@@ -6,6 +6,7 @@
 #
 # Refuses if the worktree has uncommitted changes or commits that exist on no remote
 # branch, unless --force is given. The branch itself is never deleted.
+# Also releases the worktree's port prefix claim (see worktree-up.sh).
 set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
