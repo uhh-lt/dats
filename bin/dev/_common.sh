@@ -49,14 +49,19 @@ dats_claims_init() {
 	fi
 }
 
-# Remove every claim that belongs to the given worktree path.
+# Remove every claim that belongs to the given worktree path. Holds the same machine-wide lock
+# as the allocation in worktree-up.sh, so a concurrent allocation cannot be undone by accident.
 # Usage: dats_claims_release <worktree_path>
 dats_claims_release() {
 	local claim
-	for claim in "${DATS_CLAIMS_DIR}"/[0-9][0-9][0-9]; do
-		[[ -f "${claim}" ]] || continue
-		if [[ "$(cat "${claim}")" == "$1" ]]; then
-			rm -f "${claim}"
-		fi
-	done
+	dats_claims_init
+	(
+		flock 9
+		for claim in "${DATS_CLAIMS_DIR}"/[0-9][0-9][0-9]; do
+			[[ -f "${claim}" ]] || continue
+			if [[ "$(cat "${claim}")" == "$1" ]]; then
+				rm -f "${claim}"
+			fi
+		done
+	) 9>"${DATS_CLAIMS_DIR}/.lock"
 }

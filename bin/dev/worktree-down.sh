@@ -49,11 +49,22 @@ if [ "${FORCE}" -eq 0 ]; then
 	fi
 fi
 
+# Collect this script and all its ancestors (just, the calling shell, ...): they may run inside
+# the worktree too, but must survive the teardown.
+protected=" "
+pid=$$
+while [ -n "${pid}" ] && [ "${pid}" -gt 1 ]; do
+	protected+="${pid} "
+	# Field 4 of /proc/<pid>/stat is the parent pid; strip the "(comm)" field first, it may contain spaces.
+	pid="$(sed 's/^.*) //' "/proc/${pid}/stat" 2>/dev/null | awk '{print $2}')"
+done
+
 # Stop dev servers (uvicorn, vite, workers) running inside the worktree.
 for proc in /proc/[0-9]*; do
 	pid="${proc#/proc/}"
+	[[ "${protected}" == *" ${pid} "* ]] && continue
 	cwd="$(readlink "${proc}/cwd" 2>/dev/null || true)"
-	if [ "${pid}" != "$$" ] && [[ "${cwd}" == "${TARGET}" || "${cwd}" == "${TARGET}/"* ]]; then
+	if [[ "${cwd}" == "${TARGET}" || "${cwd}" == "${TARGET}/"* ]]; then
 		kill "${pid}" 2>/dev/null || true
 	fi
 done
