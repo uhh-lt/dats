@@ -3,13 +3,15 @@ import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
+import { metadataQueries } from "@api/queries/metadataQueries";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { toPendingBboxAnnotation } from "../_hooks/pendingBboxAnnotation";
 import { useBboxAnnotationResize } from "../_hooks/useBboxAnnotationResize";
@@ -28,7 +30,7 @@ const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationR
 };
 
 export function ImageAnnotator(props: ImageAnnotatorProps) {
-  const heightMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
+  const heightMetadata = useQuery(metadataQueries.bySdocAndKey(props.sdocData.id, "height"));
 
   if (heightMetadata.isSuccess) {
     return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;
@@ -58,7 +60,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const dispatch = useAppDispatch();
 
   // global server state (react query)
-  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
+  const annotations = useQuery(annotationQueries.bbox.bySdoc(sdocData.id, visibleUserId));
 
   // resize controller
   const resizeController = useBboxAnnotationResize(imgRef);

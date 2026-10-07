@@ -1,5 +1,5 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { QueryKey } from "@api/hooks/QueryKey";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { queryClient } from "@api/queryClient";
 import { useTabNavigate } from "@core/navigation";
 import { ApproachType } from "@models/ApproachType";
@@ -80,7 +80,7 @@ function SentenceAnnotationResultStepContent({
 
     // reload annotations
     queryClient.invalidateQueries({
-      queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, firstAnnotatedSdocId, approach2AssistantID[approachType]],
+      queryKey: annotationQueries.sentence.bySdoc(firstAnnotatedSdocId, approach2AssistantID[approachType]).queryKey,
     });
   };
 

@@ -1,26 +1,12 @@
-import { QueryKey } from "@api/hooks/QueryKey";
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { WhiteboardService } from "@api/services/WhiteboardService";
 import { WhiteboardRead } from "@models/WhiteboardRead";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-
-export type WhiteboardMap = Record<number, WhiteboardRead>;
-
-export const projectWhiteboardsQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId],
-    queryFn: async () => {
-      const data = await WhiteboardService.getByProject({ projectId });
-      return data.reduce((acc, whiteboard) => {
-        acc[whiteboard.id] = whiteboard;
-        return acc;
-      }, {} as WhiteboardMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useCreateWhiteboard = () =>
   useMutation({
+    mutationKey: [...whiteboardQueries.all(), "createWhiteboard"],
     mutationFn: WhiteboardService.create,
     meta: {
       datsEvent: "WHITEBOARD_CREATED",
@@ -30,6 +16,7 @@ export const useCreateWhiteboard = () =>
 
 export const useUpdateWhiteboard = () =>
   useMutation({
+    mutationKey: [...whiteboardQueries.all(), "updateWhiteboard"],
     mutationFn: WhiteboardService.updateById,
     meta: {
       datsEvent: "WHITEBOARD_UPDATED",
@@ -39,6 +26,7 @@ export const useUpdateWhiteboard = () =>
 
 export const useDuplicateWhiteboard = () =>
   useMutation({
+    mutationKey: [...whiteboardQueries.all(), "duplicateWhiteboard"],
     mutationFn: WhiteboardService.duplicateById,
     meta: {
       datsEvent: "WHITEBOARD_CREATED",
@@ -48,6 +36,7 @@ export const useDuplicateWhiteboard = () =>
 
 export const useDeleteWhiteboard = () =>
   useMutation({
+    mutationKey: [...whiteboardQueries.all(), "deleteWhiteboard"],
     mutationFn: WhiteboardService.deleteById,
     meta: {
       datsEvent: "WHITEBOARD_DELETED",
@@ -63,8 +52,8 @@ export const useDeleteWhiteboard = () =>
 export const useGetWhiteboardById = (whiteboardId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...projectWhiteboardsQueryOptions(projectId!),
+    ...whiteboardQueries.byProject(projectId),
     select: (data) => (whiteboardId != null ? data[whiteboardId] : undefined),
-    enabled: !!projectId && whiteboardId != null,
+    enabled: whiteboardId != null,
   });
 };

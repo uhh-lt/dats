@@ -1,8 +1,8 @@
+import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { projectTimelineAnalysisQueryOptions } from "../../_api/timelineAnalysisQueryOptions";
 import { ConceptList } from "./_components/ConceptList";
 import { TimeAnalysisProvenance } from "./_components/TimeAnalysisProvenance";
 import { TimelineAnalysisViz } from "./_components/TimeAnalysisViz";
@@ -13,7 +13,7 @@ export function TimelineAnalysisView() {
   const { projectId, analysisId } = TimelineAnalysisRouteAPI.useParams();
 
   const { data: timelineAnalysis } = useSuspenseQuery({
-    ...projectTimelineAnalysisQueryOptions(projectId),
+    ...timelineAnalysisQueries.byProjectRequired(projectId),
     select: (data) => data[analysisId],
   });
 

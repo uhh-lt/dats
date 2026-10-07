@@ -1,91 +1,23 @@
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
+import { sdocQueries } from "@api/queries/sdocQueries";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
-import { TagService } from "@api/services/TagService";
-import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
-import { QueryKey } from "./QueryKey";
 
 // SDOC QUERIES
-const getDocumentQueryOptions = (sdocId: number) =>
-  queryOptions<SourceDocumentRead, Error>({
-    queryKey: [QueryKey.SDOC, sdocId],
-    queryFn: () => SourceDocumentService.getById({ sdocId }),
-    staleTime: Infinity,
-  });
+// The queries themselves live in sdocQueries. The hook below only derives data from them.
 
-const useGetDocument = (sdocId: number | null | undefined) =>
-  useQuery<SourceDocumentRead, Error>({
-    ...getDocumentQueryOptions(sdocId!),
-    enabled: !!sdocId,
-  });
-
-const getDocumentDataQueryOptions = (sdocId: number) =>
-  queryOptions<SourceDocumentDataRead, Error>({
-    queryKey: [QueryKey.SDOC_DATA, sdocId],
-    queryFn: () => SourceDocumentService.getByIdWithData({ sdocId }),
-    staleTime: Infinity,
-  });
-
-const useGetDocumentData = (sdocId: number | null | undefined) =>
-  useQuery<SourceDocumentDataRead, Error>({
-    ...getDocumentDataQueryOptions(sdocId!),
-    enabled: !!sdocId,
-  });
-
-const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
-  useQuery<number, Error>({
-    queryKey: [QueryKey.SDOC_ID, projectId, filename],
-    queryFn: () =>
-      ProjectService.resolveFilename({
-        projId: projectId,
-        filename: filename!,
-        onlyFinished: true,
-      }),
-    enabled: !!filename,
-    staleTime: Infinity,
-  });
-
-const useGetSameFolderSdocIds = (sdocId: number | null | undefined) =>
-  useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOC_SAME_FOLDER, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getSameFolderSdocs({
-        sdocId: sdocId!,
-      }),
-    enabled: !!sdocId,
-    staleTime: Infinity,
-  });
-
+// the thumbnail is served from /content/
 const useGetThumbnailURL = (sdocId: number | null | undefined) =>
-  useQuery<string, Error>({
-    queryKey: [QueryKey.SDOC_THUMBNAIL_URL, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getFileUrl({
-        sdocId: sdocId!,
-        relative: true,
-        webp: true,
-        thumbnail: true,
-      }),
-    enabled: !!sdocId,
+  useQuery({
+    ...sdocQueries.thumbnailUrl(sdocId),
     select: (thumbnail_url) => encodeURI("/content/" + thumbnail_url),
-    staleTime: Infinity,
-  });
-
-const useGetSdocIdsByTagId = (tagId: number | null | undefined) =>
-  useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOC_IDS_BY_TAG_ID, tagId],
-    queryFn: () =>
-      TagService.getSdocIdsByTagId({
-        tagId: tagId!,
-      }),
-    enabled: !!tagId,
   });
 
 // SDOC MUTATIONS
 const useDeleteDocuments = () =>
   useMutation({
+    mutationKey: [...sdocQueries.all(), "deleteDocuments"],
     mutationFn: ({ sdocIds }: { sdocIds: number[] }) => SourceDocumentService.deleteSdocsBulk({ requestBody: sdocIds }),
     meta: {
       datsEvent: "SDOC_DELETED_BATCH",
@@ -96,6 +28,7 @@ const useDeleteDocuments = () =>
 
 const useUpdateName = () =>
   useMutation({
+    mutationKey: [...sdocQueries.all(), "updateName"],
     mutationFn: SourceDocumentService.updateById,
     meta: {
       datsEvent: "SDOC_UPDATED",
@@ -103,33 +36,8 @@ const useUpdateName = () =>
     },
   });
 
-// annotations
-const useGetAnnotators = (sdocId: number | null | undefined) =>
-  useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOC_ANNOTATORS, sdocId],
-    queryFn: () =>
-      SourceDocumentService.getAnnotators({
-        sdocId: sdocId!,
-      }),
-    staleTime: 1000 * 60 * 5,
-    enabled: !!sdocId,
-  });
-
 export const SdocHooks = {
-  // sdoc
-  getDocumentQueryOptions,
-  getDocumentDataQueryOptions,
-  useGetDocument,
-  useGetDocumentData,
-  useGetSameFolderSdocIds,
   useDeleteDocuments,
-  useGetDocumentIdByFilename,
-  // tags
-  useGetSdocIdsByTagId,
-  // annotations
-  useGetAnnotators,
-  // name
   useUpdateName,
-  // thumbnail
   useGetThumbnailURL,
 };

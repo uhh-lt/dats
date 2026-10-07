@@ -1,5 +1,7 @@
-import { UserHooks } from "@api/hooks/UserHooks";
+import { userQueries } from "@api/queries/userQueries";
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
 import { UserRenderer } from "../UserRenderer";
 
@@ -11,7 +13,8 @@ interface UserSelectorProps {
 
 export const UserSelectorSingle = memo(({ userId, onUserIdChange, title }: UserSelectorProps) => {
   // global server state (react query)
-  const projectUsers = UserHooks.useGetAllUsers();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const projectUsers = useQuery(userQueries.byProject(projectId));
 
   // handlers (for ui)
   const handleChange = useCallback(

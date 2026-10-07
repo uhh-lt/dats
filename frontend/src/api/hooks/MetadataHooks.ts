@@ -1,41 +1,26 @@
+import { metadataQueries, ProjectMetadataMap, SdocMetadataMap } from "@api/queries/metadataQueries";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
+import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 
 // PROJECT METADATA QUERIES
+// The queries themselves live in metadataQueries. The hooks below only derive data from them.
 
-export type ProjectMetadataMap = Record<number, ProjectMetadataRead>;
-
-export const projectMetadataQueryOptions = (projectId: number | undefined) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_METADATAS, projectId],
-    queryFn: async () => {
-      const metadata = await ProjectMetadataService.getByProject({
-        projId: projectId!,
-      });
-      return metadata.reduce((acc, metadata) => {
-        acc[metadata.id] = metadata;
-        return acc;
-      }, {} as ProjectMetadataMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-
-interface UseProjectMetaadataQueryParams<T> {
-  select?: (data: ProjectMetadataMap) => T;
+const useProjectMetadataQuery = <T>({
+  select,
+  enabled,
+}: {
+  select: (data: ProjectMetadataMap) => T;
   enabled?: boolean;
-}
-
-const useProjectMetadataQuery = <T = ProjectMetadataMap>({ select, enabled }: UseProjectMetaadataQueryParams<T>) => {
+}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...projectMetadataQueryOptions(projectId),
+    ...metadataQueries.byProject(projectId),
     select,
-    enabled: !!projectId && (enabled ?? true),
+    enabled,
   });
 };
 
@@ -50,6 +35,7 @@ const useGetProjectMetadataList = () => useProjectMetadataQuery({ select: (data)
 // PROJECT METADATA MUTATIONS
 const useCreateProjectMetadata = () =>
   useMutation({
+    mutationKey: [...metadataQueries.all(), "createProjectMetadata"],
     mutationFn: ProjectMetadataService.createMetadata,
     meta: {
       datsEvent: "PROJECT_METADATA_CREATED",
@@ -61,6 +47,7 @@ const useCreateProjectMetadata = () =>
 
 const useUpdateProjectMetadata = () =>
   useMutation({
+    mutationKey: [...metadataQueries.all(), "updateProjectMetadata"],
     mutationFn: ProjectMetadataService.updateById,
     meta: {
       datsEvent: "PROJECT_METADATA_UPDATED",
@@ -71,6 +58,7 @@ const useUpdateProjectMetadata = () =>
 
 const useDeleteProjectMetadata = () =>
   useMutation({
+    mutationKey: [...metadataQueries.all(), "deleteProjectMetadata"],
     mutationFn: ProjectMetadataService.deleteById,
     meta: {
       datsEvent: "PROJECT_METADATA_DELETED",
@@ -79,42 +67,16 @@ const useDeleteProjectMetadata = () =>
   });
 
 // SDOC METADATA QUERIES
-// mapping from projectMetadataId -> SourceDocumentRead
-export type SdocMetadataMap = Record<number, SourceDocumentMetadataRead>;
-
-interface UseSdocMetadataQueryParams<T> {
-  sdocId: number | undefined | null;
-  select?: (data: SdocMetadataMap) => T;
-}
-
-const sdocMetadataQueryFn = async (sdocId: number) => {
-  const metadata = await SdocMetadataService.getBySdoc({
-    sdocId: sdocId!,
-  });
-  return metadata.reduce((acc, metadata) => {
-    acc[metadata.project_metadata_id] = metadata;
-    return acc;
-  }, {} as SdocMetadataMap);
-};
-
-const useSdocMetadataQuery = <T = SdocMetadataMap>({ sdocId, select }: UseSdocMetadataQueryParams<T>) =>
-  useQuery({
-    queryKey: [QueryKey.SDOC_METADATAS, sdocId],
-    queryFn: () => sdocMetadataQueryFn(sdocId!),
-    staleTime: 1000 * 60 * 5,
-    select,
-    enabled: !!sdocId,
-  });
 
 const useGetSdocMetadata = (sdocId: number | null | undefined) =>
-  useSdocMetadataQuery({
-    sdocId,
+  useQuery({
+    ...metadataQueries.bySdoc(sdocId),
     select: (data) => Object.values(data),
   });
 
 const useGetSdocMetadataByProjectMetadataId = (sdocId: number | null | undefined, projectMetadataId: number) =>
-  useSdocMetadataQuery({
-    sdocId,
+  useQuery({
+    ...metadataQueries.bySdoc(sdocId),
     select: (data) => data[projectMetadataId],
   });
 
@@ -175,30 +137,15 @@ const combineBulkData = (results: UseQueryResult<SdocMetadataMap, Error>[]) => {
 
 const useGetSdocMetadataBulk = (sdocIds: number[]) =>
   useQueries({
-    queries: sdocIds.map((sdocId) => ({
-      queryKey: [QueryKey.SDOC_METADATAS, sdocId],
-      queryFn: () => sdocMetadataQueryFn(sdocId),
-      staleTime: 1000 * 60 * 5,
-    })),
+    queries: sdocIds.map((sdocId) => metadataQueries.bySdoc(sdocId)),
     combine: combineBulkData,
-  });
-
-// TODO: REMOVE THIS HOOK
-const useGetSdocMetadataByKey = (sdocId: number | null | undefined, key: string) =>
-  useQuery<SourceDocumentMetadataRead, Error>({
-    queryKey: [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
-    queryFn: () =>
-      SdocMetadataService.getBySdocAndKey({
-        sdocId: sdocId!,
-        metadataKey: key,
-      }),
-    enabled: !!sdocId,
   });
 
 // SDOC METADATA MUTATIONS
 
 const useUpdateBulkSdocMetadata = () =>
   useMutation({
+    mutationKey: [...metadataQueries.all(), "updateBulkSdocMetadata"],
     mutationFn: SdocMetadataService.updateBulk,
     meta: {
       datsEvent: "SDOC_METADATA_UPDATED_BATCH",
@@ -209,7 +156,6 @@ const useUpdateBulkSdocMetadata = () =>
 export const MetadataHooks = {
   // sdoc metadata
   useGetSdocMetadata,
-  useGetSdocMetadataByKey,
   useGetSdocMetadataByProjectMetadataId,
   useGetSdocMetadataBulk,
   useUpdateBulkSdocMetadata,

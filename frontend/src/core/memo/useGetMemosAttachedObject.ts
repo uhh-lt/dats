@@ -1,10 +1,8 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { SdocHooks } from "@api/hooks/SdocHooks";
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -13,6 +11,7 @@ import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
+import { useQuery } from "@tanstack/react-query";
 
 export type MemosAttachedObject =
   | TagRead
@@ -48,11 +47,11 @@ export const useGetMemosAttachedObject = (
   const tagQuery = TagHooks.useGetTag(type === AttachedObjectType.TAG ? id : undefined);
   const codeQuery = CodeHooks.useGetCode(type === AttachedObjectType.CODE ? id : undefined);
   const projectQuery = ProjectHooks.useGetProject(type === AttachedObjectType.PROJECT ? id : undefined);
-  const sdocQuery = SdocHooks.useGetDocument(type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined);
-  const spanQuery = SpanAnnotationHooks.useGetAnnotation(type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined);
-  const bboxQuery = BboxAnnotationHooks.useGetAnnotation(type === AttachedObjectType.BBOX_ANNOTATION ? id : undefined);
-  const sentenceQuery = SentenceAnnotationHooks.useGetAnnotation(
-    type === AttachedObjectType.SENTENCE_ANNOTATION ? id : undefined,
+  const sdocQuery = useQuery(sdocQueries.detail(type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined));
+  const spanQuery = useQuery(annotationQueries.span.byId(type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined));
+  const bboxQuery = useQuery(annotationQueries.bbox.byId(type === AttachedObjectType.BBOX_ANNOTATION ? id : undefined));
+  const sentenceQuery = useQuery(
+    annotationQueries.sentence.byId(type === AttachedObjectType.SENTENCE_ANNOTATION ? id : undefined),
   );
 
   switch (type) {

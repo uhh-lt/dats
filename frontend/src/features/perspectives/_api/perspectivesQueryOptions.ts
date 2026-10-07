@@ -1,5 +1,6 @@
-import { QueryKey } from "@api/hooks/QueryKey";
 import { useJobRefetchInterval } from "@api/hooks/jobPolling";
+import { jobQueries } from "@api/queries/jobQueries";
+import { AspectMap, perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
@@ -10,24 +11,7 @@ import { CodeRead } from "@models/CodeRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-
-export type AspectMap = Record<number, AspectRead>;
-
-export const projectAspectsQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_ASPECTS, projectId],
-    queryFn: async () => {
-      const aspects = await PerspectivesService.getAllAspects({
-        projId: projectId,
-      });
-      return aspects.reduce((acc, aspect) => {
-        acc[aspect.id] = aspect;
-        return acc;
-      }, {} as AspectMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface UseProjectAspectsQueryParams<T> {
   select?: (data: AspectMap) => T;
@@ -37,9 +21,9 @@ interface UseProjectAspectsQueryParams<T> {
 const useProjectAspectsQuery = <T = AspectMap>({ select, enabled }: UseProjectAspectsQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...projectAspectsQueryOptions(projectId!),
+    ...perspectiveQueries.aspectsByProject(projectId),
     select,
-    enabled: !!projectId && (enabled ?? true),
+    enabled,
   });
 };
 
@@ -51,16 +35,9 @@ const useGetAspect = (aspectId: number | null | undefined) =>
 
 const useGetAllAspectsList = () => useProjectAspectsQuery({ select: (data) => Object.values(data) });
 
-const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
-  useQuery<string, Error>({
-    queryKey: [QueryKey.SDOC_ASPECT_CONTENT, aspectId, sdocId],
-    queryFn: () => PerspectivesService.getDocaspectById({ aspectId: aspectId!, sdocId: sdocId! }),
-    enabled: !!aspectId && !!sdocId,
-    staleTime: Infinity,
-  });
-
 const useCreateAspect = () =>
   useMutation({
+    mutationKey: [...perspectiveQueries.all(), "createAspect"],
     mutationFn: PerspectivesService.createAspect,
     meta: {
       datsEvent: "ASPECT_CREATED",
@@ -70,6 +47,7 @@ const useCreateAspect = () =>
 
 const useUpdateAspect = () =>
   useMutation({
+    mutationKey: [...perspectiveQueries.all(), "updateAspect"],
     mutationFn: PerspectivesService.updateAspectById,
     meta: {
       datsEvent: "ASPECT_UPDATED",
@@ -79,6 +57,7 @@ const useUpdateAspect = () =>
 
 const useDeleteAspect = () =>
   useMutation({
+    mutationKey: [...perspectiveQueries.all(), "deleteAspect"],
     mutationFn: PerspectivesService.removeAspectById,
     meta: {
       datsEvent: "ASPECT_DELETED",
@@ -88,10 +67,11 @@ const useDeleteAspect = () =>
 
 const useStartPerspectivesJob = () =>
   useMutation({
+    mutationKey: [...perspectiveQueries.all(), "startPerspectivesJob"],
     mutationFn: PerspectivesService.startPerspectivesJob,
     onSuccess: (job) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, job.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PERSPECTIVES_JOB, job.job_id] });
+      queryClient.invalidateQueries({ queryKey: perspectiveQueries.aspectsByProject(job.project_id).queryKey });
+      queryClient.invalidateQueries({ queryKey: jobQueries.perspectives.byId(job.job_id).queryKey });
     },
     meta: {
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
@@ -106,13 +86,8 @@ const useLivePerspectivesJob = (
   initialData: PerspectivesJobRead | undefined,
 ) => {
   const jobRefetchInterval = useJobRefetchInterval<PerspectivesJobRead>();
-  return useQuery<PerspectivesJobRead, Error>({
-    queryKey: [QueryKey.PERSPECTIVES_JOB, perspectivesJobId],
-    queryFn: () =>
-      PerspectivesService.getPerspectivesJob({
-        perspectivesJobId: perspectivesJobId!,
-      }),
-    enabled: !!perspectivesJobId,
+  return useQuery({
+    ...jobQueries.perspectives.byId(perspectivesJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
@@ -122,6 +97,7 @@ const useLabelDocs = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useMutation({
+    mutationKey: [...perspectiveQueries.all(), "labelDocs"],
     mutationFn: (sdocIds: number[]) =>
       PerspectivesService.acceptLabel({
         aspectId,
@@ -133,7 +109,14 @@ const useLabelDocs = (aspectId: number) => {
         },
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData([QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter], data);
+      queryClient.setQueryData(
+        perspectiveQueries.visualization(
+          aspectId,
+          searchQuery,
+          filter as Body_perspectives_visualize_documents["filter"],
+        ).queryKey,
+        data,
+      );
     },
     meta: {
       successMessage: (data: PerspectivesVisualization) => `Accepted cluster(s) for ${data.docs.length} documents`,
@@ -145,6 +128,7 @@ const useUnlabelDocs = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useMutation({
+    mutationKey: [...perspectiveQueries.all(), "unlabelDocs"],
     mutationFn: (sdocIds: number[]) =>
       PerspectivesService.revertLabel({
         aspectId,
@@ -156,7 +140,14 @@ const useUnlabelDocs = (aspectId: number) => {
         },
       }),
     onSuccess: (data) => {
-      queryClient.setQueryData([QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter], data);
+      queryClient.setQueryData(
+        perspectiveQueries.visualization(
+          aspectId,
+          searchQuery,
+          filter as Body_perspectives_visualize_documents["filter"],
+        ).queryKey,
+        data,
+      );
     },
     meta: {
       successMessage: (data: PerspectivesVisualization) => `Reverted cluster(s) for ${data.docs.length} documents`,
@@ -164,64 +155,27 @@ const useUnlabelDocs = (aspectId: number) => {
   });
 };
 
-const useGetDocVisualization = (
-  aspectId: number,
-  searchQuery: string,
-  filter: Body_perspectives_visualize_documents["filter"],
-) =>
-  useQuery({
-    queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
-    queryFn: () =>
-      PerspectivesService.visualizeDocuments({
-        aspectId,
-        searchQuery,
-        requestBody: {
-          filter,
-          sorts: [],
-        },
-      }),
-    staleTime: 1000 * 60 * 5,
-    placeholderData: (prev) => prev,
-  });
-
-const useGetClusterSimilarities = (aspectId: number) =>
-  useQuery({
-    queryKey: [QueryKey.CLUSTER_SIMILARITIES, aspectId],
-    queryFn: () =>
-      PerspectivesService.getClusterSimilarities({
-        aspectId,
-      }),
-    staleTime: 1000 * 60 * 5,
-  });
-
 const useUpdateClusterDetails = () =>
   useMutation({
+    mutationKey: [...perspectiveQueries.all(), "updateClusterDetails"],
     mutationFn: PerspectivesService.updateClusterDetails,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, data.aspect_id] });
+      queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(data.aspect_id) });
     },
     meta: {
       successMessage: (data: ClusterRead) => `Updated cluster ${data.name}`,
     },
   });
 
-const useGetClustersBySdocId = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
-  useQuery({
-    queryKey: [QueryKey.SDOC_CLUSTES, aspectId, sdocId],
-    queryFn: () => PerspectivesService.getClustersForSdoc({ aspectId: aspectId!, sdocId: sdocId! }),
-    enabled: !!aspectId && !!sdocId,
-    staleTime: 1000 * 60 * 5,
-  });
-
 const useRAGChat = () =>
   useMutation({
+    mutationKey: [...perspectiveQueries.all(), "rAGChat"],
     mutationFn: RagService.ragSession,
   });
 
 export const PerspectivesQueryOptions = {
   useGetAllAspectsList,
   useGetAspect,
-  useGetDocumentAspect,
   useCreateAspect,
   useUpdateAspect,
   useDeleteAspect,
@@ -229,9 +183,6 @@ export const PerspectivesQueryOptions = {
   useLivePerspectivesJob,
   useLabelDocs,
   useUnlabelDocs,
-  useGetDocVisualization,
-  useGetClusterSimilarities,
-  useGetClustersBySdocId,
   useUpdateClusterDetails,
   useRAGChat,
 };

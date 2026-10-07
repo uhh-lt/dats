@@ -1,42 +1,27 @@
+import { FolderMap, folderQueries } from "@api/queries/folderQueries";
 import { FolderService } from "@api/services/FolderService";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 // Folder QUERIES
+// The queries themselves live in folderQueries. The hooks below only derive data from them.
 
-export type FolderMap = Record<number, FolderRead>;
-
-export const projectFoldersQueryOptions = (projectId: number | undefined, folderType: FolderType) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_FOLDERS, projectId, folderType],
-    queryFn: async () => {
-      const folders = await FolderService.getFoldersByProjectAndType({
-        projectId: projectId!,
-        folderType,
-      });
-      return folders.reduce((acc, folder) => {
-        acc[folder.id] = folder;
-        return acc;
-      }, {} as FolderMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-
-interface UseProjectFoldersQueryParams<T> {
-  select?: (data: FolderMap) => T;
+const useProjectFoldersQuery = <T>({
+  select,
+  folderType,
+  enabled,
+}: {
+  select: (data: FolderMap) => T;
   folderType: FolderType;
   enabled?: boolean;
-}
-
-const useProjectFoldersQuery = <T = FolderMap>({ select, folderType, enabled }: UseProjectFoldersQueryParams<T>) => {
+}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...projectFoldersQueryOptions(projectId, folderType),
+    ...folderQueries.byProject(projectId, folderType),
     select,
-    enabled: !!projectId && (enabled ?? true),
+    enabled,
   });
 };
 
@@ -50,8 +35,6 @@ const useGetFolder = (folderId: number | null | undefined) =>
 const useGetAllFolders = () =>
   useProjectFoldersQuery({ select: (data) => Object.values(data), folderType: FolderType.NORMAL });
 
-const useGetAllFoldersMap = () => useProjectFoldersQuery({ folderType: FolderType.NORMAL });
-
 const useGetSdocFolder = (folderId: number | null | undefined) =>
   useProjectFoldersQuery({
     select: (data) => data[folderId!],
@@ -62,23 +45,11 @@ const useGetSdocFolder = (folderId: number | null | undefined) =>
 const useGetAllSdocFolders = () =>
   useProjectFoldersQuery({ select: (data) => Object.values(data), folderType: FolderType.SDOC_FOLDER });
 
-const useGetAllSdocFoldersMap = () => useProjectFoldersQuery({ folderType: FolderType.SDOC_FOLDER });
-
-const useGetSdocIdsPerDoctypeInSdocFolder = (sdocFolderId: number | null | undefined) =>
-  useQuery({
-    queryKey: [QueryKey.SDOC_IDS_PER_DOCTYPE_IN_FOLDER, sdocFolderId],
-    queryFn: () =>
-      FolderService.getSdocIdsInFolderByDoctype({
-        folderId: sdocFolderId!,
-      }),
-    staleTime: 1000 * 60 * 5,
-    enabled: !!sdocFolderId,
-  });
-
 // Folder MUTATIONS
 
 const useCreateFolder = () =>
   useMutation({
+    mutationKey: [...folderQueries.all(), "createFolder"],
     mutationFn: FolderService.createFolder,
     meta: {
       datsEvent: "FOLDER_CREATED",
@@ -88,6 +59,7 @@ const useCreateFolder = () =>
 
 const useUpdateFolder = () =>
   useMutation({
+    mutationKey: [...folderQueries.all(), "updateFolder"],
     mutationFn: FolderService.updateById,
     meta: {
       datsEvent: "FOLDER_UPDATED",
@@ -97,6 +69,7 @@ const useUpdateFolder = () =>
 
 const useUpdateFoldersBulk = () =>
   useMutation({
+    mutationKey: [...folderQueries.all(), "updateFoldersBulk"],
     mutationFn: FolderService.updateFoldersBulk,
     meta: {
       datsEvent: "FOLDER_UPDATED_BATCH",
@@ -106,6 +79,7 @@ const useUpdateFoldersBulk = () =>
 
 const useDeleteFolder = () =>
   useMutation({
+    mutationKey: [...folderQueries.all(), "deleteFolder"],
     mutationFn: FolderService.deleteById,
     meta: {
       datsEvent: "FOLDER_DELETED",
@@ -116,11 +90,8 @@ const useDeleteFolder = () =>
 export const FolderHooks = {
   useGetFolder,
   useGetAllFolders,
-  useGetAllFoldersMap,
   useGetSdocFolder,
   useGetAllSdocFolders,
-  useGetAllSdocFoldersMap,
-  useGetSdocIdsPerDoctypeInSdocFolder,
   useCreateFolder,
   useUpdateFolder,
   useUpdateFoldersBulk,

@@ -1,5 +1,5 @@
+import { cotaQueries } from "@api/queries/cotaQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectCotasQueryOptions } from "../../_api/cotaQueryOptions";
 
 interface CotaDashboardViewLoaderArgs {
   queryClient: QueryClient;
@@ -7,5 +7,5 @@ interface CotaDashboardViewLoaderArgs {
 }
 
 export async function cotaDashboardViewLoader({ queryClient, projectId }: CotaDashboardViewLoaderArgs) {
-  queryClient.ensureQueryData(projectCotasQueryOptions(projectId));
+  queryClient.ensureQueryData(cotaQueries.byProjectRequired(projectId));
 }

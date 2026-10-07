@@ -1,8 +1,9 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { useAuth } from "@core/auth";
 import { UserRenderer } from "@core/user";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Divider, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 
@@ -19,7 +20,7 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   const [compareWithUserId, setCompareWithUserId] = useURLConnector(AnnotationRouteAPI, "compareWithUserId");
 
   // global server state (react query)
-  const annotatorUserIds = SdocHooks.useGetAnnotators(sdocId);
+  const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
   const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
 
   // when no comparison is active, exclude the currently visible user (cannot compare with yourself)

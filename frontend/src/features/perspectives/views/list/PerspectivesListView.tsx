@@ -1,3 +1,4 @@
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { useDebounce } from "@hooks/useDebounce";
@@ -6,7 +7,6 @@ import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/materi
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { ChangeEvent, useState } from "react";
-import { projectAspectsQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { PerspectiveCard } from "./_components/PerspectiveCard";
 import { PerspectiveCreationDialog } from "./_components/PerspectiveCreationDialog";
 
@@ -15,7 +15,7 @@ const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/");
 export function PerspectivesListView() {
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
   const { data: aspects } = useSuspenseQuery({
-    ...projectAspectsQueryOptions(projectId),
+    ...perspectiveQueries.aspectsByProjectRequired(projectId),
     select: (data) => Object.values(data),
   });
 

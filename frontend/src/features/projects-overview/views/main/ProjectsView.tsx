@@ -1,4 +1,4 @@
-import { userProjectsQueryOptions } from "@api/hooks/ProjectHooks";
+import { projectQueries } from "@api/queries/projectQueries";
 import { Box, Card, CardActionArea, CardContent, Container, Grid2, Typography } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -6,7 +6,7 @@ import { ProjectCard } from "./_components/ProjectCard";
 import { ProjectCreationDialog } from "./_components/ProjectCreationDialog";
 
 export function ProjectsView() {
-  const { data: projects } = useSuspenseQuery(userProjectsQueryOptions());
+  const { data: projects } = useSuspenseQuery(projectQueries.userProjects());
   const [isOpen, setIsOpen] = useState(false);
 
   return (

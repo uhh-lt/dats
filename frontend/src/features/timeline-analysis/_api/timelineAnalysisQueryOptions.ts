@@ -1,26 +1,12 @@
-import { QueryKey } from "@api/hooks/QueryKey";
+import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import { TimelineAnalysisService } from "@api/services/TimelineAnalysisService";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-
-export type TimelineMap = Record<number, TimelineAnalysisRead>;
-
-export const projectTimelineAnalysisQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId],
-    queryFn: async () => {
-      const data = await TimelineAnalysisService.getByProject({ projectId });
-      return data.reduce((acc, timeline) => {
-        acc[timeline.id] = timeline;
-        return acc;
-      }, {} as TimelineMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useCreateTimelineAnalysis = () =>
   useMutation({
+    mutationKey: [...timelineAnalysisQueries.all(), "createTimelineAnalysis"],
     mutationFn: TimelineAnalysisService.create,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_CREATED",
@@ -30,6 +16,7 @@ export const useCreateTimelineAnalysis = () =>
 
 export const useUpdateTimelineAnalysis = () =>
   useMutation({
+    mutationKey: [...timelineAnalysisQueries.all(), "updateTimelineAnalysis"],
     mutationFn: TimelineAnalysisService.updateById,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_UPDATED",
@@ -39,6 +26,7 @@ export const useUpdateTimelineAnalysis = () =>
 
 export const useRecomputeTimelineAnalysis = () =>
   useMutation({
+    mutationKey: [...timelineAnalysisQueries.all(), "recomputeTimelineAnalysis"],
     mutationFn: TimelineAnalysisService.recomputeById,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_UPDATED",
@@ -48,6 +36,7 @@ export const useRecomputeTimelineAnalysis = () =>
 
 export const useDuplicateTimelineAnalysis = () =>
   useMutation({
+    mutationKey: [...timelineAnalysisQueries.all(), "duplicateTimelineAnalysis"],
     mutationFn: TimelineAnalysisService.duplicateById,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_CREATED",
@@ -57,6 +46,7 @@ export const useDuplicateTimelineAnalysis = () =>
 
 export const useDeleteTimelineAnalysis = () =>
   useMutation({
+    mutationKey: [...timelineAnalysisQueries.all(), "deleteTimelineAnalysis"],
     mutationFn: TimelineAnalysisService.deleteById,
     meta: {
       datsEvent: "TIMELINE_ANALYSIS_DELETED",
@@ -72,9 +62,9 @@ export const useGetTimelineAnalysisById = (analysisId: number | null | undefined
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...projectTimelineAnalysisQueryOptions(projectId!),
+    ...timelineAnalysisQueries.byProject(projectId),
     select: (data) => (analysisId != null ? data[analysisId] : undefined),
-    enabled: !!projectId && analysisId != null,
+    enabled: analysisId != null,
   });
 };
 
@@ -82,8 +72,7 @@ export const useGetProjectTimelineAnalysisList = () => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...projectTimelineAnalysisQueryOptions(projectId!),
+    ...timelineAnalysisQueries.byProject(projectId),
     select: (data) => Object.values(data),
-    enabled: !!projectId,
   });
 };

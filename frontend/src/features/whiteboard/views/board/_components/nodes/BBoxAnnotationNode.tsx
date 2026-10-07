@@ -1,7 +1,7 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { memoQueries } from "@api/queries/memoQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
@@ -45,9 +45,9 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
+  const annotation = useQuery(annotationQueries.bbox.byId(props.data.bboxAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
+  const sdocData = useQuery(sdocQueries.data(annotation.data?.sdoc_id));
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
 
   // effects

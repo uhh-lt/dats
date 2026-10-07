@@ -1,7 +1,9 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
+import { jobQueries } from "@api/queries/jobQueries";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo } from "react";
 import { CrawlerJobListItem } from "./CrawlerJobListItem";
 import { SdocStatusSimpleListItem } from "./SdocStatusListItem";
@@ -16,7 +18,7 @@ export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsVie
     data: crawlerJobs,
     refetch: refetchCrawlerJobs,
     isFetching: isCrawlerFetching,
-  } = DocProcessingHooks.useGetAllCrawlerJobs(projectId);
+  } = useQuery(jobQueries.crawler.byProject(projectId));
   const {
     data: sdocStatus,
     refetch: refetchSdocStatus,

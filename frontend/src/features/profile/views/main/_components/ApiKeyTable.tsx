@@ -1,8 +1,10 @@
 import { ApiKeyHooks } from "@api/hooks/ApiKeyHooks";
+import { apiKeyQueries } from "@api/queries/apiKeyQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ApiKeyRead } from "@models/ApiKeyRead";
 import { Box, Chip, IconButton, Tooltip, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { formatDateTime } from "@utils/DateUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
@@ -47,7 +49,7 @@ const columns: MRT_ColumnDef<ApiKeyRead>[] = [
 
 export const ApiKeyTable = memo(() => {
   // global server state
-  const apiKeys = ApiKeyHooks.useGetApiKeys();
+  const apiKeys = useQuery(apiKeyQueries.list());
 
   // mutations
   const { mutate: deleteApiKey, isPending: isDeleting } = ApiKeyHooks.useDeleteApiKey();

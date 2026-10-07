@@ -1,4 +1,4 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import { MemoIndicator } from "@core/memo";
@@ -15,13 +15,14 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";
 
 export const BBoxAnnotationCard = memo(
   ({ annotation, code, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationRead>) => {
-    const sdocData = SdocHooks.useGetDocumentData(annotation.sdoc_id);
+    const sdocData = useQuery(sdocQueries.data(annotation.sdoc_id));
 
     return (
       <Card {...cardProps}>

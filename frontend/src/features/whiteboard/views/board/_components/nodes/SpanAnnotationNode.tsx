@@ -1,5 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
@@ -44,7 +44,7 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
+  const annotation = useQuery(annotationQueries.span.byId(props.data.spanAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId));
 

@@ -1,6 +1,5 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
@@ -45,8 +44,8 @@ export function CodeNode(props: NodeProps<CodeNode>) {
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(props.data.codeId);
-  const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
-  const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
+  const bboxAnnotations = useQuery(annotationQueries.bbox.byUserCode(props.data.codeId));
+  const spanAnnotations = useQuery(annotationQueries.span.byUserCode(props.data.codeId));
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.CODE, props.data.codeId));
 

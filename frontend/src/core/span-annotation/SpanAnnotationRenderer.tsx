@@ -1,10 +1,11 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 
 export type SpanAnnotationRendererSharedProps = AnnotationRendererSharedProps;
@@ -23,7 +24,7 @@ export const SpanAnnotationRenderer = memo(({ spanAnnotation, ...props }: SpanAn
 
 const SpanAnnotationRendererWithoutData = memo(
   ({ spanAnnotationId, ...props }: { spanAnnotationId: number } & SpanAnnotationRendererSharedProps) => {
-    const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(spanAnnotationId);
+    const spanAnnotation = useQuery(annotationQueries.span.byId(spanAnnotationId));
 
     if (spanAnnotation.isSuccess) {
       return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation.data} {...props} />;

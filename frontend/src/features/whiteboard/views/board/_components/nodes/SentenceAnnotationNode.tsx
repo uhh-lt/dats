@@ -1,5 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
@@ -44,7 +44,7 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = SentenceAnnotationHooks.useGetAnnotation(props.data.sentenceAnnotationId);
+  const annotation = useQuery(annotationQueries.sentence.byId(props.data.sentenceAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const memos = useQuery(
     memoQueries.byAttachedObject(AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId),

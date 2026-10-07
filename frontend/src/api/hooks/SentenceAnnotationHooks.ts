@@ -1,39 +1,18 @@
-import { CancelablePromise } from "@api/core/CancelablePromise";
+import { rollbackOptimisticUpdate } from "@api/cache-sync/_utils/optimisticUtils";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { queryClient } from "@api/queryClient";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
-import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
+import { useMutation } from "@tanstack/react-query";
 
-// SENTENCE QUERIES
+// SENTENCE QUERIES live in annotationQueries.sentence (used with `useQuery` directly).
 // TODO: filter out all disabled code ids
-const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<SentenceAnnotatorResult, Error>({
-    queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId],
-    queryFn: () =>
-      SentenceAnnotationService.getBySdocAndUser({
-        sdocId: sdocId!,
-        userId: userId!,
-      }),
-    enabled: !!sdocId && !!userId,
-  });
-
-const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
-  useQuery<SentenceAnnotationRead, Error>({
-    queryKey: [QueryKey.SENTENCE_ANNOTATION, sentenceAnnoId],
-    queryFn: () =>
-      SentenceAnnotationService.getById({
-        sentenceAnnoId: sentenceAnnoId!,
-      }) as CancelablePromise<SentenceAnnotationRead>,
-    enabled: !!sentenceAnnoId,
-    staleTime: 1000 * 60 * 5,
-  });
 
 // SENTENCE MUTATIONS
 const useCreateSentenceAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "createSentenceAnnotation"],
     mutationFn: SentenceAnnotationService.createSentenceAnnotation,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_CREATED",
@@ -43,6 +22,7 @@ const useCreateSentenceAnnotation = () =>
 
 const useCreateBulkSentenceAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "createBulkSentenceAnnotation"],
     mutationFn: SentenceAnnotationService.createSentenceAnnotationsBulk,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_CREATED_BATCH",
@@ -52,6 +32,7 @@ const useCreateBulkSentenceAnnotation = () =>
 
 const useUpdateSentenceAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "updateSentenceAnnotation"],
     mutationFn: (variables: {
       sentenceAnnoToUpdate: SentenceAnnotationRead | number;
       update: SentenceAnnotationUpdate;
@@ -79,14 +60,13 @@ const useUpdateSentenceAnnotation = () =>
     // On error, the previous cache snapshot is restored (rollback).
     onMutate: async ({ sentenceAnnoToUpdate, update }) => {
       if (typeof sentenceAnnoToUpdate === "number") return;
-      const affectedQueryKey = [
-        QueryKey.SDOC_SENTENCE_ANNOTATOR,
+      const affectedQueryKey = annotationQueries.sentence.bySdoc(
         sentenceAnnoToUpdate.sdoc_id,
         sentenceAnnoToUpdate.user_id,
-      ];
+      ).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousAnnos = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
-      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
+      const previousAnnos = queryClient.getQueryData(affectedQueryKey);
+      queryClient.setQueryData(affectedQueryKey, (old) => {
         if (!old) return old;
         const sentAnnos = { ...old.sentence_annotations };
         const newStart = update.sentence_id_start ?? sentenceAnnoToUpdate.sentence_id_start;
@@ -130,8 +110,7 @@ const useUpdateSentenceAnnotation = () =>
     },
     onError: (_error: Error, _updatedSentenceAnnotation, context) => {
       if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousAnnos);
+      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousAnnos, annotationQueries.sentence.all());
     },
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_UPDATED",
@@ -141,6 +120,7 @@ const useUpdateSentenceAnnotation = () =>
 
 const useUpdateBulkSentenceAnno = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "updateBulkSentenceAnno"],
     mutationFn: SentenceAnnotationService.updateSentenceAnnotationsBulk,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_UPDATED_BATCH",
@@ -150,6 +130,7 @@ const useUpdateBulkSentenceAnno = () =>
 
 const useDeleteSentenceAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "deleteSentenceAnnotation"],
     mutationFn: (sentAnnoToDelete: SentenceAnnotationRead | number) =>
       SentenceAnnotationService.deleteById({
         sentenceAnnoId: typeof sentAnnoToDelete === "number" ? sentAnnoToDelete : sentAnnoToDelete.id,
@@ -157,10 +138,13 @@ const useDeleteSentenceAnnotation = () =>
     // optimistic updates
     onMutate: async (sentAnnoToDelete) => {
       if (typeof sentAnnoToDelete === "number") return;
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, sentAnnoToDelete.sdoc_id, sentAnnoToDelete.user_id];
+      const affectedQueryKey = annotationQueries.sentence.bySdoc(
+        sentAnnoToDelete.sdoc_id,
+        sentAnnoToDelete.user_id,
+      ).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
-      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
+      const previousSentenceAnnotator = queryClient.getQueryData(affectedQueryKey);
+      queryClient.setQueryData(affectedQueryKey, (old) => {
         if (!old) return old;
         const sentAnnos = { ...old.sentence_annotations };
         for (
@@ -177,8 +161,11 @@ const useDeleteSentenceAnnotation = () =>
     },
     onError: (_error: Error, _sentenceAnnotationToDelete, context) => {
       if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousSentenceAnnotator);
+      rollbackOptimisticUpdate(
+        context.affectedQueryKey,
+        context.previousSentenceAnnotator,
+        annotationQueries.sentence.all(),
+      );
     },
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_DELETED",
@@ -188,6 +175,7 @@ const useDeleteSentenceAnnotation = () =>
 
 const useDeleteBulkSentenceAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "deleteBulkSentenceAnnotation"],
     mutationFn: SentenceAnnotationService.deleteSentenceAnnotationsBulk,
     meta: {
       datsEvent: "SENTENCE_ANNOTATION_DELETED_BATCH",
@@ -197,6 +185,7 @@ const useDeleteBulkSentenceAnnotation = () =>
 
 const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "deleteBulkSentenceAnnotationSingleSdoc"],
     mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
       SentenceAnnotationService.deleteSentenceAnnotationsBulk({
         requestBody: sentAnnosToDelete.map((anno) => anno.id),
@@ -215,11 +204,11 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
         return;
       }
 
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId];
+      const affectedQueryKey = annotationQueries.sentence.bySdoc(sdocId, userId).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
+      const previousSentenceAnnotator = queryClient.getQueryData(affectedQueryKey);
       const idsToDelete = sentAnnosToDelete.map((anno) => anno.id);
-      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
+      queryClient.setQueryData(affectedQueryKey, (old) => {
         if (!old) return old;
         const newSentenceAnnotations = Object.entries(old.sentence_annotations).reduce(
           (acc, [sentId, annotations]) => {
@@ -235,13 +224,20 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
     },
     onError: (_error: Error, _sentenceAnnotationToDelete, context) => {
       if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousSentenceAnnotator);
+      rollbackOptimisticUpdate(
+        context.affectedQueryKey,
+        context.previousSentenceAnnotator,
+        annotationQueries.sentence.all(),
+      );
     },
-    // Always re-fetch after error or success:
+    // Re-fetch after error or success, but only once no other sentence annotation mutation is in flight
+    // (isMutating still counts this mutation, hence `=== 1`); otherwise the refetch would overwrite their
+    // optimistic updates.
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
-      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
+      if (queryClient.isMutating({ mutationKey: annotationQueries.sentence.all() }) === 1) {
+        queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
+      }
     },
     meta: {
       successMessage: (data: SentenceAnnotationRead[]) => `Bulk deleted ${data.length} Sentence Annotations`,
@@ -250,12 +246,11 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
 
 const useCountBySdocsAndUser = () =>
   useMutation({
+    mutationKey: [...annotationQueries.sentence.all(), "countBySdocsAndUser"],
     mutationFn: SentenceAnnotationService.countAnnotations,
   });
 
 export const SentenceAnnotationHooks = {
-  useGetSentenceAnnotator,
-  useGetAnnotation,
   useCreateSentenceAnnotation,
   useCreateBulkSentenceAnnotation,
   useUpdateSentenceAnnotation,

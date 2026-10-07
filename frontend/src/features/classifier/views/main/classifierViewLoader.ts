@@ -1,5 +1,6 @@
+import { classifierQueries } from "@api/queries/classifierQueries";
+import { jobQueries } from "@api/queries/jobQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectClassifierJobsQueryOptions, projectClassifiersQueryOptions } from "../../_api/classifierQueryOptions";
 
 interface ClassifierViewLoaderArgs {
   queryClient: QueryClient;
@@ -8,7 +9,7 @@ interface ClassifierViewLoaderArgs {
 
 export async function classifierViewLoader({ queryClient, projectId }: ClassifierViewLoaderArgs) {
   await Promise.all([
-    queryClient.ensureQueryData(projectClassifiersQueryOptions(projectId)),
-    queryClient.ensureQueryData(projectClassifierJobsQueryOptions(projectId)),
+    queryClient.ensureQueryData(classifierQueries.byProject(projectId)),
+    queryClient.ensureQueryData(jobQueries.classifier.byProject(projectId)),
   ]);
 }

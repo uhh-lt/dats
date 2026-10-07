@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Decisions made (section 6). Stages 0, 1 and 2 done (uncommitted). Waiting for your review of stage 2 before stage 3. Stage 6 (Queries + Mutations files in api/hooks) added at your request.**
+Status: **Decisions made (section 6). Stages 0, 1, 2 and 3 done. Stage 4 next. Stage 6 (Queries + Mutations files in api/hooks) added at your request.**
 Branch: `refactor/query-key-factories` (contains an uncommitted phase-1 prototype, see section 4).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -104,6 +104,10 @@ mutation hooks and hooks that derive data (lookup/filter via `select`). Hooks th
 
 5.2 **Factories take identity params only.** No `enabled`, `select`, `staleTime` parameters. Missing identity (`undefined`
 id) returns `skipToken`. Components/hooks do not add a redundant `enabled` for that case.
+**`...Required` twin (found in stage 3):** `useSuspenseQuery` does not accept `skipToken`, and loaders should not use it.
+Where a factory has both consumers with a possibly-missing id and suspense/loader consumers with a known id, it gets a
+strict twin without skipToken (`sdocQueries.detailRequired(id)`, `whiteboardQueries.byProjectRequired(id)`). Both build
+the identical key. Factories whose consumers all have real ids (e.g. `classifierQueries.byProject`) take a plain `number`.
 
 5.3 **Compose at the call site:** `useQuery({ ...tagQueries.byProject(id), select })`. A wrapper hook is allowed only if it
 adds real logic (derived data, several queries, reading app state). A hook that only forwards to `useQuery` is not
@@ -184,6 +188,12 @@ Sweep, domain by domain, in this order (cache-sync dependencies first):
 
 - Each domain: `<domain>Queries.ts` factory, the existing `<Domain>Hooks.ts` keeps its mutations (now with `mutationKey`s) and data-deriving hooks, brain/utils switched to tagged keys, direct cache writes in components moved into the brain.
 - Done when: each domain has no `QueryKey.` references.
+- **Result (done):** new factories `userQueries`, `projectQueries`, `apiKeyQueries`, `sdocQueries`, `folderQueries`, `metadataQueries`,
+  `annotationQueries` (span / bbox / sentence under one root), `whiteboardQueries`, `timelineAnalysisQueries`, `cotaQueries`,
+  `classifierQueries`, `perspectiveQueries`, `tagRecommendationQueries` and `jobQueries` (one shared shape for the 9 job types, which
+  also types the brain's `upsertJob`). Every mutation in these domains has a `mutationKey`. Optimistic annotation updates roll back
+  through one helper (`cache-sync/_utils/optimisticUtils.ts`) that follows the `isMutating === 1` rule. The code-delete handler
+  invalidates `annotationQueries.all()` instead of eight keys.
 
 ### Stage 4: Derived, table and search keys
 

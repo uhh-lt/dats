@@ -1,7 +1,8 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 
 export type SdocSentenceRendererSharedProps = ExpandableRendererProps;
@@ -20,7 +21,7 @@ export const SdocSentenceRenderer = memo(({ sdoc, sentenceId, ...props }: SdocSe
 
 const SdocSentenceRendererWithoutData = memo(
   ({ sdocId, sentenceId, ...props }: { sdocId: number; sentenceId: number } & SdocSentenceRendererSharedProps) => {
-    const sdocData = SdocHooks.useGetDocumentData(sdocId);
+    const sdocData = useQuery(sdocQueries.data(sdocId));
 
     if (sdocData.isSuccess) {
       return <SdocSentenceRendererWithData sdocData={sdocData.data} sentenceId={sentenceId} {...props} />;

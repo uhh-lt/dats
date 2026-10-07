@@ -1,7 +1,8 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { LinkListItemButton } from "@core/navigation";
 import { ListItemIcon, ListItemText } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { forwardRef, memo } from "react";
 
 interface SdocListItemProps {
@@ -13,7 +14,7 @@ interface SdocListItemProps {
 export const SdocListItem = memo(
   forwardRef<HTMLAnchorElement, SdocListItemProps>(({ sdocId, projectId, selected }, ref) => {
     // query (global server state)
-    const sdoc = SdocHooks.useGetDocument(sdocId);
+    const sdoc = useQuery(sdocQueries.detail(sdocId));
 
     if (projectId === undefined) {
       return null;

@@ -1,4 +1,4 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { MemoIndicator } from "@core/memo";
@@ -6,6 +6,7 @@ import { LinkWrapper } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 
 export interface SdocRendererSharedProps extends ExpandableRendererProps {
@@ -28,7 +29,7 @@ export const SdocRenderer = memo(({ sdoc, ...props }: SdocRendererProps) => {
 });
 
 const SdocRendererWithoutData = memo(({ sdocId, ...props }: { sdocId: number } & SdocRendererSharedProps) => {
-  const sdoc = SdocHooks.useGetDocument(sdocId);
+  const sdoc = useQuery(sdocQueries.detail(sdocId));
 
   if (sdoc.isSuccess) {
     return <SdocRendererWithData sdoc={sdoc.data} {...props} />;
@@ -78,7 +79,7 @@ const SdocRendererWithData = memo(
 );
 
 function SdocContext({ sdocId }: { sdocId: number }) {
-  const sdocData = SdocHooks.useGetDocumentData(sdocId);
+  const sdocData = useQuery(sdocQueries.data(sdocId));
 
   if (sdocData.isLoading) {
     return <CircularProgress size={20} />;
