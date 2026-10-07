@@ -1,15 +1,16 @@
+import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
 import { ImportService } from "@api/services/ImportService";
 import { ImportJobRead } from "@models/ImportJobRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useJobRefetchInterval } from "./jobPolling";
-import { QueryKey } from "./QueryKey";
 
 const useStartImportJob = () =>
   useMutation({
+    mutationKey: [...jobQueries.import.all(), "startImportJob"],
     mutationFn: ImportService.startImportJob,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_IMPORT_JOBS, variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: jobQueries.import.byProject(variables.projectId).queryKey });
     },
     meta: {
       successMessage: "Import job started! Please wait...",
@@ -22,31 +23,14 @@ const useStartImportJob = () =>
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
 const useLiveImportJob = (importJobId: string | undefined, initialData: ImportJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<ImportJobRead>();
-  return useQuery<ImportJobRead, Error>({
-    queryKey: [QueryKey.IMPORT_JOB, importJobId],
-    queryFn: () =>
-      ImportService.getImportJob({
-        importJobId: importJobId!,
-      }),
-    enabled: !!importJobId,
+  return useQuery({
+    ...jobQueries.import.byId(importJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
-  });
-};
-
-const useGetAllImportJobs = (projectId: number | null | undefined) => {
-  return useQuery<ImportJobRead[], Error>({
-    queryKey: [QueryKey.PROJECT_IMPORT_JOBS, projectId],
-    queryFn: () =>
-      ImportService.getAllImportJobs({
-        projectId: projectId!,
-      }),
-    enabled: !!projectId,
   });
 };
 
 export const ImportHooks = {
   useStartImportJob,
   useLiveImportJob,
-  useGetAllImportJobs,
 };

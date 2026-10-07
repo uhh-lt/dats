@@ -1,5 +1,5 @@
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectWhiteboardsQueryOptions } from "../../_api/whiteboardQueryOptions";
 
 interface WhiteboardDashboardViewLoaderArgs {
   queryClient: QueryClient;
@@ -7,5 +7,5 @@ interface WhiteboardDashboardViewLoaderArgs {
 }
 
 export async function whiteboardDashboardViewLoader({ queryClient, projectId }: WhiteboardDashboardViewLoaderArgs) {
-  queryClient.ensureQueryData(projectWhiteboardsQueryOptions(projectId));
+  queryClient.ensureQueryData(whiteboardQueries.byProjectRequired(projectId));
 }

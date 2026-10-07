@@ -1,4 +1,5 @@
 import { UserHooks } from "@api/hooks/UserHooks";
+import { userQueries } from "@api/queries/userQueries";
 import { FormEmail } from "@components/form-inputs";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ProjectRead } from "@models/ProjectRead";
@@ -19,6 +20,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { EMAIL_REGEX } from "@utils/GlobalConstants";
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -33,7 +36,8 @@ interface ProjectUsersProps {
 
 export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
   // query all users that belong to the project
-  const allUsers = UserHooks.useGetAllUsers();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const allUsers = useQuery(userQueries.byProject(projectId));
 
   const {
     handleSubmit,

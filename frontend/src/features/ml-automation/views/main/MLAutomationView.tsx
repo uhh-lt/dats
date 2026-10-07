@@ -1,3 +1,4 @@
+import { jobQueries } from "@api/queries/jobQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
@@ -21,7 +22,7 @@ import {
 } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { projectMLJobsQueryOptions, useStartMLJob } from "../../_api/mlAutomationQueryOptions";
+import { useStartMLJob } from "../../_api/mlAutomationQueryOptions";
 import { MLJobsView } from "./_components/MLJobsView";
 
 const routeAPI = getRouteApi("/_auth/project/$projectId/tools/ml-automation");
@@ -34,7 +35,7 @@ export function MlAutomationView() {
   const startMlJob = useStartMLJob();
 
   // global server state (react-query)
-  const mlJobsQuery = useSuspenseQuery(projectMLJobsQueryOptions(projectId));
+  const mlJobsQuery = useSuspenseQuery(jobQueries.ml.byProject(projectId));
 
   // confirmation dialog
   const openConfirmationDialog = useOpenConfirmationDialog();

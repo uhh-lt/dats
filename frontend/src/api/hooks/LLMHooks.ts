@@ -1,3 +1,4 @@
+import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
 import { RagService } from "@api/services/RagService";
@@ -11,10 +12,11 @@ import { QueryKey } from "./QueryKey";
 
 const useStartLLMJob = () =>
   useMutation({
+    mutationKey: [...jobQueries.llm.all(), "startLLMJob"],
     mutationFn: LlmService.startLlmAssistantJob,
     onSuccess: (job) => {
       // force refetch of all llm jobs when adding a new one
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_LLM_JOBS, job.project_id] });
+      queryClient.invalidateQueries({ queryKey: jobQueries.llm.byProject(job.project_id).queryKey });
     },
     meta: {
       successMessage: (data: LlmAssistantJobRead) => `Started LLM Job as a new background task (ID: ${data.job_id})`,
@@ -23,31 +25,16 @@ const useStartLLMJob = () =>
 
 const useLiveLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<LlmAssistantJobRead>();
-  return useQuery<LlmAssistantJobRead, Error>({
-    queryKey: [QueryKey.LLM_JOB, llmJobId],
-    queryFn: () =>
-      LlmService.getLlmAssistantJobById({
-        jobId: llmJobId!,
-      }),
-    enabled: !!llmJobId,
+  return useQuery({
+    ...jobQueries.llm.byId(llmJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
 };
 
-const useGetAllLLMJobs = (projectId: number | undefined) => {
-  return useQuery<LlmAssistantJobRead[], Error>({
-    queryKey: [QueryKey.PROJECT_LLM_JOBS, projectId],
-    queryFn: () =>
-      LlmService.getLlmAssistantJobsByProject({
-        projectId: projectId!,
-      }),
-    enabled: !!projectId,
-  });
-};
-
 const useCreatePromptTemplates = () =>
   useMutation({
+    mutationKey: [...jobQueries.llm.all(), "createPromptTemplates"],
     mutationFn: LlmService.createPromptTemplates,
     meta: {
       successMessage: () => `Created prompt templates`,
@@ -56,6 +43,7 @@ const useCreatePromptTemplates = () =>
 
 const useDetermineApproach = () =>
   useMutation({
+    mutationKey: [...jobQueries.llm.all(), "determineApproach"],
     mutationFn: LlmService.determineApproach,
     meta: {
       successMessage: (data: ApproachType) => `Determined approach type: ${data}`,
@@ -104,7 +92,6 @@ const useListStrategies = (taskType: TaskType | undefined) =>
 export const LLMHooks = {
   useLiveLLMJob,
   useStartLLMJob,
-  useGetAllLLMJobs,
   useDetermineApproach,
   useCreatePromptTemplates,
   useCountExistingAssistantAnnotations,

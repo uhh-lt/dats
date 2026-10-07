@@ -1,4 +1,5 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { SdocTagsRenderer } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { SimSearchImageHit } from "@models/SimSearchImageHit";
@@ -15,6 +16,7 @@ import {
   Typography,
   styled,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
 
 const simSearchColorScale = d3.scaleLinear([0, 1 / 3, 2 / 3, 1], ["red", "orange", "gold", "yellowgreen"]);
@@ -44,7 +46,7 @@ export function ImageSimilaritySearchResultCard({
 }: ImageSimilaritySearchResultCardProps & CardProps) {
   // query (global server state)
   const thumbnailUrl = SdocHooks.useGetThumbnailURL(hit.sdoc_id).data ?? "";
-  const sdoc = SdocHooks.useGetDocument(hit.sdoc_id);
+  const sdoc = useQuery(sdocQueries.detail(hit.sdoc_id));
 
   const title = sdoc.isLoading ? "Loading" : sdoc.isError ? "Error: " : sdoc.isSuccess ? sdoc.data.name : "";
 

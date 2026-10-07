@@ -1,4 +1,4 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { QueryClient } from "@tanstack/react-query";
 
 interface AnnotationViewLoaderArgs {
@@ -8,8 +8,8 @@ interface AnnotationViewLoaderArgs {
 
 export async function annotationViewLoader({ queryClient, sdocId }: AnnotationViewLoaderArgs) {
   const [sdoc] = await Promise.all([
-    queryClient.ensureQueryData(SdocHooks.getDocumentQueryOptions(sdocId)),
-    queryClient.ensureQueryData(SdocHooks.getDocumentDataQueryOptions(sdocId)),
+    queryClient.ensureQueryData(sdocQueries.detailRequired(sdocId)),
+    queryClient.ensureQueryData(sdocQueries.dataRequired(sdocId)),
   ]);
 
   return sdoc;

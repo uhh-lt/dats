@@ -1,4 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
+import { metadataQueries } from "@api/queries/metadataQueries";
 import { queryClient } from "@api/queryClient";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 
@@ -8,22 +8,17 @@ import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataR
 
 // Insert or replace a metadata value in the per-sdoc map.
 export function upsertSdocMetadata(metadata: SourceDocumentMetadataRead): void {
-  queryClient.setQueryData<Record<number, SourceDocumentMetadataRead>>(
-    [QueryKey.SDOC_METADATAS, metadata.source_document_id],
-    (old) =>
-      old ? { ...old, [metadata.project_metadata_id]: metadata } : { [metadata.project_metadata_id]: metadata },
+  queryClient.setQueryData(metadataQueries.bySdoc(metadata.source_document_id).queryKey, (old) =>
+    old ? { ...old, [metadata.project_metadata_id]: metadata } : { [metadata.project_metadata_id]: metadata },
   );
 }
 
 // Remove a metadata value from the per-sdoc map.
 export function removeSdocMetadata(metadata: SourceDocumentMetadataRead): void {
-  queryClient.setQueryData<Record<number, SourceDocumentMetadataRead>>(
-    [QueryKey.SDOC_METADATAS, metadata.source_document_id],
-    (old) => {
-      if (!old) return old;
-      const next = { ...old };
-      delete next[metadata.project_metadata_id];
-      return next;
-    },
-  );
+  queryClient.setQueryData(metadataQueries.bySdoc(metadata.source_document_id).queryKey, (old) => {
+    if (!old) return old;
+    const next = { ...old };
+    delete next[metadata.project_metadata_id];
+    return next;
+  });
 }

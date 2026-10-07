@@ -1,4 +1,5 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
+import { folderQueries } from "@api/queries/folderQueries";
 import { Icon, getIconComponent } from "@components/icons";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
@@ -17,6 +18,8 @@ import {
   PopoverOrigin,
   TextField,
 } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
@@ -42,7 +45,8 @@ export function FolderActionMenu(props: FolderMenuProps) {
     ];
   }, [allFolders.data]);
 
-  const allSdocFoldersMap = FolderHooks.useGetAllSdocFoldersMap();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const allSdocFoldersMap = useQuery(folderQueries.byProject(projectId, FolderType.SDOC_FOLDER));
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!allFoldersWithRoot || !allSdocFoldersMap.data) return undefined;
 

@@ -1,5 +1,5 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
 import { memoQueries } from "@api/queries/memoQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { tagQueries } from "@api/queries/tagQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { useOpenMemoDialog } from "@core/memo";
@@ -39,7 +39,7 @@ export function SdocNode(props: NodeProps<SdocNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
+  const sdoc = useQuery(sdocQueries.detail(props.data.sdocId));
   const tagIds = useQuery(tagQueries.idsBySdoc(props.data.sdocId));
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId));
 
@@ -195,7 +195,7 @@ export function SdocNode(props: NodeProps<SdocNode>) {
 }
 
 function SdocNodeImageContent({ sdoc }: { sdoc: SourceDocumentRead }) {
-  const sdocData = SdocHooks.useGetDocumentData(sdoc.id);
+  const sdocData = useQuery(sdocQueries.data(sdoc.id));
 
   if (!sdocData.isSuccess) {
     return <CircularProgress />;

@@ -1,12 +1,13 @@
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { SdocRenderer } from "@core/source-document";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesDoc } from "@models/PerspectivesDoc";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
-import { PerspectivesQueryOptions } from "../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../_api/useGetDocVisualization";
 
 interface DocAspectTableProps {
@@ -128,7 +129,7 @@ export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTabl
 });
 
 function ContentRenderer({ aspectId, sdocId }: { aspectId: number; sdocId: number }) {
-  const content = PerspectivesQueryOptions.useGetDocumentAspect(aspectId, sdocId);
+  const content = useQuery(perspectiveQueries.docAspect(aspectId, sdocId));
   if (!content.data) return null;
   return content.data;
 }

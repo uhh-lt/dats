@@ -1,6 +1,7 @@
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TagRecommendationHooks } from "@api/hooks/TagRecommendationHooks";
 import { tagQueries } from "@api/queries/tagQueries";
+import { tagRecommendationQueries } from "@api/queries/tagRecommendationQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { TagRead } from "@models/TagRead";
@@ -34,10 +35,8 @@ export function TagRecommendationsView() {
   // global server state
   const projectId = useAppSelector((state) => state.project.projectId);
   const documentTags = useQuery(tagQueries.byProject(projectId));
-  const tagRecommendationMlJobs = TagRecommendationHooks.useGetAllTagRecommendationJobs();
-  const recommendations = TagRecommendationHooks.useGetTagRecommendationsFromJob(
-    selectedJobId === "-1" ? null : selectedJobId,
-  );
+  const tagRecommendationMlJobs = useQuery(tagRecommendationQueries.jobsByProject(projectId));
+  const recommendations = useQuery(tagRecommendationQueries.byJob(selectedJobId === "-1" ? null : selectedJobId));
 
   // event handlers
   const handleChange = (event: SelectChangeEvent<string>) => {

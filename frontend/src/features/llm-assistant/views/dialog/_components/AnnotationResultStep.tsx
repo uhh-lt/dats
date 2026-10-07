@@ -1,5 +1,5 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { QueryKey } from "@api/hooks/QueryKey";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { queryClient } from "@api/queryClient";
 import { useTabNavigate } from "@core/navigation";
 import { AnnotationLLMJobResult } from "@models/AnnotationLLMJobResult";
@@ -79,7 +79,7 @@ const AnnotationResultStepContent = memo(({ jobResult, approachType }: Annotatio
 
     // reload annotations
     queryClient.invalidateQueries({
-      queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, firstAnnotatedSdocId, approach2AssistantID[approachType]],
+      queryKey: annotationQueries.span.bySdoc(firstAnnotatedSdocId, approach2AssistantID[approachType]).queryKey,
     });
   };
 

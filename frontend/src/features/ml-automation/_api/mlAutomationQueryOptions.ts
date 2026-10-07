@@ -1,25 +1,17 @@
-import { QueryKey } from "@api/hooks/QueryKey";
 import { useJobRefetchInterval } from "@api/hooks/jobPolling";
+import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
 import { JobService } from "@api/services/JobService";
 import { MlJobRead } from "@models/MlJobRead";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-
-export const projectMLJobsQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_ML_JOBS, projectId],
-    queryFn: () =>
-      JobService.getMlJobsByProject({
-        projectId,
-      }),
-  });
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useStartMLJob = () =>
   useMutation({
+    mutationKey: [...jobQueries.ml.all(), "startMLJob"],
     mutationFn: JobService.startMlJob,
     onSuccess: (job) => {
       // Force refetch of all ML jobs when adding a new one.
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ML_JOBS, job.input.project_id] });
+      queryClient.invalidateQueries({ queryKey: jobQueries.ml.byProject(job.input.project_id).queryKey });
     },
     meta: {
       successMessage: (data: MlJobRead) => `Started ML Job as a new background task (ID: ${data.job_id})`,
@@ -28,13 +20,8 @@ export const useStartMLJob = () =>
 
 export const useLiveMLJob = (mlJobId: string | undefined, initialData: MlJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<MlJobRead>();
-  return useQuery<MlJobRead, Error>({
-    queryKey: [QueryKey.ML_JOB, mlJobId],
-    queryFn: () =>
-      JobService.getMlJobById({
-        jobId: mlJobId!,
-      }),
-    enabled: !!mlJobId,
+  return useQuery({
+    ...jobQueries.ml.byId(mlJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });

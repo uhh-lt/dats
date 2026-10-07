@@ -1,5 +1,5 @@
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectAspectsQueryOptions } from "../../_api/perspectivesQueryOptions";
 
 interface PerspectivesListViewLoaderArgs {
   queryClient: QueryClient;
@@ -7,5 +7,5 @@ interface PerspectivesListViewLoaderArgs {
 }
 
 export async function perspectivesListViewLoader({ queryClient, projectId }: PerspectivesListViewLoaderArgs) {
-  await queryClient.ensureQueryData(projectAspectsQueryOptions(projectId));
+  await queryClient.ensureQueryData(perspectiveQueries.aspectsByProjectRequired(projectId));
 }

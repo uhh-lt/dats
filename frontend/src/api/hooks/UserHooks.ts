@@ -1,42 +1,27 @@
+import { userQueries } from "@api/queries/userQueries";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
 import { ProjectUserLinks } from "@models/ProjectUserLinks";
 import { UserRead } from "@models/UserRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
 
 // USER QUERIES
-interface UseProjectUsersQueryParams<T> {
-  select?: (data: UserRead[]) => T;
-  enabled?: boolean;
-}
+// The queries themselves live in userQueries. The hook below only derives data from them.
 
-const useProjectUsersQuery = <T = UserRead[]>({ select, enabled }: UseProjectUsersQueryParams<T>) => {
+const useGetUser = (userId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.PROJECT_USERS, projectId],
-    queryFn: () =>
-      UserService.getByProject({
-        projId: projectId!,
-      }),
-    staleTime: 1000 * 60 * 5,
-    select,
-    enabled: !!projectId && (enabled ?? true),
-  });
-};
-
-const useGetAllUsers = () => useProjectUsersQuery({});
-
-const useGetUser = (userId: number | null | undefined) =>
-  useProjectUsersQuery({
+    ...userQueries.byProject(projectId),
     select: (data) => data.find((user) => user.id === userId)!,
     enabled: !!userId,
   });
+};
 
 // USER MUTATIONS
 const useUpdate = () =>
   useMutation({
+    mutationKey: [...userQueries.all(), "update"],
     mutationFn: UserService.updateMe,
     meta: {
       datsEvent: "USER_UPDATED",
@@ -46,6 +31,7 @@ const useUpdate = () =>
 
 const useAddUserToProject = () =>
   useMutation({
+    mutationKey: [...userQueries.all(), "addUserToProject"],
     mutationFn: UserService.associateUserToProject,
     meta: {
       datsEvent: "PROJECT_USERS_LINKED",
@@ -55,6 +41,7 @@ const useAddUserToProject = () =>
 
 const useRemoveUserFromProject = () =>
   useMutation({
+    mutationKey: [...userQueries.all(), "removeUserFromProject"],
     mutationFn: UserService.dissociateUserFromProject,
     meta: {
       datsEvent: "PROJECT_USERS_LINKED",
@@ -64,6 +51,7 @@ const useRemoveUserFromProject = () =>
 
 const useRegister = () =>
   useMutation({
+    mutationKey: [...userQueries.all(), "register"],
     mutationFn: AuthenticationService.register,
     meta: {
       successMessage: (user: UserRead) => `Successfully registered user ${user.first_name} ${user.last_name}`,
@@ -71,7 +59,6 @@ const useRegister = () =>
   });
 
 export const UserHooks = {
-  useGetAllUsers,
   useGetUser,
   useUpdate,
   useAddUserToProject,

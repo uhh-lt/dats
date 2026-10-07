@@ -1,11 +1,12 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 
 export type SentenceAnnotationRendererSharedProps = AnnotationRendererSharedProps;
@@ -24,7 +25,7 @@ export const SentenceAnnotationRenderer = memo(({ sentenceAnnotation, ...props }
 
 const SentenceAnnotationRendererWithoutData = memo(
   ({ sentenceAnnotationId, ...props }: { sentenceAnnotationId: number } & SentenceAnnotationRendererSharedProps) => {
-    const sentenceAnnotation = SentenceAnnotationHooks.useGetAnnotation(sentenceAnnotationId);
+    const sentenceAnnotation = useQuery(annotationQueries.sentence.byId(sentenceAnnotationId));
 
     if (sentenceAnnotation.isSuccess) {
       return <SentenceAnnotationRendererWithData sentenceAnnotation={sentenceAnnotation.data} {...props} />;
@@ -79,7 +80,7 @@ const SentenceAnnotationRendererWithData = memo(
 );
 
 function SentenceAnnotationContext({ sentenceAnnotation }: { sentenceAnnotation: SentenceAnnotationRead }) {
-  const sdocData = SdocHooks.useGetDocumentData(sentenceAnnotation.sdoc_id);
+  const sdocData = useQuery(sdocQueries.data(sentenceAnnotation.sdoc_id));
 
   if (sdocData.isLoading) {
     return <CircularProgress size={20} />;

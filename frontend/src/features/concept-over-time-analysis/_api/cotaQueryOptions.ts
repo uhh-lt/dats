@@ -1,29 +1,16 @@
-import { QueryKey } from "@api/hooks/QueryKey";
 import { useJobRefetchInterval } from "@api/hooks/jobPolling";
+import { cotaQueries } from "@api/queries/cotaQueries";
+import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import { COTARead } from "@models/COTARead";
 import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-
-export type CotaMap = Record<number, COTARead>;
-
-export const projectCotasQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_COTAS, projectId],
-    queryFn: async () => {
-      const data = await ConceptOverTimeAnalysisService.getByProject({ projectId });
-      return data.reduce((acc, cota) => {
-        acc[cota.id] = cota;
-        return acc;
-      }, {} as CotaMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useCreateCota = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "createCota"],
     mutationFn: ConceptOverTimeAnalysisService.create,
     meta: {
       datsEvent: "COTA_CREATED",
@@ -33,6 +20,7 @@ export const useCreateCota = () =>
 
 export const useDuplicateCota = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "duplicateCota"],
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     meta: {
       datsEvent: "COTA_CREATED",
@@ -42,6 +30,7 @@ export const useDuplicateCota = () =>
 
 export const useUpdateCota = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "updateCota"],
     mutationFn: ConceptOverTimeAnalysisService.updateById,
     meta: {
       datsEvent: "COTA_UPDATED",
@@ -51,6 +40,7 @@ export const useUpdateCota = () =>
 
 export const useAnnotateCotaSentences = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "annotateCotaSentences"],
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
     meta: {
       datsEvent: "COTA_UPDATED",
@@ -60,6 +50,7 @@ export const useAnnotateCotaSentences = () =>
 
 export const useRemoveCotaSentences = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "removeCotaSentences"],
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
     meta: {
       datsEvent: "COTA_UPDATED",
@@ -69,6 +60,7 @@ export const useRemoveCotaSentences = () =>
 
 export const useResetCota = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "resetCota"],
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
     meta: {
       datsEvent: "COTA_UPDATED",
@@ -78,6 +70,7 @@ export const useResetCota = () =>
 
 export const useDeleteCota = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "deleteCota"],
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
     meta: {
       datsEvent: "COTA_DELETED",
@@ -87,22 +80,18 @@ export const useDeleteCota = () =>
 
 export const useLiveCOTARefinementJob = (cotaRefinementJobId: string | null) => {
   const jobRefetchInterval = useJobRefetchInterval<COTARefinementJobRead>();
-  return useQuery<COTARefinementJobRead | null, Error>({
-    queryKey: [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJobId],
-    queryFn: () =>
-      ConceptOverTimeAnalysisService.getCotaJob({
-        cotaJobId: cotaRefinementJobId!,
-      }),
-    enabled: !!cotaRefinementJobId,
+  return useQuery({
+    ...jobQueries.cotaRefinement.byId(cotaRefinementJobId),
     refetchInterval: jobRefetchInterval,
   });
 };
 
 export const useRefineCota = () =>
   useMutation({
+    mutationKey: [...cotaQueries.all(), "refineCota"],
     mutationFn: ConceptOverTimeAnalysisService.refineCota,
     onSuccess(cota) {
-      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
+      queryClient.setQueryData(cotaQueries.byProject(cota.project_id).queryKey, (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
@@ -119,9 +108,9 @@ export const useGetCotaById = (cotaId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...projectCotasQueryOptions(projectId!),
+    ...cotaQueries.byProject(projectId),
     select: (data) => (cotaId != null ? data[cotaId] : undefined),
-    enabled: !!projectId && cotaId != null,
+    enabled: cotaId != null,
   });
 };
 
@@ -129,8 +118,7 @@ export const useGetProjectCotaList = () => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...projectCotasQueryOptions(projectId!),
+    ...cotaQueries.byProject(projectId),
     select: (data) => Object.values(data),
-    enabled: !!projectId,
   });
 };

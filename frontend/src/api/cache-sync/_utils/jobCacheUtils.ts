@@ -1,7 +1,16 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { classifierQueries } from "@api/queries/classifierQueries";
 import { codeQueries } from "@api/queries/codeQueries";
+import { cotaQueries } from "@api/queries/cotaQueries";
+import { folderQueries } from "@api/queries/folderQueries";
+import { jobQueries } from "@api/queries/jobQueries";
 import { memoQueries } from "@api/queries/memoQueries";
+import { metadataQueries } from "@api/queries/metadataQueries";
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { tagQueries } from "@api/queries/tagQueries";
+import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
+import { userQueries } from "@api/queries/userQueries";
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { queryClient } from "@api/queryClient";
 import type { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
@@ -18,6 +27,7 @@ import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { MlJobRead } from "@models/MlJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import type { DataTag } from "@tanstack/react-query";
 
 type JobRead = DATSEventMap["JOB_UPDATED"];
 
@@ -30,34 +40,34 @@ type JobRead = DATSEventMap["JOB_UPDATED"];
 export function handleJobUpdate(job: JobRead): void {
   switch (job.job_type) {
     case ExportJobRead.job_type.EXPORT:
-      upsertJob(job, QueryKey.EXPORT_JOB);
+      upsertJob(job, jobQueries.export);
       break;
     case ImportJobRead.job_type.IMPORT:
-      upsertJob(job, QueryKey.IMPORT_JOB, QueryKey.PROJECT_IMPORT_JOBS);
+      upsertJob(job, jobQueries.import);
       if (job.status === JobStatus.FINISHED) handleImportJobFinished(job);
       break;
     case CrawlerJobRead.job_type.CRAWLER:
-      upsertJob(job, QueryKey.CRAWLER_JOB, QueryKey.PROJECT_CRAWLER_JOBS);
+      upsertJob(job, jobQueries.crawler);
       break;
     case LlmAssistantJobRead.job_type.LLM_ASSISTANT:
-      upsertJob(job, QueryKey.LLM_JOB, QueryKey.PROJECT_LLM_JOBS);
+      upsertJob(job, jobQueries.llm);
       break;
     case MlJobRead.job_type.ML:
-      upsertJob(job, QueryKey.ML_JOB, QueryKey.PROJECT_ML_JOBS);
+      upsertJob(job, jobQueries.ml);
       break;
     case ClassifierJobRead.job_type.CLASSIFIER:
-      upsertJob(job, QueryKey.CLASSIFIER_JOB, QueryKey.PROJECT_CLASSIFIER_JOBS);
+      upsertJob(job, jobQueries.classifier);
       if (job.status === JobStatus.FINISHED) handleClassifierJobFinished(job);
       break;
     case DuplicateFinderJobRead.job_type.DUPLICATE_FINDER:
-      upsertJob(job, QueryKey.DUPLICATE_FINDER_JOB);
+      upsertJob(job, jobQueries.duplicateFinder);
       break;
     case COTARefinementJobRead.job_type.COTA_REFINEMENT:
-      upsertJob(job, QueryKey.COTA_REFINEMENT_JOB);
+      upsertJob(job, jobQueries.cotaRefinement);
       if (job.status === JobStatus.FINISHED) handleCOTARefinementJobFinished(job);
       break;
     case PerspectivesJobRead.job_type.PERSPECTIVES:
-      upsertJob(job, QueryKey.PERSPECTIVES_JOB);
+      upsertJob(job, jobQueries.perspectives);
       if (job.status === JobStatus.FINISHED) handlePerspectivesJobFinished(job);
       break;
     default: {
@@ -67,16 +77,21 @@ export function handleJobUpdate(job: JobRead): void {
   }
 }
 
+// The query definitions of one job type (see jobQueries): the single-job query and, for types that have one,
+// the per-project job list.
+interface JobTypeQueries<T> {
+  byId: (jobId: string) => {
+    queryKey: DataTag<readonly unknown[], T | null | undefined, Error> | DataTag<readonly unknown[], T, Error>;
+  };
+  byProject?: (projectId: number) => { queryKey: DataTag<readonly unknown[], T[], Error> };
+}
+
 // A job update carries the full JobRead: write it into the single-job cache and
 // upsert it into the project job-list cache (if the job type has one).
-function upsertJob<T extends { job_id: string; project_id: number }>(
-  job: T,
-  singleKey: (typeof QueryKey)[keyof typeof QueryKey],
-  listKey?: (typeof QueryKey)[keyof typeof QueryKey],
-) {
-  queryClient.setQueryData([singleKey, job.job_id], job);
-  if (!listKey) return;
-  queryClient.setQueryData<T[]>([listKey, job.project_id], (old) => {
+function upsertJob<T extends { job_id: string; project_id: number }>(job: T, queries: JobTypeQueries<T>) {
+  queryClient.setQueryData(queries.byId(job.job_id).queryKey, job);
+  if (!queries.byProject) return;
+  queryClient.setQueryData(queries.byProject(job.project_id).queryKey, (old) => {
     if (!old) return old;
     const index = old.findIndex((j) => j.job_id === job.job_id);
     if (index === -1) return [...old, job];
@@ -97,22 +112,22 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.FOLDERS:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, projectId] });
+      queryClient.invalidateQueries({ queryKey: folderQueries.ofProjectScope(projectId) });
       break;
     case ImportJobType.PROJECT_METADATA:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, projectId] });
+      queryClient.invalidateQueries({ queryKey: metadataQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.USERS:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, projectId] });
+      queryClient.invalidateQueries({ queryKey: userQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.TIMELINE_ANALYSES:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId] });
+      queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.WHITEBOARDS:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId] });
+      queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.COTA:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, projectId] });
+      queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.DOCUMENTS:
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
@@ -123,11 +138,11 @@ function handleImportJobFinished(job: ImportJobRead) {
     case ImportJobType.PROJECT:
       queryClient.invalidateQueries({ queryKey: tagQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, projectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, projectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, projectId] });
+      queryClient.invalidateQueries({ queryKey: metadataQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: userQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
@@ -144,7 +159,7 @@ function handleImportJobFinished(job: ImportJobRead) {
 // A finished classifier job may have created/updated classifiers; document
 // inference jobs also tagged the affected sdocs.
 function handleClassifierJobFinished(job: ClassifierJobRead) {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, job.project_id] });
+  queryClient.invalidateQueries({ queryKey: classifierQueries.byProject(job.project_id).queryKey });
   if (
     job.input.model_type === ClassifierModel.DOCUMENT &&
     job.input.task_type === ClassifierTask.INFERENCE &&
@@ -158,11 +173,11 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
 
 // A finished perspectives job recomputed the aspect's visualization data.
 function handlePerspectivesJobFinished(job: PerspectivesJobRead) {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, job.input.aspect_id] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, job.input.aspect_id] });
+  queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(job.input.aspect_id) });
+  queryClient.invalidateQueries({ queryKey: perspectiveQueries.clusterSimilarities(job.input.aspect_id).queryKey });
 }
 
 // A finished COTA refinement job updated the COTA — refresh the project's COTAs.
 function handleCOTARefinementJobFinished(job: COTARefinementJobRead) {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, job.input.project_id] });
+  queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(job.input.project_id).queryKey });
 }

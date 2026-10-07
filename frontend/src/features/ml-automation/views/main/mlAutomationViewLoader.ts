@@ -1,5 +1,5 @@
+import { jobQueries } from "@api/queries/jobQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectMLJobsQueryOptions } from "../../_api/mlAutomationQueryOptions";
 
 interface MlAutomationViewLoaderArgs {
   queryClient: QueryClient;
@@ -7,5 +7,5 @@ interface MlAutomationViewLoaderArgs {
 }
 
 export async function mlAutomationViewLoader({ queryClient, projectId }: MlAutomationViewLoaderArgs) {
-  await queryClient.ensureQueryData(projectMLJobsQueryOptions(projectId));
+  await queryClient.ensureQueryData(jobQueries.ml.byProject(projectId));
 }

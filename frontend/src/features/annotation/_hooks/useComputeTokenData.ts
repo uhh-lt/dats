@@ -1,6 +1,7 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { IToken } from "../_types/IToken";
 
@@ -57,7 +58,7 @@ export function useComputeTokenData({
   annotationOverride?: SpanAnnotationRead;
   pendingAnnotations?: SpanAnnotationRead[];
 }) {
-  const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userId);
+  const annotations = useQuery(annotationQueries.span.bySdoc(sdocData.id, userId));
   const tokenData = useTokenData(sdocData);
 
   // Three-layer memoization to avoid rebuilding the full maps on every mousemove during resize:

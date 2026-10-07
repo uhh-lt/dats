@@ -1,57 +1,19 @@
-import { QueryKey } from "@api/hooks/QueryKey";
 import { useJobRefetchInterval } from "@api/hooks/jobPolling";
+import { ClassifierDatasetStatisticsParams, classifierQueries } from "@api/queries/classifierQueries";
+import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
-import { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
-import { ClassifierInfo } from "@models/ClassifierInfo";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierRead } from "@models/ClassifierRead";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-
-export type ClassifierMap = Record<number, ClassifierRead>;
-
-export const projectClassifiersQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_CLASSIFIERS, projectId],
-    queryFn: async () => {
-      const classifiers = await ClassifierService.getByProject({
-        projId: projectId,
-      });
-
-      return classifiers.reduce((acc, classifier) => {
-        acc[classifier.id] = classifier;
-        return acc;
-      }, {} as ClassifierMap);
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-
-export const projectClassifierJobsQueryOptions = (projectId: number) =>
-  queryOptions<ClassifierJobRead[]>({
-    queryKey: [QueryKey.PROJECT_CLASSIFIER_JOBS, projectId],
-    queryFn: () =>
-      ClassifierService.getClassifierJobsByProject({
-        projectId,
-      }),
-  });
-
-export const classifierInfoQueryOptions = () =>
-  queryOptions<ClassifierInfo>({
-    queryKey: [QueryKey.CLASSIFIER_INFO],
-    queryFn: () => ClassifierService.getClassifierInfo(),
-    // Classifier settings come from backend configuration and do not change at
-    // runtime, so one response can be reused for the lifetime of the frontend.
-    staleTime: Infinity,
-  });
-
-const useGetClassifierInfo = () => useQuery(classifierInfoQueryOptions());
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const useStartClassifierJob = () =>
   useMutation({
+    mutationKey: [...classifierQueries.all(), "startClassifierJob"],
     mutationFn: ClassifierService.startClassifierJob,
     onSuccess: (job) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIER_JOBS, job.project_id] });
+      queryClient.invalidateQueries({ queryKey: jobQueries.classifier.byProject(job.project_id).queryKey });
     },
     meta: {
       successMessage: (data: ClassifierJobRead) =>
@@ -64,13 +26,8 @@ const useStartClassifierJob = () =>
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
 const useLiveClassifierJob = (classifierJobId: string | undefined, initialData: ClassifierJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<ClassifierJobRead>();
-  return useQuery<ClassifierJobRead, Error>({
-    queryKey: [QueryKey.CLASSIFIER_JOB, classifierJobId],
-    queryFn: () =>
-      ClassifierService.getClassifierJobById({
-        jobId: classifierJobId!,
-      }),
-    enabled: !!classifierJobId,
+  return useQuery({
+    ...jobQueries.classifier.byId(classifierJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
@@ -78,12 +35,13 @@ const useLiveClassifierJob = (classifierJobId: string | undefined, initialData: 
 
 const useGetAllClassifiers = (projectId: number) =>
   useQuery({
-    ...projectClassifiersQueryOptions(projectId),
+    ...classifierQueries.byProject(projectId),
     select: (data) => Object.values(data),
   });
 
 const useUpdateClassifier = () =>
   useMutation({
+    mutationKey: [...classifierQueries.all(), "updateClassifier"],
     mutationFn: ClassifierService.updateById,
     meta: {
       datsEvent: "CLASSIFIER_UPDATED",
@@ -93,6 +51,7 @@ const useUpdateClassifier = () =>
 
 const useDeleteClassifier = () =>
   useMutation({
+    mutationKey: [...classifierQueries.all(), "deleteClassifier"],
     mutationFn: ClassifierService.deleteById,
     meta: {
       datsEvent: "CLASSIFIER_DELETED",
@@ -100,61 +59,15 @@ const useDeleteClassifier = () =>
     },
   });
 
-interface DatasetStatisticsParams {
-  projectId: number;
-  model: ClassifierModel | undefined;
-  classIds: number[];
-  userIds: number[];
-  tagIds: number[];
-  mergeChildren: boolean;
-  baseModelName: string;
-}
-
-const useComputeDatasetStatistics = ({
-  projectId,
-  model,
-  classIds,
-  userIds,
-  tagIds,
-  mergeChildren,
-  baseModelName,
-}: DatasetStatisticsParams) =>
+const useComputeDatasetStatistics = (params: ClassifierDatasetStatisticsParams) =>
   useQuery({
-    queryKey: [
-      QueryKey.CLASSIFIER_DATASET_STATISTICS,
-      projectId,
-      model,
-      classIds,
-      userIds,
-      tagIds,
-      mergeChildren,
-      baseModelName,
-    ],
-    queryFn: () => {
-      if (model === undefined) {
-        throw new Error("Cannot compute dataset statistics without a classifier model.");
-      }
-
-      const request: ClassifierDatasetStatisticsRequest = {
-        model,
-        base_model_name: baseModelName,
-        tag_ids: tagIds,
-        user_ids: userIds,
-        class_ids: classIds,
-        merge_children_into_parent: mergeChildren,
-      };
-
-      return ClassifierService.computeDatasetStatistics({
-        projId: projectId,
-        requestBody: request,
-      });
-    },
+    ...classifierQueries.datasetStatistics(params),
     enabled:
-      projectId >= 0 &&
-      model !== undefined &&
-      baseModelName.length > 0 &&
-      tagIds.length > 0 &&
-      (model === ClassifierModel.DOCUMENT || userIds.length > 0),
+      params.projectId >= 0 &&
+      params.model !== undefined &&
+      params.baseModelName.length > 0 &&
+      params.tagIds.length > 0 &&
+      (params.model === ClassifierModel.DOCUMENT || params.userIds.length > 0),
     placeholderData: (previousData) => previousData,
   });
 
@@ -165,5 +78,4 @@ export const ClassifierHooks = {
   useUpdateClassifier,
   useDeleteClassifier,
   useComputeDatasetStatistics,
-  useGetClassifierInfo,
 };

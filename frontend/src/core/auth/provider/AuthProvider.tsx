@@ -1,11 +1,9 @@
 import { ApiError } from "@api/core/ApiError";
 import { OpenAPI } from "@api/core/OpenAPI";
-import { QueryKey } from "@api/hooks/QueryKey";
+import { userQueries } from "@api/queries/userQueries";
 import { queryClient } from "@api/queryClient";
 import { AuthenticationService } from "@api/services/AuthenticationService";
-import { UserService } from "@api/services/UserService";
 import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
-import { UserRead } from "@models/UserRead";
 import { useAppDispatch } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
@@ -98,10 +96,8 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
   }, []);
 
   // --- session resolution (/user/me) ---
-  const user = useQuery<UserRead, Error>({
-    queryKey: [QueryKey.ME, accessToken],
-    queryFn: UserService.getMe,
-    retry: false,
+  const user = useQuery({
+    ...userQueries.me(accessToken),
     enabled: accessToken !== undefined && !isAccessTokenExpired(accessTokenExpires),
   });
 

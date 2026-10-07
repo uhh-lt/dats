@@ -1,6 +1,19 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { annotationQueries } from "@api/queries/annotationQueries";
+import { apiKeyQueries } from "@api/queries/apiKeyQueries";
+import { classifierQueries } from "@api/queries/classifierQueries";
 import { codeQueries } from "@api/queries/codeQueries";
+import { cotaQueries } from "@api/queries/cotaQueries";
+import { folderQueries } from "@api/queries/folderQueries";
+import { metadataQueries } from "@api/queries/metadataQueries";
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
+import { projectQueries } from "@api/queries/projectQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { tagQueries } from "@api/queries/tagQueries";
+import { tagRecommendationQueries } from "@api/queries/tagRecommendationQueries";
+import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
+import { userQueries } from "@api/queries/userQueries";
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { queryClient } from "@api/queryClient";
 import type { ApiKeyRead } from "@models/ApiKeyRead";
 import type { DATSEvent } from "@models/datsEvents";
@@ -73,15 +86,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       removeMapItem(codeQueries.byProject(code.project_id).queryKey, code.id);
       // Deleting a code cascades to its annotations in the DB, which the
       // frontend cannot observe directly — invalidate annotation queries.
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, code.project_id] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(code.project_id).queryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, code.id] });
       break;
     }
@@ -133,34 +139,37 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Whiteboards ─────────────────────────────────────────────────────────
     case "WHITEBOARD_CREATED":
     case "WHITEBOARD_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id], event.payload);
+      upsertMapItem(whiteboardQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "WHITEBOARD_DELETED":
-      removeMapItem([QueryKey.PROJECT_WHITEBOARDS, event.payload.project_id], event.payload.id);
+      removeMapItem(whiteboardQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Timeline analyses ───────────────────────────────────────────────────
     case "TIMELINE_ANALYSIS_CREATED":
     case "TIMELINE_ANALYSIS_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id], event.payload);
+      upsertMapItem(timelineAnalysisQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "TIMELINE_ANALYSIS_DELETED":
-      removeMapItem([QueryKey.PROJECT_TIMELINE_ANALYSIS, event.payload.project_id], event.payload.id);
+      removeMapItem(timelineAnalysisQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Concept-over-time analyses ──────────────────────────────────────────
     case "COTA_CREATED":
     case "COTA_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_COTAS, event.payload.project_id], event.payload);
+      upsertMapItem(cotaQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "COTA_DELETED":
-      removeMapItem([QueryKey.PROJECT_COTAS, event.payload.project_id], event.payload.id);
+      removeMapItem(cotaQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Folders ─────────────────────────────────────────────────────────────
     case "FOLDER_CREATED":
     case "FOLDER_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_FOLDERS, event.payload.project_id, event.payload.folder_type], event.payload);
+      upsertMapItem(
+        folderQueries.byProject(event.payload.project_id, event.payload.folder_type).queryKey,
+        event.payload,
+      );
       break;
     case "FOLDER_UPDATED_BATCH": {
       // Read previous values before writing to detect actual moves (parent_id
@@ -168,7 +177,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       // search results. Pure renames leave SEARCH_TABLE untouched.
       let anyMoved = false;
       event.payload.forEach((folder) => {
-        const queryKey = [QueryKey.PROJECT_FOLDERS, folder.project_id, folder.folder_type] as const;
+        const queryKey = folderQueries.byProject(folder.project_id, folder.folder_type).queryKey;
         const previous = queryClient.getQueryData<Record<number, FolderRead>>(queryKey)?.[folder.id];
         upsertMapItem(queryKey, folder);
         if (previous && previous.parent_id !== folder.parent_id) {
@@ -181,25 +190,28 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
     }
     case "FOLDER_DELETED":
-      removeMapItem([QueryKey.PROJECT_FOLDERS, event.payload.project_id, event.payload.folder_type], event.payload.id);
+      removeMapItem(
+        folderQueries.byProject(event.payload.project_id, event.payload.folder_type).queryKey,
+        event.payload.id,
+      );
       break;
 
     // ── Project metadata ────────────────────────────────────────────────────
     case "PROJECT_METADATA_CREATED":
-      upsertMapItem([QueryKey.PROJECT_METADATAS, event.payload.project_id], event.payload);
+      upsertMapItem(metadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
       // New metadata key → sdoc metadata + table info queries may change.
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
+      queryClient.invalidateQueries({ queryKey: metadataQueries.bySdocScope() });
       queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] });
       break;
     case "PROJECT_METADATA_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_METADATAS, event.payload.project_id], event.payload);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS] });
+      upsertMapItem(metadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      queryClient.invalidateQueries({ queryKey: metadataQueries.bySdocScope() });
       break;
     case "PROJECT_METADATA_DELETED": {
       const metadata = event.payload;
-      removeMapItem([QueryKey.PROJECT_METADATAS, metadata.project_id], metadata.id);
+      removeMapItem(metadataQueries.byProject(metadata.project_id).queryKey, metadata.id);
       // Sweep the deleted metadata key out of every per-sdoc metadata map.
-      sweepPrefix<Record<number, unknown>>([QueryKey.SDOC_METADATAS], (old) => {
+      sweepPrefix<Record<number, unknown>>(metadataQueries.bySdocScope(), (old) => {
         if (!old) return old;
         const next = { ...old };
         delete next[metadata.id];
@@ -213,42 +225,42 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // (No CLASSIFIER_CREATED — creation is job-driven; the list refreshes when
     // the classifier job finishes.)
     case "CLASSIFIER_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_CLASSIFIERS, event.payload.project_id], event.payload);
+      upsertMapItem(classifierQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "CLASSIFIER_DELETED":
-      removeMapItem([QueryKey.PROJECT_CLASSIFIERS, event.payload.project_id], event.payload.id);
+      removeMapItem(classifierQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Aspects (perspectives) ──────────────────────────────────────────────
     case "ASPECT_CREATED":
     case "ASPECT_UPDATED":
-      upsertMapItem([QueryKey.PROJECT_ASPECTS, event.payload.project_id], event.payload);
+      upsertMapItem(perspectiveQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "ASPECT_DELETED":
-      removeMapItem([QueryKey.PROJECT_ASPECTS, event.payload.project_id], event.payload.id);
+      removeMapItem(perspectiveQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Projects ────────────────────────────────────────────────────────────
     case "PROJECT_CREATED":
-      appendListItem([QueryKey.USER_PROJECTS], event.payload);
+      appendListItem(projectQueries.userProjects().queryKey, event.payload);
       break;
     case "PROJECT_UPDATED":
-      replaceListItem([QueryKey.USER_PROJECTS], event.payload);
+      replaceListItem(projectQueries.userProjects().queryKey, event.payload);
       break;
     case "PROJECT_DELETED":
-      removeListItem([QueryKey.USER_PROJECTS], event.payload.id);
+      removeListItem(projectQueries.userProjects().queryKey, event.payload.id);
       break;
 
     // ── Users ───────────────────────────────────────────────────────────────
     case "USER_UPDATED":
-      sweepPrefix<UserRead[]>([QueryKey.PROJECT_USERS], (old) =>
+      sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
         old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
       );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.ME] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_ANNOTATORS] });
+      queryClient.invalidateQueries({ queryKey: userQueries.meScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.annotatorsScope() });
       break;
     case "USER_DELETED":
-      sweepPrefix<UserRead[]>([QueryKey.PROJECT_USERS], (old) =>
+      sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
         old ? old.filter((user) => user.id !== event.payload.id) : old,
       );
       break;
@@ -261,24 +273,24 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       const { api_key: _api_key, ...apiKeyRead } = event.payload as ApiKeyRead & {
         api_key?: string;
       };
-      appendListItem([QueryKey.USER_API_KEYS], apiKeyRead);
+      appendListItem(apiKeyQueries.list().queryKey, apiKeyRead);
       break;
     }
     case "API_KEY_DELETED":
-      removeListItem([QueryKey.USER_API_KEYS], event.payload.id);
+      removeListItem(apiKeyQueries.list().queryKey, event.payload.id);
       break;
 
     // ── Source documents ────────────────────────────────────────────────────
     case "SDOC_UPDATED":
-      setSingle([QueryKey.SDOC, event.payload.id], event.payload);
+      setSingle(sdocQueries.detail(event.payload.id).queryKey, event.payload);
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       break;
     case "SDOC_DELETED":
-      removeSingle([QueryKey.SDOC, event.payload.id]);
+      removeSingle(sdocQueries.detail(event.payload.id).queryKey);
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       break;
     case "SDOC_DELETED_BATCH":
-      event.payload.forEach((sdoc) => removeSingle([QueryKey.SDOC, sdoc.id]));
+      event.payload.forEach((sdoc) => removeSingle(sdocQueries.detail(sdoc.id).queryKey));
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       break;
 
@@ -315,52 +327,52 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Span annotations ────────────────────────────────────────────────────
     case "SPAN_ANNOTATION_CREATED": {
       const anno = event.payload;
-      setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno);
-      appendListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
+      appendListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "SPAN_ANNOTATION_CREATED_BATCH": {
       const annos = event.payload;
       if (annos.length === 0) break;
-      annos.forEach((anno) => setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno));
+      annos.forEach((anno) => setSingle(annotationQueries.span.byId(anno.id).queryKey, anno));
       // Bulk creates are always for one sdoc+user pair.
       const first = annos[0];
-      annos.forEach((anno) => appendListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno));
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, first.code_id] });
+      annos.forEach((anno) => appendListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno));
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(first.code_id).queryKey });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED": {
       const anno = event.payload;
-      setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno);
-      replaceListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
+      replaceListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        setSingle([QueryKey.SPAN_ANNOTATION, anno.id], anno);
-        replaceListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+        setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
+        replaceListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+        queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
       break;
     }
     case "SPAN_ANNOTATION_DELETED": {
       const anno = event.payload;
-      removeSingle([QueryKey.SPAN_ANNOTATION, anno.id]);
-      removeListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+      removeSingle(annotationQueries.span.byId(anno.id).queryKey);
+      removeListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "SPAN_ANNOTATION_DELETED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        removeSingle([QueryKey.SPAN_ANNOTATION, anno.id]);
-        removeListItem([QueryKey.SDOC_SPAN_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, anno.code_id] });
+        removeSingle(annotationQueries.span.byId(anno.id).queryKey);
+        removeListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+        queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
       break;
@@ -369,42 +381,42 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── BBox annotations ────────────────────────────────────────────────────
     case "BBOX_ANNOTATION_CREATED": {
       const anno = event.payload;
-      setSingle([QueryKey.BBOX_ANNOTATION, anno.id], anno);
-      appendListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
+      appendListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "BBOX_ANNOTATION_UPDATED": {
       const anno = event.payload;
-      setSingle([QueryKey.BBOX_ANNOTATION, anno.id], anno);
-      replaceListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
+      replaceListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
       break;
     }
     case "BBOX_ANNOTATION_UPDATED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        setSingle([QueryKey.BBOX_ANNOTATION, anno.id], anno);
-        replaceListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno);
-        queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+        setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
+        replaceListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+        queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
       break;
     }
     case "BBOX_ANNOTATION_DELETED": {
       const anno = event.payload;
-      removeSingle([QueryKey.BBOX_ANNOTATION, anno.id]);
-      removeListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+      removeSingle(annotationQueries.bbox.byId(anno.id).queryKey);
+      removeListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "BBOX_ANNOTATION_DELETED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        removeSingle([QueryKey.BBOX_ANNOTATION, anno.id]);
-        removeListItem([QueryKey.SDOC_BBOX_ANNOTATIONS, anno.sdoc_id, anno.user_id], anno.id);
-        queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, anno.code_id] });
+        removeSingle(annotationQueries.bbox.byId(anno.id).queryKey);
+        removeListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+        queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
       break;
@@ -415,39 +427,39 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // annotation duplicated across every sentence it covers.
     case "SENTENCE_ANNOTATION_CREATED": {
       const anno = event.payload;
-      setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+      setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
       break;
     }
     case "SENTENCE_ANNOTATION_CREATED_BATCH":
       event.payload.forEach((anno) => {
-        setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+        setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
       break;
     case "SENTENCE_ANNOTATION_UPDATED": {
       const anno = event.payload;
-      setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+      setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
       break;
     }
     case "SENTENCE_ANNOTATION_UPDATED_BATCH":
       event.payload.forEach((anno) => {
-        setSingle([QueryKey.SENTENCE_ANNOTATION, anno.id], anno);
+        setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
       break;
     case "SENTENCE_ANNOTATION_DELETED": {
       const anno = event.payload;
-      removeSingle([QueryKey.SENTENCE_ANNOTATION, anno.id]);
+      removeSingle(annotationQueries.sentence.byId(anno.id).queryKey);
       removeSentenceAnnotation(anno);
       break;
     }
     case "SENTENCE_ANNOTATION_DELETED_BATCH":
       event.payload.forEach((anno) => {
-        removeSingle([QueryKey.SENTENCE_ANNOTATION, anno.id]);
+        removeSingle(annotationQueries.sentence.byId(anno.id).queryKey);
         removeSentenceAnnotation(anno);
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
@@ -459,7 +471,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "SPAN_GROUP_CREATED":
     case "SPAN_GROUP_UPDATED":
     case "SPAN_GROUP_DELETED":
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, event.payload.sdoc_id] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.bySdocOfSdocScope(event.payload.sdoc_id) });
       break;
 
     // ── Source document tags ────────────────────────────────────────────────
@@ -481,16 +493,22 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // legacy hook (TODO: REMOVE) — keep invalidating it.
     case "SDOC_METADATA_UPDATED":
       upsertSdocMetadata(event.payload);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, event.payload.source_document_id] });
+      queryClient.invalidateQueries({
+        queryKey: metadataQueries.bySdocAndKeyOfSdocScope(event.payload.source_document_id),
+      });
       break;
     case "SDOC_METADATA_DELETED":
       removeSdocMetadata(event.payload);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, event.payload.source_document_id] });
+      queryClient.invalidateQueries({
+        queryKey: metadataQueries.bySdocAndKeyOfSdocScope(event.payload.source_document_id),
+      });
       break;
     case "SDOC_METADATA_UPDATED_BATCH":
       event.payload.forEach((metadata) => {
         upsertSdocMetadata(metadata);
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA_BY_KEY, metadata.source_document_id] });
+        queryClient.invalidateQueries({
+          queryKey: metadataQueries.bySdocAndKeyOfSdocScope(metadata.source_document_id),
+        });
       });
       break;
 
@@ -501,7 +519,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "TAG_RECOMMENDATION_REVIEWED_BATCH": {
       const mlJobIds = new Set(event.payload.map((link) => link.ml_job_id));
       mlJobIds.forEach((mlJobId) => {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_RECOMMENDATIONS, mlJobId] });
+        queryClient.invalidateQueries({ queryKey: tagRecommendationQueries.byJob(mlJobId).queryKey });
       });
       break;
     }
@@ -510,7 +528,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // The payload carries the complete resulting member list — write it
     // directly into the project-keyed user list.
     case "PROJECT_USERS_LINKED":
-      queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, event.payload.project_id], event.payload.users);
+      queryClient.setQueryData(userQueries.byProject(event.payload.project_id).queryKey, event.payload.users);
       break;
 
     default: {

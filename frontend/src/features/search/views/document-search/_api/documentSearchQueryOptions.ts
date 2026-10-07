@@ -1,5 +1,6 @@
-import { FolderMap } from "@api/hooks/FolderHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
+import { folderQueries } from "@api/queries/folderQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
 import { SearchService } from "@api/services/SearchService";
@@ -7,7 +8,6 @@ import { MyFilter } from "@core/filter";
 import { FolderType } from "@models/FolderType";
 import { SdocColumns } from "@models/SdocColumns";
 import { SortDirection } from "@models/SortDirection";
-import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 
 interface DocumentSearchQueryOptionsArgs {
@@ -67,19 +67,19 @@ export const documentSearchQueryOptions = ({
       });
 
       Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
-        queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, parseInt(sdocId)], sdoc);
-        queryClient.setQueryData<number>([QueryKey.SDOC_ID, projectId, sdoc.filename], sdoc.id);
+        queryClient.setQueryData(sdocQueries.detail(parseInt(sdocId)).queryKey, sdoc);
+        queryClient.setQueryData(sdocQueries.idByFilename(projectId, sdoc.filename).queryKey, sdoc.id);
       });
 
       Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_ANNOTATORS, parseInt(sdocId)], annotators);
+        queryClient.setQueryData(sdocQueries.annotators(parseInt(sdocId)).queryKey, annotators);
       });
 
       Object.entries(data.tags).forEach(([sdocId, tags]) => {
         queryClient.setQueryData(tagQueries.idsBySdoc(parseInt(sdocId)).queryKey, tags);
       });
 
-      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, projectId, FolderType.SDOC_FOLDER], (prev) => {
+      queryClient.setQueryData(folderQueries.byProject(projectId, FolderType.SDOC_FOLDER).queryKey, (prev) => {
         prev = prev || {};
         Object.entries(data.sdoc_folders).forEach(([folderId, folder]) => {
           prev[parseInt(folderId)] = folder;

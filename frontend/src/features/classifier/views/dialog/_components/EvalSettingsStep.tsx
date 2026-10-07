@@ -1,3 +1,4 @@
+import { classifierQueries } from "@api/queries/classifierQueries";
 import { FormMenu } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { ClassifierAveraging } from "@models/ClassifierAveraging";
@@ -16,6 +17,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
@@ -40,7 +42,7 @@ export function EvalSettingsStep() {
 
   // read the classifier to pre-fill the averaging strategy from its training settings
   const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
-  const classifierInfo = ClassifierHooks.useGetClassifierInfo();
+  const classifierInfo = useQuery(classifierQueries.info());
   const classifier = classifiers.data?.find((c) => c.id === classifierId);
   const configuredAveraging = classifier?.train_params["averaging"];
   const defaultAveraging =

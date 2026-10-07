@@ -1,12 +1,15 @@
-import { UserHooks } from "@api/hooks/UserHooks";
+import { userQueries } from "@api/queries/userQueries";
 import { UserRenderer } from "@core/user";
 import { MenuItem, TextField } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { ChangeEvent, memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
 export const UserIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
-  const projectUsers = UserHooks.useGetAllUsers();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const projectUsers = useQuery(userQueries.byProject(projectId));
 
   const handleValueChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -1,48 +1,18 @@
-import { CancelablePromise } from "@api/core/CancelablePromise";
+import { rollbackOptimisticUpdate } from "@api/cache-sync/_utils/optimisticUtils";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { queryClient } from "@api/queryClient";
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
+import { useMutation } from "@tanstack/react-query";
 
-// BBOX QUERIES
-const useGetAnnotation = (bboxId: number | undefined) =>
-  useQuery<BBoxAnnotationRead, Error>({
-    queryKey: [QueryKey.BBOX_ANNOTATION, bboxId],
-    queryFn: () =>
-      BboxAnnotationService.getById({
-        bboxId: bboxId!,
-      }) as CancelablePromise<BBoxAnnotationRead>,
-    enabled: !!bboxId,
-    staleTime: 1000 * 60 * 5,
-  });
-
-const useGetByCodeAndUser = (codeId: number | undefined) =>
-  useQuery<BBoxAnnotationRead[], Error>({
-    queryKey: [QueryKey.BBOX_ANNOTATIONS_USER_CODE, codeId],
-    queryFn: () =>
-      BboxAnnotationService.getByUserCode({
-        codeId: codeId!,
-      }),
-    enabled: !!codeId,
-  });
-
-const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<BBoxAnnotationRead[], Error>({
-    queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
-    queryFn: () =>
-      BboxAnnotationService.getBySdocAndUser({
-        sdocId: sdocId!,
-        userId: userId!,
-      }) as Promise<BBoxAnnotationRead[]>,
-    enabled: !!sdocId && !!userId,
-  });
+// BBOX QUERIES live in annotationQueries.bbox (used with `useQuery` directly).
 
 // BBOX MUTATIONS
 const useCreateBBoxAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.bbox.all(), "create"],
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
     meta: {
@@ -53,19 +23,20 @@ const useCreateBBoxAnnotation = () =>
 
 const useUpdateBBoxAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.bbox.all(), "update"],
     mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
       BboxAnnotationService.updateById({
         bboxId: typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
         requestBody: variables.requestBody,
       }),
     // optimistic update if bboxToUpdate is a proper BBoxAnnotationRead
-    // todo: rework to only update QueryKey.BBOX_ANNOTATION (we need to change the rendering for this...)
+    // todo: rework to only update the bbox annotation detail query (we need to change the rendering for this...)
     onMutate: async ({ bboxToUpdate, requestBody }) => {
       if (typeof bboxToUpdate === "number") return;
-      const affectedQueryKey = [QueryKey.SDOC_BBOX_ANNOTATIONS, bboxToUpdate.sdoc_id, bboxToUpdate.user_id];
+      const affectedQueryKey = annotationQueries.bbox.bySdoc(bboxToUpdate.sdoc_id, bboxToUpdate.user_id).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousBboxes = queryClient.getQueryData<BBoxAnnotationRead[]>(affectedQueryKey);
-      queryClient.setQueryData<BBoxAnnotationRead[]>(affectedQueryKey, (old) => {
+      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+      queryClient.setQueryData(affectedQueryKey, (old) => {
         return old
           ? old.map((anno) =>
               anno.id === bboxToUpdate.id
@@ -85,8 +56,7 @@ const useUpdateBBoxAnnotation = () =>
     },
     onError: (_error, _updatedBboxAnnotation, context) => {
       if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
+      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousBboxes, annotationQueries.bbox.all());
     },
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED",
@@ -96,6 +66,7 @@ const useUpdateBBoxAnnotation = () =>
 
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.bbox.all(), "updateBulk"],
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
@@ -105,6 +76,7 @@ const useUpdateBulkBBoxAnnotation = () =>
 
 const useDeleteBBoxAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.bbox.all(), "delete"],
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
       BboxAnnotationService.deleteById({
         bboxId: typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
@@ -112,18 +84,17 @@ const useDeleteBBoxAnnotation = () =>
     // optimistic update if bboxToDelete is a proper BBoxAnnotationRead
     onMutate: async ({ bboxToDelete }) => {
       if (typeof bboxToDelete === "number") return;
-      const affectedQueryKey = [QueryKey.SDOC_BBOX_ANNOTATIONS, bboxToDelete.sdoc_id, bboxToDelete.user_id];
+      const affectedQueryKey = annotationQueries.bbox.bySdoc(bboxToDelete.sdoc_id, bboxToDelete.user_id).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousBboxes = queryClient.getQueryData<BBoxAnnotationRead[]>(affectedQueryKey);
-      queryClient.setQueryData<BBoxAnnotationRead[]>(affectedQueryKey, (old) =>
+      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+      queryClient.setQueryData(affectedQueryKey, (old) =>
         old ? old.filter((bbox) => bbox.id !== bboxToDelete.id) : old,
       );
       return { previousBboxes, affectedQueryKey };
     },
     onError: (_error: Error, _newBbox, context) => {
       if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
+      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousBboxes, annotationQueries.bbox.all());
     },
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED",
@@ -133,6 +104,7 @@ const useDeleteBBoxAnnotation = () =>
 
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
+    mutationKey: [...annotationQueries.bbox.all(), "deleteBulk"],
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED_BATCH",
@@ -141,9 +113,6 @@ const useDeleteBulkBBoxAnnotation = () =>
   });
 
 export const BboxAnnotationHooks = {
-  useGetAnnotation,
-  useGetByCodeAndUser,
-  useGetBBoxAnnotationsBatch,
   useCreateBBoxAnnotation,
   useUpdateBBoxAnnotation,
   useUpdateBulkBBoxAnnotation,

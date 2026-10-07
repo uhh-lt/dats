@@ -1,22 +1,24 @@
+import { jobQueries } from "@api/queries/jobQueries";
+import { projectQueries } from "@api/queries/projectQueries";
 import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
 import { Body_docprocessing_recompute_processing_step } from "@models/Body_docprocessing_recompute_processing_step";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import { SDocStatus } from "@models/SDocStatus";
-import { SourceDocumentStatusSimple } from "@models/SourceDocumentStatusSimple";
-import { Query, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { useJobRefetchInterval } from "./jobPolling";
 import { QueryKey } from "./QueryKey";
 
 const useStartCrawlerJob = () =>
   useMutation({
+    mutationKey: [...jobQueries.all(), "startCrawlerJob"],
     mutationFn: JobService.startCrawlerJob,
     onSuccess: (job) => {
       setTimeout(() => {
         console.log("Invalidating project crawler jobs");
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CRAWLER_JOBS, job.input.project_id] });
+        queryClient.invalidateQueries({ queryKey: jobQueries.crawler.byProject(job.input.project_id).queryKey });
       }, 1000);
     },
     meta: {
@@ -26,31 +28,16 @@ const useStartCrawlerJob = () =>
 
 const useLiveCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
   const jobRefetchInterval = useJobRefetchInterval<CrawlerJobRead>();
-  return useQuery<CrawlerJobRead, Error>({
-    queryKey: [QueryKey.CRAWLER_JOB, crawlerJobId],
-    queryFn: () =>
-      JobService.getCrawlerJobById({
-        jobId: crawlerJobId!,
-      }),
-    enabled: !!crawlerJobId,
+  return useQuery({
+    ...jobQueries.crawler.byId(crawlerJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
 };
 
-const useGetAllCrawlerJobs = (projectId: number) => {
-  return useQuery<CrawlerJobRead[], Error>({
-    queryKey: [QueryKey.PROJECT_CRAWLER_JOBS, projectId],
-    queryFn: () =>
-      JobService.getCrawlerJobsByProject({
-        projectId: projectId!,
-      }),
-    enabled: !!projectId,
-  });
-};
-
 const useUploadDocument = () =>
   useMutation({
+    mutationKey: [...jobQueries.all(), "uploadDocument"],
     mutationFn: DocprocessingService.uploadFiles,
     meta: {
       successMessage: (data: number) =>
@@ -58,37 +45,11 @@ const useUploadDocument = () =>
     },
   });
 
-interface UseAllSimpleSdocStatusQueryParams<T> {
-  projectId: number;
-  status: SDocStatus;
-  select?: (data: SourceDocumentStatusSimple[]) => T;
-  refetchInterval?: (query: Query<SourceDocumentStatusSimple[]>) => number | false;
-}
-
-const useAllSimpleSdocStatusQuery = <T = SourceDocumentStatusSimple[]>({
-  projectId,
-  status,
-  select,
-  refetchInterval,
-}: UseAllSimpleSdocStatusQueryParams<T>) => {
-  return useQuery({
-    queryKey: [QueryKey.PROJECT_SDOC_STATUS_SIMPLE, projectId, status],
-    queryFn: () =>
-      DocprocessingService.getSimpleSdocStatusByProjectAndStatus({
-        projId: projectId!,
-        status: status!,
-      }),
-    select,
-    refetchInterval,
-  });
-};
-
 // this query is polling the processing status of simple SDocs every 3 seconds
 const usePollProcessingSimpleSdocStatus = (projectId: number) => {
   const previousLengthRef = useRef<number>(0);
-  return useAllSimpleSdocStatusQuery({
-    projectId,
-    status: SDocStatus._0,
+  return useQuery({
+    ...projectQueries.sdocStatusSimple(projectId, SDocStatus._0),
     refetchInterval: (query) => {
       if (!query.state.data) {
         return 3000;
@@ -107,6 +68,7 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
 
 const useRetryDocProcessingJobs = () =>
   useMutation({
+    mutationKey: [...jobQueries.all(), "retryDocProcessingJobs"],
     mutationFn: DocprocessingService.retryFailedSdocs,
     meta: {
       successMessage: (data: string) => data,
@@ -115,6 +77,7 @@ const useRetryDocProcessingJobs = () =>
 
 const useRecomputeDocProcessingJobs = () =>
   useMutation({
+    mutationKey: [...jobQueries.all(), "recomputeDocProcessingJobs"],
     mutationFn: DocprocessingService.recomputeProcessingStep,
     meta: {
       successMessage: (
@@ -129,7 +92,6 @@ export const DocProcessingHooks = {
   // crawler
   useStartCrawlerJob,
   useLiveCrawlerJob,
-  useGetAllCrawlerJobs,
   useUploadDocument,
   usePollProcessingSimpleSdocStatus,
   // sdoc health

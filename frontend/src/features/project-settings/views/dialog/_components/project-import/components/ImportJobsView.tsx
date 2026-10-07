@@ -1,7 +1,8 @@
-import { ImportHooks } from "@api/hooks/ImportHooks";
+import { jobQueries } from "@api/queries/jobQueries";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo } from "react";
 import { ImportJobListItem } from "./ImportJobListItem";
 
@@ -15,7 +16,7 @@ export const ImportJobsView = memo(({ projectId }: ImportJobsViewProps) => {
     data: importJobs,
     refetch: refetchImportJobs,
     isFetching: isImportFetching,
-  } = ImportHooks.useGetAllImportJobs(projectId);
+  } = useQuery(jobQueries.import.byProject(projectId));
 
   // Memoize all jobs
   const allImportJobs = useMemo(() => importJobs || [], [importJobs]);

@@ -1,4 +1,4 @@
-import { userProjectsQueryOptions } from "@api/hooks/ProjectHooks";
+import { projectQueries } from "@api/queries/projectQueries";
 import { QueryClient } from "@tanstack/react-query";
 
 interface ProjectsViewLoaderArgs {
@@ -6,5 +6,5 @@ interface ProjectsViewLoaderArgs {
 }
 
 export async function projectsViewLoader({ queryClient }: ProjectsViewLoaderArgs) {
-  await queryClient.ensureQueryData(userProjectsQueryOptions());
+  await queryClient.ensureQueryData(projectQueries.userProjects());
 }

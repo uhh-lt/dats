@@ -112,7 +112,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 - A factory is a plain object with `all()`, scope prefixes (`xxxScope()`) and `queryOptions(...)` leaves. It contains no React.
 - Keys are hierarchical: **domain, then scope, then params**, e.g. `["tags", "project", projectId]`.
-- A leaf bundles `queryKey` and `queryFn` together and takes identity params only (ids, filters). Never add `enabled`, `select` or `staleTime` parameters. A missing id returns `skipToken` as the `queryFn`.
+- A leaf bundles `queryKey` and `queryFn` together and takes identity params only (ids, filters). Never add `enabled`, `select` or `staleTime` parameters. A missing id returns `skipToken` as the `queryFn`. `useSuspenseQuery` and route loaders do not accept `skipToken`: if a suspense/loader consumer exists, add a strict twin (`detailRequired(id: number)`) next to the nullable leaf.
 - Never write a `queryKey` array by hand and never use explicit generics (`useQuery<T>`); type the service call instead.
 - Never call API service methods directly from components; go through a factory.
 

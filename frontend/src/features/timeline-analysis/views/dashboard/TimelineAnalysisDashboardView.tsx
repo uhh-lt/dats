@@ -1,3 +1,4 @@
+import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -12,7 +13,6 @@ import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
 import {
-  projectTimelineAnalysisQueryOptions,
   useCreateTimelineAnalysis,
   useDeleteTimelineAnalysis,
   useDuplicateTimelineAnalysis,
@@ -42,7 +42,7 @@ export function TimelineAnalysisDashboardView() {
 
   // global server state
   const { data: userAnalysis } = useSuspenseQuery({
-    ...projectTimelineAnalysisQueryOptions(projectId),
+    ...timelineAnalysisQueries.byProjectRequired(projectId),
     select: (data) => Object.values(data),
   });
   const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(

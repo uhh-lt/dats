@@ -1,5 +1,5 @@
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectAspectsQueryOptions } from "../../_api/perspectivesQueryOptions";
 
 interface PerspectiveDashboardViewLoaderArgs {
   queryClient: QueryClient;
@@ -12,7 +12,7 @@ export async function perspectiveDashboardViewLoader({
   projectId,
   aspectId,
 }: PerspectiveDashboardViewLoaderArgs) {
-  const aspects = await queryClient.ensureQueryData(projectAspectsQueryOptions(projectId));
+  const aspects = await queryClient.ensureQueryData(perspectiveQueries.aspectsByProjectRequired(projectId));
   const aspect = aspects[aspectId];
   if (!aspect) {
     throw new Error(`Aspect ${aspectId} not found in project ${projectId}`);

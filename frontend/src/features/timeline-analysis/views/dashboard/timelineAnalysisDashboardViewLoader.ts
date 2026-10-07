@@ -1,5 +1,5 @@
+import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import { QueryClient } from "@tanstack/react-query";
-import { projectTimelineAnalysisQueryOptions } from "../../_api/timelineAnalysisQueryOptions";
 
 interface TimelineAnalysisDashboardViewLoaderArgs {
   queryClient: QueryClient;
@@ -10,5 +10,5 @@ export async function timelineAnalysisDashboardViewLoader({
   queryClient,
   projectId,
 }: TimelineAnalysisDashboardViewLoaderArgs) {
-  queryClient.ensureQueryData(projectTimelineAnalysisQueryOptions(projectId));
+  queryClient.ensureQueryData(timelineAnalysisQueries.byProjectRequired(projectId));
 }

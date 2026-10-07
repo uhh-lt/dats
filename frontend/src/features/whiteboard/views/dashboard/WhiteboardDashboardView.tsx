@@ -1,3 +1,4 @@
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -9,7 +10,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import {
-  projectWhiteboardsQueryOptions,
   useCreateWhiteboard,
   useDeleteWhiteboard,
   useDuplicateWhiteboard,
@@ -25,7 +25,7 @@ export function WhiteboardDashboardView() {
 
   // global server state
   const { data: projectWhiteboards } = useSuspenseQuery({
-    ...projectWhiteboardsQueryOptions(projectId),
+    ...whiteboardQueries.byProjectRequired(projectId),
     select: (data) => Object.values(data),
   });
 

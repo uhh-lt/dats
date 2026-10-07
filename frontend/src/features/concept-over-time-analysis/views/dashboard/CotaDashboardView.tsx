@@ -1,3 +1,4 @@
+import { cotaQueries } from "@api/queries/cotaQueries";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -10,13 +11,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import {
-  projectCotasQueryOptions,
-  useCreateCota,
-  useDeleteCota,
-  useDuplicateCota,
-  useUpdateCota,
-} from "../../_api/cotaQueryOptions";
+import { useCreateCota, useDeleteCota, useDuplicateCota, useUpdateCota } from "../../_api/cotaQueryOptions";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 
@@ -28,7 +23,7 @@ export function CotaDashboardView() {
 
   // global server state
   const { data: userAnalysis } = useSuspenseQuery({
-    ...projectCotasQueryOptions(projectId),
+    ...cotaQueries.byProjectRequired(projectId),
     select: (data) => Object.values(data),
   });
   const projectAnalysisTableData: AnalysisDashboardRow[] = useMemo(

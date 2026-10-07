@@ -1,14 +1,11 @@
-import { QueryKey } from "@api/hooks/QueryKey";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { CodeMap, codeQueries } from "@api/queries/codeQueries";
 import { memoQueries } from "@api/queries/memoQueries";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { tagQueries } from "@api/queries/tagQueries";
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { WhiteboardService } from "@api/services/WhiteboardService";
-import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
-import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "@models/SourceDocumentRead";
-import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { QueryClient } from "@tanstack/react-query";
-import { projectWhiteboardsQueryOptions } from "../../_api/whiteboardQueryOptions";
 
 interface WhiteboardViewLoaderArgs {
   queryClient: QueryClient;
@@ -19,24 +16,24 @@ interface WhiteboardViewLoaderArgs {
 export async function whiteboardViewLoader({ queryClient, projectId, whiteboardId }: WhiteboardViewLoaderArgs) {
   const [whiteboardData, whiteboardMap] = await Promise.all([
     WhiteboardService.getDataById({ whiteboardId }),
-    queryClient.ensureQueryData(projectWhiteboardsQueryOptions(projectId)),
+    queryClient.ensureQueryData(whiteboardQueries.byProjectRequired(projectId)),
   ]);
 
   // Pre-warm related entity caches so node components don't need to fetch individually
   whiteboardData.span_annotations.forEach((sa) => {
-    queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, sa.id], sa);
+    queryClient.setQueryData(annotationQueries.span.byId(sa.id).queryKey, sa);
   });
   whiteboardData.sent_annotations.forEach((sa) => {
-    queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, sa.id], sa);
+    queryClient.setQueryData(annotationQueries.sentence.byId(sa.id).queryKey, sa);
   });
   whiteboardData.bbox_annotations.forEach((ba) => {
-    queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, ba.id], ba);
+    queryClient.setQueryData(annotationQueries.bbox.byId(ba.id).queryKey, ba);
   });
   whiteboardData.memos.forEach((memo) => {
     queryClient.setQueryData(memoQueries.byId(memo.id).queryKey, memo);
   });
   whiteboardData.sdocs.forEach((sdoc) => {
-    queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, sdoc.id], sdoc);
+    queryClient.setQueryData(sdocQueries.detail(sdoc.id).queryKey, sdoc);
   });
 
   if (whiteboardData.codes.length > 0) {
