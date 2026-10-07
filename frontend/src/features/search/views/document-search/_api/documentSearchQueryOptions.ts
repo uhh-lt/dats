@@ -1,5 +1,6 @@
 import { FolderMap } from "@api/hooks/FolderHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
+import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
 import { SearchService } from "@api/services/SearchService";
 import { MyFilter } from "@core/filter";
@@ -75,7 +76,7 @@ export const documentSearchQueryOptions = ({
       });
 
       Object.entries(data.tags).forEach(([sdocId, tags]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, parseInt(sdocId)], tags);
+        queryClient.setQueryData(tagQueries.idsBySdoc(parseInt(sdocId)).queryKey, tags);
       });
 
       queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, projectId, FolderType.SDOC_FOLDER], (prev) => {

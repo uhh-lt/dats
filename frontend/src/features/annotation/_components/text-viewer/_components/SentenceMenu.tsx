@@ -1,4 +1,4 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
+import { codeQueries } from "@api/queries/codeQueries";
 import { MemoCreateOrSelectListItemButton } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -15,6 +15,7 @@ import {
   Popover,
   PopoverPosition,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Fragment, useImperativeHandle, useState } from "react";
 
 export interface SentenceMenuHandle {
@@ -35,7 +36,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
   const tabNavigate = useTabNavigate();
 
   // global server state
-  const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
+  const codeId2CodeMap = useQuery(codeQueries.byProject(projectId));
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });

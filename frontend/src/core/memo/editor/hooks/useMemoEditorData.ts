@@ -1,4 +1,4 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -8,6 +8,7 @@ import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
+import { useQuery } from "@tanstack/react-query";
 import { useGetMemosAttachedObject } from "../../useGetMemosAttachedObject";
 import { MemoEditorTarget } from "../types/MemoEditorTarget";
 
@@ -33,7 +34,7 @@ export interface MemoEditorData {
  * Resolves a MemoEditorTarget into the memo and its attached object.
  */
 export function useMemoEditorData(target: MemoEditorTarget | undefined): MemoEditorData {
-  const memoQuery = MemoHooks.useGetMemo(target?.memoId);
+  const memoQuery = useQuery(memoQueries.byId(target?.memoId));
 
   const attachedObjectType = target?.attachedObjectType ?? memoQuery.data?.attached_object_type;
   const attachedObjectId = target?.memoId ? memoQuery.data?.attached_object_id : target?.attachedObjectId;

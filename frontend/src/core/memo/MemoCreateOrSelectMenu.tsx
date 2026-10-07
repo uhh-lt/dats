@@ -1,9 +1,10 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { UserAvatar } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo, MouseEvent, ReactNode, useCallback, useState } from "react";
 import { useOpenMemoDialog } from "./dialog/useOpenMemoDialog";
 
@@ -31,14 +32,18 @@ export const MemoCreateOrSelectMenu = memo(
     renderTrigger,
   }: MemoCreateOrSelectMenuProps) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-    const memos = MemoHooks.useGetObjectMemos(attachedObjectType, attachedObjectId, { enabled: false });
+    const {
+      data: memos,
+      refetch: refetchMemos,
+      isFetching: isFetchingMemos,
+    } = useQuery({ ...memoQueries.byAttachedObject(attachedObjectType, attachedObjectId), enabled: false });
     const openMemoDialog = useOpenMemoDialog();
 
     const handleOpen = useCallback(
       async (event: React.MouseEvent<HTMLElement>) => {
         event.stopPropagation();
         const trigger = event.currentTarget;
-        const attachedMemos = memos.data ?? (await memos.refetch()).data;
+        const attachedMemos = memos ?? (await refetchMemos()).data;
 
         if (attachedMemos?.length === 0) {
           onAction?.();
@@ -48,7 +53,7 @@ export const MemoCreateOrSelectMenu = memo(
 
         setAnchorEl(trigger);
       },
-      [attachedObjectId, attachedObjectType, memos, onAction, openMemoDialog],
+      [attachedObjectId, attachedObjectType, memos, refetchMemos, onAction, openMemoDialog],
     );
 
     const handleClose = useCallback(
@@ -87,11 +92,11 @@ export const MemoCreateOrSelectMenu = memo(
 
     return (
       <>
-        {renderTrigger(handleOpen, memos.isFetching)}
+        {renderTrigger(handleOpen, isFetchingMemos)}
         <MemoCreateOrSelectMenuContent
           anchorEl={anchorEl}
           onClose={handleClose}
-          memos={memos.data ?? []}
+          memos={memos ?? []}
           onOpenMemo={handleOpenMemo}
           onCreateMemo={handleCreateMemo}
           menuPlacement={menuPlacement}

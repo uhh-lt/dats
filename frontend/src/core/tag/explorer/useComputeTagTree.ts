@@ -1,6 +1,8 @@
-import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { dataToTree, ITree } from "@components/tree-explorer";
 import { TagRead } from "@models/TagRead";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
 
@@ -19,7 +21,8 @@ const dummyRootNode: TagRead = {
 
 export const useComputeTagTree = () => {
   // global server state
-  const allTags = TagHooks.useGetAllTags();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const allTags = useQuery(tagQueries.byProject(projectId));
 
   // computed
   const tagTree: Node<ITree<TagRead>> | null = useMemo(() => {

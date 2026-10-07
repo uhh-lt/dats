@@ -1,5 +1,5 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
+import { codeQueries } from "@api/queries/codeQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { ClassifierClassMetrics } from "@models/ClassifierClassMetrics";
 import { ClassifierData } from "@models/ClassifierData";
@@ -22,6 +22,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { formatDateTime } from "@utils/DateUtils";
 import { Fragment, useMemo, useState } from "react";
 import { ClassifierConfusionMatrixPlot } from "./ClassifierConfusionMatrixPlot";
@@ -151,8 +153,9 @@ function PerClassMetrics({
   const [selectedClassId, setSelectedClassId] = useState<number>(ALL_CLASSES);
 
   // resolve class names (tags for document classifiers, codes otherwise)
-  const projectTags = TagHooks.useGetAllTags();
-  const projectCodes = CodeHooks.useGetAllCodesMap();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const projectTags = useQuery(tagQueries.byProject(projectId));
+  const projectCodes = useQuery(codeQueries.byProject(projectId));
   const className = useMemo(() => {
     const names: Record<number, string> = {};
     if (classifierModel === ClassifierModel.DOCUMENT) {

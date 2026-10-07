@@ -1,4 +1,4 @@
-import { CodeMap } from "@api/hooks/CodeHooks";
+import { CodeMap } from "@api/queries/codeQueries";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -6,10 +6,10 @@ import ClearIcon from "@mui/icons-material/Clear";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, IconButton, Stack } from "@mui/material";
 import { memo, MouseEvent, useMemo } from "react";
-import { IToken } from "../../../_types/IToken";
 import { SpanAnnotationResizeStartHandler } from "../../../_hooks/useSpanAnnotationResize";
-import { BlockContent } from "./BlockContent";
+import { IToken } from "../../../_types/IToken";
 import { RenderBlock } from "../_hooks/useBlockPartition";
+import { BlockContent } from "./BlockContent";
 
 interface BlockComparisonRowProps {
   block: RenderBlock;

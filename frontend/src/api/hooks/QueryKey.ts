@@ -24,20 +24,6 @@ export const QueryKey = {
   // managed by frontend/src/api/hooks/UserHooks.ts
   PROJECT_USERS: "projectUsers",
 
-  // CodeMap of a Project (by project id)
-  // managed by frontend/src/api/hooks/CodeHooks.ts
-  PROJECT_CODES: "projectCodes",
-
-  // all TagRead[] of a Project (by project id)
-  // managed by frontend/src/api/hooks/TagHooks.ts
-  PROJECT_TAGS: "projectTags",
-  // all TagRead Ids of a SourceDocument (by sdoc id)
-  // managed by frontend/src/api/hooks/TagHooks.ts
-  SDOC_TAGS: "sdocTags",
-  // Record[docTagId, docTagCount] of SourceDocuments (by project id, sdoc ids)
-  // managed by frontend/src/api/hooks/TagHooks.ts
-  TAG_SDOC_COUNT: "sdocTagCount",
-
   // all ProjectRead[] of the logged-in user (no parameters)
   // managed by frontend/src/api/hooks/ProjectHooks.ts
   USER_PROJECTS: "userProjects",
@@ -70,21 +56,6 @@ export const QueryKey = {
   // managed by frontend/src/api/hooks/SdocHooks.ts
   SDOC_ANNOTATORS: "sdocAnnotators",
 
-  // a single MemoRead (by memo id)
-  // managed by frontend/src/api/hooks/MemoHooks.ts
-  MEMO: "memo",
-  // all MemoRead[] of the attached object (by attachedObjectType, attachedObjectId)
-  // managed by frontend/src/api/hooks/MemoHooks.ts
-  OBJECT_MEMOS: "objectMemos",
-  // memo workspace queries (search results)
-  // managed by frontend/src/api/hooks/MemoHooks.ts
-  MEMO_QUERY: "memoQuery",
-  // memo workspace group queries (grouped search results)
-  // managed by frontend/src/api/hooks/MemoHooks.ts
-  MEMO_GROUPS: "memoGroups",
-  // recently-opened memos of the current user (by project id)
-  // managed by frontend/src/api/hooks/MemoHooks.ts
-  MEMO_RECENT: "memoRecent",
   // memo search views (by project id)
   // managed by frontend/src/api/hooks/MemoViewHooks.ts
   MEMO_VIEWS: "memoViews",
@@ -232,8 +203,6 @@ export const QueryKey = {
   SEARCH_TABLE: "search-document-table-data",
   // managed by frontend/src/core/source-document/table/SdocFilterTable.tsx
   SDOC_TABLE: "document-table-data",
-  // managed by frontend/src/core/memo/table/MemoFilterTable.tsx
-  MEMO_TABLE: "search-memo-table-data",
   // managed by frontend/src/core/span-annotation/table/SpanAnnotationFilterTable.tsx
   SPAN_ANNO_TABLE: "span-annotation-table-data",
   // managed by frontend/src/core/bbox-annotation/table/BBoxAnnotationFilterTable.tsx

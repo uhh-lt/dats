@@ -1,10 +1,12 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { useAuth } from "@core/auth";
 import { MemoEditorPane } from "@core/memo";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Box, Button } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 import { MemoWorkspaceActions } from "../../store/memoWorkspaceSlice";
@@ -21,7 +23,7 @@ export function MemoWorkspaceView() {
   const scope = user ? `${user.id}:${projectId}` : "";
   const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 
-  const memo = MemoHooks.useGetMemo(openMemoId);
+  const memo = useQuery(memoQueries.byId(openMemoId));
   const { mutate: recordRecent } = MemoHooks.useRecordRecentMemo();
 
   // Record the opened memo as recently-opened (server-driven recents).

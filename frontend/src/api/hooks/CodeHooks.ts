@@ -1,13 +1,13 @@
+import { CodeMap, codeQueries } from "@api/queries/codeQueries";
 import { CodeService } from "@api/services/CodeService";
 import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { QueryKey } from "./QueryKey";
 
 // CODE QUERIES
+// The query itself (key + queryFn) lives in codeQueries. The hooks below only derive data from it.
 
-export type CodeMap = Record<number, CodeRead>;
 interface UseProjectCodesQueryParams<T> {
   select?: (data: CodeMap) => T;
   enabled?: boolean;
@@ -16,19 +16,9 @@ interface UseProjectCodesQueryParams<T> {
 const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.PROJECT_CODES, projectId],
-    queryFn: async () => {
-      const codes = await CodeService.getByProject({
-        projId: projectId!,
-      });
-      return codes.reduce((acc, code) => {
-        acc[code.id] = code;
-        return acc;
-      }, {} as CodeMap);
-    },
-    staleTime: 1000 * 60 * 5,
+    ...codeQueries.byProject(projectId),
     select,
-    enabled: !!projectId && (enabled ?? true),
+    enabled,
   });
 };
 
@@ -44,8 +34,6 @@ const useSelectEnabledCodes = () => {
 
 const useGetAllCodesList = () => useProjectCodesQuery({ select: (data) => Object.values(data) });
 
-const useGetAllCodesMap = () => useProjectCodesQuery({});
-
 const useGetEnabledCodes = () => {
   const selectEnabledCodes = useSelectEnabledCodes();
   return useProjectCodesQuery({ select: selectEnabledCodes });
@@ -54,6 +42,7 @@ const useGetEnabledCodes = () => {
 // CODE MUTATIONS
 const useCreateCode = () => {
   return useMutation({
+    mutationKey: [...codeQueries.all(), "create"],
     mutationFn: CodeService.createCode,
     meta: {
       datsEvent: "CODE_CREATED",
@@ -64,6 +53,7 @@ const useCreateCode = () => {
 
 const useUpdateCode = () =>
   useMutation({
+    mutationKey: [...codeQueries.all(), "update"],
     mutationFn: CodeService.updateById,
     meta: {
       datsEvent: "CODE_UPDATED",
@@ -73,6 +63,7 @@ const useUpdateCode = () =>
 
 const useDeleteCode = () => {
   return useMutation({
+    mutationKey: [...codeQueries.all(), "delete"],
     mutationFn: CodeService.deleteById,
     meta: {
       datsEvent: "CODE_DELETED",
@@ -84,7 +75,6 @@ const useDeleteCode = () => {
 export const CodeHooks = {
   // codes
   useGetAllCodesList,
-  useGetAllCodesMap,
   useGetEnabledCodes,
   useGetCode,
   useCreateCode,

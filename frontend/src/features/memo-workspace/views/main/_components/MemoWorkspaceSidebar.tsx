@@ -1,4 +1,5 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { EmojiGlyph } from "@components/emoji";
 import { getIconComponent, Icon } from "@components/icons";
 import { MyFilter } from "@core/filter";
@@ -26,7 +27,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { InfiniteData } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
 import { MemoWorkspaceActions } from "../../../store/memoWorkspaceSlice";
 
@@ -69,7 +70,7 @@ interface MemoWorkspaceSidebarProps {
 export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSidebarProps) => {
   const dispatch = useAppDispatch();
   const createMemo = MemoHooks.useCreateMemo();
-  const recentMemos = MemoHooks.useGetRecentMemos(projectId);
+  const recentMemos = useQuery(memoQueries.recent(projectId));
   const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 
   const handleCreateProjectMemo = useCallback(() => {
@@ -84,25 +85,25 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
       },
     );
   }, [createMemo, dispatch, scope, projectId]);
-  const projectMemos = MemoHooks.useQueryMemos(
-    {
+  const projectMemos = useInfiniteQuery({
+    ...memoQueries.search({
       project_id: projectId,
       filter: projectFilter,
       sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
       page_size: 200,
-    },
-    { select: flattenMemoPagesToItems },
-  );
+    }),
+    select: flattenMemoPagesToItems,
+  });
 
-  const favoriteMemos = MemoHooks.useQueryMemos(
-    {
+  const favoriteMemos = useInfiniteQuery({
+    ...memoQueries.search({
       project_id: projectId,
       filter: favoriteFilter,
       sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
       page_size: 200,
-    },
-    { select: flattenMemoPagesToItems },
-  );
+    }),
+    select: flattenMemoPagesToItems,
+  });
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>

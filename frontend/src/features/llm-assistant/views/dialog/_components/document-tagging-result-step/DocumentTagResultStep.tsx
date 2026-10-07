@@ -1,10 +1,12 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { TaggingLLMJobResult } from "@models/TaggingLLMJobResult";
 import { TagRead } from "@models/TagRead";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useState } from "react";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
 import { LLMUtterance } from "../LLMUtterance";
@@ -15,7 +17,8 @@ export const DocumentTagResultStep = memo(() => {
   // global client state
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   // global server state
-  const documentTags = TagHooks.useGetAllTags();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const documentTags = useQuery(tagQueries.byProject(projectId));
   const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output && documentTags.isSuccess) {

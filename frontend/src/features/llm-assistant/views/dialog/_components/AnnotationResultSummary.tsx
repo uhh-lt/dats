@@ -1,9 +1,11 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
+import { codeQueries } from "@api/queries/codeQueries";
 import { SdocRenderer } from "@core/source-document";
 import { AnnotationResult } from "@models/AnnotationResult";
 import { SentenceAnnotationResult } from "@models/SentenceAnnotationResult";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Chip, Stack, Typography } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 interface AnnotationResultSummaryProps {
@@ -142,7 +144,8 @@ function DocumentResultAccordion({ result }: { result: AnnotationResult | Senten
 }
 
 function SuggestedAnnotationsInfo({ result }: { result: AnnotationResult | SentenceAnnotationResult }) {
-  const codes = CodeHooks.useGetAllCodesMap();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const codes = useQuery(codeQueries.byProject(projectId));
 
   const codeId2count = useMemo(() => {
     const map = new Map<number, number>();

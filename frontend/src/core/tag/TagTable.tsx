@@ -1,6 +1,8 @@
-import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -81,7 +83,8 @@ export const TagTable = memo(
     renderBottomToolbar,
   }: TagTableProps) => {
     // global server state
-    const projectTags = TagHooks.useGetAllTags();
+    const projectId = useAppSelector((state) => state.project.projectId);
+    const projectTags = useQuery(tagQueries.byProject(projectId));
 
     // computed
     const { projectTagsMap, projectTagRows } = useMemo(() => {

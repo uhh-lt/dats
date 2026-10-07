@@ -1,4 +1,3 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, BoxProps } from "@mui/material";
@@ -7,9 +6,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { codeQueries } from "@api/queries/codeQueries";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
+import { useQuery } from "@tanstack/react-query";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
 import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAnnotation";
@@ -36,7 +37,8 @@ export const SentenceAnnotator = memo(
     const { visibleUserId, selectedAnnotationId } = AnnotationRouteAPI.useSearch();
 
     // global server state (react-query)
-    const codeMap = CodeHooks.useGetAllCodesMap();
+    const projectId = useAppSelector((state) => state.project.projectId);
+    const codeMap = useQuery(codeQueries.byProject(projectId));
 
     // selection
     const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);

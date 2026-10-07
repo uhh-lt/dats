@@ -1,4 +1,5 @@
 import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
@@ -8,6 +9,7 @@ import { TagCreate } from "@models/TagCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useDialog } from "@store/global/dialogBusSlice";
+import { useQuery } from "@tanstack/react-query";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -22,7 +24,7 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
   const { isOpen: isTagCreateDialogOpen, data: dialogData, close: handleClose } = useDialog("tagCreate");
 
   // tags for selection as parent
-  const tags = TagHooks.useGetAllTags();
+  const tags = useQuery(tagQueries.byProject(projectId));
   const tagsWithLevel = useWithLevel(tags.data || []);
 
   // maximize
