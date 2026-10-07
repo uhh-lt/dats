@@ -102,12 +102,11 @@ components and the cache-sync brain.
 anywhere, also outside React). `<Domain>Hooks.ts` (existing name/convention) = _React usage_: the domain's
 mutation hooks and hooks that derive data (lookup/filter via `select`). Hooks that only forward to `useQuery` are removed.
 
-5.2 **Factories take identity params only.** No `enabled`, `select`, `staleTime` parameters. Missing identity (`undefined`
-id) returns `skipToken`. Components/hooks do not add a redundant `enabled` for that case.
-**`...Required` twin (found in stage 3):** `useSuspenseQuery` does not accept `skipToken`, and loaders should not use it.
-Where a factory has both consumers with a possibly-missing id and suspense/loader consumers with a known id, it gets a
-strict twin without skipToken (`sdocQueries.detailRequired(id)`, `whiteboardQueries.byProjectRequired(id)`). Both build
-the identical key. Factories whose consumers all have real ids (e.g. `classifierQueries.byProject`) take a plain `number`.
+5.2 **Factories take identity params only.** No `enabled`, `select`, `staleTime` parameters.
+**No twins (decided after stage 3):** `useSuspenseQuery` and route loaders do not accept `skipToken`. So a query that is
+used by suspense or loaders takes a strict id (`sdocQueries.detail(sdocId: number)`, `whiteboardQueries.byProject(projectId: number)`)
+with a normal `queryFn`, and the few call sites that may have no id add `enabled` themselves (as the original code did).
+Queries that no suspense/loader uses may still use `skipToken` for a missing id.
 
 5.3 **Compose at the call site:** `useQuery({ ...tagQueries.byProject(id), select })`. A wrapper hook is allowed only if it
 adds real logic (derived data, several queries, reading app state). A hook that only forwards to `useQuery` is not
