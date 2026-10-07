@@ -1,3 +1,4 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { PerspectivesJobType } from "@models/PerspectivesJobType";
@@ -28,7 +29,6 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import * as d3 from "d3";
 import { useState } from "react";
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterCreationDialog } from "./ClusterCreationDialog";
@@ -86,7 +86,7 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
 
   // legend
-  const { mutate: startPerspectivesJob, isPending } = PerspectivesQueryOptions.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
 
   // global server state
   const vis = useGetDocVisualization(aspectId);

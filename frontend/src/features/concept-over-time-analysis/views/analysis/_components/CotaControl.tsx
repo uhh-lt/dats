@@ -1,3 +1,4 @@
+import { useLiveCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "@api/hooks/CotaHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { COTARead } from "@models/COTARead";
 import { COTATrainingSettings } from "@models/COTATrainingSettings";
@@ -20,7 +21,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { useLiveCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "../../../_api/cotaQueryOptions";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";

@@ -1,3 +1,4 @@
+import { useRecomputeTimelineAnalysis } from "@api/hooks/TimelineAnalysisHooks";
 import { CardContainer } from "@components/CardContainer";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -20,7 +21,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useRecomputeTimelineAnalysis } from "../../../_api/timelineAnalysisQueryOptions";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount";
 import { TimelineAnalysisExportMenu } from "./TimelineAnalysisExportMenu";

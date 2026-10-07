@@ -1,3 +1,4 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { getIconComponent, Icon } from "@components/icons";
@@ -22,7 +23,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierActions } from "../../../store/classifierSlice";
 

@@ -3,8 +3,8 @@ import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
+import { useLabelDocs, useUnlabelDocs } from "../../../../_api/useLabelDocs";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;
@@ -38,14 +38,13 @@ export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterRevie
   }, [sdocId2Doc, selectedSdocIds]);
 
   // event handlers
-  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesQueryOptions.useLabelDocs(aspectId);
+  const { mutate: labelDocsMutation, isPending: isLabelPending } = useLabelDocs(aspectId);
   const handleLabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     labelDocsMutation(selectedSdocIds);
   };
 
-  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } =
-    PerspectivesQueryOptions.useUnlabelDocs(aspectId);
+  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = useUnlabelDocs(aspectId);
   const handleUnlabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     unlabelDocsMutation(selectedSdocIds);

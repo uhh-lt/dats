@@ -1,3 +1,4 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { ExportChartButton } from "@components/export-chart-buttons";
@@ -14,7 +15,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { D3ColorScale } from "@utils/colors/D3ColorScale";
 import { useMemo, useState } from "react";
-import { PerspectivesQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../_api/useGetDocVisualization";
 import { ClusterJobProgressCard } from "../../_components/ClusterJobProgressCard";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
@@ -44,7 +44,7 @@ export function PerspectiveDashboardView() {
     ...perspectiveQueries.aspectsByProject(projectId),
     select: (data) => data[aspectId],
   });
-  const perspectivesJob = PerspectivesQueryOptions.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);
   const vis = useGetDocVisualization(aspectId);
 
   // computed

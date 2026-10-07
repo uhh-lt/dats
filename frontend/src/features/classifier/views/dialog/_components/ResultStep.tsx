@@ -1,3 +1,4 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierEvaluationOutput } from "@models/ClassifierEvaluationOutput";
 import { ClassifierInferenceOutput } from "@models/ClassifierInferenceOutput";
 import { ClassifierTask } from "@models/ClassifierTask";
@@ -5,7 +6,6 @@ import { ClassifierTrainingOutput } from "@models/ClassifierTrainingOutput";
 import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierActions } from "../../../store/classifierSlice";
 

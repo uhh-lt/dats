@@ -3,6 +3,7 @@ import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
+import { useUpdateWhiteboard } from "@api/hooks/WhiteboardHooks";
 import { EditableTypography } from "@components/EditableTypography";
 import { getIconComponent, Icon } from "@components/icons";
 import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
@@ -41,7 +42,6 @@ import {
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useUpdateWhiteboard } from "../../../_api/whiteboardQueryOptions";
 import { useReactFlowService } from "../_hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "../_hooks/useNodesEdgesStateCustom";
 import { DATSEdge } from "../_types/DATSEdge";

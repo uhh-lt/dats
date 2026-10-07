@@ -1,3 +1,4 @@
+import { useUpdateCota } from "@api/hooks/CotaHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import { COTARead } from "@models/COTARead";
@@ -11,7 +12,6 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent, FocusEvent } from "react";
-import { useUpdateCota } from "../../../_api/cotaQueryOptions";
 
 interface CotaSettingsProps {
   cota: COTARead;

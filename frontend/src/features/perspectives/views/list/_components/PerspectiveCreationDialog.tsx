@@ -1,4 +1,5 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useTabNavigate } from "@core/navigation";
@@ -31,7 +32,6 @@ import {
 import { useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 
 interface AspectTemplate {
   name: string;
@@ -122,7 +122,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
     },
   });
 
-  const createAspectMutation = PerspectivesQueryOptions.useCreateAspect();
+  const createAspectMutation = PerspectivesHooks.useCreateAspect();
   const handleAspectCreation: SubmitHandler<PerspectiveFormData> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");

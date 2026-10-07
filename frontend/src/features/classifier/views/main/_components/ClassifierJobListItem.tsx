@@ -1,3 +1,4 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { JobListItem, jobStatusToSimple } from "@core/job";
 import { ClassifierEvaluationOutput } from "@models/ClassifierEvaluationOutput";
 import { ClassifierInferenceOutput } from "@models/ClassifierInferenceOutput";
@@ -8,7 +9,6 @@ import { JobStatus } from "@models/JobStatus";
 import { Typography } from "@mui/material";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
 

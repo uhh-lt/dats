@@ -1,3 +1,4 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesDoc } from "@models/PerspectivesDoc";
@@ -20,7 +21,6 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 
 interface ClusterMenuProps {
@@ -138,7 +138,7 @@ function ClusterMenuContent({
   };
 
   // actions
-  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesQueryOptions.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
   const handleSetCluster = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedClusters = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);
