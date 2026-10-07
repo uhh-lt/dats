@@ -22,24 +22,7 @@ export const metadataQueries = {
 
   // project metadata (the metadata keys of a project), as a map by project metadata id
   byProjectScope: () => [...metadataQueries.all(), "project"] as const,
-  byProject: (projectId: number | undefined) =>
-    queryOptions({
-      queryKey: [...metadataQueries.byProjectScope(), projectId] as const,
-      queryFn:
-        projectId === undefined
-          ? skipToken
-          : async () => {
-              const metadata = await ProjectMetadataService.getByProject({ projId: projectId });
-              return metadata.reduce<ProjectMetadataMap>((acc, m) => {
-                acc[m.id] = m;
-                return acc;
-              }, {});
-            },
-      staleTime: 1000 * 60 * 5,
-    }),
-
-  // same as `byProject`, for useSuspenseQuery / route loaders: the id is known, so there is no skipToken
-  byProjectRequired: (projectId: number) =>
+  byProject: (projectId: number) =>
     queryOptions({
       queryKey: [...metadataQueries.byProjectScope(), projectId] as const,
       queryFn: async () => {

@@ -18,9 +18,9 @@ const useProjectMetadataQuery = <T>({
 }) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...metadataQueries.byProject(projectId),
+    ...metadataQueries.byProject(projectId!),
     select,
-    enabled,
+    enabled: projectId !== undefined && (enabled ?? true),
   });
 };
 

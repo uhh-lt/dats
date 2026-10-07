@@ -108,9 +108,9 @@ export const useGetCotaById = (cotaId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...cotaQueries.byProject(projectId),
+    ...cotaQueries.byProject(projectId!),
     select: (data) => (cotaId != null ? data[cotaId] : undefined),
-    enabled: cotaId != null,
+    enabled: projectId !== undefined && cotaId != null,
   });
 };
 
@@ -118,7 +118,8 @@ export const useGetProjectCotaList = () => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...cotaQueries.byProject(projectId),
+    ...cotaQueries.byProject(projectId!),
     select: (data) => Object.values(data),
+    enabled: projectId !== undefined,
   });
 };

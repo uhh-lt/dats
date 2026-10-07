@@ -25,7 +25,7 @@ export function WhiteboardDashboardView() {
 
   // global server state
   const { data: projectWhiteboards } = useSuspenseQuery({
-    ...whiteboardQueries.byProjectRequired(projectId),
+    ...whiteboardQueries.byProject(projectId),
     select: (data) => Object.values(data),
   });
 

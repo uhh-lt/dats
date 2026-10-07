@@ -12,6 +12,6 @@ export async function timelineAnalysisViewLoader({
   projectId,
   analysisId,
 }: TimelineAnalysisViewLoaderArgs) {
-  const timelineMap = await queryClient.ensureQueryData(timelineAnalysisQueries.byProjectRequired(projectId));
+  const timelineMap = await queryClient.ensureQueryData(timelineAnalysisQueries.byProject(projectId));
   return timelineMap[analysisId];
 }

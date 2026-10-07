@@ -42,7 +42,7 @@ export function TimelineAnalysisDashboardView() {
 
   // global server state
   const { data: userAnalysis } = useSuspenseQuery({
-    ...timelineAnalysisQueries.byProjectRequired(projectId),
+    ...timelineAnalysisQueries.byProject(projectId),
     select: (data) => Object.values(data),
   });
   const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(

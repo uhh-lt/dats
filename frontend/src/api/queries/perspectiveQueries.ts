@@ -29,14 +29,7 @@ export const perspectiveQueries = {
 
   // all aspects of a project, as a map by aspect id
   aspectsByProjectScope: () => [...perspectiveQueries.all(), "aspects"] as const,
-  aspectsByProject: (projectId: number | undefined) =>
-    queryOptions({
-      queryKey: [...perspectiveQueries.aspectsByProjectScope(), projectId] as const,
-      queryFn: projectId === undefined ? skipToken : () => fetchAspects(projectId),
-      staleTime: 1000 * 60 * 5,
-    }),
-  // same as `aspectsByProject`, for useSuspenseQuery / route loaders (no skipToken)
-  aspectsByProjectRequired: (projectId: number) =>
+  aspectsByProject: (projectId: number) =>
     queryOptions({
       queryKey: [...perspectiveQueries.aspectsByProjectScope(), projectId] as const,
       queryFn: () => fetchAspects(projectId),

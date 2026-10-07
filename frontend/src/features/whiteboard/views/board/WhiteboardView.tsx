@@ -8,7 +8,7 @@ export function WhiteboardView() {
   const { projectId, whiteboardId } = WhiteboardViewRouteAPI.useParams();
 
   const { data: whiteboard } = useSuspenseQuery({
-    ...whiteboardQueries.byProjectRequired(projectId),
+    ...whiteboardQueries.byProject(projectId),
     select: (data) => data[whiteboardId],
   });
 

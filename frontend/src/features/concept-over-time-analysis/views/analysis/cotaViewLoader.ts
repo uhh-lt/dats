@@ -8,6 +8,6 @@ interface CotaViewLoaderArgs {
 }
 
 export async function cotaViewLoader({ queryClient, projectId, cotaId }: CotaViewLoaderArgs) {
-  const cotaMap = await queryClient.ensureQueryData(cotaQueries.byProjectRequired(projectId));
+  const cotaMap = await queryClient.ensureQueryData(cotaQueries.byProject(projectId));
   return cotaMap[cotaId];
 }

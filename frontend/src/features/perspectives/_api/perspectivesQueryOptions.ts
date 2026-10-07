@@ -21,9 +21,9 @@ interface UseProjectAspectsQueryParams<T> {
 const useProjectAspectsQuery = <T = AspectMap>({ select, enabled }: UseProjectAspectsQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...perspectiveQueries.aspectsByProject(projectId),
+    ...perspectiveQueries.aspectsByProject(projectId!),
     select,
-    enabled,
+    enabled: projectId !== undefined && (enabled ?? true),
   });
 };
 

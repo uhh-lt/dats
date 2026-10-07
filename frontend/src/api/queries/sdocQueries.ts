@@ -20,16 +20,7 @@ export const sdocQueries = {
 
   // a single sdoc
   detailScope: () => [...sdocQueries.all(), "detail"] as const,
-  detail: (sdocId: number | null | undefined) =>
-    queryOptions({
-      queryKey: [...sdocQueries.detailScope(), sdocId] as const,
-      queryFn: !sdocId ? skipToken : () => SourceDocumentService.getById({ sdocId }),
-      staleTime: Infinity,
-    }),
-
-  // same as `detail`, for useSuspenseQuery / route loaders: the id is known, so there is no skipToken
-  // (useSuspenseQuery does not accept skipToken)
-  detailRequired: (sdocId: number) =>
+  detail: (sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.detailScope(), sdocId] as const,
       queryFn: () => SourceDocumentService.getById({ sdocId }),
@@ -38,15 +29,7 @@ export const sdocQueries = {
 
   // an sdoc including its data (text, html, ...)
   dataScope: () => [...sdocQueries.all(), "data"] as const,
-  data: (sdocId: number | null | undefined) =>
-    queryOptions({
-      queryKey: [...sdocQueries.dataScope(), sdocId] as const,
-      queryFn: !sdocId ? skipToken : () => SourceDocumentService.getByIdWithData({ sdocId }),
-      staleTime: Infinity,
-    }),
-
-  // same as `data`, for useSuspenseQuery / route loaders (see detailRequired)
-  dataRequired: (sdocId: number) =>
+  data: (sdocId: number) =>
     queryOptions({
       queryKey: [...sdocQueries.dataScope(), sdocId] as const,
       queryFn: () => SourceDocumentService.getByIdWithData({ sdocId }),

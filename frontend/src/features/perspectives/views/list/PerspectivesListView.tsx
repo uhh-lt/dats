@@ -15,7 +15,7 @@ const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/");
 export function PerspectivesListView() {
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
   const { data: aspects } = useSuspenseQuery({
-    ...perspectiveQueries.aspectsByProjectRequired(projectId),
+    ...perspectiveQueries.aspectsByProject(projectId),
     select: (data) => Object.values(data),
   });
 

@@ -8,8 +8,8 @@ interface AnnotationViewLoaderArgs {
 
 export async function annotationViewLoader({ queryClient, sdocId }: AnnotationViewLoaderArgs) {
   const [sdoc] = await Promise.all([
-    queryClient.ensureQueryData(sdocQueries.detailRequired(sdocId)),
-    queryClient.ensureQueryData(sdocQueries.dataRequired(sdocId)),
+    queryClient.ensureQueryData(sdocQueries.detail(sdocId)),
+    queryClient.ensureQueryData(sdocQueries.data(sdocId)),
   ]);
 
   return sdoc;

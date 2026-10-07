@@ -52,8 +52,8 @@ export const useDeleteWhiteboard = () =>
 export const useGetWhiteboardById = (whiteboardId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...whiteboardQueries.byProject(projectId),
+    ...whiteboardQueries.byProject(projectId!),
     select: (data) => (whiteboardId != null ? data[whiteboardId] : undefined),
-    enabled: whiteboardId != null,
+    enabled: projectId !== undefined && whiteboardId != null,
   });
 };
