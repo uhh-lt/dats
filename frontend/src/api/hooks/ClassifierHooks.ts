@@ -1,4 +1,3 @@
-import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { ClassifierDatasetStatisticsParams, classifierQueries } from "@api/queries/classifierQueries";
 import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
@@ -7,6 +6,7 @@ import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierRead } from "@models/ClassifierRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useJobRefetchInterval } from "./jobPolling";
 
 const useStartClassifierJob = () =>
   useMutation({

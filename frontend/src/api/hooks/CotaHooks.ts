@@ -1,4 +1,3 @@
-import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { cotaQueries } from "@api/queries/cotaQueries";
 import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
@@ -7,6 +6,7 @@ import { COTARead } from "@models/COTARead";
 import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useJobRefetchInterval } from "./jobPolling";
 
 export const useCreateCota = () =>
   useMutation({

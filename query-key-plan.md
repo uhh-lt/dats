@@ -193,6 +193,11 @@ Sweep, domain by domain, in this order (cache-sync dependencies first):
   also types the brain's `upsertJob`). Every mutation in these domains has a `mutationKey`. Optimistic annotation updates roll back
   through one helper (`cache-sync/_utils/optimisticUtils.ts`) that follows the `isMutating === 1` rule. The code-delete handler
   invalidates `annotationQueries.all()` instead of eight keys.
+- **Consistency fix after stage 3:** the hooks and mutations of whiteboards, timeline analyses, COTA, classifiers, perspectives and ML jobs
+  used to stay in feature-local `_api/*QueryOptions.ts` files while their queries were in `api/queries/`. They now live in `api/hooks/`
+  (`WhiteboardHooks.ts`, `TimelineAnalysisHooks.ts`, `CotaHooks.ts`, `ClassifierHooks.ts`, `PerspectivesHooks.ts`, `MlJobHooks.ts`), like
+  `CodeHooks.ts` and `TagHooks.ts`. The reason queries have to be global: the cache-sync code (`api/`) may not import from `features/`.
+  `useLabelDocs`/`useUnlabelDocs` stay in the perspectives feature because they read the `perspectives` Redux slice, which `api/hooks` may not do.
 
 ### Stage 4: Derived, table and search keys
 

@@ -1,3 +1,4 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { JobStatusBadge } from "@core/job";
 import { LinkCardActionArea } from "@core/navigation";
@@ -10,7 +11,6 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Box, Card, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import { ReactElement } from "react";
-import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 
 const statusToIcon: Record<JobStatus, ReactElement> = {
   // waiting
@@ -50,9 +50,9 @@ interface PerspectiveCardProps {
 }
 
 export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
-  const perspectivesJob = PerspectivesQueryOptions.useLivePerspectivesJob(aspect.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect.most_recent_job_id, undefined);
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const { mutate: deleteMutation, isPending } = PerspectivesQueryOptions.useDeleteAspect();
+  const { mutate: deleteMutation, isPending } = PerspectivesHooks.useDeleteAspect();
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {
     event.preventDefault();
     openConfirmationDialog({

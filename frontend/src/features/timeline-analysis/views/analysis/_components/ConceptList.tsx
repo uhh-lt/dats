@@ -1,3 +1,4 @@
+import { useUpdateTimelineAnalysis } from "@api/hooks/TimelineAnalysisHooks";
 import { CardContainer } from "@components/CardContainer";
 import { MyFilter } from "@core/filter";
 import { LogicalOperator } from "@models/LogicalOperator";
@@ -12,7 +13,6 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch } from "@store/storeHooks";
-import { useUpdateTimelineAnalysis } from "../../../_api/timelineAnalysisQueryOptions";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";

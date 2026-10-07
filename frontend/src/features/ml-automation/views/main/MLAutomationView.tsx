@@ -1,3 +1,4 @@
+import { useStartMLJob } from "@api/hooks/MlJobHooks";
 import { jobQueries } from "@api/queries/jobQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
@@ -22,7 +23,6 @@ import {
 } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { useStartMLJob } from "../../_api/mlAutomationQueryOptions";
 import { MLJobsView } from "./_components/MLJobsView";
 
 const routeAPI = getRouteApi("/_auth/project/$projectId/tools/ml-automation");

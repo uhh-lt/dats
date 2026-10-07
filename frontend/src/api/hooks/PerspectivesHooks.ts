@@ -1,17 +1,15 @@
-import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { jobQueries } from "@api/queries/jobQueries";
 import { AspectMap, perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { AspectRead } from "@models/AspectRead";
-import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@models/ClusterRead";
 import { CodeRead } from "@models/CodeRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
-import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useJobRefetchInterval } from "./jobPolling";
 
 interface UseProjectAspectsQueryParams<T> {
   select?: (data: AspectMap) => T;
@@ -93,68 +91,6 @@ const useLivePerspectivesJob = (
   });
 };
 
-const useLabelDocs = (aspectId: number) => {
-  const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
-  const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
-  return useMutation({
-    mutationKey: [...perspectiveQueries.all(), "labelDocs"],
-    mutationFn: (sdocIds: number[]) =>
-      PerspectivesService.acceptLabel({
-        aspectId,
-        searchQuery,
-        requestBody: {
-          sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_visualize_documents["filter"],
-          sorts: [],
-        },
-      }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(
-        perspectiveQueries.visualization(
-          aspectId,
-          searchQuery,
-          filter as Body_perspectives_visualize_documents["filter"],
-        ).queryKey,
-        data,
-      );
-    },
-    meta: {
-      successMessage: (data: PerspectivesVisualization) => `Accepted cluster(s) for ${data.docs.length} documents`,
-    },
-  });
-};
-
-const useUnlabelDocs = (aspectId: number) => {
-  const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
-  const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
-  return useMutation({
-    mutationKey: [...perspectiveQueries.all(), "unlabelDocs"],
-    mutationFn: (sdocIds: number[]) =>
-      PerspectivesService.revertLabel({
-        aspectId,
-        searchQuery,
-        requestBody: {
-          sdoc_ids: sdocIds,
-          filter: filter as Body_perspectives_visualize_documents["filter"],
-          sorts: [],
-        },
-      }),
-    onSuccess: (data) => {
-      queryClient.setQueryData(
-        perspectiveQueries.visualization(
-          aspectId,
-          searchQuery,
-          filter as Body_perspectives_visualize_documents["filter"],
-        ).queryKey,
-        data,
-      );
-    },
-    meta: {
-      successMessage: (data: PerspectivesVisualization) => `Reverted cluster(s) for ${data.docs.length} documents`,
-    },
-  });
-};
-
 const useUpdateClusterDetails = () =>
   useMutation({
     mutationKey: [...perspectiveQueries.all(), "updateClusterDetails"],
@@ -173,7 +109,7 @@ const useRAGChat = () =>
     mutationFn: RagService.ragSession,
   });
 
-export const PerspectivesQueryOptions = {
+export const PerspectivesHooks = {
   useGetAllAspectsList,
   useGetAspect,
   useCreateAspect,
@@ -181,8 +117,6 @@ export const PerspectivesQueryOptions = {
   useDeleteAspect,
   useStartPerspectivesJob,
   useLivePerspectivesJob,
-  useLabelDocs,
-  useUnlabelDocs,
   useUpdateClusterDetails,
   useRAGChat,
 };

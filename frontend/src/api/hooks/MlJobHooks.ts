@@ -1,9 +1,9 @@
-import { useJobRefetchInterval } from "@api/hooks/jobPolling";
 import { jobQueries } from "@api/queries/jobQueries";
 import { queryClient } from "@api/queryClient";
 import { JobService } from "@api/services/JobService";
 import { MlJobRead } from "@models/MlJobRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useJobRefetchInterval } from "./jobPolling";
 
 export const useStartMLJob = () =>
   useMutation({

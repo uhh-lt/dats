@@ -1,3 +1,4 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { Icon, getIconComponent } from "@components/icons";
 import { CodeRenderer } from "@core/code";
 import { useTabNavigate } from "@core/navigation";
@@ -21,7 +22,6 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
-import { ClassifierHooks } from "../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../store/classifierSlice";
 
 const classifierType2Icon: Record<ClassifierModel, Icon> = {

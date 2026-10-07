@@ -1,10 +1,10 @@
+import { useLiveMLJob } from "@api/hooks/MlJobHooks";
 import { JobListItem } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { MlJobRead } from "@models/MlJobRead";
 import { Typography } from "@mui/material";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { useLiveMLJob } from "../../../_api/mlAutomationQueryOptions";
 
 interface MLJobListItemProps {
   initialMLJob: MlJobRead;

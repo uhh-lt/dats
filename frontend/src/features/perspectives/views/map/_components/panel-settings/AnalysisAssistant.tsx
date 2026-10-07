@@ -1,4 +1,5 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
@@ -18,7 +19,6 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import Markdown from "react-markdown";
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface ChatMessage {
@@ -40,7 +40,7 @@ export function AnalysisAssistant() {
   const messages = useAppSelector((state) => state.perspectives.chatMessages);
   const lastDeleted = useAppSelector((state) => state.perspectives.lastDeletedChatMessages);
   const dispatch = useAppDispatch();
-  const ragChat = PerspectivesQueryOptions.useRAGChat();
+  const ragChat = PerspectivesHooks.useRAGChat();
   const handleSendMessage = () => {
     if (inputText.trim() === "") return;
     if (!projectId) return;

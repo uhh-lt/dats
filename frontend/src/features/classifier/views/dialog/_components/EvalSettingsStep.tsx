@@ -1,3 +1,4 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { classifierQueries } from "@api/queries/classifierQueries";
 import { FormMenu } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
@@ -19,7 +20,6 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 type EvaluationSettings = {

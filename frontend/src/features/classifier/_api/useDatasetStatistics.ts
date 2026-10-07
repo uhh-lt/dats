@@ -1,5 +1,5 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { useAppSelector } from "@store/storeHooks";
-import { ClassifierHooks } from "./classifierQueryOptions";
 
 /**
  * Shared hook for the classifier dialog data-selection steps (training & evaluation).
