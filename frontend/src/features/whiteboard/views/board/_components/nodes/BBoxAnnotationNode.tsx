@@ -47,7 +47,11 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   // global server state (react-query)
   const annotation = useQuery(annotationQueries.bbox.byId(props.data.bboxAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const sdocData = useQuery(sdocQueries.data(annotation.data?.sdoc_id));
+  const annotationSdocId = annotation.data?.sdoc_id;
+  const sdocData = useQuery({
+    ...sdocQueries.data(annotationSdocId!),
+    enabled: annotationSdocId !== undefined,
+  });
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
 
   // effects

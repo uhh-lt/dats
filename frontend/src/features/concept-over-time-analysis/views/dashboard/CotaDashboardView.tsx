@@ -23,7 +23,7 @@ export function CotaDashboardView() {
 
   // global server state
   const { data: userAnalysis } = useSuspenseQuery({
-    ...cotaQueries.byProjectRequired(projectId),
+    ...cotaQueries.byProject(projectId),
     select: (data) => Object.values(data),
   });
   const projectAnalysisTableData: AnalysisDashboardRow[] = useMemo(

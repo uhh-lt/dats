@@ -16,7 +16,7 @@ interface WhiteboardViewLoaderArgs {
 export async function whiteboardViewLoader({ queryClient, projectId, whiteboardId }: WhiteboardViewLoaderArgs) {
   const [whiteboardData, whiteboardMap] = await Promise.all([
     WhiteboardService.getDataById({ whiteboardId }),
-    queryClient.ensureQueryData(whiteboardQueries.byProjectRequired(projectId)),
+    queryClient.ensureQueryData(whiteboardQueries.byProject(projectId)),
   ]);
 
   // Pre-warm related entity caches so node components don't need to fetch individually

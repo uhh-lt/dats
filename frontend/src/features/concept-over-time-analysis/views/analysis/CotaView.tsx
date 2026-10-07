@@ -7,7 +7,7 @@ export function CotaView() {
   const { projectId, cotaId } = CotaRouteAPI.useParams();
 
   const { data: cota } = useSuspenseQuery({
-    ...cotaQueries.byProjectRequired(projectId),
+    ...cotaQueries.byProject(projectId),
     select: (data) => data[cotaId],
   });
 

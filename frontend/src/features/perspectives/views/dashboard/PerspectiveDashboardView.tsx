@@ -41,7 +41,7 @@ export function PerspectiveDashboardView() {
 
   // global server state
   const { data: aspect } = useSuspenseQuery({
-    ...perspectiveQueries.aspectsByProjectRequired(projectId),
+    ...perspectiveQueries.aspectsByProject(projectId),
     select: (data) => data[aspectId],
   });
   const perspectivesJob = PerspectivesQueryOptions.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);

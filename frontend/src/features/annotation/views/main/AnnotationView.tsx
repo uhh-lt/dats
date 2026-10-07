@@ -181,8 +181,8 @@ export function AnnotationView() {
   );
 
   // global server state (react query)
-  const { data: sdoc } = useSuspenseQuery(sdocQueries.detailRequired(sdocId));
-  const { data: sdocData } = useSuspenseQuery(sdocQueries.dataRequired(sdocId));
+  const { data: sdoc } = useSuspenseQuery(sdocQueries.detail(sdocId));
+  const { data: sdocData } = useSuspenseQuery(sdocQueries.data(sdocId));
 
   // rename document
   const updateNameMutation = SdocHooks.useUpdateName();

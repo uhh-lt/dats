@@ -7,5 +7,5 @@ interface PerspectivesListViewLoaderArgs {
 }
 
 export async function perspectivesListViewLoader({ queryClient, projectId }: PerspectivesListViewLoaderArgs) {
-  await queryClient.ensureQueryData(perspectiveQueries.aspectsByProjectRequired(projectId));
+  await queryClient.ensureQueryData(perspectiveQueries.aspectsByProject(projectId));
 }

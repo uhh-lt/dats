@@ -1,6 +1,6 @@
 import { TimelineAnalysisService } from "@api/services/TimelineAnalysisService";
 import type { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 
 export type TimelineMap = Record<number, TimelineAnalysisRead>;
 
@@ -23,14 +23,7 @@ export const timelineAnalysisQueries = {
 
   // all timeline analyses of a project, as a map by id
   byProjectScope: () => [...timelineAnalysisQueries.all(), "project"] as const,
-  byProject: (projectId: number | undefined) =>
-    queryOptions({
-      queryKey: [...timelineAnalysisQueries.byProjectScope(), projectId] as const,
-      queryFn: projectId === undefined ? skipToken : () => fetchTimelineAnalyses(projectId),
-      staleTime: 1000 * 60 * 5,
-    }),
-  // same as `byProject`, for useSuspenseQuery / route loaders (no skipToken)
-  byProjectRequired: (projectId: number) =>
+  byProject: (projectId: number) =>
     queryOptions({
       queryKey: [...timelineAnalysisQueries.byProjectScope(), projectId] as const,
       queryFn: () => fetchTimelineAnalyses(projectId),

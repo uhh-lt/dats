@@ -3,6 +3,6 @@ import { queryOptions } from "@tanstack/react-query";
 
 export const projectMetadataListQueryOptions = (projectId: number) =>
   queryOptions({
-    ...metadataQueries.byProjectRequired(projectId),
+    ...metadataQueries.byProject(projectId),
     select: (projectMetadata) => Object.values(projectMetadata),
   });

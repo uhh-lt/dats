@@ -7,5 +7,5 @@ interface WhiteboardDashboardViewLoaderArgs {
 }
 
 export async function whiteboardDashboardViewLoader({ queryClient, projectId }: WhiteboardDashboardViewLoaderArgs) {
-  queryClient.ensureQueryData(whiteboardQueries.byProjectRequired(projectId));
+  queryClient.ensureQueryData(whiteboardQueries.byProject(projectId));
 }

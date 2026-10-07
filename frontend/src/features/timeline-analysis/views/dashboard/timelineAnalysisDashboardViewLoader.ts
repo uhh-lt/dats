@@ -10,5 +10,5 @@ export async function timelineAnalysisDashboardViewLoader({
   queryClient,
   projectId,
 }: TimelineAnalysisDashboardViewLoaderArgs) {
-  queryClient.ensureQueryData(timelineAnalysisQueries.byProjectRequired(projectId));
+  queryClient.ensureQueryData(timelineAnalysisQueries.byProject(projectId));
 }

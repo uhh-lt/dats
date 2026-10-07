@@ -12,7 +12,7 @@ interface SdocFolderRendererProps {
 }
 
 export const SdocFolderRenderer = memo(({ sdocId, ...props }: SdocFolderRendererProps) => {
-  const sdoc = useQuery(sdocQueries.detail(sdocId));
+  const sdoc = useQuery({ ...sdocQueries.detail(sdocId!), enabled: sdocId !== undefined });
   const sdocFolder = FolderHooks.useGetSdocFolder(sdoc.data?.folder_id);
 
   if (sdoc.isSuccess && sdocFolder.isSuccess && sdocFolder.data.parent_id) {

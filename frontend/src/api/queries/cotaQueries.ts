@@ -1,6 +1,6 @@
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import type { COTARead } from "@models/COTARead";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 
 export type CotaMap = Record<number, COTARead>;
 
@@ -25,14 +25,7 @@ export const cotaQueries = {
 
   // all COTAs of a project, as a map by id
   byProjectScope: () => [...cotaQueries.all(), "project"] as const,
-  byProject: (projectId: number | undefined) =>
-    queryOptions({
-      queryKey: [...cotaQueries.byProjectScope(), projectId] as const,
-      queryFn: projectId === undefined ? skipToken : () => fetchCotas(projectId),
-      staleTime: 1000 * 60 * 5,
-    }),
-  // same as `byProject`, for useSuspenseQuery / route loaders (no skipToken)
-  byProjectRequired: (projectId: number) =>
+  byProject: (projectId: number) =>
     queryOptions({
       queryKey: [...cotaQueries.byProjectScope(), projectId] as const,
       queryFn: () => fetchCotas(projectId),

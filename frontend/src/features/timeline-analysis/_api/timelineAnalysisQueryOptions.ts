@@ -62,9 +62,9 @@ export const useGetTimelineAnalysisById = (analysisId: number | null | undefined
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...timelineAnalysisQueries.byProject(projectId),
+    ...timelineAnalysisQueries.byProject(projectId!),
     select: (data) => (analysisId != null ? data[analysisId] : undefined),
-    enabled: analysisId != null,
+    enabled: projectId !== undefined && analysisId != null,
   });
 };
 
@@ -72,7 +72,8 @@ export const useGetProjectTimelineAnalysisList = () => {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   return useQuery({
-    ...timelineAnalysisQueries.byProject(projectId),
+    ...timelineAnalysisQueries.byProject(projectId!),
     select: (data) => Object.values(data),
+    enabled: projectId !== undefined,
   });
 };

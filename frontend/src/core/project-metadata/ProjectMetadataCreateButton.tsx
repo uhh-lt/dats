@@ -15,7 +15,7 @@ interface ProjectMetadataCreateButtonProps {
 }
 
 export const ProjectMetadataCreateButton = memo(({ sdocId, docType }: ProjectMetadataCreateButtonProps) => {
-  const sdoc = useQuery(sdocQueries.detail(sdocId));
+  const sdoc = useQuery({ ...sdocQueries.detail(sdocId!), enabled: sdocId !== undefined });
 
   if (docType !== undefined) {
     return <MetadataCreateButtonContent docType={docType} />;

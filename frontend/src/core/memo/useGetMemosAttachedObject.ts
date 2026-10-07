@@ -47,7 +47,8 @@ export const useGetMemosAttachedObject = (
   const tagQuery = TagHooks.useGetTag(type === AttachedObjectType.TAG ? id : undefined);
   const codeQuery = CodeHooks.useGetCode(type === AttachedObjectType.CODE ? id : undefined);
   const projectQuery = ProjectHooks.useGetProject(type === AttachedObjectType.PROJECT ? id : undefined);
-  const sdocQuery = useQuery(sdocQueries.detail(type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined));
+  const sdocId = type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined;
+  const sdocQuery = useQuery({ ...sdocQueries.detail(sdocId!), enabled: sdocId !== undefined });
   const spanQuery = useQuery(annotationQueries.span.byId(type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined));
   const bboxQuery = useQuery(annotationQueries.bbox.byId(type === AttachedObjectType.BBOX_ANNOTATION ? id : undefined));
   const sentenceQuery = useQuery(

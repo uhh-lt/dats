@@ -12,7 +12,7 @@ export async function perspectiveDashboardViewLoader({
   projectId,
   aspectId,
 }: PerspectiveDashboardViewLoaderArgs) {
-  const aspects = await queryClient.ensureQueryData(perspectiveQueries.aspectsByProjectRequired(projectId));
+  const aspects = await queryClient.ensureQueryData(perspectiveQueries.aspectsByProject(projectId));
   const aspect = aspects[aspectId];
   if (!aspect) {
     throw new Error(`Aspect ${aspectId} not found in project ${projectId}`);

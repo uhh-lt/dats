@@ -10,7 +10,7 @@ interface SdocImageLinkProps {
 
 export function SdocImage({ projectId, filename }: SdocImageLinkProps) {
   const sdocId = useQuery(sdocQueries.idByFilename(projectId, filename));
-  const sdocData = useQuery(sdocQueries.data(sdocId.data));
+  const sdocData = useQuery({ ...sdocQueries.data(sdocId.data!), enabled: sdocId.data !== undefined });
 
   const imageMenuRef = useRef<ImageMenuHandle>(null);
 

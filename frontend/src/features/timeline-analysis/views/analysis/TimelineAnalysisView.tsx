@@ -13,7 +13,7 @@ export function TimelineAnalysisView() {
   const { projectId, analysisId } = TimelineAnalysisRouteAPI.useParams();
 
   const { data: timelineAnalysis } = useSuspenseQuery({
-    ...timelineAnalysisQueries.byProjectRequired(projectId),
+    ...timelineAnalysisQueries.byProject(projectId),
     select: (data) => data[analysisId],
   });
 

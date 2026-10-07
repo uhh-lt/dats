@@ -7,5 +7,5 @@ interface CotaDashboardViewLoaderArgs {
 }
 
 export async function cotaDashboardViewLoader({ queryClient, projectId }: CotaDashboardViewLoaderArgs) {
-  queryClient.ensureQueryData(cotaQueries.byProjectRequired(projectId));
+  queryClient.ensureQueryData(cotaQueries.byProject(projectId));
 }
