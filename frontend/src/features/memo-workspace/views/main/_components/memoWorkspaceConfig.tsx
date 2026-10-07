@@ -1,5 +1,6 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { MemoViewHooks } from "@api/hooks/MemoViewHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import {
   MemoCard,
   MemoCreateIconButton,
@@ -24,6 +25,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import SubjectIcon from "@mui/icons-material/Subject";
 import TitleIcon from "@mui/icons-material/Title";
 import UpdateIcon from "@mui/icons-material/Update";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import { MemoTableSelectionActions } from "./MemoTableSelectionActions";
 import { createMemoTemplates, emptyMemoFilter, memoDefaultFilterExpression } from "./memoTemplates";
@@ -65,9 +67,9 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
 
   useSearchInfo: MemoHooks.useMemoSearchInfo,
   useQueryRows: (request: WorkspaceQueryRequest<MemoColumns>, enabled?: boolean) =>
-    MemoHooks.useQueryMemos(request as QueryRequest_MemoColumns_, { enabled }),
+    useInfiniteQuery({ ...memoQueries.search(request as QueryRequest_MemoColumns_), enabled: enabled ?? true }),
   useQueryGroups: (request: WorkspaceGroupQueryRequest<MemoColumns>, enabled?: boolean) =>
-    MemoHooks.useQueryMemoGroups(request as GroupQueryRequest_MemoColumns_, enabled),
+    useInfiniteQuery({ ...memoQueries.groups(request as GroupQueryRequest_MemoColumns_), enabled: enabled ?? true }),
   useSearchViews: MemoViewHooks,
 
   tableColumns: memoTableColumns,

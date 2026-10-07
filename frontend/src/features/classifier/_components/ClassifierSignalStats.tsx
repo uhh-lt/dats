@@ -1,10 +1,12 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
+import { codeQueries } from "@api/queries/codeQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { ClassifierClassStatistics } from "@models/ClassifierClassStatistics";
 import { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierSignalStrength } from "@models/ClassifierSignalStrength";
 import { Alert, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { classifierUnitLabel } from "./classifierUnitLabel";
 
@@ -52,8 +54,9 @@ function ClassUnitsTable({
   classifierModel: ClassifierModel;
   unitLabel: string;
 }) {
-  const projectCodeMap = CodeHooks.useGetAllCodesMap();
-  const projectTags = TagHooks.useGetAllTags();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const projectCodeMap = useQuery(codeQueries.byProject(projectId));
+  const projectTags = useQuery(tagQueries.byProject(projectId));
 
   const rows = useMemo(() => {
     const tagMap = Object.fromEntries((projectTags.data ?? []).map((tag) => [tag.id, tag]));

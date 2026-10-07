@@ -53,7 +53,7 @@ Vite as the build tool and development server
 - `/frontend/bin`: Various scripts
 - `/frontend/public`: Public assets like logos
 - `/frontend/src`: Main application code
-  - `/api`: Generated API client and Hooks for API interactions
+  - `/api`: Generated API client (`services/`), query factories (`queries/`), hooks for API interactions (`hooks/`) and the cache-sync code (`cache-sync/`)
   - `/auth`: Authentication and authorization logic
   - `/components`: Reusable React components
   - `/layouts`: Layout components for different page structures
@@ -67,7 +67,8 @@ Vite as the build tool and development server
 
 - **React Components**: PascalCase with `.tsx` extension (e.g., `EditableTypography.tsx`, `CodeCreateDialog.tsx`)
 - **Custom Hooks**: Lowercase with `use` prefix and `.ts` extension (e.g., `useDebounce.ts`, `useDialog.ts`)
-- **API Hooks**: Named `{Entity}Hooks.ts` bundling multiple related hooks (e.g., `CodeHooks.ts`, `SdocHooks.ts`)
+- **Query factories**: `{entity}Queries.ts` in `frontend/src/api/queries/` (e.g., `tagQueries.ts`)
+- **API Hooks**: Named `{Entity}Hooks.ts` bundling the entity's mutation hooks and data-deriving hooks (e.g., `CodeHooks.ts`, `SdocHooks.ts`)
 - **Redux Slices**: `{featureName}Slice.ts` (e.g., `annoSlice.ts`, `projectSlice.ts`)
 - **Utilities**: Descriptive names matching their purpose (e.g., `ColorUtils.ts`, `DateUtils.ts`)
 - **Directories**: Lowercase with hyphens for multi-word names (e.g., `/FormInputs`, `/TreeExplorer`)
@@ -105,10 +106,30 @@ Vite as the build tool and development server
 
 ### Tanstack Query: Use for ALL SERVER state (data from API, loading, errors)
 
-- Never call API service methods directly; wrap them in custom hooks
-- Group related queries in hook files (see [CodeHooks.ts](@api/hooks/SdocHooks.ts))
-- Centralize all query keys in [QueryKey.ts](../../frontend/src/api/QueryKey.ts) enum
-- Data Normalization with Record maps (Record<id, data>) for O(1) access
+Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules below are the convention for new and migrated code.
+
+**Queries are defined once, in a query factory** (`frontend/src/api/queries/<domain>Queries.ts`, e.g. [tagQueries.ts](../../frontend/src/api/queries/tagQueries.ts)):
+
+- A factory is a plain object with `all()`, scope prefixes (`xxxScope()`) and `queryOptions(...)` leaves. It contains no React.
+- Keys are hierarchical: **domain, then scope, then params**, e.g. `["tags", "project", projectId]`.
+- A leaf bundles `queryKey` and `queryFn` together and takes identity params only (ids, filters). Never add `enabled`, `select` or `staleTime` parameters. A missing id returns `skipToken` as the `queryFn`.
+- Never write a `queryKey` array by hand and never use explicit generics (`useQuery<T>`); type the service call instead.
+- Never call API service methods directly from components; go through a factory.
+
+**Use factories at the call site:**
+
+- Components: `useQuery({ ...tagQueries.byProject(projectId), select })`. Read the project id inline with `useAppSelector((state) => state.project.projectId)` (or take it from route params/props).
+- Do not add wrapper hooks that only forward to `useQuery`. A hook is justified only if it adds logic, e.g. deriving data with `select` ([CodeHooks.ts](../../frontend/src/api/hooks/CodeHooks.ts): `useGetCode`).
+- Cache access (`setQueryData`, `getQueryData`, `invalidateQueries`) uses the typed key `tagQueries.byProject(id).queryKey` or a scope prefix like `tagQueries.byProjectScope()`. This keeps the data type inferred and keeps invalidation prefix-based.
+- Data normalization with Record maps (`Record<id, data>`) for O(1) access is fine when the cache-sync code relies on that shape; comment why.
+
+**Mutations** live in the domain's `{Entity}Hooks.ts` ([TagHooks.ts](../../frontend/src/api/hooks/TagHooks.ts)):
+
+- Every mutation has a `mutationKey` that starts with the domain root: `mutationKey: [...tagQueries.all(), "create"]`.
+- Cache updates are not written in components. Tag the mutation with `meta.datsEvent`; the cache-sync "brain" ([api/cache-sync](../../frontend/src/api/cache-sync/README.md)) writes the result into the cache.
+- Prefer `mutate` over `mutateAsync`. Necessary logic (invalidation) goes in the `useMutation` callbacks; UI actions (redirects) in the `mutate` callbacks.
+
+**Migration status:** domains not yet migrated still use the legacy `QueryKey` enum in [QueryKey.ts](../../frontend/src/api/hooks/QueryKey.ts) (see the stages in `query-key-plan.md`). When you touch such a domain, do not add new enum entries; create or extend its factory instead. Codes, tags and memos are already migrated.
 
 ### Redux Toolkit: Use for GLOBAL CLIENT state (dialogs, filters, selections)
 
@@ -245,8 +266,8 @@ Vite as the build tool and development server
 
 ## Workflow: Creating a Feature with All Patterns
 
-1. **Step 1: Define Query Keys** (QueryKey.ts)
-2. **Step 2: Create API Hooks** (e.g., CodeHooks.ts)
+1. **Step 1: Define the query factory** (e.g., `api/queries/codeQueries.ts`)
+2. **Step 2: Create mutation / data-deriving hooks** (e.g., CodeHooks.ts)
 3. **Step 3: Create Components** (e.g., CodeTable.tsx, CodeCreateDialog.tsx)
 4. **Step 4: Use in Views**
 

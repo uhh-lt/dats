@@ -1,7 +1,8 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { Box, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatRelativeTime } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
 import { MemoActionMenu } from "../MemoActionMenu";
@@ -25,7 +26,7 @@ export const MemoListItem = memo(({ memo, ...props }: MemoPresentationProps) => 
 
 const MemoListItemWithoutData = memo(
   ({ memoId, ...props }: Omit<MemoPresentationProps, "memo"> & { memoId: number }) => {
-    const memo = MemoHooks.useGetMemo(memoId);
+    const memo = useQuery(memoQueries.byId(memoId));
 
     if (memo.isSuccess) return <MemoListItemWithData memo={memo.data} {...props} />;
     if (memo.isError) return <Typography color="error">{memo.error.message}</Typography>;

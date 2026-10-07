@@ -1,12 +1,12 @@
-import { CodeMap } from "@api/hooks/CodeHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
+import { CodeMap, codeQueries } from "@api/queries/codeQueries";
+import { memoQueries } from "@api/queries/memoQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { WhiteboardService } from "@api/services/WhiteboardService";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
-import { MemoRead } from "@models/MemoRead";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { TagRead } from "@models/TagRead";
 import { QueryClient } from "@tanstack/react-query";
 import { projectWhiteboardsQueryOptions } from "../../_api/whiteboardQueryOptions";
 
@@ -33,7 +33,7 @@ export async function whiteboardViewLoader({ queryClient, projectId, whiteboardI
     queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, ba.id], ba);
   });
   whiteboardData.memos.forEach((memo) => {
-    queryClient.setQueryData<MemoRead>([QueryKey.MEMO, memo.id], memo);
+    queryClient.setQueryData(memoQueries.byId(memo.id).queryKey, memo);
   });
   whiteboardData.sdocs.forEach((sdoc) => {
     queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, sdoc.id], sdoc);
@@ -44,11 +44,11 @@ export async function whiteboardViewLoader({ queryClient, projectId, whiteboardI
       acc[code.id] = code;
       return acc;
     }, {} as CodeMap);
-    queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, projectId], codeMap);
+    queryClient.setQueryData(codeQueries.byProject(projectId).queryKey, codeMap);
   }
 
   if (whiteboardData.tags.length > 0) {
-    queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, projectId], whiteboardData.tags);
+    queryClient.setQueryData(tagQueries.byProject(projectId).queryKey, whiteboardData.tags);
   }
 
   return whiteboardMap[whiteboardId];

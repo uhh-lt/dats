@@ -1,4 +1,4 @@
-import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { useWithLevel } from "@components/tree-explorer";
 import {
   Checkbox,
@@ -11,6 +11,8 @@ import {
   SelectChangeEvent,
   Stack,
 } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { Fragment, memo } from "react";
 import { TagRenderer } from "./TagRenderer";
 
@@ -32,7 +34,8 @@ type TagSelectorProps = (TagSelectorMultipleProps | TagSelectorSingleProps) & Fo
 
 export const TagSelector = memo(({ tagIds, onTagIdChange, title, multiple, ...props }: TagSelectorProps) => {
   // global server state (react query)
-  const projectTags = TagHooks.useGetAllTags();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const projectTags = useQuery(tagQueries.byProject(projectId));
   // transform flat list into hierarchical structure
   const tagsWithLevel = useWithLevel(projectTags.data || []);
 

@@ -1,6 +1,6 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { LinkButton } from "@core/navigation";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
@@ -11,6 +11,7 @@ import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
@@ -47,7 +48,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
 
   // global server state
   const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
-  const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
+  const documentTagIds = useQuery(tagQueries.idsBySdoc(selectedSdocIds[selectedSdocIdsIndex]));
   const docClusters = PerspectivesQueryOptions.useGetClustersBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
   const vis = useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);

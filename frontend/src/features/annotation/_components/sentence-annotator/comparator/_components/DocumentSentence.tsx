@@ -1,4 +1,4 @@
-import { CodeMap } from "@api/hooks/CodeHooks";
+import { CodeMap } from "@api/queries/codeQueries";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";

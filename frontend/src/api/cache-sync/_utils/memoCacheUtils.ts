@@ -1,4 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { codeQueries } from "@api/queries/codeQueries";
+import { memoQueries } from "@api/queries/memoQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { MemoRead } from "@models/MemoRead";
@@ -12,8 +15,8 @@ import { removeSingle, setSingle } from "./cacheWriterUtils";
 
 /** Invalidate the memo workspace queries (list + groups). */
 export function invalidateMemoWorkspace(): void {
-  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_QUERY] });
-  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_GROUPS] });
+  queryClient.invalidateQueries({ queryKey: memoQueries.searchScope() });
+  queryClient.invalidateQueries({ queryKey: memoQueries.groupsScope() });
 }
 
 /**
@@ -22,7 +25,7 @@ export function invalidateMemoWorkspace(): void {
  */
 export function invalidateMemoRecents(projectIds: Iterable<number>): void {
   for (const projectId of new Set(projectIds)) {
-    queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_RECENT, projectId] });
+    queryClient.invalidateQueries({ queryKey: memoQueries.recent(projectId).queryKey });
   }
 }
 
@@ -40,10 +43,10 @@ export function invalidateAttachedObjectMemoIds(
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
       break;
     case "tag":
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS] });
+      queryClient.invalidateQueries({ queryKey: tagQueries.byProjectScope() });
       break;
     case "code":
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES] });
+      queryClient.invalidateQueries({ queryKey: codeQueries.all() });
       break;
     case "span_annotation":
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
@@ -63,25 +66,25 @@ export function invalidateAttachedObjectMemoIds(
 }
 
 export function writeMemo(memo: MemoRead): void {
-  setSingle([QueryKey.MEMO, memo.id], memo);
-  queryClient.setQueryData<MemoRead[]>(
-    [QueryKey.OBJECT_MEMOS, memo.attached_object_type, memo.attached_object_id],
+  setSingle(memoQueries.byId(memo.id).queryKey, memo);
+  queryClient.setQueryData(
+    memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.map((m) => (m.id === memo.id ? memo : m)) : [memo]),
   );
 }
 
 export function appendMemo(memo: MemoRead): void {
-  setSingle([QueryKey.MEMO, memo.id], memo);
-  queryClient.setQueryData<MemoRead[]>(
-    [QueryKey.OBJECT_MEMOS, memo.attached_object_type, memo.attached_object_id],
+  setSingle(memoQueries.byId(memo.id).queryKey, memo);
+  queryClient.setQueryData(
+    memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? [...old, memo] : [memo]),
   );
 }
 
 export function removeMemo(memo: MemoRead): void {
-  removeSingle([QueryKey.MEMO, memo.id]);
-  queryClient.setQueryData<MemoRead[]>(
-    [QueryKey.OBJECT_MEMOS, memo.attached_object_type, memo.attached_object_id],
+  removeSingle(memoQueries.byId(memo.id).queryKey);
+  queryClient.setQueryData(
+    memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
     (old) => (old ? old.filter((m) => m.id !== memo.id) : old),
   );
   invalidateAttachedObjectMemoIds(memo.attached_object_type, memo.attached_object_id);

@@ -1,8 +1,9 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { Box, CardActionArea, CircularProgress, Paper, Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatRelativeTime } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
 import Markdown from "react-markdown";
@@ -26,7 +27,7 @@ export const MemoFeedItem = memo(({ memo, ...props }: MemoPresentationProps) => 
 
 const MemoFeedItemWithoutData = memo(
   ({ memoId, ...props }: Omit<MemoPresentationProps, "memo"> & { memoId: number }) => {
-    const memo = MemoHooks.useGetMemo(memoId);
+    const memo = useQuery(memoQueries.byId(memoId));
 
     if (memo.isSuccess) return <MemoFeedItemWithData memo={memo.data} {...props} />;
     if (memo.isError) return <Typography color="error">{memo.error.message}</Typography>;

@@ -1,7 +1,7 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
@@ -10,6 +10,7 @@ import { CodeNodeData } from "@models/CodeNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useMemo, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -47,7 +48,7 @@ export function CodeNode(props: NodeProps<CodeNode>) {
   const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
   const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.CODE, props.data.codeId);
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.CODE, props.data.codeId));
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes

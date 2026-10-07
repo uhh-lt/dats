@@ -1,4 +1,5 @@
 import { TagHooks } from "@api/hooks/TagHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
@@ -10,6 +11,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useDialog } from "@store/global/dialogBusSlice";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -19,7 +22,8 @@ export function TagEditDialog() {
   const { isOpen, data: dialogData, close: handleClose } = useDialog("tagEdit");
 
   // tags for selection as parent
-  const tags = TagHooks.useGetAllTags();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const tags = useQuery(tagQueries.byProject(projectId));
   const parentTags = useMemo(() => {
     if (!tags.data || !dialogData?.tag) return [];
 

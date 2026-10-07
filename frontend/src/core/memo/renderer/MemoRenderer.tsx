@@ -1,4 +1,4 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
@@ -6,6 +6,7 @@ import { MemoRead } from "@models/MemoRead";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Box, Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -34,7 +35,7 @@ export const MemoRenderer = memo(({ memo, ...props }: MemoRendererProps) => {
 });
 
 const MemoRendererWithoutData = memo(({ memoId, ...props }: { memoId: number } & MemoRendererSharedProps) => {
-  const memo = MemoHooks.useGetMemo(memoId);
+  const memo = useQuery(memoQueries.byId(memoId));
 
   if (memo.isSuccess) {
     return <MemoRendererWithData memo={memo.data} {...props} />;

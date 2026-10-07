@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
@@ -10,6 +10,7 @@ import { SentenceAnnotationNodeData } from "@models/SentenceAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -45,7 +46,9 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
   // global server state (react-query)
   const annotation = SentenceAnnotationHooks.useGetAnnotation(props.data.sentenceAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId);
+  const memos = useQuery(
+    memoQueries.byAttachedObject(AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId),
+  );
 
   // effects
   useEffect(() => {

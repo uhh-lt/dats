@@ -1,7 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { codeQueries } from "@api/queries/codeQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
 import type { ApiKeyRead } from "@models/ApiKeyRead";
-import type { CodeRead } from "@models/CodeRead";
 import type { DATSEvent } from "@models/datsEvents";
 import type { FolderRead } from "@models/FolderRead";
 import { SearchEntityType } from "@models/SearchEntityType";
@@ -52,13 +53,13 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 
     // ── Codes ─────────────────────────────────────────────────────────────
     case "CODE_CREATED":
-      upsertMapItem([QueryKey.PROJECT_CODES, event.payload.project_id], event.payload);
+      upsertMapItem(codeQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "CODE_UPDATED": {
       const code = event.payload;
-      const queryKey = [QueryKey.PROJECT_CODES, code.project_id] as const;
+      const queryKey = codeQueries.byProject(code.project_id).queryKey;
       // Read the previous value before writing to detect an `enabled` flip.
-      const previous = queryClient.getQueryData<Record<number, CodeRead>>(queryKey)?.[code.id];
+      const previous = queryClient.getQueryData(queryKey)?.[code.id];
       upsertMapItem(queryKey, code);
       // Enabling/disabling a code cascades to its ancestors in the DB, which the
       // single CodeRead payload cannot capture — refetch all codes on a flip.
@@ -69,7 +70,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     }
     case "CODE_DELETED": {
       const code = event.payload;
-      removeMapItem([QueryKey.PROJECT_CODES, code.project_id], code.id);
+      removeMapItem(codeQueries.byProject(code.project_id).queryKey, code.id);
       // Deleting a code cascades to its annotations in the DB, which the
       // frontend cannot observe directly — invalidate annotation queries.
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION] });
@@ -87,18 +88,20 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 
     // ── Tags ──────────────────────────────────────────────────────────────
     case "TAG_CREATED":
-      appendListItem([QueryKey.PROJECT_TAGS, event.payload.project_id], event.payload);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      appendListItem(tagQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      queryClient.invalidateQueries({ queryKey: tagQueries.sdocCountScope() });
       break;
     case "TAG_UPDATED":
-      replaceListItem([QueryKey.PROJECT_TAGS, event.payload.project_id], event.payload);
+      replaceListItem(tagQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "TAG_DELETED": {
       const tag = event.payload;
       // Sweep the tag out of every cached per-sdoc tag list.
-      sweepPrefix<number[]>([QueryKey.SDOC_TAGS], (old) => (old ? old.filter((tagId) => tagId !== tag.id) : old));
-      removeListItem([QueryKey.PROJECT_TAGS, tag.project_id], tag.id);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      sweepPrefix<number[]>(tagQueries.idsBySdocScope(), (old) =>
+        old ? old.filter((tagId) => tagId !== tag.id) : old,
+      );
+      removeListItem(tagQueries.byProject(tag.project_id).queryKey, tag.id);
+      queryClient.invalidateQueries({ queryKey: tagQueries.sdocCountScope() });
       break;
     }
 
@@ -465,9 +468,9 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // those are invalidated.
     case "SDOC_TAGS_LINKED":
       Object.entries(event.payload.links).forEach(([sdocId, tagIds]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, Number(sdocId)], tagIds);
+        queryClient.setQueryData(tagQueries.idsBySdoc(Number(sdocId)).queryKey, tagIds);
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
+      queryClient.invalidateQueries({ queryKey: tagQueries.sdocCountScope() });
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
       break;
 

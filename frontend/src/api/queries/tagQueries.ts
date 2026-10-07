@@ -1,0 +1,43 @@
+import { TagService } from "@api/services/TagService";
+import { queryOptions, skipToken } from "@tanstack/react-query";
+
+/**
+ * Query factory for tags. Keys are hierarchical: domain -> scope -> params.
+ *
+ *   tagQueries.all()                         ["tags"]
+ *   tagQueries.byProject(projectId)          ["tags", "project", projectId]
+ *   tagQueries.idsBySdoc(sdocId)             ["tags", "sdoc", sdocId]
+ *   tagQueries.sdocCount(projectId, sdocIds) ["tags", "sdocCount", projectId, sdocIds]
+ */
+export const tagQueries = {
+  all: () => ["tags"] as const,
+
+  // all tags of a project
+  byProjectScope: () => [...tagQueries.all(), "project"] as const,
+  byProject: (projectId: number | undefined) =>
+    queryOptions({
+      queryKey: [...tagQueries.byProjectScope(), projectId] as const,
+      queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projId: projectId }),
+      staleTime: 1000 * 60 * 5,
+    }),
+
+  // tag ids of source documents
+  idsBySdocScope: () => [...tagQueries.all(), "sdoc"] as const,
+  idsBySdoc: (sdocId: number | null | undefined) =>
+    queryOptions({
+      queryKey: [...tagQueries.idsBySdocScope(), sdocId] as const,
+      queryFn: !sdocId ? skipToken : () => TagService.getBySdoc({ sdocId }),
+      staleTime: 1000 * 60 * 5,
+    }),
+
+  // number of documents per tag, for the given documents
+  sdocCountScope: () => [...tagQueries.all(), "sdocCount"] as const,
+  sdocCount: (projectId: number, sdocIds: number[]) =>
+    queryOptions({
+      queryKey: [...tagQueries.sdocCountScope(), projectId, sdocIds] as const,
+      queryFn: async () => {
+        const stringRecord = await TagService.getSdocCounts({ projectId, requestBody: sdocIds });
+        return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
+      },
+    }),
+};

@@ -1,5 +1,5 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { codeQueries } from "@api/queries/codeQueries";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { UserRenderer } from "@core/user";
@@ -8,6 +8,7 @@ import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Box, BoxProps, Button, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, MouseEvent, useCallback, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
@@ -129,9 +130,8 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     pendingAnnotations: rightPendingAnnotations,
   });
 
-  const codeMap = CodeHooks.useGetAllCodesMap();
-
-  const projectId = useAppSelector((state) => state.project.projectId) ?? -1;
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const codeMap = useQuery(codeQueries.byProject(projectId));
 
   // Parse HTML and partition into RenderBlocks using custom hook
   const { renderBlocks, sentenceTokenIds } = useBlockPartition(sdocData.html);
@@ -613,7 +613,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
                     handleLeftResizeStart={leftResizeController.handleResizeStart}
                     handleRightResizeStart={rightResizeController.handleResizeStart}
                     codeMap={codeMap.data || {}}
-                    projectId={projectId}
+                    projectId={projectId ?? -1}
                   />
                 </div>
               );

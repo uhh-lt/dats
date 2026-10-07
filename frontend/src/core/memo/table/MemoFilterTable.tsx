@@ -1,5 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { SearchService } from "@api/services/SearchService";
+import { memoQueries } from "@api/queries/memoQueries";
 import {
   FILTER_PARAM,
   FilterTable,
@@ -17,7 +16,6 @@ import { useURLConnector } from "@hooks/useURLConnector";
 import { MemoColumns } from "@models/MemoColumns";
 import { MemoRead } from "@models/MemoRead";
 import { Page_MemoRead_ } from "@models/Page_MemoRead_";
-import { SortDirection } from "@models/SortDirection";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
@@ -116,26 +114,9 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
     return result;
   }, [tableInfo]);
 
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_MemoRead_>({
-    queryKey: [QueryKey.MEMO_TABLE, projectId, searchQuery, filter, sortingModel, isSearchContent, fetchSize],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchMemos({
-        requestBody: {
-          project_id: projectId!,
-          search_query: searchQuery || "",
-          filter: filter,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as MemoColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-          page_number: pageParam as number,
-          page_size: fetchSize,
-        },
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => groups.length,
-    refetchOnWindowFocus: false,
-  });
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
+    memoQueries.table({ projectId, searchQuery, filter, sortingModel, isSearchContent, fetchSize }),
+  );
 
   // resetting search-parameter-dependant state
   const resetState = useCallback(() => {

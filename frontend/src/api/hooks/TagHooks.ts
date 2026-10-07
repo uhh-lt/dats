@@ -1,67 +1,27 @@
+import { tagQueries } from "@api/queries/tagQueries";
 import { TagService } from "@api/services/TagService";
 import { SdocTagLinks } from "@models/SdocTagLinks";
 import { TagRead } from "@models/TagRead";
 import { useAppSelector } from "@store/storeHooks";
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 // TAG QUERIES
-export const projectTagsQueryOptions = (projectId: number | undefined) =>
-  queryOptions({
-    queryKey: [QueryKey.PROJECT_TAGS, projectId],
-    queryFn: () =>
-      TagService.getByProject({
-        projId: projectId!,
-      }),
-    staleTime: 1000 * 60 * 5,
-  });
+// The queries themselves (key + queryFn) live in tagQueries. The hook below only derives data from them.
 
-interface UseProjectTagsQueryParams<T> {
-  select?: (data: TagRead[]) => T;
-  enabled?: boolean;
-}
-
-const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
+const useGetTag = (tagId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...projectTagsQueryOptions(projectId),
-    select,
-    enabled: !!projectId && (enabled ?? true),
-  });
-};
-
-const useGetTag = (tagId: number | null | undefined) =>
-  useProjectTagsQuery({
+    ...tagQueries.byProject(projectId),
     select: (data) => data.find((tag) => tag.id === tagId)!,
     enabled: !!tagId,
   });
-
-const useGetAllTags = () => useProjectTagsQuery({});
-
-const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) =>
-  useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOC_TAGS, sdocId],
-    queryFn: () =>
-      TagService.getBySdoc({
-        sdocId: sdocId!,
-      }),
-    staleTime: 1000 * 60 * 5,
-    enabled: !!sdocId,
-  });
-
-const useGetTagDocumentCounts = (projectId: number, sdocIds: number[]) =>
-  useQuery<Map<number, number>, Error>({
-    queryKey: [QueryKey.TAG_SDOC_COUNT, projectId, sdocIds],
-    queryFn: async () => {
-      const stringRecord = await TagService.getSdocCounts({ projectId, requestBody: sdocIds });
-      return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
-    },
-  });
+};
 
 // TAG MUTATIONS
 
 const useCreateTag = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "create"],
     mutationFn: TagService.createDocTag,
     meta: {
       datsEvent: "TAG_CREATED",
@@ -71,6 +31,7 @@ const useCreateTag = () =>
 
 const useUpdateTag = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "update"],
     mutationFn: TagService.updateById,
     meta: {
       datsEvent: "TAG_UPDATED",
@@ -80,6 +41,7 @@ const useUpdateTag = () =>
 
 const useDeleteTag = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "delete"],
     mutationFn: TagService.deleteById,
     meta: {
       datsEvent: "TAG_DELETED",
@@ -89,6 +51,7 @@ const useDeleteTag = () =>
 
 const useBulkSetTags = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "bulkSet"],
     mutationFn: TagService.setTagsBatch,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
@@ -98,6 +61,7 @@ const useBulkSetTags = () =>
 
 const useBulkLinkTags = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "bulkLink"],
     mutationFn: TagService.linkMultipleTags,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
@@ -107,6 +71,7 @@ const useBulkLinkTags = () =>
 
 const useBulkUnlinkTags = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "bulkUnlink"],
     mutationFn: TagService.unlinkMultipleTags,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
@@ -116,6 +81,7 @@ const useBulkUnlinkTags = () =>
 
 const useBulkUpdateTags = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "bulkUpdate"],
     mutationFn: TagService.updateTagsBatch,
     meta: {
       datsEvent: "SDOC_TAGS_LINKED",
@@ -125,12 +91,11 @@ const useBulkUpdateTags = () =>
 
 const useCountBySdocsAndUser = () =>
   useMutation({
+    mutationKey: [...tagQueries.all(), "count"],
     mutationFn: TagService.countTags,
   });
 
 export const TagHooks = {
-  useGetAllTags,
-  useGetAllTagIdsBySdocId,
   useGetTag,
   useCreateTag,
   useUpdateTag,
@@ -139,6 +104,5 @@ export const TagHooks = {
   useBulkUpdateTags,
   useBulkLinkTags,
   useBulkUnlinkTags,
-  useGetTagDocumentCounts,
   useCountBySdocsAndUser,
 };

@@ -1,4 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
+import { codeQueries } from "@api/queries/codeQueries";
+import { memoQueries } from "@api/queries/memoQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
 import type { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
@@ -88,10 +91,10 @@ function handleImportJobFinished(job: ImportJobRead) {
   const projectId = job.input.project_id;
   switch (job.input.import_job_type) {
     case ImportJobType.TAGS:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, projectId] });
+      queryClient.invalidateQueries({ queryKey: tagQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.CODES:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, projectId] });
+      queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.FOLDERS:
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, projectId] });
@@ -115,22 +118,18 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
       break;
     case ImportJobType.MEMOS:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
     case ImportJobType.PROJECT:
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, projectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, projectId] });
+      queryClient.invalidateQueries({ queryKey: tagQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
     case ImportJobType.BBOX_ANNOTATIONS:
     case ImportJobType.SPAN_ANNOTATIONS:
@@ -152,7 +151,7 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
     job.output
   ) {
     (job.input.task_parameters as ClassifierInferenceParams).sdoc_ids.forEach((sdocId) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
+      queryClient.invalidateQueries({ queryKey: tagQueries.idsBySdoc(sdocId).queryKey });
     });
   }
 }

@@ -1,6 +1,6 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
+import { memoQueries } from "@api/queries/memoQueries";
+import { tagQueries } from "@api/queries/tagQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { useOpenMemoDialog } from "@core/memo";
 import { SdocRenderer } from "@core/source-document";
@@ -10,6 +10,7 @@ import { SdocNodeData } from "@models/SdocNodeData";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
@@ -39,8 +40,8 @@ export function SdocNode(props: NodeProps<SdocNode>) {
 
   // global server state (react-query)
   const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
-  const tagIds = TagHooks.useGetAllTagIdsBySdocId(props.data.sdocId);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId);
+  const tagIds = useQuery(tagQueries.idsBySdoc(props.data.sdocId));
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId));
 
   const docType = sdoc.data?.doctype;
 

@@ -1,5 +1,6 @@
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TagRecommendationHooks } from "@api/hooks/TagRecommendationHooks";
+import { tagQueries } from "@api/queries/tagQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { TagRead } from "@models/TagRead";
@@ -22,6 +23,8 @@ import {
   Stack,
   Toolbar,
 } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 export function TagRecommendationsView() {
@@ -29,7 +32,8 @@ export function TagRecommendationsView() {
   const [selectedJobId, setSelectedJobId] = useState<string>("-1");
 
   // global server state
-  const documentTags = TagHooks.useGetAllTags();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const documentTags = useQuery(tagQueries.byProject(projectId));
   const tagRecommendationMlJobs = TagRecommendationHooks.useGetAllTagRecommendationJobs();
   const recommendations = TagRecommendationHooks.useGetTagRecommendationsFromJob(
     selectedJobId === "-1" ? null : selectedJobId,

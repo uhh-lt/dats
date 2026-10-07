@@ -1,7 +1,7 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
+import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
@@ -11,6 +11,7 @@ import { BBoxAnnotationNodeData } from "@models/BBoxAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -47,7 +48,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
 
   // effects
   useEffect(() => {
