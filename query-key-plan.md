@@ -1,7 +1,7 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Decisions made (section 6). Stages 0, 1, 2 and 3 done. Stage 4 next. Stage 6 (Queries + Mutations files in api/hooks) added at your request.**
-Branch: `refactor/query-key-factories` (contains an uncommitted phase-1 prototype, see section 4).
+Status: **Stages 0-3 done and committed. Stage 4 next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
 ---
@@ -79,7 +79,33 @@ Numbers from the audit (frontend/src):
 - **Great Divergence is live:** `documentSearchViewLoader.ts:33` does not pass `showFolders`, `DocumentSearchView.tsx:53` does (from Redux). `showFolders` is part of the key (default `true`), so with `showFolders = false` the loader prefetches a key the component never reads. Other search routes need the same check.
 - **Tests:** there is no frontend test setup (no vitest/msw in `package.json`). `AGENTS.md` forbids installing dependencies, so adding tests needs your approval.
 
-### Phase-1 prototype (uncommitted, on this branch)
+### Layers: who may import what (ESLint `boundaries`, `eslint.config.mjs`)
+
+```
+routes -> features -> core -> api -> models / hooks / store / utils
+```
+
+- `features` may import `api`, `core`, `components`, `hooks`, `models`, `store`, `utils`, but **not other features**.
+- `core` may import `api`, other `core` domains, ... but **not `features`**.
+- `api` may import `models`, `hooks`, `store`, `utils`, but **not `core` or `features`**. `components` may not import `api`.
+- `no-internal-modules-public-entry`: other code imports a core/feature domain only through its `index.ts`.
+- `no-cross-slice-access`: code may only read the Redux slices of its own domain (and global slices such as `project`).
+
+So where a file lives decides who can use it. On `main`: 26 files in `api/hooks` (older entity domains) and 16 files in
+`features/*/_api` (classifier, COTA, perspectives, timeline, whiteboard, ML, search, health, ...). The brain imported only the
+global `QueryKey` enum, `queryClient` and models, never a query or hook file: the enum was the only shared contract, and both
+sides retyped the key and assumed the same data shape. The typed factories replace that, which is why the brain now has to import
+the factories (and why they cannot stay private to a feature).
+
+### Who uses each domain today (measured)
+
+| Used by                                       | Domains                                                                                                                                        | Target (stage 6)                                |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| core **and** several features                 | code, tag, memo, folder, project, sdoc, user, project metadata + sdoc metadata, span / bbox / sentence annotations                             | `core/<domain>/api`                             |
+| exactly one feature                           | classifier, COTA, ML jobs, perspectives, timeline, whiteboard, tag recommendations, API keys, annotation scaling, import                       | `features/<feature>/_api`                       |
+| several features, **no matching core domain** | LLM (4 features), statistics (2), document processing (2), general / instance info (auth + plugins), job queries shared by core/export-buttons | needs a home, see open sub-decisions in stage 6 |
+
+### Phase-1 prototype (historical, now committed)
 
 Done: `api/queries/{code,tag,memo}Queries.ts` (hierarchical keys, `queryOptions` leaves, `skipToken`), brain / cache utils /
 whiteboard loader / document search use tagged keys, `cacheWriterUtils` has typed overloads, 10 enum keys removed.
@@ -95,13 +121,17 @@ Known problems with it (all fixed in stage 2, except the loose `cacheWriterUtils
 
 ## 5. Rules (proposed; become the project convention)
 
-5.1 **One factory per domain, no React in it.** `frontend/src/api/queries/<domain>Queries.ts` exports `all()`, scope
-prefixes (`xxxScope()`), and `queryOptions` leaves. Keys: domain, scope, params. Safe to import from loaders,
-components and the cache-sync brain.
-**Responsibility split (adjusted in stage 2):** `<domain>Queries.ts` = _what_ we fetch (pure key + queryFn, usable
-anywhere, also outside React). `<Domain>Hooks.ts` (existing name/convention) = _React usage_: the domain's
-mutation hooks and hooks that derive data (lookup/filter via `select`). Hooks that only forward to `useQuery` are removed.
+5.1 **One query factory per domain, no React in it, living in the domain.** Each domain has `<domain>Queries.ts` (what we fetch:
+pure key + queryFn, usable anywhere, also outside React) and `<domain>Mutations.ts` (React usage: the domain's mutation hooks
+and, if needed, hooks that derive data). Keys: domain, scope, params. **Where the files live (decided, D7, target layout of stage 6):**
 
+- a domain that **core and several features** use -> `core/<domain>/api/`, e.g. `core/code/api/codeQueries.ts` + `codeMutations.ts`;
+- a domain that **only one feature** uses -> `features/<feature>/_api/`, e.g. `features/classifier/_api/classifierQueries.ts`;
+- `api/` keeps only the services, `queryClient` and the cache-sync code (the "brain").
+
+The location decides who may import it (see the layer rules in section 4): a file in `features/x/_api` cannot be used by any
+other feature or by `core`. The brain is the only exception (see 5.9), and it may import only the pure `*Queries.ts` files.
+_Until stage 6 the existing files are still in `api/queries/` and `api/hooks/` (interim state)._
 5.2 **Factories take identity params only.** No `enabled`, `select`, `staleTime` parameters.
 **No twins (decided after stage 3):** `useSuspenseQuery` and route loaders do not accept `skipToken`. So a query that is
 used by suspense or loaders takes a strict id (`sdocQueries.detail(sdocId: number)`, `whiteboardQueries.byProject(projectId: number)`)
@@ -119,23 +149,40 @@ allowed. _(Open decision D1: how components get the current `projectId`.)_
 **The brain keeps writing entity DTOs with `setQueryData`** (deliberate deviation from TkDodo's invalidation-first advice, see
 `plan_entity_brain.md`); typed keys address his type-safety objection. Derived data is invalidated.
 
-5.6 **Mutations:** stay in the domain's `<Domain>Hooks.ts` (renaming to `*Mutations.ts` would force changing every call
-site for no benefit). Every mutation has a `mutationKey` starting with the domain, e.g. `["tags", "create"]`.
+5.6 **Mutations:** in the domain's `<domain>Mutations.ts` (stage 6; until then in `<Domain>Hooks.ts`). A mutation hook may only
+read global Redux slices (`project`, `websocket`); state of a feature slice must be passed in as a parameter or the hook stays in
+that feature (ESLint `no-cross-slice-access`). Every mutation has a `mutationKey` starting with the domain, e.g. `["tags", "create"]`.
 Cache reactions go through the brain via `meta.datsEvent`; no cache code in components. `mutate` by default,
 `mutateAsync` only for dependent/concurrent mutations. Necessary logic in `useMutation` callbacks, UI actions in
 `mutate` callbacks. Optimistic updates: `cancelQueries` in `onMutate`, rollback in `onError`, invalidate in `onSettled`
 only when `isMutating({ mutationKey }) === 1`.
 
-5.7 **Routes:** a route builds each query's options **once** in `context` from `params` + `loaderDeps`; the loader only
-primes the cache (`ensureQueryData`/`prefetch*`, no returned data); components read the options with `Route.useRouteContext()`
-and always call a Query hook. Any state that affects a query's key must be route state (params/search), not Redux.
-Loader/component both consuming the same options object is the fix for the Great Divergence.
+5.7 **Routes: ONE rule for all 19 routes with a loader (decided, D8; to be tested in a pilot first, see stage 5).**
+What a loader is for: a query factory only _describes_ a query; a loader _starts_ it when the user navigates (or hovers the link,
+`defaultPreload: "intent"`), before the view renders. It is a speed-up, not needed for correctness.
+
+1. **`context`** builds the route's query options once, from `params` + `loaderDeps` (search params that affect a query).
+2. **`loader`** does `await queryClient.ensureQueryData(...)` on exactly those options and returns nothing. It always awaits (every
+   route already has a `pendingComponent`, and the tab title needs the data).
+3. **The view** uses `useSuspenseQuery(<the same options from Route.useRouteContext()>)`. It never builds options itself and never
+   uses `useLoaderData`.
+4. **Tab title:** `getTitle` no longer receives loader data; it reads the already-loaded entity from the query cache (the loader
+   filled it).
+5. **Cache hydration** (the whiteboard bundle that seeds many caches) becomes part of the query itself (TkDodo's "Seeding the Query
+   Cache": the `queryFn` calls `setQueryData` for the other caches), not a special loader.
+
+Any state that affects a query's key must be route state (params/search), not Redux. No `*ViewLoader.ts` files remain.
 
 5.8 **Defaults:** keep the current `staleTime` default (D6). Optionally add `QueryCache.onError` for failed background
 refetches (only when cached data exists).
 
 5.9 **Lint/enforcement:** after migration forbid raw `queryKey: [...]` arrays and any use of the `QueryKey` enum outside
 the factories (ESLint `no-restricted-syntax`/custom rule in `eslint-dats-rules.js`).
+**The brain exemption (D7), with guard rails:** `api/cache-sync/**` may import the query factories from `core/*/api` and
+`features/*/_api` by deep path. Only files named `*Queries.ts` (exempt from `boundaries/element-types` and from the
+public-entry rule for the brain only), and those files must stay pure: they import only services, models and TanStack Query, never
+React, Redux, `queryClient` or components. That keeps the brain's import graph free of cycles. A lint check also forbids two
+factories with the same root key (the key list is no longer in one folder).
 
 ## 6. Decisions needed (my recommendation first)
 
@@ -147,6 +194,8 @@ the factories (ESLint `no-restricted-syntax`/custom rule in `eslint-dats-rules.j
 | D4  | Add `mutationKey` everywhere? `isMutating` rule where?                                                 | **DECIDED: yes**, `mutationKey` on every mutation; the `isMutating` rule only for the optimistic annotation/search-view mutations.                                                                                                           |
 | D5  | Add frontend tests (vitest, needs a new dev dependency) for "invalidate prefix matches the real keys"? | **DECIDED: no frontend tests for now.** Rely on `tsc` + typed keys + manual smoke tests per domain.                                                                                                                                          |
 | D6  | Global `staleTime` default value?                                                                      | **DECIDED: keep the current default** (not important enough). Existing per-query `staleTime`s stay as they are.                                                                                                                              |
+| D7  | Where do the query / mutation files live?                                                              | **DECIDED: in their domain.** Shared by core + several features -> `core/<domain>/api`; one feature only -> `features/<feature>/_api`. The brain may import `*Queries.ts` from everywhere (narrow exemption, 5.9). Not one global folder.    |
+| D8  | How do loaders work?                                                                                   | **DECIDED: one rule for all 19 routes** (5.7): context builds options, loader awaits `ensureQueryData` and returns nothing, view uses the same options, tab title read from the cache. **Pilot it on 2 routes first, then roll out.**        |
 
 ## 7. Stages
 
@@ -204,37 +253,59 @@ Sweep, domain by domain, in this order (cache-sync dependencies first):
 - Tables/search: `SEARCH_TABLE`, `SDOC_TABLE`, span/bbox/sentence/memo tables, `WORD_FREQUENCY_TABLE`, `IMG_SIMSEARCH`, `SENT_SIMSEARCH`, health tables, `TABLE_INFO` (`tableInfoQueryKey`), statistics, analysis keys, `DOCUMENT_VISUALIZATION`, `CLUSTER_*`, `ANNOSCALING_SUGGEST`, GitHub release, instance info, LLM keys.
 - Replace `createSearchViewHooks` generic key argument (`SearchViewHooks.ts`) with a real factory (`searchViewQueries.byEntity(type, projectId)`), removing the `as unknown as` cast.
 - Remove inline keys (`"sdocsWithDateMetadata"`, `"Existing-Annotation-Count"`).
+- New query files are created in `api/queries/` for now (interim, same as stages 2-3) and moved with all the others in stage 6.
 - Done when: `QueryKey.ts` has no remaining uses.
 
-### Stage 5: Router integration (fixes the Great Divergence)
+### Stage 5: Loaders: one rule for all 19 routes (fixes the Great Divergence)
 
-- For each route with a loader (about 19): create the query options once in `context` from `params` + `loaderDeps`, loader only primes the cache, component reads `Route.useRouteContext()` (5.7). Replace `*ViewLoader.ts` files that rebuild options.
-- Complete `loaderDeps` for every route whose queries depend on search params (only 5 of ~19 have them).
-- Search routes first. Resolve `showFolders`: it is part of the query key but lives in Redux, so either move it into the URL search params or take it out of the key.
-- Loaders that return data (whiteboard tab title): derive the title from the query (`select`) instead.
-- Audit other search routes (sentence, image, health, word frequency) for the same loader/component mismatch.
-- Done when: no component builds options its route loader also builds; every loader and component pair shares one options object.
+**What the investigation found:** 19 `*ViewLoader.ts` files (408 lines), no route uses `context`, only 6 declare `loaderDeps`.
+16 loaders `await`, 3 do not (the COTA / timeline / whiteboard dashboards). 6 return an entity (annotation, COTA, timeline,
+perspectives dashboard and map, whiteboard) and the only reason is the **tab title**: `TabSynchronizer` passes `loaderData` to
+each route's `getTitle`. 6 loaders (document / image / sentence search, health, word frequency, ...) rebuild their query options
+from search params, and the view builds them again (the live `showFolders` mismatch). One loader (whiteboard) also hydrates many
+caches. All routes already have a `pendingComponent`. The views already use `useSuspenseQuery`, so TkDodo's "always call a
+query hook" holds; `queryClient` in router context and `defaultPreloadStaleTime: 0` are in place.
 
-### Stage 6: Queries + Mutations files side by side in `api/hooks/`
+**The rule (5.7):** context builds the options once; the loader awaits `ensureQueryData` on them and returns nothing; the view
+uses the same options; the tab title reads the entity from the cache; cache hydration moves into the query's `queryFn`.
 
-Requested by you. Goal: one folder, `api/hooks/`, holding for each domain a `<domain>Queries.ts` and a `<domain>Mutations.ts`,
-named for what they are. No separate `api/queries/` folder and no per-domain folders.
+**Pilot first (decided):**
 
-- **Target layout:** `frontend/src/api/hooks/memoQueries.ts` + `frontend/src/api/hooks/memoMutations.ts` (same for every
-  domain). `api/cache-sync/` stays as it is. The `api/queries/` folder is removed (its files move into `api/hooks/`).
-- **`<Domain>Hooks.ts` goes away.** Its mutation hooks move to `<domain>Mutations.ts`. Call sites change from
-  `MemoHooks.useCreateMemo()` to a named import (`useCreateMemo` from `@api/hooks/memoMutations`); a mechanical rewrite
-  like the stage 2 script, verified by `tsc`.
-- **Sub-decision (open, to settle before this stage):** the few hooks that derive data (`useGetCode`, `useGetEnabledCodes`,
-  `useGetAllCodesList`, `useGetTag`) fit neither file name. Options: (a) inline the `select` at the call sites, as TkDodo
-  recommends; (b) export the selector functions from `<domain>Queries.ts` (pure functions, no React) and call
-  `useQuery({ ...codeQueries.byProject(id), select: selectEnabledCodes })`. My recommendation is (b).
-- Update the import aliases, ESLint boundary/path rules, `frontend.instructions.md` and the cache-sync README (they
-  currently mention `api/queries/`).
-- Why it comes late: stages 3 and 4 keep creating new domains; moving everything once at the end avoids renaming files
-  repeatedly. Until then, new `<domain>Queries.ts` files are created in `api/queries/` with their final file names, so stage 6
-  only moves them and splits the Hooks files into `*Mutations.ts`.
-- Done when: no `api/queries/` folder, no `*Hooks.ts` files, every domain has `<domain>Queries.ts` + `<domain>Mutations.ts` in `api/hooks/`.
+1. Pick two routes: one that depends only on params (the classifier route) and one that depends on search params and has a tab
+   title (document search, the route with the live mismatch). Apply the rule, including the tab title from the cache.
+2. Check by hand: navigation by click and by hover, back/forward, reload, a tab title appears, `showFolders = false` no longer
+   double-fetches, devtools show one request per query.
+3. Review together. If the rule holds, roll it out to the other 17 routes; if not, adjust the rule first.
+
+- Resolve `showFolders` (part of the query key but in Redux): either move it into the URL search params or take it out of the key.
+- Done when: no `*ViewLoader.ts` files remain, every route follows the rule, and no view builds options its loader also builds.
+
+### Stage 6: Domain folders (D7)
+
+Requested by you: each domain's `<domain>Queries.ts` and `<domain>Mutations.ts` side by side, in the domain they belong to.
+
+- **Layout:** see 5.1 and the table in section 4. Shared domain -> `core/<domain>/api/`, single-feature domain -> `features/<feature>/_api/`.
+  `api/queries/` and `api/hooks/*Hooks.ts` disappear; `api/` keeps services, `queryClient` and cache-sync.
+- **Lint config (first step, before moving files):** the narrow brain exemption from 5.9 (deep import of `*Queries.ts` only), a check
+  for duplicate root keys, and updated alias rules. Verify with one shared domain (codes -> `core/code/api`) and one private domain
+  (COTA -> `features/concept-over-time-analysis/_api`) before moving the rest.
+- **Mutations:** `<Domain>Hooks.ts` files become `<domain>Mutations.ts`; call sites change from `MemoHooks.useCreateMemo()` to a
+  named import. Mechanical rewrite with a script, verified by `tsc` and lint, like stages 2-3.
+- **Consequences to accept:** the brain depends on every domain it caches (removing a feature means touching the brain); the key list
+  is spread over ~25 folders; hooks that read a feature slice stay in that feature (`useLabelDocs`, `useGetDocVisualization`,
+  `useDatasetStatistics`).
+- **Open sub-decisions (settle before moving):**
+  1. `metadataQueries` -> split into `core/project-metadata/api` and `core/sdoc-metadata/api`.
+  2. `annotationQueries` has one shared root used to invalidate all annotations (code delete). Split into the three core annotation
+     domains, with the shared root in `core/annotation/api`.
+  3. `jobQueries` (9 job types, one shape): per-type definitions live with their feature (ML, classifier, COTA refinement,
+     perspectives, import, LLM, crawler, duplicate finder), the shared shape / `upsertJob` helper in `core/job/api`.
+  4. Domains used by several features without a core domain: LLM, statistics, document processing, general / instance info -> new
+     core domains (`core/llm`, `core/statistics`, ...) or the closest existing one.
+  5. Hooks that derive data (`useGetCode`, `useGetTag`, ...): export the selector as a pure function from `<domain>Queries.ts`
+     and use `useQuery({ ...codeQueries.byProject(id), select: selectEnabledCodes })` (recommended), or inline the `select`.
+- Update `frontend.instructions.md` and the cache-sync README (they mention `api/queries/` and `api/hooks/`).
+- Done when: no `api/queries/` folder, no `*Hooks.ts` files, every domain has `<domain>Queries.ts` + `<domain>Mutations.ts` in its domain folder.
 
 ### Stage 7: Cleanup and enforcement
 
