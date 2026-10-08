@@ -1,5 +1,6 @@
+import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { Icon } from "@components/icons";
-import { PerspectivesListView, perspectivesListViewLoader } from "@features/perspectives";
+import { PerspectivesListView } from "@features/perspectives";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,11 +10,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/")(
     icon: Icon.PERSPECTIVES,
     getTitle: () => "Perspectives",
   },
-  loader: ({ context, params }) =>
-    perspectivesListViewLoader({
-      queryClient: context.queryClient,
-      projectId: params.projectId,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params }) => ({ aspectsOptions: perspectiveQueries.aspectsByProject(params.projectId) }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(context.aspectsOptions);
+  },
   pendingComponent: () => <CircularProgress />,
   component: PerspectivesListView,
 });

@@ -1,4 +1,3 @@
-import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
@@ -11,9 +10,10 @@ import { TimelineAnalysisRouteAPI } from "./_hooks/timelineAnalysisRouteAPI";
 
 export function TimelineAnalysisView() {
   const { projectId, analysisId } = TimelineAnalysisRouteAPI.useParams();
+  const { timelineAnalysisOptions } = TimelineAnalysisRouteAPI.useRouteContext();
 
   const { data: timelineAnalysis } = useSuspenseQuery({
-    ...timelineAnalysisQueries.byProject(projectId),
+    ...timelineAnalysisOptions,
     select: (data) => data[analysisId],
   });
 

@@ -1,5 +1,4 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { EditableTypography } from "@components/EditableTypography";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { CodeExplorer } from "@core/code";
@@ -181,8 +180,9 @@ export function AnnotationView() {
   );
 
   // global server state (react query)
-  const { data: sdoc } = useSuspenseQuery(sdocQueries.detail(sdocId));
-  const { data: sdocData } = useSuspenseQuery(sdocQueries.data(sdocId));
+  const { sdocOptions, sdocDataOptions } = AnnotationRouteAPI.useRouteContext();
+  const { data: sdoc } = useSuspenseQuery(sdocOptions);
+  const { data: sdocData } = useSuspenseQuery(sdocDataOptions);
 
   // rename document
   const updateNameMutation = SdocHooks.useUpdateName();

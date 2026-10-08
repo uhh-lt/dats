@@ -4,7 +4,6 @@ import {
   useDuplicateTimelineAnalysis,
   useUpdateTimelineAnalysis,
 } from "@api/hooks/TimelineAnalysisHooks";
-import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -41,8 +40,9 @@ export function TimelineAnalysisDashboardView() {
   const projectId = TimelineAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
+  const { timelineAnalysisOptions } = TimelineAnalysisRouteAPI.useRouteContext();
   const { data: userAnalysis } = useSuspenseQuery({
-    ...timelineAnalysisQueries.byProject(projectId),
+    ...timelineAnalysisOptions,
     select: (data) => Object.values(data),
   });
   const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(

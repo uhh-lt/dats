@@ -1,5 +1,4 @@
 import { useCreateCota, useDeleteCota, useDuplicateCota, useUpdateCota } from "@api/hooks/CotaHooks";
-import { cotaQueries } from "@api/queries/cotaQueries";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -22,8 +21,9 @@ export function CotaDashboardView() {
   const projectId = COTADashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
+  const { cotaOptions } = COTADashboardRouteAPI.useRouteContext();
   const { data: userAnalysis } = useSuspenseQuery({
-    ...cotaQueries.byProject(projectId),
+    ...cotaOptions,
     select: (data) => Object.values(data),
   });
   const projectAnalysisTableData: AnalysisDashboardRow[] = useMemo(

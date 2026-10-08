@@ -1,5 +1,6 @@
 import { Icon } from "@components/icons";
 import { useAppDispatch } from "@store/storeHooks";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { TabRouteSearch, TabRouteState } from "../_types/TabData";
@@ -11,6 +12,7 @@ function isRouteSearchCandidate(value: unknown): value is TabRouteSearch {
 
 export function TabSynchronizer() {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
   const params = useParams({ strict: false }) as { projectId?: string | number };
   const { status, matches, location } = useRouterState({
@@ -43,10 +45,10 @@ export function TabSynchronizer() {
 
     // 3. Extract static data and invoke your getTitle function safely
     const staticData = matchedTabRoute.staticData ?? {};
-    const label = staticData.getTitle?.(
-      matchedTabRoute.loaderData,
-      (matchedTabRoute.params ?? {}) as Record<string, unknown>,
-    );
+    const label = staticData.getTitle?.({
+      queryClient,
+      params: (matchedTabRoute.params ?? {}) as Record<string, unknown>,
+    });
 
     // 4. Sync the tab data to your Redux store
     const route: TabRouteState = {
@@ -67,7 +69,17 @@ export function TabSynchronizer() {
         },
       }),
     );
-  }, [dispatch, location.hash, location.href, location.pathname, location.search, matches, params.projectId, status]);
+  }, [
+    dispatch,
+    queryClient,
+    location.hash,
+    location.href,
+    location.pathname,
+    location.search,
+    matches,
+    params.projectId,
+    status,
+  ]);
 
   return null;
 }

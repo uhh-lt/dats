@@ -4,7 +4,6 @@ import { Box } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { wordFrequencyQueries } from "../../_api/wordFrequencyQueries";
 import { WordFrequencyActions } from "../../store/wordFrequencySlice";
 import { WordFrequencyTable } from "./_components/WordFrequencyTable";
 import { WordFrequencyRouteAPI } from "./_hooks/wordFrequencyRouteAPI";
@@ -12,15 +11,9 @@ import { WordFrequencyRouteAPI } from "./_hooks/wordFrequencyRouteAPI";
 export function WordFrequencyView() {
   // search word frequency feature
   const projectId = WordFrequencyRouteAPI.useParams({ select: (params) => params.projectId });
-  const { sortingModel, searchFilter: filter, fetchSize } = WordFrequencyRouteAPI.useSearch();
-  const wordFrequencyQuery = useSuspenseInfiniteQuery(
-    wordFrequencyQueries.table({
-      projectId,
-      filter,
-      sortingModel,
-      fetchSize,
-    }),
-  );
+  const { sortingModel, searchFilter: filter } = WordFrequencyRouteAPI.useSearch();
+  const { wordFrequencyOptions } = WordFrequencyRouteAPI.useRouteContext();
+  const wordFrequencyQuery = useSuspenseInfiniteQuery(wordFrequencyOptions);
   // resetting search-parameter-dependant state
   const dispatch = useAppDispatch();
   const resetState = useCallback(() => {

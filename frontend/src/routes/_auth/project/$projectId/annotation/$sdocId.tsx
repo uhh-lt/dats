@@ -1,5 +1,6 @@
+import { sdocQueries } from "@api/queries/sdocQueries";
 import { Icon } from "@components/icons";
-import { AnnotationView, annotationViewLoader } from "@features/annotation";
+import { AnnotationView } from "@features/annotation";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -16,18 +17,26 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
   staticData: {
     tab: true,
     icon: Icon.ANNOTATION,
-    getTitle: (sdoc: Awaited<ReturnType<typeof annotationViewLoader>> | undefined) =>
-      `Document ${String(sdoc?.name ?? "")}`,
+    getTitle: ({ queryClient, params }) => {
+      const sdoc = queryClient.getQueryData(sdocQueries.detail(Number(params.sdocId)).queryKey);
+      return `Document ${sdoc?.name ?? ""}`;
+    },
   },
   params: {
     parse: ({ sdocId }) => ({ sdocId: parseInt(sdocId) }),
   },
   validateSearch: zodValidator(annotationSearchSchema),
-  loader: ({ context, params }) =>
-    annotationViewLoader({
-      queryClient: context.queryClient,
-      sdocId: params.sdocId,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params }) => ({
+    sdocOptions: sdocQueries.detail(params.sdocId),
+    sdocDataOptions: sdocQueries.data(params.sdocId),
+  }),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(context.sdocOptions),
+      context.queryClient.ensureQueryData(context.sdocDataOptions),
+    ]);
+  },
   pendingComponent: () => <CircularProgress />,
   component: AnnotationView,
 });

@@ -1,6 +1,7 @@
+import { wordFrequencyQueries } from "@api/queries/wordFrequencyQueries";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
-import { WordFrequencyView, wordFrequencyViewLoader } from "@features/word-frequency-analysis";
+import { WordFrequencyView } from "@features/word-frequency-analysis";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -39,19 +40,19 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
     getTitle: () => "Word Frequency",
   },
   validateSearch: zodValidator(wordFrequencySearchSchema),
-  loaderDeps: ({ search }) => ({
-    searchFilter: search[FILTER_PARAM],
-    sortingModel: search.sortingModel,
-    fetchSize: search.fetchSize,
-  }),
-  loader: ({ context, params, deps }) =>
-    wordFrequencyViewLoader({
-      queryClient: context.queryClient,
+  loaderDeps: ({ search }) => search,
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params, deps }) => ({
+    wordFrequencyOptions: wordFrequencyQueries.table({
       projectId: params.projectId,
-      searchFilter: deps.searchFilter,
+      filter: deps[FILTER_PARAM],
       sortingModel: deps.sortingModel,
       fetchSize: deps.fetchSize,
     }),
+  }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureInfiniteQueryData(context.wordFrequencyOptions);
+  },
   pendingComponent: () => <CircularProgress />,
   component: WordFrequencyView,
 });

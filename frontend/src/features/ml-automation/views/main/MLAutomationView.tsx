@@ -1,5 +1,4 @@
 import { useStartMLJob } from "@api/hooks/MlJobHooks";
-import { jobQueries } from "@api/queries/jobQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
@@ -35,7 +34,8 @@ export function MlAutomationView() {
   const startMlJob = useStartMLJob();
 
   // global server state (react-query)
-  const mlJobsQuery = useSuspenseQuery(jobQueries.ml.byProject(projectId));
+  const { mlJobsOptions } = routeAPI.useRouteContext();
+  const mlJobsQuery = useSuspenseQuery(mlJobsOptions);
 
   // confirmation dialog
   const openConfirmationDialog = useOpenConfirmationDialog();

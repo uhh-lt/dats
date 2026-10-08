@@ -1,5 +1,6 @@
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
-import { MyFilter } from "@core/filter";
+// eslint-disable-next-line boundaries/element-types
+import type { MyFilter } from "@core/filter";
 import { SortDirection } from "@models/SortDirection";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { infiniteQueryOptions } from "@tanstack/react-query";

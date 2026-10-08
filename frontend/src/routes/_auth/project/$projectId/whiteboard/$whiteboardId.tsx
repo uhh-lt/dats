@@ -1,5 +1,6 @@
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { Icon } from "@components/icons";
-import { WhiteboardView, whiteboardViewLoader } from "@features/whiteboard";
+import { WhiteboardView } from "@features/whiteboard";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -7,18 +8,25 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whit
   staticData: {
     tab: true,
     icon: Icon.WHITEBOARD,
-    getTitle: (whiteboard: Awaited<ReturnType<typeof whiteboardViewLoader>> | undefined) =>
-      `Whiteboard ${String(whiteboard?.title ?? "")}`,
+    getTitle: ({ queryClient, params }) => {
+      const whiteboards = queryClient.getQueryData(whiteboardQueries.byProject(Number(params.projectId)).queryKey);
+      return `Whiteboard ${whiteboards?.[Number(params.whiteboardId)]?.title ?? ""}`;
+    },
   },
   params: {
     parse: ({ whiteboardId }) => ({ whiteboardId: parseInt(whiteboardId) }),
   },
-  loader: ({ context, params }) =>
-    whiteboardViewLoader({
-      queryClient: context.queryClient,
-      projectId: params.projectId,
-      whiteboardId: params.whiteboardId,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params }) => ({
+    whiteboardOptions: whiteboardQueries.byProject(params.projectId),
+    whiteboardDataOptions: whiteboardQueries.data(params.projectId, params.whiteboardId),
+  }),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(context.whiteboardOptions),
+      context.queryClient.ensureQueryData(context.whiteboardDataOptions),
+    ]);
+  },
   pendingComponent: () => <CircularProgress />,
   component: WhiteboardView,
 });
