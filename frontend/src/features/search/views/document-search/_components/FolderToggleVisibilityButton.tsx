@@ -1,20 +1,17 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
-import { SearchActions } from "../../../store/documentSearchSlice";
+import { useShowFolders } from "../_hooks/useShowFolders";
 
 export function FolderToggleVisibilityButton() {
-  // redux (global client state)
-  const showFolders = useAppSelector((state) => state.search.showFolders);
-  const dispatch = useAppDispatch();
+  const [showFolders, toggleShowFolders] = useShowFolders();
 
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
       event.stopPropagation();
-      dispatch(SearchActions.onToggleShowFolders());
+      toggleShowFolders();
     },
-    [dispatch],
+    [toggleShowFolders],
   );
 
   return (

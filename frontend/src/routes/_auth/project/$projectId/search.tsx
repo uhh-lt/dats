@@ -1,6 +1,6 @@
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
-import { DocumentSearchView, documentSearchViewLoader } from "@features/search";
+import { DocumentSearchView, documentSearchViewOptions } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -31,6 +31,10 @@ const documentSearchSchema = z.object({
     )
     .default([]),
   fetchSize: z.coerce.number().default(20),
+  showFolders: z
+    .union([z.boolean(), z.enum(["true", "false"])])
+    .transform((value) => value === true || value === "true")
+    .default(true),
   showChildFolders: z
     .union([z.boolean(), z.enum(["true", "false"])])
     .transform((value) => value === true || value === "true")
@@ -44,27 +48,16 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
     getTitle: () => "Document Search",
   },
   validateSearch: zodValidator(documentSearchSchema),
-  loaderDeps: ({ search }) => ({
-    searchQuery: search.searchQuery,
-    searchFilter: search[FILTER_PARAM],
-    searchExpertMode: search.searchExpertMode,
-    selectedFolderId: search.selectedFolderId,
-    sortingModel: search.sortingModel,
-    fetchSize: search.fetchSize,
-    showChildFolders: search.showChildFolders,
-  }),
-  loader: ({ context, params, deps }) =>
-    documentSearchViewLoader({
-      queryClient: context.queryClient,
-      projectId: params.projectId,
-      searchQuery: deps.searchQuery,
-      searchFilter: deps.searchFilter,
-      expertMode: deps.searchExpertMode,
-      selectedFolderId: deps.selectedFolderId,
-      sortingModel: deps.sortingModel,
-      fetchSize: deps.fetchSize,
-      showChildFolders: deps.showChildFolders,
-    }),
+  // the options are built once here and used by the loader and the view
+  beforeLoad: ({ params, search }) =>
+    documentSearchViewOptions(params.projectId, { ...search, filter: search[FILTER_PARAM] }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(context.projectMetadataOptions),
+      context.queryClient.ensureInfiniteQueryData(context.documentSearchOptions),
+    ]);
+  },
   pendingComponent: () => <CircularProgress />,
   component: DocumentSearchView,
 });

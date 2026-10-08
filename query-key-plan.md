@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Stages 0-4 done and committed. Stage 5 (loader pilot) next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Status: **Stages 0-4 done and committed. Stage 5 pilot (classifier, document search) done, waiting for the review before the rollout. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
 Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -290,6 +290,19 @@ uses the same options; the tab title reads the entity from the cache; cache hydr
 2. Check by hand: navigation by click and by hover, back/forward, reload, a tab title appears, `showFolders = false` no longer
    double-fetches, devtools show one request per query.
 3. Review together. If the rule holds, roll it out to the other 17 routes; if not, adjust the rule first.
+
+**Pilot result (classifier + document search):**
+
+- The route is three lines: `beforeLoad` puts the options into the context, `loader` awaits `ensureQueryData` on them, the view reads them
+  with `routeApi.useRouteContext()`. The `*ViewLoader.ts` files of these two routes are deleted.
+- **Layer rule found:** `routes` may not import `api`. So each feature exports one small builder, `<view>ViewOptions(projectId, search)`
+  (`classifierViewOptions`, `documentSearchViewOptions`), which the route calls in `beforeLoad`. This is the only place that builds the options.
+- **`showFolders` resolved:** it moved from Redux into the route's search params (default `true`, like `showChildFolders`), so the loader
+  and the view see the same value. `useShowFolders()` reads/toggles it; hiding folders still clears the selected folder.
+  The URL of the document search now contains `showFolders` when it is switched off.
+- `loaderDeps` is simply the whole `search` object, so the loader reruns when any search param changes.
+- Tab title: both pilot routes have static titles; the title-from-cache change is done in the rollout, for the 6 routes that return an entity.
+- Not verified at runtime yet (see the manual checklist above).
 
 - Resolve `showFolders` (part of the query key but in Redux): either move it into the URL search params or take it out of the key.
 - Done when: no `*ViewLoader.ts` files remain, every route follows the rule, and no view builds options its loader also builds.

@@ -1,5 +1,3 @@
-import { classifierQueries } from "@api/queries/classifierQueries";
-import { jobQueries } from "@api/queries/jobQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { Stack } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -13,8 +11,9 @@ const routeApi = getRouteApi("/_auth/project/$projectId/classifier");
 export function ClassifierView() {
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
-  const classifiersQuery = useSuspenseQuery(classifierQueries.byProject(projectId));
-  const classifierJobsQuery = useSuspenseQuery(jobQueries.classifier.byProject(projectId));
+  const { classifiersOptions, classifierJobsOptions } = routeApi.useRouteContext();
+  const classifiersQuery = useSuspenseQuery(classifiersOptions);
+  const classifierJobsQuery = useSuspenseQuery(classifierJobsOptions);
 
   const classifiers = useMemo(() => Object.values(classifiersQuery.data), [classifiersQuery.data]);
 
