@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Stages 0-4 done and committed. Stage 5 pilot (classifier, document search) done, waiting for the review before the rollout. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Status: **Stages 0-5 done and committed. Stage 6 next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
 Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -307,8 +307,20 @@ uses the same options; the tab title reads the entity from the cache; cache hydr
 - Tab title: both pilot routes have static titles; the title-from-cache change is done in the rollout, for the 6 routes that return an entity.
 - Not verified at runtime yet (see the manual checklist above).
 
-- Resolve `showFolders` (part of the query key but in Redux): either move it into the URL search params or take it out of the key.
-- Done when: no `*ViewLoader.ts` files remain, every route follows the rule, and no view builds options its loader also builds.
+**Rollout result (done):** all 19 routes follow the rule; all `*ViewLoader.ts` files (and `searchQueryOptions.ts`) are deleted.
+
+- `loginViewLoader` is gone too; the login route keeps its `beforeLoad` redirect, which is what `beforeLoad` is for.
+- Tab titles: `getTitle` now gets `{ queryClient, params }` (`TabSynchronizer` passes them) and reads the entity from the cache with the factory key
+  (cota, timeline, annotation, perspectives dashboard and map, whiteboard). Loaders return nothing.
+- The 3 dashboards that did not await (COTA, timeline, whiteboard) now await like all others.
+- The whiteboard loader's cache seeding moved into `whiteboardQueries.data(projectId, whiteboardId)`, a query whose `queryFn` seeds the caches.
+  Consequence: `ensureQueryData` returns the cached board on a second visit and does not re-seed (the brain keeps the entity caches current).
+- The perspectives loaders still throw if the aspect does not exist.
+- **Layer finding:** routes cannot import `_api` folders of a feature (private by lint). The four feature queries that routes need (`healthQueries`,
+  `wordFrequencyQueries`, `imageSimilarityQueries`, `sentenceSimilarityQueries`) therefore moved to `api/queries/` for now. Stage 6 has to decide
+  where route-used queries of a single feature live (idea: a public `features/<f>/api/` folder that the index exports, instead of the private `_api`).
+- The decision "route or component?" is written into `.github/instructions/frontend.instructions.md`.
+- Done when: met. Not yet checked in the running app (navigation by click and hover, back/forward, reload, tab titles).
 
 ### Stage 6: Domain folders (D7)
 

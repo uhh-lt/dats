@@ -1,13 +1,13 @@
-import { cotaQueries } from "@api/queries/cotaQueries";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { CotaViewContent } from "./_components/CotaViewContent";
 import { CotaRouteAPI } from "./_hooks/cotaRouteAPI";
 
 export function CotaView() {
   const { projectId, cotaId } = CotaRouteAPI.useParams();
+  const { cotaOptions } = CotaRouteAPI.useRouteContext();
 
   const { data: cota } = useSuspenseQuery({
-    ...cotaQueries.byProject(projectId),
+    ...cotaOptions,
     select: (data) => data[cotaId],
   });
 

@@ -1,5 +1,6 @@
+import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { Icon } from "@components/icons";
-import { WhiteboardDashboardView, whiteboardDashboardViewLoader } from "@features/whiteboard";
+import { WhiteboardDashboardView } from "@features/whiteboard";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,11 +10,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/")({
     icon: Icon.WHITEBOARD,
     getTitle: () => "Whiteboard",
   },
-  loader: ({ context, params }) =>
-    whiteboardDashboardViewLoader({
-      queryClient: context.queryClient,
-      projectId: params.projectId,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params }) => ({ whiteboardOptions: whiteboardQueries.byProject(params.projectId) }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(context.whiteboardOptions);
+  },
   pendingComponent: () => <CircularProgress />,
   component: WhiteboardDashboardView,
 });

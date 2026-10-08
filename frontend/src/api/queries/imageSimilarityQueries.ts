@@ -1,5 +1,6 @@
 import { SimsearchService } from "@api/services/SimsearchService";
-import { MyFilter } from "@core/filter";
+// eslint-disable-next-line boundaries/element-types
+import type { MyFilter } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { queryOptions } from "@tanstack/react-query";
 

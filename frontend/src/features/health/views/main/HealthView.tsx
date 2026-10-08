@@ -7,7 +7,6 @@ import { Box, Tab, Tabs } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { SyntheticEvent, useCallback } from "react";
-import { healthQueries } from "../../_api/healthQueries";
 import { HealthActions } from "../../store/healthSlice";
 import { SdocStatusTable } from "./_components/SdocStatusTable";
 import { HealthRouteAPI } from "./_hooks/healthRouteAPI";
@@ -15,16 +14,10 @@ import { HealthRouteAPI } from "./_hooks/healthRouteAPI";
 export function HealthView() {
   // search health (sdoc status) feature
   const projectId = HealthRouteAPI.useParams({ select: (params) => params.projectId });
-  const { sortingModel, fetchSize } = HealthRouteAPI.useSearch();
+  const { sortingModel } = HealthRouteAPI.useSearch();
   const [tab, setTab] = useURLConnector(HealthRouteAPI, "doctype");
-  const healthTableQuery = useSuspenseInfiniteQuery(
-    healthQueries.table({
-      projectId,
-      doctype: tab,
-      sortingModel,
-      fetchSize,
-    }),
-  );
+  const { healthTableOptions, healthColumnsOptions } = HealthRouteAPI.useRouteContext();
+  const healthTableQuery = useSuspenseInfiniteQuery(healthTableOptions);
 
   // resetting search-parameter-dependant state
   const dispatch = useAppDispatch();
@@ -33,7 +26,7 @@ export function HealthView() {
   }, [dispatch]);
   useResetStateOnSearch([projectId, tab, sortingModel], resetState);
 
-  const { data: tableColumnInfo } = useSuspenseQuery(healthQueries.columns(tab));
+  const { data: tableColumnInfo } = useSuspenseQuery(healthColumnsOptions);
   const handleTabChange = useCallback(
     (_event: SyntheticEvent, newValue: DocType): void => {
       setTab(newValue);

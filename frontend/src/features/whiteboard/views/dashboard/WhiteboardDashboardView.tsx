@@ -4,7 +4,6 @@ import {
   useDuplicateWhiteboard,
   useUpdateWhiteboard,
 } from "@api/hooks/WhiteboardHooks";
-import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -24,8 +23,9 @@ export function WhiteboardDashboardView() {
   const projectId = WhiteboardDashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
+  const { whiteboardOptions } = WhiteboardDashboardRouteAPI.useRouteContext();
   const { data: projectWhiteboards } = useSuspenseQuery({
-    ...whiteboardQueries.byProject(projectId),
+    ...whiteboardOptions,
     select: (data) => Object.values(data),
   });
 

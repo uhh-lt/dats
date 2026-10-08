@@ -1,6 +1,8 @@
+import { metadataQueries } from "@api/queries/metadataQueries";
+import { sentenceSimilarityQueries } from "@api/queries/sentenceSimilarityQueries";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
-import { SentenceSimilaritySearchView, sentenceSimilaritySearchViewLoader } from "@features/search";
+import { SentenceSimilaritySearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -28,21 +30,24 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
     getTitle: () => "Sentence Search",
   },
   validateSearch: zodValidator(sentenceSearchSchema),
-  loaderDeps: ({ search }) => ({
-    searchQuery: search.searchQuery,
-    searchFilter: search[FILTER_PARAM],
-    topK: search.topK,
-    threshold: search.threshold,
-  }),
-  loader: ({ context, params, deps }) =>
-    sentenceSimilaritySearchViewLoader({
-      queryClient: context.queryClient,
+  loaderDeps: ({ search }) => search,
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params, deps }) => ({
+    sentenceSimilarityOptions: sentenceSimilarityQueries.search({
       projectId: params.projectId,
       searchQuery: deps.searchQuery,
-      searchFilter: deps.searchFilter,
+      filter: deps[FILTER_PARAM],
       topK: deps.topK,
       threshold: deps.threshold,
     }),
+    projectMetadataOptions: metadataQueries.byProject(params.projectId),
+  }),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(context.projectMetadataOptions),
+      context.queryClient.ensureQueryData(context.sentenceSimilarityOptions),
+    ]);
+  },
   pendingComponent: () => <CircularProgress />,
   component: SentenceSimilaritySearchView,
 });

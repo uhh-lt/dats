@@ -1,4 +1,3 @@
-import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { useDebounce } from "@hooks/useDebounce";
@@ -13,9 +12,9 @@ import { PerspectiveCreationDialog } from "./_components/PerspectiveCreationDial
 const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/");
 
 export function PerspectivesListView() {
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const { aspectsOptions } = routeApi.useRouteContext();
   const { data: aspects } = useSuspenseQuery({
-    ...perspectiveQueries.aspectsByProject(projectId),
+    ...aspectsOptions,
     select: (data) => Object.values(data),
   });
 

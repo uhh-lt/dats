@@ -1,5 +1,6 @@
+import { cotaQueries } from "@api/queries/cotaQueries";
 import { Icon } from "@components/icons";
-import { CotaDashboardView, cotaDashboardViewLoader } from "@features/concept-over-time-analysis";
+import { CotaDashboardView } from "@features/concept-over-time-analysis";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,11 +10,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
     icon: Icon.COTA,
     getTitle: () => "Concepts Over Time Analysis",
   },
-  loader: ({ context, params }) =>
-    cotaDashboardViewLoader({
-      queryClient: context.queryClient,
-      projectId: params.projectId,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params }) => ({ cotaOptions: cotaQueries.byProject(params.projectId) }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(context.cotaOptions);
+  },
   pendingComponent: () => <CircularProgress />,
   component: CotaDashboardView,
 });

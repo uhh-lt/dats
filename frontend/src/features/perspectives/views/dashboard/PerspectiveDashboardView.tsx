@@ -1,5 +1,4 @@
 import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
-import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { ExportChartButton } from "@components/export-chart-buttons";
 import { getIconComponent, Icon } from "@components/icons";
@@ -40,8 +39,9 @@ export function PerspectiveDashboardView() {
   dispatch(PerspectivesActions.onOpenMap({ projectId, aspectId: aspectId }));
 
   // global server state
+  const { aspectsOptions } = routeApi.useRouteContext();
   const { data: aspect } = useSuspenseQuery({
-    ...perspectiveQueries.aspectsByProject(projectId),
+    ...aspectsOptions,
     select: (data) => data[aspectId],
   });
   const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);

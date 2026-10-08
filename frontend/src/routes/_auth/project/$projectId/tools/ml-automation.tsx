@@ -1,5 +1,6 @@
+import { jobQueries } from "@api/queries/jobQueries";
 import { Icon } from "@components/icons";
-import { MlAutomationView, mlAutomationViewLoader } from "@features/ml-automation";
+import { MlAutomationView } from "@features/ml-automation";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -9,11 +10,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/ml-automat
     icon: Icon.ML_AUTOMATION,
     getTitle: () => "ML Automation",
   },
-  loader: ({ context, params }) =>
-    mlAutomationViewLoader({
-      queryClient: context.queryClient,
-      projectId: params.projectId,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: ({ params }) => ({ mlJobsOptions: jobQueries.ml.byProject(params.projectId) }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(context.mlJobsOptions);
+  },
   pendingComponent: () => <CircularProgress />,
   component: MlAutomationView,
 });

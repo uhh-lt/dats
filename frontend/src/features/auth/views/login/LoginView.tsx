@@ -1,5 +1,4 @@
 import { ApiError } from "@api/core/ApiError";
-import { generalQueries } from "@api/queries/generalQueries";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
@@ -34,11 +33,12 @@ export function LoginView() {
     },
   });
   const { redirect } = routeApi.useSearch();
+  const { instanceInfoOptions } = routeApi.useRouteContext();
   const navigate = useNavigate();
   const { updateAuthData } = useAuth();
 
   // get info about the instance, is OIDC enabled?
-  const { data: instanceInfo } = useSuspenseQuery(generalQueries.instanceInfo());
+  const { data: instanceInfo } = useSuspenseQuery(instanceInfoOptions);
 
   // login
   const { mutate: loginMutation, isPending: loginIsPending } = useMutation({

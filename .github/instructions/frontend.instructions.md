@@ -129,7 +129,20 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - Cache updates are not written in components. Tag the mutation with `meta.datsEvent`; the cache-sync "brain" ([api/cache-sync](../../frontend/src/api/cache-sync/README.md)) writes the result into the cache.
 - Prefer `mutate` over `mutateAsync`. Necessary logic (invalidation) goes in the `useMutation` callbacks; UI actions (redirects) in the `mutate` callbacks.
 
-**Migration status:** domains not yet migrated still use the legacy `QueryKey` enum in [QueryKey.ts](../../frontend/src/api/hooks/QueryKey.ts) (see the stages in `query-key-plan.md`). When you touch such a domain, do not add new enum entries; create or extend its factory instead. Codes, tags and memos are already migrated.
+**Route or component? Decide where a query is started (the factory is the same in both cases):**
+
+- A query goes in the **route** if the page is useless without it, the URL (params and search params) fully determines it, and it is needed on first render. Example: the classifier lists, the document search result.
+- Every other query is started in the **component** with `useQuery({ ...factory.leaf(...), select })`: per-row data, dialogs, panels, tabs, anything that depends on selection or Redux state, dependent queries, polling.
+- Route queries follow one rule, see [classifier.tsx](../../frontend/src/routes/_auth/project/$projectId/classifier.tsx):
+  1. `loaderDeps: ({ search }) => search` (only if the route has search params that the queries use).
+  2. `context: ({ params, deps }) => ({ xxxOptions: xxxQueries.leaf(...) })` builds the options **once**. This is the only place that builds them.
+  3. `loader: async ({ context }) => { await context.queryClient.ensureQueryData(context.xxxOptions) }` awaits them and returns nothing.
+  4. The view reads them with `routeApi.useRouteContext()` and calls `useSuspenseQuery({ ...xxxOptions, select })`. It never builds the options again.
+  5. A dynamic tab title reads the entity from the cache in `staticData.getTitle({ queryClient, params })`.
+- Do not write `*ViewLoader.ts` files. Use `beforeLoad` only for guards (e.g. the login redirect), not for query options.
+- If a query seeds other caches (e.g. the whiteboard content), do that in the `queryFn` of the factory, not in the route.
+
+**Migration status:** the `QueryKey` enum is gone; every query has a factory. The factories are still in `api/queries/` and the hooks in `api/hooks/`; they move into their domain folders in stage 6 of `query-key-plan.md`.
 
 ### Redux Toolkit: Use for GLOBAL CLIENT state (dialogs, filters, selections)
 

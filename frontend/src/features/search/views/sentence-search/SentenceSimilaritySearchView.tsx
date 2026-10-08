@@ -12,7 +12,6 @@ import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
   addKeywordFilter,
@@ -22,11 +21,11 @@ import {
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
-import { sentenceSimilarityQueries } from "./_api/sentenceSimilarityQueries";
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
 
 export function SentenceSimilaritySearchView() {
+  const { sentenceSimilarityOptions, projectMetadataOptions } = SentenceSearchRouteAPI.useRouteContext();
   const projectId = SentenceSearchRouteAPI.useParams({ select: (params) => params.projectId });
 
   // redux (global client state)
@@ -38,15 +37,7 @@ export function SentenceSimilaritySearchView() {
   // sentence similarity search feature
   const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
   const [filter, setFilter] = useURLConnector(SentenceSearchRouteAPI, FILTER_PARAM);
-  const { data, isError, isFetching, isLoading } = useSuspenseQuery(
-    sentenceSimilarityQueries.search({
-      projectId,
-      searchQuery,
-      filter,
-      topK,
-      threshold,
-    }),
-  );
+  const { data, isError, isFetching, isLoading } = useSuspenseQuery(sentenceSimilarityOptions);
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // resetting search-parameter-dependant state
@@ -56,7 +47,10 @@ export function SentenceSimilaritySearchView() {
   useResetStateOnSearch([projectId, searchQuery, filter, topK, threshold], resetState);
 
   // filtering feature
-  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
+  const { data: projectMetadata } = useSuspenseQuery({
+    ...projectMetadataOptions,
+    select: (metadata) => Object.values(metadata),
+  });
 
   const keywordMetadataIds = useMemo(() => {
     return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);

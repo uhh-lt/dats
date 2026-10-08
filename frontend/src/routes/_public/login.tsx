@@ -1,4 +1,5 @@
-import { LoginView, loginViewLoader } from "@features/auth";
+import { generalQueries } from "@api/queries/generalQueries";
+import { LoginView } from "@features/auth";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -15,10 +16,11 @@ export const Route = createFileRoute("/_public/login")({
       throw redirect({ to: search.redirect });
     }
   },
-  loader: ({ context }) =>
-    loginViewLoader({
-      queryClient: context.queryClient,
-    }),
+  // the query options are built once here; the loader and the view use the same ones
+  context: () => ({ instanceInfoOptions: generalQueries.instanceInfo() }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(context.instanceInfoOptions);
+  },
   pendingComponent: () => <CircularProgress />,
   component: LoginView,
 });

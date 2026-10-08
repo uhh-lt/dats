@@ -11,7 +11,6 @@ import { Box, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
-import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { useInitSearchFilterSlice } from "../../_hooks/useInitSearchFilterSlice";
 import {
@@ -22,16 +21,16 @@ import {
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../store/imageSearchSlice";
-import { imageSimilarityQueries } from "./_api/imageSimilarityQueries";
 import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearchToolbar";
 import { ImageSimilarityView } from "./_components/ImageSimilarityView";
 import { ImageSearchRouteAPI } from "./_hooks/imageSearchRouteAPI";
 
 export function ImageSimilaritySearchView() {
   // router
+  const { imageSimilarityOptions, projectMetadataOptions } = ImageSearchRouteAPI.useRouteContext();
   const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, topK, threshold } = ImageSearchRouteAPI.useSearch();
-  const [filter, setFilter] = useURLConnector(ImageSearchRouteAPI, FILTER_PARAM);
+  const { searchQuery } = ImageSearchRouteAPI.useSearch();
+  const [, setFilter] = useURLConnector(ImageSearchRouteAPI, FILTER_PARAM);
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
@@ -45,7 +44,10 @@ export function ImageSimilaritySearchView() {
   }, [searchQuery, dispatch]);
 
   // filter
-  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
+  const { data: projectMetadata } = useSuspenseQuery({
+    ...projectMetadataOptions,
+    select: (metadata) => Object.values(metadata),
+  });
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -87,15 +89,7 @@ export function ImageSimilaritySearchView() {
     [dispatch],
   );
 
-  const { data, isError, isFetching, isLoading } = useSuspenseQuery(
-    imageSimilarityQueries.search({
-      projectId,
-      searchQuery,
-      filter,
-      topK,
-      threshold,
-    }),
-  );
+  const { data, isError, isFetching, isLoading } = useSuspenseQuery(imageSimilarityOptions);
   // extract sdoc ids from results, but they have to be unique
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
