@@ -6,4 +6,3 @@ export * from "./views/image-search/ImageSimilaritySearchView";
 export * from "./views/image-search/imageSimilaritySearchViewLoader";
 export * from "./views/sentence-search/SentenceSimilaritySearchView";
 export * from "./views/sentence-search/sentenceSimilaritySearchViewLoader";
-export * from "./views/document-search/documentSearchViewOptions";
