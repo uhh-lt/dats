@@ -293,10 +293,13 @@ uses the same options; the tab title reads the entity from the cache; cache hydr
 
 **Pilot result (classifier + document search):**
 
-- The route is three lines: `beforeLoad` puts the options into the context, `loader` awaits `ensureQueryData` on them, the view reads them
-  with `routeApi.useRouteContext()`. The `*ViewLoader.ts` files of these two routes are deleted.
-- **Layer rule found:** `routes` may not import `api`. So each feature exports one small builder, `<view>ViewOptions(projectId, search)`
-  (`classifierViewOptions`, `documentSearchViewOptions`), which the route calls in `beforeLoad`. This is the only place that builds the options.
+- Exactly TkDodo's pattern: `loaderDeps` picks the search params, the route's `context` builds the options **once** from `params` and `deps`,
+  `loader` awaits `ensureQueryData` on them, the view reads them with `routeApi.useRouteContext()`. No loader file, no builder file.
+  (A first version used `beforeLoad` plus a builder function per feature. That was wrong: `beforeLoad` runs on every navigation and gets no
+  `deps`, and the builder file was just the old loader file renamed.)
+- **Layer rule:** routes must import the query definitions, as in the blog. The lint config got an `api-queries` element (`src/api/queries/**`)
+  that routes, features and core may import. In stage 6 the queries move into core/features, which routes may already import, so the
+  element is removed again.
 - **`showFolders` resolved:** it moved from Redux into the route's search params (default `true`, like `showChildFolders`), so the loader
   and the view see the same value. `useShowFolders()` reads/toggles it; hiding folders still clears the selected folder.
   The URL of the document search now contains `showFolders` when it is switched off.

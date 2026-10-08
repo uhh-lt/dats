@@ -138,6 +138,8 @@ export default defineConfig(
         { type: "plugins", pattern: "src/plugins/**" },
         { type: "hooks", pattern: "src/hooks/**" },
         { type: "store", pattern: "src/store/**" },
+        // query definitions (key + queryFn, no React): routes need them to build their route context
+        { type: "api-queries", pattern: "src/api/queries/**" },
         { type: "api", pattern: "src/api/**" },
         { type: "models", pattern: "src/models/**" },
         { type: "components", pattern: "src/components/*", mode: "folder", capture: ["componentName"] },
@@ -172,21 +174,23 @@ export default defineConfig(
               allow: ["components", "hooks", "models", "store", "utils"],
             },
             // API contains global server state management logic. Having access to API, means having access to all server state and mutation functions. It means being domain logic.
-            { from: ["api"], allow: ["models", "hooks", "store", "utils"] },
+            { from: ["api"], allow: ["api-queries", "models", "hooks", "store", "utils"] },
+            { from: ["api-queries"], allow: ["api", "api-queries", "models", "hooks", "store", "utils"] },
             // Core contains domain-specific logic and components that are shared across features.
             {
               from: ["core"],
-              allow: ["api", "components", "core", "hooks", "models", "store", "utils"],
+              allow: ["api", "api-queries", "components", "core", "hooks", "models", "store", "utils"],
             },
             // Features use generic and core components to compose domain-specific functionalities.
             {
               from: ["features"],
-              allow: ["api", "components", "core", "hooks", "models", "store", "utils"],
+              allow: ["api", "api-queries", "components", "core", "hooks", "models", "store", "utils"],
             },
             // Routes are the entry point of the application. They compose generic components, core components, and features to create pages.
             {
               from: ["routes"],
-              allow: ["components", "core", "features", "models"],
+              // api-queries is allowed so that the route context can build the query options (until stage 6 moves them into core/features)
+              allow: ["api-queries", "components", "core", "features", "models"],
             },
           ],
         },
