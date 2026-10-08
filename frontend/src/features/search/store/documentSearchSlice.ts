@@ -21,7 +21,6 @@ interface SearchState {
   selectedSdocFolderId: number | undefined; // the id of the selected sdoc folder document. Used to highlight the selected folder in the table, and to show the folder information (tags, metadata etc.).
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
   expandedFolderIds: string[]; // the ids of the folders that are expanded in the folder tree.
-  showFolders: boolean; // whether the folders are shown in search table.
   scrollPosition: number; // the scroll position of the document table, used to restore position when returning to the table
   folderSelectionType: FolderSelection; // whether a folder or a document is selected
   // app state:
@@ -37,7 +36,6 @@ const initialState: TableState & SearchState = {
   sortingModel: [{ id: SdocColumns.SD_SOURCE_DOCUMENT_NAME, desc: false }],
   expandedTagIds: [],
   expandedFolderIds: [],
-  showFolders: true,
   scrollPosition: 0,
   folderSelectionType: FolderSelection.UNKNOWN,
   // app state:
@@ -144,11 +142,9 @@ const searchSlice = createSlice({
     onMoveFolders: (state) => {
       state.rowSelectionModel = initialTableState.rowSelectionModel; // reset row selection model after moving folders
     },
-    onToggleShowFolders: (state) => {
-      state.showFolders = !state.showFolders;
-      if (!state.showFolders) {
-        state.selectedSdocFolderId = undefined;
-      }
+    // showFolders lives in the URL (search param), the selected folder must not outlive hidden folders
+    onFoldersHidden: (state) => {
+      state.selectedSdocFolderId = undefined;
     },
     // search statistics
     onToggleSortStatsByGlobal: (state) => {

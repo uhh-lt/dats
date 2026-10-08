@@ -1,5 +1,4 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
-import { searchQueries } from "@api/queries/searchQueries";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { FILTER_PARAM } from "@core/filter";
@@ -19,7 +18,6 @@ import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
   addKeywordFilter,
@@ -30,14 +28,17 @@ import {
 import { SearchActions } from "../../store/documentSearchSlice";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
+import { useShowFolders } from "./_hooks/useShowFolders";
 
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, searchExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
+  const { searchQuery, searchExpertMode, sortingModel } = DocumentSearchRouteAPI.useSearch();
   const [filter, setFilter] = useURLConnector(DocumentSearchRouteAPI, FILTER_PARAM);
   const [selectedFolderId, setSelectedFolderId] = useURLConnector(DocumentSearchRouteAPI, "selectedFolderId");
   const [showChildFolders, setShowChildFolders] = useURLConnector(DocumentSearchRouteAPI, "showChildFolders");
+  const [showFolders, handleToggleShowFolders] = useShowFolders();
+  const { documentSearchOptions, projectMetadataOptions } = DocumentSearchRouteAPI.useRouteContext();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -45,23 +46,10 @@ export function DocumentSearchView() {
   const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
   const expandedFolderIds = useAppSelector((state) => state.search.expandedFolderIds);
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
-  const showFolders = useAppSelector((state) => state.search.showFolders);
   const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
 
-  const documentSearchQuery = useSuspenseInfiniteQuery(
-    searchQueries.documents({
-      projectId,
-      selectedFolderId,
-      searchQuery,
-      filter: filter,
-      expertMode: searchExpertMode,
-      sortingModel,
-      fetchSize,
-      showFolders,
-      showChildFolders,
-    }),
-  );
+  const documentSearchQuery = useSuspenseInfiniteQuery(documentSearchOptions);
 
   const { flatData, totalFetchedSdocs, totalFetchedFolders, totalResults, sdocIds } = useMemo(() => {
     const searchData = documentSearchQuery.data;
@@ -129,7 +117,10 @@ export function DocumentSearchView() {
   useResetStateOnSearch([projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel], resetState);
 
   // filtering feature
-  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
+  const { data: projectMetadata } = useSuspenseQuery({
+    ...projectMetadataOptions,
+    select: (metadata) => Object.values(metadata),
+  });
   const keywordMetadataIds = useMemo(() => {
     return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);
   }, [projectMetadata]);
@@ -169,7 +160,6 @@ export function DocumentSearchView() {
     },
     [setSelectedFolderId],
   );
-  const handleToggleShowFolders = useCallback(() => dispatch(SearchActions.onToggleShowFolders()), [dispatch]);
   const handleToggleShowChildFolders = useCallback(() => {
     setShowChildFolders((prev) => !prev);
   }, [setShowChildFolders]);

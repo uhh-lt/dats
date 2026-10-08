@@ -54,6 +54,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { FolderSelection, SearchActions } from "../../../store/documentSearchSlice";
 import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
+import { useShowFolders } from "../_hooks/useShowFolders";
 import { FolderToggleVisibilityButton } from "./FolderToggleVisibilityButton";
 import { NoDocumentsPlaceholder } from "./NoDocumentsPlaceholder";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
@@ -159,7 +160,7 @@ export function SearchDocumentTable({
   );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
-  const showFolders = useAppSelector((state) => state.search.showFolders);
+  const [showFolders] = useShowFolders();
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
 
