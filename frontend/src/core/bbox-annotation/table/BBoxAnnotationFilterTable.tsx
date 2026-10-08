@@ -1,5 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { SearchService } from "@api/services/SearchService";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import {
@@ -28,7 +27,6 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import { BBoxColumns } from "@models/BBoxColumns";
 import { Page_BBoxAnnotationRow_ } from "@models/Page_BBoxAnnotationRow_";
-import { SortDirection } from "@models/SortDirection";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -153,30 +151,8 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   }, [tableInfo]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_BBoxAnnotationRow_>({
-    queryKey: [
-      QueryKey.BBOX_TABLE,
-      projectId,
-      filter, //refetch when columnFilters changes
-      sortingModel, //refetch when sorting changes
-      fetchSize,
-    ],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchBboxAnnotations({
-        requestBody: {
-          project_id: projectId!,
-          filter: filter as MyFilter<BBoxColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as BBoxColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-          page_number: pageParam as number,
-          page_size: fetchSize,
-        },
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => groups.length,
-    refetchOnWindowFocus: false,
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
+    ...annotationQueries.bbox.table({ projectId, filter, sortingModel, fetchSize }),
   });
 
   // resetting search-parameter-dependant state

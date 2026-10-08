@@ -1,5 +1,5 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
 import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { llmQueries } from "@api/queries/llmQueries";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
@@ -17,6 +17,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
@@ -28,7 +29,7 @@ interface ChatMessage {
 }
 
 export function AnalysisAssistant() {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(llmQueries.availableModels());
 
   const theme = useTheme();
   const [inputText, setInputText] = useState<string>("");

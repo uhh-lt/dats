@@ -1,8 +1,8 @@
+import { searchViewQueries } from "@api/queries/searchViewQueries";
 import { queryClient } from "@api/queryClient";
 import { SearchViewService } from "@api/services/SearchViewService";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
 
 /**
  * Minimal structural shape every search view satisfies, regardless of entity.
@@ -17,22 +17,23 @@ export interface SearchViewBase {
 
 /**
  * Factory for per-entity search-view hooks. The backend search-view CRUD is already
- * entity-agnostic (discriminated by `entityType`); this just scopes the query cache
- * key and the entity type so each entity gets its own typed hooks
+ * entity-agnostic (discriminated by `entityType`); this just scopes the entity type
+ * so each entity gets its own typed hooks
  * (e.g. `MemoViewHooks`, `SpanAnnotationViewHooks`).
  */
-export const createSearchViewHooks = <TView extends SearchViewBase>(
-  entityType: SearchEntityType,
-  queryKey: (typeof QueryKey)[keyof typeof QueryKey],
-) => {
+export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: SearchEntityType) => {
+  // the service returns the union of all view types, the entity type selects the one of this hook
+  const asViews = (views: Awaited<ReturnType<typeof SearchViewService.getByProject>>) => views as unknown as TView[];
+
   const useGetViews = (projectId: number) =>
-    useQuery<TView[], Error>({
-      queryKey: [queryKey, entityType, projectId],
-      queryFn: async () => (await SearchViewService.getByProject({ projectId, entityType })) as unknown as TView[],
+    useQuery({
+      ...searchViewQueries.byProject(entityType, projectId),
+      select: asViews,
     });
 
   const useCreateView = () =>
     useMutation({
+      mutationKey: [...searchViewQueries.byEntity(entityType), "create"],
       mutationFn: SearchViewService.create,
       meta: {
         datsEvent: "SEARCH_VIEW_CREATED",
@@ -41,15 +42,16 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
 
   const useUpdateView = () =>
     useMutation({
+      mutationKey: [...searchViewQueries.byEntity(entityType), "update"],
       mutationFn: SearchViewService.update,
       // Serialize updates per entity: rapid successive patches (e.g. toggling properties)
       // must reach the server in click order, since each patch is merged onto server state.
-      scope: { id: `${queryKey}-update-${entityType}` },
+      scope: { id: `searchViews-update-${entityType}` },
       onMutate: async ({ viewId, requestBody }) => {
         // Optimistically merge the patch into every cached view list containing this view
         // (the update DTO carries no project_id, so match by view id). This makes the UI
         // react instantly and ensures the next click reads fresh state.
-        const key = [queryKey, entityType];
+        const key = searchViewQueries.byEntity(entityType);
         await queryClient.cancelQueries({ queryKey: key });
         const previousEntries = queryClient.getQueriesData<TView[]>({ queryKey: key });
         queryClient.setQueriesData<TView[]>({ queryKey: key }, (views) =>
@@ -72,10 +74,12 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
 
   const useReorderViews = (projectId: number) =>
     useMutation({
+      mutationKey: [...searchViewQueries.byEntity(entityType), "reorder"],
       mutationFn: SearchViewService.reorder,
-      scope: { id: `${queryKey}-order-${projectId}` },
+      scope: { id: `searchViews-order-${projectId}` },
       onMutate: ({ requestBody }) => {
-        const key = [queryKey, entityType, projectId];
+        // untagged key: the cache of this hook is typed as TView[] (see useGetViews)
+        const key = [...searchViewQueries.byEntity(entityType), projectId];
         queryClient.cancelQueries({ queryKey: key });
         const previousViews = queryClient.getQueryData<TView[]>(key);
 
@@ -93,18 +97,19 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
         return { previousViews };
       },
       onError: (_error, _variables, context) => {
-        queryClient.setQueryData(
-          [queryKey, entityType, projectId],
+        queryClient.setQueryData<TView[]>(
+          [...searchViewQueries.byEntity(entityType), projectId],
           (context as { previousViews?: TView[] })?.previousViews,
         );
       },
       onSuccess: (views) => {
-        queryClient.setQueryData<TView[]>([queryKey, entityType, projectId], views as unknown as TView[]);
+        queryClient.setQueryData<TView[]>([...searchViewQueries.byEntity(entityType), projectId], asViews(views));
       },
     });
 
   const useDeleteView = () =>
     useMutation({
+      mutationKey: [...searchViewQueries.byEntity(entityType), "delete"],
       mutationFn: SearchViewService.delete,
       meta: {
         datsEvent: "SEARCH_VIEW_DELETED",

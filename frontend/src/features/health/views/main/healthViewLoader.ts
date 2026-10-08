@@ -1,6 +1,6 @@
 import { DocType } from "@models/DocType";
 import { QueryClient } from "@tanstack/react-query";
-import { sdocHealthTableColumnsQueryOptions, sdocHealthTableQueryOptions } from "../../_api/healthQueryOptions";
+import { healthQueries } from "../../_api/healthQueries";
 
 interface HealthViewLoaderArgs {
   queryClient: QueryClient;
@@ -18,9 +18,9 @@ export async function healthViewLoader({
   fetchSize,
 }: HealthViewLoaderArgs) {
   await Promise.all([
-    queryClient.ensureQueryData(sdocHealthTableColumnsQueryOptions(doctype)),
+    queryClient.ensureQueryData(healthQueries.columns(doctype)),
     queryClient.prefetchInfiniteQuery(
-      sdocHealthTableQueryOptions({
+      healthQueries.table({
         projectId,
         doctype,
         sortingModel,

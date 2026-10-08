@@ -2,7 +2,7 @@ import { MyFilter } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { QueryClient } from "@tanstack/react-query";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
-import { sentenceSimilaritySearchQueryOptions } from "./_api/sentenceSimilaritySearchQueryOptions";
+import { sentenceSimilarityQueries } from "./_api/sentenceSimilarityQueries";
 
 interface SentenceSimilaritySearchViewLoaderArgs {
   queryClient: QueryClient;
@@ -24,7 +24,7 @@ export async function sentenceSimilaritySearchViewLoader({
   await Promise.all([
     queryClient.ensureQueryData(projectMetadataListQueryOptions(projectId)),
     queryClient.ensureQueryData(
-      sentenceSimilaritySearchQueryOptions({
+      sentenceSimilarityQueries.search({
         projectId,
         searchQuery,
         filter: searchFilter,

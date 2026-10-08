@@ -1,5 +1,6 @@
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { queryClient } from "@api/queryClient";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -43,7 +44,7 @@ const WordFrequencySlice = createSlice({
         const projectId = action.payload;
         state.column2Info = initialState.column2Info;
         if (projectId) {
-          queryClient.removeQueries({ queryKey: tableInfoQueryKey("wordFrequency", projectId) });
+          queryClient.removeQueries({ queryKey: tableInfoQueries.bySlice("wordFrequency", projectId) });
         }
       })
       .addDefaultCase(() => {});

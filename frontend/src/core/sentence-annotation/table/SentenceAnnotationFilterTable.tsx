@@ -1,5 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { SearchService } from "@api/services/SearchService";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
@@ -29,7 +28,6 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Page_SentenceAnnotationRow_ } from "@models/Page_SentenceAnnotationRow_";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
-import { SortDirection } from "@models/SortDirection";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -154,25 +152,9 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_SentenceAnnotationRow_>({
-    queryKey: [QueryKey.SENT_ANNO_TABLE, projectId, filter, sortingModel, fetchSize],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchSentenceAnnotations({
-        requestBody: {
-          project_id: projectId!,
-          filter: filter as MyFilter<SentAnnoColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SentAnnoColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-          page_number: pageParam as number,
-          page_size: fetchSize,
-        },
-      }),
-    initialPageParam: 0,
-    enabled: !!projectId && !!userId,
-    getNextPageParam: (_lastGroup, groups) => groups.length,
-    refetchOnWindowFocus: false,
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
+    ...annotationQueries.sentence.table({ projectId, filter, sortingModel, fetchSize }),
+    enabled: !!userId,
   });
 
   // resetting search-parameter-dependant state

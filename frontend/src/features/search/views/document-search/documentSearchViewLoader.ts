@@ -1,8 +1,8 @@
+import { searchQueries } from "@api/queries/searchQueries";
 import { MyFilter } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { QueryClient } from "@tanstack/react-query";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
-import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 
 interface DocumentSearchViewLoaderArgs {
   queryClient: QueryClient;
@@ -30,7 +30,7 @@ export async function documentSearchViewLoader({
   await Promise.all([
     queryClient.ensureQueryData(projectMetadataListQueryOptions(projectId)),
     queryClient.prefetchInfiniteQuery(
-      documentSearchQueryOptions({
+      searchQueries.documents({
         projectId,
         selectedFolderId,
         searchQuery,

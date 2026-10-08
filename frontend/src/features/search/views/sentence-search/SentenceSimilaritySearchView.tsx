@@ -22,7 +22,7 @@ import {
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
-import { sentenceSimilaritySearchQueryOptions } from "./_api/sentenceSimilaritySearchQueryOptions";
+import { sentenceSimilarityQueries } from "./_api/sentenceSimilarityQueries";
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
 
@@ -39,7 +39,7 @@ export function SentenceSimilaritySearchView() {
   const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
   const [filter, setFilter] = useURLConnector(SentenceSearchRouteAPI, FILTER_PARAM);
   const { data, isError, isFetching, isLoading } = useSuspenseQuery(
-    sentenceSimilaritySearchQueryOptions({
+    sentenceSimilarityQueries.search({
       projectId,
       searchQuery,
       filter,

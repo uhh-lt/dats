@@ -1,5 +1,6 @@
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { AppDispatch } from "@store/store";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
@@ -7,7 +8,7 @@ import { MemoFilterActions } from "../memoFilterSlice";
 
 const useGetMemoSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueryKey("memoFilter", projectId),
+    queryKey: tableInfoQueries.bySlice("memoFilter", projectId),
     queryFn: async () => {
       const result = await SearchService.searchMemoInfo({ projectId });
       const columnInfo = result.map((info) => {

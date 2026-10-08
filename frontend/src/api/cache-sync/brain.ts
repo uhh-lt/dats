@@ -1,4 +1,3 @@
-import { QueryKey } from "@api/hooks/QueryKey";
 import { annotationQueries } from "@api/queries/annotationQueries";
 import { apiKeyQueries } from "@api/queries/apiKeyQueries";
 import { classifierQueries } from "@api/queries/classifierQueries";
@@ -9,6 +8,10 @@ import { metadataQueries } from "@api/queries/metadataQueries";
 import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { projectQueries } from "@api/queries/projectQueries";
 import { sdocQueries } from "@api/queries/sdocQueries";
+import { searchQueries } from "@api/queries/searchQueries";
+import { searchViewQueries } from "@api/queries/searchViewQueries";
+import { statisticsQueries } from "@api/queries/statisticsQueries";
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { tagQueries } from "@api/queries/tagQueries";
 import { tagRecommendationQueries } from "@api/queries/tagRecommendationQueries";
 import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
@@ -88,7 +91,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       // frontend cannot observe directly — invalidate annotation queries.
       queryClient.invalidateQueries({ queryKey: annotationQueries.all() });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(code.project_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, code.id] });
+      queryClient.invalidateQueries({ queryKey: statisticsQueries.codeStatsByCode(code.id) });
       break;
     }
 
@@ -185,7 +188,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         }
       });
       if (anyMoved) {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+        queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       }
       break;
     }
@@ -201,7 +204,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       upsertMapItem(metadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
       // New metadata key → sdoc metadata + table info queries may change.
       queryClient.invalidateQueries({ queryKey: metadataQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] });
+      queryClient.invalidateQueries({ queryKey: tableInfoQueries.all() });
       break;
     case "PROJECT_METADATA_UPDATED":
       upsertMapItem(metadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
@@ -217,7 +220,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         delete next[metadata.id];
         return next;
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE_INFO] });
+      queryClient.invalidateQueries({ queryKey: tableInfoQueries.all() });
       break;
     }
 
@@ -283,44 +286,45 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Source documents ────────────────────────────────────────────────────
     case "SDOC_UPDATED":
       setSingle(sdocQueries.detail(event.payload.id).queryKey, event.payload);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
     case "SDOC_DELETED":
       removeSingle(sdocQueries.detail(event.payload.id).queryKey);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
     case "SDOC_DELETED_BATCH":
       event.payload.forEach((sdoc) => removeSingle(sdocQueries.detail(sdoc.id).queryKey));
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
 
     // ── Search views ────────────────────────────────────────────────────────
     case "SEARCH_VIEW_CREATED": {
       const view = event.payload;
-      const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
-      if (!viewKey) break;
-      appendListItem([viewKey, view.entity_type, view.project_id], view);
+      appendListItem(searchViewQueries.byProject(view.entity_type as SearchEntityType, view.project_id).queryKey, view);
       break;
     }
     case "SEARCH_VIEW_UPDATED": {
       const view = event.payload;
-      const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
-      if (!viewKey) break;
-      replaceListItem([viewKey, view.entity_type, view.project_id], view);
+      replaceListItem(
+        searchViewQueries.byProject(view.entity_type as SearchEntityType, view.project_id).queryKey,
+        view,
+      );
       break;
     }
     case "SEARCH_VIEW_DELETED": {
       const view = event.payload;
-      const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
-      if (!viewKey) break;
-      removeListItem([viewKey, view.entity_type, view.project_id], view.id);
+      removeListItem(
+        searchViewQueries.byProject(view.entity_type as SearchEntityType, view.project_id).queryKey,
+        view.id,
+      );
       break;
     }
     case "SEARCH_VIEW_UPDATED_BATCH":
       event.payload.forEach((view) => {
-        const viewKey = SEARCH_VIEW_QUERY_KEYS[view.entity_type as SearchEntityType];
-        if (!viewKey) return;
-        replaceListItem([viewKey, view.entity_type, view.project_id], view);
+        replaceListItem(
+          searchViewQueries.byProject(view.entity_type as SearchEntityType, view.project_id).queryKey,
+          view,
+        );
       });
       break;
 
@@ -347,7 +351,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
       replaceListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
       queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.tableScope() });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED_BATCH": {
@@ -357,7 +361,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         replaceListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
         queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.tableScope() });
       break;
     }
     case "SPAN_ANNOTATION_DELETED": {
@@ -374,7 +378,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         removeListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
         queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.span.tableScope() });
       break;
     }
 
@@ -391,7 +395,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
       replaceListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
       queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.tableScope() });
       break;
     }
     case "BBOX_ANNOTATION_UPDATED_BATCH": {
@@ -401,7 +405,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         replaceListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
         queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.tableScope() });
       break;
     }
     case "BBOX_ANNOTATION_DELETED": {
@@ -418,7 +422,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         removeListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
         queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.tableScope() });
       break;
     }
 
@@ -441,7 +445,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       const anno = event.payload;
       setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.tableScope() });
       break;
     }
     case "SENTENCE_ANNOTATION_UPDATED_BATCH":
@@ -449,7 +453,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.tableScope() });
       break;
     case "SENTENCE_ANNOTATION_DELETED": {
       const anno = event.payload;
@@ -462,7 +466,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         removeSingle(annotationQueries.sentence.byId(anno.id).queryKey);
         removeSentenceAnnotation(anno);
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] });
+      queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.tableScope() });
       break;
 
     // ── Span groups ─────────────────────────────────────────────────────────
@@ -483,7 +487,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         queryClient.setQueryData(tagQueries.idsBySdoc(Number(sdocId)).queryKey, tagIds);
       });
       queryClient.invalidateQueries({ queryKey: tagQueries.sdocCountScope() });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
+      queryClient.invalidateQueries({ queryKey: statisticsQueries.tagScope() });
       break;
 
     // ── Source document metadata ────────────────────────────────────────────
@@ -536,12 +540,3 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     }
   }
 }
-
-// Each entity's views live under their own query key; the payload's entity_type
-// selects which one to write into.
-const SEARCH_VIEW_QUERY_KEYS: Record<SearchEntityType, (typeof QueryKey)[keyof typeof QueryKey]> = {
-  [SearchEntityType.MEMO]: QueryKey.MEMO_VIEWS,
-  [SearchEntityType.SPAN_ANNOTATION]: QueryKey.SPAN_ANNO_VIEWS,
-  [SearchEntityType.SENTENCE_ANNOTATION]: QueryKey.SENTENCE_ANNO_VIEWS,
-  [SearchEntityType.BBOX_ANNOTATION]: QueryKey.BBOX_ANNO_VIEWS,
-};

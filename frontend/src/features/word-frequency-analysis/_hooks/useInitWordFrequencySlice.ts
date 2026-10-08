@@ -1,5 +1,6 @@
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -7,7 +8,7 @@ import { WordFrequencyActions } from "../store/wordFrequencySlice";
 
 const wordFrequencyTableInfoQueryOptions = (projectId: number, callback?: (columnInfo: ColumnInfo[]) => void) =>
   queryOptions({
-    queryKey: tableInfoQueryKey("wordFrequency", projectId),
+    queryKey: tableInfoQueries.bySlice("wordFrequency", projectId),
     queryFn: async () => {
       const result = await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId });
       const columnInfo = result.map((info) => ({

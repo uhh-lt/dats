@@ -1,5 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { SearchService } from "@api/services/SearchService";
+import { annotationQueries } from "@api/queries/annotationQueries";
 import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
@@ -27,7 +26,6 @@ import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Page_SpanAnnotationRow_ } from "@models/Page_SpanAnnotationRow_";
-import { SortDirection } from "@models/SortDirection";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { SpanColumns } from "@models/SpanColumns";
 import { RootState } from "@store/store";
@@ -151,25 +149,9 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_SpanAnnotationRow_>({
-    queryKey: [QueryKey.SPAN_ANNO_TABLE, projectId, filter, sortingModel, fetchSize],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchSpanAnnotations({
-        requestBody: {
-          project_id: projectId!,
-          filter: filter as MyFilter<SpanColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SpanColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-          page_number: pageParam as number,
-          page_size: fetchSize,
-        },
-      }),
-    initialPageParam: 0,
-    enabled: !!projectId && !!userId,
-    getNextPageParam: (_lastGroup, groups) => groups.length,
-    refetchOnWindowFocus: false,
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
+    ...annotationQueries.span.table({ projectId, filter, sortingModel, fetchSize }),
+    enabled: !!userId,
   });
 
   // resetting search-parameter-dependant state

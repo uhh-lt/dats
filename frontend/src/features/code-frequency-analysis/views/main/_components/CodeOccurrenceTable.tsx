@@ -6,6 +6,7 @@ import { UserRenderer } from "@core/user";
 import { CodeOccurrence } from "@models/CodeOccurrence";
 import { DocType } from "@models/DocType";
 import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
   MRT_ShowHideColumnsButton,
@@ -16,7 +17,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { ChangeEventHandler, Fragment, useRef, useState } from "react";
-import { useCodeOccurrencesQuery } from "../../../_api/codeFrequencyAnalysisQueryOptions";
+import { codeFrequencyQueries } from "../../../_api/codeFrequencyQueries";
 
 const columns: MRT_ColumnDef<CodeOccurrence>[] = [
   {
@@ -64,7 +65,10 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds, docTypes }: Co
   const code = CodeHooks.useGetCode(codeId);
 
   // computed
-  const codeOccurrences = useCodeOccurrencesQuery(projectId, userIds, codeId, docTypes, withChildren);
+  const codeOccurrences = useQuery({
+    ...codeFrequencyQueries.occurrences(projectId, userIds, codeId, docTypes, withChildren),
+    enabled: userIds.length > 0 && docTypes.length > 0,
+  });
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
