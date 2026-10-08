@@ -1,4 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { SearchService } from "@api/services/SearchService";
 import { ColumnInfo } from "@core/filter";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
@@ -11,9 +11,7 @@ import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
     queryKey: [
-      QueryKey.TABLE_INFO,
-      "timelineAnalysis",
-      timelineAnalysis.project_id,
+      ...tableInfoQueries.bySlice("timelineAnalysis", timelineAnalysis.project_id),
       timelineAnalysis.timeline_analysis_type,
       timelineAnalysis.id,
     ],

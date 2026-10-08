@@ -1,5 +1,6 @@
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { queryClient } from "@api/queryClient";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
@@ -167,7 +168,7 @@ const searchSlice = createSlice({
       const projectId = action.payload;
       state.column2Info = initialState.column2Info;
       if (projectId) {
-        queryClient.removeQueries({ queryKey: tableInfoQueryKey("search", projectId) });
+        queryClient.removeQueries({ queryKey: tableInfoQueries.bySlice("search", projectId) });
       }
     });
   },

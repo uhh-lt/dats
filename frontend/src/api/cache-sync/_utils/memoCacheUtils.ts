@@ -1,8 +1,8 @@
-import { QueryKey } from "@api/hooks/QueryKey";
 import { annotationQueries } from "@api/queries/annotationQueries";
 import { codeQueries } from "@api/queries/codeQueries";
 import { memoQueries } from "@api/queries/memoQueries";
 import { sdocQueries } from "@api/queries/sdocQueries";
+import { searchQueries } from "@api/queries/searchQueries";
 import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
@@ -42,7 +42,7 @@ export function invalidateAttachedObjectMemoIds(
   switch (attachedObjectType) {
     case "source_document":
       queryClient.invalidateQueries({ queryKey: sdocQueries.detail(attachedObjectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
     case "tag":
       queryClient.invalidateQueries({ queryKey: tagQueries.byProjectScope() });
@@ -52,15 +52,15 @@ export function invalidateAttachedObjectMemoIds(
       break;
     case "span_annotation":
       queryClient.invalidateQueries({ queryKey: annotationQueries.span.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
     case "sentence_annotation":
       queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
     case "bbox_annotation":
       queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
       break;
     default:
       break;

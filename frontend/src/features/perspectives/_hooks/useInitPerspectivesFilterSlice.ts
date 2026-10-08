@@ -1,5 +1,6 @@
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { AppDispatch } from "@store/store";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
@@ -7,7 +8,7 @@ import { PerspectivesActions } from "../store/perspectivesSlice";
 
 const useGetPerspectivesFilterInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueryKey("perspectives", projectId),
+    queryKey: tableInfoQueries.bySlice("perspectives", projectId),
     queryFn: async () => {
       const result = await SearchService.searchSdocInfo({ projectId });
       const columnInfo = result.map((info) => {

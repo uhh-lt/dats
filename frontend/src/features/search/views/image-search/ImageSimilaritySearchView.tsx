@@ -22,7 +22,7 @@ import {
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../store/imageSearchSlice";
-import { imageSimilaritySearchQueryOptions } from "./_api/imageSimilaritySearchQueryOptions";
+import { imageSimilarityQueries } from "./_api/imageSimilarityQueries";
 import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearchToolbar";
 import { ImageSimilarityView } from "./_components/ImageSimilarityView";
 import { ImageSearchRouteAPI } from "./_hooks/imageSearchRouteAPI";
@@ -88,7 +88,7 @@ export function ImageSimilaritySearchView() {
   );
 
   const { data, isError, isFetching, isLoading } = useSuspenseQuery(
-    imageSimilaritySearchQueryOptions({
+    imageSimilarityQueries.search({
       projectId,
       searchQuery,
       filter,

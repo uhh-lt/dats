@@ -1,5 +1,6 @@
 import { jobQueries } from "@api/queries/jobQueries";
 import { projectQueries } from "@api/queries/projectQueries";
+import { searchQueries } from "@api/queries/searchQueries";
 import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
@@ -9,7 +10,6 @@ import { SDocStatus } from "@models/SDocStatus";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { useJobRefetchInterval } from "./jobPolling";
-import { QueryKey } from "./QueryKey";
 
 const useStartCrawlerJob = () =>
   useMutation({
@@ -58,7 +58,7 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
       // Only invalidate if previous length > 0 and current length == 0
       if (previousLengthRef.current > 0 && currentLength === 0) {
         console.log("Invalidating documents");
-        queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
+        queryClient.invalidateQueries({ queryKey: searchQueries.documentsByProject(projectId) });
       }
       previousLengthRef.current = currentLength;
       return 3000;

@@ -1,7 +1,21 @@
 import { ProjectService } from "@api/services/ProjectService";
+import { SearchService } from "@api/services/SearchService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { SdocColumns } from "@models/SdocColumns";
+import { SortDirection } from "@models/SortDirection";
+import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
+import type { MRT_SortingState } from "material-react-table";
+// eslint-disable-next-line boundaries/element-types
+import type { MyFilter } from "@core/filter";
+
+interface SdocTableParams {
+  projectId: number | undefined;
+  searchQuery: string | undefined;
+  filter: MyFilter<SdocColumns>;
+  sortingModel: MRT_SortingState;
+  fetchSize: number;
+}
 
 /**
  * Query factory for source documents (sdocs).
@@ -14,6 +28,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  *   sdocQueries.thumbnailUrl(sdocId)         ["sdocs", "thumbnailUrl", sdocId]
  *   sdocQueries.idsByTag(tagId)              ["sdocs", "idsByTag", tagId]
  *   sdocQueries.annotators(sdocId)           ["sdocs", "annotators", sdocId]
+ *   sdocQueries.table(params)                ["sdocs", "table", projectId, ...]
  */
 export const sdocQueries = {
   all: () => ["sdocs"] as const,
@@ -82,5 +97,35 @@ export const sdocQueries = {
       queryKey: [...sdocQueries.annotatorsScope(), sdocId] as const,
       queryFn: !sdocId ? skipToken : () => SourceDocumentService.getAnnotators({ sdocId }),
       staleTime: 1000 * 60 * 5,
+    }),
+
+  // the sdoc filter table
+  tableScope: () => [...sdocQueries.all(), "table"] as const,
+  table: ({ projectId, searchQuery, filter, sortingModel, fetchSize }: SdocTableParams) =>
+    infiniteQueryOptions({
+      queryKey: [...sdocQueries.tableScope(), projectId, searchQuery, filter, sortingModel, fetchSize] as const,
+      queryFn: !projectId
+        ? skipToken
+        : ({ pageParam }) =>
+            SearchService.searchSdocs({
+              searchQuery: searchQuery || "",
+              projectId,
+              folderId: null,
+              highlight: true,
+              expertMode: false,
+              showFolders: false,
+              requestBody: {
+                filter,
+                sorts: sortingModel.map((sort) => ({
+                  column: sort.id as SdocColumns,
+                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+                })),
+              },
+              pageNumber: pageParam,
+              pageSize: fetchSize,
+            }),
+      initialPageParam: 0,
+      getNextPageParam: (_lastGroup, groups) => groups.length,
+      refetchOnWindowFocus: false,
     }),
 };

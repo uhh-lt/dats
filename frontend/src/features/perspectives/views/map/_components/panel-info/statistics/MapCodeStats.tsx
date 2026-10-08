@@ -1,8 +1,9 @@
-import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
+import { statisticsQueries } from "@api/queries/statisticsQueries";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 
@@ -14,14 +15,14 @@ interface MapCodeStatsProps {
 
 export function MapCodeStats({ codeId, sdocIds, ...props }: MapCodeStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
-  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds, sortStatsByGlobal);
+  const codeStatsQuery = useQuery(statisticsQueries.codeStats(codeId, sdocIds, sortStatsByGlobal));
   return (
     <>
-      {codeStats.isSuccess ? (
-        <MapCodeStatsWithData codeStats={codeStats.data} {...props} />
-      ) : codeStats.isError ? (
-        <Box>Error: {codeStats.error.message}</Box>
-      ) : codeStats.isLoading && codeStats.isFetching ? (
+      {codeStatsQuery.isSuccess ? (
+        <MapCodeStatsWithData codeStats={codeStatsQuery.data} {...props} />
+      ) : codeStatsQuery.isError ? (
+        <Box>Error: {codeStatsQuery.error.message}</Box>
+      ) : codeStatsQuery.isLoading && codeStatsQuery.isFetching ? (
         <Box>Loading...</Box>
       ) : (
         <Box>Something went wrong!</Box>

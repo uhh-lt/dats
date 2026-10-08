@@ -1,7 +1,7 @@
 import { MyFilter } from "@core/filter";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { QueryClient } from "@tanstack/react-query";
-import { wordFrequencyTableQueryOptions } from "../../_api/wordFrequencyAnalysisQueryOptions";
+import { wordFrequencyQueries } from "../../_api/wordFrequencyQueries";
 
 interface WordFrequencyViewLoaderArgs {
   queryClient: QueryClient;
@@ -20,7 +20,7 @@ export async function wordFrequencyViewLoader({
 }: WordFrequencyViewLoaderArgs) {
   await Promise.all([
     queryClient.prefetchInfiniteQuery(
-      wordFrequencyTableQueryOptions({
+      wordFrequencyQueries.table({
         projectId,
         filter: searchFilter,
         sortingModel,

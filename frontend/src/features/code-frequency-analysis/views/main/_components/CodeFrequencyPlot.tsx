@@ -6,6 +6,7 @@ import { DocType } from "@models/DocType";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useMemo, useReducer, useState } from "react";
 import type { BarShapeProps, PieSectorShapeProps, TooltipContentProps } from "recharts";
 import {
@@ -23,7 +24,7 @@ import {
   YAxis,
 } from "recharts";
 import { Node } from "ts-tree-structure";
-import { useCodeFrequenciesQuery } from "../../../_api/codeFrequencyAnalysisQueryOptions";
+import { codeFrequencyQueries } from "../../../_api/codeFrequencyQueries";
 
 const renderCustomizedLabel = (data: { value: number; percent?: number }) => {
   return `${data.value} (${(data.percent ?? 0 * 100).toFixed(0)}%)`;
@@ -63,11 +64,13 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
   const [showPieChart, toggleShowPieChart] = useReducer((previous) => !previous, false);
 
   // global server state (react-query)
-  const chartData = useCodeFrequenciesQuery(
-    projectId,
-    userIds,
-    data.children.map((node) => node.model.data.id) || [],
-    docTypes,
+  const chartData = useQuery(
+    codeFrequencyQueries.frequencies(
+      projectId,
+      userIds,
+      data.children.map((node) => node.model.data.id),
+      docTypes,
+    ),
   );
 
   // computed

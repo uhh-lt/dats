@@ -1,4 +1,5 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
+import { searchQueries } from "@api/queries/searchQueries";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { FILTER_PARAM } from "@core/filter";
@@ -27,7 +28,6 @@ import {
   toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
-import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
 
@@ -50,7 +50,7 @@ export function DocumentSearchView() {
   const dispatch = useAppDispatch();
 
   const documentSearchQuery = useSuspenseInfiniteQuery(
-    documentSearchQueryOptions({
+    searchQueries.documents({
       projectId,
       selectedFolderId,
       searchQuery,

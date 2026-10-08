@@ -1,5 +1,5 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { LLMHooks } from "@api/hooks/LLMHooks";
+import { llmQueries } from "@api/queries/llmQueries";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { Language } from "@models/Language";
@@ -8,6 +8,7 @@ import AddIcon from "@mui/icons-material/Add";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { Button, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { isValidHttpUrl } from "@utils/URLUtils";
 import { useCallback, useState } from "react";
 
@@ -16,7 +17,7 @@ interface UrlCrawlerSectionProps {
 }
 
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(llmQueries.availableModels());
 
   // Local state
   const [currentUrl, setCurrentUrl] = useState("");

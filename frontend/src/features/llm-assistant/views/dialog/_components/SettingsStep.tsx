@@ -1,4 +1,5 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
+import { llmQueries } from "@api/queries/llmQueries";
 import { CodeRenderer } from "@core/code";
 import { ApproachType } from "@models/ApproachType";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
@@ -25,6 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -71,7 +73,7 @@ function getFuzzySettings(strategy: StrategyInfo): FuzzySettings {
 
 /** Configures the model, processing strategy, learning approach, and overwrite behavior for an LLM job. */
 export const SettingsStep = memo(() => {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(llmQueries.availableModels());
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
   const recommendation = useAppSelector((state) => state.llmAssistant.llmApproachRecommendation);
   const llmId = useAppSelector((state) => state.llmAssistant.llmId);
@@ -87,7 +89,7 @@ export const SettingsStep = memo(() => {
   const savedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
   const dispatch = useAppDispatch();
 
-  const strategies = LLMHooks.useListStrategies(llmMethod);
+  const strategies = useQuery(llmQueries.strategies(llmMethod));
   const [modelId, setModelId] = useState(llmId);
   const [strategyType, setStrategyType] = useState<StrategyType | undefined>(savedStrategy);
   const [approachType, setApproachType] = useState(savedApproach);
@@ -116,11 +118,9 @@ export const SettingsStep = memo(() => {
   );
   const codeIds = useMemo(() => codes.map((code) => code.id), [codes]);
   const isAnnotationTask = llmMethod === TaskType.ANNOTATION || llmMethod === TaskType.SENTENCE_ANNOTATION;
-  const existingAnnotations = LLMHooks.useCountExistingAssistantAnnotations({
-    taskType: llmMethod,
-    approachType,
-    sdocIds,
-    codeIds,
+  const existingAnnotations = useQuery({
+    ...llmQueries.existingAnnotationCount({ taskType: llmMethod, approachType, sdocIds, codeIds }),
+    enabled: isAnnotationTask,
   });
   const existingAnnotationCounts = useMemo(
     () => Object.entries(existingAnnotations.data ?? {}).filter(([, count]) => count > 0),

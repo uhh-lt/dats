@@ -13,7 +13,7 @@ import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { ReactElement, useCallback, useMemo } from "react";
-import { flatMapSdocHealthRows } from "../../../_api/healthQueryOptions";
+import { flatMapSdocHealthRows } from "../../../_api/healthQueries";
 import { HealthActions } from "../../../store/healthSlice";
 import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
 import { HealthTableToolbarLeft } from "./HealthTableToolbarLeft";

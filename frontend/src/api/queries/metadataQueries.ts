@@ -1,3 +1,4 @@
+import { AnalysisService } from "@api/services/AnalysisService";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
 import type { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -16,6 +17,7 @@ export type SdocMetadataMap = Record<number, SourceDocumentMetadataRead>;
  *   metadataQueries.byProject(projectId)          ["metadata", "project", projectId]
  *   metadataQueries.bySdoc(sdocId)                ["metadata", "sdoc", sdocId]
  *   metadataQueries.bySdocAndKey(sdocId, key)     ["metadata", "sdocByKey", sdocId, key]
+ *   metadataQueries.sdocCountWithDate(projId, id) ["metadata", "sdocCountWithDate", projId, metadataId]
  */
 export const metadataQueries = {
   all: () => ["metadata"] as const,
@@ -59,5 +61,13 @@ export const metadataQueries = {
     queryOptions({
       queryKey: [...metadataQueries.bySdocAndKeyScope(), sdocId, key] as const,
       queryFn: !sdocId ? skipToken : () => SdocMetadataService.getBySdocAndKey({ sdocId, metadataKey: key }),
+    }),
+
+  // number of sdocs that have a valid date for a date metadata
+  sdocCountWithDateScope: () => [...metadataQueries.all(), "sdocCountWithDate"] as const,
+  sdocCountWithDate: (projectId: number, dateMetadataId: number) =>
+    queryOptions({
+      queryKey: [...metadataQueries.sdocCountWithDateScope(), projectId, dateMetadataId] as const,
+      queryFn: () => AnalysisService.countSdocsWithDateMetadata({ projectId, dateMetadataId }),
     }),
 };

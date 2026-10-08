@@ -1,5 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { SearchService } from "@api/services/SearchService";
+import { sdocQueries } from "@api/queries/sdocQueries";
 import {
   FILTER_PARAM,
   FilterTable,
@@ -21,7 +20,6 @@ import { useURLConnector } from "@hooks/useURLConnector";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { PaginatedSDocHits } from "@models/PaginatedSDocHits";
 import { SdocColumns } from "@models/SdocColumns";
-import { SortDirection } from "@models/SortDirection";
 import { Box, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
@@ -127,29 +125,8 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
     return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
   }, [tableInfo]);
 
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedSDocHits>({
-    queryKey: [QueryKey.SDOC_TABLE, projectId, searchQuery, filter, sortingModel, fetchSize],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchSdocs({
-        searchQuery: searchQuery || "",
-        projectId: projectId!,
-        folderId: null,
-        highlight: true,
-        expertMode: false,
-        showFolders: false,
-        requestBody: {
-          filter: filter as MyFilter<SdocColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SdocColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        pageNumber: pageParam as number,
-        pageSize: fetchSize,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => groups.length,
-    refetchOnWindowFocus: false,
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
+    ...sdocQueries.table({ projectId, searchQuery, filter, sortingModel, fetchSize }),
   });
 
   // resetting search-parameter-dependant state

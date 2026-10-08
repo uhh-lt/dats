@@ -1,9 +1,10 @@
 import { memoQueries } from "@api/queries/memoQueries";
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
 // eslint-disable-next-line boundaries/element-types
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { MemoRead } from "@models/MemoRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -21,7 +22,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
  */
 const useMemoSearchInfo = (projectId: number) =>
   useQuery<Record<string, ColumnInfo>>({
-    queryKey: tableInfoQueryKey("memoFilter", projectId),
+    queryKey: tableInfoQueries.bySlice("memoFilter", projectId),
     queryFn: async () => {
       const result = await SearchService.searchMemoInfo({ projectId });
       return result.reduce<Record<string, ColumnInfo>>((acc, info) => {

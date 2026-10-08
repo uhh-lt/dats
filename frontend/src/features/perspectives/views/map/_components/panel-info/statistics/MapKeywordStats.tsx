@@ -1,8 +1,9 @@
-import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
+import { statisticsQueries } from "@api/queries/statisticsQueries";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { KeywordStat } from "@models/KeywordStat";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 
@@ -14,14 +15,14 @@ interface MapKeywordStatsProps {
 
 export function MapKeywordStats({ projectId, sdocIds, ...props }: MapKeywordStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
-  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds, sortStatsByGlobal);
+  const keywordStatsQuery = useQuery(statisticsQueries.keywordStats(projectId, sdocIds, sortStatsByGlobal));
   return (
     <>
-      {keywordStats.isSuccess ? (
-        <MapKeywordStatsWithData keywordStats={keywordStats.data} {...props} />
-      ) : keywordStats.isError ? (
-        <Box>Error: {keywordStats.error.message}</Box>
-      ) : keywordStats.isLoading && keywordStats.isFetching ? (
+      {keywordStatsQuery.isSuccess ? (
+        <MapKeywordStatsWithData keywordStats={keywordStatsQuery.data} {...props} />
+      ) : keywordStatsQuery.isError ? (
+        <Box>Error: {keywordStatsQuery.error.message}</Box>
+      ) : keywordStatsQuery.isLoading && keywordStatsQuery.isFetching ? (
         <Box>Loading...</Box>
       ) : (
         <Box>Something went wrong!</Box>

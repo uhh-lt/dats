@@ -1,14 +1,14 @@
 import { ApiError } from "@api/core/ApiError";
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { generalQueries } from "@api/queries/generalQueries";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
 import { handleOIDCLogin, useAuth } from "@core/auth";
+import { LinkButton } from "@core/navigation";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
-import { LinkButton } from "@core/navigation";
 import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
@@ -38,7 +38,7 @@ export function LoginView() {
   const { updateAuthData } = useAuth();
 
   // get info about the instance, is OIDC enabled?
-  const { data: instanceInfo } = useSuspenseQuery(GeneralHooks.instanceInfoQueryOptions());
+  const { data: instanceInfo } = useSuspenseQuery(generalQueries.instanceInfo());
 
   // login
   const { mutate: loginMutation, isPending: loginIsPending } = useMutation({

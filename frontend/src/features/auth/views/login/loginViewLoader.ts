@@ -1,4 +1,4 @@
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { generalQueries } from "@api/queries/generalQueries";
 import { QueryClient } from "@tanstack/react-query";
 
 interface LoginViewLoaderArgs {
@@ -6,5 +6,5 @@ interface LoginViewLoaderArgs {
 }
 
 export async function loginViewLoader({ queryClient }: LoginViewLoaderArgs) {
-  await queryClient.ensureQueryData(GeneralHooks.instanceInfoQueryOptions());
+  await queryClient.ensureQueryData(generalQueries.instanceInfo());
 }

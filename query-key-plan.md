@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Stages 0-3 done and committed. Stage 4 next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Status: **Stages 0-4 done and committed. Stage 5 (loader pilot) next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
 Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -255,6 +255,20 @@ Sweep, domain by domain, in this order (cache-sync dependencies first):
 - Remove inline keys (`"sdocsWithDateMetadata"`, `"Existing-Annotation-Count"`).
 - New query files are created in `api/queries/` for now (interim, same as stages 2-3) and moved with all the others in stage 6.
 - Done when: `QueryKey.ts` has no remaining uses.
+
+**Result (done):** `QueryKey.ts` is deleted. New factories, by who consumes them:
+
+- Shared with the cache-sync code, so in `api/queries/` for now: `searchQueries` (document search), `searchViewQueries`, `statisticsQueries`,
+  `tableInfoQueries` (keys only: every filter slice has its own `queryFn`), `llmQueries`, `annoscalingQueries`, `generalQueries`; the
+  tables are leaves of their domain (`sdocQueries.table`, `annotationQueries.span/bbox/sentence.table`, `metadataQueries.sdocCountWithDate`).
+- Used by one feature only, directly in the feature's `_api/`: `healthQueries`, `wordFrequencyQueries`, `codeFrequencyQueries`,
+  `imageSimilarityQueries`, `sentenceSimilarityQueries`, `githubReleaseQueries`. These keep their final location (stage 6 does not move them).
+- Wrapper hooks removed (`StatisticsHooks`, `GeneralHooks`, `useCodeFrequenciesQuery`, ...): call sites use `useQuery(factory.leaf(...))`.
+- `createSearchViewHooks(entityType)` no longer takes a key. One `as unknown as TView[]` remains in a single `select` helper, because the
+  service returns the union of all view types and the generic hook narrows by entity.
+- The `ASPECT` entry (unused) is gone. Mutations of the search views got `mutationKey`s.
+- Inline mutations in components (login, logout, token refresh, word frequency export, document sampler) still have no `mutationKey`;
+  they are placed in stage 6.
 
 ### Stage 5: Loaders: one rule for all 19 routes (fixes the Great Divergence)
 

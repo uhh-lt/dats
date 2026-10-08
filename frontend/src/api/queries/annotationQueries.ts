@@ -1,7 +1,22 @@
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
+import { SearchService } from "@api/services/SearchService";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { BBoxColumns } from "@models/BBoxColumns";
+import { SentAnnoColumns } from "@models/SentAnnoColumns";
+import { SortDirection } from "@models/SortDirection";
+import { SpanColumns } from "@models/SpanColumns";
+import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
+import type { MRT_SortingState } from "material-react-table";
+// eslint-disable-next-line boundaries/element-types
+import type { MyFilter } from "@core/filter";
+
+interface AnnotationTableParams<TColumns extends string> {
+  projectId: number | undefined;
+  filter: MyFilter<TColumns>;
+  sortingModel: MRT_SortingState;
+  fetchSize: number;
+}
 
 const annotationRoot = () => ["annotations"] as const;
 
@@ -42,6 +57,30 @@ const spanQueries = {
       queryKey: [...spanQueries.bySdocScope(), sdocId, userId] as const,
       queryFn: !sdocId || !userId ? skipToken : () => SpanAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
+  // the span annotation filter table
+  tableScope: () => [...spanQueries.all(), "table"] as const,
+  table: ({ projectId, filter, sortingModel, fetchSize }: AnnotationTableParams<SpanColumns>) =>
+    infiniteQueryOptions({
+      queryKey: [...spanQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
+      queryFn: !projectId
+        ? skipToken
+        : ({ pageParam }) =>
+            SearchService.searchSpanAnnotations({
+              requestBody: {
+                project_id: projectId,
+                filter,
+                sorts: sortingModel.map((sort) => ({
+                  column: sort.id as SpanColumns,
+                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+                })),
+                page_number: pageParam,
+                page_size: fetchSize,
+              },
+            }),
+      initialPageParam: 0,
+      getNextPageParam: (_lastGroup, groups) => groups.length,
+      refetchOnWindowFocus: false,
+    }),
 };
 
 /**
@@ -71,6 +110,30 @@ const bboxQueries = {
       queryKey: [...bboxQueries.bySdocScope(), sdocId, userId] as const,
       queryFn: !sdocId || !userId ? skipToken : () => BboxAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
+  // the bbox annotation filter table
+  tableScope: () => [...bboxQueries.all(), "table"] as const,
+  table: ({ projectId, filter, sortingModel, fetchSize }: AnnotationTableParams<BBoxColumns>) =>
+    infiniteQueryOptions({
+      queryKey: [...bboxQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
+      queryFn: !projectId
+        ? skipToken
+        : ({ pageParam }) =>
+            SearchService.searchBboxAnnotations({
+              requestBody: {
+                project_id: projectId,
+                filter,
+                sorts: sortingModel.map((sort) => ({
+                  column: sort.id as BBoxColumns,
+                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+                })),
+                page_number: pageParam,
+                page_size: fetchSize,
+              },
+            }),
+      initialPageParam: 0,
+      getNextPageParam: (_lastGroup, groups) => groups.length,
+      refetchOnWindowFocus: false,
+    }),
 };
 
 /**
@@ -93,6 +156,30 @@ const sentenceQueries = {
     queryOptions({
       queryKey: [...sentenceQueries.bySdocScope(), sdocId, userId] as const,
       queryFn: !sdocId || !userId ? skipToken : () => SentenceAnnotationService.getBySdocAndUser({ sdocId, userId }),
+    }),
+  // the sentence annotation filter table
+  tableScope: () => [...sentenceQueries.all(), "table"] as const,
+  table: ({ projectId, filter, sortingModel, fetchSize }: AnnotationTableParams<SentAnnoColumns>) =>
+    infiniteQueryOptions({
+      queryKey: [...sentenceQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
+      queryFn: !projectId
+        ? skipToken
+        : ({ pageParam }) =>
+            SearchService.searchSentenceAnnotations({
+              requestBody: {
+                project_id: projectId,
+                filter,
+                sorts: sortingModel.map((sort) => ({
+                  column: sort.id as SentAnnoColumns,
+                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+                })),
+                page_number: pageParam,
+                page_size: fetchSize,
+              },
+            }),
+      initialPageParam: 0,
+      getNextPageParam: (_lastGroup, groups) => groups.length,
+      refetchOnWindowFocus: false,
     }),
 };
 

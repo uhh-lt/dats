@@ -1,5 +1,4 @@
 import { OpenAPI } from "@api/core/OpenAPI";
-import { QueryKey } from "@api/hooks/QueryKey";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import LaunchIcon from "@mui/icons-material/Launch";
@@ -19,7 +18,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getGitHubRelease, getGitHubReleasePageUrl } from "./_api/githubRelease";
+import { getGitHubReleasePageUrl } from "./_api/githubRelease";
+import { githubReleaseQueries } from "./_api/githubReleaseQueries";
 
 const DISMISSED_VERSION_KEY = "dats-whats-new-dismissed-version";
 const currentVersion = OpenAPI.VERSION;
@@ -47,11 +47,8 @@ export function WhatsNewDialog() {
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const releaseQuery = useQuery({
-    queryKey: [QueryKey.GITHUB_RELEASE, currentReleaseTag],
-    queryFn: () => getGitHubRelease(currentReleaseTag),
+    ...githubReleaseQueries.byTag(currentReleaseTag),
     enabled: isOpen,
-    retry: 1,
-    staleTime: Infinity,
   });
 
   const handleClose = useCallback(() => {

@@ -1,4 +1,4 @@
-import { QueryKey } from "@api/hooks/QueryKey";
+import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { queryClient } from "@api/queryClient";
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ColumnInfo, MyFilter, MyFilterExpression } from "../filterUtils";
@@ -15,8 +15,6 @@ export interface FilterState {
   // app state:
   expertMode: boolean;
 }
-
-export const tableInfoQueryKey = (sliceName: string, projectId: number) => [QueryKey.TABLE_INFO, sliceName, projectId];
 
 export const createInitialFilterState = (defaultFilterExpression: MyFilterExpression): FilterState => {
   return {
@@ -46,7 +44,7 @@ export const resetProjectFilterState = ({
   // reset column info
   state.column2Info = initialState.column2Info;
   if (projectId) {
-    queryClient.removeQueries({ queryKey: tableInfoQueryKey(sliceName, projectId) });
+    queryClient.removeQueries({ queryKey: tableInfoQueries.bySlice(sliceName, projectId) });
   }
 };
 
