@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TagHooks } from "../api/tagHooks";
+import { useDeleteTag, useUpdateTag } from "../api/tagMutations";
 import { tagQueries } from "../api/tagQueries";
 import { TagRenderer } from "../TagRenderer";
 
@@ -55,7 +55,7 @@ export function TagEditDialog() {
   }, [isOpen, reset, dialogData]);
 
   // form actions
-  const { mutate: updateTagMutation, isPending: isUpdateLoading } = TagHooks.useUpdateTag();
+  const { mutate: updateTagMutation, isPending: isUpdateLoading } = useUpdateTag();
   const handleTagUpdate = useCallback<SubmitHandler<TagUpdate>>(
     (updateData) => {
       if (dialogData?.tag) {
@@ -82,7 +82,7 @@ export function TagEditDialog() {
     [handleClose, dialogData, updateTagMutation],
   );
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const { mutate: deleteTagMutation, isPending: isDeleteLoading } = TagHooks.useDeleteTag();
+  const { mutate: deleteTagMutation, isPending: isDeleteLoading } = useDeleteTag();
   const handleTagDelete = useCallback(() => {
     if (dialogData?.tag) {
       openConfirmationDialog({

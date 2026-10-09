@@ -1,4 +1,4 @@
-import { SdocHooks, SdocTagsRenderer, sdocQueries } from "@core/source-document";
+import { SdocTagsRenderer, sdocQueries, useGetThumbnailURL } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { SimSearchImageHit } from "@models/SimSearchImageHit";
 import {
@@ -43,7 +43,7 @@ export function ImageSimilaritySearchResultCard({
   ...props
 }: ImageSimilaritySearchResultCardProps & CardProps) {
   // query (global server state)
-  const thumbnailUrl = SdocHooks.useGetThumbnailURL(hit.sdoc_id).data ?? "";
+  const thumbnailUrl = useGetThumbnailURL(hit.sdoc_id).data ?? "";
   const sdoc = useQuery(sdocQueries.detail(hit.sdoc_id));
 
   const title = sdoc.isLoading ? "Loading" : sdoc.isError ? "Error: " : sdoc.isSuccess ? sdoc.data.name : "";

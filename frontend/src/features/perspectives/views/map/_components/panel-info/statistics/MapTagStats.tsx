@@ -1,6 +1,6 @@
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
 import { statisticsQueries } from "@core/statistics";
-import { TagHooks } from "@core/tag";
+import { useGetTag } from "@core/tag";
 import { TagStat } from "@models/TagStat";
 import { useQuery } from "@tanstack/react-query";
 
@@ -78,7 +78,7 @@ function DocumentTagStatButtonContent({
   tagId,
   ...props
 }: { tagId: number } & Omit<StatsDisplayButtonProps, "term" | "disabled">) {
-  const tag = TagHooks.useGetTag(tagId);
+  const tag = useGetTag(tagId);
 
   return (
     <StatsDisplayButton

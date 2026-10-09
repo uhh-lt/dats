@@ -1,5 +1,5 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
+import { useDeleteBBoxAnnotation } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler, useCallback } from "react";
@@ -16,7 +16,7 @@ export function BBoxAnnotationDeleteMenuItem({
 }: BBoxAnnotationDeleteMenuItemProps & MenuItemProps) {
   // event handlers
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
+  const deleteMutation = useDeleteBBoxAnnotation();
   const handleClick: MouseEventHandler<HTMLLIElement> = useCallback(
     (event) => {
       event.stopPropagation();

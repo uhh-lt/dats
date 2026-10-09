@@ -1,5 +1,5 @@
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
-import { LLMHooks } from "@core/llm";
+import { useLiveLLMJob } from "@core/llm";
 import { SdocRenderer } from "@core/source-document";
 import { ApproachType } from "@models/ApproachType";
 import { FewShotParams } from "@models/FewShotParams";
@@ -22,7 +22,7 @@ interface LLMJobListItemProps {
 
 export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   // global server state (react-query)
-  const llmJob = LLMHooks.useLiveLLMJob(initialLLMJob.job_id, initialLLMJob);
+  const llmJob = useLiveLLMJob(initialLLMJob.job_id, initialLLMJob);
 
   // actions
   const dispatch = useAppDispatch();

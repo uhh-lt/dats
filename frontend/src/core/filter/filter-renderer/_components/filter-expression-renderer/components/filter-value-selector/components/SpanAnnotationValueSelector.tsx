@@ -1,5 +1,5 @@
 import { useWithLevel } from "@components/tree-explorer";
-import { CodeHooks, CodeRenderer } from "@core/code";
+import { CodeRenderer, useGetAllCodesList } from "@core/code";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, memo, useCallback, useState } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
@@ -7,7 +7,7 @@ import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelect
 export const SpanAnnotationValueSelector = memo(
   ({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
     // global server state (react-query)
-    const projectCodes = CodeHooks.useGetAllCodesList();
+    const projectCodes = useGetAllCodesList();
     const codeTree = useWithLevel(projectCodes.data || []);
 
     const [value, setValue] = useState<string[]>(() => {

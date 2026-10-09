@@ -1,6 +1,6 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
-import { ProjectHooks } from "@core/project";
+import { useCreateProject } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectCreate } from "@models/ProjectCreate";
@@ -27,7 +27,7 @@ export function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogPr
       description: "",
     },
   });
-  const createProjectMutation = ProjectHooks.useCreateProject();
+  const createProjectMutation = useCreateProject();
   const handleProjectCreation: SubmitHandler<ProjectCreate> = (data) => {
     createProjectMutation.mutate(
       {

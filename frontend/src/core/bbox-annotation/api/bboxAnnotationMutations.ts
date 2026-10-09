@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 // BBOX QUERIES live in annotationQueries.bbox (used with `useQuery` directly).
 
 // BBOX MUTATIONS
-const useCreateBBoxAnnotation = () =>
+export const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "create"],
     mutationFn: (variables: BBoxAnnotationCreate) =>
@@ -21,7 +21,7 @@ const useCreateBBoxAnnotation = () =>
     },
   });
 
-const useUpdateBBoxAnnotation = () =>
+export const useUpdateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "update"],
     mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
@@ -64,7 +64,7 @@ const useUpdateBBoxAnnotation = () =>
     },
   });
 
-const useUpdateBulkBBoxAnnotation = () =>
+export const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "updateBulk"],
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
@@ -74,7 +74,7 @@ const useUpdateBulkBBoxAnnotation = () =>
     },
   });
 
-const useDeleteBBoxAnnotation = () =>
+export const useDeleteBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "delete"],
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
@@ -102,7 +102,7 @@ const useDeleteBBoxAnnotation = () =>
     },
   });
 
-const useDeleteBulkBBoxAnnotation = () =>
+export const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "deleteBulk"],
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
@@ -111,11 +111,3 @@ const useDeleteBulkBBoxAnnotation = () =>
       successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,
     },
   });
-
-export const BboxAnnotationHooks = {
-  useCreateBBoxAnnotation,
-  useUpdateBBoxAnnotation,
-  useUpdateBulkBBoxAnnotation,
-  useDeleteBBoxAnnotation,
-  useDeleteBulkBBoxAnnotation,
-};

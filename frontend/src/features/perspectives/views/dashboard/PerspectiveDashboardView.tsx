@@ -17,7 +17,7 @@ import { ClusterJobProgressCard } from "../../_components/ClusterJobProgressCard
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { DocAspectTable } from "../../_components/DocAspectTable";
 import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
-import { PerspectivesHooks } from "../../api/perspectivesHooks";
+import { useLivePerspectivesJob } from "../../api/perspectivesHooks";
 import { useGetDocVisualization } from "../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { ClusterDistributionPlot } from "./_components/ClusterDistributionPlot";
@@ -44,7 +44,7 @@ export function PerspectiveDashboardView() {
     ...aspectsOptions,
     select: (data) => data[aspectId],
   });
-  const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);
+  const perspectivesJob = useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);
   const vis = useGetDocVisualization(aspectId);
 
   // computed

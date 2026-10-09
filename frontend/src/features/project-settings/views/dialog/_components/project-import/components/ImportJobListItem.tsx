@@ -4,7 +4,7 @@ import { JobStatus } from "@models/JobStatus";
 import { Typography } from "@mui/material";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { ImportHooks } from "../../../../../api/importHooks";
+import { useLiveImportJob } from "../../../../../api/importHooks";
 
 interface ImportJobListItemProps {
   initialImportJob: ImportJobRead;
@@ -12,7 +12,7 @@ interface ImportJobListItemProps {
 
 export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemProps) => {
   // global server state (react-query)
-  const importJob = ImportHooks.useLiveImportJob(initialImportJob.job_id, initialImportJob);
+  const importJob = useLiveImportJob(initialImportJob.job_id, initialImportJob);
 
   // compute subtitle
   const subTitle = useMemo(() => {

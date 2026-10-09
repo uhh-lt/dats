@@ -1,7 +1,7 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
-import { MetadataHooks } from "@core/project-metadata";
+import { useGetProjectMetadataList } from "@core/project-metadata";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -27,7 +27,7 @@ export const SelectSentenceAnnotationsDialog = memo(
     const dialog = useDialog();
 
     // global server state
-    const metadata = MetadataHooks.useGetProjectMetadataList();
+    const metadata = useGetProjectMetadataList();
 
     // maximize
     const { isMaximized, toggleMaximize } = useDialogMaximize();

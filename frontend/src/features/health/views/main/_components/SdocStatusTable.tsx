@@ -1,5 +1,5 @@
 import { FilterTable } from "@core/filter";
-import { DocProcessingHooks } from "@core/job";
+import { useRecomputeDocProcessingJobs, useRetryDocProcessingJobs } from "@core/job";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
 import { SdocHealthResult } from "@models/SdocHealthResult";
@@ -82,7 +82,7 @@ export function SdocStatusTable({
   }, [rowSelectionModel]);
 
   // actions
-  const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = DocProcessingHooks.useRetryDocProcessingJobs();
+  const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
     retryDocProcessingJobs({
       projId: projectId,
@@ -91,8 +91,7 @@ export function SdocStatusTable({
     });
   }, [doctype, projectId, retryDocProcessingJobs, selectedRows]);
 
-  const { mutate: recomputeDocProcessingJobs, isPending: isRecomputePending } =
-    DocProcessingHooks.useRecomputeDocProcessingJobs();
+  const { mutate: recomputeDocProcessingJobs, isPending: isRecomputePending } = useRecomputeDocProcessingJobs();
   const handleRecompute = useCallback(
     (step: string) => {
       recomputeDocProcessingJobs({

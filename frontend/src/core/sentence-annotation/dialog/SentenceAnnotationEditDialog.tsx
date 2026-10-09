@@ -7,7 +7,7 @@ import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
-import { SentenceAnnotationHooks } from "../api/sentenceAnnotationHooks";
+import { useUpdateBulkSentenceAnno } from "../api/sentenceAnnotationMutations";
 import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
 export interface SentenceAnnotationEditDialogProps extends ButtonProps {
@@ -24,7 +24,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
   const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("sentenceAnnotationEdit");
 
   // mutations
-  const { mutate: updateAnnotationBulkMutation, isPending } = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
+  const { mutate: updateAnnotationBulkMutation, isPending } = useUpdateBulkSentenceAnno();
 
   // actions
   const handleClose = useCallback(() => {

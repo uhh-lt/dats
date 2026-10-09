@@ -1,7 +1,7 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo, useCallback } from "react";
-import { MemoHooks } from "./api/memoHooks";
+import { useUpdateMemos } from "./api/memoMutations";
 
 interface MemoFavoriteMenuItemProps {
   memoId: number | undefined;
@@ -11,7 +11,7 @@ interface MemoFavoriteMenuItemProps {
 
 export const MemoFavoriteMenuItem = memo(
   ({ memoId, isFavorite, onClick, ...props }: MemoFavoriteMenuItemProps & MenuItemProps) => {
-    const { mutate: updateMemos, isPending } = MemoHooks.useUpdateMemos();
+    const { mutate: updateMemos, isPending } = useUpdateMemos();
 
     const handleClick = useCallback(
       (event: React.MouseEvent) => {

@@ -4,7 +4,7 @@ import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, useCallback } from "react";
-import { SdocHooks } from "./api/sdocHooks";
+import { useDeleteDocuments } from "./api/sdocMutations";
 
 interface DeleteSdocsButtonProps {
   sdocIds: number[];
@@ -13,7 +13,7 @@ interface DeleteSdocsButtonProps {
 
 export const DeleteSdocsButton = memo(({ sdocIds, onDeleted, ...props }: DeleteSdocsButtonProps & IconButtonProps) => {
   // mutations
-  const { mutate: deleteDocuments } = SdocHooks.useDeleteDocuments();
+  const { mutate: deleteDocuments } = useDeleteDocuments();
 
   // ui events
   const openConfirmationDialog = useOpenConfirmationDialog();

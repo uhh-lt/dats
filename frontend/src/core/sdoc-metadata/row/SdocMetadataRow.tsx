@@ -1,5 +1,5 @@
 import { FormChipList, FormDate, FormNumber, FormSwitch, FormText } from "@components/form-inputs";
-import { MetadataHooks, ProjectMetadataEditMenu } from "@core/project-metadata";
+import { ProjectMetadataEditMenu, useGetProjectMetadata } from "@core/project-metadata";
 import { ErrorMessage } from "@hookform/error-message";
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -21,7 +21,7 @@ interface SdocMetadataRowProps {
 }
 
 export const SdocMetadataRow = memo(({ metadata, onUpdateMetadata, onAddFilterClick }: SdocMetadataRowProps) => {
-  const projectMetadata = MetadataHooks.useGetProjectMetadata(metadata.project_metadata_id);
+  const projectMetadata = useGetProjectMetadata(metadata.project_metadata_id);
 
   if (projectMetadata.data) {
     return (

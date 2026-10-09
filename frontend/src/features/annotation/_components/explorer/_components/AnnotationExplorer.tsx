@@ -1,4 +1,4 @@
-import { CodeHooks } from "@core/code";
+import { useGetAllCodesList } from "@core/code";
 import { useDebounce } from "@hooks/useDebounce";
 import { CodeRead } from "@models/CodeRead";
 import { Square } from "@mui/icons-material";
@@ -29,7 +29,7 @@ export function AnnotationExplorer<T extends AnnotationRead>({
   const filter = useDebounce(filterValue, 300);
 
   // code filtering
-  const projectCodes = CodeHooks.useGetAllCodesList();
+  const projectCodes = useGetAllCodesList();
   const [filterCodeIds, setFilterCodeIds] = useState<number[]>([]);
   const codes = useMemo(() => {
     const annotationCodeIds = new Set(annotations?.map((annotation) => annotation.code_id));

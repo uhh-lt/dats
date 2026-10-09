@@ -1,4 +1,4 @@
-import { SentenceAnnotationHooks } from "@core/sentence-annotation";
+import { useUpdateSentenceAnnotation } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
 
@@ -84,7 +84,7 @@ const hasChangedBoundaries = (state: ResizeState): boolean => {
  * @param sentenceCount - Total number of sentences in the document (used to clamp the end boundary)
  */
 export function useSentenceAnnotationResize(sentenceCount: number | undefined) {
-  const { mutate: updateSentenceAnnotation } = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+  const { mutate: updateSentenceAnnotation } = useUpdateSentenceAnnotation();
   const resizeStateRef = useRef<ResizeState | undefined>(undefined);
   const suppressMouseUpRef = useRef(false);
   const [resizeState, setResizeState] = useState<ResizeState>();

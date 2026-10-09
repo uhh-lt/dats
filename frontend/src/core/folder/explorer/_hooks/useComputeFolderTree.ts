@@ -1,19 +1,19 @@
 import { dataToTree, ITree } from "@components/tree-explorer";
-import { ProjectHooks } from "@core/project";
+import { useGetProject } from "@core/project";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import { FolderHooks } from "../../api/folderHooks";
+import { useGetAllFolders } from "../../api/folderHooks";
 
 export const useComputeFolderTree = () => {
   // global server state
-  const allFolders = FolderHooks.useGetAllFolders();
+  const allFolders = useGetAllFolders();
 
   // global client state
   const projectId = useAppSelector((state) => state.project.projectId);
-  const project = ProjectHooks.useGetProject(projectId);
+  const project = useGetProject(projectId);
 
   // computed
   const folderTree: Node<ITree<FolderRead>> | null = useMemo(() => {

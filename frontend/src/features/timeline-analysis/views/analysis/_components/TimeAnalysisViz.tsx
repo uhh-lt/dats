@@ -20,7 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useRecomputeTimelineAnalysis } from "../../../api/timelineAnalysisHooks";
+import { useRecomputeTimelineAnalysis } from "../../../api/timelineAnalysisMutations";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount";
 import { TimelineAnalysisExportMenu } from "./TimelineAnalysisExportMenu";

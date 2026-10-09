@@ -1,5 +1,7 @@
 export * from "./api/docProcessingHooks";
+export * from "./api/docProcessingMutations";
 export * from "./api/jobHooks";
+export * from "./api/jobMutations";
 export * from "./api/jobPolling";
 export * from "./api/jobQueries";
 export * from "./JobListItem";

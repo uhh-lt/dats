@@ -10,7 +10,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import { useCreateCota, useDeleteCota, useDuplicateCota, useUpdateCota } from "../../api/cotaHooks";
+import { useCreateCota, useDeleteCota, useDuplicateCota, useUpdateCota } from "../../api/cotaMutations";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 

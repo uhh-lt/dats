@@ -5,7 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { TagRead } from "@models/TagRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { TagHooks } from "./api/tagHooks";
+import { useGetTag } from "./api/tagHooks";
 
 export interface TagRendererSharedProps extends ExpandableRendererProps {
   renderMemoIndicator?: boolean;
@@ -24,7 +24,7 @@ export const TagRenderer = memo(({ tag, ...props }: TagRendererProps) => {
 });
 
 const TagRendererWithoutData = memo(({ tagId, ...props }: { tagId: number } & TagRendererSharedProps) => {
-  const tag = TagHooks.useGetTag(tagId);
+  const tag = useGetTag(tagId);
 
   if (tag.isSuccess) {
     return <TagRendererWithData tag={tag.data} {...props} />;

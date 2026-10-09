@@ -12,8 +12,8 @@ Every renderer file must follow this exact order:
 
 ```tsx
 // 1. Imports
-import { EntityHooks } from "@api/hooks/EntityHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
+import { useGetEntity } from "@core/entity";
 import { EntityRead } from "@models/EntityRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
@@ -38,7 +38,7 @@ export const EntityRenderer = memo(({ entity, ...props }: EntityRendererProps) =
 
 // 5. WithoutData component (fetches by ID)
 const EntityRendererWithoutData = memo(({ entityId, ...props }: { entityId: number } & EntityRendererSharedProps) => {
-  const entity = EntityHooks.useGetEntity(entityId);
+  const entity = useGetEntity(entityId);
 
   if (entity.isSuccess) {
     return <EntityRendererWithData entity={entity.data} {...props} />;

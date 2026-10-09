@@ -19,7 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
-import { TagHooks } from "../../api/tagHooks";
+import { useBulkLinkTags, useBulkUnlinkTags, useBulkUpdateTags } from "../../api/tagMutations";
 import { tagQueries } from "../../api/tagQueries";
 import { TagCreateListItemButton } from "../../dialog";
 
@@ -96,8 +96,8 @@ function TagMenuContent({
   };
 
   // actions
-  const { mutate: addTagsMutation } = TagHooks.useBulkLinkTags();
-  const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkTags();
+  const { mutate: addTagsMutation } = useBulkLinkTags();
+  const { mutate: removeTagsMutation } = useBulkUnlinkTags();
   const handleClickTag = (tagId: number) => () => {
     const isChecked = checked[tagId] === CheckboxState.CHECKED;
     setChecked((prevChecked) => ({
@@ -123,7 +123,7 @@ function TagMenuContent({
     handleClose();
   };
 
-  const { mutate: updateTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkUpdateTags();
+  const { mutate: updateTagsMutation, isPending: isUpdatePending } = useBulkUpdateTags();
   const handleApplyTags = useCallback(() => {
     const checkedEntries = Object.entries(checked);
     updateTagsMutation({

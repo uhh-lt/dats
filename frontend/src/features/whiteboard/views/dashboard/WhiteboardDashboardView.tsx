@@ -13,7 +13,7 @@ import {
   useDeleteWhiteboard,
   useDuplicateWhiteboard,
   useUpdateWhiteboard,
-} from "../../api/whiteboardHooks";
+} from "../../api/whiteboardMutations";
 import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
 const WhiteboardDashboardRouteAPI = getRouteApi("/_auth/project/$projectId/whiteboard/");

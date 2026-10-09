@@ -12,14 +12,15 @@ import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { FolderHooks } from "./api/folderHooks";
+import { useGetAllFolders } from "./api/folderHooks";
+import { useDeleteFolder, useUpdateFolder } from "./api/folderMutations";
 import { FolderRenderer } from "./FolderRenderer";
 
 export function FolderEditDialog() {
   const { isOpen, data: dialogData, close: handleClose } = useDialog("folderEdit");
 
   // folders for selection as parent
-  const folders = FolderHooks.useGetAllFolders();
+  const folders = useGetAllFolders();
   const parentFolders = useMemo(() => {
     if (!folders.data || !dialogData?.folder) return [];
 
@@ -49,7 +50,7 @@ export function FolderEditDialog() {
   }, [isOpen, reset, dialogData]);
 
   // form actions
-  const { mutate: updateFolderMutation, isPending: isUpdateLoading } = FolderHooks.useUpdateFolder();
+  const { mutate: updateFolderMutation, isPending: isUpdateLoading } = useUpdateFolder();
   const handleFolderUpdate = useCallback<SubmitHandler<FolderUpdate>>(
     (updateData) => {
       if (dialogData?.folder) {
@@ -73,7 +74,7 @@ export function FolderEditDialog() {
     },
     [handleClose, dialogData, updateFolderMutation],
   );
-  const { mutate: deleteFolderMutation, isPending: isDeleteLoading } = FolderHooks.useDeleteFolder();
+  const { mutate: deleteFolderMutation, isPending: isDeleteLoading } = useDeleteFolder();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const handleFolderDelete = useCallback(() => {
     if (dialogData?.folder) {

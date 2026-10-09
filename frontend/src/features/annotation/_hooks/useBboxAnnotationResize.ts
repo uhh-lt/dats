@@ -1,4 +1,4 @@
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
+import { useUpdateBBoxAnnotation } from "@core/bbox-annotation";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { PointerEvent as ReactPointerEvent, RefObject, useCallback, useEffect, useRef, useState } from "react";
 
@@ -122,7 +122,7 @@ const hasChangedBoundaries = (state: ResizeState): boolean => {
  * @param imageRef - Ref to the SVG image element (used for coordinate conversion and bounds clamping)
  */
 export function useBboxAnnotationResize(imageRef: RefObject<SVGImageElement | null>) {
-  const { mutate: updateBBoxAnnotation } = BboxAnnotationHooks.useUpdateBBoxAnnotation();
+  const { mutate: updateBBoxAnnotation } = useUpdateBBoxAnnotation();
   const resizeStateRef = useRef<ResizeState | undefined>(undefined);
   const suppressMouseUpRef = useRef(false);
   const [resizeState, setResizeState] = useState<ResizeState>();

@@ -2,7 +2,7 @@ import { getIconComponent, Icon } from "@components/icons";
 import { MemoRead } from "@models/MemoRead";
 import { IconButton } from "@mui/material";
 import { memo, useCallback } from "react";
-import { MemoHooks } from "./api/memoHooks";
+import { useUpdateMemos } from "./api/memoMutations";
 
 interface MemoFavoriteIconButtonProps {
   memo: MemoRead;
@@ -13,7 +13,7 @@ interface MemoFavoriteIconButtonProps {
  * surrounding clickable row/card does not also trigger selection.
  */
 export const MemoFavoriteIconButton = memo(({ memo }: MemoFavoriteIconButtonProps) => {
-  const { mutate: updateMemos } = MemoHooks.useUpdateMemos();
+  const { mutate: updateMemos } = useUpdateMemos();
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {

@@ -21,7 +21,8 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { useGetAspect } from "../../../../api/perspectivesHooks";
+import { useStartPerspectivesJob } from "../../../../api/perspectivesMutations";
 import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 interface PositionSettingsProps {
@@ -30,7 +31,7 @@ interface PositionSettingsProps {
 
 export function PositionSettings({ aspectId }: PositionSettingsProps) {
   // aspect (to check modality and disable refinment)
-  const aspect = PerspectivesHooks.useGetAspect(aspectId);
+  const aspect = useGetAspect(aspectId);
 
   // position settings
   const xAxis = useAppSelector((state) => state.perspectives.xAxis);
@@ -77,7 +78,7 @@ export function PositionSettings({ aspectId }: PositionSettingsProps) {
   }, [vis.data]);
 
   // refinement
-  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJob, isPending } = useStartPerspectivesJob();
   const handleRefineTM = () => {
     startPerspectivesJob({
       aspectId,

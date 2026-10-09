@@ -12,7 +12,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch } from "@store/storeHooks";
-import { useUpdateTimelineAnalysis } from "../../../api/timelineAnalysisHooks";
+import { useUpdateTimelineAnalysis } from "../../../api/timelineAnalysisMutations";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";

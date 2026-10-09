@@ -1,6 +1,6 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { annotationQueries } from "@core/annotation";
-import { CodeHooks, CodeRenderer } from "@core/code";
+import { CodeRenderer, useGetCode } from "@core/code";
 import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -43,7 +43,7 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
 
   // global server state (react-query)
   const annotation = useQuery(annotationQueries.sentence.byId(props.data.sentenceAnnotationId));
-  const code = CodeHooks.useGetCode(annotation.data?.code_id);
+  const code = useGetCode(annotation.data?.code_id);
   const memos = useQuery(
     memoQueries.byAttachedObject(AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId),
   );

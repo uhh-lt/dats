@@ -1,7 +1,7 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { useAuth } from "@core/auth";
-import { CodeHooks } from "@core/code";
+import { useGetCode, useGetEnabledCodes } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
@@ -79,7 +79,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
 
   // computed
   const codes = useComputeCodesForSelection();
-  const enabledCodes = CodeHooks.useGetEnabledCodes();
+  const enabledCodes = useGetEnabledCodes();
   const codeTree = useWithLevel(codes, codes[0]?.parent_id ?? null);
   const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
     const scopedOptions = codeTree.map((c) => ({
@@ -412,7 +412,7 @@ function CodeSelectorListItem({
   memoButtonRef,
 }: CodeSelectorListItemProps) {
   // global server state (react query)
-  const code = CodeHooks.useGetCode(codeId);
+  const code = useGetCode(codeId);
 
   return (
     <>

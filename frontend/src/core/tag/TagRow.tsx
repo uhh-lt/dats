@@ -1,6 +1,6 @@
 import { Box, Stack } from "@mui/material";
 import { memo } from "react";
-import { TagHooks } from "./api/tagHooks";
+import { useGetTag } from "./api/tagHooks";
 import { TagRenderer } from "./TagRenderer";
 import { TagUnlinkButton } from "./TagUnlinkButton";
 
@@ -10,7 +10,7 @@ interface TagRow {
 }
 
 export const TagRow = memo(({ tagId, sdocId }: TagRow) => {
-  const tag = TagHooks.useGetTag(tagId);
+  const tag = useGetTag(tagId);
 
   return (
     <Stack direction={"row"}>

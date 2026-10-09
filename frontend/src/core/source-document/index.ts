@@ -1,4 +1,5 @@
 export * from "./api/sdocHooks";
+export * from "./api/sdocMutations";
 export * from "./api/sdocQueries";
 export * from "./api/searchQueries";
 export * from "./DeleteSdocsButton";

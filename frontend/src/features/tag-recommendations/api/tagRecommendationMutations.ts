@@ -6,7 +6,7 @@ import { tagRecommendationQueries } from "./tagRecommendationQueries";
 // TAG RECOMMENDATION QUERIES live in tagRecommendationQueries (used with `useQuery` directly).
 
 // TAG RECOMMENDATION MUTATIONS
-const useReviewTagRecommendations = () =>
+export const useReviewTagRecommendations = () =>
   useMutation({
     mutationKey: [...tagRecommendationQueries.all(), "reviewTagRecommendations"],
     mutationFn: TagRecommendationService.updateRecommendations,
@@ -17,7 +17,3 @@ const useReviewTagRecommendations = () =>
       successMessage: () => `Reviewed tags!`,
     },
   });
-
-export const TagRecommendationHooks = {
-  useReviewTagRecommendations,
-};

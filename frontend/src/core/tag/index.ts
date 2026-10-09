@@ -1,4 +1,5 @@
 export * from "./api/tagHooks";
+export * from "./api/tagMutations";
 export * from "./api/tagQueries";
 export * from "./dialog";
 export * from "./explorer";

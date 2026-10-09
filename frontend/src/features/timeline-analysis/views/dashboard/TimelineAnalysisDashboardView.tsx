@@ -16,7 +16,7 @@ import {
   useDeleteTimelineAnalysis,
   useDuplicateTimelineAnalysis,
   useUpdateTimelineAnalysis,
-} from "../../api/timelineAnalysisHooks";
+} from "../../api/timelineAnalysisMutations";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 
