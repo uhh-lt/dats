@@ -1,5 +1,5 @@
 import { useAuth } from "@core/auth";
-import { CodeHooks } from "@core/code";
+import { useGetEnabledCodes } from "@core/code";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect } from "react";
 import { CodeShortcutActions } from "../../store/codeShortcutSlice";
@@ -12,7 +12,7 @@ export function CodeShortcutSynchronizer({ projectId }: CodeShortcutSynchronizer
   const dispatch = useAppDispatch();
   const { user } = useAuth();
   const currentProjectId = useAppSelector((state) => state.project.projectId);
-  const codes = CodeHooks.useGetEnabledCodes();
+  const codes = useGetEnabledCodes();
 
   useEffect(() => {
     if (!user || !codes.isSuccess || currentProjectId !== projectId) {

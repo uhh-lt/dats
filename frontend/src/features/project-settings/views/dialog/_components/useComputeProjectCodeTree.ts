@@ -1,5 +1,5 @@
 import { dataToTree, ITree } from "@components/tree-explorer";
-import { CodeHooks } from "@core/code";
+import { useGetAllCodesList } from "@core/code";
 import { CodeRead } from "@models/CodeRead";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
@@ -20,7 +20,7 @@ const dummyRootNode: CodeRead = {
 
 export const useComputeProjectCodeTree = () => {
   // global server state
-  const allCodes = CodeHooks.useGetAllCodesList();
+  const allCodes = useGetAllCodesList();
 
   // computed
   const codeTree: Node<ITree<CodeRead>> | null = useMemo(() => {

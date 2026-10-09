@@ -1,5 +1,5 @@
-import { CodeHooks } from "@core/code";
-import { TagHooks } from "@core/tag";
+import { useUpdateCode } from "@core/code";
+import { useBulkUnlinkTags } from "@core/tag";
 import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { Ref, useImperativeHandle, useState } from "react";
@@ -38,7 +38,7 @@ export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
   }));
 
   // actions
-  const bulkUnlinkTagsMutation = TagHooks.useBulkUnlinkTags();
+  const bulkUnlinkTagsMutation = useBulkUnlinkTags();
   const handleDeleteTagSdocEdges = () => {
     if (edges.length === 0) return;
 
@@ -61,7 +61,7 @@ export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
     closeMenu();
   };
 
-  const updateCodeMutation = CodeHooks.useUpdateCode();
+  const updateCodeMutation = useUpdateCode();
   const handleDeleteCodeCodeEdges = () => {
     if (edges.length === 0) return;
 

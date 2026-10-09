@@ -1,4 +1,4 @@
-import { LLMHooks } from "@core/llm";
+import { useDetermineApproach } from "@core/llm";
 import { TagTable } from "@core/tag";
 import { TagRead } from "@models/TagRead";
 import { TaskType } from "@models/TaskType";
@@ -23,7 +23,7 @@ export const DocumentTagSelectionStep = memo(() => {
   );
 
   // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
+  const { mutate: determineApproachMutation, isPending } = useDetermineApproach();
 
   const handleNext = useCallback(
     (tags: TagRead[]) => () => {

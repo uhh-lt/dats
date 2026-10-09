@@ -1,4 +1,5 @@
 export * from "./api/memoHooks";
+export * from "./api/memoMutations";
 export * from "./api/memoQueries";
 export * from "./dialog";
 export * from "./editor";

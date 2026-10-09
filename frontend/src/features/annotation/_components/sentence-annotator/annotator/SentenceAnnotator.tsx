@@ -1,3 +1,8 @@
+import {
+  useCreateSentenceAnnotation,
+  useDeleteSentenceAnnotation,
+  useUpdateSentenceAnnotation,
+} from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, BoxProps } from "@mui/material";
@@ -8,7 +13,6 @@ import { memo, useMemo, useRef, useState } from "react";
 import { useAuth } from "@core/auth";
 import { codeQueries } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
-import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { useQuery } from "@tanstack/react-query";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
@@ -67,9 +71,9 @@ export const SentenceAnnotator = memo(
     const dispatch = useAppDispatch();
     const { user } = useAuth();
     const openSnackbar = useOpenSnackbar();
-    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
-    const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
-    const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+    const createMutation = useCreateSentenceAnnotation();
+    const deleteMutation = useDeleteSentenceAnnotation();
+    const updateMutation = useUpdateSentenceAnnotation();
 
     // resize
     const resizeController = useSentenceAnnotationResize(sdocData.sentences.length);

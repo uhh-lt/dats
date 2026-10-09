@@ -1,4 +1,4 @@
-import { SpanAnnotationHooks } from "@core/span-annotation";
+import { useUpdateSpanAnnotation } from "@core/span-annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { IToken } from "../_types/IToken";
@@ -96,7 +96,7 @@ const hasChangedBoundaries = (state: ResizeState): boolean => {
  *   character offsets and span text from token indices)
  */
 export function useSpanAnnotationResize(tokenData: IToken[] | undefined) {
-  const { mutate: updateSpanAnnotation } = SpanAnnotationHooks.useUpdateSpanAnnotation();
+  const { mutate: updateSpanAnnotation } = useUpdateSpanAnnotation();
   const resizeStateRef = useRef<ResizeState | undefined>(undefined);
   const suppressMouseUpRef = useRef(false);
   const [resizeState, setResizeState] = useState<ResizeState>();

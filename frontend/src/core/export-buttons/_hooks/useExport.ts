@@ -1,4 +1,4 @@
-import { JobHooks } from "@core/job";
+import { useLiveExportJob, useStartExportJob } from "@core/job";
 import { useOpenSnackbar } from "@core/notification";
 import { ExportJobInput } from "@models/ExportJobInput";
 import { JobStatus } from "@models/JobStatus";
@@ -12,8 +12,8 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // mutations
-  const { mutate: startExportMutation, reset: resetExport, data, isPending } = JobHooks.useStartExportJob();
-  const exportJob = JobHooks.useLiveExportJob(data?.job_id);
+  const { mutate: startExportMutation, reset: resetExport, data, isPending } = useStartExportJob();
+  const exportJob = useLiveExportJob(data?.job_id);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

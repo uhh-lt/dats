@@ -1,5 +1,5 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { CodeHooks } from "@core/code";
+import { useGetCode } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CircularProgress } from "@mui/material";
@@ -30,7 +30,7 @@ export function CodeIndicator({
   memoCount = 0,
   attachedObjectType = AttachedObjectType.SPAN_ANNOTATION,
 }: CodeIndicatorProps) {
-  const code = CodeHooks.useGetCode(codeId);
+  const code = useGetCode(codeId);
 
   // pending (not yet persisted) annotations have negative ids. They render their real code pill
   // (so the label never flickers), but are styled as pending and made non-interactive until saved.

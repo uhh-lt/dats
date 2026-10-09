@@ -1,7 +1,13 @@
 import { useAuth } from "@core/auth";
 import { codeQueries } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
-import { SentenceAnnotationHooks } from "@core/sentence-annotation";
+import {
+  useCreateBulkSentenceAnnotation,
+  useCreateSentenceAnnotation,
+  useDeleteBulkSentenceAnnotationSingleSdoc,
+  useDeleteSentenceAnnotation,
+  useUpdateSentenceAnnotation,
+} from "@core/sentence-annotation";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
@@ -100,11 +106,11 @@ export const SentenceAnnotationComparison = memo(
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
     const openSnackbar = useOpenSnackbar();
-    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
-    const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation();
-    const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
-    const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotationSingleSdoc();
-    const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+    const createMutation = useCreateSentenceAnnotation();
+    const createBulkMutation = useCreateBulkSentenceAnnotation();
+    const deleteMutation = useDeleteSentenceAnnotation();
+    const deleteBulkMutation = useDeleteBulkSentenceAnnotationSingleSdoc();
+    const updateMutation = useUpdateSentenceAnnotation();
     const openConfirmationDialog = useOpenConfirmationDialog();
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
       openConfirmationDialog({

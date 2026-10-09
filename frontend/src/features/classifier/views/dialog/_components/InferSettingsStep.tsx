@@ -1,8 +1,8 @@
 import { FormSwitch } from "@components/form-inputs";
 import { CodeRenderer } from "@core/code";
-import { SentenceAnnotationHooks } from "@core/sentence-annotation";
-import { SpanAnnotationHooks } from "@core/span-annotation";
-import { TagHooks, TagRenderer } from "@core/tag";
+import { useCountSentenceAnnotationsBySdocsAndUser } from "@core/sentence-annotation";
+import { useCountSpanAnnotationsBySdocsAndUser } from "@core/span-annotation";
+import { TagRenderer, useCountTagsBySdocsAndUser } from "@core/tag";
 import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {
@@ -22,7 +22,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_TRAINED_ID } from "@utils/GlobalConstants";
 import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { ClassifierHooks } from "../../../api/classifierHooks";
+import { useStartClassifierJob } from "../../../api/classifierMutations";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface InferenceSettings {
@@ -32,11 +32,11 @@ interface InferenceSettings {
 const useCountBySdocsAndUser = (model: ClassifierModel) => {
   switch (model) {
     case ClassifierModel.DOCUMENT:
-      return TagHooks.useCountBySdocsAndUser;
+      return useCountTagsBySdocsAndUser;
     case ClassifierModel.SENTENCE:
-      return SentenceAnnotationHooks.useCountBySdocsAndUser;
+      return useCountSentenceAnnotationsBySdocsAndUser;
     case ClassifierModel.SPAN:
-      return SpanAnnotationHooks.useCountBySdocsAndUser;
+      return useCountSpanAnnotationsBySdocsAndUser;
   }
 };
 
@@ -75,7 +75,7 @@ export function InferenceSettingsStep() {
     dispatch(ClassifierActions.setInferenceKeepExisting(getValues("keepExisting")));
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
-  const { mutate: startClassifierJobMutation, isPending: isStartJobPending } = ClassifierHooks.useStartClassifierJob();
+  const { mutate: startClassifierJobMutation, isPending: isStartJobPending } = useStartClassifierJob();
   const onSubmit = (data: InferenceSettings) => {
     if (model === undefined || task === undefined || classifierId === undefined || sdocIds.length === 0) return;
     dispatch(ClassifierActions.setInferenceKeepExisting(data.keepExisting));

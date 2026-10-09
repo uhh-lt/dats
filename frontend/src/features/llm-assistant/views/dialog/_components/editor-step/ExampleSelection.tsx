@@ -1,7 +1,7 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
-import { MetadataHooks } from "@core/project-metadata";
+import { useGetProjectMetadataList } from "@core/project-metadata";
 import { SEATFilterActions, SentenceAnnotationReduxFilterTable } from "@core/sentence-annotation";
 import { SATFilterActions, SpanAnnotationReduxFilterTable } from "@core/span-annotation";
 import { useDialog } from "@hooks/useDialog";
@@ -47,7 +47,7 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
 
   // dialog
   const dispatch = useAppDispatch();
-  const metadata = MetadataHooks.useGetProjectMetadataList();
+  const metadata = useGetProjectMetadataList();
   const dialog = useDialog();
   const [selectedCodeId, setSelectedCodeId] = useState<number | null>(null);
   const handleOpenDialog = useCallback(

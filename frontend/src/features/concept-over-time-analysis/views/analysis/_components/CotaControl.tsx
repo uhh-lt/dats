@@ -20,7 +20,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { useLiveCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "../../../api/cotaHooks";
+import { useLiveCOTARefinementJob } from "../../../api/cotaHooks";
+import { useRefineCota, useResetCota, useUpdateCota } from "../../../api/cotaMutations";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";

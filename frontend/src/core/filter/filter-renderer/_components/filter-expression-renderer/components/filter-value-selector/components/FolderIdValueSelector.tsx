@@ -1,5 +1,5 @@
 import { useWithLevel } from "@components/tree-explorer";
-import { FolderHooks, FolderRenderer } from "@core/folder";
+import { FolderRenderer, useGetAllFolders } from "@core/folder";
 import { FolderType } from "@models/FolderType";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
@@ -7,7 +7,7 @@ import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelect
 
 export const FolderIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
-  const projectFolders = FolderHooks.useGetAllFolders();
+  const projectFolders = useGetAllFolders();
   // transform flat list into hierarchical structure
   const foldersWithLevel = useWithLevel(projectFolders.data || []);
 

@@ -2,7 +2,7 @@ import { ExpandableRenderer, ExpandableRendererProps } from "@components/Expanda
 import { ProjectRead } from "@models/ProjectRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { ProjectHooks } from "./api/projectHooks";
+import { useGetProject } from "./api/projectHooks";
 
 export type ProjectRendererSharedProps = ExpandableRendererProps;
 
@@ -20,7 +20,7 @@ export const ProjectRenderer = memo(({ project, ...props }: ProjectRendererProps
 
 const ProjectRendererWithoutData = memo(
   ({ projectId, ...props }: { projectId: number } & ProjectRendererSharedProps) => {
-    const project = ProjectHooks.useGetProject(projectId);
+    const project = useGetProject(projectId);
 
     if (project.isSuccess) {
       return <ProjectRendererWithData project={project.data} {...props} />;

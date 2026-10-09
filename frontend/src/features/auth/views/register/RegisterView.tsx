@@ -1,7 +1,7 @@
 import { DATSLogo } from "@components/DATSLogo";
 import { FormEmail, FormPassword, FormText } from "@components/form-inputs";
 import { LinkButton } from "@core/navigation";
-import { UserHooks } from "@core/user";
+import { useRegister } from "@core/user";
 import { ErrorMessage } from "@hookform/error-message";
 import { UserCreate } from "@models/UserCreate";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
@@ -64,7 +64,7 @@ export function RegisterView() {
   });
 
   // registration
-  const registerUserMutation = UserHooks.useRegister();
+  const registerUserMutation = useRegister();
 
   // form handling
   const handleRegistration: SubmitHandler<RegisterFormValues> = (data) => {

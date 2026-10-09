@@ -1,4 +1,4 @@
-export * from "./api/sentenceAnnotationHooks";
+export * from "./api/sentenceAnnotationMutations";
 export * from "./dialog";
 export * from "./SentenceAnnotationExportButton";
 export * from "./SentenceAnnotationRenderer";

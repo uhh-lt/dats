@@ -53,7 +53,7 @@ Vite as the build tool and development server
 - `/frontend/bin`: Various scripts
 - `/frontend/public`: Public assets like logos
 - `/frontend/src`: Main application code
-  - `/api`: Generated API client (`services/`), query factories (`queries/`), hooks for API interactions (`hooks/`) and the cache-sync code (`cache-sync/`)
+  - `/api`: Generated API client (`services/`), the `queryClient` and the cache-sync code (`cache-sync/`). Queries and mutations live in the domain they belong to, see "Where do queries and mutations live?" below
   - `/auth`: Authentication and authorization logic
   - `/components`: Reusable React components
   - `/layouts`: Layout components for different page structures
@@ -67,8 +67,9 @@ Vite as the build tool and development server
 
 - **React Components**: PascalCase with `.tsx` extension (e.g., `EditableTypography.tsx`, `CodeCreateDialog.tsx`)
 - **Custom Hooks**: Lowercase with `use` prefix and `.ts` extension (e.g., `useDebounce.ts`, `useDialog.ts`)
-- **Query factories**: `{entity}Queries.ts` in `frontend/src/api/queries/` (e.g., `tagQueries.ts`)
-- **API Hooks**: Named `{Entity}Hooks.ts` bundling the entity's mutation hooks and data-deriving hooks (e.g., `CodeHooks.ts`, `SdocHooks.ts`)
+- **Query factories**: `{domain}Queries.ts` in the domain's `api/` folder (e.g., `core/tag/api/tagQueries.ts`)
+- **Mutations**: `{domain}Mutations.ts` next to it, exporting the `useMutation` hooks as named exports (e.g., `core/tag/api/tagMutations.ts`)
+- **Data-deriving hooks**: `{domain}Hooks.ts` next to it, only if the domain has hooks that add logic on top of a query (e.g., `core/code/api/codeHooks.ts`: `useGetCode`)
 - **Redux Slices**: `{featureName}Slice.ts` (e.g., `annoSlice.ts`, `projectSlice.ts`)
 - **Utilities**: Descriptive names matching their purpose (e.g., `ColorUtils.ts`, `DateUtils.ts`)
 - **Directories**: Lowercase with hyphens for multi-word names (e.g., `/FormInputs`, `/TreeExplorer`)
@@ -108,7 +109,16 @@ Vite as the build tool and development server
 
 Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules below are the convention for new and migrated code.
 
-**Queries are defined once, in a query factory** (`frontend/src/api/queries/<domain>Queries.ts`, e.g. [tagQueries.ts](../../frontend/src/api/queries/tagQueries.ts)):
+**Where do queries and mutations live?** In the domain that owns the data, in a public `api/` folder next to the domain's code:
+
+- Used by core and by several features (code, tag, memo, folder, project, source document, user, annotations, metadata, job, llm, statistics, workspace views): `core/<domain>/api/`.
+- Used by exactly one feature (classifier, COTA, whiteboard, perspectives, ...): `features/<feature>/api/`.
+- Each domain's `index.ts` exports its `api/` files, so other code imports `import { codeQueries, useCreateCode } from "@core/code"`. Inside the domain use relative imports.
+- A hook that reads the Redux slice of a feature stays in that feature (`useLabelDocs`); `core` may not read feature slices.
+- Only the cache-sync code (`api/cache-sync`) may import `core/<domain>/api/<file>` directly (ESLint exemption), because it writes the caches of every domain.
+- Do not create new root keys that exist already; the root of a factory is its domain (`["tags", ...]`).
+
+**Queries are defined once, in a query factory** (`<domain>/api/<domain>Queries.ts`, e.g. [tagQueries.ts](../../frontend/src/core/tag/api/tagQueries.ts)):
 
 - A factory is a plain object with `all()`, scope prefixes (`xxxScope()`) and `queryOptions(...)` leaves. It contains no React.
 - Keys are hierarchical: **domain, then scope, then params**, e.g. `["tags", "project", projectId]`.
@@ -119,11 +129,11 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 **Use factories at the call site:**
 
 - Components: `useQuery({ ...tagQueries.byProject(projectId), select })`. Read the project id inline with `useAppSelector((state) => state.project.projectId)` (or take it from route params/props).
-- Do not add wrapper hooks that only forward to `useQuery`. A hook is justified only if it adds logic, e.g. deriving data with `select` ([CodeHooks.ts](../../frontend/src/api/hooks/CodeHooks.ts): `useGetCode`).
+- Do not add wrapper hooks that only forward to `useQuery`. A hook is justified only if it adds logic, e.g. deriving data with `select` ([codeHooks.ts](../../frontend/src/core/code/api/codeHooks.ts): `useGetCode`).
 - Cache access (`setQueryData`, `getQueryData`, `invalidateQueries`) uses the typed key `tagQueries.byProject(id).queryKey` or a scope prefix like `tagQueries.byProjectScope()`. This keeps the data type inferred and keeps invalidation prefix-based.
 - Data normalization with Record maps (`Record<id, data>`) for O(1) access is fine when the cache-sync code relies on that shape; comment why.
 
-**Mutations** live in the domain's `{Entity}Hooks.ts` ([TagHooks.ts](../../frontend/src/api/hooks/TagHooks.ts)):
+**Mutations** live in the domain's `{domain}Mutations.ts` ([tagMutations.ts](../../frontend/src/core/tag/api/tagMutations.ts)) and are imported by name (`useCreateTag`):
 
 - Every mutation has a `mutationKey` that starts with the domain root: `mutationKey: [...tagQueries.all(), "create"]`.
 - Cache updates are not written in components. Tag the mutation with `meta.datsEvent`; the cache-sync "brain" ([api/cache-sync](../../frontend/src/api/cache-sync/README.md)) writes the result into the cache.
@@ -142,7 +152,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - Do not write `*ViewLoader.ts` files. Use `beforeLoad` only for guards (e.g. the login redirect), not for query options.
 - If a query seeds other caches (e.g. the whiteboard content), do that in the `queryFn` of the factory, not in the route.
 
-**Migration status:** the `QueryKey` enum is gone; every query has a factory. The factories are still in `api/queries/` and the hooks in `api/hooks/`; they move into their domain folders in stage 6 of `query-key-plan.md`.
+**Migration status:** the `QueryKey` enum is gone and every query has a factory in its domain's `api/` folder.
 
 ### Redux Toolkit: Use for GLOBAL CLIENT state (dialogs, filters, selections)
 
@@ -279,8 +289,8 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 ## Workflow: Creating a Feature with All Patterns
 
-1. **Step 1: Define the query factory** (e.g., `api/queries/codeQueries.ts`)
-2. **Step 2: Create mutation / data-deriving hooks** (e.g., CodeHooks.ts)
+1. **Step 1: Define the query factory** (e.g., `core/code/api/codeQueries.ts`)
+2. **Step 2: Create mutations / data-deriving hooks** (e.g., `codeMutations.ts`, `codeHooks.ts`)
 3. **Step 3: Create Components** (e.g., CodeTable.tsx, CodeCreateDialog.tsx)
 4. **Step 4: Use in Views**
 

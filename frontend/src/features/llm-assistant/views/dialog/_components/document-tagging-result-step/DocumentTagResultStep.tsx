@@ -1,6 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { LLMHooks } from "@core/llm";
-import { TagHooks, tagQueries } from "@core/tag";
+import { useLiveLLMJob } from "@core/llm";
+import { tagQueries, useBulkSetTags } from "@core/tag";
 import { TaggingLLMJobResult } from "@models/TaggingLLMJobResult";
 import { TagRead } from "@models/TagRead";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
@@ -18,7 +18,7 @@ export const DocumentTagResultStep = memo(() => {
   // global server state
   const projectId = useAppSelector((state) => state.project.projectId);
   const documentTags = useQuery(tagQueries.byProject(projectId));
-  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
+  const llmJob = useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output && documentTags.isSuccess) {
     return (
@@ -72,7 +72,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
     dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
-  const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetTags();
+  const { mutate: applyTagsMutation, isPending } = useBulkSetTags();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation(
       {

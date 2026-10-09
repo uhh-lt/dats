@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
-import { ClassifierHooks } from "../../api/classifierHooks";
+import { useGetAllClassifiers } from "../../api/classifierHooks";
 import { ClassifierActions } from "../../store/classifierSlice";
 
 const classifierType2Icon: Record<ClassifierModel, Icon> = {
@@ -42,7 +42,7 @@ export const ClassifierInferenceButton = memo(({ sdocIds, projectId }: { sdocIds
   };
 
   // classifier menu
-  const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
+  const classifiers = useGetAllClassifiers(projectId);
   const groupedClassifiers = useMemo(() => {
     if (!classifiers.data) {
       return {};

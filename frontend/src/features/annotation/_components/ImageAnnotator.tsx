@@ -1,10 +1,10 @@
+import { useCreateBBoxAnnotation, useDeleteBBoxAnnotation, useUpdateBBoxAnnotation } from "@core/bbox-annotation";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { annotationQueries } from "@core/annotation";
 import { useAuth } from "@core/auth";
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { metadataQueries } from "@core/project-metadata";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
@@ -85,9 +85,9 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   // mutations for create, update, delete
   const { user } = useAuth();
   const openSnackbar = useOpenSnackbar();
-  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
-  const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
-  const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
+  const createMutation = useCreateBBoxAnnotation();
+  const updateMutation = useUpdateBBoxAnnotation();
+  const deleteMutation = useDeleteBBoxAnnotation();
 
   // click handling
   const handleClick = useCallback(

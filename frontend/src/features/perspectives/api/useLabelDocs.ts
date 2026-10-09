@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { perspectiveQueries } from "./perspectiveQueries";
 
 // These two mutations read the perspectives slice (current search query and filter), which is why they live in the
-// feature and not in api/hooks/PerspectivesHooks.ts.
+// feature and not in perspectivesMutations.ts.
 
 export const useLabelDocs = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);

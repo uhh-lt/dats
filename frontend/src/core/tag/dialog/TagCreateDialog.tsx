@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TagHooks } from "../api/tagHooks";
+import { useCreateTag } from "../api/tagMutations";
 import { tagQueries } from "../api/tagQueries";
 import { TagRenderer } from "../TagRenderer";
 
@@ -52,7 +52,7 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
   }, [dialogData, isTagCreateDialogOpen, reset, projectId]);
 
   // form actions
-  const { mutate: createTagMutation, isPending } = TagHooks.useCreateTag();
+  const { mutate: createTagMutation, isPending } = useCreateTag();
   const handleTagCreation = useCallback<SubmitHandler<TagCreate>>(
     (createData) => {
       createTagMutation(

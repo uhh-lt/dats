@@ -1,6 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
-import { JobHooks, jobStatusToSimple } from "@core/job";
-import { SdocHooks, SdocRenderer } from "@core/source-document";
+import { jobStatusToSimple, useLiveDuplicateFinderJob, useStartDuplicateFinderJob } from "@core/job";
+import { SdocRenderer, useDeleteDocuments } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";
@@ -49,7 +49,7 @@ export function DuplicateFinderView() {
   const lastDuplicateFinderJobId = useAppSelector((state) => state.duplicateFinder.lastDuplicateFinderJobId);
 
   // actions
-  const { mutate: startDuplicateFinderJob, isPending } = JobHooks.useStartDuplicateFinderJob();
+  const { mutate: startDuplicateFinderJob, isPending } = useStartDuplicateFinderJob();
   const handleClickFindDuplicateTextDocuments = () => {
     startDuplicateFinderJob(
       {
@@ -66,7 +66,7 @@ export function DuplicateFinderView() {
       },
     );
   };
-  const deleteDocumentsMutation = SdocHooks.useDeleteDocuments();
+  const deleteDocumentsMutation = useDeleteDocuments();
   const handleDeleteClick = (sdocIds: number[]) => {
     deleteDocumentsMutation.mutate(
       {
@@ -106,7 +106,7 @@ export function DuplicateFinderView() {
   };
 
   // job data
-  const duplicateFinderJob = JobHooks.useLiveDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
+  const duplicateFinderJob = useLiveDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
 
   // computed
   const { data, rowCount } = useMemo(() => {

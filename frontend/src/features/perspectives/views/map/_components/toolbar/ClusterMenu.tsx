@@ -20,7 +20,7 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
-import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { useStartPerspectivesJob } from "../../../../api/perspectivesMutations";
 import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 
 interface ClusterMenuProps {
@@ -138,7 +138,7 @@ function ClusterMenuContent({
   };
 
   // actions
-  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = useStartPerspectivesJob();
   const handleSetCluster = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedClusters = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);

@@ -1,7 +1,7 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { MemoHooks } from "./api/memoHooks";
+import { useUpdateMemos } from "./api/memoMutations";
 
 interface MemoFavoriteButtonProps {
   memoIds: number[];
@@ -10,7 +10,7 @@ interface MemoFavoriteButtonProps {
 
 export const MemoFavoriteButton = memo(
   ({ memoIds, isFavorite, ...props }: MemoFavoriteButtonProps & IconButtonProps) => {
-    const { mutate: updateMemos, isPending } = MemoHooks.useUpdateMemos();
+    const { mutate: updateMemos, isPending } = useUpdateMemos();
 
     const handleClick = useCallback(() => {
       updateMemos({

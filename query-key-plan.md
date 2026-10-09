@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Stages 0-5 done and committed. Stage 6 next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Status: **Stages 0-6 done. Stage 7 (cleanup and enforcement) next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
 Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -316,9 +316,7 @@ uses the same options; the tab title reads the entity from the cache; cache hydr
 - The whiteboard loader's cache seeding moved into `whiteboardQueries.data(projectId, whiteboardId)`, a query whose `queryFn` seeds the caches.
   Consequence: `ensureQueryData` returns the cached board on a second visit and does not re-seed (the brain keeps the entity caches current).
 - The perspectives loaders still throw if the aspect does not exist.
-- **Layer finding:** routes cannot import `_api` folders of a feature (private by lint). The four feature queries that routes need (`healthQueries`,
-  `wordFrequencyQueries`, `imageSimilarityQueries`, `sentenceSimilarityQueries`) therefore moved to `api/queries/` for now. Stage 6 has to decide
-  where route-used queries of a single feature live (idea: a public `features/<f>/api/` folder that the index exports, instead of the private `_api`).
+- **Layer finding:** routes cannot import `_api` folders of a feature (private by lint). Solved in stage 6 with a public `api/` folder per domain that the index exports.
 - The decision "route or component?" is written into `.github/instructions/frontend.instructions.md`.
 - Done when: met. Not yet checked in the running app (navigation by click and hover, back/forward, reload, tab titles).
 
@@ -346,8 +344,27 @@ Requested by you: each domain's `<domain>Queries.ts` and `<domain>Mutations.ts` 
      core domains (`core/llm`, `core/statistics`, ...) or the closest existing one.
   5. Hooks that derive data (`useGetCode`, `useGetTag`, ...): export the selector as a pure function from `<domain>Queries.ts`
      and use `useQuery({ ...codeQueries.byProject(id), select: selectEnabledCodes })` (recommended), or inline the `select`.
-- Update `frontend.instructions.md` and the cache-sync README (they mention `api/queries/` and `api/hooks/`).
-- Done when: no `api/queries/` folder, no `*Hooks.ts` files, every domain has `<domain>Queries.ts` + `<domain>Mutations.ts` in its domain folder.
+     **Result (done, 3 commits):**
+
+- Every query factory, mutation hook and data-deriving hook lives in `core/<domain>/api/` (shared) or `features/<feature>/api/` (single feature).
+  The folder is **public** (`api`, not `_api`) and the domain's `index.ts` exports it, so routes and other code import `@core/code` / `@features/x`.
+  `api/queries/` and `api/hooks/` are gone; `api/` keeps `services/`, `queryClient.ts` and `cache-sync/`.
+- Per domain: `<domain>Queries.ts` (pure), `<domain>Mutations.ts` (named exports of the `useMutation` hooks, e.g. `useCreateCode`), and
+  `<domain>Hooks.ts` only where the domain has hooks that add logic on a query (`useGetCode`, polling hooks). The `XHooks` objects are gone.
+- **Lint:** the cache-sync folder is exempt from `boundaries/element-types` and `no-internal-modules-public-entry` (it deep-imports
+  `@core/code/api/codeQueries`). The temporary `api-queries` element from stage 5 is removed again. No new import cycles (checked by script: 0 cycles before and after).
+- **Sub-decisions as settled** (some differ from the proposal above):
+  1. Metadata stays one unit in `core/project-metadata/api` (`metadataQueries` with project and sdoc metadata), because `metadataQueries.all()` is
+     used 9 times to invalidate both. `core/sdoc-metadata` imports it.
+  2. `annotationQueries` (span / bbox / sentence with the shared root) stays one file in `core/annotation/api`; the mutations are in the three annotation domains.
+  3. `jobQueries` stays one file in `core/job/api` (one shape for all job types), no per-type split.
+  4. New core domains `core/llm` (LLM queries and job mutations, used by four features) and `core/statistics`. Document processing mutations are in `core/job`.
+     General / instance info is in `core/auth`. `tableInfoQueries` is in `core/filter`, the search-view factory in `core/workspace`.
+  5. Data-deriving hooks are kept as hooks (`codeHooks.ts`), not inlined: they read the project id from Redux and are used ~100 times.
+  - The document search query (`searchQueries`) lives in `core/source-document/api`, not in the search feature: core's job polling invalidates it, and core may not import features.
+- Three mutations named `useCountBySdocsAndUser` (tags, span, sentence annotations) clashed in one file; they are now `useCountTagsBySdocsAndUser`, `useCountSpanAnnotationsBySdocsAndUser`, `useCountSentenceAnnotationsBySdocsAndUser`.
+- `frontend.instructions.md`, the entity-renderer instructions and the cache-sync README describe the new layout.
+- Done when: met (`api/queries` and `api/hooks` are gone, no `*Hooks` objects). Not yet checked in the running app.
 
 ### Stage 7: Cleanup and enforcement
 

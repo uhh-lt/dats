@@ -1,9 +1,9 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
-import { TagHooks, tagQueries } from "@core/tag";
+import { tagQueries, useBulkSetTags } from "@core/tag";
 import { TagRead } from "@models/TagRead";
 import { TagRecommendationResult } from "@models/TagRecommendationResult";
-import { TagRecommendationHooks } from "../../api/tagRecommendationHooks";
+import { useReviewTagRecommendations } from "../../api/tagRecommendationMutations";
 import { tagRecommendationQueries } from "../../api/tagRecommendationQueries";
 // TODO: This feature needs its own components or rework in general
 // eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
@@ -106,9 +106,8 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
   });
 
   // actions
-  const { mutate: applyTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkSetTags();
-  const { mutate: reviewTagsMutation, isPending: isReviewPending } =
-    TagRecommendationHooks.useReviewTagRecommendations();
+  const { mutate: applyTagsMutation, isPending: isUpdatePending } = useBulkSetTags();
+  const { mutate: reviewTagsMutation, isPending: isReviewPending } = useReviewTagRecommendations();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation({
       requestBody: {

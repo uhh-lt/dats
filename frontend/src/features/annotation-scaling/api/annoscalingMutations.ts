@@ -5,7 +5,7 @@ import { annoscalingQueries } from "./annoscalingQueries";
 
 // QUERIES live in annoscalingQueries (used with `useQuery` directly).
 
-const useConfirmSuggestions = () =>
+export const useConfirmSuggestions = () =>
   useMutation({
     mutationKey: [...annoscalingQueries.all(), "confirmSuggestions"],
     mutationFn: AnnoscalingService.confirmSuggestions,
@@ -14,7 +14,3 @@ const useConfirmSuggestions = () =>
       successMessage: () => "Successfully confirmed annotation suggestions",
     },
   });
-
-export const AnnoscalingHooks = {
-  useConfirmSuggestions,
-};

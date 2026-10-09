@@ -25,7 +25,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { MouseEventHandler, useMemo, useState } from "react";
-import { useAnnotateCotaSentences, useRemoveCotaSentences } from "../../../api/cotaHooks";
+import { useAnnotateCotaSentences, useRemoveCotaSentences } from "../../../api/cotaMutations";
 import { CotaActions } from "../../../store/cotaSlice";
 
 interface CotaSentenceAnnotatorProps {

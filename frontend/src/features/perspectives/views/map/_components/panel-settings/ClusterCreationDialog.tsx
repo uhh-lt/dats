@@ -9,7 +9,7 @@ import { Button, Dialog, DialogActions, DialogContent, Stack, Tooltip, Typograph
 import { useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { useStartPerspectivesJob } from "../../../../api/perspectivesMutations";
 
 interface ClusterCreationDialogProps {
   aspectId: number;
@@ -34,7 +34,7 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
       description: "",
     },
   });
-  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = useStartPerspectivesJob();
   const handleClusterCreation: SubmitHandler<ClusterCreate> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");

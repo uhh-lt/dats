@@ -1,4 +1,4 @@
-import { LLMHooks } from "@core/llm";
+import { useLiveLLMJob } from "@core/llm";
 import { MetadataExtractionLLMJobResult } from "@models/MetadataExtractionLLMJobResult";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -9,7 +9,7 @@ import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultSte
 export const MetadataExtractionResultStep = memo(() => {
   // get the job
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
+  const llmJob = useLiveLLMJob(llmJobId, undefined);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { MemoDeleteButton, MemoHooks } from "@core/memo";
+import { MemoDeleteButton, useUpdateMemos } from "@core/memo";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { IconButton, Tooltip } from "@mui/material";
@@ -11,7 +11,7 @@ interface MemoTableSelectionActionsProps {
 
 /** Bulk actions for selected memos in the TABLE layout: favorite, unfavorite, and delete. */
 export function MemoTableSelectionActions({ selectedIds, clearSelection }: MemoTableSelectionActionsProps): ReactNode {
-  const { mutate: updateMemos, isPending: isFavoriting } = MemoHooks.useUpdateMemos();
+  const { mutate: updateMemos, isPending: isFavoriting } = useUpdateMemos();
 
   const handleFavorite = useCallback(
     (isFavorite: boolean) => {

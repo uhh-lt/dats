@@ -1,7 +1,7 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
-import { MetadataHooks } from "@core/project-metadata";
+import { useGetProjectMetadataList } from "@core/project-metadata";
 import { SpanAnnotationReduxFilterTable } from "@core/span-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
@@ -30,7 +30,7 @@ export function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
-  const metadata = MetadataHooks.useGetProjectMetadataList();
+  const metadata = useGetProjectMetadataList();
 
   return (
     <>

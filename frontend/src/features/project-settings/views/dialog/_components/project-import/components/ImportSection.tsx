@@ -12,9 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useStartImportJob } from "../../../../../api/importMutations";
 
 import { useCallback, useState } from "react";
-import { ImportHooks } from "../../../../../api/importHooks";
 import { ImportDropzone } from "./ImportDropzone";
 
 const importTypeHelperText: Record<ImportJobType, string> = {
@@ -39,7 +39,7 @@ export function ImportSection({ projectId }: { projectId: number }) {
   const [importType, setImportType] = useState<ImportJobType>(ImportJobType.CODES);
   const [file, setFile] = useState<File>();
 
-  const { mutate: startImportMutation, isPending } = ImportHooks.useStartImportJob();
+  const { mutate: startImportMutation, isPending } = useStartImportJob();
 
   // Handle import type change
   const handleImportTypeChange = (event: SelectChangeEvent) => {

@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
-import { PerspectivesHooks } from "../../api/perspectivesHooks";
+import { useUpdateClusterDetails } from "../../api/perspectivesMutations";
 import { useGetDocVisualization } from "../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { DocAspectTable } from "../DocAspectTable";
@@ -55,7 +55,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
     }
   }, [cluster, reset]);
 
-  const updateCluster = PerspectivesHooks.useUpdateClusterDetails();
+  const updateCluster = useUpdateClusterDetails();
 
   const handleSave: SubmitHandler<ClusterUpdate> = (data) => {
     if (!cluster) return;

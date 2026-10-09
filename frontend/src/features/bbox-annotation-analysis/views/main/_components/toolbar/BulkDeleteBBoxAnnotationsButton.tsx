@@ -1,4 +1,4 @@
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
+import { useDeleteBulkBBoxAnnotation } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -14,7 +14,7 @@ export function BulkDeleteBBoxAnnotationsButton({ selectedData }: BulkDeleteBBox
   // actions
   const dispatch = useAppDispatch();
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const deleteBulkMutation = BboxAnnotationHooks.useDeleteBulkBBoxAnnotation();
+  const deleteBulkMutation = useDeleteBulkBBoxAnnotation();
   const handleDeleteAnnotationsClick = () => {
     openConfirmationDialog({
       text: `Do you really want to delete ${selectedData.length} bbox annotation${selectedData.length > 1 ? "s" : ""}? This action cannot be undone!`,

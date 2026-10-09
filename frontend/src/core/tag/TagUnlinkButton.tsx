@@ -3,11 +3,11 @@ import { TagRead } from "@models/TagRead";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { TagHooks } from "./api/tagHooks";
+import { useBulkUnlinkTags } from "./api/tagMutations";
 
 export const TagUnlinkButton = memo(({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: TagRead }) => {
   // mutations
-  const { mutate: removeTagMutation, isPending } = TagHooks.useBulkUnlinkTags();
+  const { mutate: removeTagMutation, isPending } = useBulkUnlinkTags();
 
   // actions
   const openConfirmationDialog = useOpenConfirmationDialog();

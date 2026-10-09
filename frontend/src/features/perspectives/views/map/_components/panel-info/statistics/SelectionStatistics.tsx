@@ -1,5 +1,5 @@
-import { CodeHooks, CodeRenderer } from "@core/code";
-import { MetadataHooks } from "@core/project-metadata";
+import { CodeRenderer, useGetEnabledCodes } from "@core/code";
+import { useGetProjectMetadataList } from "@core/project-metadata";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
@@ -28,7 +28,7 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   const count = selectedSdocIds.length;
 
   // filter
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = useGetProjectMetadataList();
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -67,7 +67,7 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   );
 
   // query all codes of the current project
-  const projectCodes = CodeHooks.useGetEnabledCodes();
+  const projectCodes = useGetEnabledCodes();
   const pinnedStatistics = useAppSelector((state) => state.perspectives.pinnedStatistics);
   const handlePinStatistics = useCallback(
     (stat: string) => {

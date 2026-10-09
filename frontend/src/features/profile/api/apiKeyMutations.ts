@@ -7,7 +7,7 @@ import { apiKeyQueries } from "./apiKeyQueries";
 
 // API KEY MUTATIONS
 
-const useCreateApiKey = () =>
+export const useCreateApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "createApiKey"],
     mutationFn: ({ name, expiresIn }: { name: string; expiresIn: ExpiryDuration }) =>
@@ -18,7 +18,7 @@ const useCreateApiKey = () =>
     },
   });
 
-const useDeleteApiKey = () =>
+export const useDeleteApiKey = () =>
   useMutation({
     mutationKey: [...apiKeyQueries.all(), "deleteApiKey"],
     mutationFn: ({ keyId }: { keyId: number }) => ApiKeyService.deleteApiKey({ keyId }),
@@ -27,8 +27,3 @@ const useDeleteApiKey = () =>
       successMessage: (deletedKey: ApiKeyRead) => `Deleted API key ${deletedKey.name}`,
     },
   });
-
-export const ApiKeyHooks = {
-  useCreateApiKey,
-  useDeleteApiKey,
-};

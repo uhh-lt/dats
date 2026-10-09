@@ -1,4 +1,4 @@
-import { TagHooks, tagQueries } from "@core/tag";
+import { tagQueries, useBulkLinkTags } from "@core/tag";
 import CheckIcon from "@mui/icons-material/Check";
 import LabelIcon from "@mui/icons-material/Label";
 import { Button, MenuItem, Select, Stack } from "@mui/material";
@@ -19,7 +19,7 @@ export const BulkDocTagger = memo(() => {
   const [selectedDocumentTagId, setSelectedDocumentTagId] = useState(-1);
 
   // mutation
-  const { mutate: linkTags, isPending: isLinkingTags } = TagHooks.useBulkLinkTags();
+  const { mutate: linkTags, isPending: isLinkingTags } = useBulkLinkTags();
 
   // actions
   const handleSelectChange = useCallback((event: { target: { value: string } }) => {

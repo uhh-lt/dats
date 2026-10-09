@@ -1,5 +1,5 @@
 import { useAppSelector } from "@store/storeHooks";
-import { ClassifierHooks } from "./classifierHooks";
+import { useComputeDatasetStatistics, useGetAllClassifiers } from "./classifierHooks";
 
 /**
  * Shared hook for the classifier dialog data-selection steps (training & evaluation).
@@ -19,12 +19,12 @@ export function useDatasetStatistics() {
   const trainingBaseModelName = useAppSelector((state) => state.classifier.drafts.trainingSettings?.base_name);
 
   // in the EVALUATION flow we know the classifier, so we use its actual base model
-  const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
+  const classifiers = useGetAllClassifiers(projectId);
   const classifier = classifiers.data?.find((c) => c.id === classifierId);
   const baseModelName = trainingBaseModelName ?? classifier?.base_model ?? "";
 
   // global server state
-  const datasetStats = ClassifierHooks.useComputeDatasetStatistics({
+  const datasetStats = useComputeDatasetStatistics({
     projectId,
     model,
     classIds,

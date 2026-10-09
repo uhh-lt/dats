@@ -99,8 +99,7 @@ Per-event logic builds on shared primitives in [\_utils/](_utils):
 
 1. **Entity caches are written, never invalidated.** Derived/search/statistics
    caches are invalidated, never written.
-2. **No entity cache writes outside the brain.** This is governance rule 5 in
-   [QueryKey.ts](../hooks/QueryKey.ts). If you find a `setQueryData` reacting
+2. **No entity cache writes outside the brain.** If you find a `setQueryData` reacting
    to an entity change elsewhere, it belongs here.
 3. **Prefer the meta tag** over an explicit `onSuccess` whenever the response
    payload matches the event DTO.

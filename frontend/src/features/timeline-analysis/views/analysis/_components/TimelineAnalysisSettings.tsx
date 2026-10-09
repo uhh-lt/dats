@@ -1,5 +1,5 @@
 import { CardContainer } from "@components/CardContainer";
-import { MetadataHooks } from "@core/project-metadata";
+import { useGetProjectMetadataList } from "@core/project-metadata";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import { DateGroupBy } from "@models/DateGroupBy";
 import { DocType } from "@models/DocType";
@@ -14,7 +14,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent } from "react";
-import { useUpdateTimelineAnalysis } from "../../../api/timelineAnalysisHooks";
+import { useUpdateTimelineAnalysis } from "../../../api/timelineAnalysisMutations";
 
 const aggregationType2HumanReadable: Record<TimelineAnalysisType, Record<TAAnnotationAggregationType, string>> = {
   [TimelineAnalysisType.DOCUMENT]: {
@@ -45,7 +45,7 @@ interface TimelineAnalysisSettingsProps {
 
 export function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettingsProps) {
   // global server state (react-query)
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );

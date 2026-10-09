@@ -10,7 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useUpdateCota } from "../../../api/cotaHooks";
+import { useUpdateCota } from "../../../api/cotaMutations";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaConceptEditor } from "./CotaConceptEditor";
 import { CotaConceptListItem } from "./CotaConceptListItem";

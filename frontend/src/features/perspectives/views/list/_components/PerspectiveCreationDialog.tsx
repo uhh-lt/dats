@@ -32,7 +32,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { PerspectivesHooks } from "../../../api/perspectivesHooks";
+import { useCreateAspect } from "../../../api/perspectivesMutations";
 
 interface AspectTemplate {
   name: string;
@@ -123,7 +123,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
     },
   });
 
-  const createAspectMutation = PerspectivesHooks.useCreateAspect();
+  const createAspectMutation = useCreateAspect();
   const handleAspectCreation: SubmitHandler<PerspectiveFormData> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");
