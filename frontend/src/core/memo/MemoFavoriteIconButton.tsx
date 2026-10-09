@@ -1,8 +1,8 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { MemoRead } from "@models/MemoRead";
 import { IconButton } from "@mui/material";
 import { memo, useCallback } from "react";
+import { MemoHooks } from "./api/memoHooks";
 
 interface MemoFavoriteIconButtonProps {
   memo: MemoRead;

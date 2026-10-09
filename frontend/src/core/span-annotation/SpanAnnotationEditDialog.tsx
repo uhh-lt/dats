@@ -1,4 +1,3 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
@@ -8,6 +7,7 @@ import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
+import { SpanAnnotationHooks } from "./api/spanAnnotationHooks";
 import { SpanAnnotationRenderer } from "./SpanAnnotationRenderer";
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {

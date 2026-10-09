@@ -1,4 +1,4 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { PointerEvent as ReactPointerEvent, RefObject, useCallback, useEffect, useRef, useState } from "react";
 

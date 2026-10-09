@@ -1,7 +1,7 @@
-import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { llmQueries } from "@api/queries/llmQueries";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
+import { DocProcessingHooks } from "@core/job";
+import { llmQueries } from "@core/llm";
 import { Language } from "@models/Language";
 import { ProcessingSettings } from "@models/ProcessingSettings";
 import AddIcon from "@mui/icons-material/Add";

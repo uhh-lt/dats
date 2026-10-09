@@ -1,6 +1,6 @@
-import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { queryClient } from "@api/queryClient";
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { tableInfoQueries } from "../api/tableInfoQueries";
 import { ColumnInfo, MyFilter, MyFilterExpression } from "../filterUtils";
 import { createClearedFilter } from "./_utils/filterLogic";
 

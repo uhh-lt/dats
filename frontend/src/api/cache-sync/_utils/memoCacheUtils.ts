@@ -1,10 +1,10 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { codeQueries } from "@api/queries/codeQueries";
-import { memoQueries } from "@api/queries/memoQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
-import { searchQueries } from "@api/queries/searchQueries";
-import { tagQueries } from "@api/queries/tagQueries";
 import { queryClient } from "@api/queryClient";
+import { annotationQueries } from "@core/annotation/api/annotationQueries";
+import { codeQueries } from "@core/code/api/codeQueries";
+import { memoQueries } from "@core/memo/api/memoQueries";
+import { sdocQueries } from "@core/source-document/api/sdocQueries";
+import { searchQueries } from "@core/source-document/api/searchQueries";
+import { tagQueries } from "@core/tag/api/tagQueries";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { MemoRead } from "@models/MemoRead";
 import { removeSingle, setSingle } from "./cacheWriterUtils";

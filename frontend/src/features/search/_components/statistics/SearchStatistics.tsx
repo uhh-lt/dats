@@ -1,4 +1,4 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeHooks } from "@core/code";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";

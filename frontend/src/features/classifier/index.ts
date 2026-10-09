@@ -1,3 +1,4 @@
+export * from "./api/classifierQueries";
 export { classifierReducer } from "./store/classifierSlice";
 export * from "./views/button/ClassifierInferenceButton";
 export * from "./views/dialog/ClassifierDialog";

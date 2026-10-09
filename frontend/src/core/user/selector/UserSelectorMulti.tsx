@@ -1,4 +1,3 @@
-import { userQueries } from "@api/queries/userQueries";
 import {
   Checkbox,
   FormControl,
@@ -12,6 +11,7 @@ import {
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment, memo, useCallback } from "react";
+import { userQueries } from "../api/userQueries";
 import { UserRenderer } from "../UserRenderer";
 
 interface UserSelectorProps {

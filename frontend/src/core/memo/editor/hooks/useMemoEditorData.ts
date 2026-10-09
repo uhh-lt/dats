@@ -1,4 +1,3 @@
-import { memoQueries } from "@api/queries/memoQueries";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -9,6 +8,7 @@ import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
 import { useQuery } from "@tanstack/react-query";
+import { memoQueries } from "../../api/memoQueries";
 import { useGetMemosAttachedObject } from "../../useGetMemosAttachedObject";
 import { MemoEditorTarget } from "../types/MemoEditorTarget";
 

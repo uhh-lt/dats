@@ -1,6 +1,11 @@
-import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { attachedObjectTypeToText, MemoCard, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
+import {
+  attachedObjectTypeToText,
+  MemoCard,
+  memoQueries,
+  useGetMemosAttachedObject,
+  useOpenMemoDialog,
+} from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";

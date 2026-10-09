@@ -1,6 +1,6 @@
-import { codeQueries } from "@api/queries/codeQueries";
-import { tagQueries } from "@api/queries/tagQueries";
 import { getIconComponent, Icon } from "@components/icons";
+import { codeQueries } from "@core/code";
+import { tagQueries } from "@core/tag";
 import { ClassifierClassMetrics } from "@models/ClassifierClassMetrics";
 import { ClassifierData } from "@models/ClassifierData";
 import { ClassifierEvaluationRead } from "@models/ClassifierEvaluationRead";

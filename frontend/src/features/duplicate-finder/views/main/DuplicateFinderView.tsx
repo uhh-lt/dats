@@ -1,8 +1,6 @@
-import { JobHooks } from "@api/hooks/JobHooks";
-import { SdocHooks } from "@api/hooks/SdocHooks";
 import { ContentContainerLayout } from "@components/content-layouts";
-import { jobStatusToSimple } from "@core/job";
-import { SdocRenderer } from "@core/source-document";
+import { JobHooks, jobStatusToSimple } from "@core/job";
+import { SdocHooks, SdocRenderer } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";

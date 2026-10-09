@@ -1,4 +1,6 @@
 export * from "./action-menu";
+export * from "./api/folderHooks";
+export * from "./api/folderQueries";
 export * from "./explorer";
 export * from "./FolderCreateButton";
 export * from "./FolderCreateDialog";

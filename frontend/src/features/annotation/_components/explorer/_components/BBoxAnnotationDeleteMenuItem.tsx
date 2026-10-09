@@ -1,5 +1,5 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { getIconComponent, Icon } from "@components/icons";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler, useCallback } from "react";

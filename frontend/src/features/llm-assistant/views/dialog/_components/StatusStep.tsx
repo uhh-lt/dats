@@ -1,6 +1,6 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
 import { LinearProgressWithLabel } from "@components/progress-bars";
 import { jobStatusToSimple } from "@core/job";
+import { LLMHooks } from "@core/llm";
 import { JobStatus } from "@models/JobStatus";
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";

@@ -1,4 +1,3 @@
-import { useUpdateCota } from "@api/hooks/CotaHooks";
 import { COTAConcept } from "@models/COTAConcept";
 import { COTARead } from "@models/COTARead";
 import AddIcon from "@mui/icons-material/Add";
@@ -11,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useUpdateCota } from "../../../api/cotaHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaConceptEditor } from "./CotaConceptEditor";
 import { CotaConceptListItem } from "./CotaConceptListItem";

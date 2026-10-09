@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
-import { metadataQueries } from "@api/queries/metadataQueries";
-import { searchQueries } from "@api/queries/searchQueries";
+import { metadataQueries } from "@core/project-metadata";
+import { searchQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";

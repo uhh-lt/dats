@@ -1,5 +1,5 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { useAuth } from "@core/auth";
+import { sdocQueries } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";

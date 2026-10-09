@@ -24,7 +24,7 @@ import {
   YAxis,
 } from "recharts";
 import { Node } from "ts-tree-structure";
-import { codeFrequencyQueries } from "../../../_api/codeFrequencyQueries";
+import { codeFrequencyQueries } from "../../../api/codeFrequencyQueries";
 
 const renderCustomizedLabel = (data: { value: number; percent?: number }) => {
   return `${data.value} (${(data.percent ?? 0 * 100).toFixed(0)}%)`;

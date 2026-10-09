@@ -1,8 +1,7 @@
-import { imageSimilarityQueries } from "@api/queries/imageSimilarityQueries";
-import { metadataQueries } from "@api/queries/metadataQueries";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
-import { ImageSimilaritySearchView } from "@features/search";
+import { metadataQueries } from "@core/project-metadata";
+import { imageSimilarityQueries, ImageSimilaritySearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";

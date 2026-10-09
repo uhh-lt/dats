@@ -1,7 +1,7 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { JobStatus } from "@models/JobStatus";
 import { Dialog } from "@mui/material";
 import { memo } from "react";
+import { PerspectivesHooks } from "../api/perspectivesHooks";
 import { ClusterJobProgressCard } from "./ClusterJobProgressCard";
 
 interface ClusterJobProgressDialog {

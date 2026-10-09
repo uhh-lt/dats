@@ -1,5 +1,5 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { useAuth } from "@core/auth";
+import { CodeHooks } from "@core/code";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect } from "react";
 import { CodeShortcutActions } from "../../store/codeShortcutSlice";

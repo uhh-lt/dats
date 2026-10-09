@@ -2,7 +2,7 @@ import { CardContainer } from "@components/CardContainer";
 import { getIconComponent, Icon } from "@components/icons";
 import { Box, Card, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useGetDocVisualization } from "../../../_api/useGetDocVisualization";
+import { useGetDocVisualization } from "../../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../store/perspectivesSlice";
 
 interface ClusterListProps {

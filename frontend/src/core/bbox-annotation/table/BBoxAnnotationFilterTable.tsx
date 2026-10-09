@@ -1,5 +1,5 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
 import { ImageCropper } from "@components/ImageCropper";
+import { annotationQueries } from "@core/annotation";
 import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,

@@ -1,6 +1,4 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
-import { sdocQueries } from "@api/queries/sdocQueries";
-import { SdocTagsRenderer } from "@core/source-document";
+import { SdocHooks, SdocTagsRenderer, sdocQueries } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { SimSearchImageHit } from "@models/SimSearchImageHit";
 import {

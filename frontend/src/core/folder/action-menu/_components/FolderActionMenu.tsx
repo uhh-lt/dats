@@ -1,5 +1,3 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
-import { folderQueries } from "@api/queries/folderQueries";
 import { Icon, getIconComponent } from "@components/icons";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
@@ -23,6 +21,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import { FolderHooks } from "../../api/folderHooks";
+import { folderQueries } from "../../api/folderQueries";
 import { FolderCreateButton } from "../../FolderCreateButton";
 
 interface FolderMenuProps {

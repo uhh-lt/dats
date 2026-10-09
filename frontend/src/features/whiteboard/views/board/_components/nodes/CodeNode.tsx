@@ -1,9 +1,7 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { memoQueries } from "@api/queries/memoQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { CodeRenderer } from "@core/code";
-import { useOpenMemoDialog } from "@core/memo";
+import { annotationQueries } from "@core/annotation";
+import { CodeHooks, CodeRenderer } from "@core/code";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeNodeData } from "@models/CodeNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";

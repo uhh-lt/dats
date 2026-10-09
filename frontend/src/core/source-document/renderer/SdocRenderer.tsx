@@ -1,4 +1,3 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { MemoIndicator } from "@core/memo";
@@ -8,6 +7,7 @@ import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
+import { sdocQueries } from "../api/sdocQueries";
 
 export interface SdocRendererSharedProps extends ExpandableRendererProps {
   link?: boolean;

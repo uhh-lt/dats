@@ -1,5 +1,3 @@
-import { TagHooks } from "@api/hooks/TagHooks";
-import { tagQueries } from "@api/queries/tagQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
@@ -16,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { TagHooks } from "../api/tagHooks";
+import { tagQueries } from "../api/tagQueries";
 import { TagRenderer } from "../TagRenderer";
 
 export function TagEditDialog() {

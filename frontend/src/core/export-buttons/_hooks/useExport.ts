@@ -1,4 +1,4 @@
-import { JobHooks } from "@api/hooks/JobHooks";
+import { JobHooks } from "@core/job";
 import { useOpenSnackbar } from "@core/notification";
 import { ExportJobInput } from "@models/ExportJobInput";
 import { JobStatus } from "@models/JobStatus";

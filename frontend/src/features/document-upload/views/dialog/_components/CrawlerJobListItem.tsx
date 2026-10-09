@@ -1,5 +1,4 @@
-import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { JobListItem } from "@core/job";
+import { DocProcessingHooks, JobListItem } from "@core/job";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";

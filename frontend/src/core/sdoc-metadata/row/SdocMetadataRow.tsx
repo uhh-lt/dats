@@ -1,6 +1,5 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { FormChipList, FormDate, FormNumber, FormSwitch, FormText } from "@components/form-inputs";
-import { ProjectMetadataEditMenu } from "@core/project-metadata";
+import { MetadataHooks, ProjectMetadataEditMenu } from "@core/project-metadata";
 import { ErrorMessage } from "@hookform/error-message";
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";

@@ -1,4 +1,4 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocReduxFilterTable } from "@core/source-document";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@mui/material";

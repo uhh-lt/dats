@@ -1,4 +1,3 @@
-import { tagQueries } from "@api/queries/tagQueries";
 import { useWithLevel } from "@components/tree-explorer";
 import {
   Checkbox,
@@ -14,6 +13,7 @@ import {
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment, memo } from "react";
+import { tagQueries } from "./api/tagQueries";
 import { TagRenderer } from "./TagRenderer";
 
 interface TagSelectorMultipleProps {

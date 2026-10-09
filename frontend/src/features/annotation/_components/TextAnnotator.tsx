@@ -1,6 +1,6 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";

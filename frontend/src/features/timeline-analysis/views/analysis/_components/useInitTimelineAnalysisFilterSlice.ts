@@ -1,6 +1,5 @@
-import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo } from "@core/filter";
+import { ColumnInfo, tableInfoQueries } from "@core/filter";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
 import { AppDispatch } from "@store/store";

@@ -1,5 +1,5 @@
-import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { ProjectHooks } from "@core/project";
 import { ProjectRead } from "@models/ProjectRead";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { LoadingButton } from "@mui/lab";

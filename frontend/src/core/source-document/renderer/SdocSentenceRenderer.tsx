@@ -1,9 +1,9 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
+import { sdocQueries } from "../api/sdocQueries";
 
 export type SdocSentenceRendererSharedProps = ExpandableRendererProps;
 

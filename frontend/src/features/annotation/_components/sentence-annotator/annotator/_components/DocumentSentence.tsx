@@ -1,4 +1,4 @@
-import { CodeMap } from "@api/queries/codeQueries";
+import { CodeMap } from "@core/code";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { ListItemButton, Stack, StackProps, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";

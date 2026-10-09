@@ -1,9 +1,9 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { LinkListItemButton } from "@core/navigation";
 import { ListItemIcon, ListItemText } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { forwardRef, memo } from "react";
+import { sdocQueries } from "../../../../api/sdocQueries";
 
 interface SdocListItemProps {
   sdocId: number;

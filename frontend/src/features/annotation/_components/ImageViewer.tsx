@@ -1,6 +1,6 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { metadataQueries } from "@api/queries/metadataQueries";
+import { annotationQueries } from "@core/annotation";
 import { useTabNavigate } from "@core/navigation";
+import { metadataQueries } from "@core/project-metadata";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";

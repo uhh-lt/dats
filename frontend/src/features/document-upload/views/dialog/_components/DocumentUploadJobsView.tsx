@@ -1,6 +1,5 @@
-import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { jobQueries } from "@api/queries/jobQueries";
 import { DialogSection } from "@components/DialogSection";
+import { DocProcessingHooks, jobQueries } from "@core/job";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";

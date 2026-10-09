@@ -1,7 +1,6 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
-import { llmQueries } from "@api/queries/llmQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { llmQueries } from "@core/llm";
 import { useTabNavigate } from "@core/navigation";
 import { DocTypeSelector } from "@core/source-document";
 import { TagSelector } from "@core/tag";
@@ -33,6 +32,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
 interface AspectTemplate {
   name: string;

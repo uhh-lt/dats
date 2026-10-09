@@ -1,9 +1,9 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { UserRenderer } from "@core/user";
 import { UserRead } from "@models/UserRead";
 import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment } from "react";
+import { sdocQueries } from "../api/sdocQueries";
 
 interface SdocAnnotatorsRendererProps {
   sdocId?: number;

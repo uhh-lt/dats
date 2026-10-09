@@ -1,8 +1,8 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
 import { MemoReduxFilterTable } from "@core/memo";
+import { MetadataHooks } from "@core/project-metadata";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { MemoRead } from "@models/MemoRead";

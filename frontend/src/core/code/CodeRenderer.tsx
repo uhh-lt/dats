@@ -1,4 +1,3 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { MemoIndicator } from "@core/memo";
@@ -6,6 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
+import { CodeHooks } from "./api/codeHooks";
 
 export interface CodeRendererSharedProps extends ExpandableRendererProps {
   renderMemoIndicator?: boolean;

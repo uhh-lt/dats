@@ -1,5 +1,4 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ProjectMetadataCreateButton } from "@core/project-metadata";
+import { MetadataHooks, ProjectMetadataCreateButton } from "@core/project-metadata";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";

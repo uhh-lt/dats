@@ -1,4 +1,4 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
+import { annotationQueries } from "@core/annotation";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { useQuery } from "@tanstack/react-query";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";

@@ -1,4 +1,4 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeHooks } from "@core/code";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { contrastiveColors } from "@utils/colors/colors";
 import { SpanAnnotationResizeStartHandler } from "../../_hooks/useSpanAnnotationResize";

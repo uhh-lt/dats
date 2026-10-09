@@ -1,8 +1,8 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
+import { MemoHooks } from "./api/memoHooks";
 
 interface MemoCreateIconButtonProps {
   attachedObjectId: number;

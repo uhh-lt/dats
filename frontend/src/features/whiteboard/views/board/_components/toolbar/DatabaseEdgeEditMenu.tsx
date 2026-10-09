@@ -1,5 +1,5 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
+import { CodeHooks } from "@core/code";
+import { TagHooks } from "@core/tag";
 import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { Ref, useImperativeHandle, useState } from "react";

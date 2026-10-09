@@ -1,3 +1,4 @@
+export * from "./api/tableInfoQueries";
 export * from "./filter-dialogs";
 export * from "./filter-renderer";
 export * from "./filterUtils";

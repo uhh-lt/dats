@@ -1,5 +1,4 @@
-import { tagQueries } from "@api/queries/tagQueries";
-import { TagRenderer } from "@core/tag";
+import { tagQueries, TagRenderer } from "@core/tag";
 import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 

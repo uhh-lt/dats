@@ -1,16 +1,20 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
-import { MemoViewHooks } from "@api/hooks/MemoViewHooks";
-import { memoQueries } from "@api/queries/memoQueries";
 import {
   MemoCard,
   MemoCreateIconButton,
   MemoFeedItem,
+  MemoHooks,
   MemoListItem,
   memoColumnsToFlags,
+  memoQueries,
   memoRenderableColumns,
   memoTableColumns,
 } from "@core/memo";
-import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryRequest } from "@core/workspace";
+import {
+  EntityWorkspaceConfig,
+  MemoViewHooks,
+  WorkspaceGroupQueryRequest,
+  WorkspaceQueryRequest,
+} from "@core/workspace";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoColumns } from "@models/MemoColumns";

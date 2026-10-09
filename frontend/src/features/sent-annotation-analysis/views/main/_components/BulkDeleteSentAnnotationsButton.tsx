@@ -1,5 +1,5 @@
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";

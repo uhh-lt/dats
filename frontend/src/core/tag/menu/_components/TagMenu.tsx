@@ -1,5 +1,3 @@
-import { TagHooks } from "@api/hooks/TagHooks";
-import { tagQueries } from "@api/queries/tagQueries";
 import { Icon, getIconComponent } from "@components/icons";
 import { TagRead } from "@models/TagRead";
 import {
@@ -21,6 +19,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import { TagHooks } from "../../api/tagHooks";
+import { tagQueries } from "../../api/tagQueries";
 import { TagCreateListItemButton } from "../../dialog";
 
 interface TagMenuProps {

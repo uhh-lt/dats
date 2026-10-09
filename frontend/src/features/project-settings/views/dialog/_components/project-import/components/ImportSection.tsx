@@ -13,8 +13,8 @@ import {
   Typography,
 } from "@mui/material";
 
-import { ImportHooks } from "@api/hooks/ImportHooks";
 import { useCallback, useState } from "react";
+import { ImportHooks } from "../../../../../api/importHooks";
 import { ImportDropzone } from "./ImportDropzone";
 
 const importTypeHelperText: Record<ImportJobType, string> = {

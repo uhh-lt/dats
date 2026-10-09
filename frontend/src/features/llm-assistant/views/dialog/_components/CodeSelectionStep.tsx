@@ -1,5 +1,5 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
 import { CodeTable } from "@core/code";
+import { LLMHooks } from "@core/llm";
 import { CodeRead } from "@models/CodeRead";
 import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";

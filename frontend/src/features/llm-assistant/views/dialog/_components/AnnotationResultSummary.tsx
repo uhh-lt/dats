@@ -1,4 +1,4 @@
-import { codeQueries } from "@api/queries/codeQueries";
+import { codeQueries } from "@core/code";
 import { SdocRenderer } from "@core/source-document";
 import { AnnotationResult } from "@models/AnnotationResult";
 import { SentenceAnnotationResult } from "@models/SentenceAnnotationResult";

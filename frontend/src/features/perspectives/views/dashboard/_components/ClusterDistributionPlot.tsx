@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useGetDocVisualization } from "../../../_api/useGetDocVisualization";
+import { useGetDocVisualization } from "../../../api/useGetDocVisualization";
 
 interface Data {
   clusterId: number;

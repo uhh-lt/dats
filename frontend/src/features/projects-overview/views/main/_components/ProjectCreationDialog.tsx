@@ -1,6 +1,6 @@
-import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
+import { ProjectHooks } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectCreate } from "@models/ProjectCreate";

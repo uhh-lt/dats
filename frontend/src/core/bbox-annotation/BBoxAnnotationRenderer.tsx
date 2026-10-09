@@ -1,9 +1,8 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { ImageCropper } from "@components/ImageCropper";
-import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { annotationQueries, AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { CodeHooks } from "@core/code";
+import { sdocQueries } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CircularProgress, Typography } from "@mui/material";

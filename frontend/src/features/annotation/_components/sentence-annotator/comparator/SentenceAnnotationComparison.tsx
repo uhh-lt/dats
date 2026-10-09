@@ -1,7 +1,7 @@
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { codeQueries } from "@api/queries/codeQueries";
 import { useAuth } from "@core/auth";
+import { codeQueries } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";

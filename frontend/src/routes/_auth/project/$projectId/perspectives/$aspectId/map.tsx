@@ -1,6 +1,5 @@
-import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { Icon } from "@components/icons";
-import { PerspectivesMapView } from "@features/perspectives";
+import { perspectiveQueries, PerspectivesMapView } from "@features/perspectives";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 

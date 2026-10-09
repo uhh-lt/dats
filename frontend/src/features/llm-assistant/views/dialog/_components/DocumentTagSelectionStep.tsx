@@ -1,4 +1,4 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
+import { LLMHooks } from "@core/llm";
 import { TagTable } from "@core/tag";
 import { TagRead } from "@models/TagRead";
 import { TaskType } from "@models/TaskType";

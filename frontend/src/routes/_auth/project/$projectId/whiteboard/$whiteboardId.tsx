@@ -1,6 +1,5 @@
-import { whiteboardQueries } from "@api/queries/whiteboardQueries";
 import { Icon } from "@components/icons";
-import { WhiteboardView } from "@features/whiteboard";
+import { whiteboardQueries, WhiteboardView } from "@features/whiteboard";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 

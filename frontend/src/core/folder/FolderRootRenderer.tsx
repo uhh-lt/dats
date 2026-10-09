@@ -1,6 +1,6 @@
-import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { getIconComponent, Icon } from "@components/icons";
+import { ProjectHooks } from "@core/project";
 import { ProjectRead } from "@models/ProjectRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";

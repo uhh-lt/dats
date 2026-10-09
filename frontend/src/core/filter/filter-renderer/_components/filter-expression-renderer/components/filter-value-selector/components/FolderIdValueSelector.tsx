@@ -1,6 +1,5 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
 import { useWithLevel } from "@components/tree-explorer";
-import { FolderRenderer } from "@core/folder";
+import { FolderHooks, FolderRenderer } from "@core/folder";
 import { FolderType } from "@models/FolderType";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";

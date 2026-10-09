@@ -1,7 +1,6 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
-import { tagQueries } from "@api/queries/tagQueries";
 import { getIconComponent, Icon } from "@components/icons";
+import { LLMHooks } from "@core/llm";
+import { TagHooks, tagQueries } from "@core/tag";
 import { TaggingLLMJobResult } from "@models/TaggingLLMJobResult";
 import { TagRead } from "@models/TagRead";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";

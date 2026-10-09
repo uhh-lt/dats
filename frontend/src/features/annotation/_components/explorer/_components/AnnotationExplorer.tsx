@@ -1,4 +1,4 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeHooks } from "@core/code";
 import { useDebounce } from "@hooks/useDebounce";
 import { CodeRead } from "@models/CodeRead";
 import { Square } from "@mui/icons-material";

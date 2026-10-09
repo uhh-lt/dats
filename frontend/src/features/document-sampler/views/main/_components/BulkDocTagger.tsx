@@ -1,5 +1,4 @@
-import { TagHooks } from "@api/hooks/TagHooks";
-import { tagQueries } from "@api/queries/tagQueries";
+import { TagHooks, tagQueries } from "@core/tag";
 import CheckIcon from "@mui/icons-material/Check";
 import LabelIcon from "@mui/icons-material/Label";
 import { Button, MenuItem, Select, Stack } from "@mui/material";

@@ -1,7 +1,7 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { useAuth } from "@core/auth";
+import { CodeHooks } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";

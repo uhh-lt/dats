@@ -1,9 +1,9 @@
 import { ClassifierModel } from "@models/ClassifierModel";
 import { Box, Button, DialogActions, Divider, FormControlLabel, Switch } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useCallback } from "react";
 import type { ChangeEvent } from "react";
-import { useDatasetStatistics } from "../../../_api/useDatasetStatistics";
+import { useCallback } from "react";
+import { useDatasetStatistics } from "../../../api/useDatasetStatistics";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 

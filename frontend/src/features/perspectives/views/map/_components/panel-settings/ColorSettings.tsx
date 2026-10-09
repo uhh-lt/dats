@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { PerspectivesJobType } from "@models/PerspectivesJobType";
@@ -29,7 +28,8 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import * as d3 from "d3";
 import { useState } from "react";
-import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterCreationDialog } from "./ClusterCreationDialog";
 

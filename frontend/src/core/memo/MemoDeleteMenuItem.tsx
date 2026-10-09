@@ -1,8 +1,8 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo, useCallback } from "react";
+import { MemoHooks } from "./api/memoHooks";
 
 interface MemoDeleteMenuItemProps {
   memoId?: number;

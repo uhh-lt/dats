@@ -1,6 +1,5 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
-import { llmQueries } from "@api/queries/llmQueries";
 import { CodeRenderer } from "@core/code";
+import { LLMHooks, llmQueries } from "@core/llm";
 import { ApproachType } from "@models/ApproachType";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
 import { StrategyInfo } from "@models/StrategyInfo";

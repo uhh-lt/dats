@@ -1,4 +1,3 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
@@ -13,6 +12,7 @@ import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { FolderHooks } from "./api/folderHooks";
 import { FolderRenderer } from "./FolderRenderer";
 
 export function FolderEditDialog() {

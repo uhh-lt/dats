@@ -9,8 +9,8 @@ import {
 } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import SquareIcon from "@mui/icons-material/Square";
+import { CodeHooks } from "./api/codeHooks";
 
 const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
   const hashTable: Record<number, CodeTableRow> = Object.create(null);

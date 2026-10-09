@@ -1,5 +1,5 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { Icon } from "@components/icons";
+import { sdocQueries } from "@core/source-document";
 import { AnnotationView } from "@features/annotation";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";

@@ -1,5 +1,5 @@
-import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { ProjectHooks } from "@core/project";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";

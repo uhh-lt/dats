@@ -1,4 +1,4 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";

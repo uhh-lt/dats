@@ -1,4 +1,3 @@
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
@@ -8,6 +7,7 @@ import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
+import { SentenceAnnotationHooks } from "../api/sentenceAnnotationHooks";
 import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
 export interface SentenceAnnotationEditDialogProps extends ButtonProps {

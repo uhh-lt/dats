@@ -1,6 +1,5 @@
-import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
-import { ColumnInfo } from "@core/filter";
+import { ColumnInfo, tableInfoQueries } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";

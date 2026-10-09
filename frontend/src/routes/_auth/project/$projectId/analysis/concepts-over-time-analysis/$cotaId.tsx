@@ -1,6 +1,5 @@
-import { cotaQueries } from "@api/queries/cotaQueries";
 import { Icon } from "@components/icons";
-import { CotaView } from "@features/concept-over-time-analysis";
+import { cotaQueries, CotaView } from "@features/concept-over-time-analysis";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 

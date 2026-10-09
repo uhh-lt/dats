@@ -1,6 +1,5 @@
-import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { flatMapSdocHealthRows } from "@api/queries/healthQueries";
 import { FilterTable } from "@core/filter";
+import { DocProcessingHooks } from "@core/job";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
 import { SdocHealthResult } from "@models/SdocHealthResult";
@@ -14,6 +13,7 @@ import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { ReactElement, useCallback, useMemo } from "react";
+import { flatMapSdocHealthRows } from "../../../api/healthQueries";
 import { HealthActions } from "../../../store/healthSlice";
 import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
 import { HealthTableToolbarLeft } from "./HealthTableToolbarLeft";

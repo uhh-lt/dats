@@ -1,4 +1,3 @@
-import { createSearchViewHooks } from "@api/hooks/SearchViewHooks";
 import { ColumnInfo, MyFilter, MyFilterExpression } from "@core/filter";
 import { GroupPage } from "@models/GroupPage";
 import { GroupSummary } from "@models/GroupSummary";
@@ -7,6 +6,7 @@ import { SearchViewLayout } from "@models/SearchViewLayout";
 import { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { ReactNode } from "react";
+import { createSearchViewHooks } from "../api/searchViewHooks";
 import {
   WorkspaceGroupConfig,
   WorkspaceGroupQueryRequest,

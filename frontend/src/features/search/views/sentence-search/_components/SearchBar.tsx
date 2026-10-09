@@ -1,5 +1,5 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { SdocHooks } from "@core/source-document";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { useURLConnector } from "@hooks/useURLConnector";
 import ClearIcon from "@mui/icons-material/Clear";

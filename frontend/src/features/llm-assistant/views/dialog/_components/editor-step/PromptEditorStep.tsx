@@ -1,5 +1,5 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
 import { FormTextMultiline } from "@components/form-inputs";
+import { LLMHooks } from "@core/llm";
 import { ErrorMessage } from "@hookform/error-message";
 import { ApproachType } from "@models/ApproachType";
 import { LLMPromptTemplates } from "@models/LLMPromptTemplates";

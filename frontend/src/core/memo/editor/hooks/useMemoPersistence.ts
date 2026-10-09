@@ -1,7 +1,7 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MemoHooks } from "../../api/memoHooks";
 import { MemoAttachedObject } from "./useMemoEditorData";
 
 export interface MemoFormValues {

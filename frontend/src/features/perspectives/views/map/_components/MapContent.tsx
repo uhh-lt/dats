@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useGetDocVisualization } from "../../../_api/useGetDocVisualization";
+import { useGetDocVisualization } from "../../../api/useGetDocVisualization";
 import { MapPlot } from "./MapPlot";
 import { MapToolbar } from "./toolbar/MapToolbar";
 

@@ -1,5 +1,5 @@
-import { statisticsQueries } from "@api/queries/statisticsQueries";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
+import { statisticsQueries } from "@core/statistics";
 import { KeywordStat } from "@models/KeywordStat";
 import { TabPanel } from "@mui/lab";
 import { useAppSelector } from "@store/storeHooks";

@@ -1,8 +1,8 @@
-import { userQueries } from "@api/queries/userQueries";
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
+import { userQueries } from "../api/userQueries";
 import { UserRenderer } from "../UserRenderer";
 
 interface UserSelectorProps {

@@ -1,6 +1,4 @@
-import { AnnoscalingHooks } from "@api/hooks/AnnoscalingHooks";
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { annoscalingQueries } from "@api/queries/annoscalingQueries";
+import { CodeHooks } from "@core/code";
 import { AnnoscalingResult } from "@models/AnnoscalingResult";
 import { CodeRead } from "@models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
@@ -19,6 +17,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
+import { AnnoscalingHooks } from "../../api/annoscalingHooks";
+import { annoscalingQueries } from "../../api/annoscalingQueries";
 import { AnnotationScalingList } from "./_components/AnnotationScalingList";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/annotation-scaling");

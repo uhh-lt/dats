@@ -1,8 +1,7 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { FILTER_PARAM } from "@core/filter";
-import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder";
+import { FolderExplorer, FolderHooks, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";

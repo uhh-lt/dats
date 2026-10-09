@@ -1,6 +1,6 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { CardContainer } from "@components/CardContainer";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
+import { CodeHooks } from "@core/code";
 import { SdocRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { CodeOccurrence } from "@models/CodeOccurrence";
@@ -17,7 +17,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { ChangeEventHandler, Fragment, useRef, useState } from "react";
-import { codeFrequencyQueries } from "../../../_api/codeFrequencyQueries";
+import { codeFrequencyQueries } from "../../../api/codeFrequencyQueries";
 
 const columns: MRT_ColumnDef<CodeOccurrence>[] = [
   {

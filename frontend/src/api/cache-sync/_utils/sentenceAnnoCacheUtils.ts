@@ -1,5 +1,5 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
 import { queryClient } from "@api/queryClient";
+import { annotationQueries } from "@core/annotation/api/annotationQueries";
 import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 
 // The SDOC_SENTENCE_ANNOTATOR cache groups annotations by sentence index, with

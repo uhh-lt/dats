@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { ExportChartButton } from "@components/export-chart-buttons";
 import { getIconComponent, Icon } from "@components/icons";
@@ -14,11 +13,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { D3ColorScale } from "@utils/colors/D3ColorScale";
 import { useMemo, useState } from "react";
-import { useGetDocVisualization } from "../../_api/useGetDocVisualization";
 import { ClusterJobProgressCard } from "../../_components/ClusterJobProgressCard";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { DocAspectTable } from "../../_components/DocAspectTable";
 import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
+import { PerspectivesHooks } from "../../api/perspectivesHooks";
+import { useGetDocVisualization } from "../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { ClusterDistributionPlot } from "./_components/ClusterDistributionPlot";
 import { ClusterList } from "./_components/ClusterList";

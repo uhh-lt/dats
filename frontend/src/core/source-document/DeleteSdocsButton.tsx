@@ -1,10 +1,10 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, useCallback } from "react";
+import { SdocHooks } from "./api/sdocHooks";
 
 interface DeleteSdocsButtonProps {
   sdocIds: number[];

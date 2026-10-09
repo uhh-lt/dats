@@ -1,4 +1,3 @@
-import { classifierQueries } from "@api/queries/classifierQueries";
 import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { ClassifierAveraging } from "@models/ClassifierAveraging";
@@ -24,6 +23,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { SubmitErrorHandler, useForm, useWatch } from "react-hook-form";
+import { classifierQueries } from "../../../api/classifierQueries";
 import { ClassifierActions, ClassifierTrainingSettings } from "../../../store/classifierSlice";
 
 const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];

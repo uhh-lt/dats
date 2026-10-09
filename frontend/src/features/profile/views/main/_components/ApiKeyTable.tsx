@@ -1,5 +1,3 @@
-import { ApiKeyHooks } from "@api/hooks/ApiKeyHooks";
-import { apiKeyQueries } from "@api/queries/apiKeyQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ApiKeyRead } from "@models/ApiKeyRead";
@@ -8,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDateTime } from "@utils/DateUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
+import { ApiKeyHooks } from "../../../api/apiKeyHooks";
+import { apiKeyQueries } from "../../../api/apiKeyQueries";
 
 const isExpired = (apiKey: ApiKeyRead): boolean =>
   apiKey.expires_at !== null && new Date(apiKey.expires_at).getTime() < Date.now();

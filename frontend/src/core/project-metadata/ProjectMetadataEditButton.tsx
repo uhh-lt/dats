@@ -1,4 +1,3 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { Icon, MetaTypeIcons, getIconComponent } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { MetaType } from "@models/MetaType";
@@ -19,6 +18,7 @@ import {
 } from "@mui/material";
 import { ChangeEventHandler, MouseEventHandler, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
+import { MetadataHooks } from "./api/metadataHooks";
 
 interface ProjectMetadataEditMenuProps {
   projectMetadata: ProjectMetadataRead;

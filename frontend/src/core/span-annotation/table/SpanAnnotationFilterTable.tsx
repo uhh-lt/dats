@@ -1,4 +1,4 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
+import { annotationQueries } from "@core/annotation";
 import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {

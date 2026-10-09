@@ -1,4 +1,4 @@
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
 

@@ -1,6 +1,5 @@
-import { timelineAnalysisQueries } from "@api/queries/timelineAnalysisQueries";
 import { Icon } from "@components/icons";
-import { TimelineAnalysisDashboardView } from "@features/timeline-analysis";
+import { TimelineAnalysisDashboardView, timelineAnalysisQueries } from "@features/timeline-analysis";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 

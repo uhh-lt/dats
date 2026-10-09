@@ -1,5 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
-import { llmQueries } from "@api/queries/llmQueries";
+import { llmQueries } from "@core/llm";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
@@ -20,6 +19,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Markdown from "react-markdown";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface ChatMessage {

@@ -1,7 +1,7 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import { MemoIndicator } from "@core/memo";
+import { sdocQueries } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";

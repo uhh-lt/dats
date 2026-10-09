@@ -1,8 +1,8 @@
-import { UserHooks } from "@api/hooks/UserHooks";
 import { PublicUserRead } from "@models/PublicUserRead";
 import { UserRead } from "@models/UserRead";
 import { Avatar, AvatarProps, Tooltip, TooltipProps } from "@mui/material";
 import { memo } from "react";
+import { UserHooks } from "./api/userHooks";
 
 interface UserAvatarProps extends AvatarProps {
   user: number | UserRead | PublicUserRead;
