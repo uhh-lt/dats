@@ -1,8 +1,8 @@
-import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { ProjectRead } from "@models/ProjectRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
+import { ProjectHooks } from "./api/projectHooks";
 
 export type ProjectRendererSharedProps = ExpandableRendererProps;
 

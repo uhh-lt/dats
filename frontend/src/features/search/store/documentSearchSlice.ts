@@ -1,6 +1,5 @@
-import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { queryClient } from "@api/queryClient";
-import { ColumnInfo } from "@core/filter";
+import { ColumnInfo, tableInfoQueries } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";

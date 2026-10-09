@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { codeQueries } from "@api/queries/codeQueries";
-import { tagQueries } from "@api/queries/tagQueries";
+import { codeQueries } from "@core/code";
+import { tagQueries } from "@core/tag";
 import { ClassifierEvaluationRead } from "@models/ClassifierEvaluationRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {

@@ -1,10 +1,10 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
-import { useDatasetStatistics } from "../../../_api/useDatasetStatistics";
+import { ClassifierHooks } from "../../../api/classifierHooks";
+import { useDatasetStatistics } from "../../../api/useDatasetStatistics";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 

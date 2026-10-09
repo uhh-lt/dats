@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { JobStatusBadge } from "@core/job";
 import { LinkCardActionArea } from "@core/navigation";
@@ -11,6 +10,7 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Box, Card, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import { ReactElement } from "react";
+import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
 const statusToIcon: Record<JobStatus, ReactElement> = {
   // waiting

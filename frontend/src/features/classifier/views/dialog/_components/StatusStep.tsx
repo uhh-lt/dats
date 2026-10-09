@@ -1,9 +1,9 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { JobStatus } from "@models/JobStatus";
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 export const StatusStep = memo(() => {

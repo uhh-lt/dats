@@ -1,6 +1,6 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
-import { annotationQueries } from "@api/queries/annotationQueries";
 import { queryClient } from "@api/queryClient";
+import { annotationQueries } from "@core/annotation";
+import { LLMHooks } from "@core/llm";
 import { useTabNavigate } from "@core/navigation";
 import { ApproachType } from "@models/ApproachType";
 import { SentenceAnnotationLLMJobResult } from "@models/SentenceAnnotationLLMJobResult";

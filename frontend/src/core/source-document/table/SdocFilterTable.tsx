@@ -1,4 +1,3 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import {
   FILTER_PARAM,
   FilterTable,
@@ -27,6 +26,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
+import { sdocQueries } from "../api/sdocQueries";
 import { SdocAnnotatorsRenderer, SdocFolderRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";

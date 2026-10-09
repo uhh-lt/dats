@@ -1,4 +1,3 @@
-import { memoQueries } from "@api/queries/memoQueries";
 import {
   FILTER_PARAM,
   FilterTable,
@@ -22,6 +21,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
+import { memoQueries } from "../api/memoQueries";
 import { MemoRenderer } from "../renderer";
 import { MemoReduxToolbarLeft } from "./_components/MemoReduxToolbarLeft";
 import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";

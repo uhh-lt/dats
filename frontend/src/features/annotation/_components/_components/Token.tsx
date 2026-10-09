@@ -1,5 +1,5 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { Icon, getIconComponent } from "@components/icons";
+import { CodeHooks } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";

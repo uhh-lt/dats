@@ -1,14 +1,10 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
-import { useUpdateWhiteboard } from "@api/hooks/WhiteboardHooks";
 import { EditableTypography } from "@components/EditableTypography";
 import { getIconComponent, Icon } from "@components/icons";
-import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
-import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
-import { SpanAnnotationEditDialog } from "@core/span-annotation";
+import { BBoxAnnotationEditDialog, BboxAnnotationHooks } from "@core/bbox-annotation";
+import { CodeHooks } from "@core/code";
+import { SentenceAnnotationEditDialog, SentenceAnnotationHooks } from "@core/sentence-annotation";
+import { SpanAnnotationEditDialog, SpanAnnotationHooks } from "@core/span-annotation";
+import { TagHooks } from "@core/tag";
 import { WhiteboardEdgeData } from "@models/WhiteboardEdgeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { WhiteboardRead } from "@models/WhiteboardRead";
@@ -42,6 +38,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useUpdateWhiteboard } from "../../../api/whiteboardHooks";
 import { useReactFlowService } from "../_hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "../_hooks/useNodesEdgesStateCustom";
 import { DATSEdge } from "../_types/DATSEdge";

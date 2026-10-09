@@ -1,9 +1,9 @@
 /* eslint-disable boundaries/element-types */
 // This needs access to the "@api" layer because it needs to fetch configuration from the backend
 import { OpenAPI } from "@api/core/OpenAPI";
-import { generalQueries } from "@api/queries/generalQueries";
-import { useQuery } from "@tanstack/react-query";
+import { generalQueries } from "@core/auth";
 import * as Sentry from "@sentry/react";
+import { useQuery } from "@tanstack/react-query";
 
 /**
  * This component is responsible for initializing Sentry with the Glitchtip configuration fetched from the backend.

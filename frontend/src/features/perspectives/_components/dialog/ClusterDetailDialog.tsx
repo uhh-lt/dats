@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ClusterUpdate } from "@models/ClusterUpdate";
@@ -8,7 +7,8 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
-import { useGetDocVisualization } from "../../_api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../api/perspectivesHooks";
+import { useGetDocVisualization } from "../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";

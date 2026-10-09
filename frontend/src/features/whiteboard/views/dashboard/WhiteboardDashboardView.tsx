@@ -1,10 +1,4 @@
 import {
-  useCreateWhiteboard,
-  useDeleteWhiteboard,
-  useDuplicateWhiteboard,
-  useUpdateWhiteboard,
-} from "@api/hooks/WhiteboardHooks";
-import {
   AnalysisDashboard,
   AnalysisDashboardRow,
   HandleCreateAnalysis,
@@ -14,6 +8,12 @@ import { useOpenConfirmationDialog } from "@core/notification";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import {
+  useCreateWhiteboard,
+  useDeleteWhiteboard,
+  useDuplicateWhiteboard,
+  useUpdateWhiteboard,
+} from "../../api/whiteboardHooks";
 import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
 const WhiteboardDashboardRouteAPI = getRouteApi("/_auth/project/$projectId/whiteboard/");

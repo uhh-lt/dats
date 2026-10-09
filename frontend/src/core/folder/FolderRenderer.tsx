@@ -1,10 +1,10 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
+import { FolderHooks } from "./api/folderHooks";
 
 export interface FolderRendererSharedProps extends ExpandableRendererProps {
   renderName?: boolean;

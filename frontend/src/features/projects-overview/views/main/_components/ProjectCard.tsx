@@ -1,5 +1,5 @@
-import { projectQueries } from "@api/queries/projectQueries";
 import { useTabNavigate } from "@core/navigation";
+import { projectQueries } from "@core/project";
 import { ProjectRead } from "@models/ProjectRead";
 import { SDocStatus } from "@models/SDocStatus";
 import {

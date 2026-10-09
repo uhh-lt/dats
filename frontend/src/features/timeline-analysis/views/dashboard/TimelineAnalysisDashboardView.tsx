@@ -1,10 +1,4 @@
 import {
-  useCreateTimelineAnalysis,
-  useDeleteTimelineAnalysis,
-  useDuplicateTimelineAnalysis,
-  useUpdateTimelineAnalysis,
-} from "@api/hooks/TimelineAnalysisHooks";
-import {
   AnalysisDashboard,
   AnalysisDashboardRow,
   HandleCreateAnalysis,
@@ -17,6 +11,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
+import {
+  useCreateTimelineAnalysis,
+  useDeleteTimelineAnalysis,
+  useDuplicateTimelineAnalysis,
+  useUpdateTimelineAnalysis,
+} from "../../api/timelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 

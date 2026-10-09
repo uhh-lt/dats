@@ -1,8 +1,8 @@
 import { ApiError } from "@api/core/ApiError";
 import { OpenAPI } from "@api/core/OpenAPI";
-import { userQueries } from "@api/queries/userQueries";
 import { queryClient } from "@api/queryClient";
 import { AuthenticationService } from "@api/services/AuthenticationService";
+import { userQueries } from "@core/user";
 import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
 import { useAppDispatch } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";

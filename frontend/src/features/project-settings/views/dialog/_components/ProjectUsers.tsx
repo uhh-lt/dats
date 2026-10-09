@@ -1,7 +1,6 @@
-import { UserHooks } from "@api/hooks/UserHooks";
-import { userQueries } from "@api/queries/userQueries";
 import { FormEmail } from "@components/form-inputs";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { UserHooks, userQueries } from "@core/user";
 import { ProjectRead } from "@models/ProjectRead";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";

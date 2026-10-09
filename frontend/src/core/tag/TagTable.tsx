@@ -1,4 +1,3 @@
-import { tagQueries } from "@api/queries/tagQueries";
 import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
 import { useAppSelector } from "@store/storeHooks";
@@ -12,6 +11,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
+import { tagQueries } from "./api/tagQueries";
 
 const createDataTree = (dataset: TagRead[]): TagTableRow[] => {
   const hashTable: Record<number, TagTableRow> = Object.create(null);

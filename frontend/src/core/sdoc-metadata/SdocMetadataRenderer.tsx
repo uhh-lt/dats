@@ -1,4 +1,4 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { MetadataHooks } from "@core/project-metadata";
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";

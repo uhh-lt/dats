@@ -1,9 +1,7 @@
-import { memoQueries } from "@api/queries/memoQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
-import { tagQueries } from "@api/queries/tagQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { useOpenMemoDialog } from "@core/memo";
-import { SdocRenderer } from "@core/source-document";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
+import { sdocQueries, SdocRenderer } from "@core/source-document";
+import { tagQueries } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { DocType } from "@models/DocType";
 import { SdocNodeData } from "@models/SdocNodeData";

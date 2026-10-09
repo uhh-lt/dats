@@ -1,6 +1,6 @@
-import { TagHooks } from "@api/hooks/TagHooks";
-import { statisticsQueries } from "@api/queries/statisticsQueries";
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
+import { statisticsQueries } from "@core/statistics";
+import { TagHooks } from "@core/tag";
 import { TagStat } from "@models/TagStat";
 import { TabPanel } from "@mui/lab";
 import { useAppSelector } from "@store/storeHooks";

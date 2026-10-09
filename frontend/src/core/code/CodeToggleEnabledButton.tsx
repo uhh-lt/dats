@@ -1,4 +1,3 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { ITree } from "@components/tree-explorer";
 import { CodeRead } from "@models/CodeRead";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
@@ -6,6 +5,7 @@ import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, MouseEventHandler, useCallback } from "react";
+import { CodeHooks } from "./api/codeHooks";
 
 export const CodeToggleEnabledButton = memo(
   ({ code, ...props }: IconButtonProps & { code: ITree<CodeRead> | null | undefined }) => {

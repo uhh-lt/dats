@@ -1,7 +1,6 @@
 import { Icon } from "@components/icons";
-import { classifierQueries } from "@api/queries/classifierQueries";
-import { jobQueries } from "@api/queries/jobQueries";
-import { ClassifierView } from "@features/classifier";
+import { jobQueries } from "@core/job";
+import { classifierQueries, ClassifierView } from "@features/classifier";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 

@@ -1,4 +1,4 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
+import { LLMHooks } from "@core/llm";
 import { MetadataExtractionLLMJobResult } from "@models/MetadataExtractionLLMJobResult";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

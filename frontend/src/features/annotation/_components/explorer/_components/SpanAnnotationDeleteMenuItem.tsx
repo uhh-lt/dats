@@ -1,5 +1,5 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler } from "react";

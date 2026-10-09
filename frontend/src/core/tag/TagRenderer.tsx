@@ -1,4 +1,3 @@
-import { TagHooks } from "@api/hooks/TagHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { MemoIndicator } from "@core/memo";
@@ -6,6 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { TagRead } from "@models/TagRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
+import { TagHooks } from "./api/tagHooks";
 
 export interface TagRendererSharedProps extends ExpandableRendererProps {
   renderMemoIndicator?: boolean;

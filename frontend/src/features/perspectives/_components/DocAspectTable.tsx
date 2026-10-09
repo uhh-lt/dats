@@ -1,4 +1,3 @@
-import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { SdocRenderer } from "@core/source-document";
 import { ClusterRead } from "@models/ClusterRead";
@@ -8,7 +7,8 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
-import { useGetDocVisualization } from "../_api/useGetDocVisualization";
+import { perspectiveQueries } from "../api/perspectiveQueries";
+import { useGetDocVisualization } from "../api/useGetDocVisualization";
 
 interface DocAspectTableProps {
   aspectId: number;

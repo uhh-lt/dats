@@ -1,7 +1,7 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
+import { MetadataHooks } from "@core/project-metadata";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";

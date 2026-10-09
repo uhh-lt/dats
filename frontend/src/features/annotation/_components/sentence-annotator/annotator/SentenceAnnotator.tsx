@@ -5,10 +5,10 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { codeQueries } from "@api/queries/codeQueries";
 import { useAuth } from "@core/auth";
+import { codeQueries } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { useQuery } from "@tanstack/react-query";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";

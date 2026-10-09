@@ -1,10 +1,10 @@
-import { tagQueries } from "@api/queries/tagQueries";
 import { dataToTree, ITree } from "@components/tree-explorer";
 import { TagRead } from "@models/TagRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
+import { tagQueries } from "../api/tagQueries";
 
 // create a dummy root node that will hold the results
 const dummyRootNode: TagRead = {

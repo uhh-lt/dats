@@ -1,5 +1,5 @@
-import { codeQueries } from "@api/queries/codeQueries";
-import { tagQueries } from "@api/queries/tagQueries";
+import { codeQueries } from "@core/code";
+import { tagQueries } from "@core/tag";
 import { ClassifierData } from "@models/ClassifierData";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { TagRead } from "@models/TagRead";

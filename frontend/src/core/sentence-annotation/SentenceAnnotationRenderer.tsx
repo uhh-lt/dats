@@ -1,7 +1,6 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
-import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { annotationQueries, AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { sdocQueries } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";

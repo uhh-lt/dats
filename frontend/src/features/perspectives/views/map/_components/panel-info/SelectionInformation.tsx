@@ -1,11 +1,9 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { perspectiveQueries } from "@api/queries/perspectiveQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
-import { tagQueries } from "@api/queries/tagQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import { LinkButton } from "@core/navigation";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
-import { TagMenuButton, TagRow } from "@core/tag";
+import { sdocQueries } from "@core/source-document";
+import { TagMenuButton, tagQueries, TagRow } from "@core/tag";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
@@ -14,7 +12,8 @@ import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography 
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
-import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
+import { perspectiveQueries } from "../../../../api/perspectiveQueries";
+import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface SelectionInformationProps {

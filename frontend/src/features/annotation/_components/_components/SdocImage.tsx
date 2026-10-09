@@ -1,4 +1,4 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
+import { sdocQueries } from "@core/source-document";
 import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { ImageMenu, ImageMenuHandle } from "./ImageMenu";

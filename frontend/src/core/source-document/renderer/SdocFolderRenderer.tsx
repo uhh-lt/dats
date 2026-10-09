@@ -1,9 +1,8 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
-import { sdocQueries } from "@api/queries/sdocQueries";
-import { FolderRenderer, FolderRootRenderer } from "@core/folder";
+import { FolderHooks, FolderRenderer, FolderRootRenderer } from "@core/folder";
 import { FolderType } from "@models/FolderType";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
+import { sdocQueries } from "../api/sdocQueries";
 
 interface SdocFolderRendererProps {
   sdocId?: number;

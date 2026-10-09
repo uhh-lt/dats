@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { DocType } from "@models/DocType";
 import { PerspectivesJobType } from "@models/PerspectivesJobType";
@@ -22,7 +21,8 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 interface PositionSettingsProps {
   aspectId: number;

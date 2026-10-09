@@ -1,4 +1,4 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocMetadataRendererWithData } from "@core/sdoc-metadata";
 import { SdocRenderer } from "@core/source-document";
 import { MetadataExtractionResult } from "@models/MetadataExtractionResult";

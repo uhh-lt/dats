@@ -1,4 +1,3 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierEvaluationOutput } from "@models/ClassifierEvaluationOutput";
 import { ClassifierInferenceOutput } from "@models/ClassifierInferenceOutput";
 import { ClassifierTask } from "@models/ClassifierTask";
@@ -7,6 +6,7 @@ import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ResultStep() {

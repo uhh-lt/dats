@@ -1,8 +1,6 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
-import { memoQueries } from "@api/queries/memoQueries";
 import { Icon, getIconComponent } from "@components/icons";
 import { useAuth } from "@core/auth";
-import { MemoCard, MemoEditorPane } from "@core/memo";
+import { MemoCard, MemoEditorPane, MemoHooks, memoQueries } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";

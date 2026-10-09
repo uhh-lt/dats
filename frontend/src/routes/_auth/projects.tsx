@@ -1,4 +1,4 @@
-import { projectQueries } from "@api/queries/projectQueries";
+import { projectQueries } from "@core/project";
 import { ProjectsView } from "@features/projects-overview";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";

@@ -1,6 +1,5 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ProjectMetadataTable } from "@core/project-metadata";
+import { LLMHooks } from "@core/llm";
+import { MetadataHooks, ProjectMetadataTable } from "@core/project-metadata";
 import { DocType } from "@models/DocType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { TaskType } from "@models/TaskType";

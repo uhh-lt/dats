@@ -1,11 +1,9 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { memoQueries } from "@api/queries/memoQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { ImageCropper } from "@components/ImageCropper";
-import { CodeRenderer } from "@core/code";
-import { useOpenMemoDialog } from "@core/memo";
+import { annotationQueries } from "@core/annotation";
+import { CodeHooks, CodeRenderer } from "@core/code";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
+import { sdocQueries } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationNodeData } from "@models/BBoxAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";

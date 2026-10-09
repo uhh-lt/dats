@@ -1,4 +1,4 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeHooks } from "@core/code";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { memo, SVGProps } from "react";
 import { BboxAnnotationResizeStartHandler } from "../_hooks/useBboxAnnotationResize";

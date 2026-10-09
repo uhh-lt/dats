@@ -1,5 +1,5 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";

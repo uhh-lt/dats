@@ -1,4 +1,4 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
+import { annotationQueries } from "@core/annotation";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useQuery } from "@tanstack/react-query";

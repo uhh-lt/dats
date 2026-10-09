@@ -2,11 +2,11 @@ import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { metadataQueries } from "@api/queries/metadataQueries";
+import { annotationQueries } from "@core/annotation";
 import { useAuth } from "@core/auth";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
+import { metadataQueries } from "@core/project-metadata";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";

@@ -1,4 +1,4 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
+import { annotationQueries } from "@core/annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";

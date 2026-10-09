@@ -1,5 +1,5 @@
-import { LLMHooks } from "@api/hooks/LLMHooks";
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
+import { LLMHooks } from "@core/llm";
 import { SdocRenderer } from "@core/source-document";
 import { ApproachType } from "@models/ApproachType";
 import { FewShotParams } from "@models/FewShotParams";

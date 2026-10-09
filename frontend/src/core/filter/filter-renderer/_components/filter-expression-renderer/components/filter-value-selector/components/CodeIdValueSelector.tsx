@@ -1,8 +1,7 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeRenderer } from "@core/code";
+import { useWithLevel } from "@components/tree-explorer";
+import { CodeHooks, CodeRenderer } from "@core/code";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
-import { useWithLevel } from "@components/tree-explorer";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
 export const CodeIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {

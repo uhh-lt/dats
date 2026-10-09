@@ -1,6 +1,5 @@
-import { tagQueries } from "@api/queries/tagQueries";
 import { useWithLevel } from "@components/tree-explorer";
-import { TagRenderer } from "@core/tag";
+import { tagQueries, TagRenderer } from "@core/tag";
 import { MenuItem, TextField } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";

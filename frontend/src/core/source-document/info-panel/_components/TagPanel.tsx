@@ -1,5 +1,4 @@
-import { tagQueries } from "@api/queries/tagQueries";
-import { TagMenuButton, TagRow } from "@core/tag";
+import { TagMenuButton, tagQueries, TagRow } from "@core/tag";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";

@@ -1,7 +1,6 @@
-import { wordFrequencyQueries } from "@api/queries/wordFrequencyQueries";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
-import { WordFrequencyView } from "@features/word-frequency-analysis";
+import { wordFrequencyQueries, WordFrequencyView } from "@features/word-frequency-analysis";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";

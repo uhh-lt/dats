@@ -1,5 +1,5 @@
-import { metadataQueries } from "@api/queries/metadataQueries";
 import { queryClient } from "@api/queryClient";
+import { metadataQueries } from "@core/project-metadata/api/metadataQueries";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 
 // The SDOC_METADATAS cache is a per-sdoc map keyed by project_metadata_id

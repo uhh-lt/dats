@@ -1,4 +1,4 @@
-import { metadataQueries } from "@api/queries/metadataQueries";
+import { metadataQueries } from "@core/project-metadata";
 import { useQuery } from "@tanstack/react-query";
 
 interface SdocsWithDateCounterProps {

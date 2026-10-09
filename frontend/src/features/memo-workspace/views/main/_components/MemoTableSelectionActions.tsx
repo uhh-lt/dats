@@ -1,5 +1,4 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
-import { MemoDeleteButton } from "@core/memo";
+import { MemoDeleteButton, MemoHooks } from "@core/memo";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { IconButton, Tooltip } from "@mui/material";

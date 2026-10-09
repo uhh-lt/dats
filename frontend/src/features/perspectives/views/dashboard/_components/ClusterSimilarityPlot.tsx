@@ -1,4 +1,3 @@
-import { perspectiveQueries } from "@api/queries/perspectiveQueries";
 import { getIconComponent, Icon } from "@components/icons";
 import {
   Box,
@@ -16,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { D3ColorScale, d3ColorSchemes } from "@utils/colors/D3ColorScale";
 import * as d3 from "d3";
 import { memo } from "react";
+import { perspectiveQueries } from "../../../api/perspectiveQueries";
 
 interface ClusterSimilarityPlotProps {
   aspectId: number;

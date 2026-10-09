@@ -1,4 +1,4 @@
-import { generalQueries } from "@api/queries/generalQueries";
+import { generalQueries } from "@core/auth";
 import { LoginView } from "@features/auth";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, redirect } from "@tanstack/react-router";

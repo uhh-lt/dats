@@ -1,6 +1,5 @@
-import { tableInfoQueries } from "@api/queries/tableInfoQueries";
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo } from "@core/filter";
+import { ColumnInfo, tableInfoQueries } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";

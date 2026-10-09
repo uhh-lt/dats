@@ -1,6 +1,5 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { useUpdateTimelineAnalysis } from "@api/hooks/TimelineAnalysisHooks";
 import { CardContainer } from "@components/CardContainer";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import { DateGroupBy } from "@models/DateGroupBy";
 import { DocType } from "@models/DocType";
@@ -15,6 +14,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent } from "react";
+import { useUpdateTimelineAnalysis } from "../../../api/timelineAnalysisHooks";
 
 const aggregationType2HumanReadable: Record<TimelineAnalysisType, Record<TAAnnotationAggregationType, string>> = {
   [TimelineAnalysisType.DOCUMENT]: {

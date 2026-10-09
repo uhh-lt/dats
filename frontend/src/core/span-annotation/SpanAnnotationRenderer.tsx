@@ -1,6 +1,5 @@
-import { annotationQueries } from "@api/queries/annotationQueries";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
-import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { annotationQueries, AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Typography } from "@mui/material";

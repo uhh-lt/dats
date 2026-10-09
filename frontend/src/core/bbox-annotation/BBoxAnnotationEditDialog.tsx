@@ -1,4 +1,3 @@
-import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
@@ -7,6 +6,7 @@ import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from 
 import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
+import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
 import { BBoxAnnotationRenderer } from "./BBoxAnnotationRenderer";
 
 export interface BBoxAnnotationEditDialogProps {

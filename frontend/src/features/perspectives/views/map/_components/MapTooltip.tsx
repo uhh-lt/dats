@@ -1,4 +1,4 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
+import { sdocQueries } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { Box, Card, CardContent, PopoverPosition, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";

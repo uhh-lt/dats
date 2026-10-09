@@ -1,4 +1,3 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
@@ -10,6 +9,7 @@ import { useDialog } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { CodeHooks } from "../api/codeHooks";
 import { CodeRenderer } from "../CodeRenderer";
 
 type CodeCreateValues = {

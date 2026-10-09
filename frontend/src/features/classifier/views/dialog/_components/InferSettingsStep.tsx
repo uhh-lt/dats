@@ -1,10 +1,8 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
 import { FormSwitch } from "@components/form-inputs";
 import { CodeRenderer } from "@core/code";
-import { TagRenderer } from "@core/tag";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
+import { TagHooks, TagRenderer } from "@core/tag";
 import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {
@@ -24,6 +22,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_TRAINED_ID } from "@utils/GlobalConstants";
 import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface InferenceSettings {

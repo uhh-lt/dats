@@ -1,5 +1,4 @@
-import { userQueries } from "@api/queries/userQueries";
-import { UserRenderer } from "@core/user";
+import { userQueries, UserRenderer } from "@core/user";
 import { MenuItem, TextField } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";

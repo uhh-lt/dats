@@ -1,4 +1,3 @@
-import { memoQueries } from "@api/queries/memoQueries";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
@@ -10,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { memoQueries } from "../api/memoQueries";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
 export interface MemoRendererSharedProps extends ExpandableRendererProps {

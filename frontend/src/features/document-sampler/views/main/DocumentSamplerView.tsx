@@ -1,7 +1,7 @@
-import { tagQueries } from "@api/queries/tagQueries";
 import { AnalysisService } from "@api/services/AnalysisService";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
+import { tagQueries } from "@core/tag";
 import { SampledSdocsResults } from "@models/SampledSdocsResults";
 import { TagRead } from "@models/TagRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";

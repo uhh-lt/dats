@@ -3,8 +3,8 @@ import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
-import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
-import { useLabelDocs, useUnlabelDocs } from "../../../../_api/useLabelDocs";
+import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
+import { useLabelDocs, useUnlabelDocs } from "../../../../api/useLabelDocs";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;

@@ -1,8 +1,8 @@
-import { CodeHooks } from "@api/hooks/CodeHooks";
-import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { TagHooks } from "@api/hooks/TagHooks";
-import { annotationQueries } from "@api/queries/annotationQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
+import { annotationQueries } from "@core/annotation";
+import { CodeHooks } from "@core/code";
+import { ProjectHooks } from "@core/project";
+import { sdocQueries } from "@core/source-document";
+import { TagHooks } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";

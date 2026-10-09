@@ -1,4 +1,3 @@
-import { memoQueries } from "@api/queries/memoQueries";
 import { UserAvatar } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
@@ -6,6 +5,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { memo, MouseEvent, ReactNode, useCallback, useState } from "react";
+import { memoQueries } from "./api/memoQueries";
 import { useOpenMemoDialog } from "./dialog/useOpenMemoDialog";
 
 interface MemoCreateOrSelectMenuProps {

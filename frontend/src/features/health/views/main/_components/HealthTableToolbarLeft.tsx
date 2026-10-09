@@ -1,5 +1,5 @@
-import { llmQueries } from "@api/queries/llmQueries";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
+import { llmQueries } from "@core/llm";
 import { Button, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";

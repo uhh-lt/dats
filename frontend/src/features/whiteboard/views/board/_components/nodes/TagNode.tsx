@@ -1,9 +1,7 @@
-import { TagHooks } from "@api/hooks/TagHooks";
-import { memoQueries } from "@api/queries/memoQueries";
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { useOpenMemoDialog } from "@core/memo";
-import { TagRenderer } from "@core/tag";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
+import { sdocQueries } from "@core/source-document";
+import { TagHooks, TagRenderer } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { TagNodeData } from "@models/TagNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";

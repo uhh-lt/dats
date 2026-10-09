@@ -1,5 +1,5 @@
-import { jobQueries } from "@api/queries/jobQueries";
 import { Icon } from "@components/icons";
+import { jobQueries } from "@core/job";
 import { MlAutomationView } from "@features/ml-automation";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";

@@ -1,6 +1,5 @@
-import { healthQueries } from "@api/queries/healthQueries";
 import { Icon } from "@components/icons";
-import { HealthView } from "@features/health";
+import { healthQueries, HealthView } from "@features/health";
 import { DocType } from "@models/DocType";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";

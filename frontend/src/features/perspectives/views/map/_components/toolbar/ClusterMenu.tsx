@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesDoc } from "@models/PerspectivesDoc";
@@ -21,7 +20,8 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
-import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 
 interface ClusterMenuProps {
   aspectId: number;

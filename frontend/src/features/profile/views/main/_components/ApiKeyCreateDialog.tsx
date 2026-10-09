@@ -1,4 +1,3 @@
-import { ApiKeyHooks } from "@api/hooks/ApiKeyHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText } from "@components/form-inputs";
 import { useOpenSnackbar } from "@core/notification";
@@ -11,6 +10,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, TextField } from "@mui/material";
 import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { ApiKeyHooks } from "../../../api/apiKeyHooks";
 
 interface ApiKeyCreateDialogProps {
   open: boolean;

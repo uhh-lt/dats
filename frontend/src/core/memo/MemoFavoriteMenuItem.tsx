@@ -1,7 +1,7 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo, useCallback } from "react";
+import { MemoHooks } from "./api/memoHooks";
 
 interface MemoFavoriteMenuItemProps {
   memoId: number | undefined;

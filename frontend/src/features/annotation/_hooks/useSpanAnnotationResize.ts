@@ -1,4 +1,4 @@
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { IToken } from "../_types/IToken";

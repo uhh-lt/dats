@@ -1,8 +1,7 @@
-import { SdocHooks } from "@api/hooks/SdocHooks";
 import { EditableTypography } from "@components/EditableTypography";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { CodeExplorer } from "@core/code";
-import { DocumentInfoPanel } from "@core/source-document";
+import { DocumentInfoPanel, SdocHooks } from "@core/source-document";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";

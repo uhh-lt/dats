@@ -1,4 +1,4 @@
-import { codeQueries } from "@api/queries/codeQueries";
+import { codeQueries } from "@core/code";
 import { MemoCreateOrSelectListItemButton } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";

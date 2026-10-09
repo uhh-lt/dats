@@ -1,4 +1,3 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import {
   MRT_ColumnDef,
@@ -9,6 +8,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
+import { MetadataHooks } from "./api/metadataHooks";
 
 const columns: MRT_ColumnDef<ProjectMetadataRead>[] = [
   {

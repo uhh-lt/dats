@@ -1,4 +1,3 @@
-import { useAnnotateCotaSentences, useRemoveCotaSentences } from "@api/hooks/CotaHooks";
 import { SdocRenderer } from "@core/source-document";
 import { COTAConcept } from "@models/COTAConcept";
 import { COTARead } from "@models/COTARead";
@@ -26,6 +25,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { MouseEventHandler, useMemo, useState } from "react";
+import { useAnnotateCotaSentences, useRemoveCotaSentences } from "../../../api/cotaHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 
 interface CotaSentenceAnnotatorProps {

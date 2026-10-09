@@ -1,4 +1,3 @@
-import { sdocQueries } from "@api/queries/sdocQueries";
 import { useTabNavigate } from "@core/navigation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -8,6 +7,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useRef } from "react";
+import { sdocQueries } from "../../../api/sdocQueries";
 import { SdocListItem } from "./_components/SdocListItem";
 
 interface RelatedPanelProps {

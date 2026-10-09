@@ -1,4 +1,3 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { getIconComponent, Icon } from "@components/icons";
@@ -24,6 +23,7 @@ import {
 } from "material-react-table";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface ClassifierTableProps {
