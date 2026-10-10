@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Stages 0-6 done. Stage 7 (cleanup and enforcement) next. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Status: **Stages 0-7 done. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
 Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -371,6 +371,15 @@ Requested by you: each domain's `<domain>Queries.ts` and `<domain>Mutations.ts` 
 - Delete `QueryKey.ts` and its governance comment; remove the loose untyped overloads in `cacheWriterUtils`.
 - Add the lint rule (5.9); update `api/cache-sync/README.md` and write a short "Query conventions" section in the docs/AGENTS files.
 - Done when: lint rule on, no enum, docs updated.
+
+**Result (done):**
+
+- The loose `QueryKey` overloads of `cacheWriterUtils` are removed (every caller already passed a tagged key, `tsc` found nothing to fix). `QueryKey.ts` was deleted in stage 4.
+- Two ESLint rules (`no-restricted-syntax`, in `eslint.config.mjs`): a `queryKey` array literal is only allowed in `*Queries.ts` files, and every `useMutation` needs a `mutationKey`. Both were checked with a probe file.
+- The last raw key (timeline table info) is now `tableInfoQueries.timeline(...)`. The five inline mutations (login, logout, token refresh,
+  word frequency export, document sampler) got `mutationKey`s; for that, `authQueries.all()` (`core/auth/api`) and `documentSamplerQueries.all()` were added as roots.
+- All 30 factory roots are unique (checked once with a grep). This is **not** enforced by lint; a duplicate root would silently share a cache prefix.
+- Docs: `frontend.instructions.md` states both rules; the cache-sync README no longer points to the enum.
 
 ## 8. Related: hey-api client migration (separate branch, after this)
 
