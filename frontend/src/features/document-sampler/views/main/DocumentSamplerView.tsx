@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
+import { documentSamplerQueries } from "../../api/documentSamplerQueries";
 import { DocumentSamplerActions } from "../../store/documentSamplerSlice";
 import { DocumentsBarChart } from "./_components/DocumentsBarChart";
 import { DocumentsTable } from "./_components/DocumentsTable";
@@ -60,6 +61,7 @@ export function DocumentSamplerView() {
     [dispatch, tagsMap],
   );
   const { mutate: aggregateSdocsByTags } = useMutation({
+    mutationKey: [...documentSamplerQueries.all(), "aggregateSdocsByTags"],
     mutationFn: AnalysisService.sampleSdocsByTags,
     onSuccess: transformAndStore,
   });

@@ -340,4 +340,24 @@ export default defineConfig(
       "local/no-internal-modules-public-entry": "off",
     },
   },
+  // QUERY CONVENTIONS (see .github/instructions/frontend.instructions.md)
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/**/*Queries.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Property[key.name='queryKey'] > ArrayExpression",
+          message:
+            "Do not write a queryKey by hand. Use a query factory (e.g. tagQueries.byProject(id)) or its .queryKey / scope functions. Keys are only defined in *Queries.ts files.",
+        },
+        {
+          selector: "CallExpression[callee.name='useMutation']:not(:has(Property[key.name='mutationKey']))",
+          message:
+            "Every mutation needs a mutationKey that starts with its domain root, e.g. mutationKey: [...tagQueries.all(), 'create'].",
+        },
+      ],
+    },
+  },
 );

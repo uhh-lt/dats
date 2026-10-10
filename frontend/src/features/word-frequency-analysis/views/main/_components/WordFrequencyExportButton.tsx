@@ -7,6 +7,7 @@ import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation } from "@tanstack/react-query";
 import { downloadFile } from "@utils/downloadUtils";
+import { wordFrequencyQueries } from "../../../api/wordFrequencyQueries";
 
 interface WordFrequencyExportButtonProps {
   filter: MyFilter<WordFrequencyColumns>;
@@ -16,6 +17,7 @@ export function WordFrequencyExportButton({ filter }: WordFrequencyExportButtonP
   const projectId = useAppSelector((state) => state.project.projectId);
 
   const exportWordFrequencies = useMutation({
+    mutationKey: [...wordFrequencyQueries.all(), "export"],
     mutationFn: WordFrequencyService.wordFrequencyAnalysisExport,
   });
 

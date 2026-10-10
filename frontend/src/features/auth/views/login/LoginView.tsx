@@ -2,7 +2,7 @@ import { ApiError } from "@api/core/ApiError";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
-import { handleOIDCLogin, useAuth } from "@core/auth";
+import { authQueries, handleOIDCLogin, useAuth } from "@core/auth";
 import { LinkButton } from "@core/navigation";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -42,6 +42,7 @@ export function LoginView() {
 
   // login
   const { mutate: loginMutation, isPending: loginIsPending } = useMutation({
+    mutationKey: [...authQueries.all(), "login"],
     mutationFn: AuthenticationService.login,
     retry: false,
     onSuccess(data) {

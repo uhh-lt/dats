@@ -7,6 +7,7 @@ import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData
 import { useAppDispatch } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { authQueries } from "../api/authQueries";
 import { AuthActions } from "../authActions";
 import { AuthContext } from "../types/AuthContext";
 
@@ -119,6 +120,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
 
   // Logout action.
   const { mutate: logoutMutation } = useMutation({
+    mutationKey: [...authQueries.all(), "logout"],
     mutationFn: AuthenticationService.logout,
     retry: false,
   });
@@ -136,6 +138,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
 
   // Refresh access token shortly before expiry.
   const { mutate: refreshAccessTokenMutation } = useMutation({
+    mutationKey: [...authQueries.all(), "refreshAccessToken"],
     mutationFn: AuthenticationService.refreshAccessToken,
     retry: false,
     onSuccess(data) {

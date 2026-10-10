@@ -1,3 +1,4 @@
+export * from "./api/authQueries";
 export * from "./api/generalQueries";
 export * from "./authActions";
 export * from "./HandleOIDCLogin";

@@ -9,11 +9,11 @@ import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 
 const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
-    queryKey: [
-      ...tableInfoQueries.bySlice("timelineAnalysis", timelineAnalysis.project_id),
+    queryKey: tableInfoQueries.timeline(
+      timelineAnalysis.project_id,
       timelineAnalysis.timeline_analysis_type,
       timelineAnalysis.id,
-    ],
+    ),
     queryFn: async () => {
       const projectId = timelineAnalysis.project_id;
       let columnInfo: ColumnInfo[] = [];

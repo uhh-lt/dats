@@ -123,7 +123,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - A factory is a plain object with `all()`, scope prefixes (`xxxScope()`) and `queryOptions(...)` leaves. It contains no React.
 - Keys are hierarchical: **domain, then scope, then params**, e.g. `["tags", "project", projectId]`.
 - A leaf bundles `queryKey` and `queryFn` together and takes identity params only (ids, filters). Never add `enabled`, `select` or `staleTime` parameters. A missing id returns `skipToken` as the `queryFn`. `useSuspenseQuery` and route loaders do not accept `skipToken`: a query that is used by suspense or loaders takes a strict id (`id: number`) with a normal `queryFn`, and call sites that may have no id add `enabled` themselves.
-- Never write a `queryKey` array by hand and never use explicit generics (`useQuery<T>`); type the service call instead.
+- Never write a `queryKey` array by hand and never use explicit generics (`useQuery<T>`); type the service call instead. ESLint enforces this: a `queryKey` array literal is only allowed in `*Queries.ts` files.
 - Never call API service methods directly from components; go through a factory.
 
 **Use factories at the call site:**
@@ -135,7 +135,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 **Mutations** live in the domain's `{domain}Mutations.ts` ([tagMutations.ts](../../frontend/src/core/tag/api/tagMutations.ts)) and are imported by name (`useCreateTag`):
 
-- Every mutation has a `mutationKey` that starts with the domain root: `mutationKey: [...tagQueries.all(), "create"]`.
+- Every mutation has a `mutationKey` that starts with the domain root: `mutationKey: [...tagQueries.all(), "create"]`. ESLint fails a `useMutation` without a `mutationKey`.
 - Cache updates are not written in components. Tag the mutation with `meta.datsEvent`; the cache-sync "brain" ([api/cache-sync](../../frontend/src/api/cache-sync/README.md)) writes the result into the cache.
 - Prefer `mutate` over `mutateAsync`. Necessary logic (invalidation) goes in the `useMutation` callbacks; UI actions (redirects) in the `mutate` callbacks.
 
