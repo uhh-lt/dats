@@ -1,6 +1,6 @@
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { useStartCrawlerJob } from "@core/job";
+import { JobHooks } from "@core/job";
 import { llmQueries } from "@core/llm";
 import { Language } from "@models/Language";
 import { ProcessingSettings } from "@models/ProcessingSettings";
@@ -67,7 +67,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
     setUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
   }, []);
 
-  const crawlUrlsMutation = useStartCrawlerJob();
+  const crawlUrlsMutation = JobHooks.useStartCrawlerJob();
   const handleImport = useCallback(async () => {
     if (urls.length > 0) {
       await crawlUrlsMutation.mutateAsync({

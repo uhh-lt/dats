@@ -1,5 +1,5 @@
 import { FormTextMultiline } from "@components/form-inputs";
-import { useCreatePromptTemplates, useStartLLMJob } from "@core/llm";
+import { LLMHooks } from "@core/llm";
 import { ErrorMessage } from "@hookform/error-message";
 import { ApproachType } from "@models/ApproachType";
 import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
@@ -44,7 +44,7 @@ export function PromptEditorStep() {
 
   // example selection (for few-shot learning)
   const [selectedAnnotationIds, setSelectedAnnotationIds] = useState<Record<number, number[]>>({});
-  const { mutate: createPromptTemplatesMutation, isPending } = useCreatePromptTemplates();
+  const { mutate: createPromptTemplatesMutation, isPending } = LLMHooks.useCreatePromptTemplates();
   const handleSelectExamples = useCallback(
     (codeId: number, annotationIds: number[]) => {
       if (!method) return;
@@ -125,7 +125,7 @@ export function PromptEditorStep() {
   );
 
   // start llm job
-  const { mutate: startLLMJobMutation, isPending: isStartPending } = useStartLLMJob();
+  const { mutate: startLLMJobMutation, isPending: isStartPending } = LLMHooks.useStartLLMJob();
   const handleStartLLMJob = useCallback(() => {
     if (model === undefined) return;
     if (method === undefined) return;

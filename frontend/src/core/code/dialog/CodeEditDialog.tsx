@@ -13,8 +13,7 @@ import { useDialog } from "@store/global/dialogBusSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useGetEnabledCodes } from "../api/codeHooks";
-import { useDeleteCode, useUpdateCode } from "../api/codeMutations";
+import { CodeHooks } from "../api/codeHooks";
 import { CodeRenderer } from "../CodeRenderer";
 
 type CodeEditValues = {
@@ -36,7 +35,7 @@ export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogP
   const openConfirmationDialog = useOpenConfirmationDialog();
 
   // codes for selection as parent
-  const codes = useGetEnabledCodes();
+  const codes = CodeHooks.useGetEnabledCodes();
   const parentCodes = useMemo(() => {
     if (!codes.data || !dialogData?.code) return [];
 
@@ -72,7 +71,7 @@ export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogP
   }, [isOpen, reset, dialogData]);
 
   // form actions
-  const { mutate: updateCodeMutation, isPending: isUpdateLoading } = useUpdateCode();
+  const { mutate: updateCodeMutation, isPending: isUpdateLoading } = CodeHooks.useUpdateCode();
   const handleCodeUpdate = useCallback<SubmitHandler<CodeEditValues>>(
     (updateData) => {
       if (dialogData?.code) {
@@ -116,7 +115,7 @@ export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogP
     },
     [dialogData, updateCodeMutation, codes, handleClose, onCodeUpdated],
   );
-  const { mutate: deleteCodeMutation, isPending: isDeleteLoading } = useDeleteCode();
+  const { mutate: deleteCodeMutation, isPending: isDeleteLoading } = CodeHooks.useDeleteCode();
   const handleCodeDelete = useCallback(() => {
     // disallow deleting of SYSTEM CODES
     if (dialogData?.code && !dialogData.code.is_system) {

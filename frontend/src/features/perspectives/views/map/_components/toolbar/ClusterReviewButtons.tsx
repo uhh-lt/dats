@@ -3,8 +3,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
-import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
-import { useLabelDocs, useUnlabelDocs } from "../../../../api/useLabelDocs";
+import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;
@@ -13,7 +12,7 @@ interface ClusterReviewButtonsProps {
 
 export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterReviewButtonsProps) {
   // check which buttons to show
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const sdocId2Doc = useMemo(() => {
     if (!vis.data) return undefined;
     return vis.data.docs.reduce(
@@ -38,13 +37,13 @@ export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterRevie
   }, [sdocId2Doc, selectedSdocIds]);
 
   // event handlers
-  const { mutate: labelDocsMutation, isPending: isLabelPending } = useLabelDocs(aspectId);
+  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesHooks.useLabelDocs(aspectId);
   const handleLabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     labelDocsMutation(selectedSdocIds);
   };
 
-  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = useUnlabelDocs(aspectId);
+  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = PerspectivesHooks.useUnlabelDocs(aspectId);
   const handleUnlabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     unlabelDocsMutation(selectedSdocIds);

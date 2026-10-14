@@ -1,5 +1,5 @@
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useDeleteBulkSentenceAnnotation } from "@core/sentence-annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
@@ -14,7 +14,7 @@ export function BulkDeleteSentAnnotationsButton({ selectedData }: BulkDeleteSent
   // actions
   const dispatch = useAppDispatch();
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const deleteBulkMutation = useDeleteBulkSentenceAnnotation();
+  const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotation();
   const handleDeleteAnnotationsClick = () => {
     openConfirmationDialog({
       text: `Do you really want to delete ${selectedData.length} sentence annotation${selectedData.length > 1 ? "s" : ""}? This action cannot be undone!`,

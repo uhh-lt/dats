@@ -7,8 +7,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
-import { useUpdateClusterDetails } from "../../api/perspectivesMutations";
-import { useGetDocVisualization } from "../../api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../api/perspectiveHooks";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";
@@ -28,7 +27,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   };
 
   // get cluster information
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const cluster = useMemo(() => {
     if (!vis.data) return null;
     return vis.data.clusters.find((t) => t.id === clusterId);
@@ -55,7 +54,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
     }
   }, [cluster, reset]);
 
-  const updateCluster = useUpdateClusterDetails();
+  const updateCluster = PerspectivesHooks.useUpdateClusterDetails();
 
   const handleSave: SubmitHandler<ClusterUpdate> = (data) => {
     if (!cluster) return;

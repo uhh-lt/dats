@@ -1,6 +1,6 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { annotationQueries } from "@core/annotation";
-import { CodeRenderer, useGetCode } from "@core/code";
+import { CodeHooks, CodeRenderer } from "@core/code";
 import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -43,7 +43,7 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
 
   // global server state (react-query)
   const annotation = useQuery(annotationQueries.span.byId(props.data.spanAnnotationId));
-  const code = useGetCode(annotation.data?.code_id);
+  const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId));
 
   // effects

@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 // BBOX QUERIES live in annotationQueries.bbox (used with `useQuery` directly).
 
 // BBOX MUTATIONS
-export const useCreateBBoxAnnotation = () =>
+const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "create"],
     mutationFn: (variables: BBoxAnnotationCreate) =>
@@ -21,7 +21,7 @@ export const useCreateBBoxAnnotation = () =>
     },
   });
 
-export const useUpdateBBoxAnnotation = () =>
+const useUpdateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "update"],
     mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
@@ -64,7 +64,7 @@ export const useUpdateBBoxAnnotation = () =>
     },
   });
 
-export const useUpdateBulkBBoxAnnotation = () =>
+const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "updateBulk"],
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
@@ -74,7 +74,7 @@ export const useUpdateBulkBBoxAnnotation = () =>
     },
   });
 
-export const useDeleteBBoxAnnotation = () =>
+const useDeleteBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "delete"],
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
@@ -102,7 +102,7 @@ export const useDeleteBBoxAnnotation = () =>
     },
   });
 
-export const useDeleteBulkBBoxAnnotation = () =>
+const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.bbox.all(), "deleteBulk"],
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
@@ -111,3 +111,11 @@ export const useDeleteBulkBBoxAnnotation = () =>
       successMessage: (data: BBoxAnnotationRead[]) => `Deleted ${data.length} Bounding Box Annotations`,
     },
   });
+
+export const BboxAnnotationHooks = {
+  useCreateBBoxAnnotation,
+  useUpdateBBoxAnnotation,
+  useUpdateBulkBBoxAnnotation,
+  useDeleteBBoxAnnotation,
+  useDeleteBulkBBoxAnnotation,
+};

@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useGetDocVisualization } from "../../../api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../api/perspectiveHooks";
 
 interface Data {
   clusterId: number;
@@ -40,7 +40,7 @@ export const ClusterDistributionPlot = memo(({ aspectId, height, showPieChart }:
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // global server state
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
 
   // computed
   const chartData = useMemo(() => {

@@ -1,4 +1,4 @@
-import { useGetProjectMetadata, useGetSdocMetadataByProjectMetadataId } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
@@ -11,8 +11,8 @@ interface SdocMetadataRendererProps {
 }
 
 export const SdocMetadataRenderer = memo(({ sdocId, projectMetadataId }: SdocMetadataRendererProps) => {
-  const sdocMetadata = useGetSdocMetadataByProjectMetadataId(sdocId, projectMetadataId);
-  const projectMetadata = useGetProjectMetadata(projectMetadataId);
+  const sdocMetadata = MetadataHooks.useGetSdocMetadataByProjectMetadataId(sdocId, projectMetadataId);
+  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectMetadataId);
 
   if (projectMetadata.isSuccess && sdocMetadata.isSuccess && sdocMetadata.data !== undefined) {
     return <SdocMetadataRendererWithData sdocMetadata={sdocMetadata.data} projectMetadata={projectMetadata.data} />;

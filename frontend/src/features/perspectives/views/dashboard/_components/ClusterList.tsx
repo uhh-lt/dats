@@ -2,7 +2,7 @@ import { CardContainer } from "@components/CardContainer";
 import { getIconComponent, Icon } from "@components/icons";
 import { Box, Card, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useGetDocVisualization } from "../../../api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../api/perspectiveHooks";
 import { PerspectivesActions } from "../../../store/perspectivesSlice";
 
 interface ClusterListProps {
@@ -12,7 +12,7 @@ interface ClusterListProps {
 
 export function ClusterList({ aspectId, height }: ClusterListProps) {
   // global server state
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // open cluster dialog

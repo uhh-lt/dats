@@ -1,5 +1,5 @@
 import { FormText, FormTextMultiline } from "@components/form-inputs";
-import { ProjectExportButton, useUpdateProject } from "@core/project";
+import { ProjectExportButton, ProjectHooks } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
 import { ProjectRead } from "@models/ProjectRead";
 import { ProjectUpdate } from "@models/ProjectUpdate";
@@ -25,7 +25,7 @@ export const ProjectDetails = memo(({ project }: ProjectDetailsProps) => {
   });
 
   // mutations
-  const updateProjectMutation = useUpdateProject();
+  const updateProjectMutation = ProjectHooks.useUpdateProject();
 
   // form handling
   const handleProjectUpdate: SubmitHandler<ProjectUpdate> = useCallback(

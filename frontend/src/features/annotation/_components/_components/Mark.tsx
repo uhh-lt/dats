@@ -1,4 +1,4 @@
-import { useGetCode } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { contrastiveColors } from "@utils/colors/colors";
 import { SpanAnnotationResizeStartHandler } from "../../_hooks/useSpanAnnotationResize";
@@ -13,7 +13,7 @@ interface MarkProps {
 }
 
 export function Mark({ annotation, isStart, isEnd, height, top, onResizeStart }: MarkProps) {
-  const code = useGetCode(annotation.code_id);
+  const code = CodeHooks.useGetCode(annotation.code_id);
 
   // pending (not yet persisted) annotations have negative ids and never offer resize handles.
   const isPending = annotation.id < 0;

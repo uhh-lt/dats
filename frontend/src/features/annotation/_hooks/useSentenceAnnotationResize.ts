@@ -1,4 +1,4 @@
-import { useUpdateSentenceAnnotation } from "@core/sentence-annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
 
@@ -79,12 +79,12 @@ const hasChangedBoundaries = (state: ResizeState): boolean => {
  * - Listens for global pointermove/pointerup/pointercancel/Escape events
  * - Disables text selection and forces a resize cursor via a global stylesheet
  * - Computes a preview annotation with clamped boundaries on each pointer move
- * - Commits the resize via `useUpdateSentenceAnnotation` on pointer up
+ * - Commits the resize via `SentenceAnnotationHooks.useUpdateSentenceAnnotation` on pointer up
  *
  * @param sentenceCount - Total number of sentences in the document (used to clamp the end boundary)
  */
 export function useSentenceAnnotationResize(sentenceCount: number | undefined) {
-  const { mutate: updateSentenceAnnotation } = useUpdateSentenceAnnotation();
+  const { mutate: updateSentenceAnnotation } = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
   const resizeStateRef = useRef<ResizeState | undefined>(undefined);
   const suppressMouseUpRef = useRef(false);
   const [resizeState, setResizeState] = useState<ResizeState>();

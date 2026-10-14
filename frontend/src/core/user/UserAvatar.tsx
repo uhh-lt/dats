@@ -2,7 +2,7 @@ import { PublicUserRead } from "@models/PublicUserRead";
 import { UserRead } from "@models/UserRead";
 import { Avatar, AvatarProps, Tooltip, TooltipProps } from "@mui/material";
 import { memo } from "react";
-import { useGetUser } from "./api/userHooks";
+import { UserHooks } from "./api/userHooks";
 
 interface UserAvatarProps extends AvatarProps {
   user: number | UserRead | PublicUserRead;
@@ -19,7 +19,7 @@ export const UserAvatar = memo(({ user, tooltipPlacement = "top", ...props }: Us
 
 const UserAvatarWithoutData = memo(
   ({ userId, tooltipPlacement, ...props }: { userId: number } & Omit<UserAvatarProps, "user">) => {
-    const user = useGetUser(userId);
+    const user = UserHooks.useGetUser(userId);
 
     if (user.data) {
       return <UserAvatarWithData user={user.data} tooltipPlacement={tooltipPlacement} {...props} />;

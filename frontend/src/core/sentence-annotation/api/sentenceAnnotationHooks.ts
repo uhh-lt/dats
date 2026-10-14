@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 // TODO: filter out all disabled code ids
 
 // SENTENCE MUTATIONS
-export const useCreateSentenceAnnotation = () =>
+const useCreateSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "createSentenceAnnotation"],
     mutationFn: SentenceAnnotationService.createSentenceAnnotation,
@@ -20,7 +20,7 @@ export const useCreateSentenceAnnotation = () =>
     },
   });
 
-export const useCreateBulkSentenceAnnotation = () =>
+const useCreateBulkSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "createBulkSentenceAnnotation"],
     mutationFn: SentenceAnnotationService.createSentenceAnnotationsBulk,
@@ -30,7 +30,7 @@ export const useCreateBulkSentenceAnnotation = () =>
     },
   });
 
-export const useUpdateSentenceAnnotation = () =>
+const useUpdateSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "updateSentenceAnnotation"],
     mutationFn: (variables: {
@@ -118,7 +118,7 @@ export const useUpdateSentenceAnnotation = () =>
     },
   });
 
-export const useUpdateBulkSentenceAnno = () =>
+const useUpdateBulkSentenceAnno = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "updateBulkSentenceAnno"],
     mutationFn: SentenceAnnotationService.updateSentenceAnnotationsBulk,
@@ -128,7 +128,7 @@ export const useUpdateBulkSentenceAnno = () =>
     },
   });
 
-export const useDeleteSentenceAnnotation = () =>
+const useDeleteSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "deleteSentenceAnnotation"],
     mutationFn: (sentAnnoToDelete: SentenceAnnotationRead | number) =>
@@ -173,7 +173,7 @@ export const useDeleteSentenceAnnotation = () =>
     },
   });
 
-export const useDeleteBulkSentenceAnnotation = () =>
+const useDeleteBulkSentenceAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "deleteBulkSentenceAnnotation"],
     mutationFn: SentenceAnnotationService.deleteSentenceAnnotationsBulk,
@@ -183,7 +183,7 @@ export const useDeleteBulkSentenceAnnotation = () =>
     },
   });
 
-export const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
+const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "deleteBulkSentenceAnnotationSingleSdoc"],
     mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
@@ -244,8 +244,19 @@ export const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
     },
   });
 
-export const useCountSentenceAnnotationsBySdocsAndUser = () =>
+const useCountBySdocsAndUser = () =>
   useMutation({
     mutationKey: [...annotationQueries.sentence.all(), "countBySdocsAndUser"],
     mutationFn: SentenceAnnotationService.countAnnotations,
   });
+
+export const SentenceAnnotationHooks = {
+  useCreateSentenceAnnotation,
+  useCreateBulkSentenceAnnotation,
+  useUpdateSentenceAnnotation,
+  useUpdateBulkSentenceAnno,
+  useDeleteSentenceAnnotation,
+  useDeleteBulkSentenceAnnotation,
+  useDeleteBulkSentenceAnnotationSingleSdoc,
+  useCountBySdocsAndUser,
+};

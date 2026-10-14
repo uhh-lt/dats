@@ -11,12 +11,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import {
-  useCreateTimelineAnalysis,
-  useDeleteTimelineAnalysis,
-  useDuplicateTimelineAnalysis,
-  useUpdateTimelineAnalysis,
-} from "../../api/timelineAnalysisMutations";
+import { TimelineAnalysisHooks } from "../../api/timelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 
@@ -57,18 +52,20 @@ export function TimelineAnalysisDashboardView() {
   );
 
   // mutations
-  const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } = useCreateTimelineAnalysis();
+  const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } =
+    TimelineAnalysisHooks.useCreateTimelineAnalysis();
   const {
     mutate: deleteTimelineAnalysis,
     isPending: isDeletingTimelineAnalysis,
     variables: deletingVariables,
-  } = useDeleteTimelineAnalysis();
-  const { mutate: updateTimelineAnalysis, isPending: isUpdatingTimelineAnalysis } = useUpdateTimelineAnalysis();
+  } = TimelineAnalysisHooks.useDeleteTimelineAnalysis();
+  const { mutate: updateTimelineAnalysis, isPending: isUpdatingTimelineAnalysis } =
+    TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const {
     mutate: duplicateTimelineAnalysis,
     isPending: isDuplicatingTimelineAnalysis,
     variables: duplicatingVariables,
-  } = useDuplicateTimelineAnalysis();
+  } = TimelineAnalysisHooks.useDuplicateTimelineAnalysis();
 
   const dispatch = useAppDispatch();
 

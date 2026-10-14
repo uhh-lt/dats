@@ -18,8 +18,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { useGetAllClassifiers } from "../../../api/classifierHooks";
-import { useStartClassifierJob } from "../../../api/classifierMutations";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { classifierQueries } from "../../../api/classifierQueries";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
@@ -42,7 +41,7 @@ export function EvalSettingsStep() {
   const dispatch = useAppDispatch();
 
   // read the classifier to pre-fill the averaging strategy from its training settings
-  const classifiers = useGetAllClassifiers(projectId);
+  const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
   const classifierInfo = useQuery(classifierQueries.info());
   const classifier = classifiers.data?.find((c) => c.id === classifierId);
   const configuredAveraging = classifier?.train_params["averaging"];
@@ -67,7 +66,7 @@ export function EvalSettingsStep() {
     dispatch(ClassifierActions.setEvaluationAveraging(getValues("averaging")));
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
-  const { mutate: startClassifierJobMutation, isPending } = useStartClassifierJob();
+  const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: EvaluationSettings) => {
     if (model === undefined || task === undefined || classifierId === undefined) return;
     dispatch(ClassifierActions.setEvaluationAveraging(data.averaging));

@@ -1,7 +1,7 @@
 import { EmojiGlyph } from "@components/emoji";
 import { getIconComponent, Icon } from "@components/icons";
 import { MyFilter } from "@core/filter";
-import { memoQueries, useCreateMemo } from "@core/memo";
+import { MemoHooks, memoQueries } from "@core/memo";
 import { LinkListItemButton } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
@@ -68,7 +68,7 @@ interface MemoWorkspaceSidebarProps {
 
 export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSidebarProps) => {
   const dispatch = useAppDispatch();
-  const createMemo = useCreateMemo();
+  const createMemo = MemoHooks.useCreateMemo();
   const recentMemos = useQuery(memoQueries.recent(projectId));
   const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 

@@ -1,6 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { LinkButton } from "@core/navigation";
-import { useGetSdocMetadata, useUpdateBulkSdocMetadata } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
 import { sdocQueries } from "@core/source-document";
 import { TagMenuButton, tagQueries, TagRow } from "@core/tag";
@@ -12,8 +12,8 @@ import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography 
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
+import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
 import { perspectiveQueries } from "../../../../api/perspectiveQueries";
-import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface SelectionInformationProps {
@@ -46,10 +46,10 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   };
 
   // global server state
-  const metadata = useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
+  const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
   const documentTagIds = useQuery(tagQueries.idsBySdoc(selectedSdocIds[selectedSdocIdsIndex]));
   const docClusters = useQuery(perspectiveQueries.clustersBySdoc(aspectId, selectedSdocIds[selectedSdocIdsIndex]));
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const sdoc = useQuery(sdocQueries.detail(selectedSdocIds[selectedSdocIdsIndex]));
 
   // filtering
@@ -58,7 +58,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   };
 
   // mutation
-  const { mutate: updateMetadataMutation } = useUpdateBulkSdocMetadata();
+  const { mutate: updateMetadataMutation } = MetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataId: number) => (data: SourceDocumentMetadataUpdate) => {
       updateMetadataMutation({

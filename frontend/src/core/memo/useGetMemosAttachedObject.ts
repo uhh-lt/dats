@@ -1,8 +1,8 @@
 import { annotationQueries } from "@core/annotation";
-import { useGetCode } from "@core/code";
-import { useGetProject } from "@core/project";
+import { CodeHooks } from "@core/code";
+import { ProjectHooks } from "@core/project";
 import { sdocQueries } from "@core/source-document";
-import { useGetTag } from "@core/tag";
+import { TagHooks } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -44,9 +44,9 @@ export const useGetMemosAttachedObject = (
   id: number | undefined,
 ): MemosAttachedObjectQuery => {
   // Pass the id only when the type matches, otherwise pass undefined to disable the query
-  const tagQuery = useGetTag(type === AttachedObjectType.TAG ? id : undefined);
-  const codeQuery = useGetCode(type === AttachedObjectType.CODE ? id : undefined);
-  const projectQuery = useGetProject(type === AttachedObjectType.PROJECT ? id : undefined);
+  const tagQuery = TagHooks.useGetTag(type === AttachedObjectType.TAG ? id : undefined);
+  const codeQuery = CodeHooks.useGetCode(type === AttachedObjectType.CODE ? id : undefined);
+  const projectQuery = ProjectHooks.useGetProject(type === AttachedObjectType.PROJECT ? id : undefined);
   const sdocId = type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined;
   const sdocQuery = useQuery({ ...sdocQueries.detail(sdocId!), enabled: sdocId !== undefined });
   const spanQuery = useQuery(annotationQueries.span.byId(type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined));

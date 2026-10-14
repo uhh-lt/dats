@@ -1,5 +1,5 @@
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useDeleteSentenceAnnotation } from "@core/sentence-annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler } from "react";
@@ -14,7 +14,7 @@ export function SentenceAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: SentenceAnnotationDeleteMenuItemProps & MenuItemProps) {
-  const deleteMutation = useDeleteSentenceAnnotation();
+  const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const handleClick: MouseEventHandler<HTMLLIElement> = (event) => {
     event.stopPropagation();

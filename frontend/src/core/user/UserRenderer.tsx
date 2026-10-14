@@ -3,7 +3,7 @@ import { PublicUserRead } from "@models/PublicUserRead";
 import { UserRead } from "@models/UserRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { useGetUser } from "./api/userHooks";
+import { UserHooks } from "./api/userHooks";
 import { UserAvatar } from "./UserAvatar";
 
 export interface UserRendererSharedProps extends ExpandableRendererProps {
@@ -23,7 +23,7 @@ export const UserRenderer = memo(({ user, ...props }: UserRendererProps) => {
 });
 
 const UserRendererWithoutData = memo(({ userId, ...props }: { userId: number } & UserRendererSharedProps) => {
-  const user = useGetUser(userId);
+  const user = UserHooks.useGetUser(userId);
 
   if (user.isSuccess) {
     return <UserRendererWithData user={user.data} {...props} />;

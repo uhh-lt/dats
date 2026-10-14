@@ -1,5 +1,5 @@
 import { CodeRenderer } from "@core/code";
-import { llmQueries, useCreatePromptTemplates } from "@core/llm";
+import { LLMHooks, llmQueries } from "@core/llm";
 import { ApproachType } from "@models/ApproachType";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
 import { StrategyInfo } from "@models/StrategyInfo";
@@ -192,7 +192,7 @@ export const SettingsStep = memo(() => {
     dispatch(LLMAssistantActions.previousLLMDialogStep());
   }, [dispatch]);
 
-  const createPromptTemplates = useCreatePromptTemplates();
+  const createPromptTemplates = LLMHooks.useCreatePromptTemplates();
   const handleSubmit = useCallback(() => {
     if (!llmMethod || !modelId || !strategyType || !selectedStrategy) return;
 

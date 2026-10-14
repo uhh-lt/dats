@@ -2,7 +2,7 @@ import { dataToTree, ITree } from "@components/tree-explorer";
 import { CodeRead } from "@models/CodeRead";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import { useGetEnabledCodes } from "../api/codeHooks";
+import { CodeHooks } from "../api/codeHooks";
 
 // create a dummy root node that will hold the results
 const dummyRootNode: CodeRead = {
@@ -20,7 +20,7 @@ const dummyRootNode: CodeRead = {
 
 export const useComputeCodeTree = () => {
   // global server state
-  const allCodes = useGetEnabledCodes();
+  const allCodes = CodeHooks.useGetEnabledCodes();
 
   // computed
   const codeTree: Node<ITree<CodeRead>> | null = useMemo(() => {

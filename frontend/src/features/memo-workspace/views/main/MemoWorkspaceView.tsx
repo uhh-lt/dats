@@ -1,6 +1,6 @@
 import { SidebarContentLayout } from "@components/content-layouts";
 import { useAuth } from "@core/auth";
-import { MemoEditorPane, memoQueries, useRecordRecentMemo } from "@core/memo";
+import { MemoEditorPane, MemoHooks, memoQueries } from "@core/memo";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Box, Button } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -22,7 +22,7 @@ export function MemoWorkspaceView() {
   const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 
   const memo = useQuery(memoQueries.byId(openMemoId));
-  const { mutate: recordRecent } = useRecordRecentMemo();
+  const { mutate: recordRecent } = MemoHooks.useRecordRecentMemo();
 
   // Record the opened memo as recently-opened (server-driven recents).
   useEffect(() => {

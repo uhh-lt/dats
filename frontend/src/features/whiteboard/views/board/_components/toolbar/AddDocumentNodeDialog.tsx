@@ -1,7 +1,7 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
-import { useGetProjectMetadataList } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocReduxFilterTable } from "@core/source-document";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
@@ -27,7 +27,7 @@ export function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddD
   const dialog = useDialog();
 
   // global server state
-  const metadata = useGetProjectMetadataList();
+  const metadata = MetadataHooks.useGetProjectMetadataList();
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

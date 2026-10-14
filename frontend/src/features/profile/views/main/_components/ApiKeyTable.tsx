@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDateTime } from "@utils/DateUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
-import { useDeleteApiKey } from "../../../api/apiKeyMutations";
+import { ApiKeyHooks } from "../../../api/apiKeyHooks";
 import { apiKeyQueries } from "../../../api/apiKeyQueries";
 
 const isExpired = (apiKey: ApiKeyRead): boolean =>
@@ -52,7 +52,7 @@ export const ApiKeyTable = memo(() => {
   const apiKeys = useQuery(apiKeyQueries.list());
 
   // mutations
-  const { mutate: deleteApiKey, isPending: isDeleting } = useDeleteApiKey();
+  const { mutate: deleteApiKey, isPending: isDeleting } = ApiKeyHooks.useDeleteApiKey();
 
   // actions
   const openConfirmationDialog = useOpenConfirmationDialog();

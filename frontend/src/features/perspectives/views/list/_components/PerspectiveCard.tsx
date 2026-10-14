@@ -10,8 +10,7 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Box, Card, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import { ReactElement } from "react";
-import { useLivePerspectivesJob } from "../../../api/perspectivesHooks";
-import { useDeleteAspect } from "../../../api/perspectivesMutations";
+import { PerspectivesHooks } from "../../../api/perspectiveHooks";
 
 const statusToIcon: Record<JobStatus, ReactElement> = {
   // waiting
@@ -51,9 +50,9 @@ interface PerspectiveCardProps {
 }
 
 export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
-  const perspectivesJob = useLivePerspectivesJob(aspect.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect.most_recent_job_id, undefined);
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const { mutate: deleteMutation, isPending } = useDeleteAspect();
+  const { mutate: deleteMutation, isPending } = PerspectivesHooks.useDeleteAspect();
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {
     event.preventDefault();
     openConfirmationDialog({

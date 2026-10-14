@@ -1,4 +1,4 @@
-import { useGetCode } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { memo, SVGProps } from "react";
 import { BboxAnnotationResizeStartHandler } from "../_hooks/useBboxAnnotationResize";
@@ -28,7 +28,7 @@ export const SVGBBox = memo(
     onMouseLeave,
     ...props
   }: SVGBBoxProps & CustomSVGProps) => {
-    const code = useGetCode(bbox.code_id);
+    const code = CodeHooks.useGetCode(bbox.code_id);
 
     // pending (not yet persisted) annotations have negative ids and never offer resize handles.
     const isPending = bbox.id < 0;

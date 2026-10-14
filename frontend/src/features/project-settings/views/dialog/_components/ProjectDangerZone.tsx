@@ -1,5 +1,5 @@
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useDeleteProject } from "@core/project";
+import { ProjectHooks } from "@core/project";
 import { ProjectRead } from "@models/ProjectRead";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { LoadingButton } from "@mui/lab";
@@ -20,7 +20,7 @@ export function ProjectDangerZone({ project }: ProjectDangerZoneProps) {
 
   // handle delete
   const navigate = useNavigate();
-  const { mutate: deleteProject, isPending } = useDeleteProject();
+  const { mutate: deleteProject, isPending } = ProjectHooks.useDeleteProject();
   const handleClickRemoveProject = useCallback(() => {
     if (project) {
       openConfirmationDialog({

@@ -1,4 +1,4 @@
-import { useGetProjectMetadataList } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import { COTARead } from "@models/COTARead";
 import { DateGroupBy } from "@models/DateGroupBy";
@@ -11,7 +11,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent, FocusEvent } from "react";
-import { useUpdateCota } from "../../../api/cotaMutations";
+import { CotaHooks } from "../../../api/cotaHooks";
 
 interface CotaSettingsProps {
   cota: COTARead;
@@ -19,13 +19,13 @@ interface CotaSettingsProps {
 
 export function CotaTimelineSettings({ cota }: CotaSettingsProps) {
   // global server state (react-query)
-  const projectMetadata = useGetProjectMetadataList();
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
 
   // actions
-  const updateCota = useUpdateCota();
+  const updateCota = CotaHooks.useUpdateCota();
   const handleChangeMetadataId = (event: ChangeEvent<HTMLInputElement>) => {
     updateCota.mutate({
       cotaId: cota.id,

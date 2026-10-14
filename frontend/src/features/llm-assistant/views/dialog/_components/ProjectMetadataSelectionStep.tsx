@@ -1,5 +1,5 @@
-import { useDetermineApproach } from "@core/llm";
-import { ProjectMetadataTable, useGetProjectMetadataList } from "@core/project-metadata";
+import { LLMHooks } from "@core/llm";
+import { MetadataHooks, ProjectMetadataTable } from "@core/project-metadata";
 import { DocType } from "@models/DocType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { TaskType } from "@models/TaskType";
@@ -24,14 +24,14 @@ export const ProjectMetadataSelectionStep = memo(() => {
   );
 
   // global server state
-  const projectMetadata = useGetProjectMetadataList();
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = useMemo(() => {
     if (!projectMetadata.data) return [];
     return projectMetadata.data.filter((metadata) => metadata.doctype === DocType.TEXT && metadata.read_only === false);
   }, [projectMetadata.data]);
 
   // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = useDetermineApproach();
+  const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
 
   const handleNext = useCallback(
     (projectMetadata: ProjectMetadataRead[]) => {

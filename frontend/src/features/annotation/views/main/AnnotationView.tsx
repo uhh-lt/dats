@@ -1,7 +1,7 @@
 import { EditableTypography } from "@components/EditableTypography";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { CodeExplorer } from "@core/code";
-import { DocumentInfoPanel, useUpdateName } from "@core/source-document";
+import { DocumentInfoPanel, SdocHooks } from "@core/source-document";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
@@ -184,7 +184,7 @@ export function AnnotationView() {
   const { data: sdocData } = useSuspenseQuery(sdocDataOptions);
 
   // rename document
-  const updateNameMutation = useUpdateName();
+  const updateNameMutation = SdocHooks.useUpdateName();
   const handleUpdateName = (newName: string) => {
     if (newName === sdoc.name) {
       return;

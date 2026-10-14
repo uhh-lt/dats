@@ -1,12 +1,15 @@
+import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
+import { SdocMetadataService } from "@api/services/SdocMetadataService";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { useAppSelector } from "@store/storeHooks";
-import { useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { metadataQueries, ProjectMetadataMap, SdocMetadataMap } from "./metadataQueries";
 
 // PROJECT METADATA QUERIES
 // The queries themselves live in metadataQueries. The hooks below only derive data from them.
 
-export const useProjectMetadataQuery = <T>({
+const useProjectMetadataQuery = <T>({
   select,
   enabled,
 }: {
@@ -21,23 +24,23 @@ export const useProjectMetadataQuery = <T>({
   });
 };
 
-export const useGetProjectMetadata = (metadataId: number | null | undefined) =>
+const useGetProjectMetadata = (metadataId: number | null | undefined) =>
   useProjectMetadataQuery({
     select: (data) => data[metadataId!],
     enabled: !!metadataId,
   });
 
-export const useGetProjectMetadataList = () => useProjectMetadataQuery({ select: (data) => Object.values(data) });
+const useGetProjectMetadataList = () => useProjectMetadataQuery({ select: (data) => Object.values(data) });
 
 // SDOC METADATA QUERIES
 
-export const useGetSdocMetadata = (sdocId: number | null | undefined) =>
+const useGetSdocMetadata = (sdocId: number | null | undefined) =>
   useQuery({
     ...metadataQueries.bySdoc(sdocId),
     select: (data) => Object.values(data),
   });
 
-export const useGetSdocMetadataByProjectMetadataId = (sdocId: number | null | undefined, projectMetadataId: number) =>
+const useGetSdocMetadataByProjectMetadataId = (sdocId: number | null | undefined, projectMetadataId: number) =>
   useQuery({
     ...metadataQueries.bySdoc(sdocId),
     select: (data) => data[projectMetadataId],
@@ -98,8 +101,67 @@ const combineBulkData = (results: UseQueryResult<SdocMetadataMap, Error>[]) => {
   };
 };
 
-export const useGetSdocMetadataBulk = (sdocIds: number[]) =>
+const useGetSdocMetadataBulk = (sdocIds: number[]) =>
   useQueries({
     queries: sdocIds.map((sdocId) => metadataQueries.bySdoc(sdocId)),
     combine: combineBulkData,
   });
+
+// PROJECT METADATA MUTATIONS
+const useCreateProjectMetadata = () =>
+  useMutation({
+    mutationKey: [...metadataQueries.all(), "createProjectMetadata"],
+    mutationFn: ProjectMetadataService.createMetadata,
+    meta: {
+      datsEvent: "PROJECT_METADATA_CREATED",
+      successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
+      errorMessage: (error: { status: number }) =>
+        error.status === 409 ? "Key already exists" : "Could not add metadata",
+    },
+  });
+
+const useUpdateProjectMetadata = () =>
+  useMutation({
+    mutationKey: [...metadataQueries.all(), "updateProjectMetadata"],
+    mutationFn: ProjectMetadataService.updateById,
+    meta: {
+      datsEvent: "PROJECT_METADATA_UPDATED",
+      successMessage: (projectMetadata: ProjectMetadataRead) =>
+        `Updated projectMetadata ${projectMetadata.id} for project ${projectMetadata.project_id}`,
+    },
+  });
+
+const useDeleteProjectMetadata = () =>
+  useMutation({
+    mutationKey: [...metadataQueries.all(), "deleteProjectMetadata"],
+    mutationFn: ProjectMetadataService.deleteById,
+    meta: {
+      datsEvent: "PROJECT_METADATA_DELETED",
+      successMessage: (data: ProjectMetadataRead) => `Deleted metadata "${data.key}"`,
+    },
+  });
+
+// SDOC METADATA MUTATIONS
+
+const useUpdateBulkSdocMetadata = () =>
+  useMutation({
+    mutationKey: [...metadataQueries.all(), "updateBulkSdocMetadata"],
+    mutationFn: SdocMetadataService.updateBulk,
+    meta: {
+      datsEvent: "SDOC_METADATA_UPDATED_BATCH",
+      successMessage: (data: SourceDocumentMetadataRead[]) => `Updated ${data.length} document metadata values`,
+    },
+  });
+
+export const MetadataHooks = {
+  useProjectMetadataQuery,
+  useGetProjectMetadata,
+  useGetProjectMetadataList,
+  useGetSdocMetadata,
+  useGetSdocMetadataByProjectMetadataId,
+  useGetSdocMetadataBulk,
+  useCreateProjectMetadata,
+  useUpdateProjectMetadata,
+  useDeleteProjectMetadata,
+  useUpdateBulkSdocMetadata,
+};

@@ -1,4 +1,4 @@
-import { useGetEnabledCodes } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
@@ -37,7 +37,7 @@ export function SearchStatistics({
   };
 
   // query all codes of the current project
-  const projectCodes = useGetEnabledCodes();
+  const projectCodes = CodeHooks.useGetEnabledCodes();
 
   // menu
   const handleMenuItemClick = useCallback((navigateTo: string) => {

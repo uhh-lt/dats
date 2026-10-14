@@ -1,4 +1,4 @@
-import { JobListItem, useLiveCrawlerJob } from "@core/job";
+import { JobHooks, JobListItem } from "@core/job";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
@@ -11,7 +11,7 @@ interface CrawlerJobListItemProps {
 
 export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListItemProps) => {
   // global server state (react-query)
-  const crawlerJob = useLiveCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
+  const crawlerJob = JobHooks.useLiveCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
 
   const dateString = useMemo(() => {
     return formatDateTime(initialCrawlerJob.created);

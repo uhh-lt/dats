@@ -6,7 +6,7 @@ import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from 
 import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { useUpdateBulkBBoxAnnotation } from "./api/bboxAnnotationMutations";
+import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
 import { BBoxAnnotationRenderer } from "./BBoxAnnotationRenderer";
 
 export interface BBoxAnnotationEditDialogProps {
@@ -23,7 +23,7 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
   const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("bboxAnnotationEdit");
 
   // mutations
-  const { mutate: updateAnnotationBulkMutation, isPending } = useUpdateBulkBBoxAnnotation();
+  const { mutate: updateAnnotationBulkMutation, isPending } = BboxAnnotationHooks.useUpdateBulkBBoxAnnotation();
 
   // actions
   const handleClose = useCallback(() => {

@@ -21,8 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
-import { useGetAllFolders } from "../../api/folderHooks";
-import { useUpdateFoldersBulk } from "../../api/folderMutations";
+import { FolderHooks } from "../../api/folderHooks";
 import { folderQueries } from "../../api/folderQueries";
 import { FolderCreateButton } from "../../FolderCreateButton";
 
@@ -36,7 +35,7 @@ interface FolderMenuProps {
 
 export function FolderActionMenu(props: FolderMenuProps) {
   // global server state (react-query)
-  const allFolders = useGetAllFolders();
+  const allFolders = FolderHooks.useGetAllFolders();
   const allFoldersWithRoot: FolderRead[] | undefined = useMemo(() => {
     if (!allFolders.data) return undefined;
     // Add a root folder with id -1
@@ -139,7 +138,7 @@ function FolderMenuContent({
   };
 
   // actions
-  const { mutate: updateFoldersBulkMutation, isPending } = useUpdateFoldersBulk();
+  const { mutate: updateFoldersBulkMutation, isPending } = FolderHooks.useUpdateFoldersBulk();
   const handleMoveToFolder = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedFolders = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);

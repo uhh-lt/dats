@@ -1,6 +1,6 @@
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { getIconComponent, Icon } from "@components/icons";
-import { useGetProject } from "@core/project";
+import { ProjectHooks } from "@core/project";
 import { ProjectRead } from "@models/ProjectRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
@@ -20,7 +20,7 @@ export const FolderRootRenderer = memo(({ projectId, ...props }: FolderRootRende
 
 const FolderRootRendererWithoutData = memo(
   ({ projectId, ...props }: { projectId?: number } & FolderRootRendererSharedProps) => {
-    const project = useGetProject(projectId);
+    const project = ProjectHooks.useGetProject(projectId);
 
     if (project.isSuccess) {
       return <FolderRootRendererWithData project={project.data} {...props} />;

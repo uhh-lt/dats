@@ -9,8 +9,7 @@ import { useDialog } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useGetEnabledCodes } from "../api/codeHooks";
-import { useCreateCode } from "../api/codeMutations";
+import { CodeHooks } from "../api/codeHooks";
 import { CodeRenderer } from "../CodeRenderer";
 
 type CodeCreateValues = {
@@ -35,7 +34,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 
   // maximize
   // codes for selection as parent
-  const codes = useGetEnabledCodes();
+  const codes = CodeHooks.useGetEnabledCodes();
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
   const codeTree = useWithLevel(parentCodes);
 
@@ -63,7 +62,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
   }, [dialogData, isCodeCreateDialogOpen, reset]);
 
   // form actions
-  const { mutate: createCodeMutation, isPending } = useCreateCode();
+  const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
   const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
     (createData) => {
       let pcid: number | undefined = undefined;

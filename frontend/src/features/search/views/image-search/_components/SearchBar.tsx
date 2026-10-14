@@ -1,5 +1,5 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { useGetThumbnailURL } from "@core/source-document";
+import { SdocHooks } from "@core/source-document";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { useURLConnector } from "@hooks/useURLConnector";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -103,7 +103,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
 }
 
 function SdocImageRenderer({ sdocId }: { sdocId: number }) {
-  const thumbnail = useGetThumbnailURL(sdocId);
+  const thumbnail = SdocHooks.useGetThumbnailURL(sdocId);
 
   const [open, setOpen] = useState(false);
 

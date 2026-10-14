@@ -1,10 +1,10 @@
 import { EditableTypography } from "@components/EditableTypography";
 import { getIconComponent, Icon } from "@components/icons";
-import { BBoxAnnotationEditDialog, useUpdateBBoxAnnotation } from "@core/bbox-annotation";
-import { useUpdateCode } from "@core/code";
-import { SentenceAnnotationEditDialog, useUpdateSentenceAnnotation } from "@core/sentence-annotation";
-import { SpanAnnotationEditDialog, useUpdateSpanAnnotation } from "@core/span-annotation";
-import { useBulkLinkTags } from "@core/tag";
+import { BBoxAnnotationEditDialog, BboxAnnotationHooks } from "@core/bbox-annotation";
+import { CodeHooks } from "@core/code";
+import { SentenceAnnotationEditDialog, SentenceAnnotationHooks } from "@core/sentence-annotation";
+import { SpanAnnotationEditDialog, SpanAnnotationHooks } from "@core/span-annotation";
+import { TagHooks } from "@core/tag";
 import { WhiteboardEdgeData } from "@models/WhiteboardEdgeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { WhiteboardRead } from "@models/WhiteboardRead";
@@ -38,7 +38,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useUpdateWhiteboard } from "../../../api/whiteboardMutations";
+import { WhiteboardHooks } from "../../../api/whiteboardHooks";
 import { useReactFlowService } from "../_hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "../_hooks/useNodesEdgesStateCustom";
 import { DATSEdge } from "../_types/DATSEdge";
@@ -164,11 +164,11 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const connectionHandleId = useStore((state: ReactFlowState) => state.connection.fromHandle?.id);
 
   // mutations
-  const bulkLinkTagsMutation = useBulkLinkTags();
-  const updateCodeMutation = useUpdateCode();
-  const updateSpanAnnotationMutation = useUpdateSpanAnnotation();
-  const updateSentenceAnnotationMutation = useUpdateSentenceAnnotation();
-  const updateBBoxAnnotationMutation = useUpdateBBoxAnnotation();
+  const bulkLinkTagsMutation = TagHooks.useBulkLinkTags();
+  const updateCodeMutation = CodeHooks.useUpdateCode();
+  const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
+  const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+  const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
 
   // refs
   const flowRef = useRef<HTMLDivElement>(null);
@@ -341,7 +341,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   }, [selectedEdges]);
 
   // 1. SAVE Feature
-  const { mutate: updateWhiteboard, isPending: updateWhiteboardPending } = useUpdateWhiteboard();
+  const { mutate: updateWhiteboard, isPending: updateWhiteboardPending } = WhiteboardHooks.useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
     const customEdges = edges.filter(isCustomEdge);
     updateWhiteboard({

@@ -20,8 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { useLiveCOTARefinementJob } from "../../../api/cotaHooks";
-import { useRefineCota, useResetCota, useUpdateCota } from "../../../api/cotaMutations";
+import { CotaHooks } from "../../../api/cotaHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";
@@ -42,10 +41,10 @@ export function CotaControl({ cota }: CotaControlProps) {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const refinementJob = useLiveCOTARefinementJob(cota.last_refinement_job_id);
+  const refinementJob = CotaHooks.useLiveCOTARefinementJob(cota.last_refinement_job_id);
 
   // actions
-  const refineCota = useRefineCota();
+  const refineCota = CotaHooks.useRefineCota();
   const handleRefineCota = () => {
     refineCota.mutate({
       requestBody: {
@@ -56,7 +55,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   };
 
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const resetCota = useResetCota();
+  const resetCota = CotaHooks.useResetCota();
   const handleResetCota = () => {
     openConfirmationDialog({
       text: `Do you really want to reset the analysis "${cota.name}"? This action cannot be undone! It will reset the search space and delete all sentence annotations.`,
@@ -77,7 +76,7 @@ export function CotaControl({ cota }: CotaControlProps) {
     dispatch(CotaActions.onCloseTrainingSettings());
   };
 
-  const updateCota = useUpdateCota();
+  const updateCota = CotaHooks.useUpdateCota();
   const handleApplyTrainingSettings = (trainingSettings: COTATrainingSettings) => {
     updateCota.mutate(
       {

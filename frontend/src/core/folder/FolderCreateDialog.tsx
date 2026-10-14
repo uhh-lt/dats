@@ -10,8 +10,7 @@ import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useGetAllFolders } from "./api/folderHooks";
-import { useCreateFolder } from "./api/folderMutations";
+import { FolderHooks } from "./api/folderHooks";
 import { FolderRenderer } from "./FolderRenderer";
 
 interface FolderCreateDialogProps {
@@ -23,7 +22,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
   const { isOpen: isFolderCreateDialogOpen, data, close: handleClose } = useDialog("folderCreate");
 
   // folders for selection as parent
-  const folders = useGetAllFolders();
+  const folders = FolderHooks.useGetAllFolders();
   const foldersWithLevel = useWithLevel(folders.data || []);
 
   // maximize
@@ -50,7 +49,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
   }, [isFolderCreateDialogOpen, data, reset, projectId]);
 
   // form actions
-  const { mutate: createFolderMutation, isPending } = useCreateFolder();
+  const { mutate: createFolderMutation, isPending } = FolderHooks.useCreateFolder();
   const handleFolderCreation = useCallback<SubmitHandler<FolderCreate>>(
     (data) => {
       createFolderMutation(

@@ -3,8 +3,7 @@ import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
-import { useStartClassifierJob } from "../../../api/classifierMutations";
-import { useDatasetStatistics } from "../../../api/useDatasetStatistics";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 
@@ -25,10 +24,10 @@ export function TrainingDataSelectionStep() {
     dispatch(ClassifierActions.previousClassifierDialogStep());
   }, [dispatch]);
 
-  const { mutate: startClassifierJobMutation, isPending } = useStartClassifierJob();
+  const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
 
   // dataset statistics (shared with DataSelection via props)
-  const { datasetStats } = useDatasetStatistics();
+  const { datasetStats } = ClassifierHooks.useDatasetStatistics();
 
   const handleNext = () => {
     if (model === undefined || task === undefined || trainingSettings === undefined) return;

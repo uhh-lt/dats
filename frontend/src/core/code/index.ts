@@ -1,5 +1,4 @@
 export * from "./api/codeHooks";
-export * from "./api/codeMutations";
 export * from "./api/codeQueries";
 export * from "./CodeExportButton";
 export * from "./CodeRenderer";

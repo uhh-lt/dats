@@ -7,7 +7,7 @@ import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@
 import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { useUpdateBulkSpan } from "./api/spanAnnotationMutations";
+import { SpanAnnotationHooks } from "./api/spanAnnotationHooks";
 import { SpanAnnotationRenderer } from "./SpanAnnotationRenderer";
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {
@@ -24,7 +24,7 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
   const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("spanAnnotationEdit");
 
   // mutations
-  const { mutate: updateAnnotationBulkMutation, isPending } = useUpdateBulkSpan();
+  const { mutate: updateAnnotationBulkMutation, isPending } = SpanAnnotationHooks.useUpdateBulkSpan();
 
   // actions
   const handleClose = useCallback(() => {

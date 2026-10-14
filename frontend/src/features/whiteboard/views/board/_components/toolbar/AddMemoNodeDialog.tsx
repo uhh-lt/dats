@@ -2,7 +2,7 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
 import { MemoReduxFilterTable } from "@core/memo";
-import { useGetProjectMetadataList } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { MemoRead } from "@models/MemoRead";
@@ -29,7 +29,7 @@ export function AddMemoNodeDialog({ projectId, buttonProps, ...props }: AddMemoN
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
-  const metadata = useGetProjectMetadataList();
+  const metadata = MetadataHooks.useGetProjectMetadataList();
 
   return (
     <>

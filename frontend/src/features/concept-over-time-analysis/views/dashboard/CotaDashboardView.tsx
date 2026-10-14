@@ -10,7 +10,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import { useCreateCota, useDeleteCota, useDuplicateCota, useUpdateCota } from "../../api/cotaMutations";
+import { CotaHooks } from "../../api/cotaHooks";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 
@@ -37,10 +37,14 @@ export function CotaDashboardView() {
   );
 
   // mutations
-  const { mutate: createCota, isPending: isCreatingCota } = useCreateCota();
-  const { mutate: deleteCota, isPending: isDeletingCota, variables: deletingVariables } = useDeleteCota();
-  const { mutate: updateCota, isPending: isUpdatingCota } = useUpdateCota();
-  const { mutate: duplicateCota, isPending: isDuplicatingCota, variables: duplicatingVariables } = useDuplicateCota();
+  const { mutate: createCota, isPending: isCreatingCota } = CotaHooks.useCreateCota();
+  const { mutate: deleteCota, isPending: isDeletingCota, variables: deletingVariables } = CotaHooks.useDeleteCota();
+  const { mutate: updateCota, isPending: isUpdatingCota } = CotaHooks.useUpdateCota();
+  const {
+    mutate: duplicateCota,
+    isPending: isDuplicatingCota,
+    variables: duplicatingVariables,
+  } = CotaHooks.useDuplicateCota();
 
   const dispatch = useAppDispatch();
 

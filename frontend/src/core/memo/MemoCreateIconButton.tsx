@@ -2,7 +2,7 @@ import { getIconComponent, Icon } from "@components/icons";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { useCreateMemo } from "./api/memoMutations";
+import { MemoHooks } from "./api/memoHooks";
 
 interface MemoCreateIconButtonProps {
   attachedObjectId: number;
@@ -22,7 +22,7 @@ export const MemoCreateIconButton = memo(
     title = "Create memo",
     ...props
   }: MemoCreateIconButtonProps & IconButtonProps) => {
-    const createMemo = useCreateMemo();
+    const createMemo = MemoHooks.useCreateMemo();
 
     const handleCreate = useCallback(() => {
       createMemo.mutate(

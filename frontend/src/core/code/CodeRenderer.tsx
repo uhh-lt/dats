@@ -5,7 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { useGetCode } from "./api/codeHooks";
+import { CodeHooks } from "./api/codeHooks";
 
 export interface CodeRendererSharedProps extends ExpandableRendererProps {
   renderMemoIndicator?: boolean;
@@ -24,7 +24,7 @@ export const CodeRenderer = memo(({ code, ...props }: CodeRendererProps) => {
 });
 
 const CodeRendererWithoutData = memo(({ codeId, ...props }: { codeId: number } & CodeRendererSharedProps) => {
-  const code = useGetCode(codeId);
+  const code = CodeHooks.useGetCode(codeId);
 
   if (code.isSuccess) {
     return <CodeRendererWithData code={code.data} {...props} />;

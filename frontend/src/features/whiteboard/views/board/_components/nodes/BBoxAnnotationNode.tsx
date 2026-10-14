@@ -1,7 +1,7 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { ImageCropper } from "@components/ImageCropper";
 import { annotationQueries } from "@core/annotation";
-import { CodeRenderer, useGetCode } from "@core/code";
+import { CodeHooks, CodeRenderer } from "@core/code";
 import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { sdocQueries } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -44,7 +44,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
 
   // global server state (react-query)
   const annotation = useQuery(annotationQueries.bbox.byId(props.data.bboxAnnotationId));
-  const code = useGetCode(annotation.data?.code_id);
+  const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const annotationSdocId = annotation.data?.sdoc_id;
   const sdocData = useQuery({
     ...sdocQueries.data(annotationSdocId!),

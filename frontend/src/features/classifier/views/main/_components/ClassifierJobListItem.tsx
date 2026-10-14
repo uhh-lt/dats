@@ -10,7 +10,7 @@ import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
-import { useLiveClassifierJob } from "../../../api/classifierHooks";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 
 interface ClassifierJobListItemProps {
   initialClassifierJob: ClassifierJobRead;
@@ -18,7 +18,7 @@ interface ClassifierJobListItemProps {
 
 export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJobListItemProps) => {
   // global server state (react-query)
-  const cj = useLiveClassifierJob(initialClassifierJob.job_id, initialClassifierJob);
+  const cj = ClassifierHooks.useLiveClassifierJob(initialClassifierJob.job_id, initialClassifierJob);
 
   // compute subtitle
   const subTitle = useMemo(() => {

@@ -1,7 +1,7 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { FILTER_PARAM } from "@core/filter";
-import { FolderExplorer, FolderInformation, FolderRenderer, useUpdateFoldersBulk } from "@core/folder";
+import { FolderExplorer, FolderHooks, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
@@ -170,7 +170,7 @@ export function DocumentSearchView() {
   );
 
   // folder handler
-  const { mutate: updateFoldersBulkMutation } = useUpdateFoldersBulk();
+  const { mutate: updateFoldersBulkMutation } = FolderHooks.useUpdateFoldersBulk();
   const handleMoveFolders = useCallback(
     (folderIds: number[], targetFolderId: number) => {
       updateFoldersBulkMutation(

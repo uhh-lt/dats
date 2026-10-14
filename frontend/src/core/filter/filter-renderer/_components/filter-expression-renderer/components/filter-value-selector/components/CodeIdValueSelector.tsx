@@ -1,12 +1,12 @@
 import { useWithLevel } from "@components/tree-explorer";
-import { CodeRenderer, useGetEnabledCodes } from "@core/code";
+import { CodeHooks, CodeRenderer } from "@core/code";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
 export const CodeIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
-  const projectCodes = useGetEnabledCodes();
+  const projectCodes = CodeHooks.useGetEnabledCodes();
   const codeTree = useWithLevel(projectCodes.data || []);
 
   const handleValueChange = useCallback(

@@ -10,7 +10,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, TextField } from "@mui/material";
 import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useCreateApiKey } from "../../../api/apiKeyMutations";
+import { ApiKeyHooks } from "../../../api/apiKeyHooks";
 
 interface ApiKeyCreateDialogProps {
   open: boolean;
@@ -55,7 +55,7 @@ export function ApiKeyCreateDialog({ open, onClose }: ApiKeyCreateDialogProps) {
   });
 
   // form actions
-  const { mutate: createApiKeyMutation, isPending } = useCreateApiKey();
+  const { mutate: createApiKeyMutation, isPending } = ApiKeyHooks.useCreateApiKey();
   const handleApiKeyCreation = useCallback<SubmitHandler<ApiKeyCreateFormValues>>(
     (data) => {
       createApiKeyMutation(
