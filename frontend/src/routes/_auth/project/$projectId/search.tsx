@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { metadataQueries } from "@core/project-metadata";
-import { searchQueries } from "@core/source-document";
+import { sdocQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    documentSearchOptions: searchQueries.documents({
+    documentSearchOptions: sdocQueries.search.documents({
       projectId: params.projectId,
       selectedFolderId: deps.selectedFolderId,
       searchQuery: deps.searchQuery,

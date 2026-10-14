@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { metadataQueries } from "@core/project-metadata";
-import { imageSimilarityQueries, ImageSimilaritySearchView } from "@features/search";
+import { ImageSimilaritySearchView, searchQueries } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    imageSimilarityOptions: imageSimilarityQueries.search({
+    imageSimilarityOptions: searchQueries.image({
       projectId: params.projectId,
       searchQuery: deps.searchQuery,
       filter: deps[FILTER_PARAM],

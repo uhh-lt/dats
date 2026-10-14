@@ -6,7 +6,6 @@ import { folderQueries } from "@core/folder/api/folderQueries";
 import { metadataQueries } from "@core/project-metadata/api/metadataQueries";
 import { projectQueries } from "@core/project/api/projectQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
-import { searchQueries } from "@core/source-document/api/searchQueries";
 import { statisticsQueries } from "@core/statistics/api/statisticsQueries";
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
@@ -188,7 +187,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         }
       });
       if (anyMoved) {
-        queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+        queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       }
       break;
     }
@@ -286,15 +285,15 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Source documents ────────────────────────────────────────────────────
     case "SDOC_UPDATED":
       setSingle(sdocQueries.detail(event.payload.id).queryKey, event.payload);
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
     case "SDOC_DELETED":
       removeSingle(sdocQueries.detail(event.payload.id).queryKey);
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
     case "SDOC_DELETED_BATCH":
       event.payload.forEach((sdoc) => removeSingle(sdocQueries.detail(sdoc.id).queryKey));
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
 
     // ── Search views ────────────────────────────────────────────────────────

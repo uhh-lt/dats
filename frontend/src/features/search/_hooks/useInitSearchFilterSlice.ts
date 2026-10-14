@@ -1,5 +1,5 @@
 import { toColumnInfoMap } from "@core/filter";
-import { searchQueries } from "@core/source-document";
+import { sdocQueries } from "@core/source-document";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -10,7 +10,7 @@ export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) =
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useQuery(searchQueries.tableInfo(projectId));
+  const { data: columnData } = useQuery(sdocQueries.search.tableInfo(projectId));
 
   // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
   useEffect(() => {
