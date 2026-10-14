@@ -5,7 +5,7 @@ import { annotationQueries } from "@core/annotation";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 // BBOX QUERIES live in annotationQueries.bbox (used with `useQuery` directly).
 
@@ -112,10 +112,20 @@ const useDeleteBulkBBoxAnnotation = () =>
     },
   });
 
+const useGetAnnotation = (bboxId: number | null | undefined) => useQuery(annotationQueries.bbox.byId(bboxId));
+
+const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(annotationQueries.bbox.byUserCode(codeId));
+
+const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  useQuery(annotationQueries.bbox.bySdoc(sdocId, userId));
+
 export const BboxAnnotationHooks = {
   useCreateBBoxAnnotation,
   useUpdateBBoxAnnotation,
   useUpdateBulkBBoxAnnotation,
   useDeleteBBoxAnnotation,
   useDeleteBulkBBoxAnnotation,
+  useGetAnnotation,
+  useGetByCodeAndUser,
+  useGetBBoxAnnotationsBatch,
 };

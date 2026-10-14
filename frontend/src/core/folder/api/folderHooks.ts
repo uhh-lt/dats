@@ -87,6 +87,14 @@ const useDeleteFolder = () =>
     },
   });
 
+const useGetAllFoldersMap = () => useProjectFoldersQuery({ select: (data) => data, folderType: FolderType.NORMAL });
+
+const useGetAllSdocFoldersMap = () =>
+  useProjectFoldersQuery({ select: (data) => data, folderType: FolderType.SDOC_FOLDER });
+
+const useGetSdocIdsPerDoctypeInSdocFolder = (sdocFolderId: number | null | undefined) =>
+  useQuery(folderQueries.sdocIdsPerDoctype(sdocFolderId));
+
 export const FolderHooks = {
   useProjectFoldersQuery,
   useGetFolder,
@@ -97,4 +105,7 @@ export const FolderHooks = {
   useUpdateFolder,
   useUpdateFoldersBulk,
   useDeleteFolder,
+  useGetAllFoldersMap,
+  useGetAllSdocFoldersMap,
+  useGetSdocIdsPerDoctypeInSdocFolder,
 };

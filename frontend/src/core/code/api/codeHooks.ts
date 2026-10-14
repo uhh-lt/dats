@@ -72,6 +72,8 @@ const useDeleteCode = () => {
   });
 };
 
+const useGetAllCodesMap = () => useProjectCodesQuery({});
+
 export const CodeHooks = {
   useProjectCodesQuery,
   useGetCode,
@@ -81,4 +83,5 @@ export const CodeHooks = {
   useCreateCode,
   useUpdateCode,
   useDeleteCode,
+  useGetAllCodesMap,
 };

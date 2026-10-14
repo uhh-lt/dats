@@ -1,6 +1,7 @@
 import { queryClient } from "@api/queryClient";
 import { TagRecommendationService } from "@api/services/TagRecommendationService";
-import { useMutation } from "@tanstack/react-query";
+import { useAppSelector } from "@store/storeHooks";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { tagRecommendationQueries } from "./tagRecommendationQueries";
 
 // TAG RECOMMENDATION QUERIES live in tagRecommendationQueries (used with `useQuery` directly).
@@ -18,6 +19,16 @@ const useReviewTagRecommendations = () =>
     },
   });
 
+const useGetAllTagRecommendationJobs = () => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  return useQuery(tagRecommendationQueries.jobsByProject(projectId));
+};
+
+const useGetTagRecommendationsFromJob = (mlJobId: string | null | undefined) =>
+  useQuery(tagRecommendationQueries.byJob(mlJobId));
+
 export const TagRecommendationHooks = {
   useReviewTagRecommendations,
+  useGetAllTagRecommendationJobs,
+  useGetTagRecommendationsFromJob,
 };

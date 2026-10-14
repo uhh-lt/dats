@@ -4,7 +4,7 @@ import { SentenceAnnotationService } from "@api/services/SentenceAnnotationServi
 import { annotationQueries } from "@core/annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 // SENTENCE QUERIES live in annotationQueries.sentence (used with `useQuery` directly).
 // TODO: filter out all disabled code ids
@@ -250,6 +250,9 @@ const useCountBySdocsAndUser = () =>
     mutationFn: SentenceAnnotationService.countAnnotations,
   });
 
+const useGetAnnotation = (sentenceAnnoId: number | null | undefined) =>
+  useQuery(annotationQueries.sentence.byId(sentenceAnnoId));
+
 export const SentenceAnnotationHooks = {
   useCreateSentenceAnnotation,
   useCreateBulkSentenceAnnotation,
@@ -259,4 +262,5 @@ export const SentenceAnnotationHooks = {
   useDeleteBulkSentenceAnnotation,
   useDeleteBulkSentenceAnnotationSingleSdoc,
   useCountBySdocsAndUser,
+  useGetAnnotation,
 };

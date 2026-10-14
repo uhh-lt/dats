@@ -153,6 +153,25 @@ const useUpdateBulkSdocMetadata = () =>
     },
   });
 
+const useSdocMetadataQuery = <T = SdocMetadataMap>({
+  sdocId,
+  select,
+}: {
+  sdocId: number | null | undefined;
+  select?: (data: SdocMetadataMap) => T;
+}) =>
+  useQuery({
+    ...metadataQueries.bySdoc(sdocId),
+    select,
+  });
+
+const useGetSdocMetadataByKey = (sdocId: number | null | undefined, key: string) =>
+  useQuery(metadataQueries.bySdocAndKey(sdocId, key));
+
+// number of sdocs that have a valid date for a date metadata
+const useCountSdocsWithDateMetadata = (projectId: number, dateMetadataId: number) =>
+  useQuery(metadataQueries.sdocCountWithDate(projectId, dateMetadataId));
+
 export const MetadataHooks = {
   useProjectMetadataQuery,
   useGetProjectMetadata,
@@ -164,4 +183,7 @@ export const MetadataHooks = {
   useUpdateProjectMetadata,
   useDeleteProjectMetadata,
   useUpdateBulkSdocMetadata,
+  useSdocMetadataQuery,
+  useGetSdocMetadataByKey,
+  useCountSdocsWithDateMetadata,
 };

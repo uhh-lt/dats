@@ -29,7 +29,10 @@ const useStartImportJob = () =>
     },
   });
 
+const useGetAllImportJobs = (projectId: number | null | undefined) => useQuery(jobQueries.import.byProject(projectId));
+
 export const ImportHooks = {
   useLiveImportJob,
   useStartImportJob,
+  useGetAllImportJobs,
 };

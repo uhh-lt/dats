@@ -1,6 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { AnnoscalingService } from "@api/services/AnnoscalingService";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { annoscalingQueries } from "./annoscalingQueries";
 
 // QUERIES live in annoscalingQueries (used with `useQuery` directly).
@@ -15,6 +15,10 @@ const useConfirmSuggestions = () =>
     },
   });
 
+const useAnnotationSuggestions = (projectId: number, codeId?: number, antiCodeId?: number) =>
+  useQuery(annoscalingQueries.suggest(projectId, codeId, antiCodeId));
+
 export const AnnoscalingHooks = {
   useConfirmSuggestions,
+  useAnnotationSuggestions,
 };

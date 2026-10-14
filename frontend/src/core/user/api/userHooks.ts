@@ -58,10 +58,28 @@ const useRegister = () =>
     },
   });
 
+interface UseProjectUsersQueryParams<T> {
+  select?: (data: UserRead[]) => T;
+  enabled?: boolean;
+}
+
+const useProjectUsersQuery = <T = UserRead[]>({ select, enabled }: UseProjectUsersQueryParams<T>) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  return useQuery({
+    ...userQueries.byProject(projectId),
+    select,
+    enabled: !!projectId && (enabled ?? true),
+  });
+};
+
+const useGetAllUsers = () => useProjectUsersQuery({});
+
 export const UserHooks = {
   useGetUser,
   useUpdate,
   useAddUserToProject,
   useRemoveUserFromProject,
   useRegister,
+  useProjectUsersQuery,
+  useGetAllUsers,
 };

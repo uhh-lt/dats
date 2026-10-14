@@ -3,7 +3,9 @@ import { LlmService } from "@api/services/LlmService";
 import { JobHooks, jobQueries } from "@core/job";
 import { ApproachType } from "@models/ApproachType";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
+import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { llmQueries } from "./llmQueries";
 
 const useLiveLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJobRead | undefined) => {
   const jobRefetchInterval = JobHooks.useJobRefetchInterval<LlmAssistantJobRead>();
@@ -45,9 +47,30 @@ const useDetermineApproach = () =>
     },
   });
 
+const useGetAllLLMJobs = (projectId: number | undefined) => useQuery(jobQueries.llm.byProject(projectId));
+
+const useCountExistingAssistantAnnotations = (params: {
+  taskType: TaskType | undefined;
+  approachType: ApproachType;
+  sdocIds: number[];
+  codeIds: number[];
+}) =>
+  useQuery({
+    ...llmQueries.existingAnnotationCount(params),
+    enabled: params.taskType === TaskType.SENTENCE_ANNOTATION || params.taskType === TaskType.ANNOTATION,
+  });
+
+const useGetAvailableLLMs = () => useQuery(llmQueries.availableModels());
+
+const useListStrategies = (taskType: TaskType | undefined) => useQuery(llmQueries.strategies(taskType));
+
 export const LLMHooks = {
   useLiveLLMJob,
   useStartLLMJob,
   useCreatePromptTemplates,
   useDetermineApproach,
+  useGetAllLLMJobs,
+  useCountExistingAssistantAnnotations,
+  useGetAvailableLLMs,
+  useListStrategies,
 };

@@ -1,5 +1,5 @@
+export * from "./api/authHooks";
 export * from "./api/authQueries";
-export * from "./api/generalQueries";
 export * from "./authActions";
 export * from "./HandleOIDCLogin";
 export * from "./provider";
