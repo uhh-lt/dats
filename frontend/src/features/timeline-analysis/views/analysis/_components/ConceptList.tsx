@@ -12,7 +12,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch } from "@store/storeHooks";
-import { useUpdateTimelineAnalysis } from "../../../api/timelineAnalysisMutations";
+import { TimelineAnalysisHooks } from "../../../api/timelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";
@@ -30,7 +30,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
   useInitTimelineAnalysisFilterSlice({ timelineAnalysis });
 
   // actions
-  const updateTimelineAnalysisMutation = useUpdateTimelineAnalysis();
+  const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const handleAddConcept = () => {
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,

@@ -10,7 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useUpdateCota } from "../../../api/cotaMutations";
+import { CotaHooks } from "../../../api/cotaHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaConceptEditor } from "./CotaConceptEditor";
 import { CotaConceptListItem } from "./CotaConceptListItem";
@@ -26,7 +26,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
   const dispatch = useAppDispatch();
 
   // mutations
-  const updateCota = useUpdateCota();
+  const updateCota = CotaHooks.useUpdateCota();
 
   // actions
   const handleAddConcept = () => {

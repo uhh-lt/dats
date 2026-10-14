@@ -1,6 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { annotationQueries } from "@core/annotation";
-import { useLiveLLMJob } from "@core/llm";
+import { LLMHooks } from "@core/llm";
 import { useTabNavigate } from "@core/navigation";
 import { ApproachType } from "@models/ApproachType";
 import { SentenceAnnotationLLMJobResult } from "@models/SentenceAnnotationLLMJobResult";
@@ -20,7 +20,7 @@ const approach2AssistantID: Record<ApproachType, number> = {
 export function SentenceAnnotationResultStep() {
   // get the job
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = useLiveLLMJob(llmJobId, undefined);
+  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output) {
     return (

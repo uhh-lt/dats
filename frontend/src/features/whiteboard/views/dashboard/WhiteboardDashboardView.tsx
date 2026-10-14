@@ -8,12 +8,7 @@ import { useOpenConfirmationDialog } from "@core/notification";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
-import {
-  useCreateWhiteboard,
-  useDeleteWhiteboard,
-  useDuplicateWhiteboard,
-  useUpdateWhiteboard,
-} from "../../api/whiteboardMutations";
+import { WhiteboardHooks } from "../../api/whiteboardHooks";
 import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
 const WhiteboardDashboardRouteAPI = getRouteApi("/_auth/project/$projectId/whiteboard/");
@@ -30,18 +25,18 @@ export function WhiteboardDashboardView() {
   });
 
   // mutations
-  const { mutate: createWhiteboard, isPending: isCreatingWhiteboard } = useCreateWhiteboard();
+  const { mutate: createWhiteboard, isPending: isCreatingWhiteboard } = WhiteboardHooks.useCreateWhiteboard();
   const {
     mutate: deleteWhiteboard,
     isPending: isDeletingWhiteboard,
     variables: deletingVariables,
-  } = useDeleteWhiteboard();
-  const { mutate: updateWhiteboard, isPending: isUpdatingWhiteboard } = useUpdateWhiteboard();
+  } = WhiteboardHooks.useDeleteWhiteboard();
+  const { mutate: updateWhiteboard, isPending: isUpdatingWhiteboard } = WhiteboardHooks.useUpdateWhiteboard();
   const {
     mutate: duplicateWhiteboard,
     isPending: isDuplicatingWhiteboard,
     variables: duplicatingVariables,
-  } = useDuplicateWhiteboard();
+  } = WhiteboardHooks.useDuplicateWhiteboard();
 
   // CRUD actions
   const handleDuplicateClick = (row: MRT_Row<AnalysisDashboardRow>) => {

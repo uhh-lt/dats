@@ -1,4 +1,4 @@
-import { useGetProjectMetadataList } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocReduxFilterTable } from "@core/source-document";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@mui/material";
@@ -15,7 +15,7 @@ export function InferDataSelectionStep() {
   const dispatch = useAppDispatch();
 
   // global server state
-  const projectMetadata = useGetProjectMetadataList();
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   // selection state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(

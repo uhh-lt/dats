@@ -1,7 +1,7 @@
 import { FormEmail, FormPassword, FormText } from "@components/form-inputs";
 import { useAuth } from "@core/auth";
 import { useOpenSnackbar } from "@core/notification";
-import { UserAvatar, useUpdate } from "@core/user";
+import { UserAvatar, UserHooks } from "@core/user";
 import { ErrorMessage } from "@hookform/error-message";
 import { UserRead } from "@models/UserRead";
 import {
@@ -40,7 +40,7 @@ interface ProfileHomeProps {
 }
 
 export function ProfileHome({ user }: ProfileHomeProps) {
-  const updateUserMutation = useUpdate();
+  const updateUserMutation = UserHooks.useUpdate();
   const { logout } = useAuth();
   const openSnackbar = useOpenSnackbar();
 

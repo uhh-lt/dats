@@ -1,13 +1,7 @@
 import { useAuth } from "@core/auth";
 import { codeQueries } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
-import {
-  useCreateBulkAnnotations,
-  useCreateSpanAnnotation,
-  useDeleteBulkSpanAnnotation,
-  useDeleteSpanAnnotation,
-  useUpdateSpanAnnotation,
-} from "@core/span-annotation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { UserRenderer } from "@core/user";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
@@ -86,11 +80,11 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Mutator hooks for span annotations
-  const createMutation = useCreateSpanAnnotation();
-  const createBulkMutation = useCreateBulkAnnotations();
-  const updateMutation = useUpdateSpanAnnotation();
-  const deleteMutation = useDeleteSpanAnnotation();
-  const deleteBulkMutation = useDeleteBulkSpanAnnotation();
+  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
+  const createBulkMutation = SpanAnnotationHooks.useCreateBulkAnnotations();
+  const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
+  const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
+  const deleteBulkMutation = SpanAnnotationHooks.useDeleteBulkSpanAnnotation();
 
   // Compute token data and maps
   const resizeTokenData = useTokenData(sdocData);

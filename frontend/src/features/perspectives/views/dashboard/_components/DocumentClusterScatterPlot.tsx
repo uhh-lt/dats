@@ -4,7 +4,7 @@ import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useMemo } from "react";
 import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
-import { useGetDocVisualization } from "../../../api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../api/perspectiveHooks";
 
 interface DocumentClusterScatterPlotProps {
   aspectId: number;
@@ -16,7 +16,7 @@ export const DocumentClusterScatterPlot = memo(({ aspectId, height }: DocumentCl
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // global server state
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
 
   // computed
   const chartData = useMemo(() => {

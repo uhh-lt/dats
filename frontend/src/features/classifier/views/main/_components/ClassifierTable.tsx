@@ -23,7 +23,7 @@ import {
 } from "material-react-table";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
-import { useDeleteClassifier, useUpdateClassifier } from "../../../api/classifierMutations";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface ClassifierTableProps {
@@ -94,7 +94,7 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
   }, [rowSelectionModel]);
 
   // rename
-  const { mutate: updateClassifier, isPending: isRenamePending } = useUpdateClassifier();
+  const { mutate: updateClassifier, isPending: isRenamePending } = ClassifierHooks.useUpdateClassifier();
   const handleRenameClassifier: MRT_TableOptions<ClassifierRead>["onEditingRowSave"] = ({ row, values, table }) => {
     if (!values.name || values.name === row.original.name) {
       table.setEditingRow(null); //exit editing mode
@@ -154,7 +154,7 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
   };
 
   // classifier deletion
-  const deleteClassifierMutation = useDeleteClassifier();
+  const deleteClassifierMutation = ClassifierHooks.useDeleteClassifier();
   const handleDeleteClassifier = () => {
     if (selectedRows.length === 0) return;
     selectedRows.forEach((classifierId) => {

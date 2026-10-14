@@ -1,5 +1,5 @@
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useDeleteSpanAnnotation } from "@core/span-annotation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MouseEventHandler } from "react";
@@ -14,7 +14,7 @@ export function SpanAnnotationDeleteMenuItem({
   onClick,
   ...props
 }: SpanAnnotationDeleteMenuItemProps & MenuItemProps) {
-  const deleteMutation = useDeleteSpanAnnotation();
+  const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const handleClick: MouseEventHandler = (event) => {
     event.stopPropagation();

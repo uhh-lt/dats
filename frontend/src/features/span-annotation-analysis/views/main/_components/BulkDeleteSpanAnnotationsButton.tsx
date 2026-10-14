@@ -1,5 +1,5 @@
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useDeleteBulkSpanAnnotation } from "@core/span-annotation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
@@ -14,7 +14,7 @@ export function BulkDeleteSpanAnnotationsButton({ selectedData }: BulkDeleteSpan
   // actions
   const dispatch = useAppDispatch();
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const deleteBulkMutation = useDeleteBulkSpanAnnotation();
+  const deleteBulkMutation = SpanAnnotationHooks.useDeleteBulkSpanAnnotation();
   const handleDeleteAnnotationsClick = () => {
     openConfirmationDialog({
       text: `Do you really want to delete ${selectedData.length} span annotation${selectedData.length > 1 ? "s" : ""}? This action cannot be undone!`,

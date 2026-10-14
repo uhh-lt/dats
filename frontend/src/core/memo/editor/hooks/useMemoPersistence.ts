@@ -1,7 +1,7 @@
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCreateMemo, useUpdateMemo } from "../../api/memoMutations";
+import { MemoHooks } from "../../api/memoHooks";
 import { MemoAttachedObject } from "./useMemoEditorData";
 
 export interface MemoFormValues {
@@ -88,8 +88,8 @@ export function useMemoPersistence({
   // --- persistence ---
   const currentMemoIdRef = useRef(memo?.id);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const { mutateAsync: createMemo } = useCreateMemo();
-  const { mutateAsync: updateMemo } = useUpdateMemo();
+  const { mutateAsync: createMemo } = MemoHooks.useCreateMemo();
+  const { mutateAsync: updateMemo } = MemoHooks.useUpdateMemo();
 
   const persistMemo = useCallback(
     (values: MemoFormValues) => {

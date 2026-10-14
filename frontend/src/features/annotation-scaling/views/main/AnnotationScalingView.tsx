@@ -1,4 +1,4 @@
-import { useGetEnabledCodes } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { AnnoscalingResult } from "@models/AnnoscalingResult";
 import { CodeRead } from "@models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
@@ -17,7 +17,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { useConfirmSuggestions } from "../../api/annoscalingMutations";
+import { AnnoscalingHooks } from "../../api/annoscalingHooks";
 import { annoscalingQueries } from "../../api/annoscalingQueries";
 import { AnnotationScalingList } from "./_components/AnnotationScalingList";
 
@@ -26,7 +26,7 @@ const routeApi = getRouteApi("/_auth/project/$projectId/analysis/annotation-scal
 export function AnnotationScalingView() {
   // global client state (react router)
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
-  const codes = useGetEnabledCodes();
+  const codes = CodeHooks.useGetEnabledCodes();
 
   const [code, setCode] = useState<CodeRead | null>(null);
   const [opposingCode, setopposingCode] = useState<CodeRead | null>(null);
@@ -35,7 +35,7 @@ export function AnnotationScalingView() {
 
   // global server state (react-query)
   const suggestions = useQuery(annoscalingQueries.suggest(projectId, code?.id, opposingCode?.id));
-  const confirmHook = useConfirmSuggestions();
+  const confirmHook = AnnoscalingHooks.useConfirmSuggestions();
 
   const handleSubmit = () => {
     confirmHook.mutate(

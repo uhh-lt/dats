@@ -1,5 +1,5 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { useGetProject } from "@core/project";
+import { ProjectHooks } from "@core/project";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
@@ -26,7 +26,7 @@ export const ProjectSettingsDialog = memo(
     const { isOpen, close: handleClose } = useDialog("projectSettings");
 
     // queries
-    const project = useGetProject(projectId);
+    const project = ProjectHooks.useGetProject(projectId);
 
     // state
     const [tab, setTab] = useState("1");

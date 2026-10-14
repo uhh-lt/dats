@@ -1,5 +1,5 @@
 import { DialogSection } from "@components/DialogSection";
-import { jobQueries, usePollProcessingSimpleSdocStatus } from "@core/job";
+import { JobHooks, jobQueries } from "@core/job";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -22,7 +22,7 @@ export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsVie
     data: sdocStatus,
     refetch: refetchSdocStatus,
     isFetching: isSdocStatusFetching,
-  } = usePollProcessingSimpleSdocStatus(projectId);
+  } = JobHooks.usePollProcessingSimpleSdocStatus(projectId);
 
   // Memoize all jobs
   const allCrawlerJobs = useMemo(() => crawlerJobs || [], [crawlerJobs]);

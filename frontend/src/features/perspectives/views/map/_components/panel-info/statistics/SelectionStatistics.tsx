@@ -1,12 +1,12 @@
-import { CodeRenderer, useGetEnabledCodes } from "@core/code";
-import { useGetProjectMetadataList } from "@core/project-metadata";
+import { CodeHooks, CodeRenderer } from "@core/code";
+import { MetadataHooks } from "@core/project-metadata";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { Box, Button, Divider, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo } from "react";
-import { useGetDocVisualization } from "../../../../../api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../../../api/perspectiveHooks";
 import { PerspectivesActions } from "../../../../../store/perspectivesSlice";
 import { MapCodeStats } from "./MapCodeStats";
 import { MapKeywordStats } from "./MapKeywordStats";
@@ -23,12 +23,12 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   const selectedSdocIds = useAppSelector((state) => state.perspectives.selectedSdocIds);
 
   // global server state
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const total = vis.data?.docs.length || 0;
   const count = selectedSdocIds.length;
 
   // filter
-  const projectMetadata = useGetProjectMetadataList();
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -67,7 +67,7 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   );
 
   // query all codes of the current project
-  const projectCodes = useGetEnabledCodes();
+  const projectCodes = CodeHooks.useGetEnabledCodes();
   const pinnedStatistics = useAppSelector((state) => state.perspectives.pinnedStatistics);
   const handlePinStatistics = useCallback(
     (stat: string) => {

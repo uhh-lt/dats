@@ -1,4 +1,4 @@
-import { useUpdateBulkSdocMetadata } from "@core/project-metadata";
+import { MetadataHooks } from "@core/project-metadata";
 import { SdocMetadataRendererWithData } from "@core/sdoc-metadata";
 import { SdocRenderer } from "@core/source-document";
 import { MetadataExtractionResult } from "@models/MetadataExtractionResult";
@@ -161,7 +161,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
     dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
-  const { mutate: updateBulkMetadataMutation, isPending: isUpdatePending } = useUpdateBulkSdocMetadata();
+  const { mutate: updateBulkMetadataMutation, isPending: isUpdatePending } = MetadataHooks.useUpdateBulkSdocMetadata();
 
   const handleUpdateBulkMetadata = useCallback(() => {
     const metadataToUpdate: SourceDocumentMetadataBulkUpdate[] = theRows.reduce((acc, row) => {

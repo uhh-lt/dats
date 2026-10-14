@@ -1,5 +1,5 @@
 import { LinkLink } from "@core/navigation";
-import { sdocQueries, useGetThumbnailURL } from "@core/source-document";
+import { SdocHooks, sdocQueries } from "@core/source-document";
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
 import { Box } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ interface SdocAudioLinkProps {
 
 export function SdocAudioLink({ projectId, filename }: SdocAudioLinkProps) {
   const sdocId = useQuery(sdocQueries.idByFilename(projectId, filename));
-  const thumbnailUrl = useGetThumbnailURL(sdocId.data);
+  const thumbnailUrl = SdocHooks.useGetThumbnailURL(sdocId.data);
 
   return (
     <>

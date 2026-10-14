@@ -1,6 +1,6 @@
 import { FormEmail } from "@components/form-inputs";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useAddUserToProject, useRemoveUserFromProject, userQueries } from "@core/user";
+import { UserHooks, userQueries } from "@core/user";
 import { ProjectRead } from "@models/ProjectRead";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -49,7 +49,7 @@ export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
   });
 
   // form handling
-  const addUserMutation = useAddUserToProject();
+  const addUserMutation = UserHooks.useAddUserToProject();
   const handleAddUser: SubmitHandler<UserAddFormValues> = useCallback(
     (data) => {
       addUserMutation.mutate({
@@ -66,7 +66,7 @@ export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
 
   // remove user
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const removeUserMutation = useRemoveUserFromProject();
+  const removeUserMutation = UserHooks.useRemoveUserFromProject();
   const handleClickRemoveUser = useCallback(
     (userId: number) => {
       openConfirmationDialog({

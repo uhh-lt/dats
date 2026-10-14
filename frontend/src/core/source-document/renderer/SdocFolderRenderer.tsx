@@ -1,4 +1,4 @@
-import { FolderRenderer, FolderRootRenderer, useGetSdocFolder } from "@core/folder";
+import { FolderHooks, FolderRenderer, FolderRootRenderer } from "@core/folder";
 import { FolderType } from "@models/FolderType";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
@@ -12,7 +12,7 @@ interface SdocFolderRendererProps {
 
 export const SdocFolderRenderer = memo(({ sdocId, ...props }: SdocFolderRendererProps) => {
   const sdoc = useQuery({ ...sdocQueries.detail(sdocId!), enabled: sdocId !== undefined });
-  const sdocFolder = useGetSdocFolder(sdoc.data?.folder_id);
+  const sdocFolder = FolderHooks.useGetSdocFolder(sdoc.data?.folder_id);
 
   if (sdoc.isSuccess && sdocFolder.isSuccess && sdocFolder.data.parent_id) {
     return <FolderRenderer folder={sdocFolder.data.parent_id} folderType={FolderType.NORMAL} {...props} />;

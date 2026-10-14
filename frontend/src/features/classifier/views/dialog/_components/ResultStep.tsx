@@ -6,7 +6,7 @@ import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
-import { useLiveClassifierJob } from "../../../api/classifierHooks";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ResultStep() {
@@ -15,7 +15,7 @@ export function ResultStep() {
   const dispatch = useAppDispatch();
 
   // get the job
-  const cj = useLiveClassifierJob(classifierJobId, undefined);
+  const cj = ClassifierHooks.useLiveClassifierJob(classifierJobId, undefined);
 
   // dialog actions
   const handleClose = useCallback(() => {

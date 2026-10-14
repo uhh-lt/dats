@@ -20,7 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useRecomputeTimelineAnalysis } from "../../../api/timelineAnalysisMutations";
+import { TimelineAnalysisHooks } from "../../../api/timelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount";
 import { TimelineAnalysisExportMenu } from "./TimelineAnalysisExportMenu";
@@ -37,7 +37,7 @@ export function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizPro
   const dispatch = useAppDispatch();
 
   // event handlers
-  const recomputeMutation = useRecomputeTimelineAnalysis();
+  const recomputeMutation = TimelineAnalysisHooks.useRecomputeTimelineAnalysis();
   const recomputeTimelineAnalysis = () => {
     recomputeMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,

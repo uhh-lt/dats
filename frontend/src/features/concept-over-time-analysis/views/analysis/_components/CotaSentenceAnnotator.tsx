@@ -25,7 +25,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { MouseEventHandler, useMemo, useState } from "react";
-import { useAnnotateCotaSentences, useRemoveCotaSentences } from "../../../api/cotaMutations";
+import { CotaHooks } from "../../../api/cotaHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 
 interface CotaSentenceAnnotatorProps {
@@ -197,7 +197,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   }, [cota.concepts]);
 
   // actions
-  const annotateCotaSentences = useAnnotateCotaSentences();
+  const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
   const handleAnnotateSentences = (sentences: COTASentenceID[], conceptId: string | null) => {
     annotateCotaSentences.mutate({
       cotaId: cota.id,
@@ -206,7 +206,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     });
   };
 
-  const removeCotaSentences = useRemoveCotaSentences();
+  const removeCotaSentences = CotaHooks.useRemoveCotaSentences();
   const handleRemoveSentences = (sentences: COTASentenceID[]) => {
     removeCotaSentences.mutate(
       {

@@ -1,6 +1,6 @@
 import { CardContainer } from "@components/CardContainer";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
-import { useGetCode } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { SdocRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { CodeOccurrence } from "@models/CodeOccurrence";
@@ -62,7 +62,7 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds, docTypes }: Co
   };
 
   // global server state (react-query)
-  const code = useGetCode(codeId);
+  const code = CodeHooks.useGetCode(codeId);
 
   // computed
   const codeOccurrences = useQuery({

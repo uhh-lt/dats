@@ -1,6 +1,6 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { useAuth } from "@core/auth";
-import { MemoCard, MemoEditorPane, memoQueries, useCreateMemo } from "@core/memo";
+import { MemoCard, MemoEditorPane, MemoHooks, memoQueries } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -58,7 +58,7 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
   );
 
   // mutations
-  const { mutate: createMemoMutation, isPending } = useCreateMemo();
+  const { mutate: createMemoMutation, isPending } = MemoHooks.useCreateMemo();
 
   const handleAddMemo = useCallback(() => {
     if (!user) return;

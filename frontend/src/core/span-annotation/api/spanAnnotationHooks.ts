@@ -11,7 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 // SPAN QUERIES live in annotationQueries.span (used with `useQuery` directly).
 
 // SPAN MUTATIONS
-export const useCreateBulkAnnotations = () =>
+const useCreateBulkAnnotations = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "createBulk"],
     mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
@@ -21,7 +21,7 @@ export const useCreateBulkAnnotations = () =>
     },
   });
 
-export const useCreateSpanAnnotation = () =>
+const useCreateSpanAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "create"],
     mutationFn: (variables: SpanAnnotationCreate) =>
@@ -32,7 +32,7 @@ export const useCreateSpanAnnotation = () =>
     },
   });
 
-export const useUpdateSpanAnnotation = () =>
+const useUpdateSpanAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "update"],
     mutationFn: (variables: {
@@ -85,7 +85,7 @@ export const useUpdateSpanAnnotation = () =>
     },
   });
 
-export const useUpdateBulkSpan = () =>
+const useUpdateBulkSpan = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "updateBulk"],
     mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
@@ -95,7 +95,7 @@ export const useUpdateBulkSpan = () =>
     },
   });
 
-export const useDeleteSpanAnnotation = () =>
+const useDeleteSpanAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "delete"],
     mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | number }) =>
@@ -129,7 +129,7 @@ export const useDeleteSpanAnnotation = () =>
     },
   });
 
-export const useDeleteBulkSpanAnnotation = () =>
+const useDeleteBulkSpanAnnotation = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "deleteBulk"],
     mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
@@ -139,8 +139,18 @@ export const useDeleteBulkSpanAnnotation = () =>
     },
   });
 
-export const useCountSpanAnnotationsBySdocsAndUser = () =>
+const useCountBySdocsAndUser = () =>
   useMutation({
     mutationKey: [...annotationQueries.span.all(), "count"],
     mutationFn: SpanAnnotationService.countAnnotations,
   });
+
+export const SpanAnnotationHooks = {
+  useCreateBulkAnnotations,
+  useCreateSpanAnnotation,
+  useUpdateSpanAnnotation,
+  useUpdateBulkSpan,
+  useDeleteSpanAnnotation,
+  useDeleteBulkSpanAnnotation,
+  useCountBySdocsAndUser,
+};

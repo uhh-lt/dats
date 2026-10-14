@@ -1,7 +1,7 @@
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { ImageCropper } from "@components/ImageCropper";
 import { annotationQueries, AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
-import { useGetCode } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { sdocQueries } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
@@ -81,7 +81,7 @@ const BBoxAnnotationRendererWithData = memo(
 
 function BBoxAnnotationContext({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationRead }) {
   const sdocData = useQuery(sdocQueries.data(bboxAnnotation.sdoc_id));
-  const code = useGetCode(bboxAnnotation.code_id);
+  const code = CodeHooks.useGetCode(bboxAnnotation.code_id);
 
   if (sdocData.isLoading || code.isLoading) {
     return <CircularProgress size={20} />;

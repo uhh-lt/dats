@@ -5,12 +5,12 @@ import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { useUpdateCode } from "./api/codeMutations";
+import { CodeHooks } from "./api/codeHooks";
 
 export const CodeToggleEnabledButton = memo(
   ({ code, ...props }: IconButtonProps & { code: ITree<CodeRead> | null | undefined }) => {
     const isDisabled = (code?.data as CodeRead).enabled === false;
-    const updateCodeMutation = useUpdateCode();
+    const updateCodeMutation = CodeHooks.useUpdateCode();
 
     const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback(
       (event) => {

@@ -7,7 +7,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { MouseEvent, memo, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
-import { useCreateProjectMetadata } from "./api/metadataMutations";
+import { MetadataHooks } from "./api/metadataHooks";
 
 interface ProjectMetadataCreateButtonProps {
   sdocId?: number;
@@ -43,7 +43,7 @@ function MetadataCreateButtonContent({ docType }: { docType: DocType | undefined
 
   // create
   const projectId = useAppSelector((state) => state.project.projectId);
-  const { mutate: createMetadataMutation } = useCreateProjectMetadata();
+  const { mutate: createMetadataMutation } = MetadataHooks.useCreateProjectMetadata();
 
   const handleCreateMetadata = useCallback(
     (metaType: string) => {

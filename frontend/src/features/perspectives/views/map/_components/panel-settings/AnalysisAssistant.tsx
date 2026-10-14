@@ -19,7 +19,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Markdown from "react-markdown";
-import { useRAGChat } from "../../../../api/perspectivesMutations";
+import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface ChatMessage {
@@ -41,7 +41,7 @@ export function AnalysisAssistant() {
   const messages = useAppSelector((state) => state.perspectives.chatMessages);
   const lastDeleted = useAppSelector((state) => state.perspectives.lastDeletedChatMessages);
   const dispatch = useAppDispatch();
-  const ragChat = useRAGChat();
+  const ragChat = PerspectivesHooks.useRAGChat();
   const handleSendMessage = () => {
     if (inputText.trim() === "") return;
     if (!projectId) return;

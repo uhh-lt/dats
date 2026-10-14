@@ -1,8 +1,4 @@
-import {
-  useCreateSentenceAnnotation,
-  useDeleteSentenceAnnotation,
-  useUpdateSentenceAnnotation,
-} from "@core/sentence-annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, BoxProps } from "@mui/material";
@@ -71,9 +67,9 @@ export const SentenceAnnotator = memo(
     const dispatch = useAppDispatch();
     const { user } = useAuth();
     const openSnackbar = useOpenSnackbar();
-    const createMutation = useCreateSentenceAnnotation();
-    const deleteMutation = useDeleteSentenceAnnotation();
-    const updateMutation = useUpdateSentenceAnnotation();
+    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
+    const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
+    const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
 
     // resize
     const resizeController = useSentenceAnnotationResize(sdocData.sentences.length);

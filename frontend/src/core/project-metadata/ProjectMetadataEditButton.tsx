@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { ChangeEventHandler, MouseEventHandler, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
-import { useDeleteProjectMetadata, useUpdateProjectMetadata } from "./api/metadataMutations";
+import { MetadataHooks } from "./api/metadataHooks";
 
 interface ProjectMetadataEditMenuProps {
   projectMetadata: ProjectMetadataRead;
@@ -58,7 +58,7 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
   const openConfirmationDialog = useOpenConfirmationDialog();
 
   // closing / confirming changes
-  const updateMutation = useUpdateProjectMetadata();
+  const updateMutation = MetadataHooks.useUpdateProjectMetadata();
   const handleClose = () => {
     setPosition(undefined);
 
@@ -93,7 +93,7 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
   };
 
   // deletion
-  const deleteMutation = useDeleteProjectMetadata();
+  const deleteMutation = MetadataHooks.useDeleteProjectMetadata();
   const handleDeleteMetadata = useCallback(() => {
     openConfirmationDialog({
       text: `Do you really want to delete the ProjectMetadata ${projectMetadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,

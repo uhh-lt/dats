@@ -28,8 +28,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import * as d3 from "d3";
 import { useState } from "react";
-import { useStartPerspectivesJob } from "../../../../api/perspectivesMutations";
-import { useGetDocVisualization } from "../../../../api/useGetDocVisualization";
+import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterCreationDialog } from "./ClusterCreationDialog";
 
@@ -86,10 +85,10 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
 
   // legend
-  const { mutate: startPerspectivesJob, isPending } = useStartPerspectivesJob();
+  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
 
   // global server state
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
 
   // cluster click
   const handleClusterClick = (clusterId: number) => () => {

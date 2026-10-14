@@ -2,7 +2,7 @@ import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo, useCallback } from "react";
-import { useDeleteMemo } from "./api/memoMutations";
+import { MemoHooks } from "./api/memoHooks";
 
 interface MemoDeleteMenuItemProps {
   memoId?: number;
@@ -13,7 +13,7 @@ interface MemoDeleteMenuItemProps {
 
 export const MemoDeleteMenuItem = memo(
   ({ memoId, memoTitle, onClick, ...props }: MemoDeleteMenuItemProps & MenuItemProps) => {
-    const { mutate: deleteMemo } = useDeleteMemo();
+    const { mutate: deleteMemo } = MemoHooks.useDeleteMemo();
 
     const openConfirmationDialog = useOpenConfirmationDialog();
     const handleDeleteMemo = useCallback(

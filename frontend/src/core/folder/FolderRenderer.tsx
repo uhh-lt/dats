@@ -4,7 +4,7 @@ import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { useGetFolder, useGetSdocFolder } from "./api/folderHooks";
+import { FolderHooks } from "./api/folderHooks";
 
 export interface FolderRendererSharedProps extends ExpandableRendererProps {
   renderName?: boolean;
@@ -28,7 +28,7 @@ export const FolderRenderer = memo(({ folder, folderType, ...props }: FolderRend
 });
 
 const FolderRendererWithoutData = memo(({ folderId, ...props }: { folderId: number } & FolderRendererSharedProps) => {
-  const folder = useGetFolder(folderId);
+  const folder = FolderHooks.useGetFolder(folderId);
 
   if (folder.isSuccess) {
     return <FolderRendererWithData folder={folder.data} {...props} />;
@@ -41,7 +41,7 @@ const FolderRendererWithoutData = memo(({ folderId, ...props }: { folderId: numb
 
 const SdocFolderRendererWithoutData = memo(
   ({ folderId, ...props }: { folderId: number } & FolderRendererSharedProps) => {
-    const folder = useGetSdocFolder(folderId);
+    const folder = FolderHooks.useGetSdocFolder(folderId);
 
     if (folder.isSuccess) {
       return <FolderRendererWithData folder={folder.data} {...props} />;

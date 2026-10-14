@@ -1,4 +1,4 @@
-export * from "./api/bboxAnnotationMutations";
+export * from "./api/bboxAnnotationHooks";
 export * from "./BBoxAnnotationEditDialog";
 export * from "./BBoxAnnotationExportButton";
 export * from "./BBoxAnnotationRenderer";

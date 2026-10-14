@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { useStartMLJob } from "../../api/mlJobMutations";
+import { MlJobHooks } from "../../api/mlJobHooks";
 import { MLJobsView } from "./_components/MLJobsView";
 
 const routeAPI = getRouteApi("/_auth/project/$projectId/tools/ml-automation");
@@ -31,7 +31,7 @@ export function MlAutomationView() {
   const projectId = routeAPI.useParams({ select: (params) => params.projectId });
 
   // actions
-  const startMlJob = useStartMLJob();
+  const startMlJob = MlJobHooks.useStartMLJob();
 
   // global server state (react-query)
   const { mlJobsOptions } = routeAPI.useRouteContext();

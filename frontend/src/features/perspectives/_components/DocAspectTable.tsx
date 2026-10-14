@@ -7,8 +7,8 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
+import { PerspectivesHooks } from "../api/perspectiveHooks";
 import { perspectiveQueries } from "../api/perspectiveQueries";
-import { useGetDocVisualization } from "../api/useGetDocVisualization";
 
 interface DocAspectTableProps {
   aspectId: number;
@@ -18,7 +18,7 @@ interface DocAspectTableProps {
 
 export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTableProps) => {
   // global server state
-  const vis = useGetDocVisualization(aspectId);
+  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // computed

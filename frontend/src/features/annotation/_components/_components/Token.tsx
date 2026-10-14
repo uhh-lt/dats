@@ -1,5 +1,5 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { useGetCode } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -100,7 +100,7 @@ interface MemoTokenBadgeProps {
  * which annotation the memo belongs to.
  */
 function MemoTokenBadge({ annotation }: MemoTokenBadgeProps) {
-  const code = useGetCode(annotation.code_id);
+  const code = CodeHooks.useGetCode(annotation.code_id);
 
   if (!code.data) {
     return null;

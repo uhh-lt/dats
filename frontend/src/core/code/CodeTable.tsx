@@ -8,7 +8,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
-import { useGetEnabledCodes } from "./api/codeHooks";
+import { CodeHooks } from "./api/codeHooks";
 
 import SquareIcon from "@mui/icons-material/Square";
 
@@ -82,7 +82,7 @@ export const CodeTable = memo(
     renderBottomToolbar,
   }: CodeTableProps) => {
     // global server state
-    const projectCodes = useGetEnabledCodes();
+    const projectCodes = CodeHooks.useGetEnabledCodes();
 
     // computed
     const { projectCodesMap, projectCodesRows } = useMemo(() => {

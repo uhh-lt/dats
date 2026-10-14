@@ -3,7 +3,7 @@ import { Box, Button, DialogActions, Divider, FormControlLabel, Switch } from "@
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import type { ChangeEvent } from "react";
 import { useCallback } from "react";
-import { useDatasetStatistics } from "../../../api/useDatasetStatistics";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 
@@ -22,7 +22,7 @@ export function EvalDataSelectionStep() {
   }, [dispatch]);
 
   // dataset statistics (shared with DataSelection via props)
-  const { datasetStats } = useDatasetStatistics();
+  const { datasetStats } = ClassifierHooks.useDatasetStatistics();
 
   const handleNext = () => {
     dispatch(ClassifierActions.nextClassifierDialogStep());

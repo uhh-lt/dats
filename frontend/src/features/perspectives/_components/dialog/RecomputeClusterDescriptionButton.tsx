@@ -1,7 +1,7 @@
 import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { IconButton, Tooltip } from "@mui/material";
-import { useStartPerspectivesJob } from "../../api/perspectivesMutations";
+import { PerspectivesHooks } from "../../api/perspectiveHooks";
 
 interface RecomputeClusterDescriptionButtonProps {
   aspectId: number;
@@ -14,7 +14,7 @@ export function RecomputeClusterDescriptionButton({
   clusterId,
   onSuccess,
 }: RecomputeClusterDescriptionButtonProps) {
-  const { mutate: startPerspectivesJobMutation, isPending } = useStartPerspectivesJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
 
   const handleClick = () => {
     startPerspectivesJobMutation(

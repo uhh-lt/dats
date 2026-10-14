@@ -1,6 +1,6 @@
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
-import { useCreateSpanAnnotation, useDeleteSpanAnnotation, useUpdateSpanAnnotation } from "@core/span-annotation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -65,9 +65,9 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   });
 
   // mutations for create, update, delete
-  const createMutation = useCreateSpanAnnotation();
-  const updateMutation = useUpdateSpanAnnotation();
-  const deleteMutation = useDeleteSpanAnnotation();
+  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
+  const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
+  const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
 
   // handle ui events
   const handleMenu: MouseEventHandler = (event) => {

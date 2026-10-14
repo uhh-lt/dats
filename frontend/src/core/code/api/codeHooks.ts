@@ -1,5 +1,7 @@
+import { CodeService } from "@api/services/CodeService";
+import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { CodeMap, codeQueries } from "./codeQueries";
 
@@ -11,7 +13,7 @@ interface UseProjectCodesQueryParams<T> {
   enabled?: boolean;
 }
 
-export const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQueryParams<T>) => {
+const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
     ...codeQueries.byProject(projectId),
@@ -20,19 +22,63 @@ export const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjec
   });
 };
 
-export const useGetCode = (codeId: number | null | undefined) =>
+const useGetCode = (codeId: number | null | undefined) =>
   useProjectCodesQuery({
     select: (data) => data[codeId!],
     enabled: !!codeId,
   });
 
-export const useSelectEnabledCodes = () => {
+const useSelectEnabledCodes = () => {
   return useCallback((data: CodeMap) => Object.values(data).filter((code) => code.enabled), []);
 };
 
-export const useGetAllCodesList = () => useProjectCodesQuery({ select: (data) => Object.values(data) });
+const useGetAllCodesList = () => useProjectCodesQuery({ select: (data) => Object.values(data) });
 
-export const useGetEnabledCodes = () => {
+const useGetEnabledCodes = () => {
   const selectEnabledCodes = useSelectEnabledCodes();
   return useProjectCodesQuery({ select: selectEnabledCodes });
+};
+
+// CODE MUTATIONS
+const useCreateCode = () => {
+  return useMutation({
+    mutationKey: [...codeQueries.all(), "create"],
+    mutationFn: CodeService.createCode,
+    meta: {
+      datsEvent: "CODE_CREATED",
+      successMessage: (data: CodeRead) => `Created code ${data.name}`,
+    },
+  });
+};
+
+const useUpdateCode = () =>
+  useMutation({
+    mutationKey: [...codeQueries.all(), "update"],
+    mutationFn: CodeService.updateById,
+    meta: {
+      datsEvent: "CODE_UPDATED",
+      successMessage: (data: CodeRead) => `Updated code ${data.name}`,
+    },
+  });
+
+const useDeleteCode = () => {
+  return useMutation({
+    mutationKey: [...codeQueries.all(), "delete"],
+    mutationFn: CodeService.deleteById,
+    meta: {
+      datsEvent: "CODE_DELETED",
+      successMessage: (data: CodeRead) => `Deleted code ${data.name}`,
+    },
+  });
+};
+
+export const CodeHooks = {
+  useProjectCodesQuery,
+  useGetCode,
+  useSelectEnabledCodes,
+  useGetAllCodesList,
+  useGetEnabledCodes,
+  useCreateCode,
+  useUpdateCode,
+  useDeleteCode,
 };
