@@ -1,6 +1,8 @@
+import type { ColumnInfo } from "../filterUtils";
+
 /**
- * Keys of the table info (column infos of a filter table). Every filter slice fetches its own
- * column info with its own `queryFn`, so this factory only provides keys.
+ * Keys of the table info (column infos of a filter table). The queries that fetch the column infos are leaves of the
+ * domain factories (e.g. `sdocQueries.tableInfo`); they use these keys, so that the cache-sync code can invalidate all of them.
  *
  *   tableInfoQueries.all()                       ["tableInfo"]
  *   tableInfoQueries.bySlice(sliceName, projId)  ["tableInfo", sliceName, projId]
@@ -13,3 +15,12 @@ export const tableInfoQueries = {
   timeline: (projectId: number, timelineAnalysisType: string, timelineAnalysisId: number) =>
     [...tableInfoQueries.bySlice("timelineAnalysis", projectId), timelineAnalysisType, timelineAnalysisId] as const,
 };
+
+/** The search info endpoints return the column as an enum; the filter state uses plain strings. */
+export const toColumnInfos = <T extends Omit<ColumnInfo, "column"> & { column: { toString(): string } }>(
+  infos: T[],
+): ColumnInfo[] => infos.map((info) => ({ ...info, column: info.column.toString() }));
+
+/** The filter slices store the column infos as a map by column. */
+export const toColumnInfoMap = (infos: ColumnInfo[]): Record<string, ColumnInfo> =>
+  Object.fromEntries(infos.map((info) => [info.column, info]));

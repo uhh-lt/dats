@@ -1,12 +1,12 @@
 import { queryClient } from "@api/queryClient";
 import { SearchService } from "@api/services/SearchService";
-import type { MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
 import { SdocColumns } from "@models/SdocColumns";
 import { SortDirection } from "@models/SortDirection";
-import { infiniteQueryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { sdocQueries } from "./sdocQueries";
 
 interface DocumentSearchParams {
@@ -32,6 +32,14 @@ interface DocumentSearchParams {
  */
 export const searchQueries = {
   all: () => ["search"] as const,
+
+  // the column infos of the document search
+  tableInfo: (projectId: number) =>
+    queryOptions({
+      queryKey: tableInfoQueries.bySlice("search", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      staleTime: Infinity,
+    }),
 
   documentsScope: () => [...searchQueries.all(), "documents"] as const,
   // prefix of all document searches of one project, for invalidation

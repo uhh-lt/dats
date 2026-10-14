@@ -1,6 +1,6 @@
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
-import type { MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import type { MemoColumns } from "@models/MemoColumns";
@@ -79,6 +79,14 @@ export const memoQueries = {
         SearchService.searchMemoGroups({ requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
       getNextPageParam: nextPageByCount,
+    }),
+
+  // the column infos of the memo filter table
+  tableInfo: (projectId: number) =>
+    queryOptions({
+      queryKey: tableInfoQueries.bySlice("memoFilter", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchMemoInfo({ projectId })),
+      staleTime: Infinity,
     }),
 
   // the memo filter table

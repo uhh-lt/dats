@@ -2,7 +2,7 @@ import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { SearchService } from "@api/services/SearchService";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
-import type { MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
 import { BBoxColumns } from "@models/BBoxColumns";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SortDirection } from "@models/SortDirection";
@@ -57,6 +57,14 @@ const spanQueries = {
       queryFn: !sdocId || !userId ? skipToken : () => SpanAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
   // the span annotation filter table
+  // the column infos of the span annotation filter table
+  tableInfo: (projectId: number) =>
+    queryOptions({
+      queryKey: tableInfoQueries.bySlice("satFilter", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId })),
+      staleTime: Infinity,
+    }),
+
   tableScope: () => [...spanQueries.all(), "table"] as const,
   table: ({ projectId, filter, sortingModel, fetchSize }: AnnotationTableParams<SpanColumns>) =>
     infiniteQueryOptions({
@@ -110,6 +118,14 @@ const bboxQueries = {
       queryFn: !sdocId || !userId ? skipToken : () => BboxAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
   // the bbox annotation filter table
+  // the column infos of the bbox annotation filter table
+  tableInfo: (projectId: number) =>
+    queryOptions({
+      queryKey: tableInfoQueries.bySlice("bboxFilter", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId })),
+      staleTime: Infinity,
+    }),
+
   tableScope: () => [...bboxQueries.all(), "table"] as const,
   table: ({ projectId, filter, sortingModel, fetchSize }: AnnotationTableParams<BBoxColumns>) =>
     infiniteQueryOptions({
@@ -157,6 +173,14 @@ const sentenceQueries = {
       queryFn: !sdocId || !userId ? skipToken : () => SentenceAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
   // the sentence annotation filter table
+  // the column infos of the sentence annotation filter table
+  tableInfo: (projectId: number) =>
+    queryOptions({
+      queryKey: tableInfoQueries.bySlice("seatFilter", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId })),
+      staleTime: Infinity,
+    }),
+
   tableScope: () => [...sentenceQueries.all(), "table"] as const,
   table: ({ projectId, filter, sortingModel, fetchSize }: AnnotationTableParams<SentAnnoColumns>) =>
     infiniteQueryOptions({

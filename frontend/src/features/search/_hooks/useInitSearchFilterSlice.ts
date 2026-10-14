@@ -1,44 +1,21 @@
-import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
+import { toColumnInfoMap } from "@core/filter";
+import { searchQueries } from "@core/source-document";
 import { useAppDispatch } from "@store/storeHooks";
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { SearchActions } from "../store/documentSearchSlice";
 
-const searchTableInfoQueryOptions = (projectId: number, callback?: (data: ColumnInfo[]) => void) =>
-  queryOptions({
-    queryKey: tableInfoQueries.bySlice("search", projectId),
-    queryFn: async () => {
-      const result = await SearchService.searchSdocInfo({ projectId });
-      const columnInfo = result.map((info) => ({
-        ...info,
-        column: info.column.toString(),
-      })) as ColumnInfo[];
-      callback?.(columnInfo);
-      return columnInfo;
-    },
-    staleTime: Infinity,
-  });
-
 export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) => {
+  // global client state (redux)
   const dispatch = useAppDispatch();
-  const initializeSearchFilterSlice = useCallback(
-    (columnInfo: ColumnInfo[]) => {
-      dispatch(
-        SearchActions.init({
-          columnInfoMap: columnInfo.reduce(
-            (acc, info) => {
-              acc[info.column] = info;
-              return acc;
-            },
-            {} as Record<string, ColumnInfo>,
-          ),
-        }),
-      );
-    },
-    [dispatch],
-  );
 
-  const { data: columnData } = useQuery(searchTableInfoQueryOptions(projectId, initializeSearchFilterSlice));
+  // global server state (react-query)
+  const { data: columnData } = useQuery(searchQueries.tableInfo(projectId));
+
+  // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
+  useEffect(() => {
+    if (columnData) dispatch(SearchActions.init({ columnInfoMap: toColumnInfoMap(columnData) }));
+  }, [columnData, dispatch]);
+
   return columnData;
 };

@@ -1,44 +1,21 @@
-import { WordFrequencyService } from "@api/services/WordFrequencyService";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
+import { toColumnInfoMap } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
-import { queryOptions, useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { wordFrequencyQueries } from "../api/wordFrequencyQueries";
 import { WordFrequencyActions } from "../store/wordFrequencySlice";
 
-const wordFrequencyTableInfoQueryOptions = (projectId: number, callback?: (columnInfo: ColumnInfo[]) => void) =>
-  queryOptions({
-    queryKey: tableInfoQueries.bySlice("wordFrequency", projectId),
-    queryFn: async () => {
-      const result = await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId });
-      const columnInfo = result.map((info) => ({
-        ...info,
-        column: info.column.toString(),
-      })) as ColumnInfo[];
-      callback?.(columnInfo);
-      return columnInfo;
-    },
-    staleTime: Infinity,
-  });
-
 export const useInitWordFrequencySlice = ({ projectId }: { projectId: number }) => {
+  // global client state (redux)
   const dispatch = useAppDispatch();
-  const initializeWordFrequencySlice = useCallback(
-    (columnInfo: ColumnInfo[]) => {
-      dispatch(
-        WordFrequencyActions.init({
-          columnInfoMap: columnInfo.reduce(
-            (acc, info) => {
-              acc[info.column] = info;
-              return acc;
-            },
-            {} as Record<string, ColumnInfo>,
-          ),
-        }),
-      );
-    },
-    [dispatch],
-  );
 
-  const { data: columnData } = useQuery(wordFrequencyTableInfoQueryOptions(projectId, initializeWordFrequencySlice));
+  // global server state (react-query)
+  const { data: columnData } = useQuery(wordFrequencyQueries.tableInfo(projectId));
+
+  // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
+  useEffect(() => {
+    if (columnData) dispatch(WordFrequencyActions.init({ columnInfoMap: toColumnInfoMap(columnData) }));
+  }, [columnData, dispatch]);
+
   return columnData;
 };

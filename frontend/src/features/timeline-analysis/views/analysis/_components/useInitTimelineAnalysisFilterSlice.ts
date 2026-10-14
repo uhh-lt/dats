@@ -1,78 +1,10 @@
-import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
+import { toColumnInfoMap } from "@core/filter";
 import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
-import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
-import { AppDispatch } from "@store/store";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { timelineAnalysisQueries } from "../../../api/timelineAnalysisQueries";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
-
-const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, dispatch: AppDispatch) =>
-  useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueries.timeline(
-      timelineAnalysis.project_id,
-      timelineAnalysis.timeline_analysis_type,
-      timelineAnalysis.id,
-    ),
-    queryFn: async () => {
-      const projectId = timelineAnalysis.project_id;
-      let columnInfo: ColumnInfo[] = [];
-      switch (timelineAnalysis.timeline_analysis_type) {
-        case TimelineAnalysisType.DOCUMENT: {
-          const sdocInfo = await SearchService.searchSdocInfo({ projectId });
-          columnInfo = sdocInfo.map((info) => {
-            return {
-              ...info,
-              column: info.column.toString(),
-            };
-          });
-          break;
-        }
-        case TimelineAnalysisType.BBOX_ANNOTATION: {
-          const bboxInfo = await SearchService.searchBboxAnnotationInfo({ projectId });
-          columnInfo = bboxInfo.map((info) => {
-            return {
-              ...info,
-              column: info.column.toString(),
-            };
-          });
-          break;
-        }
-        case TimelineAnalysisType.SENTENCE_ANNOTATION: {
-          const sentAnnoInfo = await SearchService.searchSentenceAnnotationInfo({ projectId });
-          columnInfo = sentAnnoInfo.map((info) => {
-            return {
-              ...info,
-              column: info.column.toString(),
-            };
-          });
-          break;
-        }
-        case TimelineAnalysisType.SPAN_ANNOTATION: {
-          const spanAnnoInfo = await SearchService.searchSpanAnnotationInfo({ projectId });
-          columnInfo = spanAnnoInfo.map((info) => {
-            return {
-              ...info,
-              column: info.column.toString(),
-            };
-          });
-          break;
-        }
-        default:
-          break;
-      }
-
-      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
-        return {
-          ...acc,
-          [info.column]: info,
-        };
-      }, {});
-      dispatch(TimelineAnalysisActions.init({ columnInfoMap }));
-      return columnInfo;
-    },
-    staleTime: Infinity,
-  });
 
 export const useInitTimelineAnalysisFilterSlice = ({
   timelineAnalysis,
@@ -83,7 +15,12 @@ export const useInitTimelineAnalysisFilterSlice = ({
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetTimelineAnalysisInfo(timelineAnalysis, dispatch);
+  const { data: columnData } = useQuery(timelineAnalysisQueries.tableInfo(timelineAnalysis));
+
+  // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
+  useEffect(() => {
+    if (columnData) dispatch(TimelineAnalysisActions.init({ columnInfoMap: toColumnInfoMap(columnData) }));
+  }, [columnData, dispatch]);
 
   return columnData;
 };
