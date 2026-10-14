@@ -2,7 +2,7 @@ import { ApiKeyService } from "@api/services/ApiKeyService";
 import { ApiKeyCreatedResponse } from "@models/ApiKeyCreatedResponse";
 import { ApiKeyRead } from "@models/ApiKeyRead";
 import { ExpiryDuration } from "@models/ExpiryDuration";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiKeyQueries } from "./apiKeyQueries";
 
 // API KEY MUTATIONS
@@ -28,7 +28,10 @@ const useDeleteApiKey = () =>
     },
   });
 
+const useGetApiKeys = () => useQuery(apiKeyQueries.list());
+
 export const ApiKeyHooks = {
   useCreateApiKey,
   useDeleteApiKey,
+  useGetApiKeys,
 };

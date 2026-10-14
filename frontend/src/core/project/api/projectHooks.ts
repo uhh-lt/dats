@@ -1,6 +1,7 @@
 import { ProjectService } from "@api/services/ProjectService";
 import { ProjectCreate } from "@models/ProjectCreate";
 import { ProjectRead } from "@models/ProjectRead";
+import { SDocStatus } from "@models/SDocStatus";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { projectQueries } from "./projectQueries";
 
@@ -48,9 +49,29 @@ const useDeleteProject = () =>
     },
   });
 
+interface UseProjectsQueryParams<T> {
+  select?: (data: ProjectRead[]) => T;
+  enabled?: boolean;
+}
+
+const useProjectsQuery = <T = ProjectRead[]>({ select, enabled }: UseProjectsQueryParams<T>) =>
+  useQuery({
+    ...projectQueries.userProjects(),
+    select,
+    enabled,
+  });
+
+const useGetAllProjects = () => useProjectsQuery({});
+
+const useCountSdocsWithStatus = (projectId: number, status: SDocStatus) =>
+  useQuery(projectQueries.sdocStatusCount(projectId, status));
+
 export const ProjectHooks = {
   useGetProject,
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
+  useProjectsQuery,
+  useGetAllProjects,
+  useCountSdocsWithStatus,
 };

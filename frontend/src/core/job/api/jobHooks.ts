@@ -173,6 +173,8 @@ function useJobRefetchInterval<T extends { status: JobStatus }>(intervalMs = 100
   };
 }
 
+const useGetAllCrawlerJobs = (projectId: number) => useQuery(jobQueries.crawler.byProject(projectId));
+
 export const JobHooks = {
   useLiveDuplicateFinderJob,
   useLiveExportJob,
@@ -185,4 +187,5 @@ export const JobHooks = {
   useRetryDocProcessingJobs,
   useRecomputeDocProcessingJobs,
   useJobRefetchInterval,
+  useGetAllCrawlerJobs,
 };

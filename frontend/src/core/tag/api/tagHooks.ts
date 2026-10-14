@@ -95,6 +95,27 @@ const useCountBySdocsAndUser = () =>
     mutationFn: TagService.countTags,
   });
 
+interface UseProjectTagsQueryParams<T> {
+  select?: (data: TagRead[]) => T;
+  enabled?: boolean;
+}
+
+const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  return useQuery({
+    ...tagQueries.byProject(projectId),
+    select,
+    enabled: !!projectId && (enabled ?? true),
+  });
+};
+
+const useGetAllTags = () => useProjectTagsQuery({});
+
+const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) => useQuery(tagQueries.idsBySdoc(sdocId));
+
+const useGetTagDocumentCounts = (projectId: number, sdocIds: number[]) =>
+  useQuery(tagQueries.sdocCount(projectId, sdocIds));
+
 export const TagHooks = {
   useGetTag,
   useCreateTag,
@@ -105,4 +126,8 @@ export const TagHooks = {
   useBulkUnlinkTags,
   useBulkUpdateTags,
   useCountBySdocsAndUser,
+  useProjectTagsQuery,
+  useGetAllTags,
+  useGetAllTagIdsBySdocId,
+  useGetTagDocumentCounts,
 };

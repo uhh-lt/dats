@@ -1,4 +1,4 @@
-import { generalQueries } from "@core/auth";
+import { authQueries } from "@core/auth";
 import { LoginView } from "@features/auth";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, redirect } from "@tanstack/react-router";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_public/login")({
     }
   },
   // the query options are built once here; the loader and the view use the same ones
-  context: () => ({ instanceInfoOptions: generalQueries.instanceInfo() }),
+  context: () => ({ instanceInfoOptions: authQueries.instanceInfo() }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(context.instanceInfoOptions);
   },

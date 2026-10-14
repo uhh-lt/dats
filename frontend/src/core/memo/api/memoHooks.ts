@@ -2,8 +2,13 @@ import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
 import { ColumnInfo, tableInfoQueries } from "@core/filter";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoRead } from "@models/MemoRead";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Page_MemoRead_ } from "@models/Page_MemoRead_";
+import { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
+import type { InfiniteData } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { memoQueries } from "./memoQueries";
 
 // MEMO QUERIES
@@ -92,6 +97,36 @@ const useRecordRecentMemo = () =>
     },
   });
 
+const useGetMemo = (memoId: number | null | undefined) => useQuery(memoQueries.byId(memoId));
+
+const useGetObjectMemos = (
+  attachedObjType: AttachedObjectType,
+  attachedObjId: number | null | undefined,
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    ...memoQueries.byAttachedObject(attachedObjType, attachedObjId),
+    enabled: options?.enabled ?? true,
+  });
+
+const useQueryMemos = <TData = InfiniteData<Page_MemoRead_>>(
+  request: QueryRequest_MemoColumns_,
+  options?: { enabled?: boolean; select?: (data: InfiniteData<Page_MemoRead_>) => TData },
+) =>
+  useInfiniteQuery({
+    ...memoQueries.search(request),
+    enabled: options?.enabled ?? true,
+    select: options?.select,
+  });
+
+const useQueryMemoGroups = (request: GroupQueryRequest_MemoColumns_, enabled = true) =>
+  useInfiniteQuery({
+    ...memoQueries.groups(request),
+    enabled,
+  });
+
+const useGetRecentMemos = (projectId: number | null | undefined) => useQuery(memoQueries.recent(projectId));
+
 export const MemoHooks = {
   useMemoSearchInfo,
   useCreateMemo,
@@ -100,4 +135,9 @@ export const MemoHooks = {
   useDeleteMemo,
   useDeleteMemos,
   useRecordRecentMemo,
+  useGetMemo,
+  useGetObjectMemos,
+  useQueryMemos,
+  useQueryMemoGroups,
+  useGetRecentMemos,
 };
