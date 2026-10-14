@@ -1,5 +1,4 @@
 import { CodeTable } from "@core/code";
-import { LLMHooks } from "@core/llm";
 import { CodeRead } from "@models/CodeRead";
 import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
@@ -7,6 +6,7 @@ import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
+import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -24,7 +24,7 @@ export const CodeSelectionStep = memo(() => {
   );
 
   // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
+  const { mutate: determineApproachMutation, isPending } = LlmAssistantHooks.useDetermineApproach();
 
   const handleNext = useCallback(
     (codes: CodeRead[]) => {

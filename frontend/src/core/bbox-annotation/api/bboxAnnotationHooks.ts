@@ -1,18 +1,18 @@
-import { rollbackOptimisticUpdate } from "@api/cache-sync/_utils/optimisticUtils";
 import { queryClient } from "@api/queryClient";
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
-import { annotationQueries } from "@core/annotation";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { rollbackOptimisticUpdate } from "@utils/optimisticUtils";
+import { bboxAnnotationQueries } from "./bboxAnnotationQueries";
 
-// BBOX QUERIES live in annotationQueries.bbox (used with `useQuery` directly).
+// BBOX QUERIES live in bboxAnnotationQueries (used with `useQuery` directly).
 
 // BBOX MUTATIONS
 const useCreateBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.bbox.all(), "create"],
+    mutationKey: [...bboxAnnotationQueries.all(), "create"],
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
     meta: {
@@ -23,7 +23,7 @@ const useCreateBBoxAnnotation = () =>
 
 const useUpdateBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.bbox.all(), "update"],
+    mutationKey: [...bboxAnnotationQueries.all(), "update"],
     mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
       BboxAnnotationService.updateById({
         bboxId: typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
@@ -33,7 +33,7 @@ const useUpdateBBoxAnnotation = () =>
     // todo: rework to only update the bbox annotation detail query (we need to change the rendering for this...)
     onMutate: async ({ bboxToUpdate, requestBody }) => {
       if (typeof bboxToUpdate === "number") return;
-      const affectedQueryKey = annotationQueries.bbox.bySdoc(bboxToUpdate.sdoc_id, bboxToUpdate.user_id).queryKey;
+      const affectedQueryKey = bboxAnnotationQueries.bySdoc(bboxToUpdate.sdoc_id, bboxToUpdate.user_id).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousBboxes = queryClient.getQueryData(affectedQueryKey);
       queryClient.setQueryData(affectedQueryKey, (old) => {
@@ -56,7 +56,12 @@ const useUpdateBBoxAnnotation = () =>
     },
     onError: (_error, _updatedBboxAnnotation, context) => {
       if (!context) return;
-      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousBboxes, annotationQueries.bbox.all());
+      rollbackOptimisticUpdate(
+        queryClient,
+        context.affectedQueryKey,
+        context.previousBboxes,
+        bboxAnnotationQueries.all(),
+      );
     },
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED",
@@ -66,7 +71,7 @@ const useUpdateBBoxAnnotation = () =>
 
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.bbox.all(), "updateBulk"],
+    mutationKey: [...bboxAnnotationQueries.all(), "updateBulk"],
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
@@ -76,7 +81,7 @@ const useUpdateBulkBBoxAnnotation = () =>
 
 const useDeleteBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.bbox.all(), "delete"],
+    mutationKey: [...bboxAnnotationQueries.all(), "delete"],
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
       BboxAnnotationService.deleteById({
         bboxId: typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
@@ -84,7 +89,7 @@ const useDeleteBBoxAnnotation = () =>
     // optimistic update if bboxToDelete is a proper BBoxAnnotationRead
     onMutate: async ({ bboxToDelete }) => {
       if (typeof bboxToDelete === "number") return;
-      const affectedQueryKey = annotationQueries.bbox.bySdoc(bboxToDelete.sdoc_id, bboxToDelete.user_id).queryKey;
+      const affectedQueryKey = bboxAnnotationQueries.bySdoc(bboxToDelete.sdoc_id, bboxToDelete.user_id).queryKey;
       await queryClient.cancelQueries({ queryKey: affectedQueryKey });
       const previousBboxes = queryClient.getQueryData(affectedQueryKey);
       queryClient.setQueryData(affectedQueryKey, (old) =>
@@ -94,7 +99,12 @@ const useDeleteBBoxAnnotation = () =>
     },
     onError: (_error: Error, _newBbox, context) => {
       if (!context) return;
-      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousBboxes, annotationQueries.bbox.all());
+      rollbackOptimisticUpdate(
+        queryClient,
+        context.affectedQueryKey,
+        context.previousBboxes,
+        bboxAnnotationQueries.all(),
+      );
     },
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED",
@@ -104,7 +114,7 @@ const useDeleteBBoxAnnotation = () =>
 
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.bbox.all(), "deleteBulk"],
+    mutationKey: [...bboxAnnotationQueries.all(), "deleteBulk"],
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED_BATCH",
@@ -112,12 +122,12 @@ const useDeleteBulkBBoxAnnotation = () =>
     },
   });
 
-const useGetAnnotation = (bboxId: number | null | undefined) => useQuery(annotationQueries.bbox.byId(bboxId));
+const useGetAnnotation = (bboxId: number | null | undefined) => useQuery(bboxAnnotationQueries.byId(bboxId));
 
-const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(annotationQueries.bbox.byUserCode(codeId));
+const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(bboxAnnotationQueries.byUserCode(codeId));
 
 const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery(annotationQueries.bbox.bySdoc(sdocId, userId));
+  useQuery(bboxAnnotationQueries.bySdoc(sdocId, userId));
 
 export const BboxAnnotationHooks = {
   useCreateBBoxAnnotation,

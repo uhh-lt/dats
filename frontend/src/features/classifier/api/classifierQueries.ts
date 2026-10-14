@@ -2,7 +2,7 @@ import { ClassifierService } from "@api/services/ClassifierService";
 import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
 import type { ClassifierModel } from "@models/ClassifierModel";
 import type { ClassifierRead } from "@models/ClassifierRead";
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export type ClassifierMap = Record<number, ClassifierRead>;
 
@@ -16,8 +16,23 @@ export interface ClassifierDatasetStatisticsParams {
   baseModelName: string;
 }
 
+const classifierJobQueries = {
+  all: () => [...classifierQueries.all(), "job"] as const,
+  byId: (jobId: string | null | undefined) =>
+    queryOptions({
+      queryKey: [...classifierJobQueries.all(), "detail", jobId] as const,
+      queryFn: !jobId ? skipToken : () => ClassifierService.getClassifierJobById({ jobId }),
+    }),
+  byProjectScope: () => [...classifierJobQueries.all(), "project"] as const,
+  byProject: (projectId: number) =>
+    queryOptions({
+      queryKey: [...classifierJobQueries.byProjectScope(), projectId] as const,
+      queryFn: () => ClassifierService.getClassifierJobsByProject({ projectId }),
+    }),
+};
+
 /**
- * Query factory for classifiers. (The classifier background jobs are in jobQueries.classifier.)
+ * Query factory for classifiers. (The classifier background jobs are `classifierQueries.job`.)
  *
  *   classifierQueries.all()                     ["classifiers"]
  *   classifierQueries.byProject(projectId)      ["classifiers", "project", projectId]
@@ -89,4 +104,7 @@ export const classifierQueries = {
         return ClassifierService.computeDatasetStatistics({ projId: projectId, requestBody: request });
       },
     }),
+
+  // the refinement / background job of this domain
+  job: classifierJobQueries,
 };

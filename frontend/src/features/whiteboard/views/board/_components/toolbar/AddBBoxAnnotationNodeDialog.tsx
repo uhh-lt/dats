@@ -1,7 +1,7 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { BBoxAnnotationReduxFilterTable } from "@core/bbox-annotation";
-import { MetadataHooks } from "@core/project-metadata";
+import { ProjectMetadataHooks } from "@core/project-metadata";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { BBoxColumns } from "@models/BBoxColumns";
@@ -29,7 +29,7 @@ export const AddBBoxAnnotationNodeDialog = memo(
     const { isMaximized, toggleMaximize } = useDialogMaximize();
 
     // global server state
-    const metadata = MetadataHooks.useGetProjectMetadataList();
+    const metadata = ProjectMetadataHooks.useGetProjectMetadataList();
 
     return (
       <>

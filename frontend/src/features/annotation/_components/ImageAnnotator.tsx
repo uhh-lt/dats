@@ -1,5 +1,5 @@
 import { BboxAnnotationHooks } from "@core/bbox-annotation";
-import { MetadataHooks } from "@core/project-metadata";
+import { SdocMetadataHooks } from "@core/sdoc-metadata";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -28,7 +28,7 @@ const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationR
 };
 
 export function ImageAnnotator(props: ImageAnnotatorProps) {
-  const heightMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
+  const heightMetadata = SdocMetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
 
   if (heightMetadata.isSuccess) {
     return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;

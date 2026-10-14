@@ -54,14 +54,12 @@ interface UseProjectsQueryParams<T> {
   enabled?: boolean;
 }
 
-const useProjectsQuery = <T = ProjectRead[]>({ select, enabled }: UseProjectsQueryParams<T>) =>
+const useGetAllProjects = <T = ProjectRead[]>({ select, enabled }: UseProjectsQueryParams<T> = {}) =>
   useQuery({
     ...projectQueries.userProjects(),
     select,
     enabled,
   });
-
-const useGetAllProjects = () => useProjectsQuery({});
 
 const useCountSdocsWithStatus = (projectId: number, status: SDocStatus) =>
   useQuery(projectQueries.sdocStatusCount(projectId, status));
@@ -71,7 +69,6 @@ export const ProjectHooks = {
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
-  useProjectsQuery,
   useGetAllProjects,
   useCountSdocsWithStatus,
 };

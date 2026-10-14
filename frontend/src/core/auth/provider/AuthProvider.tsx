@@ -1,13 +1,12 @@
 import { ApiError } from "@api/core/ApiError";
 import { OpenAPI } from "@api/core/OpenAPI";
 import { queryClient } from "@api/queryClient";
-import { AuthenticationService } from "@api/services/AuthenticationService";
 import { userQueries } from "@core/user";
 import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
 import { useAppDispatch } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { authQueries } from "../api/authQueries";
+import { AuthMutations } from "../api/authMutations";
 import { AuthActions } from "../authActions";
 import { AuthContext } from "../types/AuthContext";
 
@@ -119,11 +118,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
   }, [user.isError, clearLocalAuthData]);
 
   // Logout action.
-  const { mutate: logoutMutation } = useMutation({
-    mutationKey: [...authQueries.all(), "logout"],
-    mutationFn: AuthenticationService.logout,
-    retry: false,
-  });
+  const { mutate: logoutMutation } = AuthMutations.useLogout();
 
   const logout = useCallback(() => {
     const refreshTokenToRevoke = refreshToken;
@@ -137,10 +132,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
   }, [refreshToken, clearLocalAuthData, logoutMutation]);
 
   // Refresh access token shortly before expiry.
-  const { mutate: refreshAccessTokenMutation } = useMutation({
-    mutationKey: [...authQueries.all(), "refreshAccessToken"],
-    mutationFn: AuthenticationService.refreshAccessToken,
-    retry: false,
+  const { mutate: refreshAccessTokenMutation } = AuthMutations.useRefreshAccessToken({
     onSuccess(data) {
       updateAuthData(data);
     },

@@ -1,5 +1,4 @@
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
-import { LLMHooks } from "@core/llm";
 import { SdocRenderer } from "@core/source-document";
 import { ApproachType } from "@models/ApproachType";
 import { FewShotParams } from "@models/FewShotParams";
@@ -14,6 +13,7 @@ import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
 interface LLMJobListItemProps {
@@ -22,7 +22,7 @@ interface LLMJobListItemProps {
 
 export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   // global server state (react-query)
-  const llmJob = LLMHooks.useLiveLLMJob(initialLLMJob.job_id, initialLLMJob);
+  const llmJob = LlmAssistantHooks.useLiveLLMJob(initialLLMJob.job_id, initialLLMJob);
 
   // actions
   const dispatch = useAppDispatch();

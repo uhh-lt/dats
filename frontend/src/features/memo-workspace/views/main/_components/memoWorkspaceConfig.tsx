@@ -8,12 +8,7 @@ import {
   memoRenderableColumns,
   memoTableColumns,
 } from "@core/memo";
-import {
-  EntityWorkspaceConfig,
-  MemoViewHooks,
-  WorkspaceGroupQueryRequest,
-  WorkspaceQueryRequest,
-} from "@core/workspace";
+import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryRequest } from "@core/workspace";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoColumns } from "@models/MemoColumns";
@@ -29,6 +24,7 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import TitleIcon from "@mui/icons-material/Title";
 import UpdateIcon from "@mui/icons-material/Update";
 import { ReactNode } from "react";
+import { MemoViewHooks } from "../../../api/memoViewHooks";
 import { MemoTableSelectionActions } from "./MemoTableSelectionActions";
 import { createMemoTemplates, emptyMemoFilter, memoDefaultFilterExpression } from "./memoTemplates";
 

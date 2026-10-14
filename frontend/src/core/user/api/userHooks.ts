@@ -63,7 +63,7 @@ interface UseProjectUsersQueryParams<T> {
   enabled?: boolean;
 }
 
-const useProjectUsersQuery = <T = UserRead[]>({ select, enabled }: UseProjectUsersQueryParams<T>) => {
+const useGetAllUsers = <T = UserRead[]>({ select, enabled }: UseProjectUsersQueryParams<T> = {}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
     ...userQueries.byProject(projectId),
@@ -72,14 +72,11 @@ const useProjectUsersQuery = <T = UserRead[]>({ select, enabled }: UseProjectUse
   });
 };
 
-const useGetAllUsers = () => useProjectUsersQuery({});
-
 export const UserHooks = {
   useGetUser,
   useUpdate,
   useAddUserToProject,
   useRemoveUserFromProject,
   useRegister,
-  useProjectUsersQuery,
   useGetAllUsers,
 };

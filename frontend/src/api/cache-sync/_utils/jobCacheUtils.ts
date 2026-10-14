@@ -1,15 +1,20 @@
 import { queryClient } from "@api/queryClient";
 import { codeQueries } from "@core/code/api/codeQueries";
+import { exportQueries } from "@core/export-buttons/api/exportQueries";
 import { folderQueries } from "@core/folder/api/folderQueries";
-import { jobQueries } from "@core/job/api/jobQueries";
 import { memoQueries } from "@core/memo/api/memoQueries";
-import { metadataQueries } from "@core/project-metadata/api/metadataQueries";
+import { projectMetadataQueries } from "@core/project-metadata/api/projectMetadataQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
+import { documentUploadQueries } from "@features/document-upload/api/documentUploadQueries";
+import { duplicateFinderQueries } from "@features/duplicate-finder/api/duplicateFinderQueries";
+import { llmAssistantQueries } from "@features/llm-assistant/api/llmAssistantQueries";
+import { mlAutomationQueries } from "@features/ml-automation/api/mlAutomationQueries";
 import { perspectiveQueries } from "@features/perspectives/api/perspectiveQueries";
+import { importQueries } from "@features/project-settings/api/importQueries";
 import { timelineAnalysisQueries } from "@features/timeline-analysis/api/timelineAnalysisQueries";
 import { whiteboardQueries } from "@features/whiteboard/api/whiteboardQueries";
 import type { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
@@ -40,34 +45,34 @@ type JobRead = DATSEventMap["JOB_UPDATED"];
 export function handleJobUpdate(job: JobRead): void {
   switch (job.job_type) {
     case ExportJobRead.job_type.EXPORT:
-      upsertJob(job, jobQueries.export);
+      upsertJob(job, exportQueries.job);
       break;
     case ImportJobRead.job_type.IMPORT:
-      upsertJob(job, jobQueries.import);
+      upsertJob(job, importQueries.job);
       if (job.status === JobStatus.FINISHED) handleImportJobFinished(job);
       break;
     case CrawlerJobRead.job_type.CRAWLER:
-      upsertJob(job, jobQueries.crawler);
+      upsertJob(job, documentUploadQueries.job);
       break;
     case LlmAssistantJobRead.job_type.LLM_ASSISTANT:
-      upsertJob(job, jobQueries.llm);
+      upsertJob(job, llmAssistantQueries.job);
       break;
     case MlJobRead.job_type.ML:
-      upsertJob(job, jobQueries.ml);
+      upsertJob(job, mlAutomationQueries.job);
       break;
     case ClassifierJobRead.job_type.CLASSIFIER:
-      upsertJob(job, jobQueries.classifier);
+      upsertJob(job, classifierQueries.job);
       if (job.status === JobStatus.FINISHED) handleClassifierJobFinished(job);
       break;
     case DuplicateFinderJobRead.job_type.DUPLICATE_FINDER:
-      upsertJob(job, jobQueries.duplicateFinder);
+      upsertJob(job, duplicateFinderQueries.job);
       break;
     case COTARefinementJobRead.job_type.COTA_REFINEMENT:
-      upsertJob(job, jobQueries.cotaRefinement);
+      upsertJob(job, cotaQueries.job);
       if (job.status === JobStatus.FINISHED) handleCOTARefinementJobFinished(job);
       break;
     case PerspectivesJobRead.job_type.PERSPECTIVES:
-      upsertJob(job, jobQueries.perspectives);
+      upsertJob(job, perspectiveQueries.job);
       if (job.status === JobStatus.FINISHED) handlePerspectivesJobFinished(job);
       break;
     default: {
@@ -77,7 +82,7 @@ export function handleJobUpdate(job: JobRead): void {
   }
 }
 
-// The query definitions of one job type (see jobQueries): the single-job query and, for types that have one,
+// The query definitions of one job type (`<domain>Queries.job`): the single-job query and, for types that have one,
 // the per-project job list.
 interface JobTypeQueries<T> {
   byId: (jobId: string) => {
@@ -115,7 +120,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: folderQueries.ofProjectScope(projectId) });
       break;
     case ImportJobType.PROJECT_METADATA:
-      queryClient.invalidateQueries({ queryKey: metadataQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: projectMetadataQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.USERS:
       queryClient.invalidateQueries({ queryKey: userQueries.byProject(projectId).queryKey });
@@ -138,7 +143,7 @@ function handleImportJobFinished(job: ImportJobRead) {
     case ImportJobType.PROJECT:
       queryClient.invalidateQueries({ queryKey: tagQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: metadataQueries.byProject(projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: projectMetadataQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: userQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });

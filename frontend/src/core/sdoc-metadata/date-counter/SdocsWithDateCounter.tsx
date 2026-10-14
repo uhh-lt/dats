@@ -1,4 +1,4 @@
-import { MetadataHooks } from "@core/project-metadata";
+import { SdocMetadataHooks } from "../api/sdocMetadataHooks";
 
 interface SdocsWithDateCounterProps {
   projectId: number;
@@ -7,7 +7,7 @@ interface SdocsWithDateCounterProps {
 
 export function SdocsWithDateCounter({ projectId, dateMetadataId }: SdocsWithDateCounterProps) {
   // global server state (react-query)
-  const validDocumentsCheck = MetadataHooks.useCountSdocsWithDateMetadata(projectId, dateMetadataId);
+  const validDocumentsCheck = SdocMetadataHooks.useCountSdocsWithDateMetadata(projectId, dateMetadataId);
 
   if (dateMetadataId === -1 || validDocumentsCheck.isLoading) {
     return <>Specify the metadata key that denotes the date of the document.</>;

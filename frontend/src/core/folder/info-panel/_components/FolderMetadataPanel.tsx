@@ -1,5 +1,5 @@
-import { MetadataHooks, ProjectMetadataCreateButton } from "@core/project-metadata";
-import { SdocMetadataRow } from "@core/sdoc-metadata";
+import { ProjectMetadataCreateButton } from "@core/project-metadata";
+import { SdocMetadataHooks, SdocMetadataRow } from "@core/sdoc-metadata";
 import { DocType } from "@models/DocType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
@@ -67,10 +67,10 @@ interface FolderDoctypeMetadataPanelProps {
 }
 
 function FolderDoctypeMetadataPanel({ doctype, sdocIds, onAddMetadataFilter }: FolderDoctypeMetadataPanelProps) {
-  const metadata = MetadataHooks.useGetSdocMetadataBulk(sdocIds);
+  const metadata = SdocMetadataHooks.useGetSdocMetadataBulk(sdocIds);
 
   // mutation
-  const { mutate: updateMetadataMutation } = MetadataHooks.useUpdateBulkSdocMetadata();
+  const { mutate: updateMetadataMutation } = SdocMetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataIds: number[]) => (data: SourceDocumentMetadataUpdate) => {
       updateMetadataMutation({

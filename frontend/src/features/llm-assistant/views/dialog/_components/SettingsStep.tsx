@@ -1,5 +1,5 @@
+import { GeneralHooks } from "@api/general/generalHooks";
 import { CodeRenderer } from "@core/code";
-import { LLMHooks } from "@core/llm";
 import { ApproachType } from "@models/ApproachType";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
 import { StrategyInfo } from "@models/StrategyInfo";
@@ -28,6 +28,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions, LLMStrategyParams } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -71,7 +72,7 @@ function getFuzzySettings(strategy: StrategyInfo): FuzzySettings {
 
 /** Configures the model, processing strategy, learning approach, and overwrite behavior for an LLM job. */
 export const SettingsStep = memo(() => {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
   const recommendation = useAppSelector((state) => state.llmAssistant.llmApproachRecommendation);
   const llmId = useAppSelector((state) => state.llmAssistant.llmId);
@@ -87,7 +88,7 @@ export const SettingsStep = memo(() => {
   const savedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
   const dispatch = useAppDispatch();
 
-  const strategies = LLMHooks.useListStrategies(llmMethod);
+  const strategies = LlmAssistantHooks.useListStrategies(llmMethod);
   const [modelId, setModelId] = useState(llmId);
   const [strategyType, setStrategyType] = useState<StrategyType | undefined>(savedStrategy);
   const [approachType, setApproachType] = useState(savedApproach);
@@ -116,7 +117,7 @@ export const SettingsStep = memo(() => {
   );
   const codeIds = useMemo(() => codes.map((code) => code.id), [codes]);
   const isAnnotationTask = llmMethod === TaskType.ANNOTATION || llmMethod === TaskType.SENTENCE_ANNOTATION;
-  const existingAnnotations = LLMHooks.useCountExistingAssistantAnnotations({
+  const existingAnnotations = LlmAssistantHooks.useCountExistingAssistantAnnotations({
     taskType: llmMethod,
     approachType,
     sdocIds,
@@ -193,7 +194,7 @@ export const SettingsStep = memo(() => {
     dispatch(LLMAssistantActions.previousLLMDialogStep());
   }, [dispatch]);
 
-  const createPromptTemplates = LLMHooks.useCreatePromptTemplates();
+  const createPromptTemplates = LlmAssistantHooks.useCreatePromptTemplates();
   const handleSubmit = useCallback(() => {
     if (!llmMethod || !modelId || !strategyType || !selectedStrategy) return;
 

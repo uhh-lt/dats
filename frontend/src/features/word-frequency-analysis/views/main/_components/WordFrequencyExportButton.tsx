@@ -1,13 +1,11 @@
-import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { getIconComponent, Icon } from "@components/icons";
 import { MyFilter } from "@core/filter";
 import { useOpenSnackbar } from "@core/notification";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation } from "@tanstack/react-query";
 import { downloadFile } from "@utils/downloadUtils";
-import { wordFrequencyQueries } from "../../../api/wordFrequencyQueries";
+import { WordFrequencyHooks } from "../../../api/wordFrequencyHooks";
 
 interface WordFrequencyExportButtonProps {
   filter: MyFilter<WordFrequencyColumns>;
@@ -16,10 +14,7 @@ interface WordFrequencyExportButtonProps {
 export function WordFrequencyExportButton({ filter }: WordFrequencyExportButtonProps) {
   const projectId = useAppSelector((state) => state.project.projectId);
 
-  const exportWordFrequencies = useMutation({
-    mutationKey: [...wordFrequencyQueries.all(), "export"],
-    mutationFn: WordFrequencyService.wordFrequencyAnalysisExport,
-  });
+  const exportWordFrequencies = WordFrequencyHooks.useExportWordFrequencies();
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

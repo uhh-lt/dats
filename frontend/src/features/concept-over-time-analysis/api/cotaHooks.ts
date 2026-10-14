@@ -1,6 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
-import { JobHooks, jobQueries } from "@core/job";
+import { useJobRefetchInterval } from "@core/job";
 import { COTARead } from "@models/COTARead";
 import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
 import { useAppSelector } from "@store/storeHooks";
@@ -8,9 +8,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { cotaQueries } from "./cotaQueries";
 
 const useLiveCOTARefinementJob = (cotaRefinementJobId: string | null) => {
-  const jobRefetchInterval = JobHooks.useJobRefetchInterval<COTARefinementJobRead>();
+  const jobRefetchInterval = useJobRefetchInterval<COTARefinementJobRead>();
   return useQuery({
-    ...jobQueries.cotaRefinement.byId(cotaRefinementJobId),
+    ...cotaQueries.job.byId(cotaRefinementJobId),
     refetchInterval: jobRefetchInterval,
   });
 };

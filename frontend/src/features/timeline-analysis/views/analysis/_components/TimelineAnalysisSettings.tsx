@@ -1,5 +1,5 @@
 import { CardContainer } from "@components/CardContainer";
-import { MetadataHooks } from "@core/project-metadata";
+import { ProjectMetadataHooks } from "@core/project-metadata";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import { DateGroupBy } from "@models/DateGroupBy";
 import { DocType } from "@models/DocType";
@@ -45,7 +45,7 @@ interface TimelineAnalysisSettingsProps {
 
 export function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettingsProps) {
   // global server state (react-query)
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );

@@ -1,12 +1,12 @@
+import { GeneralHooks } from "@api/general/generalHooks";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { JobHooks } from "@core/job";
-import { LLMHooks } from "@core/llm";
 import { Language } from "@models/Language";
 import { ProcessingSettings } from "@models/ProcessingSettings";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { Button } from "@mui/material";
 import { useCallback, useState } from "react";
+import { DocumentUploadHooks } from "../../../api/documentUploadHooks";
 import { UploadDropzone } from "./UploadDropzone";
 
 interface FileUploadSectionProps {
@@ -14,7 +14,7 @@ interface FileUploadSectionProps {
 }
 
 export function FileUploadSection({ projectId }: FileUploadSectionProps) {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
 
   // Local state
   const [files, setFiles] = useState<File[]>([]);
@@ -32,7 +32,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
     setFiles(files);
   }, []);
 
-  const uploadDocumentMutation = JobHooks.useUploadDocument();
+  const uploadDocumentMutation = DocumentUploadHooks.useUploadDocument();
   const handleUpload = useCallback(async () => {
     if (files.length > 0) {
       await uploadDocumentMutation.mutateAsync({

@@ -1,6 +1,6 @@
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { SearchService } from "@api/services/SearchService";
-import { tableInfoQueries, toColumnInfos } from "@core/filter";
+import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { AspectRead } from "@models/AspectRead";
 import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { queryOptions, skipToken } from "@tanstack/react-query";
@@ -15,9 +15,18 @@ const fetchAspects = async (projectId: number) => {
   }, {});
 };
 
+const perspectivesJobQueries = {
+  all: () => [...perspectiveQueries.all(), "job"] as const,
+  byId: (jobId: string | null | undefined) =>
+    queryOptions({
+      queryKey: [...perspectivesJobQueries.all(), "detail", jobId] as const,
+      queryFn: !jobId ? skipToken : () => PerspectivesService.getPerspectivesJob({ perspectivesJobId: jobId }),
+    }),
+};
+
 /**
  * Query factory for perspectives (aspects, their clusters and visualizations).
- * The perspectives background job is in jobQueries.perspectives.
+ * The perspectives background job is `perspectiveQueries.job`.
  *
  *   perspectiveQueries.all()                                       ["perspectives"]
  *   perspectiveQueries.aspectsByProject(projectId)                 ["perspectives", "aspects", projectId]
@@ -64,10 +73,14 @@ export const perspectiveQueries = {
     }),
 
   // the column infos of the perspectives filter
-  tableInfo: (projectId: number) =>
+  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
       queryKey: tableInfoQueries.bySlice("perspectives", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      queryFn: async () => {
+        const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
+        onLoaded?.(columnInfos);
+        return columnInfos;
+      },
       staleTime: Infinity,
     }),
 
@@ -86,4 +99,7 @@ export const perspectiveQueries = {
       queryFn: !aspectId || !sdocId ? skipToken : () => PerspectivesService.getClustersForSdoc({ aspectId, sdocId }),
       staleTime: 1000 * 60 * 5,
     }),
+
+  // the refinement / background job of this domain
+  job: perspectivesJobQueries,
 };

@@ -2,7 +2,7 @@ import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
-import { JobHooks, jobQueries } from "@core/job";
+import { useJobRefetchInterval } from "@core/job";
 import { AspectRead } from "@models/AspectRead";
 import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@models/ClusterRead";
@@ -43,9 +43,9 @@ const useLivePerspectivesJob = (
   perspectivesJobId: string | null | undefined,
   initialData: PerspectivesJobRead | undefined,
 ) => {
-  const jobRefetchInterval = JobHooks.useJobRefetchInterval<PerspectivesJobRead>();
+  const jobRefetchInterval = useJobRefetchInterval<PerspectivesJobRead>();
   return useQuery({
-    ...jobQueries.perspectives.byId(perspectivesJobId),
+    ...perspectiveQueries.job.byId(perspectivesJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
@@ -87,7 +87,7 @@ const useStartPerspectivesJob = () =>
     mutationFn: PerspectivesService.startPerspectivesJob,
     onSuccess: (job) => {
       queryClient.invalidateQueries({ queryKey: perspectiveQueries.aspectsByProject(job.project_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: jobQueries.perspectives.byId(job.job_id).queryKey });
+      queryClient.invalidateQueries({ queryKey: perspectiveQueries.job.byId(job.job_id).queryKey });
     },
     meta: {
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,

@@ -1,5 +1,5 @@
-import { MetadataHooks, ProjectMetadataCreateButton } from "@core/project-metadata";
-import { SdocMetadataRow } from "@core/sdoc-metadata";
+import { ProjectMetadataCreateButton } from "@core/project-metadata";
+import { SdocMetadataHooks, SdocMetadataRow } from "@core/sdoc-metadata";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { TabPanel } from "@mui/lab";
@@ -21,10 +21,10 @@ export const MetadataPanel = memo((props: MetadataPanelProps) => {
 });
 
 function MetadataPanelContent({ sdocId, onAddFilterClick }: MetadataPanelProps) {
-  const metadata = MetadataHooks.useGetSdocMetadata(sdocId);
+  const metadata = SdocMetadataHooks.useGetSdocMetadata(sdocId);
 
   // mutation
-  const { mutate: updateMetadataMutation } = MetadataHooks.useUpdateBulkSdocMetadata();
+  const { mutate: updateMetadataMutation } = SdocMetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataId: number) => (data: SourceDocumentMetadataUpdate) => {
       updateMetadataMutation({

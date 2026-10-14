@@ -1,5 +1,5 @@
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
-import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type ColumnInfo, type MyFilter } from "@core/filter";
 import { SortDirection } from "@models/SortDirection";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
@@ -21,10 +21,14 @@ export const wordFrequencyQueries = {
   all: () => ["wordFrequency"] as const,
 
   // the column infos of the word frequency filter
-  tableInfo: (projectId: number) =>
+  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
       queryKey: tableInfoQueries.bySlice("wordFrequency", projectId),
-      queryFn: async () => toColumnInfos(await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId })),
+      queryFn: async () => {
+        const columnInfos = toColumnInfos(await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId }));
+        onLoaded?.(columnInfos);
+        return columnInfos;
+      },
       staleTime: Infinity,
     }),
 

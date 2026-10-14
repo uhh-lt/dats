@@ -1,5 +1,4 @@
-import { LLMHooks } from "@core/llm";
-import { MetadataHooks, ProjectMetadataTable } from "@core/project-metadata";
+import { ProjectMetadataHooks, ProjectMetadataTable } from "@core/project-metadata";
 import { DocType } from "@models/DocType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { TaskType } from "@models/TaskType";
@@ -8,6 +7,7 @@ import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
+import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -24,14 +24,14 @@ export const ProjectMetadataSelectionStep = memo(() => {
   );
 
   // global server state
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = useMemo(() => {
     if (!projectMetadata.data) return [];
     return projectMetadata.data.filter((metadata) => metadata.doctype === DocType.TEXT && metadata.read_only === false);
   }, [projectMetadata.data]);
 
   // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
+  const { mutate: determineApproachMutation, isPending } = LlmAssistantHooks.useDetermineApproach();
 
   const handleNext = useCallback(
     (projectMetadata: ProjectMetadataRead[]) => {

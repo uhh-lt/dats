@@ -1,4 +1,4 @@
-import { MetadataHooks } from "@core/project-metadata";
+import { ProjectMetadataHooks } from "@core/project-metadata";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import { COTARead } from "@models/COTARead";
 import { DateGroupBy } from "@models/DateGroupBy";
@@ -19,7 +19,7 @@ interface CotaSettingsProps {
 
 export function CotaTimelineSettings({ cota }: CotaSettingsProps) {
   // global server state (react-query)
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );

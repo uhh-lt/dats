@@ -4,7 +4,7 @@ import { MlJobRead } from "@models/MlJobRead";
 import { Typography } from "@mui/material";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { MlJobHooks } from "../../../api/mlJobHooks";
+import { MlAutomationHooks } from "../../../api/mlAutomationHooks";
 
 interface MLJobListItemProps {
   initialMLJob: MlJobRead;
@@ -12,7 +12,7 @@ interface MLJobListItemProps {
 
 export const MLJobListItem = memo(({ initialMLJob }: MLJobListItemProps) => {
   // global server state (react-query)
-  const mlJob = MlJobHooks.useLiveMLJob(initialMLJob.job_id, initialMLJob);
+  const mlJob = MlAutomationHooks.useLiveMLJob(initialMLJob.job_id, initialMLJob);
 
   // compute subtitle
   const subTitle = useMemo(() => {

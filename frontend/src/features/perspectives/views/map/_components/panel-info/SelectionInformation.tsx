@@ -1,7 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { LinkButton } from "@core/navigation";
-import { MetadataHooks } from "@core/project-metadata";
-import { SdocMetadataRow } from "@core/sdoc-metadata";
+import { SdocMetadataHooks, SdocMetadataRow } from "@core/sdoc-metadata";
 import { SdocHooks } from "@core/source-document";
 import { TagHooks, TagMenuButton, TagRow } from "@core/tag";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -44,7 +43,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   };
 
   // global server state
-  const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
+  const metadata = SdocMetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
   const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
   const docClusters = PerspectivesHooks.useGetClustersBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
@@ -56,7 +55,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   };
 
   // mutation
-  const { mutate: updateMetadataMutation } = MetadataHooks.useUpdateBulkSdocMetadata();
+  const { mutate: updateMetadataMutation } = SdocMetadataHooks.useUpdateBulkSdocMetadata();
   const handleMetadataUpdate = useCallback(
     (metadataId: number) => (data: SourceDocumentMetadataUpdate) => {
       updateMetadataMutation({

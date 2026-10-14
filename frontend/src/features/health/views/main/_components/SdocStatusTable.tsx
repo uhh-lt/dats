@@ -1,5 +1,4 @@
 import { FilterTable } from "@core/filter";
-import { JobHooks } from "@core/job";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
 import { SdocHealthResult } from "@models/SdocHealthResult";
@@ -13,6 +12,7 @@ import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { ReactElement, useCallback, useMemo } from "react";
+import { HealthHooks } from "../../../api/healthHooks";
 import { flatMapSdocHealthRows } from "../../../api/healthQueries";
 import { HealthActions } from "../../../store/healthSlice";
 import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
@@ -82,7 +82,7 @@ export function SdocStatusTable({
   }, [rowSelectionModel]);
 
   // actions
-  const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = JobHooks.useRetryDocProcessingJobs();
+  const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = HealthHooks.useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
     retryDocProcessingJobs({
       projId: projectId,
@@ -92,7 +92,7 @@ export function SdocStatusTable({
   }, [doctype, projectId, retryDocProcessingJobs, selectedRows]);
 
   const { mutate: recomputeDocProcessingJobs, isPending: isRecomputePending } =
-    JobHooks.useRecomputeDocProcessingJobs();
+    HealthHooks.useRecomputeDocProcessingJobs();
   const handleRecompute = useCallback(
     (step: string) => {
       recomputeDocProcessingJobs({

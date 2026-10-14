@@ -100,7 +100,7 @@ interface UseProjectTagsQueryParams<T> {
   enabled?: boolean;
 }
 
-const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
+const useGetAllTags = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T> = {}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
     ...tagQueries.byProject(projectId),
@@ -108,8 +108,6 @@ const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQ
     enabled: !!projectId && (enabled ?? true),
   });
 };
-
-const useGetAllTags = () => useProjectTagsQuery({});
 
 const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) => useQuery(tagQueries.idsBySdoc(sdocId));
 
@@ -126,7 +124,6 @@ export const TagHooks = {
   useBulkUnlinkTags,
   useBulkUpdateTags,
   useCountBySdocsAndUser,
-  useProjectTagsQuery,
   useGetAllTags,
   useGetAllTagIdsBySdocId,
   useGetTagDocumentCounts,

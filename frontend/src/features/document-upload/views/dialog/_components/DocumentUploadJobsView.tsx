@@ -1,8 +1,8 @@
 import { DialogSection } from "@components/DialogSection";
-import { JobHooks } from "@core/job";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
+import { DocumentUploadHooks } from "../../../api/documentUploadHooks";
 import { CrawlerJobListItem } from "./CrawlerJobListItem";
 import { SdocStatusSimpleListItem } from "./SdocStatusListItem";
 
@@ -16,12 +16,12 @@ export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsVie
     data: crawlerJobs,
     refetch: refetchCrawlerJobs,
     isFetching: isCrawlerFetching,
-  } = JobHooks.useGetAllCrawlerJobs(projectId);
+  } = DocumentUploadHooks.useGetAllCrawlerJobs(projectId);
   const {
     data: sdocStatus,
     refetch: refetchSdocStatus,
     isFetching: isSdocStatusFetching,
-  } = JobHooks.usePollProcessingSimpleSdocStatus(projectId);
+  } = DocumentUploadHooks.usePollProcessingSimpleSdocStatus(projectId);
 
   // Memoize all jobs
   const allCrawlerJobs = useMemo(() => crawlerJobs || [], [crawlerJobs]);

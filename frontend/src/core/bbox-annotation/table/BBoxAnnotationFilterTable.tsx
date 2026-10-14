@@ -1,5 +1,4 @@
 import { ImageCropper } from "@components/ImageCropper";
-import { annotationQueries } from "@core/annotation";
 import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,
@@ -32,6 +31,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
+import { bboxAnnotationQueries } from "../api/bboxAnnotationQueries";
 import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions, defaultBBoxFilterExpression } from "./bboxFilterSlice";
 
@@ -152,7 +152,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...annotationQueries.bbox.table({ projectId, filter, sortingModel, fetchSize }),
+    ...bboxAnnotationQueries.table({ projectId, filter, sortingModel, fetchSize }),
   });
 
   // resetting search-parameter-dependant state

@@ -1,13 +1,13 @@
 import { queryClient } from "@api/queryClient";
-import { annotationQueries } from "@core/annotation";
-import { LLMHooks } from "@core/llm";
 import { useTabNavigate } from "@core/navigation";
+import { spanAnnotationQueries } from "@core/span-annotation";
 import { AnnotationLLMJobResult } from "@models/AnnotationLLMJobResult";
 import { ApproachType } from "@models/ApproachType";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
 import { memo, useCallback, useMemo } from "react";
+import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { AnnotationResultSummary } from "./AnnotationResultSummary";
 import { LLMUtterance } from "./LLMUtterance";
@@ -20,7 +20,7 @@ const approach2AssistantID: Record<ApproachType, number> = {
 export const AnnotationResultStep = memo(() => {
   // get the job
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
+  const llmJob = LlmAssistantHooks.useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output) {
     return (
@@ -79,7 +79,7 @@ const AnnotationResultStepContent = memo(({ jobResult, approachType }: Annotatio
 
     // reload annotations
     queryClient.invalidateQueries({
-      queryKey: annotationQueries.span.bySdoc(firstAnnotatedSdocId, approach2AssistantID[approachType]).queryKey,
+      queryKey: spanAnnotationQueries.bySdoc(firstAnnotatedSdocId, approach2AssistantID[approachType]).queryKey,
     });
   };
 
