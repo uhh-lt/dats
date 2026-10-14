@@ -1,11 +1,10 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { useAuth } from "@core/auth";
-import { MemoCard, MemoEditorPane, MemoHooks, memoQueries } from "@core/memo";
+import { MemoCard, MemoEditorPane, MemoHooks } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Box, Button, CircularProgress, Stack } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useState } from "react";
 
 interface DocumentMemosProps {
@@ -47,7 +46,7 @@ interface DocumentMemoListProps {
 
 function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
   const { user } = useAuth();
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SOURCE_DOCUMENT, sdocId));
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SOURCE_DOCUMENT, sdocId);
 
   const handleSelectMemo = useCallback(
     (memoId: number) => {

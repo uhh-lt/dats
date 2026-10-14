@@ -1,7 +1,6 @@
-import { annotationQueries } from "@core/annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 export interface UseGetSentenceAnnotator {
@@ -49,7 +48,7 @@ export function useGetSentenceAnnotator({
   annotationOverride?: SentenceAnnotationRead;
   pendingAnnotations?: SentenceAnnotationRead[];
 }): UseGetSentenceAnnotator {
-  const annotatorResult = useQuery(annotationQueries.sentence.bySdoc(sdocId, userId));
+  const annotatorResult = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, userId);
 
   // Three-layer memoization to avoid recomputing lane assignments on every change:
   // 1. Base sentence annotations from server data (rare changes)

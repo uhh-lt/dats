@@ -1,15 +1,14 @@
 /* eslint-disable boundaries/element-types */
+import { AuthHooks } from "@core/auth";
 // This needs access to the "@api" layer because it needs to fetch configuration from the backend
 import { OpenAPI } from "@api/core/OpenAPI";
-import { authQueries } from "@core/auth";
 import * as Sentry from "@sentry/react";
-import { useQuery } from "@tanstack/react-query";
 
 /**
  * This component is responsible for initializing Sentry with the Glitchtip configuration fetched from the backend.
  */
 export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data: instanceInfo, isError, error } = useQuery(authQueries.instanceInfo());
+  const { data: instanceInfo, isError, error } = AuthHooks.useGetInstanceInfo();
 
   if (isError) {
     console.error("Failed to fetch instance info for Sentry initialization:", error);

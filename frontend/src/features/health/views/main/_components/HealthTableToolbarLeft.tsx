@@ -1,7 +1,6 @@
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { llmQueries } from "@core/llm";
+import { LLMHooks } from "@core/llm";
 import { Button, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
 
@@ -15,7 +14,7 @@ export function HealthTableToolbarLeft({
   onRetry,
   onRecompute,
 }: HealthTableToolbarProps) {
-  const availableLLMs = useQuery(llmQueries.availableModels());
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   if (selectedRows.length === 0) {

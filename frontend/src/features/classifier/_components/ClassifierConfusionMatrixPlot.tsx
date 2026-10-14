@@ -1,6 +1,6 @@
+import { CodeHooks } from "@core/code";
+import { TagHooks } from "@core/tag";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { codeQueries } from "@core/code";
-import { tagQueries } from "@core/tag";
 import { ClassifierEvaluationRead } from "@models/ClassifierEvaluationRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {
@@ -14,8 +14,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { Data, Layout } from "plotly.js";
 import { useMemo, useState } from "react";
 import Plot from "react-plotly.js";
@@ -52,9 +50,8 @@ export function ClassifierConfusionMatrixPlot({ evaluation, classifierModel }: C
   const classIds = evaluation.confusion_matrix_class_ids;
 
   // resolve class names (tags for document classifiers, codes otherwise)
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const projectTags = useQuery(tagQueries.byProject(projectId));
-  const projectCodes = useQuery(codeQueries.byProject(projectId));
+  const projectTags = TagHooks.useGetAllTags();
+  const projectCodes = CodeHooks.useGetAllCodesMap();
   const classNames = useMemo(() => {
     if (!classIds) return [];
     if (classifierModel === ClassifierModel.DOCUMENT) {

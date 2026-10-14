@@ -253,7 +253,11 @@ const useCountBySdocsAndUser = () =>
 const useGetAnnotation = (sentenceAnnoId: number | null | undefined) =>
   useQuery(annotationQueries.sentence.byId(sentenceAnnoId));
 
+const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  useQuery(annotationQueries.sentence.bySdoc(sdocId, userId));
+
 export const SentenceAnnotationHooks = {
+  useGetSentenceAnnotator,
   useCreateSentenceAnnotation,
   useCreateBulkSentenceAnnotation,
   useUpdateSentenceAnnotation,

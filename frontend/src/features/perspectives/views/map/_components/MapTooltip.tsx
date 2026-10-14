@@ -1,7 +1,6 @@
-import { sdocQueries } from "@core/source-document";
+import { SdocHooks } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { Box, Card, CardContent, PopoverPosition, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 
 export interface MapTooltipData {
   id?: string;
@@ -14,9 +13,9 @@ interface MapTooltipProps {
 
 export function MapTooltip({ data }: MapTooltipProps) {
   const sdocId = parseInt(data.id || "0", 10);
-  const sdoc = useQuery(sdocQueries.detail(sdocId));
+  const sdoc = SdocHooks.useGetDocument(sdocId);
 
-  const sdocData = useQuery(sdocQueries.data(sdocId));
+  const sdocData = SdocHooks.useGetDocumentData(sdocId);
   if (data.id && data.position) {
     return (
       <Box

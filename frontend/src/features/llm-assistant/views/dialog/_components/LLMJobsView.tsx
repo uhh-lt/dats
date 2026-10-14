@@ -1,20 +1,15 @@
 import { DialogSection } from "@components/DialogSection";
-import { jobQueries } from "@core/job";
+import { LLMHooks } from "@core/llm";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { LLMJobListItem } from "./LLMJobListItem";
 
 export function LLMJobsView() {
   const projectId = useAppSelector((state) => state.project.projectId);
 
-  const {
-    data: llmJobs,
-    refetch: refetchLLMJobs,
-    isFetching: isLLMFetching,
-  } = useQuery(jobQueries.llm.byProject(projectId));
+  const { data: llmJobs, refetch: refetchLLMJobs, isFetching: isLLMFetching } = LLMHooks.useGetAllLLMJobs(projectId);
   const allLLMJobs = useMemo(() => llmJobs || [], [llmJobs]);
 
   const handleRefresh = () => {

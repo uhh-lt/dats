@@ -4,11 +4,9 @@ import { ClusterRead } from "@models/ClusterRead";
 import { PerspectivesDoc } from "@models/PerspectivesDoc";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
 import { PerspectivesHooks } from "../api/perspectiveHooks";
-import { perspectiveQueries } from "../api/perspectiveQueries";
 
 interface DocAspectTableProps {
   aspectId: number;
@@ -129,7 +127,7 @@ export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTabl
 });
 
 function ContentRenderer({ aspectId, sdocId }: { aspectId: number; sdocId: number }) {
-  const content = useQuery(perspectiveQueries.docAspect(aspectId, sdocId));
+  const content = PerspectivesHooks.useGetDocumentAspect(aspectId, sdocId);
   if (!content.data) return null;
   return content.data;
 }

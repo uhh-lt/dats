@@ -1,13 +1,12 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { memoQueries, useOpenMemoDialog } from "@core/memo";
-import { sdocQueries } from "@core/source-document";
+import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { SdocHooks } from "@core/source-document";
 import { TagHooks, TagRenderer } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { TagNodeData } from "@models/TagNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
@@ -40,8 +39,8 @@ export function TagNode(props: NodeProps<TagNode>) {
 
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
-  const sdocIds = useQuery(sdocQueries.idsByTag(props.data.tagId));
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.TAG, props.data.tagId));
+  const sdocIds = SdocHooks.useGetSdocIdsByTagId(props.data.tagId);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.TAG, props.data.tagId);
 
   // effects
   useEffect(() => {

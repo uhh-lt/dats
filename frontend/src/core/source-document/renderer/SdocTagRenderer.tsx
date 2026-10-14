@@ -1,6 +1,5 @@
-import { tagQueries, TagRenderer } from "@core/tag";
+import { TagHooks, TagRenderer } from "@core/tag";
 import { Stack } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 
 interface SdocTagsRendererProps {
   sdocId?: number;
@@ -23,7 +22,7 @@ export function SdocTagsRenderer({ sdocId, tagIds }: SdocTagsRendererProps) {
 }
 
 function SdocTagsRendererWithoutData({ sdocId }: { sdocId: number }) {
-  const tags = useQuery(tagQueries.idsBySdoc(sdocId));
+  const tags = TagHooks.useGetAllTagIdsBySdocId(sdocId);
 
   if (tags.isSuccess) {
     return <SdocTagsRendererWithData tagIds={tags.data} />;

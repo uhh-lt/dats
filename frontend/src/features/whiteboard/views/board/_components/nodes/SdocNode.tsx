@@ -1,14 +1,13 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { memoQueries, useOpenMemoDialog } from "@core/memo";
-import { sdocQueries, SdocRenderer } from "@core/source-document";
-import { tagQueries } from "@core/tag";
+import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { SdocHooks, SdocRenderer } from "@core/source-document";
+import { TagHooks } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { DocType } from "@models/DocType";
 import { SdocNodeData } from "@models/SdocNodeData";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
@@ -37,9 +36,9 @@ export function SdocNode(props: NodeProps<SdocNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const sdoc = useQuery(sdocQueries.detail(props.data.sdocId));
-  const tagIds = useQuery(tagQueries.idsBySdoc(props.data.sdocId));
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId));
+  const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
+  const tagIds = TagHooks.useGetAllTagIdsBySdocId(props.data.sdocId);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId);
 
   const docType = sdoc.data?.doctype;
 
@@ -193,7 +192,7 @@ export function SdocNode(props: NodeProps<SdocNode>) {
 }
 
 function SdocNodeImageContent({ sdoc }: { sdoc: SourceDocumentRead }) {
-  const sdocData = useQuery(sdocQueries.data(sdoc.id));
+  const sdocData = SdocHooks.useGetDocumentData(sdoc.id);
 
   if (!sdocData.isSuccess) {
     return <CircularProgress />;

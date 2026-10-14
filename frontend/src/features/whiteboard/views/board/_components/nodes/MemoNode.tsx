@@ -2,7 +2,7 @@ import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/Gene
 import {
   attachedObjectTypeToText,
   MemoCard,
-  memoQueries,
+  MemoHooks,
   useGetMemosAttachedObject,
   useOpenMemoDialog,
 } from "@core/memo";
@@ -17,7 +17,6 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { MenuItem, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -215,7 +214,7 @@ export function MemoNode(props: NodeProps<MemoNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const memo = useQuery(memoQueries.byId(props.data.memoId));
+  const memo = MemoHooks.useGetMemo(props.data.memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type, memo.data?.attached_object_id);
 
   useEffect(() => {

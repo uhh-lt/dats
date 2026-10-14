@@ -1,8 +1,7 @@
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
-import { statisticsQueries } from "@core/statistics";
+import { StatisticsHooks } from "@core/statistics";
 import { TagHooks } from "@core/tag";
 import { TagStat } from "@models/TagStat";
-import { useQuery } from "@tanstack/react-query";
 
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -17,14 +16,14 @@ interface MapTagStatsProps {
 
 export function MapTagStats(props: MapTagStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
-  const tagStatsQuery = useQuery(statisticsQueries.tagStats(props.sdocIds, sortStatsByGlobal));
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds, sortStatsByGlobal);
   return (
     <>
-      {tagStatsQuery.isSuccess ? (
-        <MapTagStatsWithData tagStats={tagStatsQuery.data} {...props} />
-      ) : tagStatsQuery.isError ? (
-        <Box>Error: {tagStatsQuery.error.message}</Box>
-      ) : tagStatsQuery.isLoading && tagStatsQuery.isFetching ? (
+      {tagStats.isSuccess ? (
+        <MapTagStatsWithData tagStats={tagStats.data} {...props} />
+      ) : tagStats.isError ? (
+        <Box>Error: {tagStats.error.message}</Box>
+      ) : tagStats.isLoading && tagStats.isFetching ? (
         <Box>Loading...</Box>
       ) : (
         <Box>Something went wrong!</Box>

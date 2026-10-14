@@ -1,10 +1,9 @@
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
-import { statisticsQueries } from "@core/statistics";
+import { StatisticsHooks } from "@core/statistics";
 import { TagHooks } from "@core/tag";
 import { TagStat } from "@models/TagStat";
 import { TabPanel } from "@mui/lab";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
@@ -28,7 +27,7 @@ export function DocumentTagStats(props: DocumentTagStatsProps) {
 
 function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-  const tagStats = useQuery(statisticsQueries.tagStats(props.sdocIds, sortStatsByGlobal));
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds, sortStatsByGlobal);
   return (
     <>
       {tagStats.isSuccess ? (

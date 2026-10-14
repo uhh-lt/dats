@@ -5,9 +5,8 @@ import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack, Tab, Tabs } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useState } from "react";
-import { folderQueries } from "../../api/folderQueries";
+import { FolderHooks } from "../../api/folderHooks";
 
 interface FolderMetadataPanelProps {
   sdocFolderId: number;
@@ -15,7 +14,7 @@ interface FolderMetadataPanelProps {
 }
 
 export const FolderMetadataPanel = memo(({ sdocFolderId, onAddMetadataFilter }: FolderMetadataPanelProps) => {
-  const sdocIdsPerDoctype = useQuery(folderQueries.sdocIdsPerDoctype(sdocFolderId));
+  const sdocIdsPerDoctype = FolderHooks.useGetSdocIdsPerDoctypeInSdocFolder(sdocFolderId);
 
   // tabs
   const [tab, setTab] = useState(DocType.TEXT);

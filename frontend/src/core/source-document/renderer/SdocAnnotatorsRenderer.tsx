@@ -1,9 +1,8 @@
 import { UserRenderer } from "@core/user";
 import { UserRead } from "@models/UserRead";
 import { Stack } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { Fragment } from "react";
-import { sdocQueries } from "../api/sdocQueries";
+import { SdocHooks } from "../api/sdocHooks";
 
 interface SdocAnnotatorsRendererProps {
   sdocId?: number;
@@ -26,7 +25,7 @@ export function SdocAnnotatorsRenderer({ sdocId, annotators, ...props }: SdocAnn
 }
 
 function SdocAnnotatorsRendererWithoutData({ sdocId, ...props }: { sdocId: number }) {
-  const annotators = useQuery(sdocQueries.annotators(sdocId));
+  const annotators = SdocHooks.useGetAnnotators(sdocId);
 
   if (annotators.isSuccess) {
     return <SdocAnnotatorsRendererWithData annotators={annotators.data} {...props} />;

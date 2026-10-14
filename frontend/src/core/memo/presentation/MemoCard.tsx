@@ -2,12 +2,11 @@ import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { Box, Card, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatRelativeTime } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { memoQueries } from "../api/memoQueries";
+import { MemoHooks } from "../api/memoHooks";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
@@ -35,7 +34,7 @@ export const MemoCard = memo(({ memo, ...props }: MemoPresentationProps) => {
 });
 
 const MemoCardWithoutData = memo(({ memoId, ...props }: Omit<MemoPresentationProps, "memo"> & { memoId: number }) => {
-  const memo = useQuery(memoQueries.byId(memoId));
+  const memo = MemoHooks.useGetMemo(memoId);
 
   if (memo.isSuccess) return <MemoCardWithData memo={memo.data} {...props} />;
   if (memo.isError) return <Typography color="error">{memo.error.message}</Typography>;

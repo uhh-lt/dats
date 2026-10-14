@@ -1,7 +1,6 @@
-import { annotationQueries } from "@core/annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
-import { useQuery } from "@tanstack/react-query";
 import { range } from "lodash";
 import { useMemo } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
@@ -16,8 +15,8 @@ const filterByText = (text: string) => (annotation: SentenceAnnotationRead) =>
 export function SentenceAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
   const { visibleUserId, compareWithUserId } = AnnotationRouteAPI.useSearch();
-  const annotatorLeft = useQuery(annotationQueries.sentence.bySdoc(sdocId, visibleUserId));
-  const annotatorRight = useQuery(annotationQueries.sentence.bySdoc(sdocId, compareWithUserId));
+  const annotatorLeft = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, visibleUserId);
+  const annotatorRight = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, compareWithUserId);
 
   const annotations = useMemo(() => {
     const result: SentenceAnnotationRead[] = [];

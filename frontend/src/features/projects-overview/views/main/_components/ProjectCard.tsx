@@ -1,5 +1,5 @@
 import { useTabNavigate } from "@core/navigation";
-import { projectQueries } from "@core/project";
+import { ProjectHooks } from "@core/project";
 import { ProjectRead } from "@models/ProjectRead";
 import { SDocStatus } from "@models/SDocStatus";
 import {
@@ -12,14 +12,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 
 interface ProjectCardProps {
   project: ProjectRead;
 }
 export function ProjectCard({ project }: ProjectCardProps) {
-  const numFinishedSdocs = useQuery(projectQueries.sdocStatusCount(project.id, SDocStatus._1));
-  const numProcessingSdocs = useQuery(projectQueries.sdocStatusCount(project.id, SDocStatus._0));
+  const numFinishedSdocs = ProjectHooks.useCountSdocsWithStatus(project.id, SDocStatus._1);
+  const numProcessingSdocs = ProjectHooks.useCountSdocsWithStatus(project.id, SDocStatus._0);
 
   // open project
   const tabNavigate = useTabNavigate();

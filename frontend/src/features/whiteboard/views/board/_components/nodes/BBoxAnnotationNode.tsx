@@ -1,15 +1,14 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { ImageCropper } from "@components/ImageCropper";
-import { annotationQueries } from "@core/annotation";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { CodeHooks, CodeRenderer } from "@core/code";
-import { memoQueries, useOpenMemoDialog } from "@core/memo";
-import { sdocQueries } from "@core/source-document";
+import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { SdocHooks } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationNodeData } from "@models/BBoxAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -43,14 +42,10 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = useQuery(annotationQueries.bbox.byId(props.data.bboxAnnotationId));
+  const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const annotationSdocId = annotation.data?.sdoc_id;
-  const sdocData = useQuery({
-    ...sdocQueries.data(annotationSdocId!),
-    enabled: annotationSdocId !== undefined,
-  });
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
+  const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
 
   // effects
   useEffect(() => {

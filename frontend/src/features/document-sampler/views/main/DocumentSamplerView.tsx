@@ -1,11 +1,11 @@
 import { AnalysisService } from "@api/services/AnalysisService";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { tagQueries } from "@core/tag";
+import { TagHooks } from "@core/tag";
 import { SampledSdocsResults } from "@models/SampledSdocsResults";
 import { TagRead } from "@models/TagRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { documentSamplerQueries } from "../../api/documentSamplerQueries";
@@ -28,7 +28,7 @@ export function DocumentSamplerView() {
   const dispatch = useAppDispatch();
 
   // global server state
-  const tags = useQuery(tagQueries.byProject(projectId));
+  const tags = TagHooks.useGetAllTags();
   const tagsMap = useMemo(() => {
     if (!tags.data) {
       return {};

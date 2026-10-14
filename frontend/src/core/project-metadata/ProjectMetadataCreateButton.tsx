@@ -1,10 +1,9 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { sdocQueries } from "@core/source-document";
+import { SdocHooks } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { MetaType } from "@models/MetaType";
 import { Button, PopoverPosition } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { MouseEvent, memo, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
 import { MetadataHooks } from "./api/metadataHooks";
@@ -15,7 +14,7 @@ interface ProjectMetadataCreateButtonProps {
 }
 
 export const ProjectMetadataCreateButton = memo(({ sdocId, docType }: ProjectMetadataCreateButtonProps) => {
-  const sdoc = useQuery({ ...sdocQueries.detail(sdocId!), enabled: sdocId !== undefined });
+  const sdoc = SdocHooks.useGetDocument(sdocId);
 
   if (docType !== undefined) {
     return <MetadataCreateButtonContent docType={docType} />;
