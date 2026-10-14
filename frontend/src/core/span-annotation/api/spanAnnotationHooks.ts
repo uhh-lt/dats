@@ -1,19 +1,19 @@
-import { rollbackOptimisticUpdate } from "@api/cache-sync/_utils/optimisticUtils";
 import { queryClient } from "@api/queryClient";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
-import { annotationQueries } from "@core/annotation";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { rollbackOptimisticUpdate } from "@utils/optimisticUtils";
+import { spanAnnotationQueries } from "./spanAnnotationQueries";
 
-// SPAN QUERIES live in annotationQueries.span (used with `useQuery` directly).
+// SPAN QUERIES live in spanAnnotationQueries (used with `useQuery` directly).
 
 // SPAN MUTATIONS
 const useCreateBulkAnnotations = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "createBulk"],
+    mutationKey: [...spanAnnotationQueries.all(), "createBulk"],
     mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED_BATCH",
@@ -23,7 +23,7 @@ const useCreateBulkAnnotations = () =>
 
 const useCreateSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "create"],
+    mutationKey: [...spanAnnotationQueries.all(), "create"],
     mutationFn: (variables: SpanAnnotationCreate) =>
       SpanAnnotationService.createSpanAnnotation({ requestBody: variables }),
     meta: {
@@ -34,7 +34,7 @@ const useCreateSpanAnnotation = () =>
 
 const useUpdateSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "update"],
+    mutationKey: [...spanAnnotationQueries.all(), "update"],
     mutationFn: (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | number;
       requestBody: SpanAnnotationUpdate;
@@ -50,7 +50,7 @@ const useUpdateSpanAnnotation = () =>
     // todo: rework to only update the span annotation detail query (we need to change the rendering for this...)
     onMutate: async ({ spanAnnotationToUpdate, requestBody }) => {
       if (typeof spanAnnotationToUpdate === "number") return;
-      const affectedQueryKey = annotationQueries.span.bySdoc(
+      const affectedQueryKey = spanAnnotationQueries.bySdoc(
         spanAnnotationToUpdate.sdoc_id,
         spanAnnotationToUpdate.user_id,
       ).queryKey;
@@ -77,7 +77,12 @@ const useUpdateSpanAnnotation = () =>
     },
     onError: (_error: Error, _updatedSpanAnnotation, context) => {
       if (!context) return;
-      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousAnnos, annotationQueries.span.all());
+      rollbackOptimisticUpdate(
+        queryClient,
+        context.affectedQueryKey,
+        context.previousAnnos,
+        spanAnnotationQueries.all(),
+      );
     },
     meta: {
       datsEvent: "SPAN_ANNOTATION_UPDATED",
@@ -87,7 +92,7 @@ const useUpdateSpanAnnotation = () =>
 
 const useUpdateBulkSpan = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "updateBulk"],
+    mutationKey: [...spanAnnotationQueries.all(), "updateBulk"],
     mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
@@ -97,7 +102,7 @@ const useUpdateBulkSpan = () =>
 
 const useDeleteSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "delete"],
+    mutationKey: [...spanAnnotationQueries.all(), "delete"],
     mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | number }) =>
       SpanAnnotationService.deleteById({
         spanId:
@@ -108,7 +113,7 @@ const useDeleteSpanAnnotation = () =>
     // optimistic updates if spanAnnotationToDelete is a proper SpanAnnotationRead
     onMutate: async ({ spanAnnotationToDelete }) => {
       if (typeof spanAnnotationToDelete === "number") return;
-      const affectedQueryKey = annotationQueries.span.bySdoc(
+      const affectedQueryKey = spanAnnotationQueries.bySdoc(
         spanAnnotationToDelete.sdoc_id,
         spanAnnotationToDelete.user_id,
       ).queryKey;
@@ -121,7 +126,12 @@ const useDeleteSpanAnnotation = () =>
     },
     onError: (_error: Error, _spanAnnotationToDelete, context) => {
       if (!context) return;
-      rollbackOptimisticUpdate(context.affectedQueryKey, context.previousSpanAnnotations, annotationQueries.span.all());
+      rollbackOptimisticUpdate(
+        queryClient,
+        context.affectedQueryKey,
+        context.previousSpanAnnotations,
+        spanAnnotationQueries.all(),
+      );
     },
     meta: {
       datsEvent: "SPAN_ANNOTATION_DELETED",
@@ -131,7 +141,7 @@ const useDeleteSpanAnnotation = () =>
 
 const useDeleteBulkSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "deleteBulk"],
+    mutationKey: [...spanAnnotationQueries.all(), "deleteBulk"],
     mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_DELETED_BATCH",
@@ -141,16 +151,16 @@ const useDeleteBulkSpanAnnotation = () =>
 
 const useCountBySdocsAndUser = () =>
   useMutation({
-    mutationKey: [...annotationQueries.span.all(), "count"],
+    mutationKey: [...spanAnnotationQueries.all(), "count"],
     mutationFn: SpanAnnotationService.countAnnotations,
   });
 
-const useGetAnnotation = (spanId: number | null | undefined) => useQuery(annotationQueries.span.byId(spanId));
+const useGetAnnotation = (spanId: number | null | undefined) => useQuery(spanAnnotationQueries.byId(spanId));
 
-const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(annotationQueries.span.byUserCode(codeId));
+const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(spanAnnotationQueries.byUserCode(codeId));
 
 const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery(annotationQueries.span.bySdoc(sdocId, userId));
+  useQuery(spanAnnotationQueries.bySdoc(sdocId, userId));
 
 export const SpanAnnotationHooks = {
   useCreateBulkAnnotations,

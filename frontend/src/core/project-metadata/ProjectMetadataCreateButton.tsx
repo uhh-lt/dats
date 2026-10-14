@@ -6,7 +6,7 @@ import { Button, PopoverPosition } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { MouseEvent, memo, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
-import { MetadataHooks } from "./api/metadataHooks";
+import { ProjectMetadataHooks } from "./api/projectMetadataHooks";
 
 interface ProjectMetadataCreateButtonProps {
   sdocId?: number;
@@ -42,7 +42,7 @@ function MetadataCreateButtonContent({ docType }: { docType: DocType | undefined
 
   // create
   const projectId = useAppSelector((state) => state.project.projectId);
-  const { mutate: createMetadataMutation } = MetadataHooks.useCreateProjectMetadata();
+  const { mutate: createMetadataMutation } = ProjectMetadataHooks.useCreateProjectMetadata();
 
   const handleCreateMetadata = useCallback(
     (metaType: string) => {

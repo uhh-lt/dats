@@ -1,9 +1,10 @@
-import { MetadataHooks } from "@core/project-metadata";
+import { ProjectMetadataHooks } from "@core/project-metadata";
 import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { formatDateOnly } from "@utils/DateUtils";
 import { memo } from "react";
+import { SdocMetadataHooks } from "./api/sdocMetadataHooks";
 
 interface SdocMetadataRendererProps {
   sdocId: number;
@@ -11,8 +12,8 @@ interface SdocMetadataRendererProps {
 }
 
 export const SdocMetadataRenderer = memo(({ sdocId, projectMetadataId }: SdocMetadataRendererProps) => {
-  const sdocMetadata = MetadataHooks.useGetSdocMetadataByProjectMetadataId(sdocId, projectMetadataId);
-  const projectMetadata = MetadataHooks.useGetProjectMetadata(projectMetadataId);
+  const sdocMetadata = SdocMetadataHooks.useGetSdocMetadataByProjectMetadataId(sdocId, projectMetadataId);
+  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadata(projectMetadataId);
 
   if (projectMetadata.isSuccess && sdocMetadata.isSuccess && sdocMetadata.data !== undefined) {
     return <SdocMetadataRendererWithData sdocMetadata={sdocMetadata.data} projectMetadata={projectMetadata.data} />;

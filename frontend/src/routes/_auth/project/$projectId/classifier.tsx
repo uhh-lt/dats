@@ -1,5 +1,4 @@
 import { Icon } from "@components/icons";
-import { jobQueries } from "@core/job";
 import { classifierQueries, ClassifierView } from "@features/classifier";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -13,7 +12,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/classifier")({
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
     classifiersOptions: classifierQueries.byProject(params.projectId),
-    classifierJobsOptions: jobQueries.classifier.byProject(params.projectId),
+    classifierJobsOptions: classifierQueries.job.byProject(params.projectId),
   }),
   loader: async ({ context }) => {
     await Promise.all([

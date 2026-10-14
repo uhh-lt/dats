@@ -1,11 +1,11 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { LLMHooks } from "@core/llm";
 import { TagHooks } from "@core/tag";
 import { TaggingLLMJobResult } from "@models/TaggingLLMJobResult";
 import { TagRead } from "@models/TagRead";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useState } from "react";
+import { LlmAssistantHooks } from "../../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
 import { LLMUtterance } from "../LLMUtterance";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow";
@@ -16,7 +16,7 @@ export const DocumentTagResultStep = memo(() => {
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   // global server state
   const documentTags = TagHooks.useGetAllTags();
-  const llmJob = LLMHooks.useLiveLLMJob(llmJobId, undefined);
+  const llmJob = LlmAssistantHooks.useLiveLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output && documentTags.isSuccess) {
     return (

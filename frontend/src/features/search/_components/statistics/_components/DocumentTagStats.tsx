@@ -1,5 +1,5 @@
+import { StatisticsHooks } from "@api/statistics/statisticsHooks";
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
-import { StatisticsHooks } from "@core/statistics";
 import { TagHooks } from "@core/tag";
 import { TagStat } from "@models/TagStat";
 import { TabPanel } from "@mui/lab";

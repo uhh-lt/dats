@@ -1,5 +1,5 @@
 import { ContentContainerLayout } from "@components/content-layouts";
-import { JobHooks, jobStatusToSimple } from "@core/job";
+import { jobStatusToSimple } from "@core/job";
 import { SdocHooks, SdocRenderer } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
@@ -15,6 +15,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
+import { DuplicateFinderHooks } from "../../api/duplicateFinderHooks";
 import { DuplicateFinderActions } from "../../store/duplicateFinderSlice";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/tools/duplicate-finder");
@@ -49,7 +50,7 @@ export function DuplicateFinderView() {
   const lastDuplicateFinderJobId = useAppSelector((state) => state.duplicateFinder.lastDuplicateFinderJobId);
 
   // actions
-  const { mutate: startDuplicateFinderJob, isPending } = JobHooks.useStartDuplicateFinderJob();
+  const { mutate: startDuplicateFinderJob, isPending } = DuplicateFinderHooks.useStartDuplicateFinderJob();
   const handleClickFindDuplicateTextDocuments = () => {
     startDuplicateFinderJob(
       {
@@ -106,7 +107,7 @@ export function DuplicateFinderView() {
   };
 
   // job data
-  const duplicateFinderJob = JobHooks.useLiveDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
+  const duplicateFinderJob = DuplicateFinderHooks.useLiveDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
 
   // computed
   const { data, rowCount } = useMemo(() => {

@@ -1,7 +1,6 @@
 import { toColumnInfoMap } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { sdocQueries } from "../../api/sdocQueries";
 import { SdocTableFilterActions } from "../sdocTableFilterSlice";
 
@@ -9,13 +8,12 @@ export const useInitDocumentTableFilterSlice = ({ projectId }: { projectId: numb
   // global client state (redux)
   const dispatch = useAppDispatch();
 
-  // global server state (react-query)
-  const { data: columnData } = useQuery(sdocQueries.tableInfo(projectId));
-
-  // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
-  useEffect(() => {
-    if (columnData) dispatch(SdocTableFilterActions.init({ columnInfoMap: toColumnInfoMap(columnData) }));
-  }, [columnData, dispatch]);
+  // global server state (react-query); the slice is initialized as a side effect of fetching the column infos
+  const { data: columnData } = useQuery(
+    sdocQueries.tableInfo(projectId, (columnInfos) =>
+      dispatch(SdocTableFilterActions.init({ columnInfoMap: toColumnInfoMap(columnInfos) })),
+    ),
+  );
 
   return columnData;
 };

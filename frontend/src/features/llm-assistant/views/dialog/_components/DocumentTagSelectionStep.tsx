@@ -1,4 +1,3 @@
-import { LLMHooks } from "@core/llm";
 import { TagTable } from "@core/tag";
 import { TagRead } from "@models/TagRead";
 import { TaskType } from "@models/TaskType";
@@ -7,6 +6,7 @@ import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
+import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -23,7 +23,7 @@ export const DocumentTagSelectionStep = memo(() => {
   );
 
   // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
+  const { mutate: determineApproachMutation, isPending } = LlmAssistantHooks.useDetermineApproach();
 
   const handleNext = useCallback(
     (tags: TagRead[]) => () => {

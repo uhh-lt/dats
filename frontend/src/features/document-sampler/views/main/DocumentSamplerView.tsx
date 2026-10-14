@@ -1,14 +1,12 @@
-import { AnalysisService } from "@api/services/AnalysisService";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { TagHooks } from "@core/tag";
 import { SampledSdocsResults } from "@models/SampledSdocsResults";
 import { TagRead } from "@models/TagRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useMutation } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { documentSamplerQueries } from "../../api/documentSamplerQueries";
+import { DocumentSamplerHooks } from "../../api/documentSamplerHooks";
 import { DocumentSamplerActions } from "../../store/documentSamplerSlice";
 import { DocumentsBarChart } from "./_components/DocumentsBarChart";
 import { DocumentsTable } from "./_components/DocumentsTable";
@@ -60,11 +58,7 @@ export function DocumentSamplerView() {
     },
     [dispatch, tagsMap],
   );
-  const { mutate: aggregateSdocsByTags } = useMutation({
-    mutationKey: [...documentSamplerQueries.all(), "aggregateSdocsByTags"],
-    mutationFn: AnalysisService.sampleSdocsByTags,
-    onSuccess: transformAndStore,
-  });
+  const { mutate: aggregateSdocsByTags } = DocumentSamplerHooks.useSampleSdocsByTags({ onSuccess: transformAndStore });
 
   // actions
   const onAggregate = useCallback(() => {

@@ -3,7 +3,7 @@ import { ProjectService } from "@api/services/ProjectService";
 import { SearchService } from "@api/services/SearchService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
-import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type ColumnInfo, type MyFilter } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
@@ -45,10 +45,14 @@ const searchQueries = {
   all: () => ["search"] as const,
 
   // the column infos of the document search
-  tableInfo: (projectId: number) =>
+  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
       queryKey: tableInfoQueries.bySlice("search", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      queryFn: async () => {
+        const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
+        onLoaded?.(columnInfos);
+        return columnInfos;
+      },
       staleTime: Infinity,
     }),
 
@@ -212,10 +216,14 @@ export const sdocQueries = {
     }),
 
   // the column infos of the sdoc filter table
-  tableInfo: (projectId: number) =>
+  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
       queryKey: tableInfoQueries.bySlice("documentTableFilter", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      queryFn: async () => {
+        const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
+        onLoaded?.(columnInfos);
+        return columnInfos;
+      },
       staleTime: Infinity,
     }),
 

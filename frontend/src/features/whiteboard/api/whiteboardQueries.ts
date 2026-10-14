@@ -1,9 +1,11 @@
 import { queryClient } from "@api/queryClient";
 import { WhiteboardService } from "@api/services/WhiteboardService";
-import { annotationQueries } from "@core/annotation";
+import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { CodeMap, codeQueries } from "@core/code";
 import { memoQueries } from "@core/memo";
+import { sentenceAnnotationQueries } from "@core/sentence-annotation";
 import { sdocQueries } from "@core/source-document";
+import { spanAnnotationQueries } from "@core/span-annotation";
 import { tagQueries } from "@core/tag";
 import type { WhiteboardRead } from "@models/WhiteboardRead";
 import { queryOptions } from "@tanstack/react-query";
@@ -47,13 +49,13 @@ export const whiteboardQueries = {
         const whiteboardData = await WhiteboardService.getDataById({ whiteboardId });
 
         whiteboardData.span_annotations.forEach((sa) => {
-          queryClient.setQueryData(annotationQueries.span.byId(sa.id).queryKey, sa);
+          queryClient.setQueryData(spanAnnotationQueries.byId(sa.id).queryKey, sa);
         });
         whiteboardData.sent_annotations.forEach((sa) => {
-          queryClient.setQueryData(annotationQueries.sentence.byId(sa.id).queryKey, sa);
+          queryClient.setQueryData(sentenceAnnotationQueries.byId(sa.id).queryKey, sa);
         });
         whiteboardData.bbox_annotations.forEach((ba) => {
-          queryClient.setQueryData(annotationQueries.bbox.byId(ba.id).queryKey, ba);
+          queryClient.setQueryData(bboxAnnotationQueries.byId(ba.id).queryKey, ba);
         });
         whiteboardData.memos.forEach((memo) => {
           queryClient.setQueryData(memoQueries.byId(memo.id).queryKey, memo);

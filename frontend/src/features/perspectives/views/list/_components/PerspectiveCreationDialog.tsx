@@ -1,6 +1,6 @@
+import { GeneralHooks } from "@api/general/generalHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
-import { LLMHooks } from "@core/llm";
 import { useTabNavigate } from "@core/navigation";
 import { DocTypeSelector } from "@core/source-document";
 import { TagSelector } from "@core/tag";
@@ -97,7 +97,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // available LLMs for the model selection
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
 
   // perspective creation
   const tabNavigate = useTabNavigate();

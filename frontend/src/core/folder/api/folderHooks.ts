@@ -8,12 +8,12 @@ import { FolderMap, folderQueries } from "./folderQueries";
 // Folder QUERIES
 // The queries themselves live in folderQueries. The hooks below only derive data from them.
 
-const useProjectFoldersQuery = <T>({
+const useProjectFoldersQuery = <T = FolderMap>({
   select,
   folderType,
   enabled,
 }: {
-  select: (data: FolderMap) => T;
+  select?: (data: FolderMap) => T;
   folderType: FolderType;
   enabled?: boolean;
 }) => {
@@ -87,11 +87,6 @@ const useDeleteFolder = () =>
     },
   });
 
-const useGetAllFoldersMap = () => useProjectFoldersQuery({ select: (data) => data, folderType: FolderType.NORMAL });
-
-const useGetAllSdocFoldersMap = () =>
-  useProjectFoldersQuery({ select: (data) => data, folderType: FolderType.SDOC_FOLDER });
-
 const useGetSdocIdsPerDoctypeInSdocFolder = (sdocFolderId: number | null | undefined) =>
   useQuery(folderQueries.sdocIdsPerDoctype(sdocFolderId));
 
@@ -105,7 +100,5 @@ export const FolderHooks = {
   useUpdateFolder,
   useUpdateFoldersBulk,
   useDeleteFolder,
-  useGetAllFoldersMap,
-  useGetAllSdocFoldersMap,
   useGetSdocIdsPerDoctypeInSdocFolder,
 };

@@ -1,6 +1,6 @@
 import { SearchService } from "@api/services/SearchService";
 import { TimelineAnalysisService } from "@api/services/TimelineAnalysisService";
-import { tableInfoQueries, toColumnInfos } from "@core/filter";
+import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
 import { queryOptions } from "@tanstack/react-query";
@@ -13,6 +13,21 @@ const fetchTimelineAnalyses = async (projectId: number) => {
     acc[timeline.id] = timeline;
     return acc;
   }, {});
+};
+
+const fetchColumnInfos = async (projectId: number, timelineAnalysisType: TimelineAnalysisType) => {
+  switch (timelineAnalysisType) {
+    case TimelineAnalysisType.DOCUMENT:
+      return toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
+    case TimelineAnalysisType.BBOX_ANNOTATION:
+      return toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId }));
+    case TimelineAnalysisType.SENTENCE_ANNOTATION:
+      return toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId }));
+    case TimelineAnalysisType.SPAN_ANNOTATION:
+      return toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId }));
+    default:
+      return [];
+  }
 };
 
 /**
@@ -35,28 +50,16 @@ export const timelineAnalysisQueries = {
     }),
 
   // the column infos of the filter of one timeline analysis; they depend on its type
-  tableInfo: (timelineAnalysis: TimelineAnalysisRead) =>
-    queryOptions({
-      queryKey: tableInfoQueries.timeline(
-        timelineAnalysis.project_id,
-        timelineAnalysis.timeline_analysis_type,
-        timelineAnalysis.id,
-      ),
+  tableInfo: (timelineAnalysis: TimelineAnalysisRead, onLoaded?: (columnInfos: ColumnInfo[]) => void) => {
+    const { project_id: projectId, timeline_analysis_type: type, id } = timelineAnalysis;
+    return queryOptions({
+      queryKey: tableInfoQueries.timeline(projectId, type, id),
       queryFn: async () => {
-        const projectId = timelineAnalysis.project_id;
-        switch (timelineAnalysis.timeline_analysis_type) {
-          case TimelineAnalysisType.DOCUMENT:
-            return toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
-          case TimelineAnalysisType.BBOX_ANNOTATION:
-            return toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId }));
-          case TimelineAnalysisType.SENTENCE_ANNOTATION:
-            return toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId }));
-          case TimelineAnalysisType.SPAN_ANNOTATION:
-            return toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId }));
-          default:
-            return [];
-        }
+        const columnInfos = await fetchColumnInfos(projectId, type);
+        onLoaded?.(columnInfos);
+        return columnInfos;
       },
       staleTime: Infinity,
-    }),
+    });
+  },
 };

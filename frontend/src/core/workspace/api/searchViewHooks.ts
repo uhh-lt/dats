@@ -1,10 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { SearchViewService } from "@api/services/SearchViewService";
-import { BBoxSearchViewRead } from "@models/BBoxSearchViewRead";
-import { MemoSearchViewRead } from "@models/MemoSearchViewRead";
 import { SearchEntityType } from "@models/SearchEntityType";
-import { SentenceSearchViewRead } from "@models/SentenceSearchViewRead";
-import { SpanSearchViewRead } from "@models/SpanSearchViewRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { searchViewQueries } from "./searchViewQueries";
 
@@ -23,7 +19,7 @@ export interface SearchViewBase {
  * Factory for per-entity search-view hooks. The backend search-view CRUD is already
  * entity-agnostic (discriminated by `entityType`); this just scopes the entity type
  * so each entity gets its own typed hooks
- * (e.g. `MemoViewHooks`, `SpanAnnotationViewHooks`).
+ * (e.g. `MemoViewHooks` in the memo workspace).
  */
 export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: SearchEntityType) => {
   // the service returns the union of all view types, the entity type selects the one of this hook
@@ -122,13 +118,3 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
 
   return { useGetViews, useCreateView, useUpdateView, useReorderViews, useDeleteView };
 };
-
-export const MemoViewHooks = createSearchViewHooks<MemoSearchViewRead>(SearchEntityType.MEMO);
-
-export const SpanAnnoViewHooks = createSearchViewHooks<SpanSearchViewRead>(SearchEntityType.SPAN_ANNOTATION);
-
-export const SentenceAnnoViewHooks = createSearchViewHooks<SentenceSearchViewRead>(
-  SearchEntityType.SENTENCE_ANNOTATION,
-);
-
-export const BBoxAnnoViewHooks = createSearchViewHooks<BBoxSearchViewRead>(SearchEntityType.BBOX_ANNOTATION);

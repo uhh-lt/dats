@@ -1,6 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
-import { JobHooks, jobQueries } from "@core/job";
+import { useJobRefetchInterval } from "@core/job";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierRead } from "@models/ClassifierRead";
@@ -12,9 +12,9 @@ import { ClassifierDatasetStatisticsParams, classifierQueries } from "./classifi
 // (classifier list + sdoc tag invalidations) live in the JOB_UPDATED handler in
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
 const useLiveClassifierJob = (classifierJobId: string | undefined, initialData: ClassifierJobRead | undefined) => {
-  const jobRefetchInterval = JobHooks.useJobRefetchInterval<ClassifierJobRead>();
+  const jobRefetchInterval = useJobRefetchInterval<ClassifierJobRead>();
   return useQuery({
-    ...jobQueries.classifier.byId(classifierJobId),
+    ...classifierQueries.job.byId(classifierJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
@@ -43,7 +43,7 @@ const useStartClassifierJob = () =>
     mutationKey: [...classifierQueries.all(), "startClassifierJob"],
     mutationFn: ClassifierService.startClassifierJob,
     onSuccess: (job) => {
-      queryClient.invalidateQueries({ queryKey: jobQueries.classifier.byProject(job.project_id).queryKey });
+      queryClient.invalidateQueries({ queryKey: classifierQueries.job.byProject(job.project_id).queryKey });
     },
     meta: {
       successMessage: (data: ClassifierJobRead) =>

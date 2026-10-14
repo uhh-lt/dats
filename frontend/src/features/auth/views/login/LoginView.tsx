@@ -1,15 +1,14 @@
 import { ApiError } from "@api/core/ApiError";
-import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
-import { authQueries, handleOIDCLogin, useAuth } from "@core/auth";
+import { AuthMutations, handleOIDCLogin, useAuth } from "@core/auth";
 import { LinkButton } from "@core/navigation";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
 import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
@@ -41,10 +40,7 @@ export function LoginView() {
   const { data: instanceInfo } = useSuspenseQuery(instanceInfoOptions);
 
   // login
-  const { mutate: loginMutation, isPending: loginIsPending } = useMutation({
-    mutationKey: [...authQueries.all(), "login"],
-    mutationFn: AuthenticationService.login,
-    retry: false,
+  const { mutate: loginMutation, isPending: loginIsPending } = AuthMutations.useLogin({
     onSuccess(data) {
       updateAuthData(data);
       navigate({ to: redirect });

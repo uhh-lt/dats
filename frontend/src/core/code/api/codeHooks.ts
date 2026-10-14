@@ -13,7 +13,7 @@ interface UseProjectCodesQueryParams<T> {
   enabled?: boolean;
 }
 
-const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQueryParams<T>) => {
+const useGetAllCodesMap = <T = CodeMap>({ select, enabled }: UseProjectCodesQueryParams<T> = {}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
     ...codeQueries.byProject(projectId),
@@ -23,7 +23,7 @@ const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQ
 };
 
 const useGetCode = (codeId: number | null | undefined) =>
-  useProjectCodesQuery({
+  useGetAllCodesMap({
     select: (data) => data[codeId!],
     enabled: !!codeId,
   });
@@ -32,11 +32,11 @@ const useSelectEnabledCodes = () => {
   return useCallback((data: CodeMap) => Object.values(data).filter((code) => code.enabled), []);
 };
 
-const useGetAllCodesList = () => useProjectCodesQuery({ select: (data) => Object.values(data) });
+const useGetAllCodesList = () => useGetAllCodesMap({ select: (data) => Object.values(data) });
 
 const useGetEnabledCodes = () => {
   const selectEnabledCodes = useSelectEnabledCodes();
-  return useProjectCodesQuery({ select: selectEnabledCodes });
+  return useGetAllCodesMap({ select: selectEnabledCodes });
 };
 
 // CODE MUTATIONS
@@ -72,10 +72,8 @@ const useDeleteCode = () => {
   });
 };
 
-const useGetAllCodesMap = () => useProjectCodesQuery({});
-
 export const CodeHooks = {
-  useProjectCodesQuery,
+  useGetAllCodesMap,
   useGetCode,
   useSelectEnabledCodes,
   useGetAllCodesList,
@@ -83,5 +81,4 @@ export const CodeHooks = {
   useCreateCode,
   useUpdateCode,
   useDeleteCode,
-  useGetAllCodesMap,
 };

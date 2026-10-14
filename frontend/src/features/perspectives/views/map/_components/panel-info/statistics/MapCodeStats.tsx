@@ -1,5 +1,5 @@
+import { StatisticsHooks } from "@api/statistics/statisticsHooks";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
-import { StatisticsHooks } from "@core/statistics";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

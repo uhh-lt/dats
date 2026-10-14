@@ -1,6 +1,6 @@
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
-import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type ColumnInfo, type MyFilter } from "@core/filter";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import type { MemoColumns } from "@models/MemoColumns";
@@ -82,10 +82,14 @@ export const memoQueries = {
     }),
 
   // the column infos of the memo filter table
-  tableInfo: (projectId: number) =>
+  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
       queryKey: tableInfoQueries.bySlice("memoFilter", projectId),
-      queryFn: async () => toColumnInfos(await SearchService.searchMemoInfo({ projectId })),
+      queryFn: async () => {
+        const columnInfos = toColumnInfos(await SearchService.searchMemoInfo({ projectId }));
+        onLoaded?.(columnInfos);
+        return columnInfos;
+      },
       staleTime: Infinity,
     }),
 

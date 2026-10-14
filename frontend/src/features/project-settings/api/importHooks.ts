@@ -1,16 +1,17 @@
 import { queryClient } from "@api/queryClient";
 import { ImportService } from "@api/services/ImportService";
-import { JobHooks, jobQueries } from "@core/job";
+import { useJobRefetchInterval } from "@core/job";
 import { ImportJobRead } from "@models/ImportJobRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { importQueries } from "./importQueries";
 
 // Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
 // (per-import-type invalidations) live in the JOB_UPDATED handler in
 // frontend/src/plugins/websocket/websocketEventHandlers.ts.
 const useLiveImportJob = (importJobId: string | undefined, initialData: ImportJobRead | undefined) => {
-  const jobRefetchInterval = JobHooks.useJobRefetchInterval<ImportJobRead>();
+  const jobRefetchInterval = useJobRefetchInterval<ImportJobRead>();
   return useQuery({
-    ...jobQueries.import.byId(importJobId),
+    ...importQueries.job.byId(importJobId),
     refetchInterval: jobRefetchInterval,
     initialData,
   });
@@ -18,10 +19,10 @@ const useLiveImportJob = (importJobId: string | undefined, initialData: ImportJo
 
 const useStartImportJob = () =>
   useMutation({
-    mutationKey: [...jobQueries.import.all(), "startImportJob"],
+    mutationKey: [...importQueries.job.all(), "startImportJob"],
     mutationFn: ImportService.startImportJob,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: jobQueries.import.byProject(variables.projectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: importQueries.job.byProject(variables.projectId).queryKey });
     },
     meta: {
       successMessage: "Import job started! Please wait...",
@@ -29,7 +30,7 @@ const useStartImportJob = () =>
     },
   });
 
-const useGetAllImportJobs = (projectId: number | null | undefined) => useQuery(jobQueries.import.byProject(projectId));
+const useGetAllImportJobs = (projectId: number | null | undefined) => useQuery(importQueries.job.byProject(projectId));
 
 export const ImportHooks = {
   useLiveImportJob,

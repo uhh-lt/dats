@@ -14,54 +14,55 @@ Dependencies are listed in package.json and managed with npm.
 
 React for building user interfaces
 
-- (react) v18.3.1
+- (react) v19.2
 - context7: /reactjs/react.dev
 
 Tanstack Router for client-side routing
 
-- (@tanstack/react-router) v1.161.1
+- (@tanstack/react-router) v1.166
 
 Tanstack Query for data fetching and server state management
 
-- (@tanstack/react-query) v5.67.2
+- (@tanstack/react-query) v5.90
 - context7: /tanstack/query
 
 Redux Toolkit for global state management
 
-- (@reduxjs/toolkit) v2.2.8
+- (@reduxjs/toolkit) v2.11
 - context7: /reduxjs/redux-toolkit
 
 React Hook Form for form state management
 
-- (react-hook-form) v7.53.0
+- (react-hook-form) v7.71
 - context7: /react-hook-form/documentation
 
 MUI for UI components, styling, theming, and icons
 
-- (@mui/material v6.4.6, @mui/icons-material v6.4.6, @mui/lab v6.0.0-beta.30)
+- (@mui/material v6.5, @mui/icons-material v6.5, @mui/lab v6.0.1-beta.36)
 - docs: https://mui.com/material-ui/getting-started/
 - llms.txt: https://mui.com/material-ui/llms.txt
 - context7: /mui/material-ui
 
 Vite as the build tool and development server
 
-- (vite) v6.2.1
+- (vite) v8.0
 - context7: /vitejs/vite
 
 ## Folder Structure
 
 - `/frontend/bin`: Various scripts
 - `/frontend/public`: Public assets like logos
-- `/frontend/src`: Main application code
-  - `/api`: Generated API client (`services/`), the `queryClient` and the cache-sync code (`cache-sync/`). Queries and mutations live in the domain they belong to, see "Where do queries and mutations live?" below
-  - `/auth`: Authentication and authorization logic
-  - `/components`: Reusable React components
-  - `/layouts`: Layout components for different page structures
-  - `/plugins`: Configurations for third-party plugins and integrations (MUI, Tanstack Query, Redux Toolkit, etc.)
-  - `/router`: React Router route definitions
-  - `/store`: Redux Toolkit store configuration
-  - `/utils`: Utility functions and helpers
-  - `/views`: Page components representing different views/screens
+- `/frontend/src`: Main application code. The layers are `routes` → `features` → `core` → `api` (enforced by ESLint)
+  - `/routes`: TanStack Router file routes (query options in `context`, prefetch in `loader`)
+  - `/features`: One folder per page or feature (`views/`, `store/`, `api/`, ...); a feature may not import another feature
+  - `/core`: Domain code that several features share (code, tag, memo, ...), with its own `api/` folder
+  - `/api`: Generated API client (`services/`, `core/`), the `queryClient`, the cache-sync code (`cache-sync/`) and global queries/hooks that no domain owns (`general/`, `statistics/`)
+  - `/components`: Generic UI components without domain logic
+  - `/hooks`: Generic hooks (`useDialog`, `useDebounce`, ...)
+  - `/store`: Redux Toolkit store with the global (`global/`) and generic (`generic/`) slices
+  - `/models`: Types generated from the OpenAPI spec
+  - `/plugins`: Setup of third-party libraries (MUI, Tanstack Query, websocket, Sentry)
+  - `/styles`, `/types`, `/utils`: Styles, global type declarations, utility functions
 
 ## File Naming Conventions
 
@@ -71,7 +72,7 @@ Vite as the build tool and development server
 - **API hooks**: `{domain}Hooks.ts` next to it, exporting one `{Domain}Hooks` object with all hooks of the domain: query hooks, data-deriving hooks and mutations (e.g., `core/tag/api/tagHooks.ts` exports `TagHooks`)
 - **Redux Slices**: `{featureName}Slice.ts` (e.g., `annoSlice.ts`, `projectSlice.ts`)
 - **Utilities**: Descriptive names matching their purpose (e.g., `ColorUtils.ts`, `DateUtils.ts`)
-- **Directories**: Lowercase with hyphens for multi-word names (e.g., `/FormInputs`, `/TreeExplorer`)
+- **Directories**: Lowercase with hyphens for multi-word names (e.g., `/form-inputs`, `/tree-explorer`)
 
 ## Component Structure
 
@@ -84,7 +85,7 @@ Vite as the build tool and development server
 **Type Safety**:
 
 - Define component props as interfaces with proper `extends` patterns for extending MUI component props
-- Example from [EditableTypography.tsx](../../frontend/src/components/EditableTypography.tsx#L17-L22):
+- Example from [EditableTypography.tsx](../../frontend/src/components/EditableTypography.tsx):
   ```tsx
   interface EditableTypographyProps {
     value: string;
@@ -110,9 +111,11 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 **Where do queries and mutations live?** In the domain that owns the data, in a public `api/` folder next to the domain's code:
 
-- Every `api/` folder has exactly two files: `<entity>Queries.ts` (the query factory) and `<entity>Hooks.ts` (the `<Entity>Hooks` object). A folder without hooks (nothing to wrap) has only the queries file; there are no empty hooks objects.
-- Used by core and by several features (code, tag, memo, folder, project, source document, user, annotations, metadata, job, llm, statistics, workspace views): `core/<domain>/api/`.
-- Used by exactly one feature (classifier, COTA, whiteboard, perspectives, ...): `features/<feature>/api/`.
+- Every `api/` folder has two files: `<entity>Queries.ts` (the query factory) and `<entity>Hooks.ts` (the `<Entity>Hooks` object). A folder without hooks (nothing to wrap) has only the queries file; there are no empty hooks objects.
+- Used by core and by several features (code, tag, memo, folder, project, source document, user, span/bbox/sentence annotations, project metadata, sdoc metadata): `core/<domain>/api/`.
+- Used by exactly one feature (classifier, COTA, whiteboard, document upload, LLM assistant, ...): `features/<feature>/api/`. Its job queries (`xxxQueries.job`) are part of it.
+- Used by several features but owned by none (`general`, `statistics`): `api/<name>/` (global).
+- Generic helpers without domain knowledge (e.g. `rollbackOptimisticUpdate`) belong to `src/utils`, they get the `queryClient` as a parameter.
 - Each domain's `index.ts` exports its `api/` files, so other code imports `import { CodeHooks } from "@core/code"`. Inside the domain use relative imports.
 - A hook that reads the Redux slice of a feature stays in that feature (`useLabelDocs`); `core` may not read feature slices.
 - Only the cache-sync code (`api/cache-sync`) may import `core/<domain>/api/<file>` directly (ESLint exemption), because it writes the caches of every domain.
@@ -129,7 +132,8 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 **Components use the `{Domain}Hooks` object** (`<domain>/api/<domain>Hooks.ts`, e.g. [codeHooks.ts](../../frontend/src/core/code/api/codeHooks.ts)):
 
 - Components call `CodeHooks.useGetCode(codeId)`, `TagHooks.useGetAllTags()`, `TagHooks.useCreateTag()`. Selection (`select`), `enabled`, reading the project id from Redux and polling live in the hook, not in the component.
-- A hook never defines a query itself. It builds on the factory: `useQuery({ ...tagQueries.byProject(projectId), select, enabled })`. Key and `queryFn` exist only in `<domain>Queries.ts`; this includes the queries that load the column infos of the filter tables (`sdocQueries.tableInfo`, ...).
+- A hook that only forwards to another hook of its domain with preset arguments (an alias) is forbidden; give the real hook optional parameters instead (see `TagHooks.useGetAllTags`).
+- A hook never defines a query itself. It builds on the factory: `useQuery({ ...tagQueries.byProject(projectId), select, enabled })`. Key and `queryFn` exist only in `<domain>Queries.ts`; this includes the queries that load the column infos of the filter tables (`sdocQueries.tableInfo`, ...). The `useInit*FilterSlice` hooks initialize their slice in the `queryFn` of that leaf (via its `onLoaded` callback), never in a `useEffect`.
 - The `{Domain}Hooks` object contains query hooks, data-deriving hooks and mutations; a hook that reads the Redux slice of a feature is part of that feature's object.
 - Components and hooks of the same domain may call the factory directly where no hook exists yet (e.g. the infinite queries of the filter tables); prefer adding a hook when a second place needs the same query.
 - Cache access (`setQueryData`, `getQueryData`, `invalidateQueries`) uses the typed key `tagQueries.byProject(id).queryKey` or a scope prefix like `tagQueries.byProjectScope()`. This keeps the data type inferred and keeps invalidation prefix-based.
@@ -155,12 +159,10 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - The route builds its options with the factory (not the hook), because the loader and the view must share exactly the same options; its view uses the options from the context.
 - If a query seeds other caches (e.g. the whiteboard content), do that in the `queryFn` of the factory, not in the route.
 
-**Migration status:** the `QueryKey` enum is gone and every query has a factory in its domain's `api/` folder.
-
 ### Redux Toolkit: Use for GLOBAL CLIENT state (dialogs, filters, selections)
 
-- Use typed selector/dispatch hooks: `useAppDispatch()` and `useAppSelector()` from [ReduxHooks.ts](../../frontend/src/plugins/ReduxHooks.ts)
-- Create slices for each feature (e.g., annotation, project, search, see [annoSlice.ts](../../frontend/src/views/annotation/annoSlice.ts))
+- Use typed selector/dispatch hooks: `useAppDispatch()` and `useAppSelector()` from [storeHooks.ts](../../frontend/src/store/storeHooks.ts)
+- Create slices for each feature (e.g., annotation, project, search, see [annoSlice.ts](../../frontend/src/features/annotation/store/annoSlice.ts))
 
 ### React Hook Form: Use for FORM STATE (input values, validation state, form submission)
 
@@ -168,8 +170,8 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 - Use `useForm()` hook to manage form state and validation
 - Wrap form inputs with `Controller` from React Hook Form
-- See [FormText.tsx](../../frontend/src/components/FormInputs/FormText.tsx) for input wrapper pattern
-- Use [FormInputs components](../../frontend/src/components/FormInputs) for consistent form controls:
+- See [FormText.tsx](../../frontend/src/components/form-inputs/FormText.tsx) for input wrapper pattern
+- Use [form-inputs components](../../frontend/src/components/form-inputs) for consistent form controls:
   - `FormText`, `FormTextMultiline`, `FormNumber`, `FormPassword`
   - `FormEmail`, `FormDate`, `FormSwitch`, `FormColorPicker`
   - `FormMenu`, `FormFreeSolo`, `FormChipList`
@@ -178,7 +180,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 - Define validation rules in `useForm()` hook via `rules` property in `Controller`
 - Display errors with `<ErrorMessage>` component from @hookform/error-message
-- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L1-L2):
+- Example from [CodeCreateDialog.tsx](../../frontend/src/core/code/dialog/CodeCreateDialog.tsx):
   ```tsx
   import { ErrorMessage } from "@hookform/error-message";
   // In JSX: <ErrorMessage errors={errors} name="fieldName" />
@@ -187,7 +189,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 **Form Reset**:
 
 - Use `useEffect()` to reset form when dialog opens with initial values
-- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L63-L74)
+- Example from [CodeCreateDialog.tsx](../../frontend/src/core/code/dialog/CodeCreateDialog.tsx)
 
 ### React Hooks: `useState()` for LOCAL CLIENT state
 
@@ -198,21 +200,21 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 **Create Custom Hooks for Reusable Logic**:
 
 - Extract component logic into custom hooks when it's used in multiple components
-- Examples: [useDialog.ts](../../frontend/src/hooks/useDialog.ts) (dialog state management), [useDebounce.ts](../../frontend/src/utils/useDebounce.ts) (value debouncing)
-- File location: `/frontend/src/hooks` for component-generic hooks, `/frontend/src/utils` for utility hooks with type generics
+- Examples: [useDialog.ts](../../frontend/src/hooks/useDialog.ts) (dialog state management), [useDebounce.ts](../../frontend/src/hooks/useDebounce.ts) (value debouncing)
+- File location: `/frontend/src/hooks` for generic hooks; domain hooks live in the domain's `api/` folder or next to the component
 
 **Hook Design Patterns**:
 
 - Return objects with clear, descriptive names: `{ isOpen, open, close, toggle }`
 - Include optional callbacks: `{ onOpen?: () => void; onClose?: () => void }`
-- For complex logic with multiple related hooks, create composition (see [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts#L44-L92))
+- For complex logic with multiple related hooks, create composition (see [useTableInfiniteScroll.ts](../../frontend/src/hooks/useTableInfiniteScroll.ts))
 
 ## TypeScript & Typing
 
 **Generics for Flexibility**:
 
 - Use generic types for hooks that work with multiple data types
-- Example from [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts#L2-L7):
+- Example from [useTableInfiniteScroll.ts](../../frontend/src/hooks/useTableInfiniteScroll.ts):
   ```tsx
   interface UseTransformInfiniteDataProps<T, U> {
     data: InfiniteData<T> | undefined;
@@ -224,7 +226,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 **Generated API Types**:
 
 - API types are auto-generated from OpenAPI spec; use them consistently
-- Import models from `frontend/src/api/openapi/models/`
+- Import models from `frontend/src/models/` (`@models/...`)
 - Type suffixes indicate operation: `Read` (GET), `Create` (POST), `Update` (PUT)
 
 **Avoid `any` Type**:
@@ -238,12 +240,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 - Use `useMemo()` for expensive computations, derived state, and filtered data lists
 - Use `useCallback()` for ALL callback functions passed as props (dependency injection)
-- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L42-L43):
-  ```tsx
-  const handleCloseCodeCreateDialog = useCallback(() => {
-    dispatch(CRUDDialogActions.closeCodeCreateDialog());
-  }, [dispatch]);
-  ```
+- Example: [CodeCreateDialog.tsx](../../frontend/src/core/code/dialog/CodeCreateDialog.tsx)
 
 **Dependency Arrays**:
 
@@ -257,7 +254,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 **Infinite Scrolling**:
 
-- Use [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts) hook for paginated table data
+- Use [useTableInfiniteScroll.ts](../../frontend/src/hooks/useTableInfiniteScroll.ts) hook for paginated table data
 - Implements smart fetching trigger at 400px from table bottom
 
 ## Error Handling
@@ -276,14 +273,12 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 **Protected Routes**:
 
-- Use [RequireAuth.tsx](../../frontend/src/auth/RequireAuth.tsx) wrapper component for authentication
-- Redirects to login page and preserves redirect location for post-login navigation
+- Protected routes are children of the `_auth` route ([\_auth.tsx](../../frontend/src/routes/_auth.tsx)); it redirects to the login page and preserves the redirect location
 
 ## Imports
 
-- Use absolute imports from `/` root (configured in vite.config.ts)
-- Group imports: React/external libraries → local components → utilities
-- Keep imports organized and remove unused imports before committing
+- Use the path aliases (`@api`, `@core`, `@features`, `@components`, `@hooks`, `@models`, `@store`, `@utils`) for other folders and relative imports inside the same domain; other code imports a core/feature domain only through its `index.ts`
+- Imports are sorted by the editor's organize-imports on save; remove unused imports before committing
 
 ## Documentation
 
@@ -293,7 +288,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 ## Workflow: Creating a Feature with All Patterns
 
 1. **Step 1: Define the query factory** (e.g., `core/code/api/codeQueries.ts`)
-2. **Step 2: Create mutations / data-deriving hooks** (e.g., `codeMutations.ts`, `codeHooks.ts`)
+2. **Step 2: Create the hooks object** with query hooks, derived hooks and mutations (e.g., `core/code/api/codeHooks.ts`)
 3. **Step 3: Create Components** (e.g., CodeTable.tsx, CodeCreateDialog.tsx)
 4. **Step 4: Use in Views**
 

@@ -1,4 +1,3 @@
-import { annotationQueries } from "@core/annotation";
 import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
@@ -33,6 +32,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
+import { sentenceAnnotationQueries } from "../api/sentenceAnnotationQueries";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
 import { SEATFilterActions, defaultSEATFilterExpression } from "./seatFilterSlice";
@@ -153,7 +153,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...annotationQueries.sentence.table({ projectId, filter, sortingModel, fetchSize }),
+    ...sentenceAnnotationQueries.table({ projectId, filter, sortingModel, fetchSize }),
     enabled: !!userId,
   });
 

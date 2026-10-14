@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { annotationQueries } from "@core/annotation/api/annotationQueries";
+import { sentenceAnnotationQueries } from "@core/sentence-annotation/api/sentenceAnnotationQueries";
 import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 
 // The SDOC_SENTENCE_ANNOTATOR cache groups annotations by sentence index, with
@@ -10,7 +10,7 @@ import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 // adding it to newly covered sentences and removing it from sentences it no
 // longer covers.
 export function upsertSentenceAnnotation(anno: SentenceAnnotationRead): void {
-  queryClient.setQueryData(annotationQueries.sentence.bySdoc(anno.sdoc_id, anno.user_id).queryKey, (old) => {
+  queryClient.setQueryData(sentenceAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, (old) => {
     if (!old) return old;
     const sentAnnos = { ...old.sentence_annotations };
     Object.keys(sentAnnos).forEach((key) => {
@@ -37,7 +37,7 @@ export function upsertSentenceAnnotation(anno: SentenceAnnotationRead): void {
 
 // Remove a sentence annotation from every sentence bucket in the grouped cache.
 export function removeSentenceAnnotation(anno: SentenceAnnotationRead): void {
-  queryClient.setQueryData(annotationQueries.sentence.bySdoc(anno.sdoc_id, anno.user_id).queryKey, (old) => {
+  queryClient.setQueryData(sentenceAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, (old) => {
     if (!old) return old;
     const sentAnnos = { ...old.sentence_annotations };
     for (let sentenceId = anno.sentence_id_start; sentenceId <= anno.sentence_id_end; sentenceId++) {

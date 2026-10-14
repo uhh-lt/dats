@@ -1,4 +1,4 @@
-import { LLMHooks } from "@core/llm";
+import { GeneralHooks } from "@api/general/generalHooks";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
@@ -28,7 +28,7 @@ interface ChatMessage {
 }
 
 export function AnalysisAssistant() {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
 
   const theme = useTheme();
   const [inputText, setInputText] = useState<string>("");

@@ -1,6 +1,6 @@
 import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { useTabNavigate } from "@core/navigation";
-import { MetadataHooks } from "@core/project-metadata";
+import { SdocMetadataHooks } from "@core/sdoc-metadata";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
@@ -16,8 +16,8 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer(props: ImageViewerProps) {
-  const heightMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
-  const widthMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "width");
+  const heightMetadata = SdocMetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
+  const widthMetadata = SdocMetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "width");
 
   if (heightMetadata.isSuccess && widthMetadata.isSuccess) {
     return (

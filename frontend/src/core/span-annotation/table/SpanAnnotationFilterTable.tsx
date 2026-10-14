@@ -1,4 +1,3 @@
-import { annotationQueries } from "@core/annotation";
 import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
@@ -33,6 +32,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
+import { spanAnnotationQueries } from "../api/spanAnnotationQueries";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSATFilterSlice } from "./_hooks/useInitSATFilterSlice";
 import { SATFilterActions, defaultSATFilterExpression } from "./satFilterSlice";
@@ -150,7 +150,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...annotationQueries.span.table({ projectId, filter, sortingModel, fetchSize }),
+    ...spanAnnotationQueries.table({ projectId, filter, sortingModel, fetchSize }),
     enabled: !!userId,
   });
 

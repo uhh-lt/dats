@@ -1,5 +1,5 @@
+import { GeneralHooks } from "@api/general/generalHooks";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { LLMHooks } from "@core/llm";
 import { Button, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
@@ -14,7 +14,7 @@ export function HealthTableToolbarLeft({
   onRetry,
   onRecompute,
 }: HealthTableToolbarProps) {
-  const availableLLMs = LLMHooks.useGetAvailableLLMs();
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   if (selectedRows.length === 0) {

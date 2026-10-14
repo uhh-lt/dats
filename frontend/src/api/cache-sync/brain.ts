@@ -1,12 +1,15 @@
 import { queryClient } from "@api/queryClient";
-import { annotationQueries } from "@core/annotation/api/annotationQueries";
+import { statisticsQueries } from "@api/statistics/statisticsQueries";
+import { bboxAnnotationQueries } from "@core/bbox-annotation/api/bboxAnnotationQueries";
 import { codeQueries } from "@core/code/api/codeQueries";
 import { tableInfoQueries } from "@core/filter/api/tableInfoQueries";
 import { folderQueries } from "@core/folder/api/folderQueries";
-import { metadataQueries } from "@core/project-metadata/api/metadataQueries";
+import { projectMetadataQueries } from "@core/project-metadata/api/projectMetadataQueries";
 import { projectQueries } from "@core/project/api/projectQueries";
+import { sdocMetadataQueries } from "@core/sdoc-metadata/api/sdocMetadataQueries";
+import { sentenceAnnotationQueries } from "@core/sentence-annotation/api/sentenceAnnotationQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
-import { statisticsQueries } from "@core/statistics/api/statisticsQueries";
+import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQueries";
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
@@ -88,7 +91,9 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       removeMapItem(codeQueries.byProject(code.project_id).queryKey, code.id);
       // Deleting a code cascades to its annotations in the DB, which the
       // frontend cannot observe directly — invalidate annotation queries.
-      queryClient.invalidateQueries({ queryKey: annotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.all() });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(code.project_id).queryKey });
       queryClient.invalidateQueries({ queryKey: statisticsQueries.codeStatsByCode(code.id) });
       break;
@@ -200,20 +205,20 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 
     // ── Project metadata ────────────────────────────────────────────────────
     case "PROJECT_METADATA_CREATED":
-      upsertMapItem(metadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      upsertMapItem(projectMetadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
       // New metadata key → sdoc metadata + table info queries may change.
-      queryClient.invalidateQueries({ queryKey: metadataQueries.bySdocScope() });
+      queryClient.invalidateQueries({ queryKey: sdocMetadataQueries.bySdocScope() });
       queryClient.invalidateQueries({ queryKey: tableInfoQueries.all() });
       break;
     case "PROJECT_METADATA_UPDATED":
-      upsertMapItem(metadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
-      queryClient.invalidateQueries({ queryKey: metadataQueries.bySdocScope() });
+      upsertMapItem(projectMetadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      queryClient.invalidateQueries({ queryKey: sdocMetadataQueries.bySdocScope() });
       break;
     case "PROJECT_METADATA_DELETED": {
       const metadata = event.payload;
-      removeMapItem(metadataQueries.byProject(metadata.project_id).queryKey, metadata.id);
+      removeMapItem(projectMetadataQueries.byProject(metadata.project_id).queryKey, metadata.id);
       // Sweep the deleted metadata key out of every per-sdoc metadata map.
-      sweepPrefix<Record<number, unknown>>(metadataQueries.bySdocScope(), (old) => {
+      sweepPrefix<Record<number, unknown>>(sdocMetadataQueries.bySdocScope(), (old) => {
         if (!old) return old;
         const next = { ...old };
         delete next[metadata.id];
@@ -330,98 +335,98 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Span annotations ────────────────────────────────────────────────────
     case "SPAN_ANNOTATION_CREATED": {
       const anno = event.payload;
-      setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
-      appendListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
+      setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno);
+      appendListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "SPAN_ANNOTATION_CREATED_BATCH": {
       const annos = event.payload;
       if (annos.length === 0) break;
-      annos.forEach((anno) => setSingle(annotationQueries.span.byId(anno.id).queryKey, anno));
+      annos.forEach((anno) => setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno));
       // Bulk creates are always for one sdoc+user pair.
       const first = annos[0];
-      annos.forEach((anno) => appendListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno));
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(first.code_id).queryKey });
+      annos.forEach((anno) => appendListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno));
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(first.code_id).queryKey });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED": {
       const anno = event.payload;
-      setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
-      replaceListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.tableScope() });
+      setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno);
+      replaceListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.tableScope() });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        setSingle(annotationQueries.span.byId(anno.id).queryKey, anno);
-        replaceListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
-        queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
+        setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno);
+        replaceListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+        queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.tableScope() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.tableScope() });
       break;
     }
     case "SPAN_ANNOTATION_DELETED": {
       const anno = event.payload;
-      removeSingle(annotationQueries.span.byId(anno.id).queryKey);
-      removeListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
+      removeSingle(spanAnnotationQueries.byId(anno.id).queryKey);
+      removeListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "SPAN_ANNOTATION_DELETED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        removeSingle(annotationQueries.span.byId(anno.id).queryKey);
-        removeListItem(annotationQueries.span.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
-        queryClient.invalidateQueries({ queryKey: annotationQueries.span.byUserCode(anno.code_id).queryKey });
+        removeSingle(spanAnnotationQueries.byId(anno.id).queryKey);
+        removeListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+        queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.tableScope() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.tableScope() });
       break;
     }
 
     // ── BBox annotations ────────────────────────────────────────────────────
     case "BBOX_ANNOTATION_CREATED": {
       const anno = event.payload;
-      setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
-      appendListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
+      setSingle(bboxAnnotationQueries.byId(anno.id).queryKey, anno);
+      appendListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "BBOX_ANNOTATION_UPDATED": {
       const anno = event.payload;
-      setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
-      replaceListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.tableScope() });
+      setSingle(bboxAnnotationQueries.byId(anno.id).queryKey, anno);
+      replaceListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.tableScope() });
       break;
     }
     case "BBOX_ANNOTATION_UPDATED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        setSingle(annotationQueries.bbox.byId(anno.id).queryKey, anno);
-        replaceListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
-        queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
+        setSingle(bboxAnnotationQueries.byId(anno.id).queryKey, anno);
+        replaceListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
+        queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.tableScope() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.tableScope() });
       break;
     }
     case "BBOX_ANNOTATION_DELETED": {
       const anno = event.payload;
-      removeSingle(annotationQueries.bbox.byId(anno.id).queryKey);
-      removeListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
+      removeSingle(bboxAnnotationQueries.byId(anno.id).queryKey);
+      removeListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
       break;
     }
     case "BBOX_ANNOTATION_DELETED_BATCH": {
       const annos = event.payload;
       annos.forEach((anno) => {
-        removeSingle(annotationQueries.bbox.byId(anno.id).queryKey);
-        removeListItem(annotationQueries.bbox.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
-        queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.byUserCode(anno.code_id).queryKey });
+        removeSingle(bboxAnnotationQueries.byId(anno.id).queryKey);
+        removeListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
+        queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.tableScope() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.tableScope() });
       break;
     }
 
@@ -430,42 +435,42 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // annotation duplicated across every sentence it covers.
     case "SENTENCE_ANNOTATION_CREATED": {
       const anno = event.payload;
-      setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
+      setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
       break;
     }
     case "SENTENCE_ANNOTATION_CREATED_BATCH":
       event.payload.forEach((anno) => {
-        setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
+        setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
       break;
     case "SENTENCE_ANNOTATION_UPDATED": {
       const anno = event.payload;
-      setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
+      setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
-      queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.tableScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.tableScope() });
       break;
     }
     case "SENTENCE_ANNOTATION_UPDATED_BATCH":
       event.payload.forEach((anno) => {
-        setSingle(annotationQueries.sentence.byId(anno.id).queryKey, anno);
+        setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.tableScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.tableScope() });
       break;
     case "SENTENCE_ANNOTATION_DELETED": {
       const anno = event.payload;
-      removeSingle(annotationQueries.sentence.byId(anno.id).queryKey);
+      removeSingle(sentenceAnnotationQueries.byId(anno.id).queryKey);
       removeSentenceAnnotation(anno);
       break;
     }
     case "SENTENCE_ANNOTATION_DELETED_BATCH":
       event.payload.forEach((anno) => {
-        removeSingle(annotationQueries.sentence.byId(anno.id).queryKey);
+        removeSingle(sentenceAnnotationQueries.byId(anno.id).queryKey);
         removeSentenceAnnotation(anno);
       });
-      queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.tableScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.tableScope() });
       break;
 
     // ── Span groups ─────────────────────────────────────────────────────────
@@ -474,7 +479,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "SPAN_GROUP_CREATED":
     case "SPAN_GROUP_UPDATED":
     case "SPAN_GROUP_DELETED":
-      queryClient.invalidateQueries({ queryKey: annotationQueries.span.bySdocOfSdocScope(event.payload.sdoc_id) });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocOfSdocScope(event.payload.sdoc_id) });
       break;
 
     // ── Source document tags ────────────────────────────────────────────────
@@ -497,20 +502,20 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "SDOC_METADATA_UPDATED":
       upsertSdocMetadata(event.payload);
       queryClient.invalidateQueries({
-        queryKey: metadataQueries.bySdocAndKeyOfSdocScope(event.payload.source_document_id),
+        queryKey: sdocMetadataQueries.bySdocAndKeyOfSdocScope(event.payload.source_document_id),
       });
       break;
     case "SDOC_METADATA_DELETED":
       removeSdocMetadata(event.payload);
       queryClient.invalidateQueries({
-        queryKey: metadataQueries.bySdocAndKeyOfSdocScope(event.payload.source_document_id),
+        queryKey: sdocMetadataQueries.bySdocAndKeyOfSdocScope(event.payload.source_document_id),
       });
       break;
     case "SDOC_METADATA_UPDATED_BATCH":
       event.payload.forEach((metadata) => {
         upsertSdocMetadata(metadata);
         queryClient.invalidateQueries({
-          queryKey: metadataQueries.bySdocAndKeyOfSdocScope(metadata.source_document_id),
+          queryKey: sdocMetadataQueries.bySdocAndKeyOfSdocScope(metadata.source_document_id),
         });
       });
       break;

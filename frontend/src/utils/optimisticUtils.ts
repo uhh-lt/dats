@@ -1,5 +1,4 @@
-import { queryClient } from "@api/queryClient";
-import type { DataTag, QueryKey } from "@tanstack/react-query";
+import type { DataTag, QueryClient, QueryKey } from "@tanstack/react-query";
 
 /**
  * Roll back an optimistic cache update after its mutation failed.
@@ -11,11 +10,13 @@ import type { DataTag, QueryKey } from "@tanstack/react-query";
  * stale (no refetch now, so the other optimistic updates stay visible) and is refreshed the next time it is used.
  * See "Concurrent Optimistic Updates in React Query" (TkDodo).
  *
+ * @param queryClient the query client of the app
  * @param queryKey the typed key of the optimistically updated cache entry
  * @param previous the snapshot taken in `onMutate`
  * @param mutationKey prefix of the mutation keys that update this cache entry
  */
 export function rollbackOptimisticUpdate<TData>(
+  queryClient: QueryClient,
   queryKey: DataTag<QueryKey, TData, Error>,
   previous: TData | undefined,
   mutationKey: QueryKey,
