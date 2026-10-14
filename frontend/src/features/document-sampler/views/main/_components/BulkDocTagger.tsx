@@ -1,9 +1,8 @@
-import { TagHooks, tagQueries } from "@core/tag";
+import { TagHooks } from "@core/tag";
 import CheckIcon from "@mui/icons-material/Check";
 import LabelIcon from "@mui/icons-material/Label";
 import { Button, MenuItem, Select, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useState } from "react";
 
 export const BulkDocTagger = memo(() => {
@@ -12,8 +11,7 @@ export const BulkDocTagger = memo(() => {
   const chartData = useAppSelector((state) => state.documentSampler.chartData);
 
   // global server state (react query)
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const documentTags = useQuery(tagQueries.byProject(projectId));
+  const documentTags = TagHooks.useGetAllTags();
 
   // local client state
   const [selectedDocumentTagId, setSelectedDocumentTagId] = useState(-1);

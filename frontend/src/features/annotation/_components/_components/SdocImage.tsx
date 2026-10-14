@@ -1,5 +1,4 @@
-import { sdocQueries } from "@core/source-document";
-import { useQuery } from "@tanstack/react-query";
+import { SdocHooks } from "@core/source-document";
 import { useRef } from "react";
 import { ImageMenu, ImageMenuHandle } from "./ImageMenu";
 
@@ -9,8 +8,8 @@ interface SdocImageLinkProps {
 }
 
 export function SdocImage({ projectId, filename }: SdocImageLinkProps) {
-  const sdocId = useQuery(sdocQueries.idByFilename(projectId, filename));
-  const sdocData = useQuery({ ...sdocQueries.data(sdocId.data!), enabled: sdocId.data !== undefined });
+  const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
+  const sdocData = SdocHooks.useGetDocumentData(sdocId.data);
 
   const imageMenuRef = useRef<ImageMenuHandle>(null);
 

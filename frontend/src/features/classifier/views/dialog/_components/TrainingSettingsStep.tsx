@@ -21,9 +21,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { SubmitErrorHandler, useForm, useWatch } from "react-hook-form";
-import { classifierQueries } from "../../../api/classifierQueries";
+import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions, ClassifierTrainingSettings } from "../../../store/classifierSlice";
 
 const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];
@@ -33,7 +32,7 @@ const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 export function TrainingSettingsStep() {
   const model = useAppSelector((state) => state.classifier.context.model);
   const savedSettings = useAppSelector((state) => state.classifier.drafts.trainingSettings);
-  const classifierInfo = useQuery(classifierQueries.info());
+  const classifierInfo = ClassifierHooks.useGetClassifierInfo();
 
   if (classifierInfo.isError) {
     return <Alert severity="error">Could not load classifier settings: {classifierInfo.error.message}</Alert>;

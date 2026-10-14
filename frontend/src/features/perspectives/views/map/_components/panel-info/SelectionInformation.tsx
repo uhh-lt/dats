@@ -2,18 +2,16 @@ import { getIconComponent, Icon } from "@components/icons";
 import { LinkButton } from "@core/navigation";
 import { MetadataHooks } from "@core/project-metadata";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
-import { sdocQueries } from "@core/source-document";
-import { TagMenuButton, tagQueries, TagRow } from "@core/tag";
+import { SdocHooks } from "@core/source-document";
+import { TagHooks, TagMenuButton, TagRow } from "@core/tag";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
-import { perspectiveQueries } from "../../../../api/perspectiveQueries";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface SelectionInformationProps {
@@ -47,10 +45,10 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
 
   // global server state
   const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
-  const documentTagIds = useQuery(tagQueries.idsBySdoc(selectedSdocIds[selectedSdocIdsIndex]));
-  const docClusters = useQuery(perspectiveQueries.clustersBySdoc(aspectId, selectedSdocIds[selectedSdocIdsIndex]));
+  const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
+  const docClusters = PerspectivesHooks.useGetClustersBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
-  const sdoc = useQuery(sdocQueries.detail(selectedSdocIds[selectedSdocIdsIndex]));
+  const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   // filtering
   const handleAddMetadataFilter = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {

@@ -1,15 +1,12 @@
 import { useWithLevel } from "@components/tree-explorer";
-import { tagQueries, TagRenderer } from "@core/tag";
+import { TagHooks, TagRenderer } from "@core/tag";
 import { MenuItem, TextField } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { ChangeEvent, memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
 export const TagIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const projectTags = useQuery(tagQueries.byProject(projectId));
+  const projectTags = TagHooks.useGetAllTags();
   // transform flat list into hierarchical strcutre
   const tagsWithLevel = useWithLevel(projectTags.data || []);
 

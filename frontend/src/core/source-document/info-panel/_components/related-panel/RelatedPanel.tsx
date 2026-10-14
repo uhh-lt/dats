@@ -4,10 +4,9 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, List, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useRef } from "react";
-import { sdocQueries } from "../../../api/sdocQueries";
+import { SdocHooks } from "../../../api/sdocHooks";
 import { SdocListItem } from "./_components/SdocListItem";
 
 interface RelatedPanelProps {
@@ -24,7 +23,7 @@ export const RelatedPanel = memo((props: RelatedPanelProps) => {
 });
 
 function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
-  const relatedSdocIds = useQuery(sdocQueries.sameFolder(sdocId));
+  const relatedSdocIds = SdocHooks.useGetSameFolderSdocIds(sdocId);
 
   // virtualization
   const parentRef = useRef<HTMLDivElement>(null);

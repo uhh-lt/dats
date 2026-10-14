@@ -1,6 +1,5 @@
-import { annotationQueries } from "@core/annotation";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
-import { useQuery } from "@tanstack/react-query";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationExplorer } from "./_components/AnnotationExplorer";
 import { BBoxAnnotationCard } from "./_components/BBoxAnnotationCard";
@@ -12,7 +11,7 @@ const estimateSize = () => 190;
 export function BBoxAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
   const { visibleUserId } = AnnotationRouteAPI.useSearch();
-  const annotations = useQuery(annotationQueries.bbox.bySdoc(sdocId, visibleUserId));
+  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocId, visibleUserId);
 
   return (
     <AnnotationExplorer

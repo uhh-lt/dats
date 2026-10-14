@@ -1,7 +1,5 @@
 import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
-import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -11,7 +9,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { tagQueries } from "./api/tagQueries";
+import { TagHooks } from "./api/tagHooks";
 
 const createDataTree = (dataset: TagRead[]): TagTableRow[] => {
   const hashTable: Record<number, TagTableRow> = Object.create(null);
@@ -83,8 +81,7 @@ export const TagTable = memo(
     renderBottomToolbar,
   }: TagTableProps) => {
     // global server state
-    const projectId = useAppSelector((state) => state.project.projectId);
-    const projectTags = useQuery(tagQueries.byProject(projectId));
+    const projectTags = TagHooks.useGetAllTags();
 
     // computed
     const { projectTagsMap, projectTagRows } = useMemo(() => {

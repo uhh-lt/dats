@@ -1,5 +1,5 @@
 import { useAuth } from "@core/auth";
-import { codeQueries } from "@core/code";
+import { CodeHooks } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
@@ -7,7 +7,6 @@ import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, BoxProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
@@ -66,8 +65,7 @@ export const SentenceAnnotationComparison = memo(
     const editableSide: "left" | "right" = isAnnotationAllowedRight && !isAnnotationAllowedLeft ? "right" : "left";
 
     // global server state (react-query)
-    const projectId = useAppSelector((state) => state.project.projectId);
-    const codeMap = useQuery(codeQueries.byProject(projectId));
+    const codeMap = CodeHooks.useGetAllCodesMap();
     const annotatorLeft = useGetSentenceAnnotator({
       sdocId: sdocData.id,
       userId: leftUserId,

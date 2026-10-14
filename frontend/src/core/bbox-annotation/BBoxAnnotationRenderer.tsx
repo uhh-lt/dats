@@ -1,14 +1,14 @@
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { ImageCropper } from "@components/ImageCropper";
-import { annotationQueries, AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { CodeHooks } from "@core/code";
-import { sdocQueries } from "@core/source-document";
+import { SdocHooks } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
+import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
 
 export type BBoxAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 
@@ -26,7 +26,7 @@ export const BBoxAnnotationRenderer = memo(({ bboxAnnotation, ...props }: BBoxAn
 
 const BBoxAnnotationRendererWithoutData = memo(
   ({ bboxAnnotationId, ...props }: { bboxAnnotationId: number } & BBoxAnnotationRendererSharedProps) => {
-    const bboxAnnotation = useQuery(annotationQueries.bbox.byId(bboxAnnotationId));
+    const bboxAnnotation = BboxAnnotationHooks.useGetAnnotation(bboxAnnotationId);
 
     if (bboxAnnotation.isSuccess) {
       return <BBoxAnnotationRendererWithData bboxAnnotation={bboxAnnotation.data} {...props} />;
@@ -80,7 +80,7 @@ const BBoxAnnotationRendererWithData = memo(
 );
 
 function BBoxAnnotationContext({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationRead }) {
-  const sdocData = useQuery(sdocQueries.data(bboxAnnotation.sdoc_id));
+  const sdocData = SdocHooks.useGetDocumentData(bboxAnnotation.sdoc_id);
   const code = CodeHooks.useGetCode(bboxAnnotation.code_id);
 
   if (sdocData.isLoading || code.isLoading) {

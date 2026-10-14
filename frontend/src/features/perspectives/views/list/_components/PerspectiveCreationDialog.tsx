@@ -1,6 +1,6 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
-import { llmQueries } from "@core/llm";
+import { LLMHooks } from "@core/llm";
 import { useTabNavigate } from "@core/navigation";
 import { DocTypeSelector } from "@core/source-document";
 import { TagSelector } from "@core/tag";
@@ -29,7 +29,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { PerspectivesHooks } from "../../../api/perspectiveHooks";
@@ -98,7 +97,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // available LLMs for the model selection
-  const availableLLMs = useQuery(llmQueries.availableModels());
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   // perspective creation
   const tabNavigate = useTabNavigate();

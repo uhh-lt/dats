@@ -1,10 +1,9 @@
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
-import { statisticsQueries } from "@core/statistics";
+import { StatisticsHooks } from "@core/statistics";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
@@ -29,7 +28,7 @@ export function CodeStats(props: CodeStatsProps) {
 function CodeStatsContent({ codeId, sdocIds, ...props }: CodeStatsProps) {
   // global client state (redux)
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-  const codeStats = useQuery(statisticsQueries.codeStats(codeId, sdocIds, sortStatsByGlobal));
+  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds, sortStatsByGlobal);
   return (
     <TabPanel value={`${codeId}`} sx={{ p: 0 }}>
       {codeStats.isSuccess ? (

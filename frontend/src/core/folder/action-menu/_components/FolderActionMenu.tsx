@@ -16,13 +16,10 @@ import {
   PopoverOrigin,
   TextField,
 } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { FolderHooks } from "../../api/folderHooks";
-import { folderQueries } from "../../api/folderQueries";
 import { FolderCreateButton } from "../../FolderCreateButton";
 
 interface FolderMenuProps {
@@ -45,8 +42,7 @@ export function FolderActionMenu(props: FolderMenuProps) {
     ];
   }, [allFolders.data]);
 
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const allSdocFoldersMap = useQuery(folderQueries.byProject(projectId, FolderType.SDOC_FOLDER));
+  const allSdocFoldersMap = FolderHooks.useGetAllSdocFoldersMap();
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!allFoldersWithRoot || !allSdocFoldersMap.data) return undefined;
 

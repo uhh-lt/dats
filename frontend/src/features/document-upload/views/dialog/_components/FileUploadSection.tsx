@@ -1,12 +1,11 @@
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { JobHooks } from "@core/job";
-import { llmQueries } from "@core/llm";
+import { LLMHooks } from "@core/llm";
 import { Language } from "@models/Language";
 import { ProcessingSettings } from "@models/ProcessingSettings";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { Button } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { UploadDropzone } from "./UploadDropzone";
 
@@ -15,7 +14,7 @@ interface FileUploadSectionProps {
 }
 
 export function FileUploadSection({ projectId }: FileUploadSectionProps) {
-  const availableLLMs = useQuery(llmQueries.availableModels());
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   // Local state
   const [files, setFiles] = useState<File[]>([]);

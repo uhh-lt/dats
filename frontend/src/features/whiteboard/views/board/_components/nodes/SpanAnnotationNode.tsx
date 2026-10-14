@@ -1,14 +1,13 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { annotationQueries } from "@core/annotation";
 import { CodeHooks, CodeRenderer } from "@core/code";
-import { memoQueries, useOpenMemoDialog } from "@core/memo";
+import { MemoHooks, useOpenMemoDialog } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationNodeData } from "@models/SpanAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -42,9 +41,9 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = useQuery(annotationQueries.span.byId(props.data.spanAnnotationId));
+  const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId));
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId);
 
   // effects
   useEffect(() => {

@@ -1,10 +1,9 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
-import { TagHooks, tagQueries } from "@core/tag";
+import { TagHooks } from "@core/tag";
 import { TagRead } from "@models/TagRead";
 import { TagRecommendationResult } from "@models/TagRecommendationResult";
 import { TagRecommendationHooks } from "../../api/tagRecommendationHooks";
-import { tagRecommendationQueries } from "../../api/tagRecommendationQueries";
 // TODO: This feature needs its own components or rework in general
 // eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
 import { DocumentTaggingResultRow } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTaggingResultRow";
@@ -23,8 +22,6 @@ import {
   Stack,
   Toolbar,
 } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 export function TagRecommendationsView() {
@@ -32,10 +29,11 @@ export function TagRecommendationsView() {
   const [selectedJobId, setSelectedJobId] = useState<string>("-1");
 
   // global server state
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const documentTags = useQuery(tagQueries.byProject(projectId));
-  const tagRecommendationMlJobs = useQuery(tagRecommendationQueries.jobsByProject(projectId));
-  const recommendations = useQuery(tagRecommendationQueries.byJob(selectedJobId === "-1" ? null : selectedJobId));
+  const documentTags = TagHooks.useGetAllTags();
+  const tagRecommendationMlJobs = TagRecommendationHooks.useGetAllTagRecommendationJobs();
+  const recommendations = TagRecommendationHooks.useGetTagRecommendationsFromJob(
+    selectedJobId === "-1" ? null : selectedJobId,
+  );
 
   // event handlers
   const handleChange = (event: SelectChangeEvent<string>) => {

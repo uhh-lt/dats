@@ -1,11 +1,9 @@
-import { codeQueries } from "@core/code";
-import { tagQueries } from "@core/tag";
+import { CodeHooks } from "@core/code";
+import { TagHooks } from "@core/tag";
 import { ClassifierData } from "@models/ClassifierData";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { TagRead } from "@models/TagRead";
 import { Typography } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { BarShapeProps } from "recharts";
 import { Bar, BarChart, CartesianGrid, Rectangle, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -44,8 +42,7 @@ function TagClassifierDataPlot({
   data: ClassifierData[];
   minHeight?: string | number | undefined;
 }) {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const projectTags = useQuery(tagQueries.byProject(projectId));
+  const projectTags = TagHooks.useGetAllTags();
 
   const classifierData = useMemo(() => {
     if (!projectTags.data) return [];
@@ -68,8 +65,7 @@ function CodeClassifierDataPlot({
   data: ClassifierData[];
   minHeight?: string | number | undefined;
 }) {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  const projectCodeMap = useQuery(codeQueries.byProject(projectId));
+  const projectCodeMap = CodeHooks.useGetAllCodesMap();
 
   const classifierData = useMemo(() => {
     if (!projectCodeMap.data) return [];
