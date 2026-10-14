@@ -2,7 +2,7 @@ import { ProjectService } from "@api/services/ProjectService";
 import { SearchService } from "@api/services/SearchService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
-import type { MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { SortDirection } from "@models/SortDirection";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
@@ -96,6 +96,14 @@ export const sdocQueries = {
       queryKey: [...sdocQueries.annotatorsScope(), sdocId] as const,
       queryFn: !sdocId ? skipToken : () => SourceDocumentService.getAnnotators({ sdocId }),
       staleTime: 1000 * 60 * 5,
+    }),
+
+  // the column infos of the sdoc filter table
+  tableInfo: (projectId: number) =>
+    queryOptions({
+      queryKey: tableInfoQueries.bySlice("documentTableFilter", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      staleTime: Infinity,
     }),
 
   // the sdoc filter table

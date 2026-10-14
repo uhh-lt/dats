@@ -1,7 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
-import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
+import { toColumnInfoMap } from "@core/filter";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoRead } from "@models/MemoRead";
@@ -24,17 +23,9 @@ import { memoQueries } from "./memoQueries";
  * column info in views.
  */
 const useMemoSearchInfo = (projectId: number) =>
-  useQuery<Record<string, ColumnInfo>>({
-    queryKey: tableInfoQueries.bySlice("memoFilter", projectId),
-    queryFn: async () => {
-      const result = await SearchService.searchMemoInfo({ projectId });
-      return result.reduce<Record<string, ColumnInfo>>((acc, info) => {
-        const column = info.column.toString();
-        acc[column] = { ...info, column };
-        return acc;
-      }, {});
-    },
-    staleTime: Infinity,
+  useQuery({
+    ...memoQueries.tableInfo(projectId),
+    select: toColumnInfoMap,
   });
 
 // MEMO MUTATIONS

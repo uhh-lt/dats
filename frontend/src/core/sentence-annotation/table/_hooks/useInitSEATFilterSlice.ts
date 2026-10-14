@@ -1,39 +1,21 @@
-import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
-import { AppDispatch } from "@store/store";
+import { annotationQueries } from "@core/annotation";
+import { toColumnInfoMap } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { SEATFilterActions } from "../seatFilterSlice";
-
-const useGetSEATInfo = (projectId: number, dispatch: AppDispatch) =>
-  useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueries.bySlice("seatFilter", projectId),
-    queryFn: async () => {
-      const result = await SearchService.searchSentenceAnnotationInfo({ projectId });
-      const columnInfo = result.map((info) => {
-        return {
-          ...info,
-          column: info.column.toString(),
-        };
-      });
-      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
-        return {
-          ...acc,
-          [info.column]: info,
-        };
-      }, {});
-      dispatch(SEATFilterActions.init({ columnInfoMap }));
-      return columnInfo;
-    },
-    staleTime: Infinity,
-  });
 
 export const useInitSEATFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetSEATInfo(projectId, dispatch);
+  const { data: columnData } = useQuery(annotationQueries.sentence.tableInfo(projectId));
+
+  // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
+  useEffect(() => {
+    if (columnData) dispatch(SEATFilterActions.init({ columnInfoMap: toColumnInfoMap(columnData) }));
+  }, [columnData, dispatch]);
 
   return columnData;
 };

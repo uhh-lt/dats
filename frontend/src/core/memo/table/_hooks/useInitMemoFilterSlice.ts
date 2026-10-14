@@ -1,39 +1,21 @@
-import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
-import { AppDispatch } from "@store/store";
+import { toColumnInfoMap } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { memoQueries } from "../../api/memoQueries";
 import { MemoFilterActions } from "../memoFilterSlice";
-
-const useGetMemoSearchInfo = (projectId: number, dispatch: AppDispatch) =>
-  useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueries.bySlice("memoFilter", projectId),
-    queryFn: async () => {
-      const result = await SearchService.searchMemoInfo({ projectId });
-      const columnInfo = result.map((info) => {
-        return {
-          ...info,
-          column: info.column.toString(),
-        };
-      });
-      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
-        return {
-          ...acc,
-          [info.column]: info,
-        };
-      }, {});
-      dispatch(MemoFilterActions.init({ columnInfoMap }));
-      return columnInfo;
-    },
-    staleTime: Infinity,
-  });
 
 export const useInitMemoFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetMemoSearchInfo(projectId, dispatch);
+  const { data: columnData } = useQuery(memoQueries.tableInfo(projectId));
+
+  // the filter slice needs the column infos (the query is cached, the slice is initialized whenever they arrive)
+  useEffect(() => {
+    if (columnData) dispatch(MemoFilterActions.init({ columnInfoMap: toColumnInfoMap(columnData) }));
+  }, [columnData, dispatch]);
 
   return columnData;
 };
