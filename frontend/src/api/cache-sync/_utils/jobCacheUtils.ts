@@ -4,7 +4,7 @@ import { folderQueries } from "@core/folder/api/folderQueries";
 import { jobQueries } from "@core/job/api/jobQueries";
 import { memoQueries } from "@core/memo/api/memoQueries";
 import { metadataQueries } from "@core/project-metadata/api/metadataQueries";
-import { searchQueries } from "@core/source-document/api/searchQueries";
+import { sdocQueries } from "@core/source-document/api/sdocQueries";
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
@@ -130,7 +130,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.DOCUMENTS:
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsByProject(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsByProject(projectId) });
       break;
     case ImportJobType.MEMOS:
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
@@ -143,7 +143,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsByProject(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsByProject(projectId) });
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
     case ImportJobType.BBOX_ANNOTATIONS:

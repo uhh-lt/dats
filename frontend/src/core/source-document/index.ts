@@ -1,6 +1,5 @@
 export * from "./api/sdocHooks";
 export * from "./api/sdocQueries";
-export * from "./api/searchQueries";
 export * from "./DeleteSdocsButton";
 export * from "./DocTypeSelector";
 export * from "./info-panel";

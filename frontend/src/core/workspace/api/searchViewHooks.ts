@@ -1,6 +1,10 @@
 import { queryClient } from "@api/queryClient";
 import { SearchViewService } from "@api/services/SearchViewService";
+import { BBoxSearchViewRead } from "@models/BBoxSearchViewRead";
+import { MemoSearchViewRead } from "@models/MemoSearchViewRead";
 import { SearchEntityType } from "@models/SearchEntityType";
+import { SentenceSearchViewRead } from "@models/SentenceSearchViewRead";
+import { SpanSearchViewRead } from "@models/SpanSearchViewRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { searchViewQueries } from "./searchViewQueries";
 
@@ -118,3 +122,13 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
 
   return { useGetViews, useCreateView, useUpdateView, useReorderViews, useDeleteView };
 };
+
+export const MemoViewHooks = createSearchViewHooks<MemoSearchViewRead>(SearchEntityType.MEMO);
+
+export const SpanAnnoViewHooks = createSearchViewHooks<SpanSearchViewRead>(SearchEntityType.SPAN_ANNOTATION);
+
+export const SentenceAnnoViewHooks = createSearchViewHooks<SentenceSearchViewRead>(
+  SearchEntityType.SENTENCE_ANNOTATION,
+);
+
+export const BBoxAnnoViewHooks = createSearchViewHooks<BBoxSearchViewRead>(SearchEntityType.BBOX_ANNOTATION);

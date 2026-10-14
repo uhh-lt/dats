@@ -2,7 +2,7 @@ import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
 import { projectQueries } from "@core/project";
-import { searchQueries } from "@core/source-document";
+import { sdocQueries } from "@core/source-document";
 import { Body_docprocessing_recompute_processing_step } from "@models/Body_docprocessing_recompute_processing_step";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import { DuplicateFinderJobRead } from "@models/DuplicateFinderJobRead";
@@ -75,7 +75,7 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
       // Only invalidate if previous length > 0 and current length == 0
       if (previousLengthRef.current > 0 && currentLength === 0) {
         console.log("Invalidating documents");
-        queryClient.invalidateQueries({ queryKey: searchQueries.documentsByProject(projectId) });
+        queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsByProject(projectId) });
       }
       previousLengthRef.current = currentLength;
       return 3000;

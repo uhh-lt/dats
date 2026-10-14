@@ -3,7 +3,6 @@ import { annotationQueries } from "@core/annotation/api/annotationQueries";
 import { codeQueries } from "@core/code/api/codeQueries";
 import { memoQueries } from "@core/memo/api/memoQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
-import { searchQueries } from "@core/source-document/api/searchQueries";
 import { tagQueries } from "@core/tag/api/tagQueries";
 import type { AttachedObjectType } from "@models/AttachedObjectType";
 import type { MemoRead } from "@models/MemoRead";
@@ -42,7 +41,7 @@ export function invalidateAttachedObjectMemoIds(
   switch (attachedObjectType) {
     case "source_document":
       queryClient.invalidateQueries({ queryKey: sdocQueries.detail(attachedObjectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
     case "tag":
       queryClient.invalidateQueries({ queryKey: tagQueries.byProjectScope() });
@@ -52,15 +51,15 @@ export function invalidateAttachedObjectMemoIds(
       break;
     case "span_annotation":
       queryClient.invalidateQueries({ queryKey: annotationQueries.span.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
     case "sentence_annotation":
       queryClient.invalidateQueries({ queryKey: annotationQueries.sentence.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
     case "bbox_annotation":
       queryClient.invalidateQueries({ queryKey: annotationQueries.bbox.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: searchQueries.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
       break;
     default:
       break;
