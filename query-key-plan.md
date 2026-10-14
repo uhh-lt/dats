@@ -1,6 +1,6 @@
 # Plan: Query keys, query definitions, mutations and route prefetching (frontend)
 
-Status: **Stages 0-7 done. Structure (D7) and the one loader rule (D8) decided, see sections 5, 6 and stages 5-6.**
+Status: **Stages 0-8 done. Stage 8 (consolidation into `<entity>Queries.ts` + `<entity>Hooks.ts`) supersedes the call-site rules 5.3 and 5.6 and the `*Mutations.ts` layout of stage 6.**
 Branch: `refactor/query-key-factories` (stages 2 and 3 are committed).
 Scope: `frontend/` only. The hey-api client migration is a separate effort (section 8).
 
@@ -138,9 +138,9 @@ used by suspense or loaders takes a strict id (`sdocQueries.detail(sdocId: numbe
 with a normal `queryFn`, and the few call sites that may have no id add `enabled` themselves (as the original code did).
 Queries that no suspense/loader uses may still use `skipToken` for a missing id.
 
-5.3 **Compose at the call site:** `useQuery({ ...tagQueries.byProject(id), select })`. A wrapper hook is allowed only if it
-adds real logic (derived data, several queries, reading app state). A hook that only forwards to `useQuery` is not
-allowed. _(Open decision D1: how components get the current `projectId`.)_
+5.3 **Components call the domain's hooks (changed in stage 8).** `CodeHooks.useGetCode(id)`, `TagHooks.useGetAllTags()`. The hook builds on the
+factory (`useQuery({ ...tagQueries.byProject(projectId), select, enabled })`); `select`, `enabled`, the project id from Redux and polling live in
+the hook. Routes build their options with the factory directly (5.7). _(Replaces the earlier rule "compose at the call site, no forwarding hooks".)_
 
 5.4 **No explicit generics** on `useQuery`/`queryOptions`/`setQueryData`; type the service call. All cache access goes through
 `factory.leaf(...).queryKey` (tagged) or a scope prefix function.
@@ -149,7 +149,7 @@ allowed. _(Open decision D1: how components get the current `projectId`.)_
 **The brain keeps writing entity DTOs with `setQueryData`** (deliberate deviation from TkDodo's invalidation-first advice, see
 `plan_entity_brain.md`); typed keys address his type-safety objection. Derived data is invalidated.
 
-5.6 **Mutations:** in the domain's `<domain>Mutations.ts` (stage 6; until then in `<Domain>Hooks.ts`). A mutation hook may only
+5.6 **Mutations:** in the domain's `<domain>Hooks.ts`, as members of the `<Domain>Hooks` object (changed in stage 8; stage 6 had a separate `<domain>Mutations.ts`). A mutation hook may only
 read global Redux slices (`project`, `websocket`); state of a feature slice must be passed in as a parameter or the hook stays in
 that feature (ESLint `no-cross-slice-access`). Every mutation has a `mutationKey` starting with the domain, e.g. `["tags", "create"]`.
 Cache reactions go through the brain via `meta.datsEvent`; no cache code in components. `mutate` by default,
@@ -380,6 +380,37 @@ Requested by you: each domain's `<domain>Queries.ts` and `<domain>Mutations.ts` 
   word frequency export, document sampler) got `mutationKey`s; for that, `authQueries.all()` (`core/auth/api`) and `documentSamplerQueries.all()` were added as roots.
 - All 30 factory roots are unique (checked once with a grep). This is **not** enforced by lint; a duplicate root would silently share a cache prefix.
 - Docs: `frontend.instructions.md` states both rules; the cache-sync README no longer points to the enum.
+
+### Stage 8: Consolidation into `<entity>Queries.ts` + `<entity>Hooks.ts` (after review of stages 0-7)
+
+Reason (your feedback): after stage 6 a domain was split over `*Hooks.ts` and `*Mutations.ts`, and moving `select` / `enabled` /
+the project id out of the hooks into the components made the call sites more complex.
+
+**Result (done, 5 commits):**
+
+- Every `api/` folder has **exactly** `<entity>Queries.ts` (the factory) and `<entity>Hooks.ts` (one `<Entity>Hooks` object with query hooks,
+  data-deriving hooks, polling hooks and mutations). No empty hooks objects: folders without hooks have only the queries file
+  (health, word frequency, similarity searches, table info, document sampler, GitHub release, annotation root), folders without their own
+  queries have only the hooks file (span / bbox / sentence annotations use `core/annotation`, ML and import jobs use `jobQueries`).
+- Components call `CodeHooks.useGetCode(...)`, `TagHooks.useCreateTag()` again. Named imports and `*Mutations.ts` are gone.
+- **The query hooks that existed on `main` are back with their old names and signatures** (about 60 hooks, e.g. `TagHooks.useGetAllTags`,
+  `SdocHooks.useGetDocument`, `StatisticsHooks.*`, `LLMHooks.useGetAvailableLLMs`). They are **not copied from main**: each one builds on the
+  factory leaf (`useQuery({ ...factory.leaf(...), select, enabled })`), so key and `queryFn` exist only in `<entity>Queries.ts`.
+  The call sites of those hooks (94 files) are restored from `main` by a diff script and reviewed; most of them now differ from `main` only in their imports.
+- Hooks that read a feature slice (`useLabelDocs`, `useGetDocVisualization`, `useDatasetStatistics`) are members of that feature's object.
+- **No query is defined outside a `*Queries.ts` file any more.** The column-info queries of the nine filter tables
+  (`sdocQueries.tableInfo`, `annotationQueries.span.tableInfo`, `memoQueries.tableInfo`, ...) were defined in the `useInit*Slice` hooks; they are factory
+  leaves now and those hooks initialize the slice with an effect when the cached data arrives (before, the `queryFn` dispatched).
+  This also fixes a shape clash on main: `useMemoSearchInfo` and the memo init hook cached different shapes under the same key.
+- Merged files so that the two-file rule holds: the document search is `sdocQueries.search.*` (root `["search"]`); the image / sentence
+  similarity searches are one `searchQueries` in `features/search` (root `["similaritySearch"]`); `docProcessing` and `jobPolling` are part of `JobHooks`;
+  the search-view hook factory and its four instances are in `core/workspace/api/searchViewHooks.ts`; the GitHub fetch functions are in `githubReleaseQueries.ts`;
+  `generalQueries` is part of `authQueries` (`AuthHooks.useGetInstanceInfo`).
+- Names: the three `useCountBySdocsAndUser` mutations are members of three different objects again, so the stage-6 renames are undone.
+  `PerspectivesHooks` (was `PerspectivesQueryOptions` on `main`), `AuthHooks` (was `GeneralHooks`), `JobHooks` (also `DocProcessingHooks` on `main`).
+- Unchanged from before: the route `context` + `loader` rule, lint rules (queryKey only in `*Queries.ts`, `mutationKey` required), the brain exemption.
+- Docs updated: `frontend.instructions.md`, entity-renderer instructions.
+- Still open: nothing has been run in the app; see the click-through list.
 
 ## 8. Related: hey-api client migration (separate branch, after this)
 
