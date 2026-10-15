@@ -8,129 +8,21 @@ import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
 import { SdocColumns } from "@models/SdocColumns";
-import { SortDirection } from "@models/SortDirection";
+import type { Sort_SdocColumns_ } from "@models/Sort_SdocColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
-import type { MRT_SortingState } from "material-react-table";
 
-interface SdocTableParams {
-  projectId: number | undefined;
-  searchQuery: string | undefined;
-  filter: MyFilter<SdocColumns>;
-  sortingModel: MRT_SortingState;
-  fetchSize: number;
-}
-
-interface DocumentSearchParams {
+/** The arguments of the document search, as the backend takes them (the page is added by the query). */
+interface SdocSearchRequest {
   projectId: number;
-  selectedFolderId: number;
   searchQuery: string;
   filter: MyFilter<SdocColumns>;
+  sorts: Sort_SdocColumns_[];
+  pageSize: number;
+  folderId?: number | null;
   expertMode: boolean;
-  sortingModel: { id: string; desc: boolean }[];
-  fetchSize: number;
   showFolders?: boolean;
   showChildFolders?: boolean;
 }
-
-/**
- * Query factory for the document search.
- *
- *   searchQueries.all()                         ["search"]
- *   searchQueries.documentsByProject(projectId) ["search", "documents", projectId]
- *   searchQueries.documents(params)             ["search", "documents", projectId, ...]
- *
- * The queryFn seeds the caches of the found sdocs, annotators, tags and folders.
- */
-const searchQueries = {
-  all: () => ["search"] as const,
-
-  // the column infos of the document search
-  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
-    queryOptions({
-      queryKey: tableInfoQueries.bySlice("search", projectId),
-      queryFn: async () => {
-        const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
-        onLoaded?.(columnInfos);
-        return columnInfos;
-      },
-      staleTime: Infinity,
-    }),
-
-  documentsScope: () => [...searchQueries.all(), "documents"] as const,
-  // prefix of all document searches of one project, for invalidation
-  documentsByProject: (projectId: number) => [...searchQueries.documentsScope(), projectId] as const,
-  documents: ({
-    projectId,
-    selectedFolderId,
-    searchQuery,
-    filter,
-    expertMode,
-    sortingModel,
-    fetchSize,
-    showFolders = true,
-    showChildFolders = false,
-  }: DocumentSearchParams) =>
-    infiniteQueryOptions({
-      queryKey: [
-        ...searchQueries.documentsByProject(projectId),
-        selectedFolderId,
-        searchQuery,
-        filter,
-        expertMode,
-        sortingModel,
-        fetchSize,
-        showFolders,
-        showChildFolders,
-      ] as const,
-      queryFn: async ({ pageParam }) => {
-        const data = await SearchService.searchSdocs({
-          searchQuery,
-          projectId,
-          folderId: selectedFolderId === -1 ? null : selectedFolderId,
-          highlight: true,
-          expertMode,
-          showFolders,
-          showChildFolders,
-          requestBody: {
-            filter,
-            sorts: sortingModel.map((sort) => ({
-              column: sort.id as SdocColumns,
-              direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-            })),
-          },
-          pageNumber: pageParam,
-          pageSize: fetchSize,
-        });
-
-        Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
-          queryClient.setQueryData(sdocQueries.detail(parseInt(sdocId)).queryKey, sdoc);
-          queryClient.setQueryData(sdocQueries.idByFilename(projectId, sdoc.filename).queryKey, sdoc.id);
-        });
-
-        Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
-          queryClient.setQueryData(sdocQueries.annotators(parseInt(sdocId)).queryKey, annotators);
-        });
-
-        Object.entries(data.tags).forEach(([sdocId, tags]) => {
-          queryClient.setQueryData(tagQueries.idsBySdoc(parseInt(sdocId)).queryKey, tags);
-        });
-
-        queryClient.setQueryData(folderQueries.byProject(projectId, FolderType.SDOC_FOLDER).queryKey, (prev) => {
-          prev = prev || {};
-          Object.entries(data.sdoc_folders).forEach(([folderId, folder]) => {
-            prev[parseInt(folderId)] = folder;
-          });
-          return prev;
-        });
-
-        return data;
-      },
-      initialPageParam: 0,
-      getNextPageParam: (_lastGroup, groups) => groups.length,
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
-    }),
-};
 
 /**
  * Query factory for source documents (sdocs).
@@ -143,8 +35,7 @@ const searchQueries = {
  *   sdocQueries.thumbnailUrl(sdocId)         ["sdoc", "thumbnailUrl", sdocId]
  *   sdocQueries.idsByTag(tagId)              ["sdoc", "idsByTag", tagId]
  *   sdocQueries.annotators(sdocId)           ["sdoc", "annotators", sdocId]
- *   sdocQueries.table(params)                ["sdoc", "table", projectId, ...]
- *   sdocQueries.search.*                     the document search, root ["search"]
+ *   sdocQueries.search(params)               ["sdoc", "search", projectId, ...]
  */
 export const sdocQueries = {
   all: () => ["sdoc"] as const,
@@ -215,10 +106,11 @@ export const sdocQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  // the column infos of the sdoc filter table
-  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
+  // the column infos of the document filter. The search page and the filter table keep their own filter slice, so each
+  // one has its own cache entry and gets its own onLoaded call.
+  tableInfo: (projectId: number, slice: "search" | "documentTable", onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
-      queryKey: tableInfoQueries.bySlice("documentTableFilter", projectId),
+      queryKey: tableInfoQueries.bySlice(slice, projectId),
       queryFn: async () => {
         const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
         onLoaded?.(columnInfos);
@@ -227,36 +119,52 @@ export const sdocQueries = {
       staleTime: Infinity,
     }),
 
-  // the sdoc filter table
-  tableScope: () => [...sdocQueries.all(), "table"] as const,
-  table: ({ projectId, searchQuery, filter, sortingModel, fetchSize }: SdocTableParams) =>
+  // the document search: project-wide, with highlights. Its queryFn seeds the caches of the found sdocs, annotators, tags
+  // and folders. Used by the search page and the sdoc filter table.
+  searchScope: () => [...sdocQueries.all(), "search"] as const,
+  // prefix of all document searches of one project, for invalidation
+  searchByProject: (projectId: number) => [...sdocQueries.searchScope(), projectId] as const,
+  search: (request: SdocSearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...sdocQueries.tableScope(), projectId, searchQuery, filter, sortingModel, fetchSize] as const,
-      queryFn: !projectId
-        ? skipToken
-        : ({ pageParam }) =>
-            SearchService.searchSdocs({
-              searchQuery: searchQuery || "",
-              projectId,
-              folderId: null,
-              highlight: true,
-              expertMode: false,
-              showFolders: false,
-              requestBody: {
-                filter,
-                sorts: sortingModel.map((sort) => ({
-                  column: sort.id as SdocColumns,
-                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-                })),
-              },
-              pageNumber: pageParam,
-              pageSize: fetchSize,
-            }),
+      queryKey: [...sdocQueries.searchByProject(request.projectId), request] as const,
+      queryFn: async ({ pageParam }) => {
+        const { projectId, searchQuery, filter, sorts, pageSize, ...options } = request;
+        const data = await SearchService.searchSdocs({
+          projectId,
+          searchQuery,
+          highlight: true,
+          ...options,
+          requestBody: { filter, sorts },
+          pageNumber: pageParam,
+          pageSize,
+        });
+
+        Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
+          queryClient.setQueryData(sdocQueries.detail(parseInt(sdocId)).queryKey, sdoc);
+          queryClient.setQueryData(sdocQueries.idByFilename(projectId, sdoc.filename).queryKey, sdoc.id);
+        });
+
+        Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
+          queryClient.setQueryData(sdocQueries.annotators(parseInt(sdocId)).queryKey, annotators);
+        });
+
+        Object.entries(data.tags).forEach(([sdocId, tags]) => {
+          queryClient.setQueryData(tagQueries.idsBySdoc(parseInt(sdocId)).queryKey, tags);
+        });
+
+        queryClient.setQueryData(folderQueries.byProject(projectId, FolderType.SDOC_FOLDER).queryKey, (prev) => {
+          prev = prev || {};
+          Object.entries(data.sdoc_folders).forEach(([folderId, folder]) => {
+            prev[parseInt(folderId)] = folder;
+          });
+          return prev;
+        });
+
+        return data;
+      },
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     }),
-
-  // the document search (project-wide search with highlights, used by the search feature and invalidated by the brain)
-  search: searchQueries,
 };

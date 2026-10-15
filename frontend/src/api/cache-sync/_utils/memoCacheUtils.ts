@@ -19,7 +19,7 @@ import { removeSingle, setSingle } from "./cacheWriterUtils";
 /** Invalidate the memo workspace queries (list + groups). */
 export function invalidateMemoWorkspace(): void {
   queryClient.invalidateQueries({ queryKey: memoQueries.searchScope() });
-  queryClient.invalidateQueries({ queryKey: memoQueries.groupsScope() });
+  queryClient.invalidateQueries({ queryKey: memoQueries.searchGroupedScope() });
 }
 
 /**
@@ -43,7 +43,7 @@ export function invalidateAttachedObjectMemoIds(
   switch (attachedObjectType) {
     case "source_document":
       queryClient.invalidateQueries({ queryKey: sdocQueries.detail(attachedObjectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "tag":
       queryClient.invalidateQueries({ queryKey: tagQueries.byProjectScope() });
@@ -53,15 +53,15 @@ export function invalidateAttachedObjectMemoIds(
       break;
     case "span_annotation":
       queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "sentence_annotation":
       queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "bbox_annotation":
       queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.bySdocScope() });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     default:
       break;

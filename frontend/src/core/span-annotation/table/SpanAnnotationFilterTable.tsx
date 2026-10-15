@@ -16,6 +16,7 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   createEmptyFilter,
+  toSorts,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -150,7 +151,12 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...spanAnnotationQueries.table({ projectId, filter, sortingModel, fetchSize }),
+    ...spanAnnotationQueries.search({
+      project_id: projectId,
+      filter,
+      sorts: toSorts<SpanColumns>(sortingModel),
+      page_size: fetchSize,
+    }),
     enabled: !!userId,
   });
 

@@ -135,7 +135,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.DOCUMENTS:
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsByProject(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
       break;
     case ImportJobType.MEMOS:
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
@@ -148,7 +148,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsByProject(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
     case ImportJobType.BBOX_ANNOTATIONS:
