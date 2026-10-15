@@ -16,6 +16,7 @@ import {
   URLFilterDialogProps,
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
+  toSorts,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -152,7 +153,12 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...bboxAnnotationQueries.table({ projectId, filter, sortingModel, fetchSize }),
+    ...bboxAnnotationQueries.search({
+      project_id: projectId,
+      filter,
+      sorts: toSorts<BBoxColumns>(sortingModel),
+      page_size: fetchSize,
+    }),
   });
 
   // resetting search-parameter-dependant state

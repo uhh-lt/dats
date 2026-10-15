@@ -10,7 +10,7 @@ export const useInitDocumentTableFilterSlice = ({ projectId }: { projectId: numb
 
   // global server state (react-query); the slice is initialized as a side effect of fetching the column infos
   const { data: columnData } = useQuery(
-    sdocQueries.tableInfo(projectId, (columnInfos) =>
+    sdocQueries.tableInfo(projectId, "documentTable", (columnInfos) =>
       dispatch(SdocTableFilterActions.init({ columnInfoMap: toColumnInfoMap(columnInfos) })),
     ),
   );

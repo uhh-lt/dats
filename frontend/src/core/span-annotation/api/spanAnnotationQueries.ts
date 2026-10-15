@@ -1,17 +1,8 @@
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
-import { SpanColumns } from "@models/SpanColumns";
-import { SortDirection } from "@models/SortDirection";
+import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
+import type { QueryRequest_SpanColumns_ } from "@models/QueryRequest_SpanColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
-import type { MRT_SortingState } from "material-react-table";
-
-interface SpanAnnotationTableParams {
-  projectId: number | undefined;
-  filter: MyFilter<SpanColumns>;
-  sortingModel: MRT_SortingState;
-  fetchSize: number;
-}
 
 /**
  * Span annotations.
@@ -50,7 +41,6 @@ export const spanAnnotationQueries = {
       queryKey: [...spanAnnotationQueries.bySdocScope(), sdocId, userId] as const,
       queryFn: !sdocId || !userId ? skipToken : () => SpanAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
-  // the span annotation filter table
   // the column infos of the span annotation filter table
   tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
@@ -63,27 +53,14 @@ export const spanAnnotationQueries = {
       staleTime: Infinity,
     }),
 
-  tableScope: () => [...spanAnnotationQueries.all(), "table"] as const,
-  table: ({ projectId, filter, sortingModel, fetchSize }: SpanAnnotationTableParams) =>
+  searchScope: () => [...spanAnnotationQueries.all(), "search"] as const,
+  search: (request: QueryRequest_SpanColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...spanAnnotationQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
-      queryFn: !projectId
-        ? skipToken
-        : ({ pageParam }) =>
-            SearchService.searchSpanAnnotations({
-              requestBody: {
-                project_id: projectId,
-                filter,
-                sorts: sortingModel.map((sort) => ({
-                  column: sort.id as SpanColumns,
-                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-                })),
-                page_number: pageParam,
-                page_size: fetchSize,
-              },
-            }),
+      queryKey: [...spanAnnotationQueries.searchScope(), request] as const,
+      queryFn: ({ pageParam }) =>
+        SearchService.searchSpanAnnotations({ requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
-      getNextPageParam: (_lastGroup, groups) => groups.length,
+      getNextPageParam: (_lastPage, pages) => pages.length,
       refetchOnWindowFocus: false,
     }),
 };

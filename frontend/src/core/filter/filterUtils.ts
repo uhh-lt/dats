@@ -12,7 +12,9 @@ import { LogicalOperator } from "@models/LogicalOperator";
 import { NumberOperator } from "@models/NumberOperator";
 import { SpanAnnotationOperator } from "@models/SpanAnnotationOperator";
 import { StringOperator } from "@models/StringOperator";
+import { SortDirection } from "@models/SortDirection";
 import { toLocalYYYYMMDD } from "@utils/DateUtils";
+import type { MRT_SortingState } from "material-react-table";
 
 // TYPES
 
@@ -184,3 +186,10 @@ export const countFilterExpressions = (filter: MyFilter): number => {
   }
   return count;
 };
+
+/** Converts the sorting state of a table (sort ids are the columns the table was configured with) to backend sorts. */
+export const toSorts = <TColumn extends string>(sortingModel: MRT_SortingState) =>
+  sortingModel.map((sort) => ({
+    column: sort.id as TColumn,
+    direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+  }));

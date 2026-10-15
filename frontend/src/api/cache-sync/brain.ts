@@ -192,7 +192,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         }
       });
       if (anyMoved) {
-        queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+        queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       }
       break;
     }
@@ -290,15 +290,15 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Source documents ────────────────────────────────────────────────────
     case "SDOC_UPDATED":
       setSingle(sdocQueries.detail(event.payload.id).queryKey, event.payload);
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "SDOC_DELETED":
       removeSingle(sdocQueries.detail(event.payload.id).queryKey);
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "SDOC_DELETED_BATCH":
       event.payload.forEach((sdoc) => removeSingle(sdocQueries.detail(sdoc.id).queryKey));
-      queryClient.invalidateQueries({ queryKey: sdocQueries.search.documentsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
 
     // ── Search views ────────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno);
       replaceListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
       queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.searchScope() });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED_BATCH": {
@@ -365,7 +365,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         replaceListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.searchScope() });
       break;
     }
     case "SPAN_ANNOTATION_DELETED": {
@@ -382,7 +382,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         removeListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.searchScope() });
       break;
     }
 
@@ -399,7 +399,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       setSingle(bboxAnnotationQueries.byId(anno.id).queryKey, anno);
       replaceListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
       queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.searchScope() });
       break;
     }
     case "BBOX_ANNOTATION_UPDATED_BATCH": {
@@ -409,7 +409,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         replaceListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
         queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.searchScope() });
       break;
     }
     case "BBOX_ANNOTATION_DELETED": {
@@ -426,7 +426,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         removeListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno.id);
         queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
       });
-      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.searchScope() });
       break;
     }
 
@@ -449,7 +449,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       const anno = event.payload;
       setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
-      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.searchScope() });
       break;
     }
     case "SENTENCE_ANNOTATION_UPDATED_BATCH":
@@ -457,7 +457,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
-      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.searchScope() });
       break;
     case "SENTENCE_ANNOTATION_DELETED": {
       const anno = event.payload;
@@ -470,7 +470,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         removeSingle(sentenceAnnotationQueries.byId(anno.id).queryKey);
         removeSentenceAnnotation(anno);
       });
-      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.tableScope() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.searchScope() });
       break;
 
     // ── Span groups ─────────────────────────────────────────────────────────

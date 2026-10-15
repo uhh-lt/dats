@@ -1,5 +1,11 @@
 import { Icon } from "@components/icons";
-import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
+import {
+  deserializeFilterFromSearchParam,
+  FILTER_EXPERT_MODE_PARAM,
+  FILTER_PARAM,
+  MyFilter,
+  toSorts,
+} from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { sdocQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
@@ -53,14 +59,14 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    documentSearchOptions: sdocQueries.search.documents({
+    documentSearchOptions: sdocQueries.search({
       projectId: params.projectId,
-      selectedFolderId: deps.selectedFolderId,
+      folderId: deps.selectedFolderId === -1 ? null : deps.selectedFolderId,
       searchQuery: deps.searchQuery,
       filter: deps[FILTER_PARAM],
       expertMode: deps.searchExpertMode,
-      sortingModel: deps.sortingModel,
-      fetchSize: deps.fetchSize,
+      sorts: toSorts<SdocColumns>(deps.sortingModel),
+      pageSize: deps.fetchSize,
       showFolders: deps.showFolders,
       showChildFolders: deps.showChildFolders,
     }),

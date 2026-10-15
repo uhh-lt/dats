@@ -12,6 +12,7 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   createEmptyFilter,
+  toSorts,
 } from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
@@ -126,7 +127,15 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
   }, [tableInfo]);
 
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...sdocQueries.table({ projectId, searchQuery, filter, sortingModel, fetchSize }),
+    ...sdocQueries.search({
+      projectId,
+      searchQuery: searchQuery || "",
+      filter,
+      sorts: toSorts<SdocColumns>(sortingModel),
+      pageSize: fetchSize,
+      expertMode: false,
+      showFolders: false,
+    }),
   });
 
   // resetting search-parameter-dependant state

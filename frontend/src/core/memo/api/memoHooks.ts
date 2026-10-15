@@ -2,18 +2,11 @@ import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { toColumnInfoMap } from "@core/filter";
 import { AttachedObjectType } from "@models/AttachedObjectType";
-import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoRead } from "@models/MemoRead";
-import { Page_MemoRead_ } from "@models/Page_MemoRead_";
-import { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
-import type { InfiniteData } from "@tanstack/react-query";
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { memoQueries } from "./memoQueries";
 
 // MEMO QUERIES
-// Memo queries (detail, attached, recent, search, groups, table) live in memoQueries and are used with
-// `useQuery`/`useInfiniteQuery` directly. Only the column-info query below is still defined here (stage 4).
-
 /**
  * Fetches the memo column info (label, sortable, filter operator, filter value type)
  * from the backend memo search info endpoint.
@@ -98,22 +91,6 @@ const useGetObjectMemos = (
     enabled: options?.enabled ?? true,
   });
 
-const useQueryMemos = <TData = InfiniteData<Page_MemoRead_>>(
-  request: QueryRequest_MemoColumns_,
-  options?: { enabled?: boolean; select?: (data: InfiniteData<Page_MemoRead_>) => TData },
-) =>
-  useInfiniteQuery({
-    ...memoQueries.search(request),
-    enabled: options?.enabled ?? true,
-    select: options?.select,
-  });
-
-const useQueryMemoGroups = (request: GroupQueryRequest_MemoColumns_, enabled = true) =>
-  useInfiniteQuery({
-    ...memoQueries.groups(request),
-    enabled,
-  });
-
 export const MemoHooks = {
   useMemoSearchInfo,
   useCreateMemo,
@@ -123,6 +100,4 @@ export const MemoHooks = {
   useDeleteMemos,
   useRecordRecentMemo,
   useGetObjectMemos,
-  useQueryMemos,
-  useQueryMemoGroups,
 };

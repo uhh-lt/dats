@@ -16,6 +16,7 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   createEmptyFilter,
+  toSorts,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -153,7 +154,12 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...sentenceAnnotationQueries.table({ projectId, filter, sortingModel, fetchSize }),
+    ...sentenceAnnotationQueries.search({
+      project_id: projectId,
+      filter,
+      sorts: toSorts<SentAnnoColumns>(sortingModel),
+      page_size: fetchSize,
+    }),
     enabled: !!userId,
   });
 

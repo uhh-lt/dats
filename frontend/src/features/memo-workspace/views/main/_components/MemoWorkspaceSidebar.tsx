@@ -26,7 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { InfiniteData, useQuery } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
 import { MemoWorkspaceActions } from "../../../store/memoWorkspaceSlice";
 
@@ -84,25 +84,25 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
       },
     );
   }, [createMemo, dispatch, scope, projectId]);
-  const projectMemos = MemoHooks.useQueryMemos(
-    {
+  const projectMemos = useInfiniteQuery({
+    ...memoQueries.search({
       project_id: projectId,
       filter: projectFilter,
       sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
       page_size: 200,
-    },
-    { select: flattenMemoPagesToItems },
-  );
+    }),
+    select: flattenMemoPagesToItems,
+  });
 
-  const favoriteMemos = MemoHooks.useQueryMemos(
-    {
+  const favoriteMemos = useInfiniteQuery({
+    ...memoQueries.search({
       project_id: projectId,
       filter: favoriteFilter,
       sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
       page_size: 200,
-    },
-    { select: flattenMemoPagesToItems },
-  );
+    }),
+    select: flattenMemoPagesToItems,
+  });
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>

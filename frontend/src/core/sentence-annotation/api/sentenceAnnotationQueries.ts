@@ -1,17 +1,8 @@
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
-import { SentAnnoColumns } from "@models/SentAnnoColumns";
-import { SortDirection } from "@models/SortDirection";
+import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
+import type { QueryRequest_SentAnnoColumns_ } from "@models/QueryRequest_SentAnnoColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
-import type { MRT_SortingState } from "material-react-table";
-
-interface SentenceAnnotationTableParams {
-  projectId: number | undefined;
-  filter: MyFilter<SentAnnoColumns>;
-  sortingModel: MRT_SortingState;
-  fetchSize: number;
-}
 
 /**
  * Sentence annotations. The per-sdoc query returns the annotations grouped by sentence
@@ -34,7 +25,6 @@ export const sentenceAnnotationQueries = {
       queryKey: [...sentenceAnnotationQueries.bySdocScope(), sdocId, userId] as const,
       queryFn: !sdocId || !userId ? skipToken : () => SentenceAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
-  // the sentence annotation filter table
   // the column infos of the sentence annotation filter table
   tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
@@ -47,27 +37,14 @@ export const sentenceAnnotationQueries = {
       staleTime: Infinity,
     }),
 
-  tableScope: () => [...sentenceAnnotationQueries.all(), "table"] as const,
-  table: ({ projectId, filter, sortingModel, fetchSize }: SentenceAnnotationTableParams) =>
+  searchScope: () => [...sentenceAnnotationQueries.all(), "search"] as const,
+  search: (request: QueryRequest_SentAnnoColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...sentenceAnnotationQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
-      queryFn: !projectId
-        ? skipToken
-        : ({ pageParam }) =>
-            SearchService.searchSentenceAnnotations({
-              requestBody: {
-                project_id: projectId,
-                filter,
-                sorts: sortingModel.map((sort) => ({
-                  column: sort.id as SentAnnoColumns,
-                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-                })),
-                page_number: pageParam,
-                page_size: fetchSize,
-              },
-            }),
+      queryKey: [...sentenceAnnotationQueries.searchScope(), request] as const,
+      queryFn: ({ pageParam }) =>
+        SearchService.searchSentenceAnnotations({ requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
-      getNextPageParam: (_lastGroup, groups) => groups.length,
+      getNextPageParam: (_lastPage, pages) => pages.length,
       refetchOnWindowFocus: false,
     }),
 };

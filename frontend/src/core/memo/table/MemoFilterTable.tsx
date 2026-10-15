@@ -9,6 +9,7 @@ import {
   URLFilterDialogProps,
   URLFilterTableToolbarProps,
   createEmptyFilter,
+  toSorts,
 } from "@core/filter";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
@@ -115,7 +116,13 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
   }, [tableInfo]);
 
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
-    memoQueries.table({ projectId, searchQuery, filter, sortingModel, isSearchContent, fetchSize }),
+    memoQueries.search({
+      project_id: projectId,
+      search_query: searchQuery || "",
+      filter,
+      sorts: toSorts<MemoColumns>(sortingModel),
+      page_size: fetchSize,
+    }),
   );
 
   // resetting search-parameter-dependant state

@@ -10,7 +10,7 @@ export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) =
 
   // global server state (react-query); the slice is initialized as a side effect of fetching the column infos
   const { data: columnData } = useQuery(
-    sdocQueries.search.tableInfo(projectId, (columnInfos) =>
+    sdocQueries.tableInfo(projectId, "search", (columnInfos) =>
       dispatch(SearchActions.init({ columnInfoMap: toColumnInfoMap(columnInfos) })),
     ),
   );

@@ -1,17 +1,8 @@
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
-import { BBoxColumns } from "@models/BBoxColumns";
-import { SortDirection } from "@models/SortDirection";
+import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
+import type { QueryRequest_BBoxColumns_ } from "@models/QueryRequest_BBoxColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
-import type { MRT_SortingState } from "material-react-table";
-
-interface BboxAnnotationTableParams {
-  projectId: number | undefined;
-  filter: MyFilter<BBoxColumns>;
-  sortingModel: MRT_SortingState;
-  fetchSize: number;
-}
 
 /**
  * Bounding box annotations.
@@ -40,7 +31,6 @@ export const bboxAnnotationQueries = {
       queryKey: [...bboxAnnotationQueries.bySdocScope(), sdocId, userId] as const,
       queryFn: !sdocId || !userId ? skipToken : () => BboxAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
-  // the bbox annotation filter table
   // the column infos of the bbox annotation filter table
   tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
     queryOptions({
@@ -53,27 +43,14 @@ export const bboxAnnotationQueries = {
       staleTime: Infinity,
     }),
 
-  tableScope: () => [...bboxAnnotationQueries.all(), "table"] as const,
-  table: ({ projectId, filter, sortingModel, fetchSize }: BboxAnnotationTableParams) =>
+  searchScope: () => [...bboxAnnotationQueries.all(), "search"] as const,
+  search: (request: QueryRequest_BBoxColumns_) =>
     infiniteQueryOptions({
-      queryKey: [...bboxAnnotationQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
-      queryFn: !projectId
-        ? skipToken
-        : ({ pageParam }) =>
-            SearchService.searchBboxAnnotations({
-              requestBody: {
-                project_id: projectId,
-                filter,
-                sorts: sortingModel.map((sort) => ({
-                  column: sort.id as BBoxColumns,
-                  direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-                })),
-                page_number: pageParam,
-                page_size: fetchSize,
-              },
-            }),
+      queryKey: [...bboxAnnotationQueries.searchScope(), request] as const,
+      queryFn: ({ pageParam }) =>
+        SearchService.searchBboxAnnotations({ requestBody: { ...request, page_number: pageParam } }),
       initialPageParam: 0,
-      getNextPageParam: (_lastGroup, groups) => groups.length,
+      getNextPageParam: (_lastPage, pages) => pages.length,
       refetchOnWindowFocus: false,
     }),
 };
