@@ -2,7 +2,6 @@ import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { MyFilter } from "@core/filter";
-import { useJobRefetchInterval } from "@core/job";
 import { AspectRead } from "@models/AspectRead";
 import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@models/ClusterRead";
@@ -36,21 +35,6 @@ const useGetAspect = (aspectId: number | null | undefined) =>
 
 const useGetAllAspectsList = () => useProjectAspectsQuery({ select: (data) => Object.values(data) });
 
-// Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
-// (visualization invalidations) live in the JOB_UPDATED handler in
-// frontend/src/plugins/websocket/websocketEventHandlers.ts.
-const useLivePerspectivesJob = (
-  perspectivesJobId: string | null | undefined,
-  initialData: PerspectivesJobRead | undefined,
-) => {
-  const jobRefetchInterval = useJobRefetchInterval<PerspectivesJobRead>();
-  return useQuery({
-    ...perspectiveQueries.job.byId(perspectivesJobId),
-    refetchInterval: jobRefetchInterval,
-    initialData,
-  });
-};
-
 const useCreateAspect = () =>
   useMutation({
     mutationKey: [...perspectiveQueries.all(), "createAspect"],
@@ -83,7 +67,7 @@ const useDeleteAspect = () =>
 
 const useStartPerspectivesJob = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.all(), "startPerspectivesJob"],
+    mutationKey: [...perspectiveQueries.job.all(), "start"],
     mutationFn: PerspectivesService.startPerspectivesJob,
     onSuccess: (job) => {
       queryClient.invalidateQueries({ queryKey: perspectiveQueries.aspectsByProject(job.project_id).queryKey });
@@ -190,7 +174,6 @@ export const PerspectivesHooks = {
   useProjectAspectsQuery,
   useGetAspect,
   useGetAllAspectsList,
-  useLivePerspectivesJob,
   useCreateAspect,
   useUpdateAspect,
   useDeleteAspect,

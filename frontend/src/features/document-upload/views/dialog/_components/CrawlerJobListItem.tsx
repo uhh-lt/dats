@@ -1,10 +1,10 @@
-import { JobListItem } from "@core/job";
+import { JobListItem, useLiveJob } from "@core/job";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { DocumentUploadHooks } from "../../../api/documentUploadHooks";
+import { documentUploadQueries } from "../../../api/documentUploadQueries";
 
 interface CrawlerJobListItemProps {
   initialCrawlerJob: CrawlerJobRead;
@@ -12,7 +12,7 @@ interface CrawlerJobListItemProps {
 
 export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListItemProps) => {
   // global server state (react-query)
-  const crawlerJob = DocumentUploadHooks.useLiveCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
+  const crawlerJob = useLiveJob(documentUploadQueries.job.byId(initialCrawlerJob.job_id), initialCrawlerJob);
 
   const dateString = useMemo(() => {
     return formatDateTime(initialCrawlerJob.created);

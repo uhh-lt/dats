@@ -1,19 +1,9 @@
 import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
-import { useJobRefetchInterval } from "@core/job";
 import { COTARead } from "@models/COTARead";
-import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { cotaQueries } from "./cotaQueries";
-
-const useLiveCOTARefinementJob = (cotaRefinementJobId: string | null) => {
-  const jobRefetchInterval = useJobRefetchInterval<COTARefinementJobRead>();
-  return useQuery({
-    ...cotaQueries.job.byId(cotaRefinementJobId),
-    refetchInterval: jobRefetchInterval,
-  });
-};
 
 /**
  * Convenience hook for components that need a single COTA by ID but have no route context.
@@ -124,7 +114,6 @@ const useRefineCota = () =>
   });
 
 export const CotaHooks = {
-  useLiveCOTARefinementJob,
   useGetCotaById,
   useGetProjectCotaList,
   useCreateCota,

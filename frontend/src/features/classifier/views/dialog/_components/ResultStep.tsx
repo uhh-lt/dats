@@ -1,3 +1,4 @@
+import { useLiveJob } from "@core/job";
 import { ClassifierEvaluationOutput } from "@models/ClassifierEvaluationOutput";
 import { ClassifierInferenceOutput } from "@models/ClassifierInferenceOutput";
 import { ClassifierTask } from "@models/ClassifierTask";
@@ -6,7 +7,7 @@ import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
-import { ClassifierHooks } from "../../../api/classifierHooks";
+import { classifierQueries } from "../../../api/classifierQueries";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ResultStep() {
@@ -15,7 +16,7 @@ export function ResultStep() {
   const dispatch = useAppDispatch();
 
   // get the job
-  const cj = ClassifierHooks.useLiveClassifierJob(classifierJobId, undefined);
+  const cj = useLiveJob(classifierQueries.job.byId(classifierJobId));
 
   // dialog actions
   const handleClose = useCallback(() => {

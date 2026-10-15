@@ -1,7 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
-import { useJobRefetchInterval } from "@core/job";
 import { projectQueries } from "@core/project";
 import { sdocQueries } from "@core/source-document";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
@@ -9,15 +8,6 @@ import { SDocStatus } from "@models/SDocStatus";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import { documentUploadQueries } from "./documentUploadQueries";
-
-const useLiveCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
-  const jobRefetchInterval = useJobRefetchInterval<CrawlerJobRead>();
-  return useQuery({
-    ...documentUploadQueries.job.byId(crawlerJobId),
-    refetchInterval: jobRefetchInterval,
-    initialData,
-  });
-};
 
 // this query is polling the processing status of simple SDocs every 3 seconds
 const usePollProcessingSimpleSdocStatus = (projectId: number) => {
@@ -42,7 +32,7 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
 
 const useStartCrawlerJob = () =>
   useMutation({
-    mutationKey: [...documentUploadQueries.job.all(), "startCrawler"],
+    mutationKey: [...documentUploadQueries.job.all(), "start"],
     mutationFn: JobService.startCrawlerJob,
     onSuccess: (job) => {
       setTimeout(() => {
@@ -68,7 +58,6 @@ const useUploadDocument = () =>
   });
 
 export const DocumentUploadHooks = {
-  useLiveCrawlerJob,
   usePollProcessingSimpleSdocStatus,
   useStartCrawlerJob,
   useUploadDocument,

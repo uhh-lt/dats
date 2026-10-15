@@ -1,5 +1,5 @@
 import { ContentContainerLayout } from "@components/content-layouts";
-import { jobStatusToSimple } from "@core/job";
+import { jobStatusToSimple, useLiveJob } from "@core/job";
 import { SdocHooks, SdocRenderer } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
@@ -16,6 +16,7 @@ import {
 } from "material-react-table";
 import { useMemo, useState } from "react";
 import { DuplicateFinderHooks } from "../../api/duplicateFinderHooks";
+import { duplicateFinderQueries } from "../../api/duplicateFinderQueries";
 import { DuplicateFinderActions } from "../../store/duplicateFinderSlice";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/tools/duplicate-finder");
@@ -107,7 +108,7 @@ export function DuplicateFinderView() {
   };
 
   // job data
-  const duplicateFinderJob = DuplicateFinderHooks.useLiveDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
+  const duplicateFinderJob = useLiveJob(duplicateFinderQueries.job.byId(lastDuplicateFinderJobId));
 
   // computed
   const { data, rowCount } = useMemo(() => {

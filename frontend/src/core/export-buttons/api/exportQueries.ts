@@ -1,14 +1,5 @@
+import { createJobQueries } from "@core/job";
 import { JobService } from "@api/services/JobService";
-import { queryOptions, skipToken } from "@tanstack/react-query";
-
-const exportJobQueries = {
-  all: () => [...exportQueries.all(), "job"] as const,
-  byId: (jobId: string | null | undefined) =>
-    queryOptions({
-      queryKey: [...exportJobQueries.all(), "detail", jobId] as const,
-      queryFn: !jobId ? skipToken : () => JobService.getExportJobById({ jobId }),
-    }),
-};
 
 /**
  * Query factory for the export (the export job).
@@ -22,5 +13,5 @@ export const exportQueries = {
   all: () => ["export"] as const,
 
   // the background job of this domain
-  job: exportJobQueries,
+  job: createJobQueries("export", (jobId) => JobService.getExportJobById({ jobId })),
 };

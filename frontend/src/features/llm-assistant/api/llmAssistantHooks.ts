@@ -1,24 +1,14 @@
 import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
-import { useJobRefetchInterval } from "@core/job";
 import { ApproachType } from "@models/ApproachType";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { llmAssistantQueries } from "./llmAssistantQueries";
 
-const useLiveLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJobRead | undefined) => {
-  const jobRefetchInterval = useJobRefetchInterval<LlmAssistantJobRead>();
-  return useQuery({
-    ...llmAssistantQueries.job.byId(llmJobId),
-    refetchInterval: jobRefetchInterval,
-    initialData,
-  });
-};
-
 const useStartLLMJob = () =>
   useMutation({
-    mutationKey: [...llmAssistantQueries.job.all(), "startLLMJob"],
+    mutationKey: [...llmAssistantQueries.job.all(), "start"],
     mutationFn: LlmService.startLlmAssistantJob,
     onSuccess: (job) => {
       // force refetch of all llm jobs when adding a new one
@@ -31,7 +21,7 @@ const useStartLLMJob = () =>
 
 const useCreatePromptTemplates = () =>
   useMutation({
-    mutationKey: [...llmAssistantQueries.job.all(), "createPromptTemplates"],
+    mutationKey: [...llmAssistantQueries.all(), "createPromptTemplates"],
     mutationFn: LlmService.createPromptTemplates,
     meta: {
       successMessage: () => `Created prompt templates`,
@@ -40,7 +30,7 @@ const useCreatePromptTemplates = () =>
 
 const useDetermineApproach = () =>
   useMutation({
-    mutationKey: [...llmAssistantQueries.job.all(), "determineApproach"],
+    mutationKey: [...llmAssistantQueries.all(), "determineApproach"],
     mutationFn: LlmService.determineApproach,
     meta: {
       successMessage: (data: ApproachType) => `Determined approach type: ${data}`,
@@ -59,7 +49,6 @@ const useCountExistingAssistantAnnotations = (params: {
   });
 
 export const LlmAssistantHooks = {
-  useLiveLLMJob,
   useStartLLMJob,
   useCreatePromptTemplates,
   useDetermineApproach,

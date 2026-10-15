@@ -1,3 +1,4 @@
+import { useLiveJob } from "@core/job";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { COTARead } from "@models/COTARead";
 import { COTATrainingSettings } from "@models/COTATrainingSettings";
@@ -21,6 +22,7 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { CotaHooks } from "../../../api/cotaHooks";
+import { cotaQueries } from "../../../api/cotaQueries";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";
@@ -41,7 +43,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const refinementJob = CotaHooks.useLiveCOTARefinementJob(cota.last_refinement_job_id);
+  const refinementJob = useLiveJob(cotaQueries.job.byId(cota.last_refinement_job_id));
 
   // actions
   const refineCota = CotaHooks.useRefineCota();

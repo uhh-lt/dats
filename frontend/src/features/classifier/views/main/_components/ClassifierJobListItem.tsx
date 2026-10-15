@@ -1,4 +1,4 @@
-import { JobListItem, jobStatusToSimple } from "@core/job";
+import { JobListItem, jobStatusToSimple, useLiveJob } from "@core/job";
 import { ClassifierEvaluationOutput } from "@models/ClassifierEvaluationOutput";
 import { ClassifierInferenceOutput } from "@models/ClassifierInferenceOutput";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
@@ -10,7 +10,7 @@ import { formatDateTime } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
-import { ClassifierHooks } from "../../../api/classifierHooks";
+import { classifierQueries } from "../../../api/classifierQueries";
 
 interface ClassifierJobListItemProps {
   initialClassifierJob: ClassifierJobRead;
@@ -18,7 +18,7 @@ interface ClassifierJobListItemProps {
 
 export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJobListItemProps) => {
   // global server state (react-query)
-  const cj = ClassifierHooks.useLiveClassifierJob(initialClassifierJob.job_id, initialClassifierJob);
+  const cj = useLiveJob(classifierQueries.job.byId(initialClassifierJob.job_id), initialClassifierJob);
 
   // compute subtitle
   const subTitle = useMemo(() => {

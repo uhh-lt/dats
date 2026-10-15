@@ -1,9 +1,10 @@
+import { useLiveJob } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
-import { ClassifierHooks } from "../../../api/classifierHooks";
+import { classifierQueries } from "../../../api/classifierQueries";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 export const StatusStep = memo(() => {
@@ -12,7 +13,7 @@ export const StatusStep = memo(() => {
   const dispatch = useAppDispatch();
 
   // poll the job
-  const classifierJob = ClassifierHooks.useLiveClassifierJob(classifierJobId, undefined);
+  const classifierJob = useLiveJob(classifierQueries.job.byId(classifierJobId));
 
   const handleClose = useCallback(() => {
     dispatch(ClassifierActions.closeClassifierDialog());

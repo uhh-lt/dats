@@ -1,16 +1,6 @@
 import { JobService } from "@api/services/JobService";
-import { useJobRefetchInterval } from "@core/job";
-import { ExportJobRead } from "@models/ExportJobRead";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { exportQueries } from "./exportQueries";
-
-const useLiveExportJob = (exportJobId: string | undefined) => {
-  const jobRefetchInterval = useJobRefetchInterval<ExportJobRead>();
-  return useQuery({
-    ...exportQueries.job.byId(exportJobId),
-    refetchInterval: jobRefetchInterval,
-  });
-};
 
 const useStartExportJob = () =>
   useMutation({
@@ -23,6 +13,5 @@ const useStartExportJob = () =>
   });
 
 export const ExportHooks = {
-  useLiveExportJob,
   useStartExportJob,
 };
