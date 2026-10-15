@@ -1,22 +1,12 @@
 import { queryClient } from "@api/queryClient";
 import { JobService } from "@api/services/JobService";
-import { useJobRefetchInterval } from "@core/job";
 import { mlAutomationQueries } from "./mlAutomationQueries";
 import { MlJobRead } from "@models/MlJobRead";
-import { useMutation, useQuery } from "@tanstack/react-query";
-
-const useLiveMLJob = (mlJobId: string | undefined, initialData: MlJobRead | undefined) => {
-  const jobRefetchInterval = useJobRefetchInterval<MlJobRead>();
-  return useQuery({
-    ...mlAutomationQueries.job.byId(mlJobId),
-    refetchInterval: jobRefetchInterval,
-    initialData,
-  });
-};
+import { useMutation } from "@tanstack/react-query";
 
 const useStartMLJob = () =>
   useMutation({
-    mutationKey: [...mlAutomationQueries.job.all(), "startMLJob"],
+    mutationKey: [...mlAutomationQueries.job.all(), "start"],
     mutationFn: JobService.startMlJob,
     onSuccess: (job) => {
       // Force refetch of all ML jobs when adding a new one.
@@ -28,6 +18,5 @@ const useStartMLJob = () =>
   });
 
 export const MlAutomationHooks = {
-  useLiveMLJob,
   useStartMLJob,
 };

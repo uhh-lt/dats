@@ -14,7 +14,10 @@ export function LLMJobsView() {
     data: llmJobs,
     refetch: refetchLLMJobs,
     isFetching: isLLMFetching,
-  } = useQuery(llmAssistantQueries.job.byProject(projectId));
+  } = useQuery({
+    ...llmAssistantQueries.job.byProject(projectId ?? 0),
+    enabled: projectId !== undefined,
+  });
   const allLLMJobs = useMemo(() => llmJobs || [], [llmJobs]);
 
   const handleRefresh = () => {

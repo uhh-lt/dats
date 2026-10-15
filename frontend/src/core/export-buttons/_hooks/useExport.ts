@@ -1,3 +1,4 @@
+import { useLiveJob } from "@core/job";
 import { useOpenSnackbar } from "@core/notification";
 import { ExportJobInput } from "@models/ExportJobInput";
 import { JobStatus } from "@models/JobStatus";
@@ -5,6 +6,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { downloadFile } from "@utils/downloadUtils";
 import { useCallback, useEffect } from "react";
 import { ExportHooks } from "../api/exportHooks";
+import { exportQueries } from "../api/exportQueries";
 
 export const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
 
@@ -13,7 +15,7 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
 
   // mutations
   const { mutate: startExportMutation, reset: resetExport, data, isPending } = ExportHooks.useStartExportJob();
-  const exportJob = ExportHooks.useLiveExportJob(data?.job_id);
+  const exportJob = useLiveJob(exportQueries.job.byId(data?.job_id));
 
   // snackbar
   const openSnackbar = useOpenSnackbar();

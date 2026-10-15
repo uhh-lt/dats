@@ -1,24 +1,11 @@
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
-import { useJobRefetchInterval } from "@core/job";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierRead } from "@models/ClassifierRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ClassifierDatasetStatisticsParams, classifierQueries } from "./classifierQueries";
-
-// Job updates arrive via websocket (JOB_UPDATED); the completion side-effects
-// (classifier list + sdoc tag invalidations) live in the JOB_UPDATED handler in
-// frontend/src/plugins/websocket/websocketEventHandlers.ts.
-const useLiveClassifierJob = (classifierJobId: string | undefined, initialData: ClassifierJobRead | undefined) => {
-  const jobRefetchInterval = useJobRefetchInterval<ClassifierJobRead>();
-  return useQuery({
-    ...classifierQueries.job.byId(classifierJobId),
-    refetchInterval: jobRefetchInterval,
-    initialData,
-  });
-};
 
 const useGetAllClassifiers = (projectId: number) =>
   useQuery({
@@ -40,7 +27,7 @@ const useComputeDatasetStatistics = (params: ClassifierDatasetStatisticsParams) 
 
 const useStartClassifierJob = () =>
   useMutation({
-    mutationKey: [...classifierQueries.all(), "startClassifierJob"],
+    mutationKey: [...classifierQueries.job.all(), "start"],
     mutationFn: ClassifierService.startClassifierJob,
     onSuccess: (job) => {
       queryClient.invalidateQueries({ queryKey: classifierQueries.job.byProject(job.project_id).queryKey });
@@ -108,7 +95,6 @@ function useDatasetStatistics() {
 }
 
 export const ClassifierHooks = {
-  useLiveClassifierJob,
   useGetAllClassifiers,
   useComputeDatasetStatistics,
   useStartClassifierJob,

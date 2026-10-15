@@ -1,20 +1,5 @@
+import { createJobQueries } from "@core/job";
 import { JobService } from "@api/services/JobService";
-import { queryOptions, skipToken } from "@tanstack/react-query";
-
-const mlJobQueries = {
-  all: () => [...mlAutomationQueries.all(), "job"] as const,
-  byId: (jobId: string | null | undefined) =>
-    queryOptions({
-      queryKey: [...mlJobQueries.all(), "detail", jobId] as const,
-      queryFn: !jobId ? skipToken : () => JobService.getMlJobById({ jobId }),
-    }),
-  byProjectScope: () => [...mlJobQueries.all(), "project"] as const,
-  byProject: (projectId: number) =>
-    queryOptions({
-      queryKey: [...mlJobQueries.byProjectScope(), projectId] as const,
-      queryFn: () => JobService.getMlJobsByProject({ projectId }),
-    }),
-};
 
 /**
  * Query factory for the ML automation (ML jobs of a project).
@@ -28,5 +13,9 @@ export const mlAutomationQueries = {
   all: () => ["mlAutomation"] as const,
 
   // the background job of this domain
-  job: mlJobQueries,
+  job: createJobQueries(
+    "mlAutomation",
+    (jobId) => JobService.getMlJobById({ jobId }),
+    (projectId) => JobService.getMlJobsByProject({ projectId }),
+  ),
 };

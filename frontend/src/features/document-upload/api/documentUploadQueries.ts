@@ -1,20 +1,5 @@
+import { createJobQueries } from "@core/job";
 import { JobService } from "@api/services/JobService";
-import { queryOptions, skipToken } from "@tanstack/react-query";
-
-const crawlerJobQueries = {
-  all: () => [...documentUploadQueries.all(), "job"] as const,
-  byId: (jobId: string | null | undefined) =>
-    queryOptions({
-      queryKey: [...crawlerJobQueries.all(), "detail", jobId] as const,
-      queryFn: !jobId ? skipToken : () => JobService.getCrawlerJobById({ jobId }),
-    }),
-  byProjectScope: () => [...crawlerJobQueries.all(), "project"] as const,
-  byProject: (projectId: number | null | undefined) =>
-    queryOptions({
-      queryKey: [...crawlerJobQueries.byProjectScope(), projectId] as const,
-      queryFn: !projectId ? skipToken : () => JobService.getCrawlerJobsByProject({ projectId }),
-    }),
-};
 
 /**
  * Query factory for the document upload (crawler jobs of a project).
@@ -28,5 +13,9 @@ export const documentUploadQueries = {
   all: () => ["documentUpload"] as const,
 
   // the background job of this domain
-  job: crawlerJobQueries,
+  job: createJobQueries(
+    "documentUpload",
+    (jobId) => JobService.getCrawlerJobById({ jobId }),
+    (projectId) => JobService.getCrawlerJobsByProject({ projectId }),
+  ),
 };

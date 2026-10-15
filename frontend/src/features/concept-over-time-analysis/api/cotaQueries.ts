@@ -1,17 +1,9 @@
+import { createJobQueries } from "@core/job";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import type { COTARead } from "@models/COTARead";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 
 export type CotaMap = Record<number, COTARead>;
-
-const cotaRefinementJobQueries = {
-  all: () => [...cotaQueries.all(), "job"] as const,
-  byId: (jobId: string | null | undefined) =>
-    queryOptions({
-      queryKey: [...cotaRefinementJobQueries.all(), "detail", jobId] as const,
-      queryFn: !jobId ? skipToken : () => ConceptOverTimeAnalysisService.getCotaJob({ cotaJobId: jobId }),
-    }),
-};
 
 /**
  * Query factory for concept-over-time analyses (COTA).
@@ -40,5 +32,5 @@ export const cotaQueries = {
     }),
 
   // the refinement / background job of this domain
-  job: cotaRefinementJobQueries,
+  job: createJobQueries("cota", (jobId) => ConceptOverTimeAnalysisService.getCotaJob({ cotaJobId: jobId })),
 };

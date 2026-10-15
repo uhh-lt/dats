@@ -717,6 +717,13 @@ const queriesFileMatchesRootKeyRule = {
     const actual = path.basename(context.filename || context.getFilename());
     if (!actual.endsWith("Queries.ts")) return {};
     return {
+      "CallExpression[callee.name='createJobQueries']"(node) {
+        const first = node.arguments[0];
+        if (!first || first.type !== "Literal" || typeof first.value !== "string") return;
+        const expected = `${first.value}Queries.ts`;
+        if (expected === actual) return;
+        context.report({ node: first, messageId: "mismatch", data: { key: first.value, expected, actual } });
+      },
       "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ObjectExpression > Property[key.name='all'] > ArrowFunctionExpression > TSAsExpression > ArrayExpression"(
         node,
       ) {

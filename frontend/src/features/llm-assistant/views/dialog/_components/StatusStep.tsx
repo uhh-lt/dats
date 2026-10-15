@@ -1,10 +1,10 @@
 import { LinearProgressWithLabel } from "@components/progress-bars";
-import { jobStatusToSimple } from "@core/job";
+import { jobStatusToSimple, useLiveJob } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
-import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
+import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -14,7 +14,7 @@ export const StatusStep = memo(() => {
   const dispatch = useAppDispatch();
 
   // poll the job
-  const llmJob = LlmAssistantHooks.useLiveLLMJob(llmJobId, undefined);
+  const llmJob = useLiveJob(llmAssistantQueries.job.byId(llmJobId));
 
   const handleClose = useCallback(() => {
     dispatch(LLMAssistantActions.closeLLMDialog());

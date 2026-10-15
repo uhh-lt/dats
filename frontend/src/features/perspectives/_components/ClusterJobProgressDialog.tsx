@@ -1,7 +1,9 @@
+import { useLiveJob } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { Dialog } from "@mui/material";
 import { memo } from "react";
 import { PerspectivesHooks } from "../api/perspectiveHooks";
+import { perspectiveQueries } from "../api/perspectiveQueries";
 import { ClusterJobProgressCard } from "./ClusterJobProgressCard";
 
 interface ClusterJobProgressDialog {
@@ -10,7 +12,7 @@ interface ClusterJobProgressDialog {
 
 export const ClusterJobProgressDialog = memo(({ aspectId }: ClusterJobProgressDialog) => {
   const aspect = PerspectivesHooks.useGetAspect(aspectId);
-  const job = PerspectivesHooks.useLivePerspectivesJob(aspect.data?.most_recent_job_id, undefined);
+  const job = useLiveJob(perspectiveQueries.job.byId(aspect.data?.most_recent_job_id));
 
   if (!job.data) {
     return null;

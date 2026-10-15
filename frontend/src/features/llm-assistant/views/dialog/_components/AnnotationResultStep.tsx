@@ -1,3 +1,4 @@
+import { useLiveJob } from "@core/job";
 import { queryClient } from "@api/queryClient";
 import { useTabNavigate } from "@core/navigation";
 import { spanAnnotationQueries } from "@core/span-annotation";
@@ -7,7 +8,7 @@ import { Button, CircularProgress, DialogActions, DialogContent, Typography } fr
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
 import { memo, useCallback, useMemo } from "react";
-import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
+import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { AnnotationResultSummary } from "./AnnotationResultSummary";
 import { LLMUtterance } from "./LLMUtterance";
@@ -20,7 +21,7 @@ const approach2AssistantID: Record<ApproachType, number> = {
 export const AnnotationResultStep = memo(() => {
   // get the job
   const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = LlmAssistantHooks.useLiveLLMJob(llmJobId, undefined);
+  const llmJob = useLiveJob(llmAssistantQueries.job.byId(llmJobId));
 
   if (llmJob.isSuccess && llmJob.data.output) {
     return (

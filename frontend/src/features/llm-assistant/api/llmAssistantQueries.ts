@@ -1,3 +1,4 @@
+import { createJobQueries } from "@core/job";
 import { LlmService } from "@api/services/LlmService";
 import { ApproachType } from "@models/ApproachType";
 import { TaskType } from "@models/TaskType";
@@ -9,21 +10,6 @@ interface ExistingAnnotationCountParams {
   sdocIds: number[];
   codeIds: number[];
 }
-
-const llmJobQueries = {
-  all: () => [...llmAssistantQueries.all(), "job"] as const,
-  byId: (jobId: string | null | undefined) =>
-    queryOptions({
-      queryKey: [...llmJobQueries.all(), "detail", jobId] as const,
-      queryFn: !jobId ? skipToken : () => LlmService.getLlmAssistantJobById({ jobId }),
-    }),
-  byProjectScope: () => [...llmJobQueries.all(), "project"] as const,
-  byProject: (projectId: number | null | undefined) =>
-    queryOptions({
-      queryKey: [...llmJobQueries.byProjectScope(), projectId] as const,
-      queryFn: !projectId ? skipToken : () => LlmService.getLlmAssistantJobsByProject({ projectId }),
-    }),
-};
 
 /**
  * Query factory for the LLM assistant.
@@ -65,5 +51,9 @@ export const llmAssistantQueries = {
     }),
 
   // the background job of the LLM assistant
-  job: llmJobQueries,
+  job: createJobQueries(
+    "llmAssistant",
+    (jobId) => LlmService.getLlmAssistantJobById({ jobId }),
+    (projectId) => LlmService.getLlmAssistantJobsByProject({ projectId }),
+  ),
 };

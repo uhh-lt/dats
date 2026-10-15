@@ -1,7 +1,7 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { ExportChartButton } from "@components/export-chart-buttons";
 import { getIconComponent, Icon } from "@components/icons";
-import { JobStatusBadge } from "@core/job";
+import { JobStatusBadge, useLiveJob } from "@core/job";
 import { LinkButton } from "@core/navigation";
 import { TagRenderer } from "@core/tag";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -18,6 +18,7 @@ import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialo
 import { DocAspectTable } from "../../_components/DocAspectTable";
 import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
 import { PerspectivesHooks } from "../../api/perspectiveHooks";
+import { perspectiveQueries } from "../../api/perspectiveQueries";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { ClusterDistributionPlot } from "./_components/ClusterDistributionPlot";
 import { ClusterList } from "./_components/ClusterList";
@@ -43,7 +44,7 @@ export function PerspectiveDashboardView() {
     ...aspectsByProjectOptions,
     select: (data) => data[aspectId],
   });
-  const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);
+  const perspectivesJob = useLiveJob(perspectiveQueries.job.byId(aspect?.most_recent_job_id));
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
 
   // computed
