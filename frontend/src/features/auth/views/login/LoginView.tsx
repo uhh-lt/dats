@@ -1,7 +1,7 @@
 import { ApiError } from "@api/core/ApiError";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
-import { AuthMutations, handleOIDCLogin, useAuth } from "@core/auth";
+import { AuthHooks, handleOIDCLogin, useAuth } from "@core/auth";
 import { LinkButton } from "@core/navigation";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -40,7 +40,7 @@ export function LoginView() {
   const { data: instanceInfo } = useSuspenseQuery(instanceInfoOptions);
 
   // login
-  const { mutate: loginMutation, isPending: loginIsPending } = AuthMutations.useLogin({
+  const { mutate: loginMutation, isPending: loginIsPending } = AuthHooks.useLogin({
     onSuccess(data) {
       updateAuthData(data);
       navigate({ to: redirect });

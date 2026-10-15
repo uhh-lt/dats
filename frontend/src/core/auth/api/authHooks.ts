@@ -38,7 +38,7 @@ const useRefreshAccessToken = (
     ...options,
   });
 
-export const AuthMutations = {
+export const AuthHooks = {
   useLogin,
   useLogout,
   useRefreshAccessToken,

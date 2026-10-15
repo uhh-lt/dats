@@ -6,7 +6,7 @@ import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { AuthMutations } from "../api/authMutations";
+import { AuthHooks } from "../api/authHooks";
 import { AuthActions } from "../authActions";
 import { AuthContext } from "../types/AuthContext";
 
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
   }, [user.isError, clearLocalAuthData]);
 
   // Logout action.
-  const { mutate: logoutMutation } = AuthMutations.useLogout();
+  const { mutate: logoutMutation } = AuthHooks.useLogout();
 
   const logout = useCallback(() => {
     const refreshTokenToRevoke = refreshToken;
@@ -132,7 +132,7 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
   }, [refreshToken, clearLocalAuthData, logoutMutation]);
 
   // Refresh access token shortly before expiry.
-  const { mutate: refreshAccessTokenMutation } = AuthMutations.useRefreshAccessToken({
+  const { mutate: refreshAccessTokenMutation } = AuthHooks.useRefreshAccessToken({
     onSuccess(data) {
       updateAuthData(data);
     },

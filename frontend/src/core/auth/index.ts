@@ -1,4 +1,4 @@
-export * from "./api/authMutations";
+export * from "./api/authHooks";
 export * from "./authActions";
 export * from "./HandleOIDCLogin";
 export * from "./provider";
