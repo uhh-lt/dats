@@ -23,7 +23,7 @@ const useCreateBBoxAnnotation = () =>
 
 const useUpdateBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.all(), "update"],
+    mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "update"],
     mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
       BboxAnnotationService.updateById({
         bboxId: typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
@@ -60,7 +60,7 @@ const useUpdateBBoxAnnotation = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousBboxes,
-        bboxAnnotationQueries.all(),
+        bboxAnnotationQueries.optimisticMutationScope(),
       );
     },
     meta: {
@@ -81,7 +81,7 @@ const useUpdateBulkBBoxAnnotation = () =>
 
 const useDeleteBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.all(), "delete"],
+    mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "delete"],
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
       BboxAnnotationService.deleteById({
         bboxId: typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
@@ -103,7 +103,7 @@ const useDeleteBBoxAnnotation = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousBboxes,
-        bboxAnnotationQueries.all(),
+        bboxAnnotationQueries.optimisticMutationScope(),
       );
     },
     meta: {

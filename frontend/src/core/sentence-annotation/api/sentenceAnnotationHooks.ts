@@ -32,7 +32,7 @@ const useCreateBulkSentenceAnnotation = () =>
 
 const useUpdateSentenceAnnotation = () =>
   useMutation({
-    mutationKey: [...sentenceAnnotationQueries.all(), "updateSentenceAnnotation"],
+    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "update"],
     mutationFn: (variables: {
       sentenceAnnoToUpdate: SentenceAnnotationRead | number;
       update: SentenceAnnotationUpdate;
@@ -114,7 +114,7 @@ const useUpdateSentenceAnnotation = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousAnnos,
-        sentenceAnnotationQueries.all(),
+        sentenceAnnotationQueries.optimisticMutationScope(),
       );
     },
     meta: {
@@ -135,7 +135,7 @@ const useUpdateBulkSentenceAnno = () =>
 
 const useDeleteSentenceAnnotation = () =>
   useMutation({
-    mutationKey: [...sentenceAnnotationQueries.all(), "deleteSentenceAnnotation"],
+    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "delete"],
     mutationFn: (sentAnnoToDelete: SentenceAnnotationRead | number) =>
       SentenceAnnotationService.deleteById({
         sentenceAnnoId: typeof sentAnnoToDelete === "number" ? sentAnnoToDelete : sentAnnoToDelete.id,
@@ -170,7 +170,7 @@ const useDeleteSentenceAnnotation = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousSentenceAnnotator,
-        sentenceAnnotationQueries.all(),
+        sentenceAnnotationQueries.optimisticMutationScope(),
       );
     },
     meta: {
@@ -191,7 +191,7 @@ const useDeleteBulkSentenceAnnotation = () =>
 
 const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
-    mutationKey: [...sentenceAnnotationQueries.all(), "deleteBulkSentenceAnnotationSingleSdoc"],
+    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteBulkSingleSdoc"],
     mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
       SentenceAnnotationService.deleteSentenceAnnotationsBulk({
         requestBody: sentAnnosToDelete.map((anno) => anno.id),
@@ -234,15 +234,15 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousSentenceAnnotator,
-        sentenceAnnotationQueries.all(),
+        sentenceAnnotationQueries.optimisticMutationScope(),
       );
     },
-    // Re-fetch after error or success, but only once no other sentence annotation mutation is in flight
+    // Re-fetch after error or success, but only once no other optimistic sentence annotation mutation is in flight
     // (isMutating still counts this mutation, hence `=== 1`); otherwise the refetch would overwrite their
     // optimistic updates.
     onSettled: (_data, _error, _variables, context) => {
       if (!context) return;
-      if (queryClient.isMutating({ mutationKey: sentenceAnnotationQueries.all() }) === 1) {
+      if (queryClient.isMutating({ mutationKey: sentenceAnnotationQueries.optimisticMutationScope() }) === 1) {
         queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
       }
     },

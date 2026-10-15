@@ -13,7 +13,8 @@ import type { DataTag, QueryClient, QueryKey } from "@tanstack/react-query";
  * @param queryClient the query client of the app
  * @param queryKey the typed key of the optimistically updated cache entry
  * @param previous the snapshot taken in `onMutate`
- * @param mutationKey prefix of the mutation keys that update this cache entry
+ * @param mutationKey prefix of the mutation keys of the mutations that update this cache entry optimistically (the
+ *   `optimisticMutationScope()` of the domain), not the domain root: other mutations must not block the rollback
  */
 export function rollbackOptimisticUpdate<TData>(
   queryClient: QueryClient,
