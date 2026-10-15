@@ -119,12 +119,12 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - Each domain's `index.ts` exports its `api/` files, so other code imports `import { CodeHooks } from "@core/code"`. Inside the domain use relative imports.
 - A hook that reads the Redux slice of a feature stays in that feature (`useLabelDocs`); `core` may not read feature slices.
 - Only the cache-sync code (`api/cache-sync`) may import `core/<domain>/api/<file>` directly (ESLint exemption), because it writes the caches of every domain.
-- Do not create new root keys that exist already; the root of a factory is its domain (`["tags", ...]`).
+- Do not create new root keys that exist already; the root of a factory is its domain (`["tag", ...]`). The file is named after that root key: `all: () => ["tag"]` lives in `tagQueries.ts` (enforced by lint).
 
 **Queries are defined once, in a query factory** (`<domain>/api/<domain>Queries.ts`, e.g. [tagQueries.ts](../../frontend/src/core/tag/api/tagQueries.ts)):
 
 - A factory is a plain object with `all()`, scope prefixes (`xxxScope()`) and `queryOptions(...)` leaves. It contains no React.
-- Keys are hierarchical: **domain, then scope, then params**, e.g. `["tags", "project", projectId]`.
+- Keys are hierarchical: **domain, then scope, then params**, e.g. `["tag", "project", projectId]`.
 - A leaf bundles `queryKey` and `queryFn` together and takes identity params only (ids, filters). Never add `enabled`, `select` or `staleTime` parameters. A missing id returns `skipToken` as the `queryFn`. `useSuspenseQuery` and route loaders do not accept `skipToken`: a query that is used by suspense or loaders takes a strict id (`id: number`) with a normal `queryFn`, and call sites that may have no id add `enabled` themselves.
 - Never write a `queryKey` array by hand and never use explicit generics (`useQuery<T>`); type the service call instead. ESLint enforces this: a `queryKey` array literal is only allowed in `*Queries.ts` files.
 - Never call API service methods directly from components; go through a factory.

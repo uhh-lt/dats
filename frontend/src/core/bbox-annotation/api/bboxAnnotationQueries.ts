@@ -17,7 +17,7 @@ interface BboxAnnotationTableParams {
  * Bounding box annotations.
  */
 export const bboxAnnotationQueries = {
-  all: () => ["bboxAnnotations"] as const,
+  all: () => ["bboxAnnotation"] as const,
 
   byIdScope: () => [...bboxAnnotationQueries.all(), "detail"] as const,
   byId: (bboxId: number | null | undefined) =>

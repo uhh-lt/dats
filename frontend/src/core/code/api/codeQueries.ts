@@ -7,11 +7,11 @@ export type CodeMap = Record<number, CodeRead>;
 /**
  * Query factory for codes. Keys are hierarchical: domain -> scope -> params.
  *
- *   codeQueries.all()                 ["codes"]
- *   codeQueries.byProject(projectId)  ["codes", "project", projectId]
+ *   codeQueries.all()                 ["code"]
+ *   codeQueries.byProject(projectId)  ["code", "project", projectId]
  */
 export const codeQueries = {
-  all: () => ["codes"] as const,
+  all: () => ["code"] as const,
 
   // all codes of a project, as a map by code id
   byProject: (projectId: number | undefined) =>

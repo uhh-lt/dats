@@ -16,13 +16,13 @@ interface SpanAnnotationTableParams {
 /**
  * Span annotations.
  *
- *   spanAnnotationQueries.all()                      ["spanAnnotations"]
- *   spanAnnotationQueries.byId(spanId)               ["spanAnnotations", "detail", spanId]
- *   spanAnnotationQueries.byUserCode(codeId)         ["spanAnnotations", "userCode", codeId]
- *   spanAnnotationQueries.bySdoc(sdocId, userId)     ["spanAnnotations", "sdoc", sdocId, userId]
+ *   spanAnnotationQueries.all()                      ["spanAnnotation"]
+ *   spanAnnotationQueries.byId(spanId)               ["spanAnnotation", "detail", spanId]
+ *   spanAnnotationQueries.byUserCode(codeId)         ["spanAnnotation", "userCode", codeId]
+ *   spanAnnotationQueries.bySdoc(sdocId, userId)     ["spanAnnotation", "sdoc", sdocId, userId]
  */
 export const spanAnnotationQueries = {
-  all: () => ["spanAnnotations"] as const,
+  all: () => ["spanAnnotation"] as const,
 
   // a single span annotation
   byIdScope: () => [...spanAnnotationQueries.all(), "detail"] as const,

@@ -24,15 +24,15 @@ interface MemoTableParams {
 /**
  * Query factory for memos. Keys are hierarchical: domain -> scope -> params.
  *
- *   memoQueries.all()                              ["memos"]
- *   memoQueries.byId(memoId)                       ["memos", "detail", memoId]
- *   memoQueries.byAttachedObject(type, id)         ["memos", "attached", type, id]
- *   memoQueries.recent(projectId)                  ["memos", "recent", projectId]
- *   memoQueries.search(request) / .groups(request) ["memos", "search" | "groups", request]
- *   memoQueries.table(params)                      ["memos", "table", projectId, ...]
+ *   memoQueries.all()                              ["memo"]
+ *   memoQueries.byId(memoId)                       ["memo", "detail", memoId]
+ *   memoQueries.byAttachedObject(type, id)         ["memo", "attached", type, id]
+ *   memoQueries.recent(projectId)                  ["memo", "recent", projectId]
+ *   memoQueries.search(request) / .groups(request) ["memo", "search" | "groups", request]
+ *   memoQueries.table(params)                      ["memo", "table", projectId, ...]
  */
 export const memoQueries = {
-  all: () => ["memos"] as const,
+  all: () => ["memo"] as const,
 
   // a single memo
   detailScope: () => [...memoQueries.all(), "detail"] as const,

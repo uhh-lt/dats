@@ -34,13 +34,13 @@ const classifierJobQueries = {
 /**
  * Query factory for classifiers. (The classifier background jobs are `classifierQueries.job`.)
  *
- *   classifierQueries.all()                     ["classifiers"]
- *   classifierQueries.byProject(projectId)      ["classifiers", "project", projectId]
- *   classifierQueries.info()                    ["classifiers", "info"]
- *   classifierQueries.datasetStatistics(params) ["classifiers", "datasetStatistics", ...params]
+ *   classifierQueries.all()                     ["classifier"]
+ *   classifierQueries.byProject(projectId)      ["classifier", "project", projectId]
+ *   classifierQueries.info()                    ["classifier", "info"]
+ *   classifierQueries.datasetStatistics(params) ["classifier", "datasetStatistics", ...params]
  */
 export const classifierQueries = {
-  all: () => ["classifiers"] as const,
+  all: () => ["classifier"] as const,
 
   // all classifiers of a project, as a map by id
   byProjectScope: () => [...classifierQueries.all(), "project"] as const,

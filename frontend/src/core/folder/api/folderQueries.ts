@@ -8,12 +8,12 @@ export type FolderMap = Record<number, FolderRead>;
 /**
  * Query factory for folders.
  *
- *   folderQueries.all()                                   ["folders"]
- *   folderQueries.byProject(projectId, folderType)        ["folders", "project", projectId, folderType]
- *   folderQueries.sdocIdsPerDoctype(sdocFolderId)         ["folders", "sdocIdsPerDoctype", sdocFolderId]
+ *   folderQueries.all()                                   ["folder"]
+ *   folderQueries.byProject(projectId, folderType)        ["folder", "project", projectId, folderType]
+ *   folderQueries.sdocIdsPerDoctype(sdocFolderId)         ["folder", "sdocIdsPerDoctype", sdocFolderId]
  */
 export const folderQueries = {
-  all: () => ["folders"] as const,
+  all: () => ["folder"] as const,
 
   // all folders of a project and type, as a map by folder id
   byProjectScope: () => [...folderQueries.all(), "project"] as const,

@@ -135,19 +135,19 @@ const searchQueries = {
 /**
  * Query factory for source documents (sdocs).
  *
- *   sdocQueries.all()                        ["sdocs"]
- *   sdocQueries.detail(sdocId)               ["sdocs", "detail", sdocId]
- *   sdocQueries.data(sdocId)                 ["sdocs", "data", sdocId]
- *   sdocQueries.idByFilename(pid, filename)  ["sdocs", "idByFilename", pid, filename]
- *   sdocQueries.sameFolder(sdocId)           ["sdocs", "sameFolder", sdocId]
- *   sdocQueries.thumbnailUrl(sdocId)         ["sdocs", "thumbnailUrl", sdocId]
- *   sdocQueries.idsByTag(tagId)              ["sdocs", "idsByTag", tagId]
- *   sdocQueries.annotators(sdocId)           ["sdocs", "annotators", sdocId]
- *   sdocQueries.table(params)                ["sdocs", "table", projectId, ...]
+ *   sdocQueries.all()                        ["sdoc"]
+ *   sdocQueries.detail(sdocId)               ["sdoc", "detail", sdocId]
+ *   sdocQueries.data(sdocId)                 ["sdoc", "data", sdocId]
+ *   sdocQueries.idByFilename(pid, filename)  ["sdoc", "idByFilename", pid, filename]
+ *   sdocQueries.sameFolder(sdocId)           ["sdoc", "sameFolder", sdocId]
+ *   sdocQueries.thumbnailUrl(sdocId)         ["sdoc", "thumbnailUrl", sdocId]
+ *   sdocQueries.idsByTag(tagId)              ["sdoc", "idsByTag", tagId]
+ *   sdocQueries.annotators(sdocId)           ["sdoc", "annotators", sdocId]
+ *   sdocQueries.table(params)                ["sdoc", "table", projectId, ...]
  *   sdocQueries.search.*                     the document search, root ["search"]
  */
 export const sdocQueries = {
-  all: () => ["sdocs"] as const,
+  all: () => ["sdoc"] as const,
 
   // a single sdoc
   detailScope: () => [...sdocQueries.all(), "detail"] as const,

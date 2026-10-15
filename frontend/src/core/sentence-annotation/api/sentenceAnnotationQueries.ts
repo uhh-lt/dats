@@ -18,7 +18,7 @@ interface SentenceAnnotationTableParams {
  * (SentenceAnnotatorResult), not a flat list.
  */
 export const sentenceAnnotationQueries = {
-  all: () => ["sentenceAnnotations"] as const,
+  all: () => ["sentenceAnnotation"] as const,
 
   byIdScope: () => [...sentenceAnnotationQueries.all(), "detail"] as const,
   byId: (sentenceAnnoId: number | null | undefined) =>

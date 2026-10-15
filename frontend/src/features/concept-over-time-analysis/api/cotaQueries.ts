@@ -16,13 +16,13 @@ const cotaRefinementJobQueries = {
 /**
  * Query factory for concept-over-time analyses (COTA).
  *
- *   cotaQueries.all()                  ["cotas"]
- *   cotaQueries.byProject(projectId)   ["cotas", "project", projectId]
+ *   cotaQueries.all()                  ["cota"]
+ *   cotaQueries.byProject(projectId)   ["cota", "project", projectId]
  *
  * The refinement job of a COTA is a background job, `cotaQueries.job`.
  */
 export const cotaQueries = {
-  all: () => ["cotas"] as const,
+  all: () => ["cota"] as const,
 
   // all COTAs of a project, as a map by id
   byProjectScope: () => [...cotaQueries.all(), "project"] as const,

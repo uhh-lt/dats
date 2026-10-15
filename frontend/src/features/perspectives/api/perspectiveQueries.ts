@@ -20,15 +20,15 @@ const perspectivesJobQueries = {
  * Query factory for perspectives (aspects, their clusters and visualizations).
  * The perspectives background job is `perspectiveQueries.job`.
  *
- *   perspectiveQueries.all()                                       ["perspectives"]
- *   perspectiveQueries.aspectsByProject(projectId)                 ["perspectives", "aspects", projectId]
- *   perspectiveQueries.docAspect(aspectId, sdocId)                 ["perspectives", "docAspect", aspectId, sdocId]
- *   perspectiveQueries.visualization(aspectId, searchQuery, filter)  ["perspectives", "visualization", aspectId, ...]
- *   perspectiveQueries.clusterSimilarities(aspectId)               ["perspectives", "clusterSimilarities", aspectId]
- *   perspectiveQueries.clustersBySdoc(aspectId, sdocId)            ["perspectives", "clustersBySdoc", aspectId, sdocId]
+ *   perspectiveQueries.all()                                       ["perspective"]
+ *   perspectiveQueries.aspectsByProject(projectId)                 ["perspective", "aspects", projectId]
+ *   perspectiveQueries.docAspect(aspectId, sdocId)                 ["perspective", "docAspect", aspectId, sdocId]
+ *   perspectiveQueries.visualization(aspectId, searchQuery, filter)  ["perspective", "visualization", aspectId, ...]
+ *   perspectiveQueries.clusterSimilarities(aspectId)               ["perspective", "clusterSimilarities", aspectId]
+ *   perspectiveQueries.clustersBySdoc(aspectId, sdocId)            ["perspective", "clustersBySdoc", aspectId, sdocId]
  */
 export const perspectiveQueries = {
-  all: () => ["perspectives"] as const,
+  all: () => ["perspective"] as const,
 
   // all aspects of a project, as a map by aspect id
   aspectsByProjectScope: () => [...perspectiveQueries.all(), "aspects"] as const,
