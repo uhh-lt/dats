@@ -7,14 +7,6 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export type AspectMap = Record<number, AspectRead>;
 
-const fetchAspects = async (projectId: number) => {
-  const aspects = await PerspectivesService.getAllAspects({ projId: projectId });
-  return aspects.reduce<AspectMap>((acc, aspect) => {
-    acc[aspect.id] = aspect;
-    return acc;
-  }, {});
-};
-
 const perspectivesJobQueries = {
   all: () => [...perspectiveQueries.all(), "job"] as const,
   byId: (jobId: string | null | undefined) =>
@@ -43,7 +35,13 @@ export const perspectiveQueries = {
   aspectsByProject: (projectId: number) =>
     queryOptions({
       queryKey: [...perspectiveQueries.aspectsByProjectScope(), projectId] as const,
-      queryFn: () => fetchAspects(projectId),
+      queryFn: async () => {
+        const aspects = await PerspectivesService.getAllAspects({ projId: projectId });
+        return aspects.reduce<AspectMap>((acc, aspect) => {
+          acc[aspect.id] = aspect;
+          return acc;
+        }, {});
+      },
       staleTime: 1000 * 60 * 5,
     }),
 
