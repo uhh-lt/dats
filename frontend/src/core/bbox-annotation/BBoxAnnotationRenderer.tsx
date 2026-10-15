@@ -7,8 +7,9 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
+import { bboxAnnotationQueries } from "./api/bboxAnnotationQueries";
 
 export type BBoxAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 
@@ -26,7 +27,7 @@ export const BBoxAnnotationRenderer = memo(({ bboxAnnotation, ...props }: BBoxAn
 
 const BBoxAnnotationRendererWithoutData = memo(
   ({ bboxAnnotationId, ...props }: { bboxAnnotationId: number } & BBoxAnnotationRendererSharedProps) => {
-    const bboxAnnotation = BboxAnnotationHooks.useGetAnnotation(bboxAnnotationId);
+    const bboxAnnotation = useQuery(bboxAnnotationQueries.byId(bboxAnnotationId));
 
     if (bboxAnnotation.isSuccess) {
       return <BBoxAnnotationRendererWithData bboxAnnotation={bboxAnnotation.data} {...props} />;

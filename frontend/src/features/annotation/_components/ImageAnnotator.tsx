@@ -1,6 +1,7 @@
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
-import { SdocMetadataHooks } from "@core/sdoc-metadata";
+import { BboxAnnotationHooks, bboxAnnotationQueries } from "@core/bbox-annotation";
+import { sdocMetadataQueries } from "@core/sdoc-metadata";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -28,7 +29,7 @@ const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationR
 };
 
 export function ImageAnnotator(props: ImageAnnotatorProps) {
-  const heightMetadata = SdocMetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
+  const heightMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "height"));
 
   if (heightMetadata.isSuccess) {
     return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;
@@ -58,7 +59,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const dispatch = useAppDispatch();
 
   // global server state (react query)
-  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
+  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
 
   // resize controller
   const resizeController = useBboxAnnotationResize(imgRef);

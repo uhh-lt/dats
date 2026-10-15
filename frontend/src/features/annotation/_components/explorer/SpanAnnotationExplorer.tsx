@@ -1,5 +1,6 @@
-import { SpanAnnotationHooks } from "@core/span-annotation";
+import { spanAnnotationQueries } from "@core/span-annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationExplorer } from "./_components/AnnotationExplorer";
@@ -10,8 +11,8 @@ const filterByText = (text: string) => (annotation: SpanAnnotationRead) => annot
 export function SpanAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
   const { visibleUserId, compareWithUserId } = AnnotationRouteAPI.useSearch();
-  const annotationsLeft = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocId, visibleUserId);
-  const annotationsRight = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocId, compareWithUserId);
+  const annotationsLeft = useQuery(spanAnnotationQueries.bySdoc(sdocId, visibleUserId));
+  const annotationsRight = useQuery(spanAnnotationQueries.bySdoc(sdocId, compareWithUserId));
 
   const combinedAnnotations = useMemo(() => {
     const leftData = annotationsLeft.data || [];

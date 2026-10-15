@@ -5,8 +5,9 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { SentenceAnnotationHooks } from "./api/sentenceAnnotationHooks";
+import { sentenceAnnotationQueries } from "./api/sentenceAnnotationQueries";
 
 export type SentenceAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 
@@ -24,7 +25,7 @@ export const SentenceAnnotationRenderer = memo(({ sentenceAnnotation, ...props }
 
 const SentenceAnnotationRendererWithoutData = memo(
   ({ sentenceAnnotationId, ...props }: { sentenceAnnotationId: number } & SentenceAnnotationRendererSharedProps) => {
-    const sentenceAnnotation = SentenceAnnotationHooks.useGetAnnotation(sentenceAnnotationId);
+    const sentenceAnnotation = useQuery(sentenceAnnotationQueries.byId(sentenceAnnotationId));
 
     if (sentenceAnnotation.isSuccess) {
       return <SentenceAnnotationRendererWithData sentenceAnnotation={sentenceAnnotation.data} {...props} />;

@@ -1,8 +1,9 @@
 import { useAuth } from "@core/auth";
-import { SdocHooks } from "@core/source-document";
+import { sdocQueries } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { useEffect } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
@@ -26,7 +27,7 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
   const isCompareMode = compareWithUserId !== undefined;
 
   // global server state (react query)
-  const annotatorUserIds = SdocHooks.useGetAnnotators(sdocId);
+  const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
   const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
 
   // handlers (for ui)

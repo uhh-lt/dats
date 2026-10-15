@@ -15,10 +15,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { TagHooks } from "../../api/tagHooks";
+import { tagQueries } from "../../api/tagQueries";
 import { TagCreateListItemButton } from "../../dialog";
 
 interface TagMenuProps {
@@ -32,7 +34,7 @@ interface TagMenuProps {
 export function TagMenu(props: TagMenuProps) {
   // global server state (react-query)
   const allTags = TagHooks.useGetAllTags();
-  const tagCounts = TagHooks.useGetTagDocumentCounts(props.projectId, props.sdocIds);
+  const tagCounts = useQuery(tagQueries.sdocCount(props.projectId, props.sdocIds));
   const initialChecked: Record<number, CheckboxState> | undefined = useMemo(() => {
     if (!tagCounts.data) return undefined;
 

@@ -4,7 +4,7 @@ import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { rollbackOptimisticUpdate } from "@utils/optimisticUtils";
 import { spanAnnotationQueries } from "./spanAnnotationQueries";
 
@@ -155,13 +155,6 @@ const useCountBySdocsAndUser = () =>
     mutationFn: SpanAnnotationService.countAnnotations,
   });
 
-const useGetAnnotation = (spanId: number | null | undefined) => useQuery(spanAnnotationQueries.byId(spanId));
-
-const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(spanAnnotationQueries.byUserCode(codeId));
-
-const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery(spanAnnotationQueries.bySdoc(sdocId, userId));
-
 export const SpanAnnotationHooks = {
   useCreateBulkAnnotations,
   useCreateSpanAnnotation,
@@ -170,7 +163,4 @@ export const SpanAnnotationHooks = {
   useDeleteSpanAnnotation,
   useDeleteBulkSpanAnnotation,
   useCountBySdocsAndUser,
-  useGetAnnotation,
-  useGetByCodeAndUser,
-  useGetSpanAnnotationsBatch,
 };

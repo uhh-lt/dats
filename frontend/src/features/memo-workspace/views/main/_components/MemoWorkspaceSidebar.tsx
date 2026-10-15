@@ -1,7 +1,7 @@
 import { EmojiGlyph } from "@components/emoji";
 import { getIconComponent, Icon } from "@components/icons";
 import { MyFilter } from "@core/filter";
-import { MemoHooks } from "@core/memo";
+import { MemoHooks, memoQueries } from "@core/memo";
 import { LinkListItemButton } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
@@ -26,7 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { InfiniteData } from "@tanstack/react-query";
+import { InfiniteData, useQuery } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
 import { MemoWorkspaceActions } from "../../../store/memoWorkspaceSlice";
 
@@ -69,7 +69,7 @@ interface MemoWorkspaceSidebarProps {
 export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSidebarProps) => {
   const dispatch = useAppDispatch();
   const createMemo = MemoHooks.useCreateMemo();
-  const recentMemos = MemoHooks.useGetRecentMemos(projectId);
+  const recentMemos = useQuery(memoQueries.recent(projectId));
   const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 
   const handleCreateProjectMemo = useCallback(() => {

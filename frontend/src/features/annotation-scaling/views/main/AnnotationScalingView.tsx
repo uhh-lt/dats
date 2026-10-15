@@ -14,9 +14,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
 import { AnnoscalingHooks } from "../../api/annoscalingHooks";
+import { annoscalingQueries } from "../../api/annoscalingQueries";
 import { AnnotationScalingList } from "./_components/AnnotationScalingList";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/annotation-scaling");
@@ -32,7 +34,7 @@ export function AnnotationScalingView() {
   const [reject, setReject] = useState<AnnoscalingResult[]>([]);
 
   // global server state (react-query)
-  const suggestions = AnnoscalingHooks.useAnnotationSuggestions(projectId, code?.id, opposingCode?.id);
+  const suggestions = useQuery(annoscalingQueries.suggest(projectId, code?.id, opposingCode?.id));
   const confirmHook = AnnoscalingHooks.useConfirmSuggestions();
 
   const handleSubmit = () => {

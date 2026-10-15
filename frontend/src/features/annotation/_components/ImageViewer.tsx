@@ -1,10 +1,11 @@
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
+import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { useTabNavigate } from "@core/navigation";
-import { SdocMetadataHooks } from "@core/sdoc-metadata";
+import { sdocMetadataQueries } from "@core/sdoc-metadata";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
@@ -16,8 +17,8 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer(props: ImageViewerProps) {
-  const heightMetadata = SdocMetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
-  const widthMetadata = SdocMetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "width");
+  const heightMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "height"));
+  const widthMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "width"));
 
   if (heightMetadata.isSuccess && widthMetadata.isSuccess) {
     return (
@@ -47,7 +48,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
+  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
 
   const annotationData = useMemo(() => {
     return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));

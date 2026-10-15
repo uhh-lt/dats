@@ -111,7 +111,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 **Where do queries and mutations live?** In the domain that owns the data, in a public `api/` folder next to the domain's code:
 
-- Every `api/` folder has two files: `<entity>Queries.ts` (the query factory) and `<entity>Hooks.ts` (the `<Entity>Hooks` object). A folder without hooks (nothing to wrap) has only the queries file; there are no empty hooks objects. `core/auth/api/authMutations.ts` is the one exception: mutations whose callbacks the caller passes in, no queries.
+- Every `api/` folder has two files: `<entity>Queries.ts` (the query factory) and `<entity>Hooks.ts` (the `<Entity>Hooks` object). A folder without hooks (nothing that adds value) has only the queries file; there are no empty hooks objects. `core/auth/api/authMutations.ts` is the one exception: mutations whose callbacks the caller passes in, no queries.
 - Used by core and by several features (code, tag, memo, folder, project, source document, user, span/bbox/sentence annotations, project metadata, sdoc metadata): `core/<domain>/api/`.
 - Used by exactly one feature (classifier, COTA, whiteboard, document upload, LLM assistant, ...): `features/<feature>/api/`. Its job queries (`xxxQueries.job`) are part of it.
 - Used by several features but owned by none (`general`, `statistics`): `api/<name>/` (global).
@@ -129,13 +129,13 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - Never write a `queryKey` array by hand and never use explicit generics (`useQuery<T>`); type the service call instead. ESLint enforces this: a `queryKey` array literal is only allowed in `*Queries.ts` files.
 - Never call API service methods directly from components; go through a factory.
 
-**Components use the `{Domain}Hooks` object** (`<domain>/api/<domain>Hooks.ts`, e.g. [codeHooks.ts](../../frontend/src/core/code/api/codeHooks.ts)):
+**Components use the `{Domain}Hooks` object when a hook adds value, otherwise `useQuery` with the factory** (`<domain>/api/<domain>Hooks.ts`, e.g. [codeHooks.ts](../../frontend/src/core/code/api/codeHooks.ts)):
 
-- Components call `CodeHooks.useGetCode(codeId)`, `TagHooks.useGetAllTags()`, `TagHooks.useCreateTag()`. Selection (`select`), `enabled`, reading the project id from Redux and polling live in the hook, not in the component.
+- A hook exists only if it adds something: selection (`select`), `enabled`, the project id from Redux, polling, composition of several queries, or a mutation. Components call `CodeHooks.useGetCode(codeId)`, `TagHooks.useGetAllTags()`, `TagHooks.useCreateTag()`.
+- A hook that only forwards its arguments to one factory leaf is forbidden. Components call `useQuery(sdocQueries.annotators(sdocId))` directly.
 - A hook that only forwards to another hook of its domain with preset arguments (an alias) is forbidden; give the real hook optional parameters instead (see `TagHooks.useGetAllTags`).
 - A hook never defines a query itself. It builds on the factory: `useQuery({ ...tagQueries.byProject(projectId), select, enabled })`. Key and `queryFn` exist only in `<domain>Queries.ts`; this includes the queries that load the column infos of the filter tables (`sdocQueries.tableInfo`, ...). The `useInit*FilterSlice` hooks initialize their slice in the `queryFn` of that leaf (via its `onLoaded` callback), never in a `useEffect`.
 - The `{Domain}Hooks` object contains query hooks, data-deriving hooks and mutations; a hook that reads the Redux slice of a feature is part of that feature's object.
-- Components and hooks of the same domain may call the factory directly where no hook exists yet (e.g. the infinite queries of the filter tables); prefer adding a hook when a second place needs the same query.
 - Cache access (`setQueryData`, `getQueryData`, `invalidateQueries`) uses the typed key `tagQueries.byProject(id).queryKey` or a scope prefix like `tagQueries.byProjectScope()`. This keeps the data type inferred and keeps invalidation prefix-based.
 - Data normalization with Record maps (`Record<id, data>`) for O(1) access is fine when the cache-sync code relies on that shape; comment why.
 

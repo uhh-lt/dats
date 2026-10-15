@@ -24,11 +24,7 @@ const useGetAllTagRecommendationJobs = () => {
   return useQuery(tagRecommendationQueries.jobsByProject(projectId));
 };
 
-const useGetTagRecommendationsFromJob = (mlJobId: string | null | undefined) =>
-  useQuery(tagRecommendationQueries.byJob(mlJobId));
-
 export const TagRecommendationHooks = {
   useReviewTagRecommendations,
   useGetAllTagRecommendationJobs,
-  useGetTagRecommendationsFromJob,
 };

@@ -2,8 +2,9 @@ import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
+import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMJobListItem } from "./LLMJobListItem";
 
 export function LLMJobsView() {
@@ -13,7 +14,7 @@ export function LLMJobsView() {
     data: llmJobs,
     refetch: refetchLLMJobs,
     isFetching: isLLMFetching,
-  } = LlmAssistantHooks.useGetAllLLMJobs(projectId);
+  } = useQuery(llmAssistantQueries.job.byProject(projectId));
   const allLLMJobs = useMemo(() => llmJobs || [], [llmJobs]);
 
   const handleRefresh = () => {

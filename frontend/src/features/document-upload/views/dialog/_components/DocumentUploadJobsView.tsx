@@ -1,8 +1,10 @@
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo } from "react";
 import { DocumentUploadHooks } from "../../../api/documentUploadHooks";
+import { documentUploadQueries } from "../../../api/documentUploadQueries";
 import { CrawlerJobListItem } from "./CrawlerJobListItem";
 import { SdocStatusSimpleListItem } from "./SdocStatusListItem";
 
@@ -16,7 +18,7 @@ export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsVie
     data: crawlerJobs,
     refetch: refetchCrawlerJobs,
     isFetching: isCrawlerFetching,
-  } = DocumentUploadHooks.useGetAllCrawlerJobs(projectId);
+  } = useQuery(documentUploadQueries.job.byProject(projectId));
   const {
     data: sdocStatus,
     refetch: refetchSdocStatus,

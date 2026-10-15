@@ -2,7 +2,7 @@ import { queryClient } from "@api/queryClient";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { rollbackOptimisticUpdate } from "@utils/optimisticUtils";
 import { sentenceAnnotationQueries } from "./sentenceAnnotationQueries";
 
@@ -257,14 +257,7 @@ const useCountBySdocsAndUser = () =>
     mutationFn: SentenceAnnotationService.countAnnotations,
   });
 
-const useGetAnnotation = (sentenceAnnoId: number | null | undefined) =>
-  useQuery(sentenceAnnotationQueries.byId(sentenceAnnoId));
-
-const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery(sentenceAnnotationQueries.bySdoc(sdocId, userId));
-
 export const SentenceAnnotationHooks = {
-  useGetSentenceAnnotator,
   useCreateSentenceAnnotation,
   useCreateBulkSentenceAnnotation,
   useUpdateSentenceAnnotation,
@@ -273,5 +266,4 @@ export const SentenceAnnotationHooks = {
   useDeleteBulkSentenceAnnotation,
   useDeleteBulkSentenceAnnotationSingleSdoc,
   useCountBySdocsAndUser,
-  useGetAnnotation,
 };

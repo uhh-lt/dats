@@ -47,23 +47,10 @@ const useGetDocumentData = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
-  useQuery(sdocQueries.idByFilename(projectId, filename));
-
-const useGetSameFolderSdocIds = (sdocId: number | null | undefined) => useQuery(sdocQueries.sameFolder(sdocId));
-
-const useGetSdocIdsByTagId = (tagId: number | null | undefined) => useQuery(sdocQueries.idsByTag(tagId));
-
-const useGetAnnotators = (sdocId: number | null | undefined) => useQuery(sdocQueries.annotators(sdocId));
-
 export const SdocHooks = {
   useGetThumbnailURL,
   useDeleteDocuments,
   useUpdateName,
   useGetDocument,
   useGetDocumentData,
-  useGetDocumentIdByFilename,
-  useGetSameFolderSdocIds,
-  useGetSdocIdsByTagId,
-  useGetAnnotators,
 };

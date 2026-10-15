@@ -102,19 +102,11 @@ const useSdocMetadataQuery = <T = SdocMetadataMap>({
     select,
   });
 
-const useGetSdocMetadataByKey = (sdocId: number | null | undefined, key: string) =>
-  useQuery(sdocMetadataQueries.bySdocAndKey(sdocId, key));
-
 // number of sdocs that have a valid date for a date metadata
-const useCountSdocsWithDateMetadata = (projectId: number, dateMetadataId: number) =>
-  useQuery(sdocMetadataQueries.sdocCountWithDate(projectId, dateMetadataId));
-
 export const SdocMetadataHooks = {
   useGetSdocMetadata,
   useGetSdocMetadataByProjectMetadataId,
   useGetSdocMetadataBulk,
   useUpdateBulkSdocMetadata,
   useSdocMetadataQuery,
-  useGetSdocMetadataByKey,
-  useCountSdocsWithDateMetadata,
 };

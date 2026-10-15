@@ -11,10 +11,11 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { D3ColorScale, d3ColorSchemes } from "@utils/colors/D3ColorScale";
 import * as d3 from "d3";
 import { memo } from "react";
-import { PerspectivesHooks } from "../../../api/perspectiveHooks";
+import { perspectiveQueries } from "../../../api/perspectiveQueries";
 
 interface ClusterSimilarityPlotProps {
   aspectId: number;
@@ -27,7 +28,7 @@ export const ClusterSimilarityPlot = memo(({ aspectId, height, colorName }: Clus
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // global server state
-  const vis = PerspectivesHooks.useGetClusterSimilarities(aspectId);
+  const vis = useQuery(perspectiveQueries.clusterSimilarities(aspectId));
 
   const labelFontSize = "0.75rem";
   const cellFontSize = "0.75rem";
