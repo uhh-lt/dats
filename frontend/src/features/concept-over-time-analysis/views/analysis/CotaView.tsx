@@ -4,10 +4,10 @@ import { CotaRouteAPI } from "./_hooks/cotaRouteAPI";
 
 export function CotaView() {
   const { projectId, cotaId } = CotaRouteAPI.useParams();
-  const { cotaOptions } = CotaRouteAPI.useRouteContext();
+  const { cotasByProjectOptions } = CotaRouteAPI.useRouteContext();
 
   const { data: cota } = useSuspenseQuery({
-    ...cotaOptions,
+    ...cotasByProjectOptions,
     select: (data) => data[cotaId],
   });
 

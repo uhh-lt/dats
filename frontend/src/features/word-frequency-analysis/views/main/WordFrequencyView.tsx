@@ -12,8 +12,8 @@ export function WordFrequencyView() {
   // search word frequency feature
   const projectId = WordFrequencyRouteAPI.useParams({ select: (params) => params.projectId });
   const { sortingModel, searchFilter: filter } = WordFrequencyRouteAPI.useSearch();
-  const { wordFrequencyOptions } = WordFrequencyRouteAPI.useRouteContext();
-  const wordFrequencyQuery = useSuspenseInfiniteQuery(wordFrequencyOptions);
+  const { wordFrequencyTableOptions } = WordFrequencyRouteAPI.useRouteContext();
+  const wordFrequencyQuery = useSuspenseInfiniteQuery(wordFrequencyTableOptions);
   // resetting search-parameter-dependant state
   const dispatch = useAppDispatch();
   const resetState = useCallback(() => {

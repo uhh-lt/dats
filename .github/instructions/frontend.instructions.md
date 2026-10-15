@@ -151,7 +151,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 - Every other query is started in the **component** through the domain's hook (`SdocHooks.useGetDocument(id)`): per-row data, dialogs, panels, tabs, anything that depends on selection or Redux state, dependent queries, polling.
 - Route queries follow one rule, see [classifier.tsx](../../frontend/src/routes/_auth/project/$projectId/classifier.tsx):
   1. `loaderDeps: ({ search }) => search` (only if the route has search params that the queries use).
-  2. `context: ({ params, deps }) => ({ xxxOptions: xxxQueries.leaf(...) })` builds the options **once**. This is the only place that builds them.
+  2. `context: ({ params, deps }) => ({ xxxOptions: xxxQueries.leaf(...) })` builds the options **once**. This is the only place that builds them. Name each option after the data it loads, like the factory leaf (`whiteboardsByProjectOptions`, `sdocDetailOptions`), never after the domain only (`cotaOptions`).
   3. `loader: async ({ context }) => { await context.queryClient.ensureQueryData(context.xxxOptions) }` awaits them and returns nothing.
   4. The view reads them with `routeApi.useRouteContext()` and calls `useSuspenseQuery({ ...xxxOptions, select })`. It never builds the options again.
   5. A dynamic tab title reads the entity from the cache in `staticData.getTitle({ queryClient, params })`.

@@ -17,12 +17,12 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whit
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
-    whiteboardOptions: whiteboardQueries.byProject(params.projectId),
+    whiteboardsByProjectOptions: whiteboardQueries.byProject(params.projectId),
     whiteboardDataOptions: whiteboardQueries.data(params.projectId, params.whiteboardId),
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(context.whiteboardOptions),
+      context.queryClient.ensureQueryData(context.whiteboardsByProjectOptions),
       context.queryClient.ensureQueryData(context.whiteboardDataOptions),
     ]);
   },

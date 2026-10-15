@@ -5,10 +5,10 @@ import { WhiteboardViewRouteAPI } from "./_hooks/whiteboardRouteAPI";
 
 export function WhiteboardView() {
   const { projectId, whiteboardId } = WhiteboardViewRouteAPI.useParams();
-  const { whiteboardOptions } = WhiteboardViewRouteAPI.useRouteContext();
+  const { whiteboardsByProjectOptions } = WhiteboardViewRouteAPI.useRouteContext();
 
   const { data: whiteboard } = useSuspenseQuery({
-    ...whiteboardOptions,
+    ...whiteboardsByProjectOptions,
     select: (data) => data[whiteboardId],
   });
 

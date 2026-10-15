@@ -27,7 +27,7 @@ import { ImageSearchRouteAPI } from "./_hooks/imageSearchRouteAPI";
 
 export function ImageSimilaritySearchView() {
   // router
-  const { imageSimilarityOptions, projectMetadataOptions } = ImageSearchRouteAPI.useRouteContext();
+  const { imageSimilaritySearchOptions, projectMetadataOptions } = ImageSearchRouteAPI.useRouteContext();
   const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
   const { searchQuery } = ImageSearchRouteAPI.useSearch();
   const [, setFilter] = useURLConnector(ImageSearchRouteAPI, FILTER_PARAM);
@@ -89,7 +89,7 @@ export function ImageSimilaritySearchView() {
     [dispatch],
   );
 
-  const { data, isError, isFetching, isLoading } = useSuspenseQuery(imageSimilarityOptions);
+  const { data, isError, isFetching, isLoading } = useSuspenseQuery(imageSimilaritySearchOptions);
   // extract sdoc ids from results, but they have to be unique
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 

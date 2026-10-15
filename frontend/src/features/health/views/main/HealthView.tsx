@@ -16,7 +16,7 @@ export function HealthView() {
   const projectId = HealthRouteAPI.useParams({ select: (params) => params.projectId });
   const { sortingModel } = HealthRouteAPI.useSearch();
   const [tab, setTab] = useURLConnector(HealthRouteAPI, "doctype");
-  const { healthTableOptions, healthColumnsOptions } = HealthRouteAPI.useRouteContext();
+  const { healthTableOptions, healthTableColumnsOptions } = HealthRouteAPI.useRouteContext();
   const healthTableQuery = useSuspenseInfiniteQuery(healthTableOptions);
 
   // resetting search-parameter-dependant state
@@ -26,7 +26,7 @@ export function HealthView() {
   }, [dispatch]);
   useResetStateOnSearch([projectId, tab, sortingModel], resetState);
 
-  const { data: tableColumnInfo } = useSuspenseQuery(healthColumnsOptions);
+  const { data: tableColumnInfo } = useSuspenseQuery(healthTableColumnsOptions);
   const handleTabChange = useCallback(
     (_event: SyntheticEvent, newValue: DocType): void => {
       setTab(newValue);

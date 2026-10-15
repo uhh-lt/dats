@@ -21,9 +21,9 @@ export function CotaDashboardView() {
   const projectId = COTADashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const { cotaOptions } = COTADashboardRouteAPI.useRouteContext();
+  const { cotasByProjectOptions } = COTADashboardRouteAPI.useRouteContext();
   const { data: userAnalysis } = useSuspenseQuery({
-    ...cotaOptions,
+    ...cotasByProjectOptions,
     select: (data) => Object.values(data),
   });
   const projectAnalysisTableData: AnalysisDashboardRow[] = useMemo(

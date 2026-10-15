@@ -11,13 +11,13 @@ export const Route = createFileRoute("/_auth/project/$projectId/classifier")({
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
-    classifiersOptions: classifierQueries.byProject(params.projectId),
-    classifierJobsOptions: classifierQueries.job.byProject(params.projectId),
+    classifiersByProjectOptions: classifierQueries.byProject(params.projectId),
+    classifierJobsByProjectOptions: classifierQueries.job.byProject(params.projectId),
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(context.classifiersOptions),
-      context.queryClient.ensureQueryData(context.classifierJobsOptions),
+      context.queryClient.ensureQueryData(context.classifiersByProjectOptions),
+      context.queryClient.ensureQueryData(context.classifierJobsByProjectOptions),
     ]);
   },
   pendingComponent: () => <CircularProgress />,

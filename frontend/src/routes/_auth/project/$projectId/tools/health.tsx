@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    healthColumnsOptions: healthQueries.columns(deps.doctype),
+    healthTableColumnsOptions: healthQueries.columns(deps.doctype),
     healthTableOptions: healthQueries.table({
       projectId: params.projectId,
       doctype: deps.doctype,
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(context.healthColumnsOptions),
+      context.queryClient.ensureQueryData(context.healthTableColumnsOptions),
       context.queryClient.ensureInfiniteQueryData(context.healthTableOptions),
     ]);
   },

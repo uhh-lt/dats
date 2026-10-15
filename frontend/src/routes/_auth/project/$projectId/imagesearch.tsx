@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    imageSimilarityOptions: searchQueries.image({
+    imageSimilaritySearchOptions: searchQueries.image({
       projectId: params.projectId,
       searchQuery: deps.searchQuery,
       filter: deps[FILTER_PARAM],
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(context.projectMetadataOptions),
-      context.queryClient.ensureQueryData(context.imageSimilarityOptions),
+      context.queryClient.ensureQueryData(context.imageSimilaritySearchOptions),
     ]);
   },
   pendingComponent: () => <CircularProgress />,

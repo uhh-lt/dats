@@ -10,10 +10,10 @@ import { TimelineAnalysisRouteAPI } from "./_hooks/timelineAnalysisRouteAPI";
 
 export function TimelineAnalysisView() {
   const { projectId, analysisId } = TimelineAnalysisRouteAPI.useParams();
-  const { timelineAnalysisOptions } = TimelineAnalysisRouteAPI.useRouteContext();
+  const { timelineAnalysesByProjectOptions } = TimelineAnalysisRouteAPI.useRouteContext();
 
   const { data: timelineAnalysis } = useSuspenseQuery({
-    ...timelineAnalysisOptions,
+    ...timelineAnalysesByProjectOptions,
     select: (data) => data[analysisId],
   });
 

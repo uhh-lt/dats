@@ -12,9 +12,9 @@ import { PerspectiveCreationDialog } from "./_components/PerspectiveCreationDial
 const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/");
 
 export function PerspectivesListView() {
-  const { aspectsOptions } = routeApi.useRouteContext();
+  const { aspectsByProjectOptions } = routeApi.useRouteContext();
   const { data: aspects } = useSuspenseQuery({
-    ...aspectsOptions,
+    ...aspectsByProjectOptions,
     select: (data) => Object.values(data),
   });
 

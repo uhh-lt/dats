@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    wordFrequencyOptions: wordFrequencyQueries.table({
+    wordFrequencyTableOptions: wordFrequencyQueries.table({
       projectId: params.projectId,
       filter: deps[FILTER_PARAM],
       sortingModel: deps.sortingModel,
@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
     }),
   }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureInfiniteQueryData(context.wordFrequencyOptions);
+    await context.queryClient.ensureInfiniteQueryData(context.wordFrequencyTableOptions);
   },
   pendingComponent: () => <CircularProgress />,
   component: WordFrequencyView,
