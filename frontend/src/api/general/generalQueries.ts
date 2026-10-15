@@ -1,3 +1,4 @@
+import { GeneralService } from "@api/services/GeneralService";
 import { RagService } from "@api/services/RagService";
 import { queryOptions } from "@tanstack/react-query";
 
@@ -6,6 +7,7 @@ import { queryOptions } from "@tanstack/react-query";
  *
  *   generalQueries.all()              ["general"]
  *   generalQueries.availableModels()  ["general", "availableModels"]
+ *   generalQueries.instanceInfo()     ["general", "instanceInfo"]
  */
 export const generalQueries = {
   all: () => ["general"] as const,
@@ -15,5 +17,13 @@ export const generalQueries = {
     queryOptions({
       queryKey: [...generalQueries.all(), "availableModels"] as const,
       queryFn: () => RagService.getAvailableModels(),
+    }),
+
+  // the configuration of the instance (is OIDC enabled, Sentry/Glitchtip DSN, ...)
+  instanceInfo: () =>
+    queryOptions({
+      queryKey: [...generalQueries.all(), "instanceInfo"] as const,
+      queryFn: () => GeneralService.info(),
+      staleTime: Infinity,
     }),
 };

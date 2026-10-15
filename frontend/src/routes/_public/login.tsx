@@ -1,4 +1,6 @@
-import { authQueries } from "@core/auth";
+// the route builds its query options itself, so it needs the query definition of the global api
+// eslint-disable-next-line boundaries/element-types
+import { generalQueries } from "@api/general/generalQueries";
 import { LoginView } from "@features/auth";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, redirect } from "@tanstack/react-router";
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/_public/login")({
     }
   },
   // the query options are built once here; the loader and the view use the same ones
-  context: () => ({ instanceInfoOptions: authQueries.instanceInfo() }),
+  context: () => ({ instanceInfoOptions: generalQueries.instanceInfo() }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(context.instanceInfoOptions);
   },

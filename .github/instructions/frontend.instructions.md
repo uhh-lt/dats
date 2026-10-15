@@ -111,7 +111,7 @@ Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules
 
 **Where do queries and mutations live?** In the domain that owns the data, in a public `api/` folder next to the domain's code:
 
-- Every `api/` folder has two files: `<entity>Queries.ts` (the query factory) and `<entity>Hooks.ts` (the `<Entity>Hooks` object). A folder without hooks (nothing to wrap) has only the queries file; there are no empty hooks objects.
+- Every `api/` folder has two files: `<entity>Queries.ts` (the query factory) and `<entity>Hooks.ts` (the `<Entity>Hooks` object). A folder without hooks (nothing to wrap) has only the queries file; there are no empty hooks objects. `core/auth/api/authMutations.ts` is the one exception: mutations whose callbacks the caller passes in, no queries.
 - Used by core and by several features (code, tag, memo, folder, project, source document, user, span/bbox/sentence annotations, project metadata, sdoc metadata): `core/<domain>/api/`.
 - Used by exactly one feature (classifier, COTA, whiteboard, document upload, LLM assistant, ...): `features/<feature>/api/`. Its job queries (`xxxQueries.job`) are part of it.
 - Used by several features but owned by none (`general`, `statistics`): `api/<name>/` (global).
