@@ -12,14 +12,6 @@ import { queryOptions } from "@tanstack/react-query";
 
 export type WhiteboardMap = Record<number, WhiteboardRead>;
 
-const fetchWhiteboards = async (projectId: number) => {
-  const data = await WhiteboardService.getByProject({ projectId });
-  return data.reduce<WhiteboardMap>((acc, whiteboard) => {
-    acc[whiteboard.id] = whiteboard;
-    return acc;
-  }, {});
-};
-
 /**
  * Query factory for whiteboards.
  *
@@ -35,7 +27,13 @@ export const whiteboardQueries = {
   byProject: (projectId: number) =>
     queryOptions({
       queryKey: [...whiteboardQueries.byProjectScope(), projectId] as const,
-      queryFn: () => fetchWhiteboards(projectId),
+      queryFn: async () => {
+        const data = await WhiteboardService.getByProject({ projectId });
+        return data.reduce<WhiteboardMap>((acc, whiteboard) => {
+          acc[whiteboard.id] = whiteboard;
+          return acc;
+        }, {});
+      },
       staleTime: 1000 * 60 * 5,
     }),
 

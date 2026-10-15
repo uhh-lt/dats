@@ -7,29 +7,6 @@ import { queryOptions } from "@tanstack/react-query";
 
 export type TimelineMap = Record<number, TimelineAnalysisRead>;
 
-const fetchTimelineAnalyses = async (projectId: number) => {
-  const data = await TimelineAnalysisService.getByProject({ projectId });
-  return data.reduce<TimelineMap>((acc, timeline) => {
-    acc[timeline.id] = timeline;
-    return acc;
-  }, {});
-};
-
-const fetchColumnInfos = async (projectId: number, timelineAnalysisType: TimelineAnalysisType) => {
-  switch (timelineAnalysisType) {
-    case TimelineAnalysisType.DOCUMENT:
-      return toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
-    case TimelineAnalysisType.BBOX_ANNOTATION:
-      return toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId }));
-    case TimelineAnalysisType.SENTENCE_ANNOTATION:
-      return toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId }));
-    case TimelineAnalysisType.SPAN_ANNOTATION:
-      return toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId }));
-    default:
-      return [];
-  }
-};
-
 /**
  * Query factory for timeline analyses.
  *
@@ -45,7 +22,13 @@ export const timelineAnalysisQueries = {
   byProject: (projectId: number) =>
     queryOptions({
       queryKey: [...timelineAnalysisQueries.byProjectScope(), projectId] as const,
-      queryFn: () => fetchTimelineAnalyses(projectId),
+      queryFn: async () => {
+        const data = await TimelineAnalysisService.getByProject({ projectId });
+        return data.reduce<TimelineMap>((acc, timeline) => {
+          acc[timeline.id] = timeline;
+          return acc;
+        }, {});
+      },
       staleTime: 1000 * 60 * 5,
     }),
 
@@ -55,7 +38,21 @@ export const timelineAnalysisQueries = {
     return queryOptions({
       queryKey: tableInfoQueries.timeline(projectId, type, id),
       queryFn: async () => {
-        const columnInfos = await fetchColumnInfos(projectId, type);
+        let columnInfos: ColumnInfo[] = [];
+        switch (type) {
+          case TimelineAnalysisType.DOCUMENT:
+            columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
+            break;
+          case TimelineAnalysisType.BBOX_ANNOTATION:
+            columnInfos = toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId }));
+            break;
+          case TimelineAnalysisType.SENTENCE_ANNOTATION:
+            columnInfos = toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId }));
+            break;
+          case TimelineAnalysisType.SPAN_ANNOTATION:
+            columnInfos = toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId }));
+            break;
+        }
         onLoaded?.(columnInfos);
         return columnInfos;
       },

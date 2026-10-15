@@ -4,14 +4,6 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export type CotaMap = Record<number, COTARead>;
 
-const fetchCotas = async (projectId: number) => {
-  const data = await ConceptOverTimeAnalysisService.getByProject({ projectId });
-  return data.reduce<CotaMap>((acc, cota) => {
-    acc[cota.id] = cota;
-    return acc;
-  }, {});
-};
-
 const cotaRefinementJobQueries = {
   all: () => [...cotaQueries.all(), "job"] as const,
   byId: (jobId: string | null | undefined) =>
@@ -37,7 +29,13 @@ export const cotaQueries = {
   byProject: (projectId: number) =>
     queryOptions({
       queryKey: [...cotaQueries.byProjectScope(), projectId] as const,
-      queryFn: () => fetchCotas(projectId),
+      queryFn: async () => {
+        const data = await ConceptOverTimeAnalysisService.getByProject({ projectId });
+        return data.reduce<CotaMap>((acc, cota) => {
+          acc[cota.id] = cota;
+          return acc;
+        }, {});
+      },
       staleTime: 1000 * 60 * 5,
     }),
 
