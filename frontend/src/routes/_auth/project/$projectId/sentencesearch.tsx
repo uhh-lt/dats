@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    sentenceSimilarityOptions: searchQueries.sentence({
+    sentenceSimilaritySearchOptions: searchQueries.sentence({
       projectId: params.projectId,
       searchQuery: deps.searchQuery,
       filter: deps[FILTER_PARAM],
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
   loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(context.projectMetadataOptions),
-      context.queryClient.ensureQueryData(context.sentenceSimilarityOptions),
+      context.queryClient.ensureQueryData(context.sentenceSimilaritySearchOptions),
     ]);
   },
   pendingComponent: () => <CircularProgress />,

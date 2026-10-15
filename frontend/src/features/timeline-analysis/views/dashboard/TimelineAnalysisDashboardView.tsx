@@ -35,9 +35,9 @@ export function TimelineAnalysisDashboardView() {
   const projectId = TimelineAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const { timelineAnalysisOptions } = TimelineAnalysisRouteAPI.useRouteContext();
+  const { timelineAnalysesByProjectOptions } = TimelineAnalysisRouteAPI.useRouteContext();
   const { data: userAnalysis } = useSuspenseQuery({
-    ...timelineAnalysisOptions,
+    ...timelineAnalysesByProjectOptions,
     select: (data) => Object.values(data),
   });
   const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(

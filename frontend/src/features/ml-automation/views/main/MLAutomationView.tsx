@@ -34,8 +34,8 @@ export function MlAutomationView() {
   const startMlJob = MlAutomationHooks.useStartMLJob();
 
   // global server state (react-query)
-  const { mlJobsOptions } = routeAPI.useRouteContext();
-  const mlJobsQuery = useSuspenseQuery(mlJobsOptions);
+  const { mlJobsByProjectOptions } = routeAPI.useRouteContext();
+  const mlJobsQuery = useSuspenseQuery(mlJobsByProjectOptions);
 
   // confirmation dialog
   const openConfirmationDialog = useOpenConfirmationDialog();

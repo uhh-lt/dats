@@ -18,9 +18,9 @@ export function WhiteboardDashboardView() {
   const projectId = WhiteboardDashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const { whiteboardOptions } = WhiteboardDashboardRouteAPI.useRouteContext();
+  const { whiteboardsByProjectOptions } = WhiteboardDashboardRouteAPI.useRouteContext();
   const { data: projectWhiteboards } = useSuspenseQuery({
-    ...whiteboardOptions,
+    ...whiteboardsByProjectOptions,
     select: (data) => Object.values(data),
   });
 

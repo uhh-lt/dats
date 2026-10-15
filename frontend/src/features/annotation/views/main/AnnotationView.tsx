@@ -179,8 +179,8 @@ export function AnnotationView() {
   );
 
   // global server state (react query)
-  const { sdocOptions, sdocDataOptions } = AnnotationRouteAPI.useRouteContext();
-  const { data: sdoc } = useSuspenseQuery(sdocOptions);
+  const { sdocDetailOptions, sdocDataOptions } = AnnotationRouteAPI.useRouteContext();
+  const { data: sdoc } = useSuspenseQuery(sdocDetailOptions);
   const { data: sdocData } = useSuspenseQuery(sdocDataOptions);
 
   // rename document

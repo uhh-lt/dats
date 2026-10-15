@@ -28,12 +28,12 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
   validateSearch: zodValidator(annotationSearchSchema),
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
-    sdocOptions: sdocQueries.detail(params.sdocId),
+    sdocDetailOptions: sdocQueries.detail(params.sdocId),
     sdocDataOptions: sdocQueries.data(params.sdocId),
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(context.sdocOptions),
+      context.queryClient.ensureQueryData(context.sdocDetailOptions),
       context.queryClient.ensureQueryData(context.sdocDataOptions),
     ]);
   },

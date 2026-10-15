@@ -8,8 +8,8 @@ import { ProjectCreationDialog } from "./_components/ProjectCreationDialog";
 const routeApi = getRouteApi("/_auth/projects");
 
 export function ProjectsView() {
-  const { projectsOptions } = routeApi.useRouteContext();
-  const { data: projects } = useSuspenseQuery(projectsOptions);
+  const { userProjectsOptions } = routeApi.useRouteContext();
+  const { data: projects } = useSuspenseQuery(userProjectsOptions);
   const [isOpen, setIsOpen] = useState(false);
 
   return (

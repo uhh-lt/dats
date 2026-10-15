@@ -11,9 +11,9 @@ const routeApi = getRouteApi("/_auth/project/$projectId/classifier");
 export function ClassifierView() {
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
-  const { classifiersOptions, classifierJobsOptions } = routeApi.useRouteContext();
-  const classifiersQuery = useSuspenseQuery(classifiersOptions);
-  const classifierJobsQuery = useSuspenseQuery(classifierJobsOptions);
+  const { classifiersByProjectOptions, classifierJobsByProjectOptions } = routeApi.useRouteContext();
+  const classifiersQuery = useSuspenseQuery(classifiersByProjectOptions);
+  const classifierJobsQuery = useSuspenseQuery(classifierJobsByProjectOptions);
 
   const classifiers = useMemo(() => Object.values(classifiersQuery.data), [classifiersQuery.data]);
 

@@ -38,9 +38,9 @@ export function PerspectiveDashboardView() {
   dispatch(PerspectivesActions.onOpenMap({ projectId, aspectId: aspectId }));
 
   // global server state
-  const { aspectsOptions } = routeApi.useRouteContext();
+  const { aspectsByProjectOptions } = routeApi.useRouteContext();
   const { data: aspect } = useSuspenseQuery({
-    ...aspectsOptions,
+    ...aspectsByProjectOptions,
     select: (data) => data[aspectId],
   });
   const perspectivesJob = PerspectivesHooks.useLivePerspectivesJob(aspect?.most_recent_job_id, undefined);

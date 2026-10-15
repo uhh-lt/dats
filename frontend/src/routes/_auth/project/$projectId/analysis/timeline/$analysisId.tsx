@@ -16,9 +16,9 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
     parse: ({ analysisId }) => ({ analysisId: parseInt(analysisId) }),
   },
   // the query options are built once here; the loader and the view use the same ones
-  context: ({ params }) => ({ timelineAnalysisOptions: timelineAnalysisQueries.byProject(params.projectId) }),
+  context: ({ params }) => ({ timelineAnalysesByProjectOptions: timelineAnalysisQueries.byProject(params.projectId) }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(context.timelineAnalysisOptions);
+    await context.queryClient.ensureQueryData(context.timelineAnalysesByProjectOptions);
   },
   pendingComponent: () => <CircularProgress />,
   component: TimelineAnalysisView,

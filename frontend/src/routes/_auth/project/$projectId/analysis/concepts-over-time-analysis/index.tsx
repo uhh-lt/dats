@@ -10,9 +10,9 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
     getTitle: () => "Concepts Over Time Analysis",
   },
   // the query options are built once here; the loader and the view use the same ones
-  context: ({ params }) => ({ cotaOptions: cotaQueries.byProject(params.projectId) }),
+  context: ({ params }) => ({ cotasByProjectOptions: cotaQueries.byProject(params.projectId) }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(context.cotaOptions);
+    await context.queryClient.ensureQueryData(context.cotasByProjectOptions);
   },
   pendingComponent: () => <CircularProgress />,
   component: CotaDashboardView,

@@ -25,7 +25,7 @@ import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilarityS
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
 
 export function SentenceSimilaritySearchView() {
-  const { sentenceSimilarityOptions, projectMetadataOptions } = SentenceSearchRouteAPI.useRouteContext();
+  const { sentenceSimilaritySearchOptions, projectMetadataOptions } = SentenceSearchRouteAPI.useRouteContext();
   const projectId = SentenceSearchRouteAPI.useParams({ select: (params) => params.projectId });
 
   // redux (global client state)
@@ -37,7 +37,7 @@ export function SentenceSimilaritySearchView() {
   // sentence similarity search feature
   const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
   const [filter, setFilter] = useURLConnector(SentenceSearchRouteAPI, FILTER_PARAM);
-  const { data, isError, isFetching, isLoading } = useSuspenseQuery(sentenceSimilarityOptions);
+  const { data, isError, isFetching, isLoading } = useSuspenseQuery(sentenceSimilaritySearchOptions);
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // resetting search-parameter-dependant state
