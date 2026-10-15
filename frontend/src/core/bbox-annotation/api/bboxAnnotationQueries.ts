@@ -10,6 +10,9 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
 export const bboxAnnotationQueries = {
   all: () => ["bboxAnnotation"] as const,
 
+  // the mutations that update a cache optimistically (see rollbackOptimisticUpdate); only these are counted there
+  optimisticMutationScope: () => [...bboxAnnotationQueries.all(), "optimistic"] as const,
+
   byIdScope: () => [...bboxAnnotationQueries.all(), "detail"] as const,
   byId: (bboxId: number | null | undefined) =>
     queryOptions({

@@ -15,6 +15,9 @@ import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-q
 export const spanAnnotationQueries = {
   all: () => ["spanAnnotation"] as const,
 
+  // the mutations that update a cache optimistically (see rollbackOptimisticUpdate); only these are counted there
+  optimisticMutationScope: () => [...spanAnnotationQueries.all(), "optimistic"] as const,
+
   // a single span annotation
   byIdScope: () => [...spanAnnotationQueries.all(), "detail"] as const,
   byId: (spanId: number | null | undefined) =>

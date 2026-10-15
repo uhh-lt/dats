@@ -34,7 +34,7 @@ const useCreateSpanAnnotation = () =>
 
 const useUpdateSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "update"],
+    mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "update"],
     mutationFn: (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | number;
       requestBody: SpanAnnotationUpdate;
@@ -81,7 +81,7 @@ const useUpdateSpanAnnotation = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousAnnos,
-        spanAnnotationQueries.all(),
+        spanAnnotationQueries.optimisticMutationScope(),
       );
     },
     meta: {
@@ -102,7 +102,7 @@ const useUpdateBulkSpan = () =>
 
 const useDeleteSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "delete"],
+    mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "delete"],
     mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | number }) =>
       SpanAnnotationService.deleteById({
         spanId:
@@ -130,7 +130,7 @@ const useDeleteSpanAnnotation = () =>
         queryClient,
         context.affectedQueryKey,
         context.previousSpanAnnotations,
-        spanAnnotationQueries.all(),
+        spanAnnotationQueries.optimisticMutationScope(),
       );
     },
     meta: {
