@@ -699,6 +699,37 @@ const noScopeViolationsRule = {
   },
 };
 
+/** @type {Rule.RuleModule} */
+const queriesFileMatchesRootKeyRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A *Queries.ts file is named after the root query key of its factory: all: () => ['tag'] -> tagQueries.ts",
+    },
+    messages: {
+      mismatch: "The root query key '{{key}}' requires this file to be named '{{expected}}', not '{{actual}}'.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const actual = path.basename(context.filename || context.getFilename());
+    if (!actual.endsWith("Queries.ts")) return {};
+    return {
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ObjectExpression > Property[key.name='all'] > ArrowFunctionExpression > TSAsExpression > ArrayExpression"(
+        node,
+      ) {
+        const first = node.elements[0];
+        if (node.elements.length !== 1 || !first || first.type !== "Literal" || typeof first.value !== "string") return;
+        const expected = `${first.value}Queries.ts`;
+        if (expected === actual) return;
+        context.report({ node: first, messageId: "mismatch", data: { key: first.value, expected, actual } });
+      },
+    };
+  },
+};
+
 /** @type {ESLint.Plugin} */
 export const datsRulesPlugin = {
   rules: {
@@ -708,5 +739,6 @@ export const datsRulesPlugin = {
     "no-internal-modules-public-entry": noInternalModulesPublicEntryRule,
     "no-cross-slice-access": noCrossSliceAccessRule,
     "no-scope-violations": noScopeViolationsRule,
+    "queries-file-matches-root-key": queriesFileMatchesRootKeyRule,
   },
 };

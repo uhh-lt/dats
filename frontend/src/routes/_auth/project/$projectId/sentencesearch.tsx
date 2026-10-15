@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
-import { searchQueries, SentenceSimilaritySearchView } from "@features/search";
+import { similaritySearchQueries, SentenceSimilaritySearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    sentenceSimilaritySearchOptions: searchQueries.sentence({
+    sentenceSimilaritySearchOptions: similaritySearchQueries.sentence({
       projectId: params.projectId,
       searchQuery: deps.searchQuery,
       filter: deps[FILTER_PARAM],

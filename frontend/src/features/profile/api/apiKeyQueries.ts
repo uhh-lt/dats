@@ -4,11 +4,11 @@ import { queryOptions } from "@tanstack/react-query";
 /**
  * Query factory for API keys.
  *
- *   apiKeyQueries.all()   ["apiKeys"]
- *   apiKeyQueries.list()  ["apiKeys", "list"]
+ *   apiKeyQueries.all()   ["apiKey"]
+ *   apiKeyQueries.list()  ["apiKey", "list"]
  */
 export const apiKeyQueries = {
-  all: () => ["apiKeys"] as const,
+  all: () => ["apiKey"] as const,
 
   // all API keys of the logged-in user
   list: () =>

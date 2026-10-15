@@ -15,12 +15,12 @@ export type WhiteboardMap = Record<number, WhiteboardRead>;
 /**
  * Query factory for whiteboards.
  *
- *   whiteboardQueries.all()                  ["whiteboards"]
- *   whiteboardQueries.byProject(projectId)   ["whiteboards", "project", projectId]
- *   whiteboardQueries.data(projectId, id)    ["whiteboards", "data", id]
+ *   whiteboardQueries.all()                  ["whiteboard"]
+ *   whiteboardQueries.byProject(projectId)   ["whiteboard", "project", projectId]
+ *   whiteboardQueries.data(projectId, id)    ["whiteboard", "data", id]
  */
 export const whiteboardQueries = {
-  all: () => ["whiteboards"] as const,
+  all: () => ["whiteboard"] as const,
 
   // all whiteboards of a project, as a map by whiteboard id
   byProjectScope: () => [...whiteboardQueries.all(), "project"] as const,

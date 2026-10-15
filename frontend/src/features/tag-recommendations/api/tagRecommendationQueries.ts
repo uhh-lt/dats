@@ -5,12 +5,12 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 /**
  * Query factory for tag recommendations.
  *
- *   tagRecommendationQueries.all()                   ["tagRecommendations"]
- *   tagRecommendationQueries.jobsByProject(pid)      ["tagRecommendations", "jobs", pid]
- *   tagRecommendationQueries.byJob(mlJobId)          ["tagRecommendations", "job", mlJobId]
+ *   tagRecommendationQueries.all()                   ["tagRecommendation"]
+ *   tagRecommendationQueries.jobsByProject(pid)      ["tagRecommendation", "jobs", pid]
+ *   tagRecommendationQueries.byJob(mlJobId)          ["tagRecommendation", "job", mlJobId]
  */
 export const tagRecommendationQueries = {
-  all: () => ["tagRecommendations"] as const,
+  all: () => ["tagRecommendation"] as const,
 
   // the tag recommendation jobs of a project
   jobsByProjectScope: () => [...tagRecommendationQueries.all(), "jobs"] as const,

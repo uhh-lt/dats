@@ -6,13 +6,13 @@ import { queryOptions } from "@tanstack/react-query";
 /**
  * Query factory for projects.
  *
- *   projectQueries.all()                              ["projects"]
- *   projectQueries.userProjects()                     ["projects", "user"]
- *   projectQueries.sdocStatusCount(projectId, status) ["projects", "sdocStatusCount", projectId, status]
- *   projectQueries.sdocStatusSimple(projectId, status) ["projects", "sdocStatusSimple", projectId, status]
+ *   projectQueries.all()                              ["project"]
+ *   projectQueries.userProjects()                     ["project", "user"]
+ *   projectQueries.sdocStatusCount(projectId, status) ["project", "sdocStatusCount", projectId, status]
+ *   projectQueries.sdocStatusSimple(projectId, status) ["project", "sdocStatusSimple", projectId, status]
  */
 export const projectQueries = {
-  all: () => ["projects"] as const,
+  all: () => ["project"] as const,
 
   // all projects of the logged-in user
   userProjects: () =>

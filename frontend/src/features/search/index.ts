@@ -1,4 +1,4 @@
-export * from "./api/searchQueries";
+export * from "./api/similaritySearchQueries";
 export { searchReducer } from "./store/documentSearchSlice";
 export { imageSearchReducer } from "./store/imageSearchSlice";
 export { sentenceSearchReducer } from "./store/sentenceSearchSlice";

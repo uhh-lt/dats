@@ -4,13 +4,13 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 /**
  * Query factory for tags. Keys are hierarchical: domain -> scope -> params.
  *
- *   tagQueries.all()                         ["tags"]
- *   tagQueries.byProject(projectId)          ["tags", "project", projectId]
- *   tagQueries.idsBySdoc(sdocId)             ["tags", "sdoc", sdocId]
- *   tagQueries.sdocCount(projectId, sdocIds) ["tags", "sdocCount", projectId, sdocIds]
+ *   tagQueries.all()                         ["tag"]
+ *   tagQueries.byProject(projectId)          ["tag", "project", projectId]
+ *   tagQueries.idsBySdoc(sdocId)             ["tag", "sdoc", sdocId]
+ *   tagQueries.sdocCount(projectId, sdocIds) ["tag", "sdocCount", projectId, sdocIds]
  */
 export const tagQueries = {
-  all: () => ["tags"] as const,
+  all: () => ["tag"] as const,
 
   // all tags of a project
   byProjectScope: () => [...tagQueries.all(), "project"] as const,

@@ -14,17 +14,17 @@ interface SimilaritySearchParams {
 /**
  * Query factory for the similarity searches of the search feature (the document search is `sdocQueries.search`).
  *
- *   searchQueries.all()               ["similaritySearch"]
- *   searchQueries.image(params)       ["similaritySearch", "image", projectId, searchQuery, ...]
- *   searchQueries.sentence(params)    ["similaritySearch", "sentence", projectId, searchQuery, ...]
+ *   similaritySearchQueries.all()               ["similaritySearch"]
+ *   similaritySearchQueries.image(params)       ["similaritySearch", "image", projectId, searchQuery, ...]
+ *   similaritySearchQueries.sentence(params)    ["similaritySearch", "sentence", projectId, searchQuery, ...]
  */
-export const searchQueries = {
+export const similaritySearchQueries = {
   all: () => ["similaritySearch"] as const,
 
-  imageScope: () => [...searchQueries.all(), "image"] as const,
+  imageScope: () => [...similaritySearchQueries.all(), "image"] as const,
   image: ({ projectId, searchQuery, filter, topK, threshold }: SimilaritySearchParams) =>
     queryOptions({
-      queryKey: [...searchQueries.imageScope(), projectId, searchQuery, filter, topK, threshold] as const,
+      queryKey: [...similaritySearchQueries.imageScope(), projectId, searchQuery, filter, topK, threshold] as const,
       queryFn: () =>
         SimsearchService.findSimilarImages({
           projId: projectId,
@@ -35,10 +35,10 @@ export const searchQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  sentenceScope: () => [...searchQueries.all(), "sentence"] as const,
+  sentenceScope: () => [...similaritySearchQueries.all(), "sentence"] as const,
   sentence: ({ projectId, searchQuery, filter, topK, threshold }: SimilaritySearchParams) =>
     queryOptions({
-      queryKey: [...searchQueries.sentenceScope(), projectId, searchQuery, filter, topK, threshold] as const,
+      queryKey: [...similaritySearchQueries.sentenceScope(), projectId, searchQuery, filter, topK, threshold] as const,
       queryFn: () =>
         SimsearchService.findSimilarSentences({
           projId: projectId,

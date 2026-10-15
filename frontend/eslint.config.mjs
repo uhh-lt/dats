@@ -340,6 +340,11 @@ export default defineConfig(
       "local/no-internal-modules-public-entry": "off",
     },
   },
+  {
+    files: ["src/**/*Queries.ts"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/queries-file-matches-root-key": "error" },
+  },
   // QUERY CONVENTIONS (see .github/instructions/frontend.instructions.md)
   {
     files: ["src/**/*.{ts,tsx}"],

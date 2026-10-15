@@ -4,12 +4,12 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 /**
  * Query factory for users.
  *
- *   userQueries.all()                      ["users"]
- *   userQueries.me(accessToken)            ["users", "me", accessToken]
- *   userQueries.byProject(projectId)       ["users", "project", projectId]
+ *   userQueries.all()                      ["user"]
+ *   userQueries.me(accessToken)            ["user", "me", accessToken]
+ *   userQueries.byProject(projectId)       ["user", "project", projectId]
  */
 export const userQueries = {
-  all: () => ["users"] as const,
+  all: () => ["user"] as const,
 
   // the logged-in user, resolved by access token
   meScope: () => [...userQueries.all(), "me"] as const,
