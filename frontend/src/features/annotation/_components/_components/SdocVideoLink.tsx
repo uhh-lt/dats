@@ -1,7 +1,8 @@
 import { LinkLink } from "@core/navigation";
-import { SdocHooks } from "@core/source-document";
+import { SdocHooks, sdocQueries } from "@core/source-document";
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
 import { Box } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 
 interface SdocVideoLinkProps {
   projectId: number;
@@ -9,7 +10,7 @@ interface SdocVideoLinkProps {
 }
 
 export function SdocVideoLink({ projectId, filename }: SdocVideoLinkProps) {
-  const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
+  const sdocId = useQuery(sdocQueries.idByFilename(projectId, filename));
   const thumbnailUrl = SdocHooks.useGetThumbnailURL(sdocId.data);
 
   return (

@@ -1,4 +1,4 @@
-import { GeneralHooks } from "@api/general/generalHooks";
+import { generalQueries } from "@api/general/generalQueries";
 import { CodeRenderer } from "@core/code";
 import { ApproachType } from "@models/ApproachType";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
@@ -25,10 +25,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
+import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions, LLMStrategyParams } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -72,7 +74,7 @@ function getFuzzySettings(strategy: StrategyInfo): FuzzySettings {
 
 /** Configures the model, processing strategy, learning approach, and overwrite behavior for an LLM job. */
 export const SettingsStep = memo(() => {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(generalQueries.availableModels());
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
   const recommendation = useAppSelector((state) => state.llmAssistant.llmApproachRecommendation);
   const llmId = useAppSelector((state) => state.llmAssistant.llmId);
@@ -88,7 +90,7 @@ export const SettingsStep = memo(() => {
   const savedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
   const dispatch = useAppDispatch();
 
-  const strategies = LlmAssistantHooks.useListStrategies(llmMethod);
+  const strategies = useQuery(llmAssistantQueries.strategies(llmMethod));
   const [modelId, setModelId] = useState(llmId);
   const [strategyType, setStrategyType] = useState<StrategyType | undefined>(savedStrategy);
   const [approachType, setApproachType] = useState(savedApproach);

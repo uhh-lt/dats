@@ -88,8 +88,6 @@ const useRecordRecentMemo = () =>
     },
   });
 
-const useGetMemo = (memoId: number | null | undefined) => useQuery(memoQueries.byId(memoId));
-
 const useGetObjectMemos = (
   attachedObjType: AttachedObjectType,
   attachedObjId: number | null | undefined,
@@ -116,8 +114,6 @@ const useQueryMemoGroups = (request: GroupQueryRequest_MemoColumns_, enabled = t
     enabled,
   });
 
-const useGetRecentMemos = (projectId: number | null | undefined) => useQuery(memoQueries.recent(projectId));
-
 export const MemoHooks = {
   useMemoSearchInfo,
   useCreateMemo,
@@ -126,9 +122,7 @@ export const MemoHooks = {
   useDeleteMemo,
   useDeleteMemos,
   useRecordRecentMemo,
-  useGetMemo,
   useGetObjectMemos,
   useQueryMemos,
   useQueryMemoGroups,
-  useGetRecentMemos,
 };

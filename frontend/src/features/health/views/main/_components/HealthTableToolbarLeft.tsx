@@ -1,6 +1,7 @@
-import { GeneralHooks } from "@api/general/generalHooks";
+import { generalQueries } from "@api/general/generalQueries";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { Button, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
 
@@ -14,7 +15,7 @@ export function HealthTableToolbarLeft({
   onRetry,
   onRecompute,
 }: HealthTableToolbarProps) {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(generalQueries.availableModels());
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   if (selectedRows.length === 0) {

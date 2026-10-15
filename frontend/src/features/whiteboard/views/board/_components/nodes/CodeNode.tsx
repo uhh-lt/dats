@@ -1,13 +1,14 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { BboxAnnotationHooks } from "@core/bbox-annotation";
+import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { CodeHooks, CodeRenderer } from "@core/code";
 import { MemoHooks, useOpenMemoDialog } from "@core/memo";
-import { SpanAnnotationHooks } from "@core/span-annotation";
+import { spanAnnotationQueries } from "@core/span-annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeNodeData } from "@models/CodeNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useMemo, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -42,8 +43,8 @@ export function CodeNode(props: NodeProps<CodeNode>) {
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(props.data.codeId);
-  const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
-  const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
+  const bboxAnnotations = useQuery(bboxAnnotationQueries.byUserCode(props.data.codeId));
+  const spanAnnotations = useQuery(spanAnnotationQueries.byUserCode(props.data.codeId));
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
   const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.CODE, props.data.codeId);
 

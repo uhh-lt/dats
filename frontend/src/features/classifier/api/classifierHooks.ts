@@ -107,8 +107,6 @@ function useDatasetStatistics() {
   return { model, datasetStats };
 }
 
-const useGetClassifierInfo = () => useQuery(classifierQueries.info());
-
 export const ClassifierHooks = {
   useLiveClassifierJob,
   useGetAllClassifiers,
@@ -117,5 +115,4 @@ export const ClassifierHooks = {
   useUpdateClassifier,
   useDeleteClassifier,
   useDatasetStatistics,
-  useGetClassifierInfo,
 };

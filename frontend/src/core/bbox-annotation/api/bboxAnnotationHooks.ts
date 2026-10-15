@@ -3,7 +3,7 @@ import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { rollbackOptimisticUpdate } from "@utils/optimisticUtils";
 import { bboxAnnotationQueries } from "./bboxAnnotationQueries";
 
@@ -122,20 +122,10 @@ const useDeleteBulkBBoxAnnotation = () =>
     },
   });
 
-const useGetAnnotation = (bboxId: number | null | undefined) => useQuery(bboxAnnotationQueries.byId(bboxId));
-
-const useGetByCodeAndUser = (codeId: number | null | undefined) => useQuery(bboxAnnotationQueries.byUserCode(codeId));
-
-const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery(bboxAnnotationQueries.bySdoc(sdocId, userId));
-
 export const BboxAnnotationHooks = {
   useCreateBBoxAnnotation,
   useUpdateBBoxAnnotation,
   useUpdateBulkBBoxAnnotation,
   useDeleteBBoxAnnotation,
   useDeleteBulkBBoxAnnotation,
-  useGetAnnotation,
-  useGetByCodeAndUser,
-  useGetBBoxAnnotationsBatch,
 };

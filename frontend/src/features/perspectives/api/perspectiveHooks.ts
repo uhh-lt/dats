@@ -186,14 +186,6 @@ const useUnlabelDocs = (aspectId: number) => {
   });
 };
 
-const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
-  useQuery(perspectiveQueries.docAspect(aspectId, sdocId));
-
-const useGetClusterSimilarities = (aspectId: number) => useQuery(perspectiveQueries.clusterSimilarities(aspectId));
-
-const useGetClustersBySdocId = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
-  useQuery(perspectiveQueries.clustersBySdoc(aspectId, sdocId));
-
 export const PerspectivesHooks = {
   useProjectAspectsQuery,
   useGetAspect,
@@ -208,7 +200,4 @@ export const PerspectivesHooks = {
   useGetDocVisualization,
   useLabelDocs,
   useUnlabelDocs,
-  useGetDocumentAspect,
-  useGetClusterSimilarities,
-  useGetClustersBySdocId,
 };

@@ -19,8 +19,6 @@ const useLiveCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
   });
 };
 
-const useGetAllCrawlerJobs = (projectId: number) => useQuery(documentUploadQueries.job.byProject(projectId));
-
 // this query is polling the processing status of simple SDocs every 3 seconds
 const usePollProcessingSimpleSdocStatus = (projectId: number) => {
   const previousLengthRef = useRef<number>(0);
@@ -71,7 +69,6 @@ const useUploadDocument = () =>
 
 export const DocumentUploadHooks = {
   useLiveCrawlerJob,
-  useGetAllCrawlerJobs,
   usePollProcessingSimpleSdocStatus,
   useStartCrawlerJob,
   useUploadDocument,

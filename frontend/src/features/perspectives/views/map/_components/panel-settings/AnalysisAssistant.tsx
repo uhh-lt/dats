@@ -1,4 +1,4 @@
-import { GeneralHooks } from "@api/general/generalHooks";
+import { generalQueries } from "@api/general/generalQueries";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
@@ -16,6 +16,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
@@ -28,7 +29,7 @@ interface ChatMessage {
 }
 
 export function AnalysisAssistant() {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(generalQueries.availableModels());
 
   const theme = useTheme();
   const [inputText, setInputText] = useState<string>("");

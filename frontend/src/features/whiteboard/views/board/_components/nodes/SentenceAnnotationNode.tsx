@@ -2,12 +2,13 @@ import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/Gene
 import { CodeHooks, CodeRenderer } from "@core/code";
 import { MemoHooks, useOpenMemoDialog } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
-import { SentenceAnnotationHooks } from "@core/sentence-annotation";
+import { sentenceAnnotationQueries } from "@core/sentence-annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationNodeData } from "@models/SentenceAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -41,7 +42,7 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
   const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = SentenceAnnotationHooks.useGetAnnotation(props.data.sentenceAnnotationId);
+  const annotation = useQuery(sentenceAnnotationQueries.byId(props.data.sentenceAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SENTENCE_ANNOTATION, props.data.sentenceAnnotationId);
 

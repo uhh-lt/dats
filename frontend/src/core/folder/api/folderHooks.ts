@@ -87,9 +87,6 @@ const useDeleteFolder = () =>
     },
   });
 
-const useGetSdocIdsPerDoctypeInSdocFolder = (sdocFolderId: number | null | undefined) =>
-  useQuery(folderQueries.sdocIdsPerDoctype(sdocFolderId));
-
 export const FolderHooks = {
   useProjectFoldersQuery,
   useGetFolder,
@@ -100,5 +97,4 @@ export const FolderHooks = {
   useUpdateFolder,
   useUpdateFoldersBulk,
   useDeleteFolder,
-  useGetSdocIdsPerDoctypeInSdocFolder,
 };

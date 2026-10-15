@@ -47,8 +47,6 @@ const useDetermineApproach = () =>
     },
   });
 
-const useGetAllLLMJobs = (projectId: number | undefined) => useQuery(llmAssistantQueries.job.byProject(projectId));
-
 const useCountExistingAssistantAnnotations = (params: {
   taskType: TaskType | undefined;
   approachType: ApproachType;
@@ -60,14 +58,10 @@ const useCountExistingAssistantAnnotations = (params: {
     enabled: params.taskType === TaskType.SENTENCE_ANNOTATION || params.taskType === TaskType.ANNOTATION,
   });
 
-const useListStrategies = (taskType: TaskType | undefined) => useQuery(llmAssistantQueries.strategies(taskType));
-
 export const LlmAssistantHooks = {
   useLiveLLMJob,
   useStartLLMJob,
   useCreatePromptTemplates,
   useDetermineApproach,
-  useGetAllLLMJobs,
   useCountExistingAssistantAnnotations,
-  useListStrategies,
 };

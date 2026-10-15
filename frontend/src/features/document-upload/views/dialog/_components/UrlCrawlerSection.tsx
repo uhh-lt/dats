@@ -1,4 +1,4 @@
-import { GeneralHooks } from "@api/general/generalHooks";
+import { generalQueries } from "@api/general/generalQueries";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { Language } from "@models/Language";
@@ -7,6 +7,7 @@ import AddIcon from "@mui/icons-material/Add";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { Button, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { isValidHttpUrl } from "@utils/URLUtils";
 import { useCallback, useState } from "react";
 import { DocumentUploadHooks } from "../../../api/documentUploadHooks";
@@ -16,7 +17,7 @@ interface UrlCrawlerSectionProps {
 }
 
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = useQuery(generalQueries.availableModels());
 
   // Local state
   const [currentUrl, setCurrentUrl] = useState("");

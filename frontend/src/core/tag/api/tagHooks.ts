@@ -109,11 +109,6 @@ const useGetAllTags = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryPa
   });
 };
 
-const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) => useQuery(tagQueries.idsBySdoc(sdocId));
-
-const useGetTagDocumentCounts = (projectId: number, sdocIds: number[]) =>
-  useQuery(tagQueries.sdocCount(projectId, sdocIds));
-
 export const TagHooks = {
   useGetTag,
   useCreateTag,
@@ -125,6 +120,4 @@ export const TagHooks = {
   useBulkUpdateTags,
   useCountBySdocsAndUser,
   useGetAllTags,
-  useGetAllTagIdsBySdocId,
-  useGetTagDocumentCounts,
 };
