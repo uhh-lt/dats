@@ -34,10 +34,10 @@ export function removeMapItem(queryKey: QueryKey, id: number): void {
   });
 }
 
-/** Append an item to an array cache. */
+/** Append an item to an array cache. An uncached list stays uncached: seeding it with only this item would hide the rest. */
 export function appendListItem<T extends { id: number }>(queryKey: TaggedKey<T[]>, item: T): void;
 export function appendListItem<T extends { id: number }>(queryKey: QueryKey, item: T): void {
-  queryClient.setQueryData<T[]>(queryKey, (old) => (old ? [...old, item] : [item]));
+  queryClient.setQueryData<T[]>(queryKey, (old) => (old ? [...old, item] : old));
 }
 
 /** Replace an item in an array cache (match by id). */

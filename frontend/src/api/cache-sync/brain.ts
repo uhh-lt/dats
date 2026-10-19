@@ -250,6 +250,18 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       removeMapItem(perspectiveQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
+    // ── Clusters (perspectives) ─────────────────────────────────────────────
+    // The clusters of an sdoc are written; the visualizations show cluster
+    // names and descriptions within derived data, so they are invalidated.
+    case "CLUSTER_UPDATED": {
+      const cluster = event.payload;
+      sweepPrefix<ClusterRead[]>([...perspectiveQueries.clustersBySdocScope(), cluster.aspect_id], (old) =>
+        old?.map((existing) => (existing.id === cluster.id ? cluster : existing)),
+      );
+      queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(cluster.aspect_id) });
+      break;
+    }
+
     // ── Projects ────────────────────────────────────────────────────────────
     case "PROJECT_CREATED":
       appendListItem(projectQueries.userProjects().queryKey, event.payload);
@@ -347,10 +359,11 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       const annos = event.payload;
       if (annos.length === 0) break;
       annos.forEach((anno) => setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno));
-      // Bulk creates are always for one sdoc+user pair.
-      const first = annos[0];
+      // A batch can span several sdocs and codes (e.g. confirmed annoscaling suggestions).
       annos.forEach((anno) => appendListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno));
-      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(first.code_id).queryKey });
+      new Set(annos.map((anno) => anno.code_id)).forEach((codeId) => {
+        queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(codeId).queryKey });
+      });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED": {
@@ -554,9 +567,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 // live here so that all cache reactions stay in one place.
 
 /**
- * A perspectives job was started. Besides the job itself, the backend points
- * the aspect's `most_recent_job_id` at the new job without emitting
- * ASPECT_UPDATED, so write that field here.
+ * A perspectives job was started. The backend also points the aspect's
+ * `most_recent_job_id` at the new job; the other project members get that as
+ * ASPECT_UPDATED, but the starter only gets the job back, so write the field
+ * here.
  */
 export function handlePerspectivesJobStarted(job: PerspectivesJobRead): void {
   handleJobUpdate(job);
@@ -567,12 +581,10 @@ export function handlePerspectivesJobStarted(job: PerspectivesJobRead): void {
   });
 }
 
-/** A cluster's name or description changed: the aspect's visualizations show them. */
-export function handleClusterUpdated(cluster: ClusterRead): void {
-  queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(cluster.aspect_id) });
-}
-
-/** Confirmed annotation suggestions became annotations, so no suggestion is current any more. */
+/**
+ * Confirmed annotation suggestions became annotations (SPAN_ANNOTATION_CREATED_BATCH), so the starter's suggestions
+ * are outdated. Other members don't need this: suggestions are computed from one user's own annotations.
+ */
 export function handleAnnoscalingSuggestionsConfirmed(): void {
   queryClient.invalidateQueries({ queryKey: annoscalingQueries.suggestScope() });
 }

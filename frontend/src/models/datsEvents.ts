@@ -14,6 +14,7 @@ import type { BboxAnnotationUpdatedEvent } from "./BboxAnnotationUpdatedEvent";
 import type { BboxAnnotationUpdatedBatchEvent } from "./BboxAnnotationUpdatedBatchEvent";
 import type { ClassifierDeletedEvent } from "./ClassifierDeletedEvent";
 import type { ClassifierUpdatedEvent } from "./ClassifierUpdatedEvent";
+import type { ClusterUpdatedEvent } from "./ClusterUpdatedEvent";
 import type { CodeCreatedEvent } from "./CodeCreatedEvent";
 import type { CodeDeletedEvent } from "./CodeDeletedEvent";
 import type { CodeUpdatedEvent } from "./CodeUpdatedEvent";
@@ -90,6 +91,7 @@ export interface DATSEventMap {
   BBOX_ANNOTATION_UPDATED_BATCH: BboxAnnotationUpdatedBatchEvent["payload"];
   CLASSIFIER_DELETED: ClassifierDeletedEvent["payload"];
   CLASSIFIER_UPDATED: ClassifierUpdatedEvent["payload"];
+  CLUSTER_UPDATED: ClusterUpdatedEvent["payload"];
   CODE_CREATED: CodeCreatedEvent["payload"];
   CODE_DELETED: CodeDeletedEvent["payload"];
   CODE_UPDATED: CodeUpdatedEvent["payload"];
@@ -167,6 +169,7 @@ export type DATSEvent =
   | (Omit<BboxAnnotationUpdatedBatchEvent, "type"> & { type: "BBOX_ANNOTATION_UPDATED_BATCH" })
   | (Omit<ClassifierDeletedEvent, "type"> & { type: "CLASSIFIER_DELETED" })
   | (Omit<ClassifierUpdatedEvent, "type"> & { type: "CLASSIFIER_UPDATED" })
+  | (Omit<ClusterUpdatedEvent, "type"> & { type: "CLUSTER_UPDATED" })
   | (Omit<CodeCreatedEvent, "type"> & { type: "CODE_CREATED" })
   | (Omit<CodeDeletedEvent, "type"> & { type: "CODE_DELETED" })
   | (Omit<CodeUpdatedEvent, "type"> & { type: "CODE_UPDATED" })

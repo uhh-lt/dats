@@ -11,6 +11,7 @@ const useConfirmSuggestions = () =>
     mutationFn: AnnoscalingService.confirmSuggestions,
     onSuccess: handleAnnoscalingSuggestionsConfirmed,
     meta: {
+      datsEvent: "SPAN_ANNOTATION_CREATED_BATCH",
       successMessage: () => "Successfully confirmed annotation suggestions",
     },
   });
