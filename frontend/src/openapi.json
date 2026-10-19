@@ -221,7 +221,18 @@
           "required": true
         },
         "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+                  "type": "array",
+                  "title": "Response Annoscaling-Confirm Suggestions"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -7721,6 +7732,18 @@
         }
       }
     },
+    "CLUSTER_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_cluster_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClusterUpdatedEvent" } } }
+          }
+        }
+      }
+    },
     "CLASSIFIER_UPDATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -10326,6 +10349,15 @@
         },
         "type": "object",
         "title": "ClusterUpdate"
+      },
+      "ClusterUpdatedEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CLUSTER_UPDATED", "title": "Type", "default": "CLUSTER_UPDATED" },
+          "payload": { "$ref": "#/components/schemas/ClusterRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ClusterUpdatedEvent"
       },
       "CodeCreate": {
         "properties": {

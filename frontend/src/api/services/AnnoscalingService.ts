@@ -5,6 +5,7 @@
 import type { AnnoscalingConfirmSuggest } from "@models/AnnoscalingConfirmSuggest";
 import type { AnnoscalingResult } from "@models/AnnoscalingResult";
 import type { AnnoscalingSuggest } from "@models/AnnoscalingSuggest";
+import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -33,14 +34,14 @@ export class AnnoscalingService {
   /**
    * Suggest annotations
    * Suggest annotations
-   * @returns any Successful Response
+   * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
   public static confirmSuggestions({
     requestBody,
   }: {
     requestBody: AnnoscalingConfirmSuggest;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/annoscaling/confirm_suggestions",

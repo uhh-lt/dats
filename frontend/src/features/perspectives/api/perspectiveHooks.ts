@@ -1,4 +1,4 @@
-import { handleClusterUpdated, handlePerspectivesJobStarted } from "@api/cache-sync";
+import { handlePerspectivesJobStarted } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
@@ -80,8 +80,8 @@ const useUpdateClusterDetails = () =>
   useMutation({
     mutationKey: [...perspectiveQueries.all(), "updateClusterDetails"],
     mutationFn: PerspectivesService.updateClusterDetails,
-    onSuccess: handleClusterUpdated,
     meta: {
+      datsEvent: "CLUSTER_UPDATED",
       successMessage: (data: ClusterRead) => `Updated cluster ${data.name}`,
     },
   });
