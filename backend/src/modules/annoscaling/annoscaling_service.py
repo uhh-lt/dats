@@ -39,7 +39,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         reject_code_id: int,
         accept: list[tuple[int, int]],
         reject: list[tuple[int, int]],
-    ):
+    ) -> list[SpanAnnotationORM]:
         sdoc_ids = list({sdoc for sdoc, _ in accept + reject})
         sdoc_data = crud_sdoc_data.read_by_ids(db, ids=sdoc_ids)
         sdocs = {sdoc.id: sdoc for sdoc in sdoc_data}
@@ -76,7 +76,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             )
             to_create.append(span_anno)
 
-        crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
+        return crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
 
     def __suggest_similar_sentences(
         self,

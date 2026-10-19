@@ -213,6 +213,7 @@ def update_cluster_details(
     cluster_id: int,
     cluster_update: ClusterUpdate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> ClusterRead:
     authz_user.assert_in_same_project_as(Crud.CLUSTER, cluster_id)
 
@@ -226,7 +227,11 @@ def update_cluster_details(
         update_dto=update_dto,
     )
     result = ClusterRead.model_validate(updated_cluster)
-    # TODO: visualization is noch nicht richtig gehandelt! update cluster details ist eigentlich nur wichtig für die visualisierung... irgendwie muss die visualisierung noch richtig aufgetrennt werden, mit query keys für die Einzelteile!.
+    ws.emit_to_project(
+        DATSEvent.CLUSTER_UPDATED,
+        result,
+        project_id=updated_cluster.get_project_id(),
+    )
     return result
 
 
@@ -277,6 +282,7 @@ def start_perspectives_job(
     aspect_id: int,
     perspectives_job_params: PerspectivesJobParamsNoCreate,
     authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
 ) -> PerspectivesJobRead:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
 
@@ -305,12 +311,17 @@ def start_perspectives_job(
     )
 
     # Update the aspect with the new job ID
-    crud_aspect.update(
+    db_aspect = crud_aspect.update(
         db=db,
         id=aspect.id,
         update_dto=AspectUpdateIntern(
             most_recent_job_id=job.get_id(),
         ),
+    )
+    ws.emit_to_project(
+        DATSEvent.ASPECT_UPDATED,
+        AspectRead.model_validate(db_aspect),
+        project_id=db_aspect.project_id,
     )
 
     return PerspectivesJobRead.from_rq_job(job)
