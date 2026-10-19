@@ -86,7 +86,9 @@ def find_duplicates_job(
     idx2sdoc_id = {}
     N = len(sdoc_id2word_id2word_freq)
     document_vectors = torch.zeros(
-        (N, vocab_size), dtype=torch.float32, device="cuda:0"
+        (N, vocab_size),
+        dtype=torch.float32,
+        device=f"cuda:{torch.cuda.current_device()}",
     )
     for idx, sdoc_id in enumerate(sdoc_id2word_id2word_freq.keys()):
         idx2sdoc_id[idx] = sdoc_id

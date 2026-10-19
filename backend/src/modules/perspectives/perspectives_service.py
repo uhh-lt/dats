@@ -6,6 +6,7 @@ from typing import Callable
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from hdbscan import HDBSCAN
 from loguru import logger
 from matplotlib.axes import Axes
@@ -76,7 +77,10 @@ class PerspectivesService:
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
 
-        self.prompt_embedder = PromptEmbedder(device="cuda:0")
+        # the job handler selects the GPU by setting the current CUDA device
+        self.prompt_embedder = PromptEmbedder(
+            device=f"cuda:{torch.cuda.current_device()}"
+        )
 
         self.perspectives_job_steps: dict[PerspectivesJobType, list[str]] = {
             PerspectivesJobType.CREATE_ASPECT: [
