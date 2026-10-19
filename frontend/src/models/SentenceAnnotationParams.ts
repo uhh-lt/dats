@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type SentenceAnnotationParams = {
-  llm_job_type: string;
+  task_type: string;
   /**
    * IDs of the source documents to analyse
    */

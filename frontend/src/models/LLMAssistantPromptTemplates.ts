@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type LLMPromptTemplates = {
+export type LLMAssistantPromptTemplates = {
   /**
    * The language of the prompt template
    */

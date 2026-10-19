@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnnotationResult } from "./AnnotationResult";
-export type AnnotationLLMJobResult = {
-  llm_job_type: string;
+export type AnnotationLLMAssistantJobResult = {
+  task_type: string;
   results: Array<AnnotationResult>;
 };

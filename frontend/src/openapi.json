@@ -2203,10 +2203,10 @@
         }
       }
     },
-    "/llm/create_prompt_templates": {
+    "/llm_assistant/create_prompt_templates": {
       "post": {
-        "tags": ["llm"],
-        "summary": "Returns the system and user prompt templates for the given llm task in all supported languages",
+        "tags": ["llm_assistant"],
+        "summary": "Returns the system and user prompt templates for the given LLM assistant task in all supported languages",
         "operationId": "create_prompt_templates",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2226,7 +2226,9 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_llm-create_prompt_templates" } }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_llm_assistant-create_prompt_templates" }
+            }
           }
         },
         "responses": {
@@ -2236,8 +2238,8 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
-                  "title": "Response Llm-Create Prompt Templates"
+                  "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
+                  "title": "Response Llm Assistant-Create Prompt Templates"
                 }
               }
             }
@@ -2249,10 +2251,10 @@
         }
       }
     },
-    "/llm/list_strategies": {
+    "/llm_assistant/list_strategies": {
       "post": {
-        "tags": ["llm"],
-        "summary": "Returns the available strategies for the given llm task",
+        "tags": ["llm_assistant"],
+        "summary": "Returns the available strategies for the given LLM assistant task",
         "operationId": "list_strategies",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2271,7 +2273,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/StrategyInfo" },
-                  "title": "Response Llm-List Strategies"
+                  "title": "Response Llm Assistant-List Strategies"
                 }
               }
             }
@@ -2283,13 +2285,13 @@
         }
       }
     },
-    "/llm/determine_approach": {
+    "/llm_assistant/determine_approach": {
       "post": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Determines the appropriate approach based on the provided input",
         "operationId": "determine_approach",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantJobParameters" } } },
           "required": true
         },
         "responses": {
@@ -2305,9 +2307,9 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/llm/count_existing_assistant_annotations": {
+    "/llm_assistant/count_existing_assistant_annotations": {
       "post": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Based on the approach, count the number of existing assistant annotations",
         "operationId": "count_existing_assistant_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2329,7 +2331,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_llm-count_existing_assistant_annotations" }
+              "schema": { "$ref": "#/components/schemas/Body_llm_assistant-count_existing_assistant_annotations" }
             }
           }
         },
@@ -2341,7 +2343,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": { "type": "integer" },
-                  "title": "Response Llm-Count Existing Assistant Annotations"
+                  "title": "Response Llm Assistant-Count Existing Assistant Annotations"
                 }
               }
             }
@@ -2353,13 +2355,13 @@
         }
       }
     },
-    "/llm/llm_assistant": {
+    "/llm_assistant/llm_assistant": {
       "post": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Start LlmAssistant job",
         "operationId": "start_llm_assistant_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobInput" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantJobInput" } } },
           "required": true
         },
         "responses": {
@@ -2375,9 +2377,9 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/llm/llm_assistant/{job_id}": {
+    "/llm_assistant/llm_assistant/{job_id}": {
       "get": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Get LlmAssistant job",
         "operationId": "get_llm_assistant_job_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2396,9 +2398,9 @@
         }
       }
     },
-    "/llm/llm_assistant/{job_id}/abort": {
+    "/llm_assistant/llm_assistant/{job_id}/abort": {
       "post": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Abort LlmAssistant job",
         "operationId": "abort_llm_assistant_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2409,7 +2411,9 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "type": "boolean", "title": "Response Llm-Abort Llm Assistant Job" } }
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Llm Assistant-Abort Llm Assistant Job" }
+              }
             }
           },
           "422": {
@@ -2419,9 +2423,9 @@
         }
       }
     },
-    "/llm/llm_assistant/{job_id}/retry": {
+    "/llm_assistant/llm_assistant/{job_id}/retry": {
       "post": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Retry LlmAssistant job",
         "operationId": "retry_llm_assistant_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2432,7 +2436,9 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "type": "boolean", "title": "Response Llm-Retry Llm Assistant Job" } }
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Llm Assistant-Retry Llm Assistant Job" }
+              }
             }
           },
           "422": {
@@ -2442,9 +2448,9 @@
         }
       }
     },
-    "/llm/llm_assistant/project/{project_id}": {
+    "/llm_assistant/llm_assistant/project/{project_id}": {
       "get": {
-        "tags": ["llm"],
+        "tags": ["llm_assistant"],
         "summary": "Get all LlmAssistant jobs by project",
         "operationId": "get_llm_assistant_jobs_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2464,7 +2470,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/LlmAssistantJobRead" },
-                  "title": "Response Llm-Get Llm Assistant Jobs By Project"
+                  "title": "Response Llm Assistant-Get Llm Assistant Jobs By Project"
                 }
               }
             }
@@ -7975,9 +7981,9 @@
         "required": ["project_id", "code_id", "reject_cide_id", "top_k"],
         "title": "AnnoscalingSuggest"
       },
-      "AnnotationLLMJobResult": {
+      "AnnotationLLMAssistantJobResult": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "ANNOTATION", "title": "Task Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/AnnotationResult" },
             "type": "array",
@@ -7985,12 +7991,12 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "AnnotationLLMJobResult"
+        "required": ["task_type", "results"],
+        "title": "AnnotationLLMAssistantJobResult"
       },
       "AnnotationParams": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "ANNOTATION", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "ANNOTATION", "title": "Task Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8011,7 +8017,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
+        "required": ["task_type", "sdoc_ids", "code_ids"],
         "title": "AnnotationParams"
       },
       "AnnotationResult": {
@@ -8739,26 +8745,26 @@
         "required": ["uploaded_file"],
         "title": "Body_import-start_import_job"
       },
-      "Body_llm-count_existing_assistant_annotations": {
+      "Body_llm_assistant-count_existing_assistant_annotations": {
         "properties": {
           "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
           "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" }
         },
         "type": "object",
         "required": ["sdoc_ids", "code_ids"],
-        "title": "Body_llm-count_existing_assistant_annotations"
+        "title": "Body_llm_assistant-count_existing_assistant_annotations"
       },
-      "Body_llm-create_prompt_templates": {
+      "Body_llm_assistant-create_prompt_templates": {
         "properties": {
-          "llm_job_params": { "$ref": "#/components/schemas/LLMJobParameters" },
+          "job_params": { "$ref": "#/components/schemas/LLMAssistantJobParameters" },
           "example_ids": {
             "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
             "title": "Example Ids"
           }
         },
         "type": "object",
-        "required": ["llm_job_params"],
-        "title": "Body_llm-create_prompt_templates"
+        "required": ["job_params"],
+        "title": "Body_llm_assistant-create_prompt_templates"
       },
       "Body_perspectives-accept_label": {
         "properties": {
@@ -10875,14 +10881,14 @@
       },
       "DefaultStrategyParams": {
         "properties": {
-          "llm_strategy_type": {
+          "strategy_type": {
             "type": "string",
             "enum": ["TAGGING_DEFAULT", "METADATA_DEFAULT", "SENTENCE_ANNOTATION_DEFAULT"],
-            "title": "Llm Strategy Type"
+            "title": "Strategy Type"
           }
         },
         "type": "object",
-        "required": ["llm_strategy_type"],
+        "required": ["strategy_type"],
         "title": "DefaultStrategyParams",
         "description": "Params for single-strategy tasks (tagging, metadata, sentence annotation)."
       },
@@ -11279,9 +11285,9 @@
       },
       "FewShotParams": {
         "properties": {
-          "llm_approach_type": { "type": "string", "const": "LLM_FEW_SHOT", "title": "Llm Approach Type" },
+          "approach_type": { "type": "string", "const": "LLM_FEW_SHOT", "title": "Approach Type" },
           "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
             "type": "array",
             "title": "Prompts",
             "description": "The prompt templates to use for the job"
@@ -11289,7 +11295,7 @@
           "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
         },
         "type": "object",
-        "required": ["llm_approach_type", "prompts", "model"],
+        "required": ["approach_type", "prompts", "model"],
         "title": "FewShotParams"
       },
       "FilterExpression_BBoxColumns_": {
@@ -11983,11 +11989,7 @@
       },
       "FuzzyGroundingStrategyParams": {
         "properties": {
-          "llm_strategy_type": {
-            "type": "string",
-            "const": "CONTEXT_ANCHORED_FUZZY_MATCHING",
-            "title": "Llm Strategy Type"
-          },
+          "strategy_type": { "type": "string", "const": "CONTEXT_ANCHORED_FUZZY_MATCHING", "title": "Strategy Type" },
           "fuzzy_threshold": {
             "type": "number",
             "maximum": 1,
@@ -12026,7 +12028,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_strategy_type"],
+        "required": ["strategy_type"],
         "title": "FuzzyGroundingStrategyParams"
       },
       "GroupConfig_BBoxColumns_": {
@@ -12484,16 +12486,16 @@
         "required": ["keyword", "filtered_count", "global_count"],
         "title": "KeywordStat"
       },
-      "LLMJobInput": {
+      "LLMAssistantJobInput": {
         "properties": {
           "project_id": {
             "type": "integer",
             "title": "Project Id",
             "description": "Project ID associated with the job"
           },
-          "llm_job_type": {
+          "task_type": {
             "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMJob (what to llm)"
+            "description": "The type of the LLMAssistantJob (what to llm)"
           },
           "specific_task_parameters": {
             "oneOf": [
@@ -12503,9 +12505,9 @@
               { "$ref": "#/components/schemas/SentenceAnnotationParams" }
             ],
             "title": "Specific Task Parameters",
-            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "description": "Specific parameters for the LLMAssistantJob w.r.t it's type",
             "discriminator": {
-              "propertyName": "llm_job_type",
+              "propertyName": "task_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationParams",
                 "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
@@ -12514,9 +12516,9 @@
               }
             }
           },
-          "llm_approach_type": {
+          "approach_type": {
             "$ref": "#/components/schemas/ApproachType",
-            "description": "The approach to use for the LLMJob"
+            "description": "The approach to use for the LLMAssistantJob"
           },
           "specific_approach_parameters": {
             "oneOf": [
@@ -12526,16 +12528,16 @@
             "title": "Specific Approach Parameters",
             "description": "Specific parameters for the approach w.r.t it's type",
             "discriminator": {
-              "propertyName": "llm_approach_type",
+              "propertyName": "approach_type",
               "mapping": {
                 "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
                 "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams"
               }
             }
           },
-          "llm_strategy_type": {
+          "strategy_type": {
             "$ref": "#/components/schemas/StrategyType",
-            "description": "The strategy to use for the LLMJob"
+            "description": "The strategy to use for the LLMAssistantJob"
           },
           "specific_strategy_parameters": {
             "oneOf": [
@@ -12546,7 +12548,7 @@
             "title": "Specific Strategy Parameters",
             "description": "Specific parameters for the strategy w.r.t it's type",
             "discriminator": {
-              "propertyName": "llm_strategy_type",
+              "propertyName": "strategy_type",
               "mapping": {
                 "CONTEXT_ANCHORED_FUZZY_MATCHING": "#/components/schemas/FuzzyGroundingStrategyParams",
                 "METADATA_DEFAULT": "#/components/schemas/DefaultStrategyParams",
@@ -12560,55 +12562,55 @@
         "type": "object",
         "required": [
           "project_id",
-          "llm_job_type",
+          "task_type",
           "specific_task_parameters",
-          "llm_approach_type",
+          "approach_type",
           "specific_approach_parameters",
-          "llm_strategy_type",
+          "strategy_type",
           "specific_strategy_parameters"
         ],
-        "title": "LLMJobInput"
+        "title": "LLMAssistantJobInput"
       },
-      "LLMJobOutput": {
+      "LLMAssistantJobOutput": {
         "properties": {
-          "llm_job_type": {
+          "task_type": {
             "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMJob (what to llm)"
+            "description": "The type of the LLMAssistantJob (what to llm)"
           },
           "specific_task_result": {
             "oneOf": [
-              { "$ref": "#/components/schemas/TaggingLLMJobResult" },
-              { "$ref": "#/components/schemas/MetadataExtractionLLMJobResult" },
-              { "$ref": "#/components/schemas/AnnotationLLMJobResult" },
-              { "$ref": "#/components/schemas/SentenceAnnotationLLMJobResult" }
+              { "$ref": "#/components/schemas/TaggingLLMAssistantJobResult" },
+              { "$ref": "#/components/schemas/MetadataExtractionLLMAssistantJobResult" },
+              { "$ref": "#/components/schemas/AnnotationLLMAssistantJobResult" },
+              { "$ref": "#/components/schemas/SentenceAnnotationLLMAssistantJobResult" }
             ],
             "title": "Specific Task Result",
-            "description": "Specific result for the LLMJob w.r.t it's type",
+            "description": "Specific result for the LLMAssistantJob w.r.t it's type",
             "discriminator": {
-              "propertyName": "llm_job_type",
+              "propertyName": "task_type",
               "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationLLMJobResult",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobResult",
-                "TAGGING": "#/components/schemas/TaggingLLMJobResult"
+                "ANNOTATION": "#/components/schemas/AnnotationLLMAssistantJobResult",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMAssistantJobResult",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMAssistantJobResult",
+                "TAGGING": "#/components/schemas/TaggingLLMAssistantJobResult"
               }
             }
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "specific_task_result"],
-        "title": "LLMJobOutput"
+        "required": ["task_type", "specific_task_result"],
+        "title": "LLMAssistantJobOutput"
       },
-      "LLMJobParameters": {
+      "LLMAssistantJobParameters": {
         "properties": {
           "project_id": {
             "type": "integer",
             "title": "Project Id",
             "description": "Project ID associated with the job"
           },
-          "llm_job_type": {
+          "task_type": {
             "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMJob (what to llm)"
+            "description": "The type of the LLMAssistantJob (what to llm)"
           },
           "specific_task_parameters": {
             "oneOf": [
@@ -12618,9 +12620,9 @@
               { "$ref": "#/components/schemas/SentenceAnnotationParams" }
             ],
             "title": "Specific Task Parameters",
-            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "description": "Specific parameters for the LLMAssistantJob w.r.t it's type",
             "discriminator": {
-              "propertyName": "llm_job_type",
+              "propertyName": "task_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationParams",
                 "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
@@ -12631,10 +12633,10 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "llm_job_type", "specific_task_parameters"],
-        "title": "LLMJobParameters"
+        "required": ["project_id", "task_type", "specific_task_parameters"],
+        "title": "LLMAssistantJobParameters"
       },
-      "LLMPromptTemplates": {
+      "LLMAssistantPromptTemplates": {
         "properties": {
           "language": { "type": "string", "title": "Language", "description": "The language of the prompt template" },
           "system_prompt": {
@@ -12650,7 +12652,7 @@
         },
         "type": "object",
         "required": ["language", "system_prompt", "user_prompt"],
-        "title": "LLMPromptTemplates"
+        "title": "LLMAssistantPromptTemplates"
       },
       "Language": { "type": "string", "enum": ["auto", "de", "en", "it"], "title": "Language" },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
@@ -12686,9 +12688,9 @@
             "title": "Steps",
             "description": "Total number of steps in the job process"
           },
-          "input": { "$ref": "#/components/schemas/LLMJobInput", "description": "Input for the job" },
+          "input": { "$ref": "#/components/schemas/LLMAssistantJobInput", "description": "Input for the job" },
           "output": {
-            "anyOf": [{ "$ref": "#/components/schemas/LLMJobOutput" }, { "type": "null" }],
+            "anyOf": [{ "$ref": "#/components/schemas/LLMAssistantJobOutput" }, { "type": "null" }],
             "description": "Output for the job"
           },
           "created": {
@@ -13072,9 +13074,9 @@
         "title": "MergeClustersParams"
       },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
-      "MetadataExtractionLLMJobResult": {
+      "MetadataExtractionLLMAssistantJobResult": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Task Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
             "type": "array",
@@ -13082,12 +13084,12 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "MetadataExtractionLLMJobResult"
+        "required": ["task_type", "results"],
+        "title": "MetadataExtractionLLMAssistantJobResult"
       },
       "MetadataExtractionParams": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Task Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -13102,7 +13104,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "sdoc_ids", "project_metadata_ids"],
+        "required": ["task_type", "sdoc_ids", "project_metadata_ids"],
         "title": "MetadataExtractionParams"
       },
       "MetadataExtractionResult": {
@@ -13187,11 +13189,9 @@
         "title": "MlJobRead"
       },
       "NERInlineTagStrategyParams": {
-        "properties": {
-          "llm_strategy_type": { "type": "string", "const": "NER_INLINE_TAGS", "title": "Llm Strategy Type" }
-        },
+        "properties": { "strategy_type": { "type": "string", "const": "NER_INLINE_TAGS", "title": "Strategy Type" } },
         "type": "object",
-        "required": ["llm_strategy_type"],
+        "required": ["strategy_type"],
         "title": "NERInlineTagStrategyParams"
       },
       "NoteNodeData": {
@@ -14696,9 +14696,9 @@
         "required": ["payload"],
         "title": "SentenceAnnotationDeletedEvent"
       },
-      "SentenceAnnotationLLMJobResult": {
+      "SentenceAnnotationLLMAssistantJobResult": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Task Type" },
           "results": {
             "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
             "type": "array",
@@ -14706,8 +14706,8 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "SentenceAnnotationLLMJobResult"
+        "required": ["task_type", "results"],
+        "title": "SentenceAnnotationLLMAssistantJobResult"
       },
       "SentenceAnnotationNodeData": {
         "properties": {
@@ -14730,7 +14730,7 @@
       },
       "SentenceAnnotationParams": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Task Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -14751,7 +14751,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "sdoc_ids", "code_ids"],
+        "required": ["task_type", "sdoc_ids", "code_ids"],
         "title": "SentenceAnnotationParams"
       },
       "SentenceAnnotationRead": {
@@ -16256,7 +16256,7 @@
       },
       "StrategyInfo": {
         "properties": {
-          "llm_strategy_type": { "$ref": "#/components/schemas/StrategyType", "description": "The strategy type" },
+          "strategy_type": { "$ref": "#/components/schemas/StrategyType", "description": "The strategy type" },
           "name": { "type": "string", "title": "Name", "description": "Human-readable name of the strategy" },
           "description": {
             "type": "string",
@@ -16280,7 +16280,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_strategy_type", "name", "description", "default_params", "allowed_data_tags"],
+        "required": ["strategy_type", "name", "description", "default_params", "allowed_data_tags"],
         "title": "StrategyInfo",
         "description": "Describes an available strategy for a task, for display in the frontend."
       },
@@ -16538,18 +16538,18 @@
         "required": ["payload"],
         "title": "TagUpdatedEvent"
       },
-      "TaggingLLMJobResult": {
+      "TaggingLLMAssistantJobResult": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "TAGGING", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "TAGGING", "title": "Task Type" },
           "results": { "items": { "$ref": "#/components/schemas/TaggingResult" }, "type": "array", "title": "Results" }
         },
         "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "TaggingLLMJobResult"
+        "required": ["task_type", "results"],
+        "title": "TaggingLLMAssistantJobResult"
       },
       "TaggingParams": {
         "properties": {
-          "llm_job_type": { "type": "string", "const": "TAGGING", "title": "Llm Job Type" },
+          "task_type": { "type": "string", "const": "TAGGING", "title": "Task Type" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -16564,7 +16564,7 @@
           }
         },
         "type": "object",
-        "required": ["llm_job_type", "sdoc_ids", "tag_ids"],
+        "required": ["task_type", "sdoc_ids", "tag_ids"],
         "title": "TaggingParams"
       },
       "TaggingResult": {
@@ -17429,9 +17429,9 @@
       },
       "ZeroShotParams": {
         "properties": {
-          "llm_approach_type": { "type": "string", "const": "LLM_ZERO_SHOT", "title": "Llm Approach Type" },
+          "approach_type": { "type": "string", "const": "LLM_ZERO_SHOT", "title": "Approach Type" },
           "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
+            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
             "type": "array",
             "title": "Prompts",
             "description": "The prompt templates to use for the job"
@@ -17439,7 +17439,7 @@
           "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
         },
         "type": "object",
-        "required": ["llm_approach_type", "prompts", "model"],
+        "required": ["approach_type", "prompts", "model"],
         "title": "ZeroShotParams"
       }
     },
