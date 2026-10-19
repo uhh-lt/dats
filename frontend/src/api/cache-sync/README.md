@@ -57,13 +57,12 @@ event tag:
   (e.g. `useDeleteDocuments`).
 - RPC-style mutations (search, chat, exports) that don't map to an entity event.
 
-**Mutations without a matching event** (the response is not an entity DTO,
-or the backend changes state it does not emit an event for) call one of the
-`handle…` reaction functions at the bottom of [brain.ts](brain.ts) from their
-`onSuccess`, e.g. `handleMemoOpened`. Add a
-new one there rather than calling `invalidateQueries` in the hook, so that all
-cache reactions stay in the brain. Job-start mutations return the new job and
-are tagged with `datsEvent: "JOB_UPDATED"`.
+**Job-start mutations** return the new job and are tagged with
+`datsEvent: "JOB_UPDATED"`, like the websocket job updates.
+
+**User-private bookkeeping stays in the hook.** A mutation that only changes
+data no other client sees (e.g. `useRecordRecentMemo`, which updates the
+user's recent memos) has no event and refreshes its cache in `onSuccess`.
 
 **Optimistic updates stay in the hooks.** `onMutate` / `onError` rollback for
 annotations and search views is untouched — the brain only handles the

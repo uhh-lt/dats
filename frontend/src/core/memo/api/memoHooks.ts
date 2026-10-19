@@ -1,4 +1,4 @@
-import { handleMemoOpened } from "@api/cache-sync";
+import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { toColumnInfoMap } from "@core/filter";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -76,7 +76,10 @@ const useRecordRecentMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "recordRecent"],
     mutationFn: ({ memoId }: { memoId: number; projectId: number }) => MemoService.recordRecentMemo({ memoId }),
-    onSuccess: (_data, { projectId }) => handleMemoOpened(projectId),
+    // The recent memos are private to the user, so there is no DATS event for this: refresh them here.
+    onSuccess: (_data, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: memoQueries.recent(projectId).queryKey });
+    },
   });
 
 const useGetObjectMemos = (

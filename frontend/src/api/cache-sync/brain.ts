@@ -363,6 +363,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       new Set(annos.map((anno) => anno.code_id)).forEach((codeId) => {
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(codeId).queryKey });
       });
+      // Annoscaling suggestions leave out annotated sentences (confirming them creates such a batch).
+      queryClient.invalidateQueries({ queryKey: annoscalingQueries.suggestScope() });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED": {
@@ -558,22 +560,4 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       console.warn("Unhandled dats event");
     }
   }
-}
-
-// ── Reactions without a DATS event ───────────────────────────────────────────
-// These mutations change server state but don't return an entity DTO with a
-// matching event, so their hooks call these instead of `meta.datsEvent`. They
-// live here so that all cache reactions stay in one place.
-
-/**
- * Confirmed annotation suggestions became annotations (SPAN_ANNOTATION_CREATED_BATCH), so the starter's suggestions
- * are outdated. Other members don't need this: suggestions are computed from one user's own annotations.
- */
-export function handleAnnoscalingSuggestionsConfirmed(): void {
-  queryClient.invalidateQueries({ queryKey: annoscalingQueries.suggestScope() });
-}
-
-/** A memo was opened: it moves to the top of the project's recent memos. */
-export function handleMemoOpened(projectId: number): void {
-  invalidateMemoRecents([projectId]);
 }
