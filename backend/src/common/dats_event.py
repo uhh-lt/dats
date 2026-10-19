@@ -27,6 +27,7 @@ from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkRead,
 )
 from modules.perspectives.aspect_dto import AspectRead
+from modules.perspectives.cluster_dto import ClusterRead
 from modules.search_view.search_view_dto import SearchViewReadUnion
 from modules.timeline_analysis.timeline_analysis_dto import TimelineAnalysisRead
 from modules.whiteboard.whiteboard_dto import WhiteboardRead
@@ -108,6 +109,8 @@ class DATSEvent(StrEnum):
     ASPECT_CREATED = "ASPECT_CREATED"
     ASPECT_UPDATED = "ASPECT_UPDATED"
     ASPECT_DELETED = "ASPECT_DELETED"
+
+    CLUSTER_UPDATED = "CLUSTER_UPDATED"
 
     CLASSIFIER_UPDATED = "CLASSIFIER_UPDATED"
     CLASSIFIER_DELETED = "CLASSIFIER_DELETED"
@@ -209,6 +212,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.ASPECT_CREATED: AspectRead,
     DATSEvent.ASPECT_UPDATED: AspectRead,
     DATSEvent.ASPECT_DELETED: AspectRead,
+    DATSEvent.CLUSTER_UPDATED: ClusterRead,
     DATSEvent.CLASSIFIER_UPDATED: ClassifierRead,
     DATSEvent.CLASSIFIER_DELETED: ClassifierRead,
     DATSEvent.PROJECT_USERS_LINKED: ProjectUserLinks,
