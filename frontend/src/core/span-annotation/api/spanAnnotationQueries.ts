@@ -1,6 +1,6 @@
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
+import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { QueryRequest_SpanColumns_ } from "@models/QueryRequest_SpanColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -45,15 +45,11 @@ export const spanAnnotationQueries = {
       queryFn: !sdocId || !userId ? skipToken : () => SpanAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
   // the column infos of the span annotation filter table
-  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
+  tableInfo: (projectId: number) =>
     queryOptions({
-      queryKey: tableInfoQueries.bySlice("satFilter", projectId),
-      queryFn: async () => {
-        const columnInfos = toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId }));
-        onLoaded?.(columnInfos);
-        return columnInfos;
-      },
-      staleTime: Infinity,
+      queryKey: tableInfoQueries.byDomain("span", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSpanAnnotationInfo({ projectId })),
+      staleTime: 1000 * 60 * 5,
     }),
 
   searchScope: () => [...spanAnnotationQueries.all(), "search"] as const,

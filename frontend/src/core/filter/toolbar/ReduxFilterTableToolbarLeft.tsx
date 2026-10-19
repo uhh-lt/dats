@@ -8,6 +8,7 @@ export function ReduxFilterTableToolbarLeft<T extends MRT_RowData>({
   filterName,
   filterActions,
   filterStateSelector,
+  tableInfoOptions,
 }: ReduxFilterTableToolbarProps<T>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
@@ -17,6 +18,7 @@ export function ReduxFilterTableToolbarLeft<T extends MRT_RowData>({
         filterName={filterName}
         filterActions={filterActions}
         filterStateSelector={filterStateSelector}
+        tableInfoOptions={tableInfoOptions}
       />
     </Stack>
   );

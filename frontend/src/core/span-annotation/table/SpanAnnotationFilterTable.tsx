@@ -17,6 +17,7 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
   toSorts,
+  TableInfoHooks,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -30,12 +31,11 @@ import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { SpanColumns } from "@models/SpanColumns";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 import { spanAnnotationQueries } from "../api/spanAnnotationQueries";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
-import { useInitSATFilterSlice } from "./_hooks/useInitSATFilterSlice";
 import { SATFilterActions, defaultSATFilterExpression } from "./satFilterSlice";
 
 const flatMapData = (page: Page_SpanAnnotationRow_) => page.items;
@@ -71,7 +71,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   const userId = user?.id;
 
   // table columns
-  const tableInfo = useInitSATFilterSlice({ projectId });
+  const { data: tableInfo } = useQuery(spanAnnotationQueries.tableInfo(projectId));
   const columns: MRT_ColumnDef<SpanAnnotationRow>[] = useMemo(() => {
     if (!tableInfo || !user) return [];
 
@@ -217,9 +217,14 @@ export const SpanAnnotationReduxFilterTable = memo(
     >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
+    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(
+      () => spanAnnotationQueries.tableInfo(tableProps.projectId),
+      [tableProps.projectId],
+    );
 
     return (
       <SpanAnnotationFilterTable
@@ -230,6 +235,7 @@ export const SpanAnnotationReduxFilterTable = memo(
           filterName,
           filterStateSelector,
           filterActions,
+          tableInfoOptions,
         }}
       />
     );
@@ -237,7 +243,6 @@ export const SpanAnnotationReduxFilterTable = memo(
 );
 
 // configs for URL filter table
-const column2InfoSelector = (state: RootState) => state.satFilter.column2Info;
 const defaultFilterExpression = defaultSATFilterExpression;
 
 /**
@@ -255,8 +260,13 @@ export const SpanAnnotationURLFilterTable = memo(
     FilterTableContainerProps<SpanAnnotationRow, URLFilterTableToolbarProps<SpanAnnotationRow>, MyFilter<SpanColumns>>,
     "filter" | "toolbarExtraProps"
   > &
-    Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
+    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(
+      () => spanAnnotationQueries.tableInfo(tableProps.projectId),
+      [tableProps.projectId],
+    );
 
     return (
       <SpanAnnotationFilterTable
@@ -266,7 +276,7 @@ export const SpanAnnotationURLFilterTable = memo(
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
-          column2InfoSelector,
+          tableInfoOptions,
         }}
       />
     );
@@ -295,7 +305,7 @@ export const SpanAnnotationLocalFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<FilterDialogProps<SpanColumns>, "column2Info" | "defaultFilterExpression">) => {
-    const column2Info = useAppSelector(column2InfoSelector);
+    const column2Info = TableInfoHooks.useColumnInfoMap(spanAnnotationQueries.tableInfo(tableProps.projectId));
 
     return (
       <SpanAnnotationFilterTable

@@ -17,6 +17,7 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
   toSorts,
+  TableInfoHooks,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -30,12 +31,11 @@ import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 import { sentenceAnnotationQueries } from "../api/sentenceAnnotationQueries";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
-import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
 import { SEATFilterActions, defaultSEATFilterExpression } from "./seatFilterSlice";
 
 const flatMapData = (page: Page_SentenceAnnotationRow_) => page.items;
@@ -71,7 +71,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
   const userId = user?.id;
 
   // table columns
-  const tableInfo = useInitSEATFilterSlice({ projectId });
+  const { data: tableInfo } = useQuery(sentenceAnnotationQueries.tableInfo(projectId));
   const columns: MRT_ColumnDef<SentenceAnnotationRow>[] = useMemo(() => {
     if (!tableInfo || !user) return [];
 
@@ -220,9 +220,14 @@ export const SentenceAnnotationReduxFilterTable = memo(
     >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
+    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(
+      () => sentenceAnnotationQueries.tableInfo(tableProps.projectId),
+      [tableProps.projectId],
+    );
 
     return (
       <SentenceAnnotationFilterTable
@@ -233,6 +238,7 @@ export const SentenceAnnotationReduxFilterTable = memo(
           filterName,
           filterStateSelector,
           filterActions,
+          tableInfoOptions,
         }}
       />
     );
@@ -240,7 +246,6 @@ export const SentenceAnnotationReduxFilterTable = memo(
 );
 
 // configs for URL filter table
-const column2InfoSelector = (state: RootState) => state.seatFilter.column2Info;
 const defaultFilterExpression = defaultSEATFilterExpression;
 
 /**
@@ -262,8 +267,13 @@ export const SentenceAnnotationURLFilterTable = memo(
     >,
     "filter" | "toolbarExtraProps"
   > &
-    Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
+    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(
+      () => sentenceAnnotationQueries.tableInfo(tableProps.projectId),
+      [tableProps.projectId],
+    );
 
     return (
       <SentenceAnnotationFilterTable
@@ -273,7 +283,7 @@ export const SentenceAnnotationURLFilterTable = memo(
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
-          column2InfoSelector,
+          tableInfoOptions,
         }}
       />
     );
@@ -302,7 +312,7 @@ export const SentenceAnnotationLocalFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<FilterDialogProps<SentAnnoColumns>, "column2Info" | "defaultFilterExpression">) => {
-    const column2Info = useAppSelector(column2InfoSelector);
+    const column2Info = TableInfoHooks.useColumnInfoMap(sentenceAnnotationQueries.tableInfo(tableProps.projectId));
 
     return (
       <SentenceAnnotationFilterTable

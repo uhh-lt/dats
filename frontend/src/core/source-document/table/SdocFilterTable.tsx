@@ -23,13 +23,12 @@ import { SdocColumns } from "@models/SdocColumns";
 import { Box, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
 import { sdocQueries } from "../api/sdocQueries";
 import { SdocAnnotatorsRenderer, SdocFolderRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
-import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
 
 const flatMapData = (page: PaginatedSDocHits) => page.hits;
@@ -63,7 +62,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
 }: FilterTableContainerProps<HierarchicalElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
-  const tableInfo = useInitDocumentTableFilterSlice({ projectId });
+  const { data: tableInfo } = useQuery(sdocQueries.tableInfo(projectId));
   const columns = useMemo(() => {
     if (!tableInfo) return [];
 
@@ -214,9 +213,11 @@ export const SdocReduxFilterTable = memo(
     >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
+    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
       <SdocFilterTable
@@ -227,6 +228,7 @@ export const SdocReduxFilterTable = memo(
           filterName,
           filterStateSelector,
           filterActions,
+          tableInfoOptions,
         }}
       />
     );
@@ -234,7 +236,6 @@ export const SdocReduxFilterTable = memo(
 );
 
 // configs for URL filter table
-const column2InfoSelector = (state: RootState) => state.documentTableFilter.column2Info;
 const defaultFilterExpression = defaultSdocFilterExpression;
 
 /**
@@ -255,8 +256,10 @@ export const SdocURLFilterTable = memo(
     >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
+    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
       <SdocFilterTable
@@ -266,7 +269,7 @@ export const SdocURLFilterTable = memo(
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
-          column2InfoSelector,
+          tableInfoOptions,
         }}
       />
     );

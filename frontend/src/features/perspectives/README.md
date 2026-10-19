@@ -100,8 +100,7 @@ The core visualization interface, wrapping the `MapPlot`.
 
 - **Functionality**: A complex lay-out managing the central scatter plot, side panels for settings and info, and dialogs.
 - **Interactions**: Coordinates the layout of the `SettingsPanel` (left), `MapContent` (center), and `InfoPanel` (right).
-- **Server Communication**:
-  - **Fetching**: Initializes the filter slice via `useInitPerspectivesFilterSlice`.
+- **Server Communication**: none itself; the filter dialog loads the column infos (`sdocQueries.tableInfo`) through `MapToolbar`.
 - **Sub Components**: `SettingsPanel`, `MapContent` (wraps `MapPlot`), `InfoPanel`, `ClusterJobProgressDialog`, `ClusterDetailDialog`.
 
 ### 5. Map Plot (`map/MapPlot.tsx`)

@@ -1,10 +1,10 @@
 import { useURLConnector } from "@hooks/useURLConnector";
-import { RootState } from "@store/store";
-import { useAppSelector } from "@store/storeHooks";
 import type { RouteApi } from "@tanstack/react-router";
 import type { AnyRouter, RouteTypesById } from "@tanstack/router-core";
 import { memo } from "react";
-import { ColumnInfo, MyFilter, MyFilterExpression } from "../filterUtils";
+import { TableInfoHooks } from "../api/tableInfoHooks";
+import type { TableInfoOptions } from "../api/tableInfoQueries";
+import { MyFilter, MyFilterExpression } from "../filterUtils";
 import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "../store";
 import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
 
@@ -23,13 +23,14 @@ export interface URLFilterDialogProps<
   routeApi: RouteApiWithFilterSearchParams<TId, TRouter>;
   filterColumnsEnum?: Record<string, TFilter>;
   defaultFilterExpression: MyFilterExpression<TFilter>;
-  column2InfoSelector: (state: RootState) => Record<string, ColumnInfo>;
+  // the query of the column infos of the table, e.g. memoQueries.tableInfo(projectId)
+  tableInfoOptions: TableInfoOptions;
 }
 
 const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter, TFilter extends string = string>({
   routeApi,
   defaultFilterExpression,
-  column2InfoSelector,
+  tableInfoOptions,
   //
   anchorEl,
   buttonProps,
@@ -37,7 +38,7 @@ const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter,
   transformOrigin,
 }: URLFilterDialogProps<TId, TRouter, TFilter> &
   Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
-  const column2Info = useAppSelector(column2InfoSelector);
+  const column2Info = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
 
   const [expertMode, setExpertMode] = useURLConnector(routeApi, FILTER_EXPERT_MODE_PARAM);
   const [filter, setFilter] = useURLConnector(routeApi, FILTER_PARAM);

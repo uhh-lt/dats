@@ -2,7 +2,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { URLFilterDialog } from "@core/filter";
+import { TableInfoHooks, URLFilterDialog } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton, useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -13,11 +13,13 @@ import {
   SdocFolderRenderer,
   SdocRenderer,
   SdocTagsRenderer,
+  sdocQueries,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { FolderType } from "@models/FolderType";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { SdocColumns } from "@models/SdocColumns";
+import { useQuery } from "@tanstack/react-query";
 import { StringOperator } from "@models/StringOperator";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
@@ -51,13 +53,15 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { FolderSelection, SearchActions } from "../../../store/documentSearchSlice";
 import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
 import { useShowFolders } from "../_hooks/useShowFolders";
 import { FolderToggleVisibilityButton } from "./FolderToggleVisibilityButton";
 import { NoDocumentsPlaceholder } from "./NoDocumentsPlaceholder";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
+
+// besides the metadata columns: the folder column is not useful for the user
+const HIDDEN_BY_DEFAULT: string[] = [SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE];
 
 const defaultFilterExpression = {
   id: "",
@@ -142,7 +146,7 @@ export function SearchDocumentTable({
   );
 
   // global client state (redux) connected to table state
-  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+  const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.search.columnVisibilityModel,
     SearchActions.onColumnVisibilityChange,
   );
@@ -169,7 +173,13 @@ export function SearchDocumentTable({
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfo = useInitSearchFilterSlice({ projectId });
+  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+  const { data: tableInfo } = useQuery(tableInfoOptions);
+  const columnVisibilityModel = TableInfoHooks.useColumnVisibility(
+    tableInfoOptions,
+    storedColumnVisibility,
+    HIDDEN_BY_DEFAULT,
+  );
   const columns = useMemo(() => {
     if (!tableInfo || !user) return [];
 
@@ -438,7 +448,7 @@ export function SearchDocumentTable({
           buttonProps={{ size: "small" }}
           routeApi={DocumentSearchRouteAPI}
           defaultFilterExpression={defaultFilterExpression}
-          column2InfoSelector={(state) => state.search.column2Info}
+          tableInfoOptions={tableInfoOptions}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

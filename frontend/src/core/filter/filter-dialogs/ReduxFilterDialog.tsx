@@ -4,12 +4,16 @@ import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
 
 import { RootState } from "@store/store";
 import { createEmptyFilter, MyFilter } from "../filterUtils";
+import { TableInfoHooks } from "../api/tableInfoHooks";
+import type { TableInfoOptions } from "../api/tableInfoQueries";
 import { FilterActions, FilterState } from "../store";
 
 export interface ReduxFilterDialogProps {
   filterName: string;
   filterStateSelector: (state: RootState) => FilterState;
   filterActions: FilterActions;
+  // the query of the column infos of the table, e.g. memoQueries.tableInfo(projectId)
+  tableInfoOptions: TableInfoOptions;
 }
 
 export const ReduxFilterDialog = memo(
@@ -21,11 +25,12 @@ export const ReduxFilterDialog = memo(
     filterStateSelector,
     filterName,
     filterActions,
+    tableInfoOptions,
   }: ReduxFilterDialogProps &
     Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
     const dispatch = useAppDispatch();
 
-    const column2Info = useAppSelector((state) => filterStateSelector(state).column2Info);
+    const column2Info = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
     const defaultFilterExpression = useAppSelector((state) => filterStateSelector(state).defaultFilterExpression);
 
     const [expertMode, setExpertMode] = useReduxConnector(

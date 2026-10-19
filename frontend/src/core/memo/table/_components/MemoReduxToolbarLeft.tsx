@@ -11,6 +11,7 @@ export function MemoReduxToolbarLeft({
   filterName,
   filterStateSelector,
   filterActions,
+  tableInfoOptions,
 }: ReduxFilterTableToolbarProps<MemoRead>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
@@ -22,6 +23,7 @@ export function MemoReduxToolbarLeft({
         filterName={filterName}
         filterStateSelector={filterStateSelector}
         filterActions={filterActions}
+        tableInfoOptions={tableInfoOptions}
       />
       {selectedMemoIds.length > 0 && (
         <>

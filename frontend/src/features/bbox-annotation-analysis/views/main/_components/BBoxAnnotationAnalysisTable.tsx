@@ -1,11 +1,15 @@
-import { BBoxAnnotationLocalFilterTable } from "@core/bbox-annotation";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
+import { BBoxAnnotationLocalFilterTable, bboxAnnotationQueries } from "@core/bbox-annotation";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, TableInfoHooks } from "@core/filter";
+import { BBoxColumns } from "@models/BBoxColumns";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
 import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
 import { BBoxAnnotationAnalysisRouteAPI } from "../_hooks/bboxAnnotationAnalysisRouteAPI";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
 import { BBoxAnnotationAnalysisTableToolbarRight } from "./toolbar/BBoxAnnotationAnalysisTableToolbarRight";
+
+// besides the metadata columns
+const HIDDEN_BY_DEFAULT: string[] = [BBoxColumns.BB_MEMO_CONTENT];
 
 interface BBoxAnnotationAnalysisTableProps {
   projectId: number;
@@ -17,9 +21,15 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
     (state) => state.bboxAnnotationAnalysis.rowSelectionModel,
     BBoxAnnotationsActions.onRowSelectionChange,
   );
-  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+  const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.bboxAnnotationAnalysis.columnVisibilityModel,
     BBoxAnnotationsActions.onColumnVisibilityChange,
+  );
+
+  const columnVisibilityModel = TableInfoHooks.useColumnVisibility(
+    bboxAnnotationQueries.tableInfo(projectId),
+    storedColumnVisibility,
+    HIDDEN_BY_DEFAULT,
   );
 
   // url state

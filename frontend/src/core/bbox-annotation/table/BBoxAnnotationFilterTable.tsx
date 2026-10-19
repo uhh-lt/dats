@@ -17,6 +17,7 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   toSorts,
+  TableInfoHooks,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -29,11 +30,10 @@ import { BBoxColumns } from "@models/BBoxColumns";
 import { Page_BBoxAnnotationRow_ } from "@models/Page_BBoxAnnotationRow_";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 import { bboxAnnotationQueries } from "../api/bboxAnnotationQueries";
-import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions, defaultBBoxFilterExpression } from "./bboxFilterSlice";
 
 const flatMapData = (page: Page_BBoxAnnotationRow_) => page.items;
@@ -66,7 +66,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   toolbarExtraProps,
 }: FilterTableContainerProps<BBoxAnnotationRow, TToolbarProps, MyFilter<BBoxColumns>>) => {
   // table columns
-  const tableInfo = useInitBBoxFilterSlice({ projectId });
+  const { data: tableInfo } = useQuery(bboxAnnotationQueries.tableInfo(projectId));
   const columns: MRT_ColumnDef<BBoxAnnotationRow>[] = useMemo(() => {
     if (!tableInfo) return [];
 
@@ -218,9 +218,14 @@ export const BBoxAnnotationReduxFilterTable = memo(
     >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
+    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(
+      () => bboxAnnotationQueries.tableInfo(tableProps.projectId),
+      [tableProps.projectId],
+    );
 
     return (
       <BBoxAnnotationFilterTable
@@ -231,6 +236,7 @@ export const BBoxAnnotationReduxFilterTable = memo(
           filterName,
           filterStateSelector,
           filterActions,
+          tableInfoOptions,
         }}
       />
     );
@@ -238,7 +244,6 @@ export const BBoxAnnotationReduxFilterTable = memo(
 );
 
 // configs for URL filter table
-const column2InfoSelector = (state: RootState) => state.bboxFilter.column2Info;
 const defaultFilterExpression = defaultBBoxFilterExpression;
 
 /**
@@ -256,8 +261,13 @@ export const BBoxAnnotationURLFilterTable = memo(
     FilterTableContainerProps<BBoxAnnotationRow, URLFilterTableToolbarProps<BBoxAnnotationRow>, MyFilter<BBoxColumns>>,
     "filter" | "toolbarExtraProps"
   > &
-    Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
+    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(
+      () => bboxAnnotationQueries.tableInfo(tableProps.projectId),
+      [tableProps.projectId],
+    );
 
     return (
       <BBoxAnnotationFilterTable
@@ -267,7 +277,7 @@ export const BBoxAnnotationURLFilterTable = memo(
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
-          column2InfoSelector,
+          tableInfoOptions,
         }}
       />
     );
@@ -296,7 +306,7 @@ export const BBoxAnnotationLocalFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<FilterDialogProps<BBoxColumns>, "column2Info" | "defaultFilterExpression">) => {
-    const column2Info = useAppSelector(column2InfoSelector);
+    const column2Info = TableInfoHooks.useColumnInfoMap(bboxAnnotationQueries.tableInfo(tableProps.projectId));
 
     return (
       <BBoxAnnotationFilterTable

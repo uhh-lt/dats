@@ -1,5 +1,3 @@
-import { queryClient } from "@api/queryClient";
-import { ColumnInfo, tableInfoQueries } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
@@ -24,7 +22,6 @@ interface SearchState {
   folderSelectionType: FolderSelection; // whether a folder or a document is selected
   // app state:
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
-  column2Info: Record<string, ColumnInfo>;
 }
 
 const initialState: TableState & SearchState = {
@@ -39,7 +36,6 @@ const initialState: TableState & SearchState = {
   folderSelectionType: FolderSelection.UNKNOWN,
   // app state:
   sortStatsByGlobal: false,
-  column2Info: {},
 };
 
 const searchSlice = createSlice({
@@ -47,31 +43,6 @@ const searchSlice = createSlice({
   initialState,
   reducers: {
     ...tableReducer,
-    // initialize column info for URL-backed filter dialogs and column visibility for table
-    init: (state, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
-      state.column2Info = action.payload.columnInfoMap;
-      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-        if (!column.column) return acc;
-        // do not show the folder column in the table, as it is not useful for the user
-        if (column.column === SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE) {
-          return {
-            ...acc,
-            [column.column]: false,
-          };
-        }
-        // show normal columsn
-        else if (isNaN(parseInt(column.column))) {
-          return acc;
-        }
-        // do not show metadata columns
-        else {
-          return {
-            ...acc,
-            [column.column]: false,
-          };
-        }
-      }, {});
-    },
     // overwrite onSearchParamsChange to add folder reset
     onSearchParamsChange: (state) => {
       tableReducer.onSearchParamsChange(state);
@@ -151,7 +122,7 @@ const searchSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'search' state.");
       state.selectedDocumentId = initialState.selectedDocumentId;
       state.expandedTagIds = initialState.expandedTagIds;
@@ -159,12 +130,6 @@ const searchSlice = createSlice({
       state.expandedFolderIds = initialState.expandedFolderIds;
       state.folderSelectionType = initialState.folderSelectionType;
       resetProjectTableState(state);
-      // reset column info
-      const projectId = action.payload;
-      state.column2Info = initialState.column2Info;
-      if (projectId) {
-        queryClient.removeQueries({ queryKey: tableInfoQueries.bySlice("search", projectId) });
-      }
     });
   },
 });

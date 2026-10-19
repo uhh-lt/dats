@@ -1,6 +1,5 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { DocType } from "@models/DocType";
-import { SdocHealthResult } from "@models/SdocHealthResult";
 import { SortDirection } from "@models/SortDirection";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
@@ -50,5 +49,3 @@ export const healthQueries = {
       refetchOnWindowFocus: false,
     }),
 };
-
-export const flatMapSdocHealthRows = (page: SdocHealthResult) => page.data;

@@ -18,13 +18,11 @@ const bboxFilterSlice = createSlice({
   initialState,
   reducers: filterReducer,
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'bboxFilter' state.");
       resetProjectFilterState({
         state,
         defaultFilterExpression: defaultBBoxFilterExpression,
-        projectId: action.payload,
-        sliceName: "bboxFilter",
       });
     });
   },

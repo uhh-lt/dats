@@ -19,13 +19,11 @@ const documentTableFilterSlice = createSlice({
   initialState,
   reducers: filterReducer,
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'documentTableFilter' state.");
       resetProjectFilterState({
         state,
         defaultFilterExpression: defaultSdocFilterExpression,
-        sliceName: "documentTableFilter",
-        projectId: action.payload,
       });
     });
   },

@@ -1,7 +1,8 @@
 import { getIconComponent, Icon } from "@components/icons";
+import { TableInfoHooks } from "@core/filter";
 import { LinkButton } from "@core/navigation";
 import { SdocMetadataHooks, SdocMetadataRow } from "@core/sdoc-metadata";
-import { SdocHooks } from "@core/source-document";
+import { SdocHooks, sdocQueries } from "@core/source-document";
 import { TagMenuButton, tagQueries, TagRow } from "@core/tag";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
@@ -9,11 +10,14 @@ import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
 import { perspectiveQueries } from "../../../../api/perspectiveQueries";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
+
+const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
 
 interface SelectionInformationProps {
   aspectId: number;
@@ -52,8 +56,20 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   // filtering
+  const { projectId: routeProjectId } = routeApi.useParams();
+  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(routeProjectId));
   const handleAddMetadataFilter = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-    dispatch(PerspectivesActions.onAddMetadataFilter({ metadata, projectMetadata, filterName: `aspect-${aspectId}` }));
+    // the column of a metadata filter is the project_metadata_id
+    const filterOperator = column2Info[projectMetadata.id.toString()]?.operator;
+    if (!filterOperator) return;
+    dispatch(
+      PerspectivesActions.onAddMetadataFilter({
+        metadata,
+        projectMetadata,
+        filterOperator,
+        filterName: `aspect-${aspectId}`,
+      }),
+    );
   };
 
   // mutation

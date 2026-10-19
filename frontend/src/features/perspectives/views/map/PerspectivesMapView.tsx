@@ -3,7 +3,6 @@ import { useAppDispatch } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import { ClusterJobProgressDialog } from "../../_components/ClusterJobProgressDialog";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
-import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { MapContent } from "./_components/MapContent";
 import { InfoPanel } from "./_components/panel-info/InfoPanel";
@@ -13,9 +12,6 @@ const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/m
 
 export function PerspectivesMapView() {
   const { projectId, aspectId } = routeApi.useParams();
-
-  // initialize the filtering
-  useInitPerspectivesFilterSlice({ projectId });
 
   // dispatch changeMap Event!
   const dispatch = useAppDispatch();

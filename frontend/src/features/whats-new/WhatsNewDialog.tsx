@@ -18,7 +18,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getGitHubReleasePageUrl, githubReleaseQueries } from "./api/githubReleaseQueries";
+import { githubReleaseQueries } from "./api/githubReleaseQueries";
+import { getGitHubReleasePageUrl } from "./_utils/githubReleaseUtils";
 
 const DISMISSED_VERSION_KEY = "dats-whats-new-dismissed-version";
 const currentVersion = OpenAPI.VERSION;

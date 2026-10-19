@@ -1,6 +1,6 @@
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
+import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { QueryRequest_SentAnnoColumns_ } from "@models/QueryRequest_SentAnnoColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -29,15 +29,11 @@ export const sentenceAnnotationQueries = {
       queryFn: !sdocId || !userId ? skipToken : () => SentenceAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
   // the column infos of the sentence annotation filter table
-  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
+  tableInfo: (projectId: number) =>
     queryOptions({
-      queryKey: tableInfoQueries.bySlice("seatFilter", projectId),
-      queryFn: async () => {
-        const columnInfos = toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId }));
-        onLoaded?.(columnInfos);
-        return columnInfos;
-      },
-      staleTime: Infinity,
+      queryKey: tableInfoQueries.byDomain("sentence", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId })),
+      staleTime: 1000 * 60 * 5,
     }),
 
   searchScope: () => [...sentenceAnnotationQueries.all(), "search"] as const,

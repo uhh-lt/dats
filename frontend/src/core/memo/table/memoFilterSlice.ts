@@ -18,13 +18,11 @@ const memoFilterSlice = createSlice({
   initialState,
   reducers: filterReducer,
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'memoFilter' state.");
       resetProjectFilterState({
         state,
         defaultFilterExpression: defaultMemoFilterExpression,
-        projectId: action.payload,
-        sliceName: "memoFilter",
       });
     });
   },

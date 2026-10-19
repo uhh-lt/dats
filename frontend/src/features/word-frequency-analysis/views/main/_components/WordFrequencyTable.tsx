@@ -1,16 +1,15 @@
 import { ContentContentLayout } from "@components/content-layouts";
-import { FilterTable, MyFilter } from "@core/filter";
+import { FilterTable, MyFilter, TableInfoHooks } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { StringOperator } from "@models/StringOperator";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { WordFrequencyResult } from "@models/WordFrequencyResult";
 import { WordFrequencyStat } from "@models/WordFrequencyStat";
-import { RootState } from "@store/store";
 import { useReduxConnector } from "@store/storeHooks";
-import { InfiniteData } from "@tanstack/react-query";
+import { InfiniteData, useQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useMemo } from "react";
-import { useInitWordFrequencySlice } from "../../../_hooks/useInitWordFrequencySlice";
+import { wordFrequencyQueries } from "../../../api/wordFrequencyQueries";
 import { WordFrequencyActions } from "../../../store/wordFrequencySlice";
 import { WordFrequencyRouteAPI } from "../_hooks/wordFrequencyRouteAPI";
 import { WordCloud } from "./WordCloud";
@@ -26,7 +25,6 @@ const defaultFilterExpression = {
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };
-const column2InfoSelector = (state: RootState) => state.wordFrequency.column2Info;
 
 interface WordFrequencyTableProps {
   projectId: number;
@@ -45,17 +43,21 @@ export const WordFrequencyTable = memo(
       (state) => state.wordFrequency.rowSelectionModel,
       WordFrequencyActions.onRowSelectionChange,
     );
-    const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+    const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
       (state) => state.wordFrequency.columnVisibilityModel,
       WordFrequencyActions.onColumnVisibilityChange,
     );
+
+    // the column infos; the options keep their identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(() => wordFrequencyQueries.tableInfo(projectId), [projectId]);
+    const columnVisibilityModel = TableInfoHooks.useColumnVisibility(tableInfoOptions, storedColumnVisibility);
 
     // url table state
     const [sortingModel, setSortingModel] = useURLConnector(WordFrequencyRouteAPI, "sortingModel");
     const [, onFetchSizeChange] = useURLConnector(WordFrequencyRouteAPI, "fetchSize");
 
     // table columns
-    const tableInfo = useInitWordFrequencySlice({ projectId });
+    const { data: tableInfo } = useQuery(tableInfoOptions);
     const columns: MRT_ColumnDef<WordFrequencyStat>[] = useMemo(() => {
       if (!tableInfo) return [];
 
@@ -142,7 +144,7 @@ export const WordFrequencyTable = memo(
             toolbarExtraProps={{
               routeApi: WordFrequencyRouteAPI,
               defaultFilterExpression,
-              column2InfoSelector,
+              tableInfoOptions,
               filter,
               sdocsTotal,
               wordsTotal,
