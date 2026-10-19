@@ -25,7 +25,7 @@ export const wordFrequencyQueries = {
     queryOptions({
       queryKey: tableInfoQueries.byDomain("wordFrequency", projectId),
       queryFn: async () => toColumnInfos(await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId })),
-      staleTime: 1000 * 60 * 5,
+      staleTime: Infinity,
     }),
 
   tableScope: () => [...wordFrequencyQueries.all(), "table"] as const,

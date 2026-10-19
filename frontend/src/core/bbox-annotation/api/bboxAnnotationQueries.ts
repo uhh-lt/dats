@@ -39,7 +39,7 @@ export const bboxAnnotationQueries = {
     queryOptions({
       queryKey: tableInfoQueries.byDomain("bbox", projectId),
       queryFn: async () => toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId })),
-      staleTime: 1000 * 60 * 5,
+      staleTime: Infinity,
     }),
 
   searchScope: () => [...bboxAnnotationQueries.all(), "search"] as const,
