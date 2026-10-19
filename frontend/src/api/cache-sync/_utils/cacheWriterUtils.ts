@@ -15,12 +15,10 @@ type TaggedKey<TData> = DataTag<QueryKey, TData, Error>;
  * written).
  */
 
-/** Upsert an item into a `Record<id, T>` map cache. */
+/** Upsert an item into a `Record<id, T>` map cache. An uncached map stays uncached: seeding it with only this item would hide the rest. */
 export function upsertMapItem<T extends { id: number }>(queryKey: TaggedKey<Record<number, T>>, item: T): void;
 export function upsertMapItem<T extends { id: number }>(queryKey: QueryKey, item: T): void {
-  queryClient.setQueryData<Record<number, T>>(queryKey, (old) =>
-    old ? { ...old, [item.id]: item } : { [item.id]: item },
-  );
+  queryClient.setQueryData<Record<number, T>>(queryKey, (old) => (old ? { ...old, [item.id]: item } : old));
 }
 
 /** Remove an item from a `Record<id, T>` map cache. */
