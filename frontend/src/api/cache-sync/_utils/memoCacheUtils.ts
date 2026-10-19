@@ -72,7 +72,7 @@ export function writeMemo(memo: MemoRead): void {
   setSingle(memoQueries.byId(memo.id).queryKey, memo);
   queryClient.setQueryData(
     memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
-    (old) => (old ? old.map((m) => (m.id === memo.id ? memo : m)) : [memo]),
+    (old) => (old ? old.map((m) => (m.id === memo.id ? memo : m)) : old),
   );
 }
 
@@ -80,7 +80,7 @@ export function appendMemo(memo: MemoRead): void {
   setSingle(memoQueries.byId(memo.id).queryKey, memo);
   queryClient.setQueryData(
     memoQueries.byAttachedObject(memo.attached_object_type, memo.attached_object_id).queryKey,
-    (old) => (old ? [...old, memo] : [memo]),
+    (old) => (old ? [...old, memo] : old),
   );
 }
 
