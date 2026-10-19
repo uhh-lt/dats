@@ -1,17 +1,12 @@
-import gc
 import subprocess
+import warnings
 
 from loguru import logger
 
-# Stable substring used by DATSWorker to detect CUDA-unavailable failures.
-CUDA_UNAVAILABLE_REASON = "CUDA is not available, but a GPU job was scheduled!"
-# User-facing message (stored in the job's status_message). Tells the user a
-# retry may succeed, since the worker self-heals transient CUDA faults and
-# restarts itself on persistent loss.
+# User-facing message (stored in the job's status_message).
 CUDA_UNAVAILABLE_MSG = (
-    f"{CUDA_UNAVAILABLE_REASON} "
-    "This is usually a temporary GPU issue - please try again. "
-    "If it keeps failing, the GPU worker restarts itself automatically."
+    "CUDA is not available, but a GPU job was scheduled! "
+    "The GPU worker cannot access a GPU. Please contact your administrator."
 )
 
 
@@ -39,35 +34,26 @@ def _cuda_diagnostics() -> str:
 
 
 def ensure_cuda_available() -> None:
-    """Raise RuntimeError if CUDA is unavailable, after one recovery attempt.
+    """Raise RuntimeError if CUDA is unavailable.
 
-    torch.cuda.is_available() swallows CUDA driver/runtime errors and returns
-    False, so a transient fault (leaked context/OOM/ECC-Xid from a prior job, a
-    driver hiccup) surfaces as "not available". We log diagnostics, try to
-    reclaim the runtime once, and re-check before giving up. Only a persistent
-    failure raises.
+    torch.cuda.is_available() swallows CUDA driver/runtime errors, returns False
+    and only emits a warning with the actual cause. That warning is logged together
+    with nvidia-smi diagnostics. Every job runs in a freshly forked work horse that
+    never inherits a CUDA context, so a failure here means the container cannot
+    reach the GPU (e.g. "Failed to initialize NVML: Unknown Error" after the
+    container lost its /dev/nvidia* devices) and retrying in-process cannot help.
     """
     import torch
 
-    if torch.cuda.is_available():
-        return
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        if torch.cuda.is_available():
+            return
 
-    logger.warning(
-        "torch.cuda.is_available() returned False for a GPU job. "
-        f"Diagnostics:\n{_cuda_diagnostics()}\nAttempting CUDA recovery..."
-    )
-    gc.collect()
-    try:
-        torch.cuda.empty_cache()
-    except Exception as e:
-        logger.warning(f"torch.cuda.empty_cache() raised during recovery: {e!r}")
-
-    if torch.cuda.is_available():
-        logger.info("CUDA became available again after recovery attempt.")
-        return
-
+    causes = "\n".join(str(w.message) for w in caught) or "no warning emitted"
     logger.error(
-        "CUDA still unavailable after recovery attempt. "
+        "torch.cuda.is_available() returned False for a GPU job. "
+        f"Cause reported by torch: {causes}\n"
         f"Diagnostics:\n{_cuda_diagnostics()}"
     )
     raise RuntimeError(CUDA_UNAVAILABLE_MSG)
