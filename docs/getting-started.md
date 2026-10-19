@@ -91,4 +91,4 @@ To ensure sensitive research data remains entirely within your controlled enviro
 
 - [**GitHub Repository**](https://github.com/uhh-lt/dats)
 - [**Admin Guide**](https://github.com/uhh-lt/dats/wiki/Admin-Guide)
-- _Requires: Machine with NVIDIA GPU, Docker with NVIDIA Container Toolkit._
+- _Requires: Machine with NVIDIA GPU, Docker with NVIDIA Container Toolkit and CDI support (see [GPU Setup](admin/gpu-setup.md))._
