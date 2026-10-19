@@ -33,7 +33,7 @@ export const sentenceAnnotationQueries = {
     queryOptions({
       queryKey: tableInfoQueries.byDomain("sentence", projectId),
       queryFn: async () => toColumnInfos(await SearchService.searchSentenceAnnotationInfo({ projectId })),
-      staleTime: 1000 * 60 * 5,
+      staleTime: Infinity,
     }),
 
   searchScope: () => [...sentenceAnnotationQueries.all(), "search"] as const,

@@ -111,7 +111,7 @@ export const sdocQueries = {
     queryOptions({
       queryKey: tableInfoQueries.byDomain("sdoc", projectId),
       queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
-      staleTime: 1000 * 60 * 5,
+      staleTime: Infinity,
     }),
 
   // the document search: project-wide, with highlights. Its queryFn seeds the caches of the found sdocs, annotators, tags

@@ -74,6 +74,6 @@ export const memoQueries = {
     queryOptions({
       queryKey: tableInfoQueries.byDomain("memoFilter", projectId),
       queryFn: async () => toColumnInfos(await SearchService.searchMemoInfo({ projectId })),
-      staleTime: 1000 * 60 * 5,
+      staleTime: Infinity,
     }),
 };

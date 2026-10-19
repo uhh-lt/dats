@@ -107,7 +107,7 @@ Vite as the build tool and development server
 
 ### Tanstack Query: Use for ALL SERVER state (data from API, loading, errors)
 
-Full plan and rationale: [query-key-plan.md](../../query-key-plan.md). The rules below are the convention for new and migrated code.
+The rules below are the convention for new and migrated code.
 
 **Where do queries and mutations live?** In the domain that owns the data, in a public `api/` folder next to the domain's code:
 
