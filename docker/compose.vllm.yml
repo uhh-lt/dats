@@ -31,8 +31,9 @@ services:
       resources:
         reservations:
           devices:
-            - driver: nvidia
-              device_ids: ["${VLLM_LLM_DEVICE_ID?vllm-llm-device-id-required!}"]
+            # CDI keeps the GPU after a `systemctl daemon-reload` (see compose.yml)
+            - driver: cdi
+              device_ids: ["nvidia.com/gpu=${VLLM_LLM_DEVICE_ID?vllm-llm-device-id-required!}"]
               capabilities: [gpu]
   vllm-emb:
     <<: *vllm-common
@@ -43,6 +44,6 @@ services:
       resources:
         reservations:
           devices:
-            - driver: nvidia
-              device_ids: ["${VLLM_EMB_DEVICE_ID?vllm-emb-device-id-required!}"]
+            - driver: cdi
+              device_ids: ["nvidia.com/gpu=${VLLM_EMB_DEVICE_ID?vllm-emb-device-id-required!}"]
               capabilities: [gpu]

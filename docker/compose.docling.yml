@@ -22,7 +22,9 @@ services:
       DOCLING_DEVICE: "cuda"
       DOCLING_SERVE_LOAD_MODELS_AT_BOOT: "true"
       DOCLING_SERVE_OPTIONS_CACHE_SIZE: 2 # number of converters (including models) to keep in memory
-      NVIDIA_VISIBLE_DEVICES: "all" # https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html
+      # restricts docling to the GPUs in DOCLING_DEVICE_IDS, numbered like nvidia-smi
+      CUDA_VISIBLE_DEVICES: ${DOCLING_DEVICE_IDS?docling-device-ids-required!}
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
       # Data configs
       # DOCLING_SERVE_ARTIFACTS_PATH: /doclingdata/artifacts
       # DOCLING_SERVE_STATIC_PATH: /doclingdata/static
@@ -39,8 +41,10 @@ services:
       resources:
         reservations:
           devices:
-            - driver: nvidia
-              device_ids: ["${DOCLING_DEVICE_IDS?docling-device-ids-required!}"]
+            # CDI keeps the GPUs after a `systemctl daemon-reload` (see compose.yml);
+            # all GPUs are mounted and CUDA_VISIBLE_DEVICES selects them
+            - driver: cdi
+              device_ids: ["nvidia.com/gpu=all"]
               capabilities: [gpu]
     #volumes:
     #  - ./docling_cache/cache:/opt/app-root/src/.cache

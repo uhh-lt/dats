@@ -31,6 +31,9 @@ services:
       CUPY_CACHE_DIR: /ray_cache/cupy_cache
       UV_CACHE_DIR: /ray_cache/uv_cache
       EASYOCR_MODULE_PATH: /ray_cache/EasyOCR
+      # restricts ray to the GPUs in RAY_DEVICE_IDS, numbered like nvidia-smi
+      CUDA_VISIBLE_DEVICES: ${RAY_DEVICE_IDS?ray-device-ids-required!}
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
     volumes:
       # - ../ray:/ray_code # uncomment for dev
       - ${DATS_DOCKER_DIR:-.}/../ray/configs/ray_config.yaml:/ray_code/configs/ray_config.yaml:ro
@@ -40,6 +43,8 @@ services:
       resources:
         reservations:
           devices:
-            - driver: nvidia
-              device_ids: ["${RAY_DEVICE_IDS?ray-device-ids-required!}"]
+            # CDI keeps the GPUs after a `systemctl daemon-reload` (see compose.yml);
+            # all GPUs are mounted and CUDA_VISIBLE_DEVICES selects them
+            - driver: cdi
+              device_ids: ["nvidia.com/gpu=all"]
               capabilities: [gpu]

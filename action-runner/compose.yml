@@ -19,8 +19,9 @@ x-runner-common: &runner-base
     resources:
       reservations:
         devices:
-          - driver: nvidia
-            device_ids: ["${RUNNER_GPU_DEVICE_ID:-0}"]
+          # CDI keeps the GPU after a `systemctl daemon-reload` (see docker/compose.yml)
+          - driver: cdi
+            device_ids: ["nvidia.com/gpu=${RUNNER_GPU_DEVICE_ID:-0}"]
             capabilities: [gpu]
 
 services:
