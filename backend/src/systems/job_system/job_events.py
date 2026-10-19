@@ -111,26 +111,6 @@ def _publish_to_project_users_sync(project_id: int, event: DATSEventBase) -> Non
         )
 
 
-def publish_event_to_project(
-    event_type: DATSEvent, payload: Any, *, project_id: int
-) -> None:
-    """Publish a DATS event to all members of a project from a sync context.
-
-    For entity changes made by jobs (e.g. the doc-processing pipeline), which
-    have no request and thus no `WebsocketEmitter`. Call it after the
-    transaction that made the change has committed. Never raises.
-    """
-    try:
-        from common.dats_event import DATS_EVENT_TO_MODEL
-
-        event = DATS_EVENT_TO_MODEL[event_type](type=event_type, payload=payload)
-        _publish_to_project_users_sync(project_id, event)
-    except Exception as e:
-        logger.error(
-            f"Failed to publish event '{event_type}' to project {project_id}: {e}"
-        )
-
-
 def publish_job_update(
     job: Job, output_override: JobOutputBase | Any | None = None
 ) -> None:

@@ -1,7 +1,8 @@
-import { handleSdocsProcessed } from "@api/cache-sync";
+import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
 import { projectQueries } from "@core/project";
+import { sdocQueries } from "@core/source-document";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import { SDocStatus } from "@models/SDocStatus";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -18,9 +19,10 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
         return 3000;
       }
       const currentLength = query.state.data.length;
-      // All documents that were processing are done now
+      // Only invalidate if previous length > 0 and current length == 0
       if (previousLengthRef.current > 0 && currentLength === 0) {
-        handleSdocsProcessed(projectId);
+        console.log("Invalidating documents");
+        queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
       }
       previousLengthRef.current = currentLength;
       return 3000;

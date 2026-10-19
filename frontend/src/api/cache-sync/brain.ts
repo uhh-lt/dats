@@ -581,8 +581,3 @@ export function handleAnnoscalingSuggestionsConfirmed(): void {
 export function handleMemoOpened(projectId: number): void {
   invalidateMemoRecents([projectId]);
 }
-
-/** Document preprocessing of a project finished: the new documents appear in the searches. */
-export function handleSdocsProcessed(projectId: number): void {
-  queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
-}

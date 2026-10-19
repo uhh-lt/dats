@@ -1,9 +1,8 @@
-from common.dats_event import DATSEvent
 from common.doc_type import DocType
 from common.job_type import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentRead, SourceDocumentUpdate
+from core.doc.source_document_dto import SourceDocumentUpdate
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline import pipeline_transitions as t
 from modules.doc_processing.pipeline.pipeline_operators import (
@@ -15,7 +14,6 @@ from systems.job_system.job_dto import (
     JobInputBase,
     JobOutputBase,
 )
-from systems.job_system.job_events import publish_event_to_project
 from systems.job_system.job_service import JobService
 
 # --- PREPROCESSING PIPELINE_GRAPH ---
@@ -141,25 +139,16 @@ def handle_job_started(jobtype: JobType, input: JobInputBase):
             )
 
 
-def _publish_if_processing_ended(sdoc: SourceDocumentRead | None) -> None:
-    # Clients only learn about a document once its processing ended (finished or erroneous), not about every step.
-    if sdoc is None:
-        return
-    publish_event_to_project(DATSEvent.SDOC_UPDATED, sdoc, project_id=sdoc.project_id)
-
-
 def handle_job_error(job_type: JobType, input: JobInputBase):
     if isinstance(input, SdocProcessingJobInput):
         with sqlr.transaction() as db:
-            db_obj = crud_sdoc.update(
+            crud_sdoc.update(
                 db,
                 id=input.sdoc_id,
                 update_dto=SourceDocumentUpdate(
                     **{job_type.value: SDocStatus.erroneous}  # type: ignore
                 ),
             )
-            sdoc = SourceDocumentRead.model_validate(db_obj)
-        _publish_if_processing_ended(sdoc)
 
 
 def handle_job_finished(
@@ -167,20 +156,12 @@ def handle_job_finished(
 ):
     if isinstance(input, SdocProcessingJobInput):
         with sqlr.transaction() as db:
-            db_obj = crud_sdoc.update(
+            crud_sdoc.update(
                 db,
                 id=input.sdoc_id,
                 update_dto=SourceDocumentUpdate(
                     **{job_type.value: SDocStatus.finished}  # type: ignore
                 ),
             )
-            # The last step of a document brings it to finished; the row lock of the update serializes
-            # concurrent steps, so exactly one of them sees this.
-            sdoc = (
-                SourceDocumentRead.model_validate(db_obj)
-                if db_obj.processed_status == SDocStatus.finished
-                else None
-            )
-        _publish_if_processing_ended(sdoc)
 
     execute_pipeline_step(job_type=job_type, input=input, output=output, job_service=js)
