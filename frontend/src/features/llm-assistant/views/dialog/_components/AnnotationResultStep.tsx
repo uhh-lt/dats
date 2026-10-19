@@ -1,7 +1,5 @@
 import { useLiveJob } from "@core/job";
-import { queryClient } from "@api/queryClient";
 import { useTabNavigate } from "@core/navigation";
-import { spanAnnotationQueries } from "@core/span-annotation";
 import { AnnotationLLMJobResult } from "@models/AnnotationLLMJobResult";
 import { ApproachType } from "@models/ApproachType";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
@@ -76,11 +74,6 @@ const AnnotationResultStepContent = memo(({ jobResult, approachType }: Annotatio
         visibleUserId: undefined,
         selectedAnnotationId: undefined,
       },
-    });
-
-    // reload annotations
-    queryClient.invalidateQueries({
-      queryKey: spanAnnotationQueries.bySdoc(firstAnnotatedSdocId, approach2AssistantID[approachType]).queryKey,
     });
   };
 

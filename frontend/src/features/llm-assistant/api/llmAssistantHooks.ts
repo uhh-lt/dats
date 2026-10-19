@@ -1,4 +1,3 @@
-import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
 import { ApproachType } from "@models/ApproachType";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
@@ -10,11 +9,8 @@ const useStartLLMJob = () =>
   useMutation({
     mutationKey: [...llmAssistantQueries.job.all(), "start"],
     mutationFn: LlmService.startLlmAssistantJob,
-    onSuccess: (job) => {
-      // force refetch of all llm jobs when adding a new one
-      queryClient.invalidateQueries({ queryKey: llmAssistantQueries.job.byProject(job.project_id).queryKey });
-    },
     meta: {
+      datsEvent: "JOB_UPDATED",
       successMessage: (data: LlmAssistantJobRead) => `Started LLM Job as a new background task (ID: ${data.job_id})`,
     },
   });

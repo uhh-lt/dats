@@ -4,7 +4,9 @@ import { exportQueries } from "@core/export-buttons/api/exportQueries";
 import { folderQueries } from "@core/folder/api/folderQueries";
 import { memoQueries } from "@core/memo/api/memoQueries";
 import { projectMetadataQueries } from "@core/project-metadata/api/projectMetadataQueries";
+import { sentenceAnnotationQueries } from "@core/sentence-annotation/api/sentenceAnnotationQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
+import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQueries";
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
@@ -32,6 +34,7 @@ import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { MlJobRead } from "@models/MlJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import { TaskType } from "@models/TaskType";
 import type { DataTag } from "@tanstack/react-query";
 
 type JobRead = DATSEventMap["JOB_UPDATED"];
@@ -56,6 +59,7 @@ export function handleJobUpdate(job: JobRead): void {
       break;
     case LlmAssistantJobRead.job_type.LLM_ASSISTANT:
       upsertJob(job, llmAssistantQueries.job);
+      if (job.status === JobStatus.FINISHED) handleLlmAssistantJobFinished(job);
       break;
     case MlJobRead.job_type.ML:
       upsertJob(job, mlAutomationQueries.job);
@@ -157,6 +161,26 @@ function handleImportJobFinished(job: ImportJobRead) {
       break;
     default:
       console.error("Unknown import job type");
+      break;
+  }
+}
+
+// A finished annotation LLM job stored its suggestions as annotations of the assistant user in the processed sdocs.
+function handleLlmAssistantJobFinished(job: LlmAssistantJobRead) {
+  if (!job.output) return;
+  const sdocIds = job.output.specific_task_result.results.map((result) => result.sdoc_id);
+  switch (job.input.llm_job_type) {
+    case TaskType.ANNOTATION:
+      sdocIds.forEach((sdocId) => {
+        queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocOfSdocScope(sdocId) });
+      });
+      break;
+    case TaskType.SENTENCE_ANNOTATION:
+      sdocIds.forEach((sdocId) => {
+        queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.bySdocOfSdocScope(sdocId) });
+      });
+      break;
+    default:
       break;
   }
 }

@@ -1,4 +1,3 @@
-import { queryClient } from "@api/queryClient";
 import { TagRecommendationService } from "@api/services/TagRecommendationService";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -11,10 +10,8 @@ const useReviewTagRecommendations = () =>
   useMutation({
     mutationKey: [...tagRecommendationQueries.all(), "reviewTagRecommendations"],
     mutationFn: TagRecommendationService.updateRecommendations,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tagRecommendationQueries.all() });
-    },
     meta: {
+      datsEvent: "TAG_RECOMMENDATION_REVIEWED_BATCH",
       successMessage: () => `Reviewed tags!`,
     },
   });

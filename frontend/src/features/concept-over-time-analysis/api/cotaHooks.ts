@@ -1,4 +1,3 @@
-import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import { COTARead } from "@models/COTARead";
 import { useAppSelector } from "@store/storeHooks";
@@ -103,12 +102,8 @@ const useRefineCota = () =>
   useMutation({
     mutationKey: [...cotaQueries.all(), "refineCota"],
     mutationFn: ConceptOverTimeAnalysisService.refineCota,
-    onSuccess(cota) {
-      queryClient.setQueryData(cotaQueries.byProject(cota.project_id).queryKey, (prev) =>
-        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
-      );
-    },
     meta: {
+      datsEvent: "COTA_UPDATED",
       successMessage: (cota: COTARead) => `Started refinement job for "COTA ${cota.id}"`,
     },
   });

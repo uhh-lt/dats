@@ -1,8 +1,7 @@
-import { queryClient } from "@api/queryClient";
+import { handleSdocsProcessed } from "@api/cache-sync";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";
 import { projectQueries } from "@core/project";
-import { sdocQueries } from "@core/source-document";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import { SDocStatus } from "@models/SDocStatus";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -19,10 +18,9 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
         return 3000;
       }
       const currentLength = query.state.data.length;
-      // Only invalidate if previous length > 0 and current length == 0
+      // All documents that were processing are done now
       if (previousLengthRef.current > 0 && currentLength === 0) {
-        console.log("Invalidating documents");
-        queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
+        handleSdocsProcessed(projectId);
       }
       previousLengthRef.current = currentLength;
       return 3000;
@@ -34,15 +32,8 @@ const useStartCrawlerJob = () =>
   useMutation({
     mutationKey: [...documentUploadQueries.job.all(), "start"],
     mutationFn: JobService.startCrawlerJob,
-    onSuccess: (job) => {
-      setTimeout(() => {
-        console.log("Invalidating project crawler jobs");
-        queryClient.invalidateQueries({
-          queryKey: documentUploadQueries.job.byProject(job.input.project_id).queryKey,
-        });
-      }, 1000);
-    },
     meta: {
+      datsEvent: "JOB_UPDATED",
       successMessage: (data: CrawlerJobRead) => `Started Crawler Job as a new background task (ID: ${data.job_id})`,
     },
   });

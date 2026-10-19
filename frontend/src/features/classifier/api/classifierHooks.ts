@@ -1,4 +1,3 @@
-import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
@@ -29,10 +28,8 @@ const useStartClassifierJob = () =>
   useMutation({
     mutationKey: [...classifierQueries.job.all(), "start"],
     mutationFn: ClassifierService.startClassifierJob,
-    onSuccess: (job) => {
-      queryClient.invalidateQueries({ queryKey: classifierQueries.job.byProject(job.project_id).queryKey });
-    },
     meta: {
+      datsEvent: "JOB_UPDATED",
       successMessage: (data: ClassifierJobRead) =>
         `Started Classifier Job as a new background task (ID: ${data.job_id})`,
     },
