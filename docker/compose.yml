@@ -184,7 +184,8 @@ services:
   rq-gpu-worker:
     <<: *dats-common
     healthcheck:
-      test: ["CMD-SHELL", "python src/worker.py healthcheck || exit 1"]
+      # also fails when the container lost access to its GPUs
+      test: ["CMD-SHELL", "python src/worker.py healthcheck gpu || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -227,7 +228,8 @@ services:
         condition: service_healthy
         restart: true
       rq-gpu-worker:
-        condition: service_healthy
+        # not service_healthy: a GPU problem must not keep this service from starting
+        condition: service_started
         restart: true
     ports:
       - "${RQ_DASHBOARD_EXPOSED?rq-dashboard-exposed-required!}:9181"
@@ -258,7 +260,8 @@ services:
         condition: service_healthy
         restart: true
       rq-gpu-worker:
-        condition: service_healthy
+        # not service_healthy: a GPU problem must not keep this service from starting
+        condition: service_started
         restart: true
     ports:
       - "${API_EXPOSED?api-exposed-required!}:5500"
