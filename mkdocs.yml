@@ -86,3 +86,4 @@ nav:
       - GitHub Agentic Workflows: development/github-agentic-workflows.md
   - Admin:
       - admin/index.md
+      - GPU Setup: admin/gpu-setup.md
