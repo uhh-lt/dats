@@ -1,7 +1,5 @@
 import { useLiveJob } from "@core/job";
-import { queryClient } from "@api/queryClient";
 import { useTabNavigate } from "@core/navigation";
-import { sentenceAnnotationQueries } from "@core/sentence-annotation";
 import { ApproachType } from "@models/ApproachType";
 import { SentenceAnnotationLLMJobResult } from "@models/SentenceAnnotationLLMJobResult";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
@@ -77,11 +75,6 @@ function SentenceAnnotationResultStepContent({
         visibleUserId: undefined,
         selectedAnnotationId: undefined,
       },
-    });
-
-    // reload annotations
-    queryClient.invalidateQueries({
-      queryKey: sentenceAnnotationQueries.bySdoc(firstAnnotatedSdocId, approach2AssistantID[approachType]).queryKey,
     });
   };
 

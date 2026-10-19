@@ -1,3 +1,4 @@
+import { handleClusterUpdated, handlePerspectivesJobStarted } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
@@ -69,10 +70,7 @@ const useStartPerspectivesJob = () =>
   useMutation({
     mutationKey: [...perspectiveQueries.job.all(), "start"],
     mutationFn: PerspectivesService.startPerspectivesJob,
-    onSuccess: (job) => {
-      queryClient.invalidateQueries({ queryKey: perspectiveQueries.aspectsByProject(job.project_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: perspectiveQueries.job.byId(job.job_id).queryKey });
-    },
+    onSuccess: handlePerspectivesJobStarted,
     meta: {
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
     },
@@ -82,9 +80,7 @@ const useUpdateClusterDetails = () =>
   useMutation({
     mutationKey: [...perspectiveQueries.all(), "updateClusterDetails"],
     mutationFn: PerspectivesService.updateClusterDetails,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(data.aspect_id) });
-    },
+    onSuccess: handleClusterUpdated,
     meta: {
       successMessage: (data: ClusterRead) => `Updated cluster ${data.name}`,
     },

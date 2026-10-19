@@ -1,4 +1,4 @@
-import { queryClient } from "@api/queryClient";
+import { handleMemoOpened } from "@api/cache-sync";
 import { MemoService } from "@api/services/MemoService";
 import { toColumnInfoMap } from "@core/filter";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -76,9 +76,7 @@ const useRecordRecentMemo = () =>
   useMutation({
     mutationKey: [...memoQueries.all(), "recordRecent"],
     mutationFn: ({ memoId }: { memoId: number; projectId: number }) => MemoService.recordRecentMemo({ memoId }),
-    onSuccess: (_data, { projectId }) => {
-      queryClient.invalidateQueries({ queryKey: memoQueries.recent(projectId).queryKey });
-    },
+    onSuccess: (_data, { projectId }) => handleMemoOpened(projectId),
   });
 
 const useGetObjectMemos = (

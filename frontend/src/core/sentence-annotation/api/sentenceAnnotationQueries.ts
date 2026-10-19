@@ -23,6 +23,8 @@ export const sentenceAnnotationQueries = {
     }),
 
   bySdocScope: () => [...sentenceAnnotationQueries.all(), "sdoc"] as const,
+  // prefix of all sentence annotation queries of one sdoc (any user), for invalidation
+  bySdocOfSdocScope: (sdocId: number) => [...sentenceAnnotationQueries.bySdocScope(), sdocId] as const,
   bySdoc: (sdocId: number | null | undefined, userId: number | null | undefined) =>
     queryOptions({
       queryKey: [...sentenceAnnotationQueries.bySdocScope(), sdocId, userId] as const,

@@ -13,6 +13,7 @@ import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQ
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
+import { annoscalingQueries } from "@features/annotation-scaling/api/annoscalingQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
 import { perspectiveQueries } from "@features/perspectives/api/perspectiveQueries";
@@ -21,8 +22,10 @@ import { tagRecommendationQueries } from "@features/tag-recommendations/api/tagR
 import { timelineAnalysisQueries } from "@features/timeline-analysis/api/timelineAnalysisQueries";
 import { whiteboardQueries } from "@features/whiteboard/api/whiteboardQueries";
 import type { ApiKeyRead } from "@models/ApiKeyRead";
+import type { ClusterRead } from "@models/ClusterRead";
 import type { DATSEvent } from "@models/datsEvents";
 import type { FolderRead } from "@models/FolderRead";
+import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { SearchEntityType } from "@models/SearchEntityType";
 import type { UserRead } from "@models/UserRead";
 import {
@@ -543,4 +546,43 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       console.warn("Unhandled dats event");
     }
   }
+}
+
+// ── Reactions without a DATS event ───────────────────────────────────────────
+// These mutations change server state but don't return an entity DTO with a
+// matching event, so their hooks call these instead of `meta.datsEvent`. They
+// live here so that all cache reactions stay in one place.
+
+/**
+ * A perspectives job was started. Besides the job itself, the backend points
+ * the aspect's `most_recent_job_id` at the new job without emitting
+ * ASPECT_UPDATED, so write that field here.
+ */
+export function handlePerspectivesJobStarted(job: PerspectivesJobRead): void {
+  handleJobUpdate(job);
+  queryClient.setQueryData(perspectiveQueries.aspectsByProject(job.project_id).queryKey, (old) => {
+    const aspect = old?.[job.input.aspect_id];
+    if (!old || !aspect) return old;
+    return { ...old, [aspect.id]: { ...aspect, most_recent_job_id: job.job_id } };
+  });
+}
+
+/** A cluster's name or description changed: the aspect's visualizations show them. */
+export function handleClusterUpdated(cluster: ClusterRead): void {
+  queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(cluster.aspect_id) });
+}
+
+/** Confirmed annotation suggestions became annotations, so no suggestion is current any more. */
+export function handleAnnoscalingSuggestionsConfirmed(): void {
+  queryClient.invalidateQueries({ queryKey: annoscalingQueries.suggestScope() });
+}
+
+/** A memo was opened: it moves to the top of the project's recent memos. */
+export function handleMemoOpened(projectId: number): void {
+  invalidateMemoRecents([projectId]);
+}
+
+/** Document preprocessing of a project finished: the new documents appear in the searches. */
+export function handleSdocsProcessed(projectId: number): void {
+  queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
 }
