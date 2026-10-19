@@ -6,23 +6,28 @@ from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     ApproachType,
-    LLMJobOutput,
-    MetadataExtractionLLMJobResult,
+    LLMAssistantJobOutput,
+    MetadataExtractionLLMAssistantJobResult,
     MetadataExtractionParams,
     MetadataExtractionResult,
     SpecificTaskParameters,
     TaskType,
 )
 from modules.llm_assistant.strategies.metadata_strategy import MetadataStrategy
-from modules.llm_assistant.tasks.llm_document_processor import LLMDocumentResponse
-from modules.llm_assistant.tasks.llm_task import LLMTask, LLMTaskContext
+from modules.llm_assistant.tasks.llm_assistant_document_processor import (
+    LLMAssistantDocumentResponse,
+)
+from modules.llm_assistant.tasks.llm_assistant_task import (
+    LLMAssistantTask,
+    LLMAssistantTaskContext,
+)
 
 
 class MetadataExtractionTask(
-    LLMTask[
+    LLMAssistantTask[
         MetadataStrategy,
         MetadataExtractionParams,
         BaseModel,
@@ -52,8 +57,8 @@ class MetadataExtractionTask(
     def _process_document(
         self,
         *,
-        context: LLMTaskContext[MetadataStrategy, MetadataExtractionParams],
-        document: LLMDocumentResponse[BaseModel],
+        context: LLMAssistantTaskContext[MetadataStrategy, MetadataExtractionParams],
+        document: LLMAssistantDocumentResponse[BaseModel],
     ) -> MetadataExtractionResult:
         current_metadata = [
             SourceDocumentMetadataReadResolved.model_validate(metadata)
@@ -122,10 +127,12 @@ class MetadataExtractionTask(
             suggested_metadata=suggested_metadata,
         )
 
-    def _build_output(self, results: list[MetadataExtractionResult]) -> LLMJobOutput:
-        return LLMJobOutput(
-            llm_job_type=TaskType.METADATA_EXTRACTION,
-            specific_task_result=MetadataExtractionLLMJobResult(
-                llm_job_type=TaskType.METADATA_EXTRACTION, results=results
+    def _build_output(
+        self, results: list[MetadataExtractionResult]
+    ) -> LLMAssistantJobOutput:
+        return LLMAssistantJobOutput(
+            task_type=TaskType.METADATA_EXTRACTION,
+            specific_task_result=MetadataExtractionLLMAssistantJobResult(
+                task_type=TaskType.METADATA_EXTRACTION, results=results
             ),
         )

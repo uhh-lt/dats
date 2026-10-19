@@ -6,23 +6,23 @@ from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
 from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
-from modules.llm_assistant.llm_job_dto import (
-    AnnotationLLMJobResult,
+from modules.llm_assistant.llm_assistant_job_dto import (
+    AnnotationLLMAssistantJobResult,
     AnnotationParams,
     ApproachType,
     DefaultStrategyParams,
     FewShotParams,
     FuzzyGroundingStrategyParams,
-    LLMJobInput,
-    LLMJobOutput,
-    LLMPromptTemplates,
-    MetadataExtractionLLMJobResult,
+    LLMAssistantJobInput,
+    LLMAssistantJobOutput,
+    LLMAssistantPromptTemplates,
+    MetadataExtractionLLMAssistantJobResult,
     MetadataExtractionParams,
     NERInlineTagStrategyParams,
-    SentenceAnnotationLLMJobResult,
+    SentenceAnnotationLLMAssistantJobResult,
     SentenceAnnotationParams,
     StrategyType,
-    TaggingLLMJobResult,
+    TaggingLLMAssistantJobResult,
     TaggingParams,
     TaskType,
     ZeroShotParams,
@@ -31,9 +31,9 @@ from systems.job_system.job_dto import JobRead, JobStatus
 
 from .conftest import LLMAssistantProject
 
-LLM_JOB_URL = "/llm/llm_assistant"
-PROMPT_TEMPLATES_URL = "/llm/create_prompt_templates"
-LLMJobRead = JobRead[LLMJobInput, LLMJobOutput]
+LLM_ASSISTANT_JOB_URL = "/llm_assistant/llm_assistant"
+PROMPT_TEMPLATES_URL = "/llm_assistant/create_prompt_templates"
+LLMAssistantJobRead = JobRead[LLMAssistantJobInput, LLMAssistantJobOutput]
 
 
 def _wait_for_status(
@@ -43,7 +43,7 @@ def _wait_for_status(
     *,
     timeout: float = 180.0,
     poll_interval: float = 1,
-) -> LLMJobRead:
+) -> LLMAssistantJobRead:
     """Poll one assistant job until the expected or another terminal status occurs."""
     deadline = time.monotonic() + timeout
     terminal_statuses = {
@@ -53,9 +53,9 @@ def _wait_for_status(
         JobStatus.CANCELED,
     }
     while True:
-        response = client.get(f"{LLM_JOB_URL}/{job_id}")
+        response = client.get(f"{LLM_ASSISTANT_JOB_URL}/{job_id}")
         assert response.status_code == 200, response.text
-        job = LLMJobRead.model_validate(response.json())
+        job = LLMAssistantJobRead.model_validate(response.json())
         if job.status == expected_status:
             return job
         if job.status in terminal_statuses:
@@ -72,11 +72,13 @@ def _wait_for_status(
         time.sleep(poll_interval)
 
 
-def _start_job(client: TestClient, payload: LLMJobInput) -> LLMJobRead:
+def _start_job(
+    client: TestClient, payload: LLMAssistantJobInput
+) -> LLMAssistantJobRead:
     """Start a typed assistant job and validate its initial endpoint response."""
-    response = client.post(LLM_JOB_URL, json=payload.model_dump(mode="json"))
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
     assert response.status_code == 200, response.text
-    job = LLMJobRead.model_validate(response.json())
+    job = LLMAssistantJobRead.model_validate(response.json())
     assert job.job_type == "llm_assistant"
     assert job.project_id == payload.project_id
     assert job.input == payload
@@ -102,7 +104,7 @@ def _prompt_templates(
     approach_type: ApproachType,
     strategy_type: StrategyType,
     example_ids: Sequence[int] | None = None,
-) -> list[LLMPromptTemplates]:
+) -> list[LLMAssistantPromptTemplates]:
     """Obtain prompts through the public endpoint for use in a job payload."""
     response = client.post(
         PROMPT_TEMPLATES_URL,
@@ -111,21 +113,23 @@ def _prompt_templates(
             "strategy_type": strategy_type.value,
         },
         json={
-            "llm_job_params": {
+            "job_params": {
                 "project_id": project_id,
-                "llm_job_type": task_parameters.llm_job_type.value,
+                "task_type": task_parameters.task_type.value,
                 "specific_task_parameters": task_parameters.model_dump(mode="json"),
             },
             "example_ids": list(example_ids) if example_ids is not None else None,
         },
     )
     assert response.status_code == 200, response.text
-    return TypeAdapter(list[LLMPromptTemplates]).validate_python(response.json())
+    return TypeAdapter(list[LLMAssistantPromptTemplates]).validate_python(
+        response.json()
+    )
 
 
 def _replace_data_tag(
-    prompts: list[LLMPromptTemplates], old: str, new: str
-) -> list[LLMPromptTemplates]:
+    prompts: list[LLMAssistantPromptTemplates], old: str, new: str
+) -> list[LLMAssistantPromptTemplates]:
     """Return prompt copies using another strategy-supported data placeholder."""
     return [
         prompt.model_copy(update={"user_prompt": prompt.user_prompt.replace(old, new)})
@@ -135,18 +139,18 @@ def _replace_data_tag(
 
 def _approach_parameters(
     approach_type: ApproachType,
-    prompts: list[LLMPromptTemplates],
+    prompts: list[LLMAssistantPromptTemplates],
     model: str = "default",
 ) -> ZeroShotParams | FewShotParams:
     """Build the discriminated approach parameters used by job payloads."""
     if approach_type == ApproachType.LLM_FEW_SHOT:
         return FewShotParams(
-            llm_approach_type=approach_type,
+            approach_type=approach_type,
             prompts=prompts,
             model=model,
         )
     return ZeroShotParams(
-        llm_approach_type=approach_type,
+        approach_type=approach_type,
         prompts=prompts,
         model=model,
     )
@@ -157,10 +161,10 @@ def _tagging_payload(
     project: LLMAssistantProject,
     *,
     model: str = "default",
-) -> LLMJobInput:
+) -> LLMAssistantJobInput:
     """Build a zero-shot tagging job through the prompt-template workflow."""
     task_parameters = TaggingParams(
-        llm_job_type=TaskType.TAGGING,
+        task_type=TaskType.TAGGING,
         sdoc_ids=[project["target_sdoc"].id],
         tag_ids=[project["people_tag"].id, project["other_tag"].id],
     )
@@ -171,25 +175,27 @@ def _tagging_payload(
         approach_type=ApproachType.LLM_ZERO_SHOT,
         strategy_type=StrategyType.TAGGING_DEFAULT,
     )
-    return LLMJobInput(
+    return LLMAssistantJobInput(
         project_id=project["project"].id,
-        llm_job_type=TaskType.TAGGING,
+        task_type=TaskType.TAGGING,
         specific_task_parameters=task_parameters,
-        llm_approach_type=ApproachType.LLM_ZERO_SHOT,
+        approach_type=ApproachType.LLM_ZERO_SHOT,
         specific_approach_parameters=_approach_parameters(
             ApproachType.LLM_ZERO_SHOT, prompts, model
         ),
-        llm_strategy_type=StrategyType.TAGGING_DEFAULT,
+        strategy_type=StrategyType.TAGGING_DEFAULT,
         specific_strategy_parameters=DefaultStrategyParams(
-            llm_strategy_type=StrategyType.TAGGING_DEFAULT
+            strategy_type=StrategyType.TAGGING_DEFAULT
         ),
     )
 
 
-def _metadata_payload(client: TestClient, project: LLMAssistantProject) -> LLMJobInput:
+def _metadata_payload(
+    client: TestClient, project: LLMAssistantProject
+) -> LLMAssistantJobInput:
     """Build a zero-shot metadata job covering every supported metadata type."""
     task_parameters = MetadataExtractionParams(
-        llm_job_type=TaskType.METADATA_EXTRACTION,
+        task_type=TaskType.METADATA_EXTRACTION,
         sdoc_ids=[project["target_sdoc"].id],
         project_metadata_ids=[item.id for item in project["metadata_fields"]],
     )
@@ -200,17 +206,17 @@ def _metadata_payload(client: TestClient, project: LLMAssistantProject) -> LLMJo
         approach_type=ApproachType.LLM_ZERO_SHOT,
         strategy_type=StrategyType.METADATA_DEFAULT,
     )
-    return LLMJobInput(
+    return LLMAssistantJobInput(
         project_id=project["project"].id,
-        llm_job_type=TaskType.METADATA_EXTRACTION,
+        task_type=TaskType.METADATA_EXTRACTION,
         specific_task_parameters=task_parameters,
-        llm_approach_type=ApproachType.LLM_ZERO_SHOT,
+        approach_type=ApproachType.LLM_ZERO_SHOT,
         specific_approach_parameters=_approach_parameters(
             ApproachType.LLM_ZERO_SHOT, prompts
         ),
-        llm_strategy_type=StrategyType.METADATA_DEFAULT,
+        strategy_type=StrategyType.METADATA_DEFAULT,
         specific_strategy_parameters=DefaultStrategyParams(
-            llm_strategy_type=StrategyType.METADATA_DEFAULT
+            strategy_type=StrategyType.METADATA_DEFAULT
         ),
     )
 
@@ -223,10 +229,10 @@ def _annotation_payload(
     strategy_type: StrategyType,
     data_tag: str,
     use_small_overlapping_chunks: bool = False,
-) -> LLMJobInput:
+) -> LLMAssistantJobInput:
     """Build one span-annotation job variant through public prompt generation."""
     task_parameters = AnnotationParams(
-        llm_job_type=TaskType.ANNOTATION,
+        task_type=TaskType.ANNOTATION,
         sdoc_ids=[project["target_sdoc"].id],
         code_ids=[project["person_code"].id],
         delete_existing_annotations=True,
@@ -243,24 +249,24 @@ def _annotation_payload(
         if data_tag != current_data_tag:
             prompts = _replace_data_tag(prompts, current_data_tag, data_tag)
         strategy_parameters = NERInlineTagStrategyParams(
-            llm_strategy_type=StrategyType.NER_INLINE_TAGS
+            strategy_type=StrategyType.NER_INLINE_TAGS
         )
     else:
         strategy_parameters = FuzzyGroundingStrategyParams(
-            llm_strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
+            strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
             chunk_size_tokens=4 if use_small_overlapping_chunks else 650,
             chunk_overlap_tokens=2 if use_small_overlapping_chunks else 100,
             fuzzy_threshold=0.85,
             context_before_chars=32,
             context_after_chars=32,
         )
-    return LLMJobInput(
+    return LLMAssistantJobInput(
         project_id=project["project"].id,
-        llm_job_type=TaskType.ANNOTATION,
+        task_type=TaskType.ANNOTATION,
         specific_task_parameters=task_parameters,
-        llm_approach_type=approach_type,
+        approach_type=approach_type,
         specific_approach_parameters=_approach_parameters(approach_type, prompts),
-        llm_strategy_type=strategy_type,
+        strategy_type=strategy_type,
         specific_strategy_parameters=strategy_parameters,
     )
 
@@ -271,10 +277,10 @@ def _sentence_annotation_payload(
     *,
     approach_type: ApproachType,
     data_tag: str,
-) -> LLMJobInput:
+) -> LLMAssistantJobInput:
     """Build one sentence-annotation job variant through public prompt generation."""
     task_parameters = SentenceAnnotationParams(
-        llm_job_type=TaskType.SENTENCE_ANNOTATION,
+        task_type=TaskType.SENTENCE_ANNOTATION,
         sdoc_ids=[project["target_sdoc"].id],
         code_ids=[project["fact_code"].id],
         delete_existing_annotations=True,
@@ -288,21 +294,21 @@ def _sentence_annotation_payload(
     )
     if data_tag != "<document>":
         prompts = _replace_data_tag(prompts, "<document>", data_tag)
-    return LLMJobInput(
+    return LLMAssistantJobInput(
         project_id=project["project"].id,
-        llm_job_type=TaskType.SENTENCE_ANNOTATION,
+        task_type=TaskType.SENTENCE_ANNOTATION,
         specific_task_parameters=task_parameters,
-        llm_approach_type=approach_type,
+        approach_type=approach_type,
         specific_approach_parameters=_approach_parameters(approach_type, prompts),
-        llm_strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT,
+        strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT,
         specific_strategy_parameters=DefaultStrategyParams(
-            llm_strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT
+            strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT
         ),
     )
 
 
 # ===========================================================================
-# START/GET LLM ASSISTANT JOB (/llm/llm_assistant) TESTS
+# START/GET LLM ASSISTANT JOB (/llm_assistant/llm_assistant) TESTS
 # ===========================================================================
 
 
@@ -315,9 +321,9 @@ def test_tagging_job_returns_current_and_exact_suggested_tags(
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     assert finished.output is not None
-    assert finished.output.llm_job_type == TaskType.TAGGING
+    assert finished.output.task_type == TaskType.TAGGING
     task_result = finished.output.specific_task_result
-    assert isinstance(task_result, TaggingLLMJobResult)
+    assert isinstance(task_result, TaggingLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
@@ -336,9 +342,9 @@ def test_metadata_job_extracts_all_supported_value_types(
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     assert finished.output is not None
-    assert finished.output.llm_job_type == TaskType.METADATA_EXTRACTION
+    assert finished.output.task_type == TaskType.METADATA_EXTRACTION
     task_result = finished.output.specific_task_result
-    assert isinstance(task_result, MetadataExtractionLLMJobResult)
+    assert isinstance(task_result, MetadataExtractionLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
@@ -415,9 +421,9 @@ def test_span_annotation_job_covers_all_approaches_strategies_and_data_tags(
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     assert finished.output is not None
-    assert finished.output.llm_job_type == TaskType.ANNOTATION
+    assert finished.output.task_type == TaskType.ANNOTATION
     task_result = finished.output.specific_task_result
-    assert isinstance(task_result, AnnotationLLMJobResult)
+    assert isinstance(task_result, AnnotationLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
@@ -481,9 +487,9 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     assert finished.output is not None
-    assert finished.output.llm_job_type == TaskType.SENTENCE_ANNOTATION
+    assert finished.output.task_type == TaskType.SENTENCE_ANNOTATION
     task_result = finished.output.specific_task_result
-    assert isinstance(task_result, SentenceAnnotationLLMJobResult)
+    assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
@@ -535,18 +541,18 @@ def test_finished_job_can_be_read_listed_but_not_aborted_or_retried(
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     list_response = client.get(
-        f"{LLM_JOB_URL}/project/{llm_assistant_project['project'].id}"
+        f"{LLM_ASSISTANT_JOB_URL}/project/{llm_assistant_project['project'].id}"
     )
     assert list_response.status_code == 200, list_response.text
-    jobs = TypeAdapter(list[LLMJobRead]).validate_python(list_response.json())
+    jobs = TypeAdapter(list[LLMAssistantJobRead]).validate_python(list_response.json())
     assert [job.job_id for job in jobs] == [finished.job_id]
     assert jobs[0].status == JobStatus.FINISHED
 
-    abort_response = client.post(f"{LLM_JOB_URL}/{finished.job_id}/abort")
+    abort_response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{finished.job_id}/abort")
     assert abort_response.status_code == 200, abort_response.text
     assert abort_response.json() is False
 
-    retry_response = client.post(f"{LLM_JOB_URL}/{finished.job_id}/retry")
+    retry_response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{finished.job_id}/retry")
     assert retry_response.status_code == 200, retry_response.text
     assert retry_response.json() is False
 
@@ -563,7 +569,7 @@ def test_failed_job_can_be_retried_and_fails_again_with_the_same_invalid_model(
     failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
     assert failed.output is None
 
-    retry_response = client.post(f"{LLM_JOB_URL}/{failed.job_id}/retry")
+    retry_response = client.post(f"{LLM_ASSISTANT_JOB_URL}/{failed.job_id}/retry")
     assert retry_response.status_code == 200, retry_response.text
     assert retry_response.json() is True
 
@@ -588,7 +594,7 @@ def test_job_management_rejects_nonexistent_job_ids(
 ) -> None:
     """Every single-job management route returns HTTP 404 for an unknown ID."""
     method = client.get if suffix == "" else client.post
-    response = method(f"{LLM_JOB_URL}/not-a-real-job{suffix}")
+    response = method(f"{LLM_ASSISTANT_JOB_URL}/not-a-real-job{suffix}")
     assert response.status_code == 404, response.text
 
 
@@ -602,12 +608,12 @@ def test_job_start_and_project_list_reject_foreign_project(
         update={"project_id": llm_assistant_project["foreign_project"].id}
     )
     start_response = client.post(
-        LLM_JOB_URL, json=foreign_payload.model_dump(mode="json")
+        LLM_ASSISTANT_JOB_URL, json=foreign_payload.model_dump(mode="json")
     )
     assert start_response.status_code == 403, start_response.text
 
     list_response = client.get(
-        f"{LLM_JOB_URL}/project/{llm_assistant_project['foreign_project'].id}"
+        f"{LLM_ASSISTANT_JOB_URL}/project/{llm_assistant_project['foreign_project'].id}"
     )
     assert list_response.status_code == 403, list_response.text
 
@@ -620,14 +626,14 @@ def test_job_start_and_project_list_reject_foreign_project(
     [
         # The outer task discriminator accepts only declared task enum values.
         pytest.param(
-            {"llm_job_type": "UNKNOWN"},
-            "llm_job_type",
+            {"task_type": "UNKNOWN"},
+            "task_type",
             id="unknown-task",
         ),
         # The strategy discriminator accepts only declared strategy enum values.
         pytest.param(
-            {"llm_strategy_type": "UNKNOWN"},
-            "llm_strategy_type",
+            {"strategy_type": "UNKNOWN"},
+            "strategy_type",
             id="unknown-strategy",
         ),
         # A job cannot omit its task-specific discriminated payload.
@@ -659,7 +665,7 @@ def test_job_start_rejects_malformed_discriminated_payloads(
     """Malformed task, approach, and strategy discriminators return HTTP 422."""
     payload = _tagging_payload(client, llm_assistant_project).model_dump(mode="json")
     payload.update(payload_update)
-    response = client.post(LLM_JOB_URL, json=payload)
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
     assert response.status_code == 422, response.text
     assert expected_fragment in response.text
 
@@ -711,6 +717,6 @@ def test_job_start_rejects_invalid_fuzzy_strategy_parameters(
     assert isinstance(strategy_parameters, dict)
     strategy_parameters.update(strategy_update)
 
-    response = client.post(LLM_JOB_URL, json=payload)
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
     assert response.status_code == 422, response.text
     assert expected_fragment in response.text

@@ -1,6 +1,6 @@
-from modules.llm_assistant.llm_job_dto import TaskType
+from modules.llm_assistant.llm_assistant_job_dto import TaskType
 from modules.llm_assistant.tasks.annotation_task import AnnotationTask
-from modules.llm_assistant.tasks.llm_task import LLMTask
+from modules.llm_assistant.tasks.llm_assistant_task import LLMAssistantTask
 from modules.llm_assistant.tasks.metadata_extraction_task import (
     MetadataExtractionTask,
 )
@@ -9,7 +9,7 @@ from modules.llm_assistant.tasks.tagging_task import TaggingTask
 from repos.llm_repo import LLMRepo
 
 # task type -> task class
-TASK_FOR_TASK_TYPE: dict[TaskType, type[LLMTask]] = {
+TASK_FOR_TASK_TYPE: dict[TaskType, type[LLMAssistantTask]] = {
     TaskType.TAGGING: TaggingTask,
     TaskType.METADATA_EXTRACTION: MetadataExtractionTask,
     TaskType.ANNOTATION: AnnotationTask,
@@ -17,7 +17,7 @@ TASK_FOR_TASK_TYPE: dict[TaskType, type[LLMTask]] = {
 }
 
 
-def get_task_class(task_type: TaskType) -> type[LLMTask]:
+def get_task_class(task_type: TaskType) -> type[LLMAssistantTask]:
     """Return the task class registered for a task type."""
     task_cls = TASK_FOR_TASK_TYPE.get(task_type)
     if task_cls is None:
@@ -25,7 +25,7 @@ def get_task_class(task_type: TaskType) -> type[LLMTask]:
     return task_cls
 
 
-def build_task(task_type: TaskType, llm: LLMRepo) -> LLMTask:
-    """Instantiate the LLMTask for the given task type."""
+def build_task(task_type: TaskType, llm: LLMRepo) -> LLMAssistantTask:
+    """Instantiate the LLMAssistantTask for the given task type."""
     task_cls = get_task_class(task_type)
     return task_cls(llm=llm)

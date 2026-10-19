@@ -13,14 +13,14 @@ from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
     FuzzyGroundingStrategyParams,
-    LLMPromptTemplates,
+    LLMAssistantPromptTemplates,
     StrategyType,
 )
 from modules.llm_assistant.prompts.data_tag import DataTag
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 from repos.llm_repo import LLMMessage
 
@@ -110,7 +110,7 @@ Text:
 """.strip()
 
 
-class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
+class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams]):
     """Span annotation via structured extraction and context-anchored grounding.
 
     The LLM acts as an extraction engine and outputs structured data with the
@@ -161,7 +161,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         project_id: int,
         is_fewshot: bool,
         strategy_params: FuzzyGroundingStrategyParams | None = None,
-        prompt_templates: list[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
         params: AnnotationParams | None = None,
         example_ids: list[int] | None = None,
     ):
@@ -171,7 +171,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         self.codename2id_dict = {code.name.upper(): code.id for code in self.codes}
         self.codeids2code_dict = {code.id: code for code in self.codes}
         self.fuzzy_params = strategy_params or FuzzyGroundingStrategyParams(
-            llm_strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
+            strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
         )
 
         super().__init__(

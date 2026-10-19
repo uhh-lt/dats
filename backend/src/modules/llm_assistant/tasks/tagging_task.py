@@ -2,12 +2,12 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.doc.source_document_crud import crud_sdoc
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     ApproachType,
-    LLMJobOutput,
+    LLMAssistantJobOutput,
     SpecificTaskParameters,
-    TaggingLLMJobResult,
+    TaggingLLMAssistantJobResult,
     TaggingParams,
     TaggingResult,
     TaskType,
@@ -16,12 +16,17 @@ from modules.llm_assistant.strategies.tagging_strategy import (
     LLMTaggingResult,
     TaggingStrategy,
 )
-from modules.llm_assistant.tasks.llm_document_processor import LLMDocumentResponse
-from modules.llm_assistant.tasks.llm_task import LLMTask, LLMTaskContext
+from modules.llm_assistant.tasks.llm_assistant_document_processor import (
+    LLMAssistantDocumentResponse,
+)
+from modules.llm_assistant.tasks.llm_assistant_task import (
+    LLMAssistantTask,
+    LLMAssistantTaskContext,
+)
 
 
 class TaggingTask(
-    LLMTask[TaggingStrategy, TaggingParams, LLMTaggingResult, TaggingResult]
+    LLMAssistantTask[TaggingStrategy, TaggingParams, LLMTaggingResult, TaggingResult]
 ):
     """Generate document-tagging suggestions for source documents."""
 
@@ -46,8 +51,8 @@ class TaggingTask(
     def _process_document(
         self,
         *,
-        context: LLMTaskContext[TaggingStrategy, TaggingParams],
-        document: LLMDocumentResponse[LLMTaggingResult],
+        context: LLMAssistantTaskContext[TaggingStrategy, TaggingParams],
+        document: LLMAssistantDocumentResponse[LLMTaggingResult],
     ) -> TaggingResult:
         current_tag_ids = [
             tag.id
@@ -94,10 +99,10 @@ class TaggingTask(
             reasoning=parsed_result.reasoning,
         )
 
-    def _build_output(self, results: list[TaggingResult]) -> LLMJobOutput:
-        return LLMJobOutput(
-            llm_job_type=TaskType.TAGGING,
-            specific_task_result=TaggingLLMJobResult(
-                llm_job_type=TaskType.TAGGING, results=results
+    def _build_output(self, results: list[TaggingResult]) -> LLMAssistantJobOutput:
+        return LLMAssistantJobOutput(
+            task_type=TaskType.TAGGING,
+            specific_task_result=TaggingLLMAssistantJobResult(
+                task_type=TaskType.TAGGING, results=results
             ),
         )

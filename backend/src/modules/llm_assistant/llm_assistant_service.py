@@ -7,11 +7,11 @@ from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,
 )
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     ApproachType,
-    LLMJobParameters,
-    LLMPromptTemplates,
+    LLMAssistantJobParameters,
+    LLMAssistantPromptTemplates,
     StrategyInfo,
     StrategyType,
     TaskType,
@@ -34,11 +34,11 @@ class LLMAssistantService(metaclass=SingletonMeta):
         return super(LLMAssistantService, cls).__new__(cls)
 
     def determine_approach(
-        self, db: Session, llm_job_params: LLMJobParameters
+        self, db: Session, job_params: LLMAssistantJobParameters
     ) -> ApproachRecommendation:
-        task_cls = get_task_class(llm_job_params.llm_job_type)
+        task_cls = get_task_class(job_params.task_type)
         return task_cls.determine_approach(
-            db=db, task_parameters=llm_job_params.specific_task_parameters
+            db=db, task_parameters=job_params.specific_task_parameters
         )
 
     def count_existing_assistant_annotations(
@@ -88,7 +88,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         for strategy_cls in STRATEGIES_FOR_TASK_TYPE.get(task_type, []):
             infos.append(
                 StrategyInfo(
-                    llm_strategy_type=strategy_cls.strategy_type,
+                    strategy_type=strategy_cls.strategy_type,
                     name=strategy_cls.display_name,
                     description=strategy_cls.description,
                     default_params=strategy_cls.default_params(),
@@ -100,22 +100,22 @@ class LLMAssistantService(metaclass=SingletonMeta):
     def create_prompt_templates(
         self,
         db: Session,
-        llm_job_params: LLMJobParameters,
+        job_params: LLMAssistantJobParameters,
         approach_type: ApproachType,
         strategy_type: StrategyType,
         strategy_params=None,
         example_ids: list[int] | None = None,
-    ) -> list[LLMPromptTemplates]:
+    ) -> list[LLMAssistantPromptTemplates]:
         # init the strategy with the provided specific parameters
         # the init process will generate prompt templates
         strategy = build_strategy(
             db=db,
-            project_id=llm_job_params.project_id,
+            project_id=job_params.project_id,
             is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
-            task_type=llm_job_params.llm_job_type,
+            task_type=job_params.task_type,
             strategy_type=strategy_type,
             strategy_params=strategy_params,
-            params=llm_job_params.specific_task_parameters,
+            params=job_params.specific_task_parameters,
             example_ids=example_ids,
         )
         return list(strategy.lang2prompt_templates.values())

@@ -21,7 +21,9 @@ class TaskType(str, Enum):
 
 
 class SpecificTaskParameters(BaseModel):
-    llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
+    task_type: TaskType = Field(
+        description="The type of the LLMAssistantJob (what to llm)"
+    )
 
 
 class DocumentBasedTaskParams(SpecificTaskParameters):
@@ -29,21 +31,21 @@ class DocumentBasedTaskParams(SpecificTaskParameters):
 
 
 class TaggingParams(DocumentBasedTaskParams):
-    llm_job_type: Literal[TaskType.TAGGING]
+    task_type: Literal[TaskType.TAGGING]
     tag_ids: list[int] = Field(
         description="IDs of the tags to use for the document tagging"
     )
 
 
 class MetadataExtractionParams(DocumentBasedTaskParams):
-    llm_job_type: Literal[TaskType.METADATA_EXTRACTION]
+    task_type: Literal[TaskType.METADATA_EXTRACTION]
     project_metadata_ids: list[int] = Field(
         description="IDs of the project metadata to use for the metadata extraction"
     )
 
 
 class AnnotationParams(DocumentBasedTaskParams):
-    llm_job_type: Literal[TaskType.ANNOTATION]
+    task_type: Literal[TaskType.ANNOTATION]
     code_ids: list[int] = Field(
         description="IDs of the codes to use for the annotation"
     )
@@ -54,7 +56,7 @@ class AnnotationParams(DocumentBasedTaskParams):
 
 
 class SentenceAnnotationParams(DocumentBasedTaskParams):
-    llm_job_type: Literal[TaskType.SENTENCE_ANNOTATION]
+    task_type: Literal[TaskType.SENTENCE_ANNOTATION]
     code_ids: list[int] = Field(
         description="IDs of the codes to use for the sentence annotation"
     )
@@ -64,16 +66,18 @@ class SentenceAnnotationParams(DocumentBasedTaskParams):
     )
 
 
-class LLMJobParameters(JobInputBase):
-    llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
+class LLMAssistantJobParameters(JobInputBase):
+    task_type: TaskType = Field(
+        description="The type of the LLMAssistantJob (what to llm)"
+    )
     specific_task_parameters: (
         TaggingParams
         | MetadataExtractionParams
         | AnnotationParams
         | SentenceAnnotationParams
     ) = Field(
-        description="Specific parameters for the LLMJob w.r.t it's type",
-        discriminator="llm_job_type",
+        description="Specific parameters for the LLMAssistantJob w.r.t it's type",
+        discriminator="task_type",
     )
 
 
@@ -88,29 +92,29 @@ class ApproachType(str, Enum):
 
 
 # Prompt template
-class LLMPromptTemplates(BaseModel):
+class LLMAssistantPromptTemplates(BaseModel):
     language: str = Field(description="The language of the prompt template")
     system_prompt: str = Field(description="The system prompt to use for the job")
     user_prompt: str = Field(description="The user prompt to use for the job")
 
 
 class SpecificApproachParameters(BaseModel):
-    llm_approach_type: ApproachType = Field(
-        description="The type of the LLMJob (what to llm)"
+    approach_type: ApproachType = Field(
+        description="The type of the LLMAssistantJob (what to llm)"
     )
 
 
 class ZeroShotParams(SpecificApproachParameters):
-    llm_approach_type: Literal[ApproachType.LLM_ZERO_SHOT]
-    prompts: list[LLMPromptTemplates] = Field(
+    approach_type: Literal[ApproachType.LLM_ZERO_SHOT]
+    prompts: list[LLMAssistantPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
     model: str = Field(description="Large Language Model to use for the job")
 
 
 class FewShotParams(SpecificApproachParameters):
-    llm_approach_type: Literal[ApproachType.LLM_FEW_SHOT]
-    prompts: list[LLMPromptTemplates] = Field(
+    approach_type: Literal[ApproachType.LLM_FEW_SHOT]
+    prompts: list[LLMAssistantPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
     model: str = Field(description="Large Language Model to use for the job")
@@ -130,7 +134,7 @@ class StrategyType(str, Enum):
 
 
 class SpecificStrategyParameters(BaseModel):
-    llm_strategy_type: StrategyType = Field(
+    strategy_type: StrategyType = Field(
         description="The type of the strategy (how to llm)"
     )
 
@@ -138,7 +142,7 @@ class SpecificStrategyParameters(BaseModel):
 class DefaultStrategyParams(SpecificStrategyParameters):
     """Params for single-strategy tasks (tagging, metadata, sentence annotation)."""
 
-    llm_strategy_type: Literal[
+    strategy_type: Literal[
         StrategyType.TAGGING_DEFAULT,
         StrategyType.METADATA_DEFAULT,
         StrategyType.SENTENCE_ANNOTATION_DEFAULT,
@@ -146,11 +150,11 @@ class DefaultStrategyParams(SpecificStrategyParameters):
 
 
 class NERInlineTagStrategyParams(SpecificStrategyParameters):
-    llm_strategy_type: Literal[StrategyType.NER_INLINE_TAGS]
+    strategy_type: Literal[StrategyType.NER_INLINE_TAGS]
 
 
 class FuzzyGroundingStrategyParams(SpecificStrategyParameters):
-    llm_strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING]
+    strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING]
     fuzzy_threshold: float = Field(
         default=0.85,
         ge=0,
@@ -185,16 +189,16 @@ class FuzzyGroundingStrategyParams(SpecificStrategyParameters):
         return self
 
 
-class LLMJobInput(LLMJobParameters):
-    llm_approach_type: ApproachType = Field(
-        description="The approach to use for the LLMJob"
+class LLMAssistantJobInput(LLMAssistantJobParameters):
+    approach_type: ApproachType = Field(
+        description="The approach to use for the LLMAssistantJob"
     )
     specific_approach_parameters: ZeroShotParams | FewShotParams = Field(
         description="Specific parameters for the approach w.r.t it's type",
-        discriminator="llm_approach_type",
+        discriminator="approach_type",
     )
-    llm_strategy_type: StrategyType = Field(
-        description="The strategy to use for the LLMJob"
+    strategy_type: StrategyType = Field(
+        description="The strategy to use for the LLMAssistantJob"
     )
     specific_strategy_parameters: (
         DefaultStrategyParams
@@ -202,7 +206,7 @@ class LLMJobInput(LLMJobParameters):
         | FuzzyGroundingStrategyParams
     ) = Field(
         description="Specific parameters for the strategy w.r.t it's type",
-        discriminator="llm_strategy_type",
+        discriminator="strategy_type",
     )
 
 
@@ -213,14 +217,14 @@ class LLMJobInput(LLMJobParameters):
 # --- START OUTPUT ---
 
 
-class LLMResultWithStatus(BaseModel):
+class LLMAssistantResultWithStatus(BaseModel):
     status: Literal["error", "finished", "partial"] = Field(
         description="Status of the Result",
     )
     status_message: str = Field(description="Status message of the result")
 
 
-class TaggingResult(LLMResultWithStatus):
+class TaggingResult(LLMAssistantResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     current_tag_ids: list[int] = Field(
         description="IDs of the tags currently assigned to the document"
@@ -231,12 +235,12 @@ class TaggingResult(LLMResultWithStatus):
     reasoning: str = Field(description="Reasoning for the tagging")
 
 
-class TaggingLLMJobResult(BaseModel):
-    llm_job_type: Literal[TaskType.TAGGING]
+class TaggingLLMAssistantJobResult(BaseModel):
+    task_type: Literal[TaskType.TAGGING]
     results: list[TaggingResult]
 
 
-class MetadataExtractionResult(LLMResultWithStatus):
+class MetadataExtractionResult(LLMAssistantResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     current_metadata: list[SourceDocumentMetadataReadResolved] = Field(
         description="Current metadata"
@@ -246,12 +250,12 @@ class MetadataExtractionResult(LLMResultWithStatus):
     )
 
 
-class MetadataExtractionLLMJobResult(BaseModel):
-    llm_job_type: Literal[TaskType.METADATA_EXTRACTION]
+class MetadataExtractionLLMAssistantJobResult(BaseModel):
+    task_type: Literal[TaskType.METADATA_EXTRACTION]
     results: list[MetadataExtractionResult]
 
 
-class AnnotationResult(LLMResultWithStatus):
+class AnnotationResult(LLMAssistantResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     suggested_annotations: list[SpanAnnotationRead] = Field(
         description="Suggested annotations"
@@ -262,12 +266,12 @@ class AnnotationResult(LLMResultWithStatus):
     )
 
 
-class AnnotationLLMJobResult(BaseModel):
-    llm_job_type: Literal[TaskType.ANNOTATION]
+class AnnotationLLMAssistantJobResult(BaseModel):
+    task_type: Literal[TaskType.ANNOTATION]
     results: list[AnnotationResult]
 
 
-class SentenceAnnotationResult(LLMResultWithStatus):
+class SentenceAnnotationResult(LLMAssistantResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     suggested_annotations: list[SentenceAnnotationRead] = Field(
         description="Suggested annotations"
@@ -278,21 +282,23 @@ class SentenceAnnotationResult(LLMResultWithStatus):
     )
 
 
-class SentenceAnnotationLLMJobResult(BaseModel):
-    llm_job_type: Literal[TaskType.SENTENCE_ANNOTATION]
+class SentenceAnnotationLLMAssistantJobResult(BaseModel):
+    task_type: Literal[TaskType.SENTENCE_ANNOTATION]
     results: list[SentenceAnnotationResult]
 
 
-class LLMJobOutput(JobOutputBase):
-    llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
+class LLMAssistantJobOutput(JobOutputBase):
+    task_type: TaskType = Field(
+        description="The type of the LLMAssistantJob (what to llm)"
+    )
     specific_task_result: (
-        TaggingLLMJobResult
-        | MetadataExtractionLLMJobResult
-        | AnnotationLLMJobResult
-        | SentenceAnnotationLLMJobResult
+        TaggingLLMAssistantJobResult
+        | MetadataExtractionLLMAssistantJobResult
+        | AnnotationLLMAssistantJobResult
+        | SentenceAnnotationLLMAssistantJobResult
     ) = Field(
-        description="Specific result for the LLMJob w.r.t it's type",
-        discriminator="llm_job_type",
+        description="Specific result for the LLMAssistantJob w.r.t it's type",
+        discriminator="task_type",
     )
 
 
@@ -313,7 +319,7 @@ class ApproachRecommendation(BaseModel):
 class StrategyInfo(BaseModel):
     """Describes an available strategy for a task, for display in the frontend."""
 
-    llm_strategy_type: StrategyType = Field(description="The strategy type")
+    strategy_type: StrategyType = Field(description="The strategy type")
     name: str = Field(description="Human-readable name of the strategy")
     description: str = Field(description="Explanation of what the strategy does")
     default_params: (
