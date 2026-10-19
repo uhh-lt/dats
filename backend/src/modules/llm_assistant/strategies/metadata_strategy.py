@@ -8,14 +8,14 @@ from sqlalchemy.orm import Session
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     DefaultStrategyParams,
-    LLMPromptTemplates,
+    LLMAssistantPromptTemplates,
     MetadataExtractionParams,
     StrategyType,
 )
 from modules.llm_assistant.prompts.data_tag import DataTag
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 # ENGLISH
 
@@ -58,7 +58,7 @@ example_template = """
 """
 
 
-class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
+class MetadataStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.METADATA_DEFAULT
     display_name = "Metadata Extraction"
     description = (
@@ -92,7 +92,7 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
         project_id: int,
         is_fewshot: bool,
         #  either prompt templates are provided
-        prompt_templates: list[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
         #  or parameters to build them
         params: MetadataExtractionParams | None = None,
         example_ids: list[int] | None = None,

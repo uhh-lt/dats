@@ -7,31 +7,31 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     DocumentBasedTaskParams,
     FewShotParams,
-    LLMJobOutput,
-    LLMResultWithStatus,
+    LLMAssistantJobOutput,
+    LLMAssistantResultWithStatus,
     SpecificTaskParameters,
     ZeroShotParams,
 )
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
-from modules.llm_assistant.tasks.llm_document_processor import (
-    LLMDocumentProcessor,
-    LLMDocumentResponse,
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
+from modules.llm_assistant.tasks.llm_assistant_document_processor import (
+    LLMAssistantDocumentProcessor,
+    LLMAssistantDocumentResponse,
 )
 from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import Job
 
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
-ResultT = TypeVar("ResultT", bound=LLMResultWithStatus)
-StrategyT = TypeVar("StrategyT", bound=LLMStrategy)
+ResultT = TypeVar("ResultT", bound=LLMAssistantResultWithStatus)
+StrategyT = TypeVar("StrategyT", bound=LLMAssistantStrategy)
 TaskParamsT = TypeVar("TaskParamsT", bound=DocumentBasedTaskParams)
 
 
 @dataclass(frozen=True)
-class LLMTaskContext(Generic[StrategyT, TaskParamsT]):
+class LLMAssistantTaskContext(Generic[StrategyT, TaskParamsT]):
     """Provide the shared job inputs required by task-specific execution hooks."""
 
     db: Session
@@ -51,7 +51,7 @@ def aggregate_raw_responses(raw_responses: list[str]) -> str:
     )
 
 
-class LLMTask(
+class LLMAssistantTask(
     ABC,
     Generic[StrategyT, TaskParamsT, ResponseT, ResultT],
 ):
@@ -64,7 +64,7 @@ class LLMTask(
     task_name: str
 
     def __init__(self, llm: LLMRepo):
-        self.document_processor = LLMDocumentProcessor(llm)
+        self.document_processor = LLMAssistantDocumentProcessor(llm)
 
     @classmethod
     @abstractmethod
@@ -84,9 +84,9 @@ class LLMTask(
         approach_parameters: ZeroShotParams | FewShotParams,
         task_parameters: TaskParamsT,
         strategy: StrategyT,
-    ) -> LLMJobOutput:
+    ) -> LLMAssistantJobOutput:
         """Run the fixed task lifecycle around task-specific execution hooks."""
-        context = LLMTaskContext(
+        context = LLMAssistantTaskContext(
             db=db,
             project_id=project_id,
             approach_parameters=approach_parameters,
@@ -144,7 +144,9 @@ class LLMTask(
 
     def _start_job(self, job: Job, num_documents: int) -> None:
         """Set and log the initial status for this task execution."""
-        message = f"Started LLMJob - {self.task_name}, num docs: {num_documents}"
+        message = (
+            f"Started LLMAssistantJob - {self.task_name}, num docs: {num_documents}"
+        )
         job.update(status_message=message)
         logger.info(message)
 
@@ -169,7 +171,7 @@ class LLMTask(
 
     def _prepare(
         self,
-        context: LLMTaskContext[StrategyT, TaskParamsT],
+        context: LLMAssistantTaskContext[StrategyT, TaskParamsT],
     ) -> None:
         """Perform optional task-specific preparation before documents are processed."""
 
@@ -182,13 +184,13 @@ class LLMTask(
     def _process_document(
         self,
         *,
-        context: LLMTaskContext[StrategyT, TaskParamsT],
-        document: LLMDocumentResponse[ResponseT],
+        context: LLMAssistantTaskContext[StrategyT, TaskParamsT],
+        document: LLMAssistantDocumentResponse[ResponseT],
     ) -> ResultT:
         """Validate, parse, deduplicate if needed, persist, and build the result for one document."""
         ...
 
     @abstractmethod
-    def _build_output(self, results: list[ResultT]) -> LLMJobOutput:
+    def _build_output(self, results: list[ResultT]) -> LLMAssistantJobOutput:
         """Wrap all per-document results in the task-specific job output."""
         ...

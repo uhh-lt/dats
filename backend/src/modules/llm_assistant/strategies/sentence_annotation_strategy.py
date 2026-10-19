@@ -9,14 +9,14 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
 from core.user.user_crud import SYSTEM_USER_IDS
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     DefaultStrategyParams,
-    LLMPromptTemplates,
+    LLMAssistantPromptTemplates,
     SentenceAnnotationParams,
     StrategyType,
 )
 from modules.llm_assistant.prompts.data_tag import DataTag
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from repos.llm_repo import LLMMessage
 
 
@@ -82,7 +82,7 @@ Kategorie: {}
 """
 
 
-class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
+class SentenceAnnotationStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.SENTENCE_ANNOTATION_DEFAULT
     display_name = "Sentence Annotation"
     description = (
@@ -124,7 +124,7 @@ class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
         project_id: int,
         is_fewshot: bool,
         # either prompt templates are provided
-        prompt_templates: list[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
         # or the parameters to build them
         params: SentenceAnnotationParams | None = None,
         example_ids: list[int] | None = None,

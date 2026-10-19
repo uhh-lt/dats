@@ -14,14 +14,14 @@ from core.user.user_crud import (
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_IDS,
 )
-from modules.llm_assistant.llm_job_dto import (
-    AnnotationLLMJobResult,
+from modules.llm_assistant.llm_assistant_job_dto import (
+    AnnotationLLMAssistantJobResult,
     AnnotationParams,
     AnnotationResult,
     ApproachRecommendation,
     ApproachType,
     FewShotParams,
-    LLMJobOutput,
+    LLMAssistantJobOutput,
     SpecificTaskParameters,
     TaskType,
 )
@@ -31,10 +31,12 @@ from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
 from modules.llm_assistant.strategies.ner_inline_tag_strategy import (
     NERInlineTagStrategy,
 )
-from modules.llm_assistant.tasks.llm_document_processor import LLMDocumentResponse
-from modules.llm_assistant.tasks.llm_task import (
-    LLMTask,
-    LLMTaskContext,
+from modules.llm_assistant.tasks.llm_assistant_document_processor import (
+    LLMAssistantDocumentResponse,
+)
+from modules.llm_assistant.tasks.llm_assistant_task import (
+    LLMAssistantTask,
+    LLMAssistantTaskContext,
     aggregate_raw_responses,
 )
 
@@ -42,7 +44,7 @@ AnnotationStrategy = NERInlineTagStrategy | FuzzyGroundingStrategy
 
 
 class AnnotationTask(
-    LLMTask[AnnotationStrategy, AnnotationParams, BaseModel, AnnotationResult]
+    LLMAssistantTask[AnnotationStrategy, AnnotationParams, BaseModel, AnnotationResult]
 ):
     """Span annotation task.
 
@@ -190,7 +192,7 @@ class AnnotationTask(
 
     def _prepare(
         self,
-        context: LLMTaskContext[AnnotationStrategy, AnnotationParams],
+        context: LLMAssistantTaskContext[AnnotationStrategy, AnnotationParams],
     ) -> None:
         if not context.task_parameters.delete_existing_annotations:
             return
@@ -214,8 +216,8 @@ class AnnotationTask(
     def _process_document(
         self,
         *,
-        context: LLMTaskContext[AnnotationStrategy, AnnotationParams],
-        document: LLMDocumentResponse[BaseModel],
+        context: LLMAssistantTaskContext[AnnotationStrategy, AnnotationParams],
+        document: LLMAssistantDocumentResponse[BaseModel],
     ) -> AnnotationResult:
         is_fewshot = isinstance(context.approach_parameters, FewShotParams)
         strategy = context.strategy
@@ -362,10 +364,10 @@ class AnnotationTask(
             ),
         )
 
-    def _build_output(self, results: list[AnnotationResult]) -> LLMJobOutput:
-        return LLMJobOutput(
-            llm_job_type=TaskType.ANNOTATION,
-            specific_task_result=AnnotationLLMJobResult(
-                llm_job_type=TaskType.ANNOTATION, results=results
+    def _build_output(self, results: list[AnnotationResult]) -> LLMAssistantJobOutput:
+        return LLMAssistantJobOutput(
+            task_type=TaskType.ANNOTATION,
+            specific_task_result=AnnotationLLMAssistantJobResult(
+                task_type=TaskType.ANNOTATION, results=results
             ),
         )

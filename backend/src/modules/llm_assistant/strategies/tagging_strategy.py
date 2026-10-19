@@ -2,14 +2,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     DefaultStrategyParams,
-    LLMPromptTemplates,
+    LLMAssistantPromptTemplates,
     StrategyType,
     TaggingParams,
 )
 from modules.llm_assistant.prompts.data_tag import DataTag
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 
 class LLMParsedTaggingResult(BaseModel):
@@ -68,7 +68,7 @@ Begründung: Das Dokument handelt von {}.
 """
 
 
-class TaggingStrategy(LLMStrategy[DefaultStrategyParams]):
+class TaggingStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.TAGGING_DEFAULT
     display_name = "Document Tagging"
     description = (
@@ -104,7 +104,7 @@ class TaggingStrategy(LLMStrategy[DefaultStrategyParams]):
         project_id: int,
         is_fewshot: bool,
         # either prompt templates are provided
-        prompt_templates: list[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
         # or the parameters to build them
         params: TaggingParams | None = None,
         example_ids: list[int] | None = None,

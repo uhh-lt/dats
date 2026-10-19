@@ -4,43 +4,45 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     ApproachType,
-    LLMJobParameters,
-    LLMPromptTemplates,
+    LLMAssistantJobParameters,
+    LLMAssistantPromptTemplates,
     StrategyInfo,
     StrategyType,
     TaskType,
 )
-from modules.llm_assistant.llm_service import LLMAssistantService
+from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 
 router = APIRouter(
-    prefix="/llm", dependencies=[Depends(get_current_user)], tags=["llm"]
+    prefix="/llm_assistant",
+    dependencies=[Depends(get_current_user)],
+    tags=["llm_assistant"],
 )
 
-llms: LLMAssistantService = LLMAssistantService()
+llmas: LLMAssistantService = LLMAssistantService()
 
 
 @router.post(
     "/create_prompt_templates",
-    response_model=list[LLMPromptTemplates],
-    summary="Returns the system and user prompt templates for the given llm task in all supported languages",
+    response_model=list[LLMAssistantPromptTemplates],
+    summary="Returns the system and user prompt templates for the given LLM assistant task in all supported languages",
 )
 def create_prompt_templates(
     *,
     db: Session = Depends(get_db_session),
-    llm_job_params: LLMJobParameters,
+    job_params: LLMAssistantJobParameters,
     approach_type: ApproachType,
     strategy_type: StrategyType,
     example_ids: list[int] | None = None,
     authz_user: AuthzUser = Depends(),
-) -> list[LLMPromptTemplates]:
-    authz_user.assert_in_project(llm_job_params.project_id)
+) -> list[LLMAssistantPromptTemplates]:
+    authz_user.assert_in_project(job_params.project_id)
 
-    return llms.create_prompt_templates(
+    return llmas.create_prompt_templates(
         db=db,
-        llm_job_params=llm_job_params,
+        job_params=job_params,
         approach_type=approach_type,
         strategy_type=strategy_type,
         example_ids=example_ids,
@@ -50,14 +52,14 @@ def create_prompt_templates(
 @router.post(
     "/list_strategies",
     response_model=list[StrategyInfo],
-    summary="Returns the available strategies for the given llm task",
+    summary="Returns the available strategies for the given LLM assistant task",
 )
 def list_strategies(
     *,
     task_type: TaskType,
     authz_user: AuthzUser = Depends(),
 ) -> list[StrategyInfo]:
-    return llms.list_strategies(task_type=task_type)
+    return llmas.list_strategies(task_type=task_type)
 
 
 @router.post(
@@ -68,12 +70,12 @@ def list_strategies(
 def determine_approach(
     *,
     db: Session = Depends(get_db_session),
-    llm_job_params: LLMJobParameters,
+    job_params: LLMAssistantJobParameters,
     authz_user: AuthzUser = Depends(),
 ) -> ApproachRecommendation:
-    authz_user.assert_in_project(llm_job_params.project_id)
+    authz_user.assert_in_project(job_params.project_id)
 
-    return llms.determine_approach(db=db, llm_job_params=llm_job_params)
+    return llmas.determine_approach(db=db, job_params=job_params)
 
 
 @router.post(
@@ -93,7 +95,7 @@ def count_existing_assistant_annotations(
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     authz_user.assert_in_same_project_as_many(Crud.CODE, code_ids)
 
-    return llms.count_existing_assistant_annotations(
+    return llmas.count_existing_assistant_annotations(
         db=db,
         approach_type=approach_type,
         task_type=task_type,

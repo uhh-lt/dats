@@ -9,14 +9,14 @@ from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
-    LLMPromptTemplates,
+    LLMAssistantPromptTemplates,
     NERInlineTagStrategyParams,
     StrategyType,
 )
 from modules.llm_assistant.prompts.data_tag import DataTag
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 
 
@@ -158,7 +158,7 @@ def _render_sentence_example_multi(
     return " ".join(rendered_sentences)
 
 
-class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
+class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
     """Span annotation via inline XML-style tags.
 
     The LLM repeats the original text and wraps relevant text passages in inline
@@ -202,7 +202,7 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
         db: Session,
         project_id: int,
         is_fewshot: bool,
-        prompt_templates: list[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
         params: AnnotationParams | None = None,
         example_ids: list[int] | None = None,
     ):

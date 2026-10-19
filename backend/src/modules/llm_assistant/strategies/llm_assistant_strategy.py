@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     DocumentBasedTaskParams,
-    LLMPromptTemplates,
+    LLMAssistantPromptTemplates,
     SpecificStrategyParameters,
     StrategyType,
 )
@@ -22,7 +22,7 @@ from repos.llm_repo import LLMMessage
 StrategyParamsT = TypeVar("StrategyParamsT", bound=SpecificStrategyParameters)
 
 
-class LLMStrategy(Generic[StrategyParamsT]):
+class LLMAssistantStrategy(Generic[StrategyParamsT]):
     """A strategy describes HOW the LLM assistant does a job.
 
     It combines the prompt-building machinery with:
@@ -80,7 +80,7 @@ class LLMStrategy(Generic[StrategyParamsT]):
         is_fewshot: bool,
         valid_data_tags: list[DataTag] = [DataTag.DOCUMENT],
         # either prompt templates are provided
-        prompt_templates: list[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
         # or the parameters to build them
         params: DocumentBasedTaskParams | None = None,
         example_ids: list[int] | None = None,
@@ -138,7 +138,7 @@ class LLMStrategy(Generic[StrategyParamsT]):
     def default_params(cls) -> StrategyParamsT:
         """Default strategy parameters."""
         return cls.strategy_params_type.model_validate(
-            {"llm_strategy_type": cls.strategy_type}
+            {"strategy_type": cls.strategy_type}
         )
 
     # VALIDATION
@@ -253,16 +253,16 @@ class LLMStrategy(Generic[StrategyParamsT]):
 
     def _build_prompt_templates(
         self, params: DocumentBasedTaskParams, example_ids: list[int] | None = None
-    ) -> list[LLMPromptTemplates]:
+    ) -> list[LLMAssistantPromptTemplates]:
         """Build system and user prompt templates for every supported language."""
         if example_ids is not None and not self.is_fewshot:
             raise ValueError("Example IDs are only allowed for few-shot learning!")
 
         # create the prompt templates for all supported languages
-        result: list[LLMPromptTemplates] = []
+        result: list[LLMAssistantPromptTemplates] = []
         for language in self.supported_languages:
             result.append(
-                LLMPromptTemplates(
+                LLMAssistantPromptTemplates(
                     language=language,
                     system_prompt=self._build_system_prompt_template(language),
                     user_prompt=self._build_user_prompt_template(

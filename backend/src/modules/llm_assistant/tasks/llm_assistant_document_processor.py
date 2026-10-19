@@ -11,8 +11,10 @@ from config import conf
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.llm_assistant.llm_exceptions import LLMBatchProcessingError
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.llm_assistant_exceptions import (
+    LLMAssistantBatchProcessingError,
+)
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from repos.llm_repo import LLMBatchChatResponse, LLMMessage, LLMRepo
 
 LLM_REQUEST_BATCH_SIZE = conf.llm_assistant.request_batch_size
@@ -23,7 +25,7 @@ ProgressCallback = Callable[[int, int, int], None]
 
 
 @dataclass(frozen=True)
-class LLMWorkItem:
+class LLMAssistantWorkItem:
     """Associate one generated LLM message with its document and message index."""
 
     sdoc_id: int
@@ -32,7 +34,7 @@ class LLMWorkItem:
 
 
 @dataclass(frozen=True)
-class LLMResponseItem(Generic[ResponseT]):
+class LLMAssistantResponseItem(Generic[ResponseT]):
     """Associate one LLM response with its message index within a document."""
 
     message_id: int
@@ -40,14 +42,14 @@ class LLMResponseItem(Generic[ResponseT]):
 
 
 @dataclass(frozen=True)
-class LLMDocumentResponse(Generic[ResponseT]):
+class LLMAssistantDocumentResponse(Generic[ResponseT]):
     """Contain all LLM responses produced for one source document."""
 
     sdoc_data: SourceDocumentDataORM
-    responses: list[LLMResponseItem[ResponseT]]
+    responses: list[LLMAssistantResponseItem[ResponseT]]
 
 
-class LLMDocumentProcessor:
+class LLMAssistantDocumentProcessor:
     """Generate and batch LLM requests while preserving document boundaries."""
 
     def __init__(self, llm: LLMRepo):
@@ -67,15 +69,15 @@ class LLMDocumentProcessor:
         self,
         *,
         model: str,
-        strategy: LLMStrategy,
+        strategy: LLMAssistantStrategy,
         db: Session,
         sdoc_ids: list[int],
         response_model: Type[ResponseT],
         on_progress: ProgressCallback,
-    ) -> Iterator[LLMDocumentResponse[ResponseT]]:
+    ) -> Iterator[LLMAssistantDocumentResponse[ResponseT]]:
         """Yield complete document responses from bounded batches of LLM requests."""
-        pending_work: list[LLMWorkItem] = []
-        responses_by_sdoc: dict[int, list[LLMResponseItem[ResponseT]]] = {}
+        pending_work: list[LLMAssistantWorkItem] = []
+        responses_by_sdoc: dict[int, list[LLMAssistantResponseItem[ResponseT]]] = {}
         completed_documents: list[SourceDocumentDataORM] = []
         processed_documents = 0
         completed_requests = 0
@@ -111,7 +113,7 @@ class LLMDocumentProcessor:
                 capture_raw=True,
             )
             if len(batch_responses) != len(pending_work):
-                raise LLMBatchProcessingError(
+                raise LLMAssistantBatchProcessingError(
                     "The LLM returned a different number of responses than requests"
                 )
 
@@ -123,7 +125,7 @@ class LLMDocumentProcessor:
                     f"Raw:\n{response.raw or '<none>'}"
                 )
                 responses_by_sdoc.setdefault(work.sdoc_id, []).append(
-                    LLMResponseItem(
+                    LLMAssistantResponseItem(
                         message_id=work.message_id,
                         response=response,
                     )
@@ -149,11 +151,11 @@ class LLMDocumentProcessor:
                 completed_requests,
             )
 
-        def take_completed_documents() -> list[LLMDocumentResponse[ResponseT]]:
+        def take_completed_documents() -> list[LLMAssistantDocumentResponse[ResponseT]]:
             """Collect responses for documents whose prompts have all been generated."""
             nonlocal completed_documents
             result = [
-                LLMDocumentResponse(
+                LLMAssistantDocumentResponse(
                     sdoc_data=sdoc_data,
                     responses=responses_by_sdoc.pop(sdoc_data.id, []),
                 )
@@ -162,7 +164,9 @@ class LLMDocumentProcessor:
             completed_documents = []
             return result
 
-        def yield_completed_documents() -> Iterator[LLMDocumentResponse[ResponseT]]:
+        def yield_completed_documents() -> Iterator[
+            LLMAssistantDocumentResponse[ResponseT]
+        ]:
             """Yield completed documents and report progress after each is consumed."""
             nonlocal processed_documents
             for document_response in take_completed_documents():
@@ -179,7 +183,7 @@ class LLMDocumentProcessor:
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
             if language is None:
-                raise LLMBatchProcessingError(
+                raise LLMAssistantBatchProcessingError(
                     f"Document with ID {sdoc_data.id} has no language!"
                 )
 
@@ -192,7 +196,7 @@ class LLMDocumentProcessor:
             ):
                 prompt_count += 1
                 pending_work.append(
-                    LLMWorkItem(
+                    LLMAssistantWorkItem(
                         sdoc_id=sdoc_data.id,
                         message_id=message_id,
                         message=prompt,

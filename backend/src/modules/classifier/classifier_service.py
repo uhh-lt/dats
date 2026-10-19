@@ -44,10 +44,10 @@ class ClassifierService(metaclass=SingletonMeta):
             case ClassifierModel.SPAN:
                 return SpanClassificationModelService()
 
-    def _next_llm_job_step(self, job: Job, description: str) -> None:
+    def _next_classifier_job_step(self, job: Job, description: str) -> None:
         job.update(current_step=job.get_current_step() + 1, status_message=description)
 
-    def _update_llm_job_description(self, job: Job, description: str) -> None:
+    def _update_classifier_job_description(self, job: Job, description: str) -> None:
         job.update(status_message=description)
 
     def delete_classifier_by_id(

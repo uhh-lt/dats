@@ -4,12 +4,12 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
     ApproachRecommendation,
     ApproachType,
-    LLMJobParameters,
-    LLMPromptTemplates,
+    LLMAssistantJobParameters,
+    LLMAssistantPromptTemplates,
     MetadataExtractionParams,
     SentenceAnnotationParams,
     StrategyInfo,
@@ -20,46 +20,46 @@ from modules.llm_assistant.llm_job_dto import (
 
 from .conftest import LLMAssistantProject
 
-PROMPT_TEMPLATES_URL = "/llm/create_prompt_templates"
-LIST_STRATEGIES_URL = "/llm/list_strategies"
-DETERMINE_APPROACH_URL = "/llm/determine_approach"
-COUNT_ANNOTATIONS_URL = "/llm/count_existing_assistant_annotations"
+PROMPT_TEMPLATES_URL = "/llm_assistant/create_prompt_templates"
+LIST_STRATEGIES_URL = "/llm_assistant/list_strategies"
+DETERMINE_APPROACH_URL = "/llm_assistant/determine_approach"
+COUNT_ANNOTATIONS_URL = "/llm_assistant/count_existing_assistant_annotations"
 
 
 def _job_parameters(
     project: LLMAssistantProject, task_type: TaskType
-) -> LLMJobParameters:
+) -> LLMAssistantJobParameters:
     """Build typed endpoint parameters for one assistant task."""
     project_id = project["project"].id
     sdoc_ids = [project["target_sdoc"].id]
     match task_type:
         case TaskType.TAGGING:
             specific = TaggingParams(
-                llm_job_type=task_type,
+                task_type=task_type,
                 sdoc_ids=sdoc_ids,
                 tag_ids=[project["people_tag"].id, project["other_tag"].id],
             )
         case TaskType.METADATA_EXTRACTION:
             specific = MetadataExtractionParams(
-                llm_job_type=task_type,
+                task_type=task_type,
                 sdoc_ids=sdoc_ids,
                 project_metadata_ids=[item.id for item in project["metadata_fields"]],
             )
         case TaskType.ANNOTATION:
             specific = AnnotationParams(
-                llm_job_type=task_type,
+                task_type=task_type,
                 sdoc_ids=sdoc_ids,
                 code_ids=[project["person_code"].id],
             )
         case TaskType.SENTENCE_ANNOTATION:
             specific = SentenceAnnotationParams(
-                llm_job_type=task_type,
+                task_type=task_type,
                 sdoc_ids=sdoc_ids,
                 code_ids=[project["fact_code"].id],
             )
-    return LLMJobParameters(
+    return LLMAssistantJobParameters(
         project_id=project_id,
-        llm_job_type=task_type,
+        task_type=task_type,
         specific_task_parameters=specific,
     )
 
@@ -67,7 +67,7 @@ def _job_parameters(
 def _post_prompt_templates(
     client: TestClient,
     *,
-    parameters: LLMJobParameters,
+    parameters: LLMAssistantJobParameters,
     approach_type: ApproachType,
     strategy_type: StrategyType,
     example_ids: Sequence[int] | None = None,
@@ -80,14 +80,14 @@ def _post_prompt_templates(
             "strategy_type": strategy_type.value,
         },
         json={
-            "llm_job_params": parameters.model_dump(mode="json"),
+            "job_params": parameters.model_dump(mode="json"),
             "example_ids": list(example_ids) if example_ids is not None else None,
         },
     )
 
 
 # ===========================================================================
-# LIST STRATEGIES (/llm/list_strategies) TESTS
+# LIST STRATEGIES (/llm_assistant/list_strategies) TESTS
 # ===========================================================================
 
 
@@ -148,12 +148,10 @@ def test_list_strategies_returns_every_strategy_and_its_defaults(
     strategies = TypeAdapter(list[StrategyInfo]).validate_python(response.json())
 
     assert [
-        (item.llm_strategy_type, item.name, item.allowed_data_tags)
-        for item in strategies
+        (item.strategy_type, item.name, item.allowed_data_tags) for item in strategies
     ] == expected_strategies
     assert all(
-        item.default_params.llm_strategy_type == item.llm_strategy_type
-        for item in strategies
+        item.default_params.strategy_type == item.strategy_type for item in strategies
     )
     assert all(item.description for item in strategies)
 
@@ -165,7 +163,7 @@ def test_list_strategies_rejects_an_unknown_task_type(client: TestClient) -> Non
 
 
 # ===========================================================================
-# CREATE PROMPT TEMPLATES (/llm/create_prompt_templates) TESTS
+# CREATE PROMPT TEMPLATES (/llm_assistant/create_prompt_templates) TESTS
 # ===========================================================================
 
 
@@ -255,7 +253,9 @@ def test_create_prompt_templates_covers_task_strategy_and_approach_variants(
         strategy_type=strategy_type,
     )
     assert response.status_code == 200, response.text
-    prompts = TypeAdapter(list[LLMPromptTemplates]).validate_python(response.json())
+    prompts = TypeAdapter(list[LLMAssistantPromptTemplates]).validate_python(
+        response.json()
+    )
 
     assert [prompt.language for prompt in prompts] == ["en", "de"]
     assert all(expected_data_tag in prompt.user_prompt for prompt in prompts)
@@ -289,7 +289,9 @@ def test_create_prompt_templates_uses_explicit_span_example_ids(
         example_ids=[example.id],
     )
     assert response.status_code == 200, response.text
-    prompts = TypeAdapter(list[LLMPromptTemplates]).validate_python(response.json())
+    prompts = TypeAdapter(list[LLMAssistantPromptTemplates]).validate_python(
+        response.json()
+    )
 
     assert len(prompts) == 2
     assert all(example.span_text.text in prompt.user_prompt for prompt in prompts)
@@ -309,7 +311,9 @@ def test_create_prompt_templates_uses_explicit_sentence_example_ids(
         example_ids=[example.id],
     )
     assert response.status_code == 200, response.text
-    prompts = TypeAdapter(list[LLMPromptTemplates]).validate_python(response.json())
+    prompts = TypeAdapter(list[LLMAssistantPromptTemplates]).validate_python(
+        response.json()
+    )
 
     assert all(
         "The text names Anna as a person." in prompt.user_prompt for prompt in prompts
@@ -378,7 +382,7 @@ def test_create_prompt_templates_rejects_unknown_query_enums(
         PROMPT_TEMPLATES_URL,
         params=query,
         json={
-            "llm_job_params": _job_parameters(
+            "job_params": _job_parameters(
                 llm_assistant_project, TaskType.ANNOTATION
             ).model_dump(mode="json"),
             "example_ids": None,
@@ -405,7 +409,7 @@ def test_create_prompt_templates_rejects_foreign_project(
 
 
 # ===========================================================================
-# DETERMINE APPROACH (/llm/determine_approach) TESTS
+# DETERMINE APPROACH (/llm_assistant/determine_approach) TESTS
 # ===========================================================================
 
 
@@ -510,19 +514,19 @@ def test_determine_approach_uses_the_least_represented_selected_code(
     }
     if task_type == TaskType.ANNOTATION:
         specific = AnnotationParams(
-            llm_job_type=TaskType.ANNOTATION,
+            task_type=TaskType.ANNOTATION,
             sdoc_ids=[llm_assistant_project["target_sdoc"].id],
             code_ids=ids_by_case[code_ids],
         )
     else:
         specific = SentenceAnnotationParams(
-            llm_job_type=TaskType.SENTENCE_ANNOTATION,
+            task_type=TaskType.SENTENCE_ANNOTATION,
             sdoc_ids=[llm_assistant_project["target_sdoc"].id],
             code_ids=ids_by_case[code_ids],
         )
-    parameters = LLMJobParameters(
+    parameters = LLMAssistantJobParameters(
         project_id=llm_assistant_project["project"].id,
-        llm_job_type=task_type,
+        task_type=task_type,
         specific_task_parameters=specific,
     )
     response = client.post(
@@ -557,14 +561,14 @@ def test_determine_approach_rejects_a_mismatched_task_discriminator(
     parameters = _job_parameters(llm_assistant_project, TaskType.ANNOTATION).model_dump(
         mode="json"
     )
-    parameters["specific_task_parameters"]["llm_job_type"] = TaskType.TAGGING.value
+    parameters["specific_task_parameters"]["task_type"] = TaskType.TAGGING.value
     response = client.post(DETERMINE_APPROACH_URL, json=parameters)
     assert response.status_code == 422, response.text
     assert "specific_task_parameters" in response.text
 
 
 # ===========================================================================
-# COUNT EXISTING ANNOTATIONS (/llm/count_existing_assistant_annotations) TESTS
+# COUNT EXISTING ANNOTATIONS (/llm_assistant/count_existing_assistant_annotations) TESTS
 # ===========================================================================
 
 

@@ -13,12 +13,12 @@ from core.user.user_crud import (
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_IDS,
 )
-from modules.llm_assistant.llm_job_dto import (
+from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     ApproachType,
     FewShotParams,
-    LLMJobOutput,
-    SentenceAnnotationLLMJobResult,
+    LLMAssistantJobOutput,
+    SentenceAnnotationLLMAssistantJobResult,
     SentenceAnnotationParams,
     SentenceAnnotationResult,
     SpecificTaskParameters,
@@ -29,16 +29,18 @@ from modules.llm_assistant.strategies.sentence_annotation_strategy import (
     LLMSentenceAnnotationResults,
     SentenceAnnotationStrategy,
 )
-from modules.llm_assistant.tasks.llm_document_processor import LLMDocumentResponse
-from modules.llm_assistant.tasks.llm_task import (
-    LLMTask,
-    LLMTaskContext,
+from modules.llm_assistant.tasks.llm_assistant_document_processor import (
+    LLMAssistantDocumentResponse,
+)
+from modules.llm_assistant.tasks.llm_assistant_task import (
+    LLMAssistantTask,
+    LLMAssistantTaskContext,
     aggregate_raw_responses,
 )
 
 
 class SentenceAnnotationTask(
-    LLMTask[
+    LLMAssistantTask[
         SentenceAnnotationStrategy,
         SentenceAnnotationParams,
         LLMSentenceAnnotationResults,
@@ -148,7 +150,9 @@ class SentenceAnnotationTask(
 
     def _prepare(
         self,
-        context: LLMTaskContext[SentenceAnnotationStrategy, SentenceAnnotationParams],
+        context: LLMAssistantTaskContext[
+            SentenceAnnotationStrategy, SentenceAnnotationParams
+        ],
     ) -> None:
         if not context.task_parameters.delete_existing_annotations:
             return
@@ -177,8 +181,10 @@ class SentenceAnnotationTask(
     def _process_document(
         self,
         *,
-        context: LLMTaskContext[SentenceAnnotationStrategy, SentenceAnnotationParams],
-        document: LLMDocumentResponse[LLMSentenceAnnotationResults],
+        context: LLMAssistantTaskContext[
+            SentenceAnnotationStrategy, SentenceAnnotationParams
+        ],
+        document: LLMAssistantDocumentResponse[LLMSentenceAnnotationResults],
     ) -> SentenceAnnotationResult:
         is_fewshot = isinstance(context.approach_parameters, FewShotParams)
         strategy = context.strategy
@@ -349,10 +355,12 @@ class SentenceAnnotationTask(
             ),
         )
 
-    def _build_output(self, results: list[SentenceAnnotationResult]) -> LLMJobOutput:
-        return LLMJobOutput(
-            llm_job_type=TaskType.SENTENCE_ANNOTATION,
-            specific_task_result=SentenceAnnotationLLMJobResult(
-                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=results
+    def _build_output(
+        self, results: list[SentenceAnnotationResult]
+    ) -> LLMAssistantJobOutput:
+        return LLMAssistantJobOutput(
+            task_type=TaskType.SENTENCE_ANNOTATION,
+            specific_task_result=SentenceAnnotationLLMAssistantJobResult(
+                task_type=TaskType.SENTENCE_ANNOTATION, results=results
             ),
         )

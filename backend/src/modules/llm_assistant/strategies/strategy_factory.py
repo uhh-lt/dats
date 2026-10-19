@@ -1,14 +1,14 @@
 from sqlalchemy.orm import Session
 
-from modules.llm_assistant.llm_job_dto import (
-    LLMPromptTemplates,
+from modules.llm_assistant.llm_assistant_job_dto import (
+    LLMAssistantPromptTemplates,
     StrategyType,
     TaskType,
 )
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
 )
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.metadata_strategy import MetadataStrategy
 from modules.llm_assistant.strategies.ner_inline_tag_strategy import (
     NERInlineTagStrategy,
@@ -64,10 +64,10 @@ def build_strategy(
     task_type: TaskType,
     strategy_type: StrategyType,
     strategy_params=None,
-    prompt_templates: list[LLMPromptTemplates] | None = None,
+    prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
     params=None,
     example_ids: list[int] | None = None,
-) -> LLMStrategy:
+) -> LLMAssistantStrategy:
     """Instantiate the strategy for the given task and strategy type."""
     strategy_cls = get_strategy_class(task_type, strategy_type)
 
