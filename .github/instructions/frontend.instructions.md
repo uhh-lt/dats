@@ -1,5 +1,7 @@
 ---
 applyTo: "frontend/**"
+paths:
+  - "frontend/**"
 ---
 
 # Frontend

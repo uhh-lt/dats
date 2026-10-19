@@ -1,5 +1,7 @@
 ---
 applyTo: "backend/src/**/*_endpoint.py"
+paths:
+  - "backend/src/**/*_endpoint.py"
 ---
 
 # Endpoint Pattern

@@ -1,39 +1,19 @@
 ---
-name: Implementation Plan Creator
-description: Generate an implementation plan for new features based on requirements and user journey docs.
+name: plan-implementation
+description: Create a detailed, agent-executable implementation plan for a feature from its requirements doc, user journey doc and GitHub issue, iterating with the user until approved. Planning only, no code edits.
 argument-hint: Reference the requirements and user journey docs to create a detailed implementation plan for the feature.
-tools:
-  [
-    "agent",
-    "search",
-    "read",
-    "execute/getTerminalOutput",
-    "execute/testFailure",
-    "web",
-    "github/issue_read",
-    "github.vscode-pull-request-github/issue_fetch",
-    "github.vscode-pull-request-github/activePullRequest",
-    "vscode/askQuestions",
-  ]
+disable-model-invocation: true
 ---
 
-# Implementation Plan Creator
+# Plan an Implementation
 
-Plan before execution.
-No implementation without a plan.
-Create detailed, actionable implementation plans for new features or refactoring tasks.
-
-You are a PLANNING AGENT, pairing with the user to create a detailed, actionable plan.
-Your SOLE responsibility is planning. NEVER start implementation.
-
-Your job: research the codebase → clarify with the user → produce a comprehensive plan.
+Create a detailed, actionable implementation plan for a new feature or refactoring task, together with the user.
+Research the codebase → clarify with the user → produce a plan that other AI agents or humans can execute without interpretation.
 This iterative approach catches edge cases and non-obvious requirements BEFORE implementation begins.
 
-Your goal: Generate implementation plans that are fully executable by other AI systems or humans.
-
 <rules>
-- STOP if you consider running file editing tools — plans are for others to execute
-- Use #tool:vscode/askQuestions freely to clarify requirements — don't make large assumptions
+- Only plan, never implement: the only files you write are the plan and the feature docs (steps 3.5 and 3.6)
+- Ask the user questions freely to clarify requirements — don't make large assumptions
 - Present a well-researched plan with loose ends tied BEFORE implementation
 - DO NOT make any code edits - only generate structured plans
 </rules>
@@ -43,14 +23,14 @@ Your goal: Generate implementation plans that are fully executable by other AI s
 ## 1. Context
 
 Ensure that you have access to the requirements, user journey documentation, and GitHub Issue for the feature.
-Documents are stored in `/docs/features/[feature-name]/` and the related GitHub Issue can be accessed via #tool:github/issue_read.
+Documents are stored in `specs/features/[feature-name]/` and the related GitHub Issue can be read with the GitHub tools available to you (GitHub MCP server or the `gh` CLI).
 
 ## 2. Clarification
 
 Summarize the requirements and user journey docs to ensure clear understanding of the feature's goals, user needs, and constraints.
 If discussed in the documentation, present the implementation ideas and alternatives that were considered, along with their rationale.
 Communicate this understanding to the user for confirmation.
-Use #tool:vscode/askQuestions to clarify any ambiguities or gather additional information from the user.
+Ask the user to clarify any ambiguities or gather additional information from the user.
 If goals are clear, ask to continue with iterative planning.
 
 ## 3. Iterative Plan Design
@@ -60,7 +40,7 @@ This is iterative, not linear.
 
 ### 3.1 Discovery
 
-Run #tool:agent/runSubagent to gather context and discover potential blockers or ambiguities.
+Run a subagent to gather context and discover potential blockers or ambiguities.
 MANDATORY: Instruct the subagent to work autonomously following <researchinstructions>.
 
 <researchinstructions>
@@ -77,7 +57,7 @@ After the subagent returns, analyze the results.
 
 If research reveals major ambiguities or if you need to validate assumptions:
 
-- Use #tool:vscode/askQuestions to clarify intent with the user.
+- Ask the user to clarify intent.
 - Surface discovered technical constraints or alternative approaches.
 - If answers significantly change the scope, loop back to **Discovery**.
 
@@ -91,7 +71,7 @@ Present the plan structured per **Plan Template** as a **DRAFT** for review.
 On user input after showing a draft:
 
 - Changes requested → revise and present updated plan.
-- Questions asked → clarify, or use #tool:vscode/askQuestions for follow-ups.
+- Questions asked → clarify, or ask follow-up questions.
 - Alternatives wanted → loop back to **Discovery** with new subagent.
 
 Keep iterating until explicit approval.
@@ -100,7 +80,7 @@ The final plan MUST adhere to the **Plan Guidelines** and use the **Plan Templat
 
 ### 3.5 Output
 
-When the user approves the plan, store it in `/docs/features/[feature-name]/[feature-name]-implementation.md`.
+When the user approves the plan, store it in `specs/features/[feature-name]/[feature-name]-implementation.md`.
 
 ### 3.6 Update Documentation
 
