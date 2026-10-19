@@ -60,7 +60,7 @@ event tag:
 **Mutations without a matching event** (the response is not an entity DTO,
 or the backend changes state it does not emit an event for) call one of the
 `handle…` reaction functions at the bottom of [brain.ts](brain.ts) from their
-`onSuccess`, e.g. `handlePerspectivesJobStarted` or `handleMemoOpened`. Add a
+`onSuccess`, e.g. `handleMemoOpened`. Add a
 new one there rather than calling `invalidateQueries` in the hook, so that all
 cache reactions stay in the brain. Job-start mutations return the new job and
 are tagged with `datsEvent: "JOB_UPDATED"`.

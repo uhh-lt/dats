@@ -25,7 +25,6 @@ import type { ApiKeyRead } from "@models/ApiKeyRead";
 import type { ClusterRead } from "@models/ClusterRead";
 import type { DATSEvent } from "@models/datsEvents";
 import type { FolderRead } from "@models/FolderRead";
-import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { SearchEntityType } from "@models/SearchEntityType";
 import type { UserRead } from "@models/UserRead";
 import {
@@ -565,21 +564,6 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 // These mutations change server state but don't return an entity DTO with a
 // matching event, so their hooks call these instead of `meta.datsEvent`. They
 // live here so that all cache reactions stay in one place.
-
-/**
- * A perspectives job was started. The backend also points the aspect's
- * `most_recent_job_id` at the new job; the other project members get that as
- * ASPECT_UPDATED, but the starter only gets the job back, so write the field
- * here.
- */
-export function handlePerspectivesJobStarted(job: PerspectivesJobRead): void {
-  handleJobUpdate(job);
-  queryClient.setQueryData(perspectiveQueries.aspectsByProject(job.project_id).queryKey, (old) => {
-    const aspect = old?.[job.input.aspect_id];
-    if (!old || !aspect) return old;
-    return { ...old, [aspect.id]: { ...aspect, most_recent_job_id: job.job_id } };
-  });
-}
 
 /**
  * Confirmed annotation suggestions became annotations (SPAN_ANNOTATION_CREATED_BATCH), so the starter's suggestions

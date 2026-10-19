@@ -1,4 +1,3 @@
-import { handlePerspectivesJobStarted } from "@api/cache-sync";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
@@ -70,8 +69,8 @@ const useStartPerspectivesJob = () =>
   useMutation({
     mutationKey: [...perspectiveQueries.job.all(), "start"],
     mutationFn: PerspectivesService.startPerspectivesJob,
-    onSuccess: handlePerspectivesJobStarted,
     meta: {
+      datsEvent: "JOB_UPDATED",
       successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
     },
   });

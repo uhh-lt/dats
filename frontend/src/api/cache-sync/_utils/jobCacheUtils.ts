@@ -77,6 +77,7 @@ export function handleJobUpdate(job: JobRead): void {
       break;
     case PerspectivesJobRead.job_type.PERSPECTIVES:
       upsertJob(job, perspectiveQueries.job);
+      writeAspectMostRecentJob(job);
       if (job.status === JobStatus.FINISHED) handlePerspectivesJobFinished(job);
       break;
     default: {
@@ -198,6 +199,16 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
       queryClient.invalidateQueries({ queryKey: tagQueries.idsBySdoc(sdocId).queryKey });
     });
   }
+}
+
+// The backend starts a perspectives job only when no other job of the aspect is running, so every update belongs to
+// the aspect's most recent job.
+function writeAspectMostRecentJob(job: PerspectivesJobRead) {
+  queryClient.setQueryData(perspectiveQueries.aspectsByProject(job.project_id).queryKey, (old) => {
+    const aspect = old?.[job.input.aspect_id];
+    if (!old || !aspect || aspect.most_recent_job_id === job.job_id) return old;
+    return { ...old, [aspect.id]: { ...aspect, most_recent_job_id: job.job_id } };
+  });
 }
 
 // A finished perspectives job recomputed the aspect's visualization data.
