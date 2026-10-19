@@ -8,10 +8,6 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 CMD ["/bin/bash"]
 
-# makes CUDA devices visible to the container by default
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-
 # install basic Ubuntu packages including python3.11
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Berlin
