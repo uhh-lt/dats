@@ -1,7 +1,7 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM } from "@core/filter";
-import { DocumentInfoPanel } from "@core/source-document";
+import { FILTER_PARAM, TableInfoHooks } from "@core/filter";
+import { DocumentInfoPanel, sdocQueries } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
@@ -32,7 +32,7 @@ export function SentenceSimilaritySearchView() {
   const dispatch = useAppDispatch();
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
-  const column2Info = useAppSelector((state) => state.search.column2Info);
+  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
 
   // sentence similarity search feature
   const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();

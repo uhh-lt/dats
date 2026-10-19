@@ -11,6 +11,7 @@ import {
 } from "@core/filter";
 import { getMetadataValue } from "@core/sdoc-metadata";
 import { ChatSessionResponse } from "@models/ChatSessionResponse";
+import { FilterOperator } from "@models/FilterOperator";
 import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { ListOperator } from "@models/ListOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
@@ -270,12 +271,13 @@ const perspectivesSlice = createSlice({
       action: PayloadAction<{
         metadata: SourceDocumentMetadataUpdate;
         projectMetadata: ProjectMetadataRead;
+        // the operator of the metadata column (from its column info)
+        filterOperator: FilterOperator;
         filterName: string;
       }>,
     ) => {
       // the column of a metadata filter is the project_metadata_id
-      const filterOperator = state.column2Info[action.payload.projectMetadata.id.toString()].operator;
-      const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
+      const filterOperatorType = filterOperator2FilterOperatorType[action.payload.filterOperator];
 
       const currentFilter = getOrCreateFilter(state, action.payload.filterName);
       currentFilter.items = [
@@ -365,14 +367,12 @@ const perspectivesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(ProjectActions.changeProject, (state, action) => {
+      .addCase(ProjectActions.changeProject, (state) => {
         console.log("Project changed! Resetting 'perspectives' state.");
         resetPerspectivesState(state);
         resetProjectFilterState({
           state,
           defaultFilterExpression,
-          projectId: action.payload,
-          sliceName: "perspectives",
         });
       })
       .addMatcher(

@@ -19,7 +19,7 @@ import { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
 import { memoQueries } from "../api/memoQueries";
@@ -28,7 +28,6 @@ import { MemoReduxToolbarLeft } from "./_components/MemoReduxToolbarLeft";
 import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
 import { MemoToolbarRight } from "./_components/MemoToolbarRight";
 import { MemoURLToolbarLeft } from "./_components/MemoURLToolbarLeft";
-import { useInitMemoFilterSlice } from "./_hooks/useInitMemoFilterSlice";
 import { MemoFilterActions, defaultMemoFilterExpression } from "./memoFilterSlice";
 
 const flatMapData = (page: Page_MemoRead_) => page.items;
@@ -63,7 +62,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
 
-  const tableInfo = useInitMemoFilterSlice({ projectId });
+  const { data: tableInfo } = useQuery(memoQueries.tableInfo(projectId));
   const columns = useMemo(() => {
     if (!tableInfo) return [];
 
@@ -197,9 +196,11 @@ export const MemoReduxFilterTable = memo(
     FilterTableContainerProps<MemoRead, ReduxFilterTableToolbarProps<MemoRead>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
+    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
       <MemoFilterTable
@@ -210,6 +211,7 @@ export const MemoReduxFilterTable = memo(
           filterName,
           filterStateSelector,
           filterActions,
+          tableInfoOptions,
         }}
       />
     );
@@ -217,7 +219,6 @@ export const MemoReduxFilterTable = memo(
 );
 
 // configs for URL filter table
-const column2InfoSelector = (state: RootState) => state.memoFilter.column2Info;
 const defaultFilterExpression = defaultMemoFilterExpression;
 
 /**
@@ -234,8 +235,9 @@ export const MemoURLFilterTable = memo(
     FilterTableContainerProps<MemoRead, URLFilterTableToolbarProps<MemoRead>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
-    Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
+    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
+    const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
       <MemoFilterTable
@@ -245,7 +247,7 @@ export const MemoURLFilterTable = memo(
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
-          column2InfoSelector,
+          tableInfoOptions,
         }}
       />
     );

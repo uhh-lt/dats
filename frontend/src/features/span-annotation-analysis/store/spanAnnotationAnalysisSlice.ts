@@ -1,5 +1,3 @@
-import { SATFilterActions } from "@core/span-annotation";
-import { SpanColumns } from "@models/SpanColumns";
 import { createSlice } from "@reduxjs/toolkit";
 import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -17,26 +15,6 @@ const SpanAnnotationsSlice = createSlice({
       .addCase(ProjectActions.changeProject, (state) => {
         console.log("Project changed! Resetting 'spanAnnotationAnalysis' state.");
         resetProjectTableState(state);
-      })
-      .addCase(SATFilterActions.init, (state, action) => {
-        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce(
-          (acc, column) => {
-            if (!column.column) return acc;
-            // this is a normal column
-            if (isNaN(parseInt(column.column))) {
-              return acc;
-              // this is a metadata column
-            } else {
-              return {
-                ...acc,
-                [column.column]: false,
-              };
-            }
-          },
-          {
-            [SpanColumns.SP_MEMO_CONTENT]: false,
-          },
-        );
       })
       .addDefaultCase(() => {});
   },

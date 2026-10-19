@@ -6,7 +6,7 @@ export function WordFrequencyTableToolbarLeft({
   anchor,
   routeApi,
   defaultFilterExpression,
-  column2InfoSelector,
+  tableInfoOptions,
 }: WordFrequencyTableToolbarProps) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
@@ -15,7 +15,7 @@ export function WordFrequencyTableToolbarLeft({
         buttonProps={{ size: "small" }}
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
-        column2InfoSelector={column2InfoSelector}
+        tableInfoOptions={tableInfoOptions}
       />
     </Stack>
   );

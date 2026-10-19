@@ -16,7 +16,6 @@ import { useMemo, useState } from "react";
 import { ClusterJobProgressCard } from "../../_components/ClusterJobProgressCard";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { DocAspectTable } from "../../_components/DocAspectTable";
-import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
 import { PerspectivesHooks } from "../../api/perspectiveHooks";
 import { perspectiveQueries } from "../../api/perspectiveQueries";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
@@ -30,9 +29,6 @@ const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/"
 
 export function PerspectiveDashboardView() {
   const { projectId, aspectId } = routeApi.useParams();
-
-  // initialize the filtering
-  useInitPerspectivesFilterSlice({ projectId });
 
   // dispatch changeMap Event!
   const dispatch = useAppDispatch();

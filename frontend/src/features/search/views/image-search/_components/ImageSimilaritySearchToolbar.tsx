@@ -1,12 +1,12 @@
 import { DATSToolbar } from "@components/DATSToolbar";
 import { URLFilterDialog } from "@core/filter";
-import { DeleteSdocsButton, SdocExportButton } from "@core/source-document";
+import { DeleteSdocsButton, SdocExportButton, sdocQueries } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { SdocColumns } from "@models/SdocColumns";
 import { StringOperator } from "@models/StringOperator";
 import { Box, Checkbox, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";
 import { ImageSearchRouteAPI } from "../_hooks/imageSearchRouteAPI";
@@ -28,6 +28,8 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
   // global client state (redux)
   const selectedDocumentIds = useAppSelector((state) => state.imageSearch.selectedDocumentIds);
   const dispatch = useAppDispatch();
+  const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
+  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
 
   // local client state
   const [filterDialogAnchor, setFilterDialogAnchor] = useState<HTMLDivElement | null>(null);
@@ -71,7 +73,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         routeApi={ImageSearchRouteAPI}
         defaultFilterExpression={defaultFilterExpression}
-        column2InfoSelector={(state) => state.search.column2Info}
+        tableInfoOptions={tableInfoOptions}
       />
       <SearchBar placeholder="Search for images" />
       <ImageSimilaritySearchOptionsMenu />

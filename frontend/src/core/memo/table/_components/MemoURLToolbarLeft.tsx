@@ -10,7 +10,7 @@ export function MemoURLToolbarLeft({
   selectedData,
   routeApi,
   defaultFilterExpression,
-  column2InfoSelector,
+  tableInfoOptions,
 }: URLFilterTableToolbarProps<MemoRead>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
@@ -21,7 +21,7 @@ export function MemoURLToolbarLeft({
         buttonProps={{ size: "small" }}
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
-        column2InfoSelector={column2InfoSelector}
+        tableInfoOptions={tableInfoOptions}
       />
       {selectedMemoIds.length > 0 && (
         <>

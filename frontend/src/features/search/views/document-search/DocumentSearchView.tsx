@@ -1,8 +1,8 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM } from "@core/filter";
+import { FILTER_PARAM, TableInfoHooks } from "@core/filter";
 import { FolderExplorer, FolderHooks, FolderInformation, FolderRenderer } from "@core/folder";
-import { DocumentInfoPanel } from "@core/source-document";
+import { DocumentInfoPanel, sdocQueries } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
@@ -45,7 +45,7 @@ export function DocumentSearchView() {
   const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
   const expandedFolderIds = useAppSelector((state) => state.search.expandedFolderIds);
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
-  const column2Info = useAppSelector((state) => state.search.column2Info);
+  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
   const dispatch = useAppDispatch();
 
   const documentSearchQuery = useSuspenseInfiniteQuery(documentSearchOptions);

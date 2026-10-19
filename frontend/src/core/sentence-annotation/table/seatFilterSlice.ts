@@ -18,13 +18,11 @@ const seatFilterSlice = createSlice({
   initialState,
   reducers: filterReducer,
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'seatFilter' state.");
       resetProjectFilterState({
         state,
         defaultFilterExpression: defaultSEATFilterExpression,
-        projectId: action.payload,
-        sliceName: "seatFilter",
       });
     });
   },

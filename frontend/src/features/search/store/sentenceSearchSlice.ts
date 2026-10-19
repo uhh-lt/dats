@@ -3,7 +3,6 @@ import { TableState, initialTableState, resetProjectTableState, tableReducer } f
 import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
 import createWebStorage from "redux-persist/es/storage/createWebStorage";
-import { SearchActions } from "./documentSearchSlice";
 const storage = createWebStorage("local");
 
 interface SentenceSearchState {
@@ -38,27 +37,11 @@ const sentenceSearchSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder
-      .addCase(ProjectActions.changeProject, (state) => {
-        console.log("Project changed! Resetting 'sentenceSearch' state.");
-        state.selectedDocumentId = initialState.selectedDocumentId;
-        resetProjectTableState(state);
-      })
-      .addCase(SearchActions.init, (state, action) => {
-        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-          if (!column.column) return acc;
-          // this is a normal column
-          if (isNaN(parseInt(column.column))) {
-            return acc;
-            // this is a metadata column
-          } else {
-            return {
-              ...acc,
-              [column.column]: false,
-            };
-          }
-        }, {});
-      });
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'sentenceSearch' state.");
+      state.selectedDocumentId = initialState.selectedDocumentId;
+      resetProjectTableState(state);
+    });
   },
 });
 

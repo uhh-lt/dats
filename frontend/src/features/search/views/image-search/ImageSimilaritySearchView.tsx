@@ -1,7 +1,7 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM } from "@core/filter";
-import { DocumentInfoPanel } from "@core/source-document";
+import { FILTER_PARAM, TableInfoHooks } from "@core/filter";
+import { DocumentInfoPanel, sdocQueries } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -12,7 +12,6 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
-import { useInitSearchFilterSlice } from "../../_hooks/useInitSearchFilterSlice";
 import {
   addKeywordFilter,
   addMetadataFilter,
@@ -35,7 +34,7 @@ export function ImageSimilaritySearchView() {
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
-  const column2Info = useAppSelector((state) => state.search.column2Info);
+  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
   const dispatch = useAppDispatch();
 
   // clear stale selection whenever the search query changes (from SearchBar or cross-feature navigation)
@@ -53,9 +52,6 @@ export function ImageSimilaritySearchView() {
   const keywordMetadataIds = useMemo(() => {
     return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);
   }, [projectMetadata]);
-
-  // search
-  useInitSearchFilterSlice({ projectId });
 
   // handle filtering
   const handleAddCodeFilter = useCallback(

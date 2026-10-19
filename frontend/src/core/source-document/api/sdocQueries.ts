@@ -3,7 +3,7 @@ import { ProjectService } from "@api/services/ProjectService";
 import { SearchService } from "@api/services/SearchService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
-import { tableInfoQueries, toColumnInfos, type ColumnInfo, type MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
@@ -106,17 +106,12 @@ export const sdocQueries = {
       staleTime: 1000 * 60 * 5,
     }),
 
-  // the column infos of the document filter. The search page and the filter table keep their own filter slice, so each
-  // one has its own cache entry and gets its own onLoaded call.
-  tableInfo: (projectId: number, slice: "search" | "documentTable", onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
+  // the column infos of the document filter (also used by the perspectives, which filter documents)
+  tableInfo: (projectId: number) =>
     queryOptions({
-      queryKey: tableInfoQueries.bySlice(slice, projectId),
-      queryFn: async () => {
-        const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
-        onLoaded?.(columnInfos);
-        return columnInfos;
-      },
-      staleTime: Infinity,
+      queryKey: tableInfoQueries.byDomain("sdoc", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchSdocInfo({ projectId })),
+      staleTime: 1000 * 60 * 5,
     }),
 
   // the document search: project-wide, with highlights. Its queryFn seeds the caches of the found sdocs, annotators, tags

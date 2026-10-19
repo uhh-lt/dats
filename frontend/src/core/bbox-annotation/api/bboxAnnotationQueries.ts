@@ -1,6 +1,6 @@
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
+import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { QueryRequest_BBoxColumns_ } from "@models/QueryRequest_BBoxColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
@@ -35,15 +35,11 @@ export const bboxAnnotationQueries = {
       queryFn: !sdocId || !userId ? skipToken : () => BboxAnnotationService.getBySdocAndUser({ sdocId, userId }),
     }),
   // the column infos of the bbox annotation filter table
-  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
+  tableInfo: (projectId: number) =>
     queryOptions({
-      queryKey: tableInfoQueries.bySlice("bboxFilter", projectId),
-      queryFn: async () => {
-        const columnInfos = toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId }));
-        onLoaded?.(columnInfos);
-        return columnInfos;
-      },
-      staleTime: Infinity,
+      queryKey: tableInfoQueries.byDomain("bbox", projectId),
+      queryFn: async () => toColumnInfos(await SearchService.searchBboxAnnotationInfo({ projectId })),
+      staleTime: 1000 * 60 * 5,
     }),
 
   searchScope: () => [...bboxAnnotationQueries.all(), "search"] as const,

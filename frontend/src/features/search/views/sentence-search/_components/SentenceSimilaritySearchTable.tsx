@@ -1,7 +1,7 @@
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
-import { URLFilterDialog } from "@core/filter";
+import { TableInfoHooks, URLFilterDialog } from "@core/filter";
 import { useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
@@ -12,6 +12,7 @@ import {
   SdocRenderer,
   SdocSentenceRenderer,
   SdocTagsRenderer,
+  sdocQueries,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { SdocColumns } from "@models/SdocColumns";
@@ -27,8 +28,8 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
 import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
@@ -71,7 +72,7 @@ export function SentenceSimilaritySearchTable({
     (state) => state.sentenceSearch.sortingModel,
     SentenceSearchActions.onSortChange,
   );
-  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+  const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.sentenceSearch.columnVisibilityModel,
     SentenceSearchActions.onColumnVisibilityChange,
   );
@@ -91,7 +92,9 @@ export function SentenceSimilaritySearchTable({
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
 
   // table columns
-  const tableInfo = useInitSearchFilterSlice({ projectId });
+  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+  const { data: tableInfo } = useQuery(tableInfoOptions);
+  const columnVisibilityModel = TableInfoHooks.useColumnVisibility(tableInfoOptions, storedColumnVisibility);
   const columns = useMemo(() => {
     if (!tableInfo || !user) return [];
 
@@ -253,7 +256,7 @@ export function SentenceSimilaritySearchTable({
           buttonProps={{ size: "small" }}
           routeApi={SentenceSearchRouteAPI}
           defaultFilterExpression={defaultFilterExpression}
-          column2InfoSelector={(state) => state.search.column2Info}
+          tableInfoOptions={tableInfoOptions}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

@@ -1,27 +1,32 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormText } from "@components/form-inputs";
-import { MyFilter, withDefaultFilterExpression } from "@core/filter";
+import { MyFilter, TableInfoHooks, withDefaultFilterExpression } from "@core/filter";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TimelineAnalysisConcept } from "@models/TimelineAnalysisConcept";
+import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { timelineAnalysisQueries } from "../../../api/timelineAnalysisQueries";
 import { ConceptFilterEditor } from "./ConceptFilterEditor";
 
 interface ConceptEditorProps {
+  timelineAnalysis: TimelineAnalysisRead;
   onUpdate: (concept: TimelineAnalysisConcept, filter: MyFilter) => void;
   onCancel: () => void;
 }
 
-export function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
+export function ConceptEditor({ timelineAnalysis, onUpdate, onCancel }: ConceptEditorProps) {
   // global client state (redux)
   const currentConcept = useAppSelector((state) => state.timelineAnalysis.currentConcept);
   const conceptEditorOpen = useAppSelector((state) => state.timelineAnalysis.conceptEditorOpen);
   const defaultFilterExpression = useAppSelector((state) => state.timelineAnalysis.defaultFilterExpression);
-  const column2Info = useAppSelector((state) => state.timelineAnalysis.column2Info);
+
+  // global server state
+  const column2Info = TableInfoHooks.useColumnInfoMap(timelineAnalysisQueries.tableInfo(timelineAnalysis));
 
   // local state for transient filter edits while dialog is open
   const [editableFilter, setEditableFilter] = useState<MyFilter>(() =>

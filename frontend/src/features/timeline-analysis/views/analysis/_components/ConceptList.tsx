@@ -16,7 +16,6 @@ import { TimelineAnalysisHooks } from "../../../api/timelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";
-import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice";
 
 interface ConceptListProps {
   timelineAnalysis: TimelineAnalysisRead;
@@ -25,9 +24,6 @@ interface ConceptListProps {
 export function ConceptList({ timelineAnalysis }: ConceptListProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
-
-  // init filter slice
-  useInitTimelineAnalysisFilterSlice({ timelineAnalysis });
 
   // actions
   const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
@@ -183,7 +179,11 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
           </List>
         </CardContent>
       </CardContainer>
-      <ConceptEditor onUpdate={handleApplyConceptChanges} onCancel={handleCancelConceptChanges} />
+      <ConceptEditor
+        timelineAnalysis={timelineAnalysis}
+        onUpdate={handleApplyConceptChanges}
+        onCancel={handleCancelConceptChanges}
+      />
     </>
   );
 }

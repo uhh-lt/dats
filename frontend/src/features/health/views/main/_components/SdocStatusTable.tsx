@@ -13,12 +13,13 @@ import { InfiniteData } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { ReactElement, useCallback, useMemo } from "react";
 import { HealthHooks } from "../../../api/healthHooks";
-import { flatMapSdocHealthRows } from "../../../api/healthQueries";
 import { HealthActions } from "../../../store/healthSlice";
 import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
 import { HealthTableToolbarLeft } from "./HealthTableToolbarLeft";
 import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
 import { HealthTableToolbarRight } from "./HealthTableToolbarRight";
+
+const flatMapData = (page: SdocHealthResult) => page.data;
 
 const sdocStatus2Icon: Record<SDocStatus, ReactElement> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,
@@ -161,7 +162,7 @@ export function SdocStatusTable({
       getRowId={(row) => `${row.sdoc_id}`}
       data={searchData}
       fetchNextPage={onFetchNextPage}
-      flatMapData={flatMapSdocHealthRows}
+      flatMapData={flatMapData}
       isLoading={isLoading || columns.length === 0}
       isError={isError}
       isFetching={isFetching}

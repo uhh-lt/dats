@@ -1,7 +1,5 @@
 import { createJobQueries } from "@core/job";
 import { PerspectivesService } from "@api/services/PerspectivesService";
-import { SearchService } from "@api/services/SearchService";
-import { type ColumnInfo, tableInfoQueries, toColumnInfos } from "@core/filter";
 import type { AspectRead } from "@models/AspectRead";
 import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { queryOptions, skipToken } from "@tanstack/react-query";
@@ -60,18 +58,6 @@ export const perspectiveQueries = {
           requestBody: { filter, sorts: [] },
         }),
       staleTime: 1000 * 60 * 5,
-    }),
-
-  // the column infos of the perspectives filter
-  tableInfo: (projectId: number, onLoaded?: (columnInfos: ColumnInfo[]) => void) =>
-    queryOptions({
-      queryKey: tableInfoQueries.bySlice("perspectives", projectId),
-      queryFn: async () => {
-        const columnInfos = toColumnInfos(await SearchService.searchSdocInfo({ projectId }));
-        onLoaded?.(columnInfos);
-        return columnInfos;
-      },
-      staleTime: Infinity,
     }),
 
   clusterSimilaritiesScope: () => [...perspectiveQueries.all(), "clusterSimilarities"] as const,

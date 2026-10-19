@@ -1,12 +1,14 @@
 import { DATSToolbar } from "@components/DATSToolbar";
 import { ReduxFilterDialog } from "@core/filter";
+import { sdocQueries } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { useDebounce } from "@hooks/useDebounce";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ChangeEvent, memo, useEffect, useState } from "react";
+import { getRouteApi } from "@tanstack/react-router";
+import { ChangeEvent, memo, useEffect, useMemo, useState } from "react";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterMenuButton } from "./ClusterMenuButton";
 import { ClusterReviewButtons } from "./ClusterReviewButtons";
@@ -17,7 +19,13 @@ interface MapToolbarProps {
   aspectId: number;
 }
 
+const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
+
 export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
+  const { projectId } = routeApi.useParams();
+  // keeps its identity, so that the memoized filter dialog does not re-render with every render
+  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+
   // selection
   const selectedDocumentIds = useAppSelector((state) => state.perspectives.selectedSdocIds);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
@@ -63,6 +71,7 @@ export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
         filterName={`aspect-${aspectId}`}
         filterStateSelector={filterStateSelector}
         filterActions={PerspectivesActions}
+        tableInfoOptions={tableInfoOptions}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       />

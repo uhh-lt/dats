@@ -18,13 +18,11 @@ const satFilterSlice = createSlice({
   initialState,
   reducers: filterReducer,
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'satFilter' state.");
       resetProjectFilterState({
         state,
         defaultFilterExpression: defaultSATFilterExpression,
-        projectId: action.payload,
-        sliceName: "satFilter",
       });
     });
   },

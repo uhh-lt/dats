@@ -1,11 +1,15 @@
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
-import { SpanAnnotationLocalFilterTable } from "@core/span-annotation";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, TableInfoHooks } from "@core/filter";
+import { SpanColumns } from "@models/SpanColumns";
+import { SpanAnnotationLocalFilterTable, spanAnnotationQueries } from "@core/span-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 import { SpanAnnotationAnalysisRouteAPI } from "../_hooks/spanAnnotationAnalysisRouteAPI";
 import { SpanAnnotationAnalysisTableToolbarLeft } from "./SpanAnnotationAnalysisTableToolbarLeft";
 import { SpanAnnotationAnalysisTableToolbarRight } from "./SpanAnnotationAnalysisTableToolbarRight";
+
+// besides the metadata columns
+const HIDDEN_BY_DEFAULT: string[] = [SpanColumns.SP_MEMO_CONTENT];
 
 const filterName = "spanAnnotationAnalysisFilter";
 
@@ -19,9 +23,15 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
     (state) => state.spanAnnotationAnalysis.rowSelectionModel,
     SpanAnnotationsActions.onRowSelectionChange,
   );
-  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+  const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.columnVisibilityModel,
     SpanAnnotationsActions.onColumnVisibilityChange,
+  );
+
+  const columnVisibilityModel = TableInfoHooks.useColumnVisibility(
+    spanAnnotationQueries.tableInfo(projectId),
+    storedColumnVisibility,
+    HIDDEN_BY_DEFAULT,
   );
 
   // url state

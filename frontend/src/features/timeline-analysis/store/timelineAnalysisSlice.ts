@@ -87,14 +87,11 @@ const initialState: FilterState & TimelineAnalysisState = {
 
 const resetTimelineAnalysisState = (
   state: Draft<FilterState & TimelineAnalysisState>,
-  projectId: number | undefined,
   timelineAnalysisType: TimelineAnalysisType,
 ) => {
   resetProjectFilterState({
     state,
     defaultFilterExpression: defaultFilterExpressions[timelineAnalysisType],
-    sliceName: "timelineAnalysis",
-    projectId,
   });
   state.lastOpenedTimelineAnalysisId = initialState.lastOpenedTimelineAnalysisId;
   state.metadataCheckerOpen = initialState.metadataCheckerOpen;
@@ -152,15 +149,15 @@ const timelineAnalysisSlice = createSlice({
     ) => {
       if (state.lastOpenedTimelineAnalysisId !== action.payload.analysisId) {
         console.log("Timeline Analysis changed! Resetting 'timelineAnalysis' state.");
-        resetTimelineAnalysisState(state, action.payload.projectId, action.payload.analysisType);
+        resetTimelineAnalysisState(state, action.payload.analysisType);
       }
       state.lastOpenedTimelineAnalysisId = action.payload.analysisId;
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(ProjectActions.changeProject, (state, action) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'timelineAnalysis' state.");
-      resetTimelineAnalysisState(state, action.payload, defaultAnalysisType);
+      resetTimelineAnalysisState(state, defaultAnalysisType);
     });
   },
 });
