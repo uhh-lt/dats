@@ -8,13 +8,13 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
-import { LLMUtterance } from "./LLMUtterance";
+import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export const DocumentTagSelectionStep = memo(() => {
   // global state
-  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
-  const selectedDocuments = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
-  const savedTags = useAppSelector((state) => state.llmAssistant.llmTags);
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
+  const selectedDocuments = useAppSelector((state) => state.llmAssistant.documentIds);
+  const savedTags = useAppSelector((state) => state.llmAssistant.tags);
   const dispatch = useAppDispatch();
 
   // local state
@@ -30,10 +30,10 @@ export const DocumentTagSelectionStep = memo(() => {
       determineApproachMutation(
         {
           requestBody: {
-            llm_job_type: TaskType.TAGGING,
+            task_type: TaskType.TAGGING,
             project_id: projectId,
             specific_task_parameters: {
-              llm_job_type: TaskType.TAGGING,
+              task_type: TaskType.TAGGING,
               tag_ids: tags.map((tag) => tag.id),
               sdoc_ids: selectedDocuments,
             },
@@ -42,7 +42,7 @@ export const DocumentTagSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              LLMAssistantActions.llmDialogGoToSettings({
+              LLMAssistantActions.goToSettings({
                 approach: data,
                 tags: tags,
                 metadata: [],
@@ -57,7 +57,7 @@ export const DocumentTagSelectionStep = memo(() => {
   );
 
   const handleBack = useCallback(() => {
-    dispatch(LLMAssistantActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousDialogStep());
   }, [dispatch]);
 
   // rendering
@@ -85,12 +85,12 @@ export const DocumentTagSelectionStep = memo(() => {
 
   return (
     <>
-      <LLMUtterance p={3}>
+      <LLMAssistantUtterance p={3}>
         <Typography>
           You selected {selectedDocuments.length} document(s) for automatic document tagging. Please select all tags
           that I should use to classify the documents.
         </Typography>
-      </LLMUtterance>
+      </LLMAssistantUtterance>
       <TagTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}

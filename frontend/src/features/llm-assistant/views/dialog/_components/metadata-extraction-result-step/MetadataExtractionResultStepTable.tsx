@@ -157,7 +157,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
   const dispatch = useAppDispatch();
 
   const handleClose = useCallback(() => {
-    dispatch(LLMAssistantActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
   const { mutate: updateBulkMetadataMutation, isPending: isUpdatePending } =
@@ -184,7 +184,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
       { requestBody: metadataToUpdate },
       {
         onSuccess() {
-          dispatch(LLMAssistantActions.closeLLMDialog());
+          dispatch(LLMAssistantActions.closeDialog());
         },
       },
     );

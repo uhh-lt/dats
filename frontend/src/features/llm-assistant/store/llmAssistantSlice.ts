@@ -4,8 +4,8 @@ import { CodeRead } from "@models/CodeRead";
 import { DefaultStrategyParams } from "@models/DefaultStrategyParams";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
-import { LLMJobOutput } from "@models/LLMJobOutput";
-import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
+import { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
+import { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
 import { NERInlineTagStrategyParams } from "@models/NERInlineTagStrategyParams";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { StrategyType } from "@models/StrategyType";
@@ -14,51 +14,54 @@ import { TaskType } from "@models/TaskType";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { LLMAssistantEvent } from "../_types/LLMAssistantEvent";
 
-export type LLMStrategyParams = DefaultStrategyParams | NERInlineTagStrategyParams | FuzzyGroundingStrategyParams;
+export type LLMAssistantStrategyParams =
+  | DefaultStrategyParams
+  | NERInlineTagStrategyParams
+  | FuzzyGroundingStrategyParams;
 
 interface LLMAssistantState {
-  // llm dialog
-  isLLMDialogOpen: boolean;
-  llmProjectId: number;
-  llmId: string;
-  llmMethod?: TaskType;
-  llmDocumentIds: number[];
-  llmStep: number;
-  llmTags: TagRead[];
-  llmMetadata: ProjectMetadataRead[];
-  llmCodes: CodeRead[];
-  llmStrategy?: StrategyType;
-  llmStrategyParams?: LLMStrategyParams;
-  llmApproach: ApproachType;
-  llmApproachRecommendation: ApproachRecommendation;
-  llmDeleteExistingAnnotations: boolean;
-  llmPrompts: LLMPromptTemplates[];
-  llmJobId?: string;
-  llmJobResult: LLMJobOutput | null | undefined;
+  // dialog
+  isDialogOpen: boolean;
+  projectId: number;
+  modelId: string;
+  method?: TaskType;
+  documentIds: number[];
+  step: number;
+  tags: TagRead[];
+  metadata: ProjectMetadataRead[];
+  codes: CodeRead[];
+  strategy?: StrategyType;
+  strategyParams?: LLMAssistantStrategyParams;
+  approach: ApproachType;
+  approachRecommendation: ApproachRecommendation;
+  deleteExistingAnnotations: boolean;
+  prompts: LLMAssistantPromptTemplates[];
+  jobId?: string;
+  jobResult: LLMAssistantJobOutput | null | undefined;
 }
 
 const initialState: LLMAssistantState = {
-  isLLMDialogOpen: false,
-  llmProjectId: -1,
-  llmDocumentIds: [],
-  llmId: "default",
-  llmMethod: undefined,
-  llmStep: 0,
-  llmTags: [],
-  llmMetadata: [],
-  llmCodes: [],
-  llmStrategy: undefined,
-  llmStrategyParams: undefined,
-  llmApproach: ApproachType.LLM_ZERO_SHOT,
-  llmApproachRecommendation: {
+  isDialogOpen: false,
+  projectId: -1,
+  documentIds: [],
+  modelId: "default",
+  method: undefined,
+  step: 0,
+  tags: [],
+  metadata: [],
+  codes: [],
+  strategy: undefined,
+  strategyParams: undefined,
+  approach: ApproachType.LLM_ZERO_SHOT,
+  approachRecommendation: {
     available_approaches: {},
     recommended_approach: ApproachType.LLM_ZERO_SHOT,
     reasoning: "",
   },
-  llmDeleteExistingAnnotations: false,
-  llmPrompts: [],
-  llmJobId: undefined,
-  llmJobResult: undefined,
+  deleteExistingAnnotations: false,
+  prompts: [],
+  jobId: undefined,
+  jobResult: undefined,
 };
 
 const llmAssistantSlice = createSlice({
@@ -66,20 +69,20 @@ const llmAssistantSlice = createSlice({
   initialState,
   reducers: {
     // Step 0: Select documents -> Open the dialog
-    openLLMAssistant: (state, action: PayloadAction<LLMAssistantEvent>) => {
-      state.isLLMDialogOpen = true;
-      state.llmDocumentIds = action.payload.selectedDocumentIds;
-      state.llmMethod = action.payload.method;
-      state.llmStep = action.payload.method === undefined ? 0 : 1;
-      state.llmProjectId = action.payload.projectId;
+    openDialog: (state, action: PayloadAction<LLMAssistantEvent>) => {
+      state.isDialogOpen = true;
+      state.documentIds = action.payload.selectedDocumentIds;
+      state.method = action.payload.method;
+      state.step = action.payload.method === undefined ? 0 : 1;
+      state.projectId = action.payload.projectId;
     },
     // Step 1: Select method -> Go to the data selection
-    llmDialogGoToDataSelection: (state, action: PayloadAction<{ method: TaskType }>) => {
-      state.llmMethod = action.payload.method;
-      state.llmStep = 1;
+    goToDataSelection: (state, action: PayloadAction<{ method: TaskType }>) => {
+      state.method = action.payload.method;
+      state.step = 1;
     },
     // Step 2: Select tags, metadata, or codes -> Go to the settings form
-    llmDialogGoToSettings: (
+    goToSettings: (
       state,
       action: PayloadAction<{
         approach: ApproachRecommendation;
@@ -88,111 +91,111 @@ const llmAssistantSlice = createSlice({
         codes: CodeRead[];
       }>,
     ) => {
-      state.llmStep = 2;
-      state.llmApproachRecommendation = action.payload.approach;
-      state.llmApproach = action.payload.approach.recommended_approach;
-      state.llmTags = action.payload.tags;
-      state.llmMetadata = action.payload.metadata;
-      state.llmCodes = action.payload.codes;
+      state.step = 2;
+      state.approachRecommendation = action.payload.approach;
+      state.approach = action.payload.approach.recommended_approach;
+      state.tags = action.payload.tags;
+      state.metadata = action.payload.metadata;
+      state.codes = action.payload.codes;
     },
     // Step 3: Save all settings and go to the prompt editor
-    llmDialogGoToPromptEditor: (
+    goToPromptEditor: (
       state,
       action: PayloadAction<{
         approach: ApproachType;
-        prompts: LLMPromptTemplates[];
+        prompts: LLMAssistantPromptTemplates[];
         deleteExistingAnnotations: boolean;
         modelId: string;
         strategy: StrategyType;
-        strategyParams: LLMStrategyParams;
+        strategyParams: LLMAssistantStrategyParams;
       }>,
     ) => {
-      state.llmStep = 3;
-      state.llmPrompts = action.payload.prompts;
-      state.llmApproach = action.payload.approach;
-      state.llmDeleteExistingAnnotations = action.payload.deleteExistingAnnotations;
-      state.llmId = action.payload.modelId;
-      state.llmStrategy = action.payload.strategy;
-      state.llmStrategyParams = action.payload.strategyParams;
+      state.step = 3;
+      state.prompts = action.payload.prompts;
+      state.approach = action.payload.approach;
+      state.deleteExistingAnnotations = action.payload.deleteExistingAnnotations;
+      state.modelId = action.payload.modelId;
+      state.strategy = action.payload.strategy;
+      state.strategyParams = action.payload.strategyParams;
     },
-    llmDialogUpdatePromptEditor: (
+    updatePromptEditor: (
       state,
       action: PayloadAction<{
-        prompts: LLMPromptTemplates[];
+        prompts: LLMAssistantPromptTemplates[];
       }>,
     ) => {
-      state.llmStep = 3;
-      state.llmPrompts = action.payload.prompts;
+      state.step = 3;
+      state.prompts = action.payload.prompts;
     },
     // Step 4 Variant A: Edit the prompts -> start the job & go to the waiting screen
-    llmDialogGoToWaiting: (
+    goToWaiting: (
       state,
       action: PayloadAction<{
         jobId: string;
-        prompts: LLMPromptTemplates[];
+        prompts: LLMAssistantPromptTemplates[];
       }>,
     ) => {
-      state.isLLMDialogOpen = true;
-      state.llmStep = 4;
-      state.llmJobId = action.payload.jobId;
-      state.llmPrompts = action.payload.prompts;
+      state.isDialogOpen = true;
+      state.step = 4;
+      state.jobId = action.payload.jobId;
+      state.prompts = action.payload.prompts;
     },
     // Step 4 Variant B: We click on View Results from Background Tasks
-    llmDialogOpenFromBackgroundTask: (state, action: PayloadAction<LlmAssistantJobRead>) => {
-      state.isLLMDialogOpen = true;
-      state.llmStep = 4;
+    openDialogFromBackgroundTask: (state, action: PayloadAction<LlmAssistantJobRead>) => {
+      state.isDialogOpen = true;
+      state.step = 4;
 
-      state.llmProjectId = action.payload.input.project_id;
-      state.llmJobId = action.payload.job_id;
-      state.llmMethod = action.payload.input.llm_job_type;
-      state.llmApproach = action.payload.input.llm_approach_type;
-      state.llmStrategy = action.payload.input.llm_strategy_type;
-      state.llmStrategyParams = action.payload.input.specific_strategy_parameters;
+      state.projectId = action.payload.input.project_id;
+      state.jobId = action.payload.job_id;
+      state.method = action.payload.input.task_type;
+      state.approach = action.payload.input.approach_type;
+      state.strategy = action.payload.input.strategy_type;
+      state.strategyParams = action.payload.input.specific_strategy_parameters;
     },
     // Step 5: Wait for the job to finish
-    llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobOutput }>) => {
-      state.llmJobResult = action.payload.result;
-      state.llmStep = 5;
+    goToResult: (state, action: PayloadAction<{ result: LLMAssistantJobOutput }>) => {
+      state.jobResult = action.payload.result;
+      state.step = 5;
     },
     // close the dialog & reset
-    closeLLMDialog: (state) => {
-      state.isLLMDialogOpen = initialState.isLLMDialogOpen;
-      state.llmProjectId = initialState.llmProjectId;
-      state.llmDocumentIds = initialState.llmDocumentIds;
-      state.llmId = initialState.llmId;
-      state.llmMethod = initialState.llmMethod;
-      state.llmStep = initialState.llmStep;
-      state.llmTags = initialState.llmTags;
-      state.llmMetadata = initialState.llmMetadata;
-      state.llmCodes = initialState.llmCodes;
-      state.llmStrategy = initialState.llmStrategy;
-      state.llmStrategyParams = initialState.llmStrategyParams;
-      state.llmPrompts = initialState.llmPrompts;
-      state.llmApproach = initialState.llmApproach;
-      state.llmApproachRecommendation = initialState.llmApproachRecommendation;
-      state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
-      state.llmJobId = initialState.llmJobId;
-      state.llmJobResult = initialState.llmJobResult;
+    closeDialog: (state) => {
+      state.isDialogOpen = initialState.isDialogOpen;
+      state.projectId = initialState.projectId;
+      state.documentIds = initialState.documentIds;
+      state.modelId = initialState.modelId;
+      state.method = initialState.method;
+      state.step = initialState.step;
+      state.tags = initialState.tags;
+      state.metadata = initialState.metadata;
+      state.codes = initialState.codes;
+      state.strategy = initialState.strategy;
+      state.strategyParams = initialState.strategyParams;
+      state.prompts = initialState.prompts;
+      state.approach = initialState.approach;
+      state.approachRecommendation = initialState.approachRecommendation;
+      state.deleteExistingAnnotations = initialState.deleteExistingAnnotations;
+      state.jobId = initialState.jobId;
+      state.jobResult = initialState.jobResult;
     },
-    previousLLMDialogStep: (state) => {
-      state.llmStep -= 1;
-      if (state.llmStep < 0) {
-        state.llmStep = 0;
+    previousDialogStep: (state) => {
+      state.step -= 1;
+      if (state.step < 0) {
+        state.step = 0;
       }
       // user just selected the method, reset method selection
-      if (state.llmStep === 0) {
-        state.llmMethod = initialState.llmMethod;
+      if (state.step === 0) {
+        state.method = initialState.method;
         // preserve the data choices for review and reset the downstream settings
-      } else if (state.llmStep === 1) {
-        state.llmPrompts = initialState.llmPrompts;
-        state.llmStrategy = initialState.llmStrategy;
-        state.llmStrategyParams = initialState.llmStrategyParams;
-        state.llmId = initialState.llmId;
-        state.llmApproach = initialState.llmApproach;
-        state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
+      } else if (state.step === 1) {
+        state.prompts = initialState.prompts;
+        state.strategy = initialState.strategy;
+        state.strategyParams = initialState.strategyParams;
+        state.modelId = initialState.modelId;
+        state.approach = initialState.approach;
+        state.deleteExistingAnnotations = initialState.deleteExistingAnnotations;
         // preserve settings when returning from Edit prompt
-      } else if (state.llmStep === 2) {
-        state.llmPrompts = initialState.llmPrompts;
+      } else if (state.step === 2) {
+        state.prompts = initialState.prompts;
       }
     },
   },

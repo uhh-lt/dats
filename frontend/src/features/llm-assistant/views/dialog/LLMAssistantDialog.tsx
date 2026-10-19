@@ -86,14 +86,14 @@ const contentDict: Record<number, Record<TaskType, React.ReactNode>> = {
 
 export const LLMAssistantDialog = memo(() => {
   // global client state (redux)
-  const method = useAppSelector((state) => state.llmAssistant.llmMethod);
-  const step = useAppSelector((state) => state.llmAssistant.llmStep);
+  const method = useAppSelector((state) => state.llmAssistant.method);
+  const step = useAppSelector((state) => state.llmAssistant.step);
   const dispatch = useAppDispatch();
 
   // open/close dialog
-  const open = useAppSelector((state) => state.llmAssistant.isLLMDialogOpen);
+  const open = useAppSelector((state) => state.llmAssistant.isDialogOpen);
   const handleClose = useCallback(() => {
-    dispatch(LLMAssistantActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
   // maximize

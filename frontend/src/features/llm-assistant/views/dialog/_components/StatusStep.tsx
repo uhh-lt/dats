@@ -6,76 +6,76 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
-import { LLMUtterance } from "./LLMUtterance";
+import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export const StatusStep = memo(() => {
   // global state
-  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
+  const jobId = useAppSelector((state) => state.llmAssistant.jobId);
   const dispatch = useAppDispatch();
 
   // poll the job
-  const llmJob = useLiveJob(llmAssistantQueries.job.byId(llmJobId));
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
 
   const handleClose = useCallback(() => {
-    dispatch(LLMAssistantActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
   const handleNext = useCallback(() => {
-    if (llmJob.data && llmJob.data.status === JobStatus.FINISHED && llmJob.data.output) {
-      dispatch(LLMAssistantActions.llmDialogGoToResult({ result: llmJob.data.output }));
+    if (llmAssistantJob.data && llmAssistantJob.data.status === JobStatus.FINISHED && llmAssistantJob.data.output) {
+      dispatch(LLMAssistantActions.goToResult({ result: llmAssistantJob.data.output }));
     } else {
       console.error("Job is not finished yet.");
     }
-  }, [llmJob.data, dispatch]);
+  }, [llmAssistantJob.data, dispatch]);
 
   const progressTooltip = useMemo(() => {
-    if (!llmJob.data) return "";
-    return llmJob.data.current_step === llmJob.data.steps.length
-      ? `Status: All ${llmJob.data?.steps.length} steps are done.`
-      : `Status: ${llmJob.data?.current_step} of ${llmJob.data?.steps.length} steps are done.`;
-  }, [llmJob.data]);
+    if (!llmAssistantJob.data) return "";
+    return llmAssistantJob.data.current_step === llmAssistantJob.data.steps.length
+      ? `Status: All ${llmAssistantJob.data?.steps.length} steps are done.`
+      : `Status: ${llmAssistantJob.data?.current_step} of ${llmAssistantJob.data?.steps.length} steps are done.`;
+  }, [llmAssistantJob.data]);
 
   const isNextDisabled = useMemo(
-    () => !llmJob.data || llmJob.data.status !== JobStatus.FINISHED || !llmJob.data.output,
-    [llmJob.data],
+    () => !llmAssistantJob.data || llmAssistantJob.data.status !== JobStatus.FINISHED || !llmAssistantJob.data.output,
+    [llmAssistantJob.data],
   );
 
   return (
     <>
       <DialogContent>
         <Stack gap={2}>
-          <LLMUtterance>
+          <LLMAssistantUtterance>
             <Typography>I am working hard! Please wait ...</Typography>
-          </LLMUtterance>
+          </LLMAssistantUtterance>
           <LinearProgressWithLabel
             sx={{ ml: 5 }}
-            variant={llmJob.isSuccess ? "determinate" : "indeterminate"}
-            current={llmJob.isSuccess ? llmJob.data.current_step : 0}
-            max={Math.max(llmJob.isSuccess ? llmJob.data.steps.length - 1 : 0, 1)}
+            variant={llmAssistantJob.isSuccess ? "determinate" : "indeterminate"}
+            current={llmAssistantJob.isSuccess ? llmAssistantJob.data.current_step : 0}
+            max={Math.max(llmAssistantJob.isSuccess ? llmAssistantJob.data.steps.length - 1 : 0, 1)}
             tooltip={progressTooltip}
-            failed={llmJob.isSuccess && jobStatusToSimple[llmJob.data.status] === "error"}
+            failed={llmAssistantJob.isSuccess && jobStatusToSimple[llmAssistantJob.data.status] === "error"}
           />
-          {llmJob.isSuccess && (
+          {llmAssistantJob.isSuccess && (
             <>
               <Typography variant="caption" color="textSecondary" textAlign="center" mt={-3}>
-                Status: {llmJob.data.status} - {llmJob.data.status_message}
+                Status: {llmAssistantJob.data.status} - {llmAssistantJob.data.status_message}
               </Typography>
-              {llmJob.data.status === JobStatus.FINISHED ? (
-                <LLMUtterance>
+              {llmAssistantJob.data.status === JobStatus.FINISHED ? (
+                <LLMAssistantUtterance>
                   <Typography>
-                    I am done with {llmJob.data.input.llm_job_type.toLowerCase()}. You can view the results now!
+                    I am done with {llmAssistantJob.data.input.task_type.toLowerCase()}. You can view the results now!
                   </Typography>
-                </LLMUtterance>
-              ) : llmJob.data.status === JobStatus.FAILED ? (
-                <LLMUtterance>
+                </LLMAssistantUtterance>
+              ) : llmAssistantJob.data.status === JobStatus.FAILED ? (
+                <LLMAssistantUtterance>
                   <Typography>An error occurred! I am very sorry. You can close this dialog now...</Typography>
-                </LLMUtterance>
+                </LLMAssistantUtterance>
               ) : null}
             </>
           )}
           <Typography mt={4} fontSize="0.9em" color="textSecondary">
-            This may take a while. You can close the dialog and come back later. You can find all LLM jobs by opening
-            the LLM Assistant again.
+            This may take a while. You can close the dialog and come back later. You can find all LLM Assistant jobs by
+            opening the LLM Assistant again.
           </Typography>
         </Stack>
       </DialogContent>

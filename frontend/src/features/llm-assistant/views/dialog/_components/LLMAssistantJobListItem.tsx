@@ -4,8 +4,8 @@ import { ApproachType } from "@models/ApproachType";
 import { FewShotParams } from "@models/FewShotParams";
 import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
-import { LLMJobOutput } from "@models/LLMJobOutput";
-import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
+import { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
+import { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
 import { ZeroShotParams } from "@models/ZeroShotParams";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItem, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
@@ -16,32 +16,35 @@ import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
-interface LLMJobListItemProps {
-  initialLLMJob: LlmAssistantJobRead;
+interface LLMAssistantJobListItemProps {
+  initialLLMAssistantJob: LlmAssistantJobRead;
 }
 
-export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
+export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssistantJobListItemProps) => {
   // global server state (react-query)
-  const llmJob = useLiveJob(llmAssistantQueries.job.byId(initialLLMJob.job_id), initialLLMJob);
+  const llmAssistantJob = useLiveJob(
+    llmAssistantQueries.job.byId(initialLLMAssistantJob.job_id),
+    initialLLMAssistantJob,
+  );
 
   // actions
   const dispatch = useAppDispatch();
   const handleViewResults = useCallback(() => {
-    if (!llmJob.data) return;
-    dispatch(LLMAssistantActions.llmDialogOpenFromBackgroundTask(llmJob.data));
-  }, [dispatch, llmJob.data]);
+    if (!llmAssistantJob.data) return;
+    dispatch(LLMAssistantActions.openDialogFromBackgroundTask(llmAssistantJob.data));
+  }, [dispatch, llmAssistantJob.data]);
 
   // compute subtitle
   const subTitle = useMemo(() => {
-    if (!llmJob.data) return "";
-    const count = llmJob.data.input.specific_task_parameters.sdoc_ids.length;
-    const createdDate = formatDateTime(llmJob.data.created);
+    if (!llmAssistantJob.data) return "";
+    const count = llmAssistantJob.data.input.specific_task_parameters.sdoc_ids.length;
+    const createdDate = formatDateTime(llmAssistantJob.data.created);
     let title = `Processes ${count} document${count !== 1 ? "s" : ""}, started at ${createdDate}`;
-    if (llmJob.data.status === JobStatus.FINISHED && llmJob.data.finished) {
-      title += `, finished at ${formatDateTime(llmJob.data.finished)}`;
+    if (llmAssistantJob.data.status === JobStatus.FINISHED && llmAssistantJob.data.finished) {
+      title += `, finished at ${formatDateTime(llmAssistantJob.data.finished)}`;
     }
     return title;
-  }, [llmJob.data]);
+  }, [llmAssistantJob.data]);
 
   // tab state
   const [tab, setTab] = useState("Status");
@@ -49,12 +52,12 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
     setTab(newValue);
   }, []);
 
-  if (llmJob.isSuccess) {
+  if (llmAssistantJob.isSuccess) {
     return (
       <JobListItem
-        jobStatus={llmJob.data.status}
-        jobId={llmJob.data.job_id}
-        title={`LLM Job - ${llmJob.data.input.llm_job_type} - ${llmJob.data.input.llm_approach_type}`}
+        jobStatus={llmAssistantJob.data.status}
+        jobId={llmAssistantJob.data.job_id}
+        title={`LLM Assistant Job - ${llmAssistantJob.data.input.task_type} - ${llmAssistantJob.data.input.approach_type}`}
         subTitle={subTitle}
       >
         <Stack sx={{ px: 9 }}>
@@ -64,23 +67,23 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
                 <Tab key={"Status"} label={"Status"} value={"Status"} />
                 <Tab key={"Inputs"} label={"Inputs"} value={"Inputs"} />
                 <div style={{ flexGrow: 1 }} />
-                {llmJob.data.status === JobStatus.FINISHED ? (
+                {llmAssistantJob.data.status === JobStatus.FINISHED ? (
                   <Button variant="contained" onClick={handleViewResults} sx={{ m: 0.5 }}>
-                    View {llmJob.data.input.llm_job_type} results
+                    View {llmAssistantJob.data.input.task_type} results
                   </Button>
-                ) : llmJob.data.status === JobStatus.STARTED ? (
+                ) : llmAssistantJob.data.status === JobStatus.STARTED ? (
                   <Button variant="contained" onClick={handleViewResults} sx={{ m: 0.5 }}>
-                    View {llmJob.data.input.llm_job_type} progress
+                    View {llmAssistantJob.data.input.task_type} progress
                   </Button>
                 ) : null}
               </TabList>
             </Box>
             <TabPanel key={"Inputs"} value={"Inputs"} sx={{ p: 0 }}>
-              <InputViewer llmJob={llmJob.data} />
+              <InputViewer llmAssistantJob={llmAssistantJob.data} />
             </TabPanel>
             <TabPanel key={"Status"} value={"Status"} sx={{ p: 0 }}>
-              {llmJob.data.output ? (
-                <StatusViewer llmJobResult={llmJob.data.output} projectId={llmJob.data.project_id} />
+              {llmAssistantJob.data.output ? (
+                <StatusViewer jobResult={llmAssistantJob.data.output} projectId={llmAssistantJob.data.project_id} />
               ) : (
                 "No results available"
               )}
@@ -94,18 +97,18 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   }
 });
 
-function InputViewer({ llmJob }: { llmJob: LlmAssistantJobRead }) {
-  switch (llmJob.input.llm_approach_type) {
+function InputViewer({ llmAssistantJob }: { llmAssistantJob: LlmAssistantJobRead }) {
+  switch (llmAssistantJob.input.approach_type) {
     case ApproachType.LLM_ZERO_SHOT:
-      return <PromptViewer prompts={(llmJob.input.specific_approach_parameters as ZeroShotParams).prompts} />;
+      return <PromptViewer prompts={(llmAssistantJob.input.specific_approach_parameters as ZeroShotParams).prompts} />;
     case ApproachType.LLM_FEW_SHOT:
-      return <PromptViewer prompts={(llmJob.input.specific_approach_parameters as FewShotParams).prompts} />;
+      return <PromptViewer prompts={(llmAssistantJob.input.specific_approach_parameters as FewShotParams).prompts} />;
     default:
       return <>Approach is not supported!</>;
   }
 }
 
-function PromptViewer({ prompts }: { prompts: LLMPromptTemplates[] }) {
+function PromptViewer({ prompts }: { prompts: LLMAssistantPromptTemplates[] }) {
   // tab state
   const [tab, setTab] = useState(prompts[0].language);
   const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
@@ -147,10 +150,11 @@ function PromptViewer({ prompts }: { prompts: LLMPromptTemplates[] }) {
   );
 }
 
-function StatusViewer({ llmJobResult, projectId }: { llmJobResult: LLMJobOutput; projectId: number }) {
+function StatusViewer({ jobResult, projectId }: { jobResult: LLMAssistantJobOutput; projectId: number }) {
   const parentRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
-    count: llmJobResult.specific_task_result.results.length,
+    count: jobResult.specific_task_result.results.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 45,
   });
@@ -176,8 +180,8 @@ function StatusViewer({ llmJobResult, projectId }: { llmJobResult: LLMJobOutput;
         >
           {items.map((item) => (
             <div key={item.key} data-index={item.index} ref={virtualizer.measureElement}>
-              <LLMResultStatusItem
-                result={llmJobResult.specific_task_result.results[item.index]}
+              <LLMAssistantResultStatusItem
+                result={jobResult.specific_task_result.results[item.index]}
                 projectId={projectId}
               />
             </div>
@@ -194,7 +198,7 @@ interface ResultStatusItem {
   sdoc_id: number;
 }
 
-function LLMResultStatusItem({ result }: { result: ResultStatusItem; projectId: number }) {
+function LLMAssistantResultStatusItem({ result }: { result: ResultStatusItem; projectId: number }) {
   const statusColor =
     result.status === "finished"
       ? jobStatusToTypographyColor[JobStatus.FINISHED]

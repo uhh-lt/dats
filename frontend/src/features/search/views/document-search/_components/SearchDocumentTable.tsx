@@ -29,7 +29,7 @@ import { ClassifierInferenceButton } from "@features/classifier";
 import { DocumentUploadButton } from "@features/document-upload";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
-import { LLMAssistanceButton } from "@features/llm-assistant";
+import { LLMAssistantButton } from "@features/llm-assistant";
 import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useURLConnectorDebounced } from "@hooks/useURLConnectorDebounced";
@@ -422,7 +422,7 @@ export function SearchDocumentTable({
             sdocIds={selectedSdocIds}
             onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
           />
-          <LLMAssistanceButton sdocIds={selectedSdocIds} projectId={projectId} />
+          <LLMAssistantButton sdocIds={selectedSdocIds} projectId={projectId} />
           <ClassifierInferenceButton sdocIds={selectedSdocIds} projectId={projectId} />
           <OpenInTabsButton sdocIds={selectedSdocIds} projectId={projectId} />
         </>

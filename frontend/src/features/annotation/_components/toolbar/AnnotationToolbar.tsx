@@ -4,7 +4,7 @@ import { DocType } from "@models/DocType";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
-import { LLMAssistanceButton } from "@features/llm-assistant";
+import { LLMAssistantButton } from "@features/llm-assistant";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
@@ -146,7 +146,7 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
             <Typography variant="overline" color="text.secondary" sx={groupLabelSx}>
               {"LLM\nAssistant"}
             </Typography>
-            <LLMAssistanceButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />
+            <LLMAssistantButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />
           </Box>
         </Box>
       ) : null}

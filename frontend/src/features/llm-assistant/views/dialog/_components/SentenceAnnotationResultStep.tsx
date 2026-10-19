@@ -1,7 +1,7 @@
 import { useLiveJob } from "@core/job";
 import { useTabNavigate } from "@core/navigation";
 import { ApproachType } from "@models/ApproachType";
-import { SentenceAnnotationLLMJobResult } from "@models/SentenceAnnotationLLMJobResult";
+import { SentenceAnnotationLLMAssistantJobResult } from "@models/SentenceAnnotationLLMAssistantJobResult";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
@@ -9,7 +9,7 @@ import { useCallback, useMemo } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { AnnotationResultSummary } from "./AnnotationResultSummary";
-import { LLMUtterance } from "./LLMUtterance";
+import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 const approach2AssistantID: Record<ApproachType, number> = {
   [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
@@ -18,24 +18,24 @@ const approach2AssistantID: Record<ApproachType, number> = {
 
 export function SentenceAnnotationResultStep() {
   // get the job
-  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = useLiveJob(llmAssistantQueries.job.byId(llmJobId));
+  const jobId = useAppSelector((state) => state.llmAssistant.jobId);
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
 
-  if (llmJob.isSuccess && llmJob.data.output) {
+  if (llmAssistantJob.isSuccess && llmAssistantJob.data.output) {
     return (
       <SentenceAnnotationResultStepContent
-        jobResult={llmJob.data.output.specific_task_result as SentenceAnnotationLLMJobResult}
-        approachType={llmJob.data.input.llm_approach_type}
+        jobResult={llmAssistantJob.data.output.specific_task_result as SentenceAnnotationLLMAssistantJobResult}
+        approachType={llmAssistantJob.data.input.approach_type}
       />
     );
-  } else if (llmJob.isLoading) {
+  } else if (llmAssistantJob.isLoading) {
     return (
       <DialogContent>
         <CircularProgress />
       </DialogContent>
     );
-  } else if (llmJob.isError) {
-    return <DialogContent>{llmJob.error.message}</DialogContent>;
+  } else if (llmAssistantJob.isError) {
+    return <DialogContent>{llmAssistantJob.error.message}</DialogContent>;
   } else {
     return <></>;
   }
@@ -45,13 +45,13 @@ function SentenceAnnotationResultStepContent({
   jobResult,
   approachType,
 }: {
-  jobResult: SentenceAnnotationLLMJobResult;
+  jobResult: SentenceAnnotationLLMAssistantJobResult;
   approachType: ApproachType;
 }) {
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
-    dispatch(LLMAssistantActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
   const projectId = useAppSelector((state) => state.project.projectId);
@@ -66,7 +66,7 @@ function SentenceAnnotationResultStepContent({
   const handleOpenFirstDocument = () => {
     if (!projectId || firstAnnotatedSdocId === undefined) return;
 
-    dispatch(LLMAssistantActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeDialog());
     tabNavigate({
       params: { projectId, sdocId: firstAnnotatedSdocId },
       to: "/project/$projectId/annotation/$sdocId",
@@ -80,7 +80,7 @@ function SentenceAnnotationResultStepContent({
 
   return (
     <>
-      <LLMUtterance p={3}>
+      <LLMAssistantUtterance p={3}>
         <AnnotationResultSummary results={jobResult.results} annotationWording="sentence" />
         {firstAnnotatedSdocId !== undefined && (
           <>
@@ -97,7 +97,7 @@ function SentenceAnnotationResultStepContent({
             <Typography mt={0.5}>You should look through all documents I annotated.</Typography>
           </>
         )}
-      </LLMUtterance>
+      </LLMAssistantUtterance>
       <DialogActions>
         <Button onClick={handleClose}>Close dialog</Button>
         <Button variant="contained" onClick={handleOpenFirstDocument} disabled={firstAnnotatedSdocId === undefined}>

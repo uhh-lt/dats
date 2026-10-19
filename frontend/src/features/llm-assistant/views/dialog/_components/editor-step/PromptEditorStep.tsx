@@ -1,7 +1,7 @@
 import { FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { ApproachType } from "@models/ApproachType";
-import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
+import { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
@@ -10,7 +10,7 @@ import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { LlmAssistantHooks } from "../../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
-import { LLMUtterance } from "../LLMUtterance";
+import { LLMAssistantUtterance } from "../LLMAssistantUtterance";
 import { ExampleSelection } from "./ExampleSelection";
 
 type PromptEditorValues = {
@@ -20,23 +20,23 @@ type PromptEditorValues = {
 
 export function PromptEditorStep() {
   // global state
-  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
-  const model = useAppSelector((state) => state.llmAssistant.llmId);
-  const method = useAppSelector((state) => state.llmAssistant.llmMethod);
-  const approach = useAppSelector((state) => state.llmAssistant.llmApproach);
-  const tags = useAppSelector((state) => state.llmAssistant.llmTags);
-  const metadata = useAppSelector((state) => state.llmAssistant.llmMetadata);
-  const codes = useAppSelector((state) => state.llmAssistant.llmCodes);
-  const sdocIds = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
-  const recommendedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
-  const deleteExistingAnnotations = useAppSelector((state) => state.llmAssistant.llmDeleteExistingAnnotations);
-  const strategy = useAppSelector((state) => state.llmAssistant.llmStrategy);
-  const strategyParams = useAppSelector((state) => state.llmAssistant.llmStrategyParams);
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
+  const model = useAppSelector((state) => state.llmAssistant.modelId);
+  const method = useAppSelector((state) => state.llmAssistant.method);
+  const approach = useAppSelector((state) => state.llmAssistant.approach);
+  const tags = useAppSelector((state) => state.llmAssistant.tags);
+  const metadata = useAppSelector((state) => state.llmAssistant.metadata);
+  const codes = useAppSelector((state) => state.llmAssistant.codes);
+  const sdocIds = useAppSelector((state) => state.llmAssistant.documentIds);
+  const recommendedPrompts = useAppSelector((state) => state.llmAssistant.prompts);
+  const deleteExistingAnnotations = useAppSelector((state) => state.llmAssistant.deleteExistingAnnotations);
+  const strategy = useAppSelector((state) => state.llmAssistant.strategy);
+  const strategyParams = useAppSelector((state) => state.llmAssistant.strategyParams);
   const dispatch = useAppDispatch();
 
   // local state (to manage tabs)
   const [tab, setTab] = useState(recommendedPrompts[0].language);
-  const [prompts, setPrompts] = useState<LLMPromptTemplates[]>(recommendedPrompts);
+  const [prompts, setPrompts] = useState<LLMAssistantPromptTemplates[]>(recommendedPrompts);
 
   const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
@@ -64,11 +64,11 @@ export function PromptEditorStep() {
           approachType: approach,
           strategyType: strategy,
           requestBody: {
-            llm_job_params: {
-              llm_job_type: method,
+            job_params: {
+              task_type: method,
               project_id: projectId,
               specific_task_parameters: {
-                llm_job_type: method,
+                task_type: method,
                 tag_ids: tags.map((tag) => tag.id),
                 project_metadata_ids: metadata.map((m) => m.id),
                 code_ids: codes.map((code) => code.id),
@@ -80,7 +80,7 @@ export function PromptEditorStep() {
         },
         {
           onSuccess(data) {
-            // dispatch(LLMAssistantActions.llmDialogUpdatePromptEditor({ prompts: data }));
+            // dispatch(LLMAssistantActions.updatePromptEditor({ prompts: data }));
             setPrompts(data);
           },
         },
@@ -102,7 +102,7 @@ export function PromptEditorStep() {
   const handleResetExamples = useCallback(() => {
     setSelectedAnnotationIds({});
     setPrompts(recommendedPrompts);
-    // dispatch(LLMAssistantActions.llmDialogUpdatePromptEditor({ prompts: recommendedPrompts }));
+    // dispatch(LLMAssistantActions.updatePromptEditor({ prompts: recommendedPrompts }));
   }, [recommendedPrompts]);
 
   // react form handlers
@@ -124,29 +124,30 @@ export function PromptEditorStep() {
     [],
   );
 
-  // start llm job
-  const { mutate: startLLMJobMutation, isPending: isStartPending } = LlmAssistantHooks.useStartLLMJob();
-  const handleStartLLMJob = useCallback(() => {
+  // start LLM Assistant job
+  const { mutate: startLLMAssistantJobMutation, isPending: isStartPending } =
+    LlmAssistantHooks.useStartLLMAssistantJob();
+  const handleStartLLMAssistantJob = useCallback(() => {
     if (model === undefined) return;
     if (method === undefined) return;
     if (strategy === undefined) return;
     if (strategyParams === undefined) return;
 
-    startLLMJobMutation(
+    startLLMAssistantJobMutation(
       {
         requestBody: {
           project_id: projectId,
-          llm_job_type: method,
-          llm_approach_type: approach,
-          llm_strategy_type: strategy,
+          task_type: method,
+          approach_type: approach,
+          strategy_type: strategy,
           specific_strategy_parameters: strategyParams,
           specific_approach_parameters: {
             model: model,
-            llm_approach_type: approach,
+            approach_type: approach,
             prompts: prompts,
           },
           specific_task_parameters: {
-            llm_job_type: method,
+            task_type: method,
             sdoc_ids: sdocIds,
             tag_ids: tags.map((tag) => tag.id),
             project_metadata_ids: metadata.map((m) => m.id),
@@ -158,7 +159,7 @@ export function PromptEditorStep() {
       {
         onSuccess: (data) => {
           dispatch(
-            LLMAssistantActions.llmDialogGoToWaiting({
+            LLMAssistantActions.goToWaiting({
               jobId: data.job_id,
               prompts: prompts,
             }),
@@ -179,22 +180,22 @@ export function PromptEditorStep() {
     metadata,
     codes,
     deleteExistingAnnotations,
-    startLLMJobMutation,
+    startLLMAssistantJobMutation,
     dispatch,
   ]);
 
   const handleBack = useCallback(() => {
-    dispatch(LLMAssistantActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousDialogStep());
   }, [dispatch]);
 
   return (
     <>
       <DialogContent>
-        <LLMUtterance>
+        <LLMAssistantUtterance>
           <Typography>
             These are my generated commands. Now is your last chance to edit them, before I get to work.
           </Typography>
-        </LLMUtterance>
+        </LLMAssistantUtterance>
         <TabContext value={tab}>
           <Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
             <TabList onChange={handleChangeTab}>
@@ -249,7 +250,7 @@ export function PromptEditorStep() {
           startIcon={<PlayCircleIcon />}
           loading={isStartPending}
           loadingPosition="start"
-          onClick={handleStartLLMJob}
+          onClick={handleStartLLMAssistantJob}
         >
           Start!
         </Button>
@@ -262,7 +263,7 @@ function PromptEditorStepForm({
   prompt,
   handleSavePrompt,
 }: {
-  prompt: LLMPromptTemplates;
+  prompt: LLMAssistantPromptTemplates;
   handleSavePrompt: SubmitHandler<PromptEditorValues>;
 }) {
   // react form

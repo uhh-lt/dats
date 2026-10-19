@@ -3,16 +3,16 @@ import { Box, Card, CardActionArea, CardContent, DialogContent, Stack, Typograph
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
-import { LLMJobsView } from "./LLMJobsView";
-import { LLMUtterance } from "./LLMUtterance";
+import { LLMAssistantJobsView } from "./LLMAssistantJobsView";
+import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export function MethodSelectionStep() {
   return (
     <>
       <DialogContent sx={{ flexShrink: 0, backgroundColor: "grey.100" }}>
-        <LLMUtterance>
+        <LLMAssistantUtterance>
           <Typography>How can I help you?</Typography>
-        </LLMUtterance>
+        </LLMAssistantUtterance>
         <Stack direction="row" columnGap={2} mt={2}>
           <MethodButton
             method={TaskType.TAGGING}
@@ -37,7 +37,7 @@ export function MethodSelectionStep() {
         </Stack>
       </DialogContent>
       <Box className="myFlexContainer myFlexFillAllContainer" p={3} bgcolor={"grey.100"}>
-        <LLMJobsView />
+        <LLMAssistantJobsView />
       </Box>
     </>
   );
@@ -52,7 +52,7 @@ interface MethodButtonProps {
 function MethodButton({ method, headline, description }: MethodButtonProps) {
   const dispatch = useAppDispatch();
   const handleClick = useCallback(() => {
-    dispatch(LLMAssistantActions.llmDialogGoToDataSelection({ method }));
+    dispatch(LLMAssistantActions.goToDataSelection({ method }));
   }, [dispatch, method]);
 
   return (

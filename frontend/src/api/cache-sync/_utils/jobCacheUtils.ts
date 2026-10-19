@@ -166,11 +166,11 @@ function handleImportJobFinished(job: ImportJobRead) {
   }
 }
 
-// A finished annotation LLM job stored its suggestions as annotations of the assistant user in the processed sdocs.
+// A finished annotation LLM Assistant job stored its suggestions as annotations of the assistant user in the processed sdocs.
 function handleLlmAssistantJobFinished(job: LlmAssistantJobRead) {
   if (!job.output) return;
   const sdocIds = job.output.specific_task_result.results.map((result) => result.sdoc_id);
-  switch (job.input.llm_job_type) {
+  switch (job.input.task_type) {
     case TaskType.ANNOTATION:
       sdocIds.forEach((sdocId) => {
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocOfSdocScope(sdocId) });

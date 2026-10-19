@@ -31,15 +31,15 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
-import { LLMAssistantActions, LLMStrategyParams } from "../../../store/llmAssistantSlice";
-import { LLMUtterance } from "./LLMUtterance";
+import { LLMAssistantActions, LLMAssistantStrategyParams } from "../../../store/llmAssistantSlice";
+import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 enum DeletionStrategy {
   DELETE_EXISTING = "DELETE_EXISTING",
   KEEP_EXISTING = "KEEP_EXISTING",
 }
 
-type FuzzySettings = Required<Omit<FuzzyGroundingStrategyParams, "llm_strategy_type">>;
+type FuzzySettings = Required<Omit<FuzzyGroundingStrategyParams, "strategy_type">>;
 
 const fallbackFuzzySettings: FuzzySettings = {
   fuzzy_threshold: 0.85,
@@ -72,26 +72,26 @@ function getFuzzySettings(strategy: StrategyInfo): FuzzySettings {
   };
 }
 
-/** Configures the model, processing strategy, learning approach, and overwrite behavior for an LLM job. */
+/** Configures the model, processing strategy, learning approach, and overwrite behavior for an LLM Assistant job. */
 export const SettingsStep = memo(() => {
   const availableLLMs = useQuery(generalQueries.availableModels());
-  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
-  const recommendation = useAppSelector((state) => state.llmAssistant.llmApproachRecommendation);
-  const llmId = useAppSelector((state) => state.llmAssistant.llmId);
-  const llmMethod = useAppSelector((state) => state.llmAssistant.llmMethod);
-  const metadata = useAppSelector((state) => state.llmAssistant.llmMetadata);
-  const codes = useAppSelector((state) => state.llmAssistant.llmCodes);
-  const tags = useAppSelector((state) => state.llmAssistant.llmTags);
-  const sdocIds = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
-  const savedStrategy = useAppSelector((state) => state.llmAssistant.llmStrategy);
-  const savedStrategyParams = useAppSelector((state) => state.llmAssistant.llmStrategyParams);
-  const savedApproach = useAppSelector((state) => state.llmAssistant.llmApproach);
-  const savedDeleteExisting = useAppSelector((state) => state.llmAssistant.llmDeleteExistingAnnotations);
-  const savedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
+  const recommendation = useAppSelector((state) => state.llmAssistant.approachRecommendation);
+  const savedModelId = useAppSelector((state) => state.llmAssistant.modelId);
+  const method = useAppSelector((state) => state.llmAssistant.method);
+  const metadata = useAppSelector((state) => state.llmAssistant.metadata);
+  const codes = useAppSelector((state) => state.llmAssistant.codes);
+  const tags = useAppSelector((state) => state.llmAssistant.tags);
+  const sdocIds = useAppSelector((state) => state.llmAssistant.documentIds);
+  const savedStrategy = useAppSelector((state) => state.llmAssistant.strategy);
+  const savedStrategyParams = useAppSelector((state) => state.llmAssistant.strategyParams);
+  const savedApproach = useAppSelector((state) => state.llmAssistant.approach);
+  const savedDeleteExisting = useAppSelector((state) => state.llmAssistant.deleteExistingAnnotations);
+  const savedPrompts = useAppSelector((state) => state.llmAssistant.prompts);
   const dispatch = useAppDispatch();
 
-  const strategies = useQuery(llmAssistantQueries.strategies(llmMethod));
-  const [modelId, setModelId] = useState(llmId);
+  const strategies = useQuery(llmAssistantQueries.strategies(method));
+  const [modelId, setModelId] = useState(savedModelId);
   const [strategyType, setStrategyType] = useState<StrategyType | undefined>(savedStrategy);
   const [approachType, setApproachType] = useState(savedApproach);
   const [deletionStrategy, setDeletionStrategy] = useState(
@@ -114,13 +114,13 @@ export const SettingsStep = memo(() => {
   });
 
   const selectedStrategy = useMemo(
-    () => strategies.data?.find((strategy) => strategy.llm_strategy_type === strategyType),
+    () => strategies.data?.find((strategy) => strategy.strategy_type === strategyType),
     [strategies.data, strategyType],
   );
   const codeIds = useMemo(() => codes.map((code) => code.id), [codes]);
-  const isAnnotationTask = llmMethod === TaskType.ANNOTATION || llmMethod === TaskType.SENTENCE_ANNOTATION;
+  const isAnnotationTask = method === TaskType.ANNOTATION || method === TaskType.SENTENCE_ANNOTATION;
   const existingAnnotations = LlmAssistantHooks.useCountExistingAssistantAnnotations({
-    taskType: llmMethod,
+    taskType: method,
     approachType,
     sdocIds,
     codeIds,
@@ -135,7 +135,7 @@ export const SettingsStep = memo(() => {
     if (!strategies.isSuccess || strategies.data.length === 0 || strategyType !== undefined) return;
     const defaultStrategy = strategies.data[0];
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStrategyType(defaultStrategy.llm_strategy_type);
+    setStrategyType(defaultStrategy.strategy_type);
     setFuzzySettings(getFuzzySettings(defaultStrategy));
   }, [strategies.data, strategies.isSuccess, strategyType]);
 
@@ -158,9 +158,9 @@ export const SettingsStep = memo(() => {
 
   const handleChangeStrategy = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const strategy = strategies.data?.find((candidate) => candidate.llm_strategy_type === event.target.value);
+      const strategy = strategies.data?.find((candidate) => candidate.strategy_type === event.target.value);
       if (!strategy) return;
-      setStrategyType(strategy.llm_strategy_type);
+      setStrategyType(strategy.strategy_type);
       setFuzzySettings(getFuzzySettings(strategy));
       setStrategyDetailsOpen(false);
     },
@@ -193,16 +193,16 @@ export const SettingsStep = memo(() => {
   }, []);
 
   const handleBack = useCallback(() => {
-    dispatch(LLMAssistantActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousDialogStep());
   }, [dispatch]);
 
   const createPromptTemplates = LlmAssistantHooks.useCreatePromptTemplates();
   const handleSubmit = useCallback(() => {
-    if (!llmMethod || !modelId || !strategyType || !selectedStrategy) return;
+    if (!method || !modelId || !strategyType || !selectedStrategy) return;
 
-    const strategyParams: LLMStrategyParams =
+    const strategyParams: LLMAssistantStrategyParams =
       strategyType === StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
-        ? { llm_strategy_type: strategyType, ...fuzzySettings }
+        ? { strategy_type: strategyType, ...fuzzySettings }
         : selectedStrategy.default_params;
 
     createPromptTemplates.mutate(
@@ -210,11 +210,11 @@ export const SettingsStep = memo(() => {
         approachType,
         strategyType,
         requestBody: {
-          llm_job_params: {
-            llm_job_type: llmMethod,
+          job_params: {
+            task_type: method,
             project_id: projectId,
             specific_task_parameters: {
-              llm_job_type: llmMethod,
+              task_type: method,
               tag_ids: tags.map((tag) => tag.id),
               project_metadata_ids: metadata.map((item) => item.id),
               code_ids: codeIds,
@@ -226,7 +226,7 @@ export const SettingsStep = memo(() => {
       {
         onSuccess(prompts) {
           dispatch(
-            LLMAssistantActions.llmDialogGoToPromptEditor({
+            LLMAssistantActions.goToPromptEditor({
               prompts,
               approach: approachType,
               deleteExistingAnnotations:
@@ -247,7 +247,7 @@ export const SettingsStep = memo(() => {
     dispatch,
     fuzzySettings,
     hasExistingAnnotations,
-    llmMethod,
+    method,
     metadata,
     modelId,
     projectId,
@@ -279,12 +279,12 @@ export const SettingsStep = memo(() => {
     >
       <DialogContent sx={{ bgcolor: "grey.100" }}>
         <Stack spacing={2}>
-          <LLMUtterance>
+          <LLMAssistantUtterance>
             <Typography>
               Configure how I should process the selected documents. Choose a model, strategy, and approach, then adjust
               any strategy-specific settings.
             </Typography>
-          </LLMUtterance>
+          </LLMAssistantUtterance>
 
           {(availableLLMs.isError || (availableLLMs.isSuccess && availableLLMs.data.length === 0)) && (
             <Alert
@@ -365,7 +365,7 @@ export const SettingsStep = memo(() => {
                   </MenuItem>
                 ) : (
                   strategies.data?.map((strategy) => (
-                    <MenuItem key={strategy.llm_strategy_type} value={strategy.llm_strategy_type}>
+                    <MenuItem key={strategy.strategy_type} value={strategy.strategy_type}>
                       {strategy.name}
                     </MenuItem>
                   ))
