@@ -136,48 +136,40 @@ def __train_model(
         )
     )
 
-    # 2. load a SetFit model from Hub with single GPU restriction
+    # 2. load a SetFit model from Hub
+    # the job handler pins the job to one GPU, so the HF Trainer sees exactly that GPU
+    # as cuda:0 and does not wrap the model in multi-GPU DataParallel
     import torch
 
-    original_device_count = torch.cuda.device_count
-    try:
-        if torch.cuda.is_available():
-            # Patch device_count to force Trainer/SetFit to believe only 1 GPU is visible,
-            # preventing it from wrapping the model in multi-GPU DataParallel (DP).
-            torch.cuda.device_count = lambda: 1
-            device_str = f"cuda:{torch.cuda.current_device()}"
-        else:
-            raise RuntimeError("CUDA is not available, but a GPU job was scheduled!")
+    model = SetFitModel.from_pretrained(
+        MODEL, device=f"cuda:{torch.cuda.current_device()}"
+    )
+    logger.info(f"Loaded COTA model {MODEL} on {model.device}.")
 
-        model = SetFitModel.from_pretrained(MODEL, device=device_str)
-        logger.info(f"Loaded COTA model {MODEL} on {model.device}.")
+    # 3. init training
+    args = TrainingArguments(
+        batch_size=BATCH_SIZE,
+        num_epochs=1,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        output_dir=str(model_output_dir),
+        report_to="none",
+    )
+    trainer = Trainer(
+        model=model,
+        args=args,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        metric="accuracy",
+        column_mapping={
+            "text": "text",
+            "label": "label",
+        },  # Map dataset columns to text/label expected by trainer
+    )
 
-        # 3. init training
-        args = TrainingArguments(
-            batch_size=BATCH_SIZE,
-            num_epochs=1,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            output_dir=str(model_output_dir),
-            report_to="none",
-        )
-        trainer = Trainer(
-            model=model,
-            args=args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            metric="accuracy",
-            column_mapping={
-                "text": "text",
-                "label": "label",
-            },  # Map dataset columns to text/label expected by trainer
-        )
-
-        # 4. train
-        trainer.train()
-    finally:
-        torch.cuda.device_count = original_device_count
+    # 4. train
+    trainer.train()
 
     return model, sentences
 

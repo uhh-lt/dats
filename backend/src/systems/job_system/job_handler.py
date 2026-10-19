@@ -12,7 +12,7 @@ from modules.doc_processing.doc_processing_pipeline import (
 from systems.job_system.cuda_utils import ensure_cuda_available
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_events import publish_job_update
-from utils.gpu_utils import find_unused_cuda_device, set_cuda_memory_limit
+from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
 
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
@@ -24,13 +24,22 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
         if job.job.origin.startswith("gpu"):
             import torch
 
+            # select and pin the GPU before anything initializes CUDA in this work
+            # horse: afterwards the job sees exactly this GPU, as cuda:0
+            gpu_uuid = select_gpu()
+            if gpu_uuid is not None:
+                pin_gpu(gpu_uuid)
+
             ensure_cuda_available()
 
-            cuda_device = find_unused_cuda_device()
-            logger.info(f"Running job {jobtype} on GPU device {cuda_device}")
-            with torch.cuda.device(cuda_device):
-                set_cuda_memory_limit(conf.rq.gpu_memory_limit)
-                output = handler(payload=payload, job=job)
+            if gpu_uuid is not None and torch.cuda.device_count() != 1:
+                logger.warning(
+                    f"CUDA was initialized before GPU {gpu_uuid} was pinned, "
+                    f"job {jobtype} runs on the first visible GPU instead."
+                )
+            logger.info(f"Running job {jobtype} on GPU {gpu_uuid or 'cuda:0'}")
+            set_cuda_memory_limit(conf.rq.gpu_memory_limit)
+            output = handler(payload=payload, job=job)
         else:
             output = handler(payload=payload, job=job)
     except Exception as e:
