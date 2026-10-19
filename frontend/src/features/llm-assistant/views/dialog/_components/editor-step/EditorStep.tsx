@@ -5,7 +5,7 @@ import { PromptEditorStep } from "./PromptEditorStep";
 
 export const EditorStep = memo(() => {
   // global state
-  const approach = useAppSelector((state) => state.llmAssistant.llmApproach);
+  const approach = useAppSelector((state) => state.llmAssistant.approach);
 
   switch (approach) {
     case ApproachType.LLM_ZERO_SHOT:

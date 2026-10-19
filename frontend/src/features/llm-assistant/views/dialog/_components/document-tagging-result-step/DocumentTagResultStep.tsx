@@ -1,39 +1,39 @@
 import { useLiveJob } from "@core/job";
 import { getIconComponent, Icon } from "@components/icons";
 import { TagHooks } from "@core/tag";
-import { TaggingLLMJobResult } from "@models/TaggingLLMJobResult";
+import { TaggingLLMAssistantJobResult } from "@models/TaggingLLMAssistantJobResult";
 import { TagRead } from "@models/TagRead";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useState } from "react";
 import { llmAssistantQueries } from "../../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
-import { LLMUtterance } from "../LLMUtterance";
+import { LLMAssistantUtterance } from "../LLMAssistantUtterance";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow";
 import { DocumentTagResultStepTable } from "./DocumentTagResultStepTable";
 
 export const DocumentTagResultStep = memo(() => {
   // global client state
-  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
+  const jobId = useAppSelector((state) => state.llmAssistant.jobId);
   // global server state
   const documentTags = TagHooks.useGetAllTags();
-  const llmJob = useLiveJob(llmAssistantQueries.job.byId(llmJobId));
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
 
-  if (llmJob.isSuccess && llmJob.data.output && documentTags.isSuccess) {
+  if (llmAssistantJob.isSuccess && llmAssistantJob.data.output && documentTags.isSuccess) {
     return (
       <DocumentTagResultStepContent
-        jobResult={llmJob.data.output.specific_task_result as TaggingLLMJobResult}
+        jobResult={llmAssistantJob.data.output.specific_task_result as TaggingLLMAssistantJobResult}
         tags={documentTags.data}
       />
     );
-  } else if (llmJob.isLoading || documentTags.isLoading) {
+  } else if (llmAssistantJob.isLoading || documentTags.isLoading) {
     return (
       <DialogContent>
         <CircularProgress />
       </DialogContent>
     );
-  } else if (llmJob.isError) {
-    return <DialogContent>{llmJob.error.message}</DialogContent>;
+  } else if (llmAssistantJob.isError) {
+    return <DialogContent>{llmAssistantJob.error.message}</DialogContent>;
   } else if (documentTags.isError) {
     return <DialogContent>{documentTags.error.message}</DialogContent>;
   } else {
@@ -41,7 +41,13 @@ export const DocumentTagResultStep = memo(() => {
   }
 });
 
-function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingLLMJobResult; tags: TagRead[] }) {
+function DocumentTagResultStepContent({
+  jobResult,
+  tags,
+}: {
+  jobResult: TaggingLLMAssistantJobResult;
+  tags: TagRead[];
+}) {
   // local client state
   const [rows, setRows] = useState<DocumentTaggingResultRow[]>(() => {
     const tagId2Tag = tags.reduce(
@@ -68,7 +74,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
 
   // actions
   const handleClose = useCallback(() => {
-    dispatch(LLMAssistantActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeDialog());
   }, [dispatch]);
 
   const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetTags();
@@ -81,7 +87,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
       },
       {
         onSuccess() {
-          dispatch(LLMAssistantActions.closeLLMDialog());
+          dispatch(LLMAssistantActions.closeDialog());
         },
       },
     );
@@ -89,7 +95,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
 
   return (
     <>
-      <LLMUtterance p={3}>
+      <LLMAssistantUtterance p={3}>
         <Typography>
           Here are the results! You can find my suggestions in the column <i>Suggested Tags</i>. Now, you decide what to
           do with them:
@@ -99,7 +105,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
           <li>Use my suggested tags (discarding the current tags)</li>
           <li>Merge both your current tags and my suggested tags</li>
         </ul>
-      </LLMUtterance>
+      </LLMAssistantUtterance>
       <DocumentTagResultStepTable rows={rows} onUpdateRows={setRows} />
       <DialogActions>
         <Button onClick={handleClose}>Discard results & close</Button>

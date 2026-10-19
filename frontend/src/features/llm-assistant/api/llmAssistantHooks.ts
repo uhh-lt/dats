@@ -1,24 +1,25 @@
-import { LlmService } from "@api/services/LlmService";
+import { LlmAssistantService } from "@api/services/LlmAssistantService";
 import { ApproachType } from "@models/ApproachType";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { llmAssistantQueries } from "./llmAssistantQueries";
 
-const useStartLLMJob = () =>
+const useStartLLMAssistantJob = () =>
   useMutation({
     mutationKey: [...llmAssistantQueries.job.all(), "start"],
-    mutationFn: LlmService.startLlmAssistantJob,
+    mutationFn: LlmAssistantService.startLlmAssistantJob,
     meta: {
       datsEvent: "JOB_UPDATED",
-      successMessage: (data: LlmAssistantJobRead) => `Started LLM Job as a new background task (ID: ${data.job_id})`,
+      successMessage: (data: LlmAssistantJobRead) =>
+        `Started LLM Assistant Job as a new background task (ID: ${data.job_id})`,
     },
   });
 
 const useCreatePromptTemplates = () =>
   useMutation({
     mutationKey: [...llmAssistantQueries.all(), "createPromptTemplates"],
-    mutationFn: LlmService.createPromptTemplates,
+    mutationFn: LlmAssistantService.createPromptTemplates,
     meta: {
       successMessage: () => `Created prompt templates`,
     },
@@ -27,7 +28,7 @@ const useCreatePromptTemplates = () =>
 const useDetermineApproach = () =>
   useMutation({
     mutationKey: [...llmAssistantQueries.all(), "determineApproach"],
-    mutationFn: LlmService.determineApproach,
+    mutationFn: LlmAssistantService.determineApproach,
     meta: {
       successMessage: (data: ApproachType) => `Determined approach type: ${data}`,
     },
@@ -45,7 +46,7 @@ const useCountExistingAssistantAnnotations = (params: {
   });
 
 export const LlmAssistantHooks = {
-  useStartLLMJob,
+  useStartLLMAssistantJob,
   useCreatePromptTemplates,
   useDetermineApproach,
   useCountExistingAssistantAnnotations,

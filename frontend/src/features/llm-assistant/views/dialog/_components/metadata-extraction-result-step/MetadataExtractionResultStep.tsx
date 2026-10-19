@@ -1,20 +1,20 @@
 import { useLiveJob } from "@core/job";
-import { MetadataExtractionLLMJobResult } from "@models/MetadataExtractionLLMJobResult";
+import { MetadataExtractionLLMAssistantJobResult } from "@models/MetadataExtractionLLMAssistantJobResult";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";
 import { llmAssistantQueries } from "../../../../api/llmAssistantQueries";
-import { LLMUtterance } from "../LLMUtterance";
+import { LLMAssistantUtterance } from "../LLMAssistantUtterance";
 import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultStepTable";
 
 export const MetadataExtractionResultStep = memo(() => {
   // get the job
-  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
-  const llmJob = useLiveJob(llmAssistantQueries.job.byId(llmJobId));
+  const jobId = useAppSelector((state) => state.llmAssistant.jobId);
+  const llmAssistantJob = useLiveJob(llmAssistantQueries.job.byId(jobId));
 
   return (
     <>
-      <LLMUtterance p={3}>
+      <LLMAssistantUtterance p={3}>
         <Typography>
           Here are the results! You can find my suggestions in the columns marked with <i>(suggested)</i>. Now, you
           decide what to do with them:
@@ -26,10 +26,12 @@ export const MetadataExtractionResultStep = memo(() => {
         <Typography>
           Of course, you can decided individually for each document. Just click on the value you want to use.
         </Typography>
-      </LLMUtterance>
-      {llmJob.isSuccess && (
+      </LLMAssistantUtterance>
+      {llmAssistantJob.isSuccess && (
         <MetadataExtractionResultStepTable
-          data={(llmJob.data.output?.specific_task_result as MetadataExtractionLLMJobResult).results || []}
+          data={
+            (llmAssistantJob.data.output?.specific_task_result as MetadataExtractionLLMAssistantJobResult).results || []
+          }
         />
       )}
     </>

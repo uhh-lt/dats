@@ -98,7 +98,7 @@ export enum Icon {
   // Job objects
   CRAWLER_JOB = "crawler_job",
   PREPROCESSING_JOB = "preprocessing_job",
-  LLM_JOB = "llm_job",
+  LLM_ASSISTANT_JOB = "llm_assistant_job",
   ML_JOB = "ml_job",
   EXPORT_JOB = "export_job",
 
@@ -236,7 +236,7 @@ const iconMap: Record<Icon, IconFactory> = {
   // Job objects
   [Icon.CRAWLER_JOB]: (iconProps) => <SearchIcon {...iconProps} />,
   [Icon.PREPROCESSING_JOB]: (iconProps) => <TuneIcon {...iconProps} />,
-  [Icon.LLM_JOB]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
+  [Icon.LLM_ASSISTANT_JOB]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
   [Icon.ML_JOB]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
   [Icon.EXPORT_JOB]: (iconProps) => <SaveAltIcon {...iconProps} />,
 

@@ -2,7 +2,7 @@ import { Icon, getIconComponent } from "@components/icons";
 import { Box, Stack, StackProps } from "@mui/material";
 import { memo } from "react";
 
-export const LLMUtterance = memo(
+export const LLMAssistantUtterance = memo(
   ({ children, ...props }: { children?: React.ReactNode } & Omit<StackProps, "direction" | "alignItems">) => {
     return (
       <Stack direction="row" alignItems="center" {...props}>

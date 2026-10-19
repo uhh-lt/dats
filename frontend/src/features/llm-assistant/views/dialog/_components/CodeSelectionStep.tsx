@@ -8,14 +8,14 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
-import { LLMUtterance } from "./LLMUtterance";
+import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export const CodeSelectionStep = memo(() => {
   // global state
-  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
-  const selectedDocuments = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
-  const llmJobType = useAppSelector((state) => state.llmAssistant.llmMethod);
-  const savedCodes = useAppSelector((state) => state.llmAssistant.llmCodes);
+  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
+  const selectedDocuments = useAppSelector((state) => state.llmAssistant.documentIds);
+  const taskType = useAppSelector((state) => state.llmAssistant.method);
+  const savedCodes = useAppSelector((state) => state.llmAssistant.codes);
   const dispatch = useAppDispatch();
 
   // local state
@@ -28,17 +28,17 @@ export const CodeSelectionStep = memo(() => {
 
   const handleNext = useCallback(
     (codes: CodeRead[]) => {
-      if (!llmJobType) return;
-      if (llmJobType !== TaskType.ANNOTATION && llmJobType !== TaskType.SENTENCE_ANNOTATION) {
+      if (!taskType) return;
+      if (taskType !== TaskType.ANNOTATION && taskType !== TaskType.SENTENCE_ANNOTATION) {
         console.error("Invalid job type for code selection step");
         return;
       }
 
       const params = {
-        llm_job_type: llmJobType,
+        task_type: taskType,
         project_id: projectId,
         specific_task_parameters: {
-          llm_job_type: llmJobType,
+          task_type: taskType,
           code_ids: codes.map((code) => code.id),
           sdoc_ids: selectedDocuments,
         },
@@ -49,7 +49,7 @@ export const CodeSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              LLMAssistantActions.llmDialogGoToSettings({
+              LLMAssistantActions.goToSettings({
                 approach: data,
                 tags: [],
                 metadata: [],
@@ -60,11 +60,11 @@ export const CodeSelectionStep = memo(() => {
         },
       );
     },
-    [llmJobType, projectId, selectedDocuments, determineApproachMutation, dispatch],
+    [taskType, projectId, selectedDocuments, determineApproachMutation, dispatch],
   );
 
   const handleBack = useCallback(() => {
-    dispatch(LLMAssistantActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousDialogStep());
   }, [dispatch]);
 
   // rendering
@@ -92,8 +92,8 @@ export const CodeSelectionStep = memo(() => {
 
   return (
     <>
-      <LLMUtterance p={3}>
-        {llmJobType === TaskType.SENTENCE_ANNOTATION ? (
+      <LLMAssistantUtterance p={3}>
+        {taskType === TaskType.SENTENCE_ANNOTATION ? (
           <Typography>
             You selected {selectedDocuments.length} document(s) for automatic sentence annotation. Please select all
             codes that I should use to annotate sentences.
@@ -104,7 +104,7 @@ export const CodeSelectionStep = memo(() => {
             should use to annotate text passages.
           </Typography>
         )}
-      </LLMUtterance>
+      </LLMAssistantUtterance>
       <CodeTable
         projectId={projectId}
         rowSelectionModel={rowSelectionModel}

@@ -5,32 +5,32 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
-import { LLMJobListItem } from "./LLMJobListItem";
+import { LLMAssistantJobListItem } from "./LLMAssistantJobListItem";
 
-export function LLMJobsView() {
+export function LLMAssistantJobsView() {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   const {
-    data: llmJobs,
-    refetch: refetchLLMJobs,
-    isFetching: isLLMFetching,
+    data: llmAssistantJobs,
+    refetch: refetchLLMAssistantJobs,
+    isFetching: isFetchingLLMAssistantJobs,
   } = useQuery({
     ...llmAssistantQueries.job.byProject(projectId ?? 0),
     enabled: projectId !== undefined,
   });
-  const allLLMJobs = useMemo(() => llmJobs || [], [llmJobs]);
+  const allLLMAssistantJobs = useMemo(() => llmAssistantJobs || [], [llmAssistantJobs]);
 
   const handleRefresh = () => {
-    refetchLLMJobs();
+    refetchLLMAssistantJobs();
   };
 
   return (
     <DialogSection
-      title="Previous LLM Jobs"
+      title="Previous LLM Assistant Jobs"
       action={
         <Tooltip title="Refresh Jobs">
           <span>
-            <IconButton loading={isLLMFetching} onClick={handleRefresh}>
+            <IconButton loading={isFetchingLLMAssistantJobs} onClick={handleRefresh}>
               <RefreshIcon />
             </IconButton>
           </span>
@@ -38,18 +38,18 @@ export function LLMJobsView() {
       }
     >
       <List sx={{ width: "100%", bgcolor: "background.paper" }} component="nav">
-        {allLLMJobs.length > 0 && (
+        {allLLMAssistantJobs.length > 0 && (
           <Stack spacing={1}>
-            {allLLMJobs.map((job) => (
-              <LLMJobListItem key={job.job_id} initialLLMJob={job} />
+            {allLLMAssistantJobs.map((job) => (
+              <LLMAssistantJobListItem key={job.job_id} initialLLMAssistantJob={job} />
             ))}
           </Stack>
         )}
 
         {/* Show message if no jobs */}
-        {allLLMJobs.length === 0 && (
+        {allLLMAssistantJobs.length === 0 && (
           <Typography color="textSecondary" textAlign="center" sx={{ py: 2 }}>
-            No LLM jobs...
+            No LLM Assistant jobs...
           </Typography>
         )}
       </List>

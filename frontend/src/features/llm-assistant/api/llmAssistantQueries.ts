@@ -1,5 +1,5 @@
 import { createJobQueries } from "@core/job";
-import { LlmService } from "@api/services/LlmService";
+import { LlmAssistantService } from "@api/services/LlmAssistantService";
 import { ApproachType } from "@models/ApproachType";
 import { TaskType } from "@models/TaskType";
 import { queryOptions, skipToken } from "@tanstack/react-query";
@@ -27,7 +27,7 @@ export const llmAssistantQueries = {
   strategies: (taskType: TaskType | undefined) =>
     queryOptions({
       queryKey: [...llmAssistantQueries.strategiesScope(), taskType] as const,
-      queryFn: !taskType ? skipToken : () => LlmService.listStrategies({ taskType }),
+      queryFn: !taskType ? skipToken : () => LlmAssistantService.listStrategies({ taskType }),
     }),
 
   existingAnnotationCountScope: () => [...llmAssistantQueries.all(), "existingAnnotationCount"] as const,
@@ -43,7 +43,7 @@ export const llmAssistantQueries = {
       queryFn: !taskType
         ? skipToken
         : () =>
-            LlmService.countExistingAssistantAnnotations({
+            LlmAssistantService.countExistingAssistantAnnotations({
               taskType,
               approachType,
               requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
@@ -53,7 +53,7 @@ export const llmAssistantQueries = {
   // the background job of the LLM assistant
   job: createJobQueries(
     "llmAssistant",
-    (jobId) => LlmService.getLlmAssistantJobById({ jobId }),
-    (projectId) => LlmService.getLlmAssistantJobsByProject({ projectId }),
+    (jobId) => LlmAssistantService.getLlmAssistantJobById({ jobId }),
+    (projectId) => LlmAssistantService.getLlmAssistantJobsByProject({ projectId }),
   ),
 };
