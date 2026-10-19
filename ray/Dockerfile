@@ -34,10 +34,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --directory . --no-dev --no-editable --no-install-project --no-install-workspace --no-managed-python
 ENV PATH="/ray_code/.venv/bin:${PATH}"
 
-# makes CUDA devices visible to the container by default
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-
 # Set timezone
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Berlin

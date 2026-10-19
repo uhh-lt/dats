@@ -108,7 +108,7 @@ The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). Th
 | `RAY_CACHE_HOST_DIR`   | Shared Ray model cache on the host                   | —             | Yes      |
 | `UV_CACHE_HOST_DIR`    | Shared uv (Python) cache on the host                 | —             | Yes      |
 | `RUNNER_WORK_BASE_DIR` | Host base dir for runner work dirs (one subdir each) | —             | Yes      |
-| `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers                  | `0`           | No       |
+| `RUNNER_GPU_DEVICE_ID` | Single GPU index or UUID for runner containers (CDI) | `0`           | No       |
 | `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping             | `dats-action` | No       |
 
 ## CI Compatibility
