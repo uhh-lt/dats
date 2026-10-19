@@ -61,8 +61,10 @@ event tag:
 `datsEvent: "JOB_UPDATED"`, like the websocket job updates.
 
 **User-private bookkeeping stays in the hook.** A mutation that only changes
-data no other client sees (e.g. `useRecordRecentMemo`, which updates the
-user's recent memos) has no event and refreshes its cache in `onSuccess`.
+data no other client sees refreshes that cache in its own `onSuccess`, e.g.
+`useRecordRecentMemo` (the user's recent memos) or `useConfirmSuggestions`
+(the user's annoscaling suggestions, next to its `datsEvent` tag for the
+created annotations).
 
 **Optimistic updates stay in the hooks.** `onMutate` / `onError` rollback for
 annotations and search views is untouched — the brain only handles the

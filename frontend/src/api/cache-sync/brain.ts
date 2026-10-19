@@ -13,7 +13,6 @@ import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQ
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
-import { annoscalingQueries } from "@features/annotation-scaling/api/annoscalingQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
 import { perspectiveQueries } from "@features/perspectives/api/perspectiveQueries";
@@ -363,8 +362,6 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       new Set(annos.map((anno) => anno.code_id)).forEach((codeId) => {
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(codeId).queryKey });
       });
-      // Annoscaling suggestions leave out annotated sentences (confirming them creates such a batch).
-      queryClient.invalidateQueries({ queryKey: annoscalingQueries.suggestScope() });
       break;
     }
     case "SPAN_ANNOTATION_UPDATED": {
