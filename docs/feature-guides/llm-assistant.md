@@ -77,7 +77,7 @@ DATS automatically generates the complex instruction prompt that will be sent to
 
 Click **Start!** The dialog will close, and the job will run asynchronously in the background. You are free to continue reading or analyzing other documents while the AI works.
 
-- To check the progress, simply click the Robot icon again to open the dialog and look at the **Previous LLM Jobs** list at the bottom of the welcome screen.
+- To check the progress, simply click the Robot icon again to open the dialog and look at the **Previous LLM Assistant Jobs** list at the bottom of the welcome screen.
 
 ## 6\. Reviewing and Applying Results
 
