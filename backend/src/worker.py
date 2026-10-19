@@ -112,7 +112,7 @@ def do_work(device: str):
     ctx = mp.get_context("fork")
 
     if device not in ["cpu", "gpu", "dev"]:
-        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu|dev]")
+        print("Usage: worker.py healthcheck [gpu] or worker.py work [cpu|gpu|dev]")
         sys.exit(1)
 
     processes = []
@@ -251,7 +251,36 @@ def stop_work(device: str):
 # ==============================================================================
 # COMMAND: healthcheck
 # ==============================================================================
-def do_healthcheck():
+def gpu_is_reachable() -> bool:
+    """Check that the container can still access its GPUs.
+
+    A container can lose its /dev/nvidia* devices while running (e.g. after a
+    `systemctl daemon-reload` with the legacy nvidia device driver), then every GPU
+    job fails. nvidia-smi detects that ("Failed to initialize NVML: Unknown Error")
+    without initializing CUDA in this process.
+    """
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "-L"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            timeout=8,
+        )
+    except Exception as e:
+        logger.error(f"GPU healthcheck failed: nvidia-smi raised {e!r}")
+        return False
+    if result.returncode != 0:
+        logger.error(f"GPU healthcheck failed: {result.stdout.strip()}")
+        return False
+    return True
+
+
+def do_healthcheck(require_gpu: bool = False):
+    if require_gpu and not gpu_is_reachable():
+        sys.exit(1)
     try:
         RedisRepo().connect()
         rq_workers = RedisRepo().redis_connection().smembers("rq:workers")
@@ -272,13 +301,16 @@ def do_healthcheck():
 # ==============================================================================
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: worker.py [healthcheck | work <mode> | stop <mode>]")
+        print("Usage: worker.py [healthcheck [gpu] | work <mode> | stop <mode>]")
         sys.exit(1)
 
     command = sys.argv[1]
 
     if command == "healthcheck":
-        do_healthcheck()
+        if len(sys.argv) == 3 and sys.argv[2] != "gpu":
+            print("Usage: worker.py healthcheck [gpu]")
+            sys.exit(1)
+        do_healthcheck(require_gpu=len(sys.argv) == 3)
     elif command == "work":
         if len(sys.argv) == 3:
             do_work(sys.argv[2])
@@ -293,5 +325,5 @@ if __name__ == "__main__":
             sys.exit(1)
     else:
         print(f"Unknown command: {command}")
-        print("Usage: worker.py [healthcheck | work <mode> | stop <mode>]")
+        print("Usage: worker.py [healthcheck [gpu] | work <mode> | stop <mode>]")
     sys.exit(1)
