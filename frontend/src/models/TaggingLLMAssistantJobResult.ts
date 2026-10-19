@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TaggingResult } from "./TaggingResult";
-export type TaggingLLMJobResult = {
-  llm_job_type: string;
+export type TaggingLLMAssistantJobResult = {
+  task_type: string;
   results: Array<TaggingResult>;
 };

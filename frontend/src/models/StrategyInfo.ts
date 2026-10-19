@@ -13,7 +13,7 @@ export type StrategyInfo = {
   /**
    * The strategy type
    */
-  llm_strategy_type: StrategyType;
+  strategy_type: StrategyType;
   /**
    * Human-readable name of the strategy
    */

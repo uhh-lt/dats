@@ -6,10 +6,10 @@
  * Params for single-strategy tasks (tagging, metadata, sentence annotation).
  */
 export type DefaultStrategyParams = {
-  llm_strategy_type: DefaultStrategyParams.llm_strategy_type;
+  strategy_type: DefaultStrategyParams.strategy_type;
 };
 export namespace DefaultStrategyParams {
-  export enum llm_strategy_type {
+  export enum strategy_type {
     TAGGING_DEFAULT = "TAGGING_DEFAULT",
     METADATA_DEFAULT = "METADATA_DEFAULT",
     SENTENCE_ANNOTATION_DEFAULT = "SENTENCE_ANNOTATION_DEFAULT",

@@ -3,5 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type NERInlineTagStrategyParams = {
-  llm_strategy_type: string;
+  strategy_type: string;
 };

@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { LLMPromptTemplates } from "./LLMPromptTemplates";
+import type { LLMAssistantPromptTemplates } from "./LLMAssistantPromptTemplates";
 export type FewShotParams = {
-  llm_approach_type: string;
+  approach_type: string;
   /**
    * The prompt templates to use for the job
    */
-  prompts: Array<LLMPromptTemplates>;
+  prompts: Array<LLMAssistantPromptTemplates>;
   /**
    * Large Language Model to use for the job
    */

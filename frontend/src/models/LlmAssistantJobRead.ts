@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { JobStatus } from "./JobStatus";
-import type { LLMJobInput } from "./LLMJobInput";
-import type { LLMJobOutput } from "./LLMJobOutput";
+import type { LLMAssistantJobInput } from "./LLMAssistantJobInput";
+import type { LLMAssistantJobOutput } from "./LLMAssistantJobOutput";
 export type LlmAssistantJobRead = {
   /**
    * RQ job ID
@@ -37,11 +37,11 @@ export type LlmAssistantJobRead = {
   /**
    * Input for the job
    */
-  input: LLMJobInput;
+  input: LLMAssistantJobInput;
   /**
    * Output for the job
    */
-  output?: LLMJobOutput | null;
+  output?: LLMAssistantJobOutput | null;
   /**
    * Created timestamp of the job
    */

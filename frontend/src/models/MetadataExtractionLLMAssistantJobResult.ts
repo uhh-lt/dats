@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { MetadataExtractionResult } from "./MetadataExtractionResult";
-export type MetadataExtractionLLMJobResult = {
-  llm_job_type: string;
+export type MetadataExtractionLLMAssistantJobResult = {
+  task_type: string;
   results: Array<MetadataExtractionResult>;
 };
