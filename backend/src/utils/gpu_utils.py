@@ -1,4 +1,5 @@
 def find_unused_cuda_device() -> str:
+    import os
     import subprocess
 
     import torch
@@ -6,21 +7,36 @@ def find_unused_cuda_device() -> str:
     if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
         return "cpu"
     try:
-        # Query free memory and utilization
+        # Query free memory and utilization of all GPUs mounted into the container
         result = subprocess.run(
             [
                 "nvidia-smi",
-                "--query-gpu=memory.free,utilization.gpu",
+                "--query-gpu=index,uuid,memory.free,utilization.gpu",
                 "--format=csv,nounits,noheader",
             ],
             stdout=subprocess.PIPE,
             encoding="utf-8",
         )
-        lines = result.stdout.strip().split("\n")
+        smi_stats: list[tuple[str, str, int, int]] = []
+        for line in result.stdout.strip().split("\n"):
+            index, uuid, mem_free, util = (field.strip() for field in line.split(","))
+            smi_stats.append((index, uuid, int(mem_free), int(util)))
+
+        # nvidia-smi ignores CUDA_VISIBLE_DEVICES and lists every GPU, while torch
+        # numbers only the visible ones: cuda:i is the i-th CUDA_VISIBLE_DEVICES entry
+        # (an nvidia-smi index or a GPU UUID, see CUDA_DEVICE_ORDER=PCI_BUS_ID).
+        visible = os.environ.get("CUDA_VISIBLE_DEVICES")
+        visible_ids = (
+            [entry.strip() for entry in visible.split(",")]
+            if visible
+            else [index for index, _, _, _ in smi_stats]
+        )
         gpu_stats = []
-        for i, line in enumerate(lines):
-            mem_free, util = map(int, line.split(","))
-            gpu_stats.append((i, mem_free, util))
+        for cuda_index, visible_id in enumerate(visible_ids):
+            for index, uuid, mem_free, util in smi_stats:
+                if visible_id == index or uuid.startswith(visible_id):
+                    gpu_stats.append((cuda_index, mem_free, util))
+                    break
         # Prefer GPUs with 0% utilization, then most free memory
         unused_gpus = [stat for stat in gpu_stats if stat[2] == 0]
         if unused_gpus:

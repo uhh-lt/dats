@@ -194,6 +194,9 @@ services:
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
       POSTGRES_POOL_SIZE: 1
       POSTGRES_MAX_OVERFLOW: 1
+      # restricts the worker to the GPUs in RQ_DEVICE_IDS, numbered like nvidia-smi
+      CUDA_VISIBLE_DEVICES: ${RQ_DEVICE_IDS?rq-device-ids-required!}
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
     command: python src/worker.py work gpu
     volumes:
       - ${DATS_DOCKER_DIR:-.}/backend_repo:/dats/docker/backend_repo
@@ -202,8 +205,12 @@ services:
       resources:
         reservations:
           devices:
-            - driver: nvidia
-              device_ids: ["${RQ_DEVICE_IDS?rq-device-ids-required!}"]
+            # CDI registers the GPUs in the container spec, so they survive a
+            # `systemctl daemon-reload` (the legacy nvidia driver loses them:
+            # "Failed to initialize NVML: Unknown Error"). CDI needs one entry per
+            # device, so all GPUs are mounted and CUDA_VISIBLE_DEVICES selects them.
+            - driver: cdi
+              device_ids: ["nvidia.com/gpu=all"]
               capabilities: [gpu]
     profiles:
       - rq
