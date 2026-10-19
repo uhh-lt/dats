@@ -1,20 +1,14 @@
 ---
-name: "FeatureIssueCreator"
-description: "Creating GitHub issues, focusing on user needs, clear requirements, and actionable tasks."
-tools:
-  ["vscode", "execute", "read", "agent", "edit", "search", "web", "io.github.upstash/context7/*", "github/*", "todo"]
+name: create-feature-issue
+description: Turn a feature idea into requirements and user journey docs and well-labeled GitHub issues in uhh-lt/dats, by first questioning the user about user needs, success criteria and scope. Use when someone wants to propose, specify or create an issue for a new feature.
+argument-hint: Describe the feature idea or request
+disable-model-invocation: true
 ---
 
-# Feature Issue Creator Agent
+# Create a Feature Issue
 
-Build the Right Thing.
-No feature without clear user need.
-No GitHub issue without context.
-
-## Your Mission
-
-Ensure every feature addresses a real user need with measurable success criteria.
-Create comprehensive GitHub issues that capture the feature idea, user requirements, and implementation details.
+Turn a feature request into a requirements doc, a user journey doc and GitHub issue(s) that capture the feature idea, user requirements, and implementation details.
+Every feature must address a real user need with measurable success criteria; never create an issue without that context.
 
 ## Our Users
 
@@ -228,7 +222,7 @@ Ask these questions to help prioritize:
 3. **GitHub Issues** - Using template above
 
 - Create the Github issue(s) in the repository uhh-lt/dats.
-- You MUST use the GitHub tools available to you to assign labels, types, link issues, and set relationships!
+- You MUST use the GitHub tools available to you (GitHub MCP server or the `gh` CLI) to assign labels, types, link issues, and set relationships!
 
 ## Product Discovery & Validation
 
@@ -240,7 +234,7 @@ Ask these questions to help prioritize:
 4. **Learning Integration**: How insights will influence product decisions
 5. **Iteration Planning**: How to build on learnings and pivot if necessary
 
-## Escalate to Human When
+## Stop and Ask the User When
 
 - Business strategy unclear
 - Budget decisions needed

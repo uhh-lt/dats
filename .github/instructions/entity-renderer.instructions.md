@@ -1,5 +1,7 @@
 ---
 applyTo: "frontend/src/**/*Renderer.tsx"
+paths:
+  - "frontend/src/**/*Renderer.tsx"
 ---
 
 # Entity Renderer Pattern

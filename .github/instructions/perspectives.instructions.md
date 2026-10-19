@@ -1,5 +1,8 @@
 ---
 applyTo: "frontend/src/views/perspectives/**, backend/src/modules/perspectives/**"
+paths:
+  - "frontend/src/views/perspectives/**"
+  - "backend/src/modules/perspectives/**"
 ---
 
 ## Perspectives

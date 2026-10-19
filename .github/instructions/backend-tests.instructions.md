@@ -1,5 +1,7 @@
 ---
 applyTo: "backend/test/**"
+paths:
+  - "backend/test/**"
 ---
 
 # Backend Testing
