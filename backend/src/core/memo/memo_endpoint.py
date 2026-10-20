@@ -20,7 +20,7 @@ from core.memo.memo_dto import (
 from core.memo.memo_generation_service import generate_memo_llm
 from core.memo.memo_orm import MemoORM
 from core.memo.memo_utils import get_memo_read_dto_from_orm, get_object_memos
-from repos.db.crud_base import NoSuchElementError
+from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(

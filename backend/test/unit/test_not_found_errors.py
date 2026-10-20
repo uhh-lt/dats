@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from common.exception_handler import NotFoundError, exception_handlers
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import NoSuchElementError
-from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
+from repos.db.sql_exceptions import NoSuchElementError
+from repos.elastic.elastic_exceptions import NoSuchObjectInElasticSearchError
 from repos.vector.weaviate_exceptions import (
     WeaviateObjectIDNotFoundException,
     WeaviateObjectIDsNotFoundException,

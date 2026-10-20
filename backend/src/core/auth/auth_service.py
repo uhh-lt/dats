@@ -5,7 +5,7 @@ from core.auth.security import verify_password
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserLogin
 from core.user.user_orm import UserORM
-from repos.db.crud_base import NoSuchElementError
+from repos.db.sql_exceptions import NoSuchElementError
 
 
 class AuthService(metaclass=SingletonMeta):

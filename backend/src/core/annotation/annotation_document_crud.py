@@ -9,7 +9,8 @@ from core.annotation.annotation_document_dto import (
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 
 class CRUDAnnotationDocument(

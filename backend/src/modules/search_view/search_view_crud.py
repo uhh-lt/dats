@@ -1,21 +1,15 @@
-from fastapi import status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from common.exception_handler import exception_handler
 from modules.search_view.search_view_dto import (
     SearchEntityType,
     SearchViewCreateUnion,
     SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
+from modules.search_view.search_view_exceptions import InvalidSearchViewOrderError
 from modules.search_view.search_view_orm import SearchViewORM
 from repos.db.crud_base import SQLCRUDBase
-
-
-@exception_handler(status.HTTP_400_BAD_REQUEST)
-class InvalidSearchViewOrderError(Exception):
-    pass
 
 
 class CRUDSearchView(

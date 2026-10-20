@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from sqlalchemy import CursorResult, delete
 from sqlalchemy.orm import Session
 
-from common.exception_handler import NotFoundError
 from config import conf
 from repos.db.orm_base import ORMBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)
@@ -18,13 +18,6 @@ BATCH_SIZE = conf.postgres.batch_size
 
 class UpdateNotAllowed(BaseModel):
     pass
-
-
-class NoSuchElementError(NotFoundError):
-    def __init__(self, model: Type[ORMModelType], **kwargs):
-        self.model = model
-        self.model_name = model.__name__.replace("ORM", "")
-        super().__init__(f"There exists no {self.model_name} with: {kwargs} !")
 
 
 class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):

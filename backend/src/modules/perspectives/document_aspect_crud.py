@@ -13,7 +13,8 @@ from modules.perspectives.document_aspect_dto import (
 )
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 
 class CRUDDocumentAspect(

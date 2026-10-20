@@ -1,9 +1,7 @@
-from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from common.exception_handler import exception_handler
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
@@ -13,18 +11,15 @@ from core.doc.source_document_dto import (
     SourceDocumentRead,
     SourceDocumentUpdate,
 )
+from core.doc.source_document_exceptions import (
+    SourceDocumentPreprocessingUnfinishedError,
+)
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
 from repos.filesystem_repo import FilesystemRepo
 from systems.event_system.events import source_document_deleted
-
-
-@exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
-class SourceDocumentPreprocessingUnfinishedError(Exception):
-    def __init__(self, sdoc_id: int):
-        super().__init__(f"SourceDocument {sdoc_id} is still getting preprocessed!")
 
 
 class CRUDSourceDocument(

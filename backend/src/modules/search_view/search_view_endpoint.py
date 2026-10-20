@@ -13,7 +13,7 @@ from modules.search_view.search_view_dto import (
     SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
-from repos.db.crud_base import NoSuchElementError
+from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(

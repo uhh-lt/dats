@@ -3,25 +3,18 @@ from typing import Any, Generic, TypeVar
 from elasticsearch import Elasticsearch, helpers
 from pydantic import BaseModel
 
-from common.exception_handler import NotFoundError
 from repos.elastic.elastic_dto_base import (
     ElasticSearchHit,
     ElasticSearchModelBase,
     PaginatedElasticSearchHits,
 )
+from repos.elastic.elastic_exceptions import NoSuchObjectInElasticSearchError
 from repos.elastic.elastic_index_base import IndexBase
 
 ModelDTOType = TypeVar("ModelDTOType", bound=ElasticSearchModelBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=ElasticSearchModelBase)
 UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
 IndexType = TypeVar("IndexType", bound=IndexBase)
-
-
-class NoSuchObjectInElasticSearchError(NotFoundError):
-    def __init__(self, index_name: str, id: int):
-        super().__init__(
-            (f"There exists no Object with ID={id} in Index {index_name} ")
-        )
 
 
 class ElasticCRUDBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOType]):

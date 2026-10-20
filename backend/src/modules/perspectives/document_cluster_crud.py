@@ -8,7 +8,8 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 
 class CRUDDocumentCluster(

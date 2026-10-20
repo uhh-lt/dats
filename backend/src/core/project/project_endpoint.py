@@ -16,7 +16,7 @@ from core.project.project_dto import (
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from repos.db.crud_base import NoSuchElementError
+from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(

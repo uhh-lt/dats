@@ -26,12 +26,8 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from repos.db.crud_base import (
-    BATCH_SIZE,
-    NoSuchElementError,
-    SQLCRUDBase,
-    UpdateNotAllowed,
-)
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
+from repos.db.sql_exceptions import NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
 
 
