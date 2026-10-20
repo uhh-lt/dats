@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -25,6 +26,32 @@ class SourceDocumentBaseDTO(BaseModel):
 
 # Properties for updating
 class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {
+            "name",
+            "folder_id",
+            "extract_html",
+            "text_extraction",
+            "text_language_detection",
+            "text_spacy",
+            "text_es_index",
+            "text_sentence_embedding",
+            "text_html_mapping",
+            "image_caption",
+            "image_embedding",
+            "image_metadata_extraction",
+            "image_thumbnail",
+            "image_object_detection",
+            "audio_metadata",
+            "audio_thumbnail",
+            "audio_transcription",
+            "video_metadata",
+            "video_thumbnail",
+            "video_audio_extraction",
+        }
+    )
+
     name: str | None = Field(
         description="User-defined name of the document (default is the filename)",
         default=None,

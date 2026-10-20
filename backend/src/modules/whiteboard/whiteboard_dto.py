@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -312,6 +312,9 @@ class WhiteboardCreateIntern(WhiteboardCreate):
 
 # Properties for updating
 class WhiteboardUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"title", "content"})
+
     title: str | None = Field(
         description="Title of the Whiteboard",
         default=None,

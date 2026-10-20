@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Self
+from typing import Any, ClassVar, Literal, Self
 
 from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -271,6 +271,9 @@ class ClassifierCreate(BaseModel):
 
 
 class ClassifierUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
+
     name: str | None = Field(default=None, description="Updated name of the classifier")
 
 

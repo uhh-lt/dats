@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from repos.db.dto_base import UpdateDTOBase
 
@@ -41,6 +41,11 @@ class MemoBaseDTO(BaseModel):
 
 # Properties to update
 class MemoUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"title", "content", "content_json"}
+    )
+
     title: str | None = Field(description="Title of the Memo", default=None)
     icon: str | None = Field(
         default=None,
@@ -70,20 +75,6 @@ class MemoUpdate(BaseModel, UpdateDTOBase):
         """
         memo_fields = set(MemoUpdate.model_fields) - self.PER_USER_FIELDS
         return memo_fields & self.model_fields_set
-
-    @model_validator(mode="after")
-    def check_fields_not_null(self) -> "MemoUpdate":
-        required_fields = {"title", "content", "content_json"}
-        invalid_fields = {
-            field
-            for field in required_fields.intersection(self.model_fields_set)
-            if getattr(self, field) is None
-        }
-        if invalid_fields:
-            raise ValueError(
-                f"Fields cannot be null: {', '.join(sorted(invalid_fields))}"
-            )
-        return self
 
 
 # Properties to update in bulk

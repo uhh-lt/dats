@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,6 +20,9 @@ class ProjectCreate(ProjectBaseDTO):
 
 # Properties for updating
 class ProjectUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"title", "description"})
+
     title: str | None = Field(description="Title of the Project", default=None)
     description: str | None = Field(
         description="Description of the Project", default=None

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import srsly
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -79,6 +81,9 @@ class AspectCreate(AspectBase):
 
 # Properties for updating
 class AspectUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
+
     name: str | None = Field(default=None, description="New name of the aspect")
 
 

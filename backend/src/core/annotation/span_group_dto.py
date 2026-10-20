@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,6 +25,9 @@ class SpanGroupCreate(SpanGroupBaseDTO):
 
 # Properties for updating
 class SpanGroupUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
+
     name: str | None = Field(description="Name of the SpanGroup", default=None)
 
 

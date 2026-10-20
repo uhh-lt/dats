@@ -86,6 +86,10 @@ export function CotaDashboardView() {
   };
 
   const handleEditAnalysis: MRT_TableOptions<AnalysisDashboardRow>["onEditingRowSave"] = ({ values, table, row }) => {
+    if (!values.title || values.title === row.original.title) {
+      table.setEditingRow(null); //exit editing mode
+      return; // not provided OR no change
+    }
     updateCota(
       {
         cotaId: row.original.id,
