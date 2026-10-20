@@ -92,6 +92,7 @@ lint target *files:
         if [ ${#rel[@]} -eq 0 ]; then
           uv run ruff check --fix src test
           uv run python lint/check_crud.py
+          uv run python lint/check_dtos.py
         else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
         cd frontend
