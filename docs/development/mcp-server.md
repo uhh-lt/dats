@@ -4,7 +4,7 @@ DATS exposes a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 
 
 ## Architecture
 
-The MCP server is built with [FastMCP](https://github.com/jlowin/fastmcp) and mounted directly onto the FastAPI application in `backend/src/main.py`. It re-uses the existing FastAPI routes — any endpoint tagged with `"mcp"` is automatically exposed as an MCP tool.
+The MCP server is built with [FastMCP](https://github.com/jlowin/fastmcp) and mounted onto the FastAPI application in `create_app()` (`backend/src/bootstrap.py`), the single place where the app is assembled. It re-uses the existing FastAPI routes — any endpoint tagged with `"mcp"` is automatically exposed as an MCP tool.
 
 ```
 Client (Claude, Copilot, ...) ──MCP──► FastMCP ──► FastAPI routes ──► DATS backend
@@ -12,6 +12,7 @@ Client (Claude, Copilot, ...) ──MCP──► FastMCP ──► FastAPI route
 
 Key files:
 
+- `backend/src/bootstrap.py` — `create_app()` assembles the FastAPI app and mounts the MCP server (last, since it wraps the lifespan)
 - `backend/src/systems/mcp_system/mcp_server.py` — MCP server setup, route mapping, and auth forwarding
 - `backend/src/core/auth/api_key_endpoint.py` — API key CRUD endpoints
 - `backend/src/core/auth/api_key_orm.py` — API key database model
