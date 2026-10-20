@@ -47,6 +47,7 @@ class CodeORM(ORMBase):
         passive_deletes=True,
     )
 
+    # many to one
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
@@ -63,7 +64,6 @@ class CodeORM(ORMBase):
         passive_deletes=True,
     )
 
-    # one to many
     bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM",
         back_populates="code",
@@ -71,7 +71,6 @@ class CodeORM(ORMBase):
         passive_deletes=True,
     )
 
-    # one to many
     sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
         "SentenceAnnotationORM",
         back_populates="code",
@@ -86,7 +85,9 @@ class CodeORM(ORMBase):
         nullable=True,
         index=True,
     )
-    parent: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
+    parent: Mapped["CodeORM | None"] = relationship(
+        "CodeORM", remote_side=[id], back_populates="children"
+    )
     children: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
         back_populates="parent",

@@ -344,6 +344,9 @@ class PerspectivesService:
         coords_y: list[float] = []
         labels: list[int] = []
         for da in doc_aspects:
+            assert da.x is not None and da.y is not None, (
+                f"Document {da.sdoc_id} has no coordinates"
+            )
             coords_x.append(da.x)
             coords_y.append(da.y)
             labels.append(doc_id2_dt[da.sdoc_id].cluster_id)
@@ -1195,7 +1198,7 @@ class PerspectivesService:
                 continue
 
             # assign the new cluster if the similarity is larger than the current cluster's distance
-            if result.score > doc_cluster.similarity:
+            if doc_cluster.similarity is None or result.score > doc_cluster.similarity:
                 update_ids.append((doc_cluster.sdoc_id, doc_cluster.cluster_id))
                 update_dtos.append(
                     DocumentClusterUpdate(

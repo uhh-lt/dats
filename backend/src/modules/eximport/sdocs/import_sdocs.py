@@ -4,6 +4,7 @@ import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type import DocType
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
@@ -24,7 +25,6 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
-from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )

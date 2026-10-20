@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.code.code_orm import CodeORM
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
+    from core.code.code_orm import CodeORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
 
@@ -19,7 +19,7 @@ class BBoxAnnotationORM(ORMBase):
     x_min: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     x_max: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     y_min: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    y_max = mapped_column(Integer, nullable=False, index=True)
+    y_max: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )

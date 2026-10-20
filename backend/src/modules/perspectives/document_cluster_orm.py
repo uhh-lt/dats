@@ -24,7 +24,7 @@ class DocumentClusterORM(ORMBase):
         index=True,
     )
 
-    similarity: Mapped[float] = mapped_column(Float, nullable=True)
+    similarity: Mapped[float | None] = mapped_column(Float)
     is_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # many to many

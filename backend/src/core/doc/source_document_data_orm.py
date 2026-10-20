@@ -22,6 +22,7 @@ class SourceDocumentDataORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="data"
     )
+
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     raw_html: Mapped[str] = mapped_column(String, nullable=False, index=False)
     html: Mapped[str] = mapped_column(String, nullable=False, index=False)
@@ -38,11 +39,11 @@ class SourceDocumentDataORM(ORMBase):
     sentence_ends: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    token_time_starts: Mapped[list[int]] = mapped_column(
-        ARRAY(Integer), nullable=True, index=False
+    token_time_starts: Mapped[list[int] | None] = mapped_column(
+        ARRAY(Integer), index=False
     )
-    token_time_ends: Mapped[list[int]] = mapped_column(
-        ARRAY(Integer), nullable=True, index=False
+    token_time_ends: Mapped[list[int] | None] = mapped_column(
+        ARRAY(Integer), index=False
     )
 
     @property
@@ -87,8 +88,6 @@ class SourceDocumentDataORM(ORMBase):
 
     @property
     def word_level_transcriptions(self) -> list[WordLevelTranscription] | None:
-        print(self.token_time_starts)
-        print(self.token_time_ends)
         if self.token_time_starts is None or self.token_time_ends is None:
             return None
         else:

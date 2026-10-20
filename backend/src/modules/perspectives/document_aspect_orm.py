@@ -27,8 +27,8 @@ class DocumentAspectORM(ORMBase):
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
     # 2D coordinates for visualization
-    x: Mapped[float] = mapped_column(Float, nullable=True)
-    y: Mapped[float] = mapped_column(Float, nullable=True)
+    x: Mapped[float | None] = mapped_column(Float)
+    y: Mapped[float | None] = mapped_column(Float)
 
     # many to many
     source_document: Mapped["SourceDocumentORM"] = relationship(

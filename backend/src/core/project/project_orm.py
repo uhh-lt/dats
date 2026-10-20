@@ -37,6 +37,7 @@ class ProjectORM(ORMBase):
         onupdate=func.current_timestamp(),
     )
 
+    # one to one
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,

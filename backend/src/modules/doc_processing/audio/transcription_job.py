@@ -92,6 +92,10 @@ def handle_transcription_job(
             ),
         )
 
+    assert (
+        sdoc_data.token_time_starts is not None
+        and sdoc_data.token_time_ends is not None
+    ), "Transcribed documents must have token timings"
     return TranscriptionJobOutput(
         token_starts=sdoc_data.token_starts,
         token_ends=sdoc_data.token_ends,

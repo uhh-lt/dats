@@ -4,6 +4,7 @@ from fastapi import HTTPException, UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
@@ -16,7 +17,6 @@ from modules.doc_processing.doc_processing_dto import (
     SdocProcessingJobInput,
     SdocStatusRow,
 )
-from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )

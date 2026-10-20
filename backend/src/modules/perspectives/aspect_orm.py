@@ -1,15 +1,15 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.tag.tag_orm import TagORM
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
     from core.project.project_orm import ProjectORM
+    from core.tag.tag_orm import TagORM
     from modules.perspectives.cluster_orm import ClusterORM
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
 
@@ -19,16 +19,16 @@ class AspectORM(ORMBase):
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     doc_embedding_prompt: Mapped[str] = mapped_column(Text, nullable=False)
-    doc_modification_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    doc_modification_prompt: Mapped[str | None] = mapped_column(Text)
     is_hierarchical: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
-    most_recent_job_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    most_recent_job_id: Mapped[str | None] = mapped_column(String)
     embedding_model: Mapped[str] = mapped_column(
         String, server_default="default", nullable=False
     )
     modality: Mapped[str] = mapped_column(String, nullable=False, server_default="text")
-    pipeline_settings: Mapped[str] = mapped_column(
+    pipeline_settings: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
 
@@ -41,22 +41,27 @@ class AspectORM(ORMBase):
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
 
-    tag_id: Mapped[int] = mapped_column(
+    tag_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("tag.id", ondelete="CASCADE"),
-        nullable=True,
         index=False,
     )
-    tag: Mapped["TagORM"] = relationship("TagORM")
+    tag: Mapped["TagORM | None"] = relationship("TagORM")
 
     # one to many
     clusters: Mapped[list["ClusterORM"]] = relationship(
-        "ClusterORM", back_populates="aspect", cascade="all, delete-orphan"
+        "ClusterORM",
+        back_populates="aspect",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     # many to many
     document_aspects: Mapped[list["DocumentAspectORM"]] = relationship(
-        "DocumentAspectORM", back_populates="aspect", cascade="all, delete-orphan"
+        "DocumentAspectORM",
+        back_populates="aspect",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",

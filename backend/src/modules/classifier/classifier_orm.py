@@ -37,12 +37,6 @@ class ClassifierORM(ORMBase):
     base_model: Mapped[str] = mapped_column(String, nullable=False, index=True)
     type: Mapped[ClassifierModel] = mapped_column(String, nullable=False, index=True)
     path: Mapped[str] = mapped_column(String, nullable=False)
-    codes: Mapped[list["CodeORM"]] = relationship(
-        "CodeORM", secondary="ClassifierCodeLinkTable".lower()
-    )
-    tags: Mapped[list["TagORM"]] = relationship(
-        "TagORM", secondary="ClassifierTagLinkTable".lower()
-    )
     labelid2classid: Mapped[dict[str, int]] = mapped_column(JSON, nullable=False)
 
     # TRAINING
@@ -50,7 +44,6 @@ class ClassifierORM(ORMBase):
     train_loss: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
     train_data_stats: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
 
-    # EVALUATION
     # one to many
     evaluations: Mapped[list["ClassifierEvaluationORM"]] = relationship(
         "ClassifierEvaluationORM",
@@ -69,6 +62,18 @@ class ClassifierORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM",
         back_populates="classifiers",
+    )
+
+    # many to many
+    codes: Mapped[list["CodeORM"]] = relationship(
+        "CodeORM",
+        secondary="ClassifierCodeLinkTable".lower(),
+        passive_deletes=True,
+    )
+    tags: Mapped[list["TagORM"]] = relationship(
+        "TagORM",
+        secondary="ClassifierTagLinkTable".lower(),
+        passive_deletes=True,
     )
 
     __table_args__ = (
@@ -119,6 +124,9 @@ class ClassifierEvaluationORM(ORMBase):
         "ClassifierORM",
         back_populates="evaluations",
     )
+
+    def get_project_id(self) -> int:
+        return self.classifier.get_project_id()
 
 
 class ClassifierCodeLinkTable(ORMBase):

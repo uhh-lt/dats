@@ -12,9 +12,9 @@ if TYPE_CHECKING:
 
 class TagRecommendationLinkORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    ml_job_id: Mapped[str] = mapped_column(String, index=True, nullable=True)
-    prediction_score: Mapped[float] = mapped_column(Float, index=True, nullable=True)
-    is_reviewed: Mapped[bool] = mapped_column(Boolean, index=True, nullable=True)
+    ml_job_id: Mapped[str | None] = mapped_column(String, index=True)
+    prediction_score: Mapped[float | None] = mapped_column(Float, index=True)
+    is_reviewed: Mapped[bool | None] = mapped_column(Boolean, index=True)
 
     # many to one
     source_document_id: Mapped[int] = mapped_column(
@@ -26,6 +26,7 @@ class TagRecommendationLinkORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="tag_recommendation_link"
     )
+
     predicted_tag_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("tag.id", ondelete="CASCADE"),

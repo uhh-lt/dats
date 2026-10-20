@@ -14,9 +14,9 @@ from sqlalchemy import (
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
-from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -64,6 +64,7 @@ class SourceDocumentORM(ORMBase):
     data: Mapped["SourceDocumentDataORM"] = relationship(
         "SourceDocumentDataORM",
         uselist=False,
+        back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
@@ -111,6 +112,13 @@ class SourceDocumentORM(ORMBase):
         passive_deletes=True,
     )
 
+    tag_recommendation_link: Mapped[list["TagRecommendationLinkORM"]] = relationship(
+        "TagRecommendationLinkORM",
+        back_populates="source_document",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     # many to many
     tags: Mapped[list["TagORM"]] = relationship(
         "TagORM",
@@ -119,16 +127,11 @@ class SourceDocumentORM(ORMBase):
         passive_deletes=True,
     )
 
-    tag_recommendation_link: Mapped[list["TagRecommendationLinkORM"]] = relationship(
-        "TagRecommendationLinkORM",
-        back_populates="source_document",
-        passive_deletes=True,
-    )
-
     document_aspects: Mapped[list["DocumentAspectORM"]] = relationship(
         "DocumentAspectORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     aspects: Mapped[list["AspectORM"]] = relationship(
         "AspectORM",
@@ -141,6 +144,7 @@ class SourceDocumentORM(ORMBase):
         "DocumentClusterORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM",

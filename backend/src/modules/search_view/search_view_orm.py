@@ -26,11 +26,9 @@ class SearchViewORM(ORMBase):
     entity_type: Mapped[str] = mapped_column(String, nullable=False)
     layout: Mapped[str] = mapped_column(String, nullable=False)
     filters: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
-    group_by: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
-    sorts: Mapped[list[object] | None] = mapped_column(JSON, nullable=True)
-    selected_properties: Mapped[list[object] | None] = mapped_column(
-        JSON, nullable=True
-    )
+    group_by: Mapped[dict[str, object] | None] = mapped_column(JSON)
+    sorts: Mapped[list[object] | None] = mapped_column(JSON)
+    selected_properties: Mapped[list[object] | None] = mapped_column(JSON)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -42,21 +40,22 @@ class SearchViewORM(ORMBase):
         nullable=False,
     )
 
+    # many to one
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+    project: Mapped["ProjectORM"] = relationship(
+        "ProjectORM", back_populates="search_views"
+    )
+
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )
-
-    project: Mapped["ProjectORM"] = relationship(
-        "ProjectORM", back_populates="search_views"
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="search_views")
 
