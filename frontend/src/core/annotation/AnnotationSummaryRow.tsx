@@ -5,7 +5,7 @@ import { LinkWrapper } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { ReactNode } from "react";
 
 export interface AnnotationRendererSharedProps extends ExpandableRendererProps {
@@ -68,10 +68,15 @@ export function AnnotationSummaryRow({
         {showSdocProjectMetadataId && (
           <SdocMetadataRenderer sdocId={sdocId} projectMetadataId={showSdocProjectMetadataId} />
         )}
-        {showCode && <CodeRenderer code={codeId} />}
+        {/* the code is the most important part: it keeps its width, only the text is truncated */}
+        {showCode && (
+          <Box flexShrink={0} maxWidth="100%" minWidth={0}>
+            <CodeRenderer code={codeId} />
+          </Box>
+        )}
         {showCode && showText ? (
-          <Typography component="span" flexShrink={0}>
-            :{" "}
+          <Typography component="span" flexShrink={0} mr={0.5}>
+            :
           </Typography>
         ) : null}
         {showText ? (
