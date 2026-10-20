@@ -48,12 +48,12 @@ export class PerspectivesService {
    * @returns AspectRead Successful Response
    * @throws ApiError
    */
-  public static getAllAspects({ projId }: { projId: number }): CancelablePromise<Array<AspectRead>> {
+  public static getAllAspects({ projectId }: { projectId: number }): CancelablePromise<Array<AspectRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/perspectives/project/{proj_id}/aspects",
+      url: "/perspectives/project/{project_id}/aspects",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

@@ -86,7 +86,7 @@ export function SdocStatusTable({
   const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = HealthHooks.useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
     retryDocProcessingJobs({
-      projId: projectId,
+      projectId,
       doctype: doctype,
       requestBody: selectedRows,
     });
@@ -97,7 +97,7 @@ export function SdocStatusTable({
   const handleRecompute = useCallback(
     (step: string) => {
       recomputeDocProcessingJobs({
-        projId: projectId,
+        projectId,
         processingStep: step,
         requestBody: {
           sdoc_ids: selectedRows,

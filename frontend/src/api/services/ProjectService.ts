@@ -31,12 +31,12 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static getProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static getProject({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}",
+      url: "/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -49,17 +49,17 @@ export class ProjectService {
    * @throws ApiError
    */
   public static updateProject({
-    projId,
+    projectId,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     requestBody: ProjectUpdate;
   }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/project/{proj_id}",
+      url: "/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -73,12 +73,12 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static deleteProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static deleteProject({ projectId }: { projectId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/project/{proj_id}",
+      url: "/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -91,19 +91,19 @@ export class ProjectService {
    * @throws ApiError
    */
   public static resolveFilename({
-    projId,
+    projectId,
     filename,
     onlyFinished = true,
   }: {
-    projId: number;
+    projectId: number;
     filename: string;
     onlyFinished?: boolean;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}/resolve_filename/{filename}",
+      url: "/project/{project_id}/resolve_filename/{filename}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
         filename: filename,
       },
       query: {

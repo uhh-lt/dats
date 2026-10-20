@@ -36,13 +36,13 @@ export class DocprocessingService {
    * @throws ApiError
    */
   public static searchSdocHealth({
-    projId,
+    projectId,
     doctype,
     page,
     pageSize,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     doctype: DocType;
     page: number;
     pageSize: number;
@@ -50,9 +50,9 @@ export class DocprocessingService {
   }): CancelablePromise<SdocHealthResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{proj_id}/search",
+      url: "/docprocessing/project/{project_id}/search",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       query: {
         doctype: doctype,
@@ -72,17 +72,17 @@ export class DocprocessingService {
    * @throws ApiError
    */
   public static getSimpleSdocStatusByProjectAndStatus({
-    projId,
+    projectId,
     status,
   }: {
-    projId: number;
+    projectId: number;
     status: SDocStatus;
   }): CancelablePromise<Array<SourceDocumentStatusSimple>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/docprocessing/project/{proj_id}/status/{status}/simple",
+      url: "/docprocessing/project/{project_id}/status/{status}/simple",
       path: {
-        proj_id: projId,
+        project_id: projectId,
         status: status,
       },
       errors: {
@@ -96,17 +96,17 @@ export class DocprocessingService {
    * @throws ApiError
    */
   public static uploadFiles({
-    projId,
+    projectId,
     formData,
   }: {
-    projId: number;
+    projectId: number;
     formData: Body_docprocessing_upload_files;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{proj_id}",
+      url: "/docprocessing/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       formData: formData,
       mediaType: "multipart/form-data",
@@ -121,19 +121,19 @@ export class DocprocessingService {
    * @throws ApiError
    */
   public static retryFailedSdocs({
-    projId,
+    projectId,
     doctype,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     doctype: DocType;
     requestBody: Array<number>;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{proj_id}/retry",
+      url: "/docprocessing/project/{project_id}/retry",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       query: {
         doctype: doctype,
@@ -151,19 +151,19 @@ export class DocprocessingService {
    * @throws ApiError
    */
   public static recomputeProcessingStep({
-    projId,
+    projectId,
     processingStep,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     processingStep: string;
     requestBody: Body_docprocessing_recompute_processing_step;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/docprocessing/project/{proj_id}/recompute",
+      url: "/docprocessing/project/{project_id}/recompute",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       query: {
         processing_step: processingStep,

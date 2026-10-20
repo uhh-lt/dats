@@ -16,12 +16,12 @@ export class SimsearchService {
    * @throws ApiError
    */
   public static findSimilarSentences({
-    projId,
+    projectId,
     topK,
     threshold,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     topK: number;
     threshold: number;
     requestBody: Body_simsearch_find_similar_sentences;
@@ -30,7 +30,7 @@ export class SimsearchService {
       method: "POST",
       url: "/simsearch/sentences",
       query: {
-        proj_id: projId,
+        project_id: projectId,
         top_k: topK,
         threshold: threshold,
       },
@@ -47,12 +47,12 @@ export class SimsearchService {
    * @throws ApiError
    */
   public static findSimilarImages({
-    projId,
+    projectId,
     topK,
     threshold,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     topK: number;
     threshold: number;
     requestBody: Body_simsearch_find_similar_images;
@@ -61,7 +61,7 @@ export class SimsearchService {
       method: "POST",
       url: "/simsearch/images",
       query: {
-        proj_id: projId,
+        project_id: projectId,
         top_k: topK,
         threshold: threshold,
       },

@@ -50,7 +50,7 @@ export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
   const handleAddUser: SubmitHandler<UserAddFormValues> = useCallback(
     (data) => {
       addUserMutation.mutate({
-        projId: project.id,
+        projectId: project.id,
         requestBody: {
           email: data.email,
         },
@@ -70,7 +70,7 @@ export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
         text: `Do you really want to remove the User ${userId} from this project? You can add her again.`,
         onAccept: () => {
           removeUserMutation.mutate({
-            projId: project.id,
+            projectId: project.id,
             userId: userId,
           });
         },

@@ -93,12 +93,12 @@ export class ProjectMetadataService {
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/projmeta/project/{proj_id}",
+      url: "/projmeta/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

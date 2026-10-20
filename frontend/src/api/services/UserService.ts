@@ -44,12 +44,12 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<UserRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<UserRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user/{proj_id}/user",
+      url: "/user/{project_id}/user",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -62,17 +62,17 @@ export class UserService {
    * @throws ApiError
    */
   public static associateUserToProject({
-    projId,
+    projectId,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     requestBody: ProjectAddUser;
   }): CancelablePromise<ProjectUserLinks> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/user/{proj_id}/user",
+      url: "/user/{project_id}/user",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -144,17 +144,17 @@ export class UserService {
    * @throws ApiError
    */
   public static dissociateUserFromProject({
-    projId,
+    projectId,
     userId,
   }: {
-    projId: number;
+    projectId: number;
     userId: number;
   }): CancelablePromise<ProjectUserLinks> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/user/{proj_id}/user/{user_id}",
+      url: "/user/{project_id}/user/{user_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
         user_id: userId,
       },
       errors: {

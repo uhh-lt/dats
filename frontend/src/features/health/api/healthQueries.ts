@@ -34,7 +34,7 @@ export const healthQueries = {
       queryKey: [...healthQueries.tableScope(), projectId, doctype, sortingModel, fetchSize] as const,
       queryFn: ({ pageParam }) =>
         DocprocessingService.searchSdocHealth({
-          projId: projectId,
+          projectId,
           doctype,
           requestBody: sortingModel.map((sort) => ({
             column: sort.id,

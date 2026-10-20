@@ -33,6 +33,6 @@ export const projectQueries = {
   sdocStatusSimple: (projectId: number, status: SDocStatus) =>
     queryOptions({
       queryKey: [...projectQueries.all(), "sdocStatusSimple", projectId, status] as const,
-      queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projId: projectId, status }),
+      queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
     }),
 };

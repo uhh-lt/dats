@@ -58,7 +58,7 @@ export function AnalysisAssistant() {
       {
         model: model,
         sessionId: sessionId,
-        projId: projectId,
+        projectId,
         requestBody: {
           query: newUserMessage.message,
           sdoc_ids: selectedSdocIds,

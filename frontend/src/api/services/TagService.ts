@@ -93,12 +93,12 @@ export class TagService {
    * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<TagRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<TagRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/tag/project/{proj_id}",
+      url: "/tag/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

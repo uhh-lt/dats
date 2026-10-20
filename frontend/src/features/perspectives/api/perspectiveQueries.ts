@@ -26,7 +26,7 @@ export const perspectiveQueries = {
     queryOptions({
       queryKey: [...perspectiveQueries.aspectsByProjectScope(), projectId] as const,
       queryFn: async () => {
-        const aspects = await PerspectivesService.getAllAspects({ projId: projectId });
+        const aspects = await PerspectivesService.getAllAspects({ projectId });
         return aspects.reduce<AspectMap>((acc, aspect) => {
           acc[aspect.id] = aspect;
           return acc;

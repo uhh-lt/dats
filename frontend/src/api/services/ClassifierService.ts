@@ -29,12 +29,12 @@ export class ClassifierService {
    * @returns ClassifierRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<ClassifierRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<ClassifierRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/classifier/project/{proj_id}",
+      url: "/classifier/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -89,17 +89,17 @@ export class ClassifierService {
    * @throws ApiError
    */
   public static computeDatasetStatistics({
-    projId,
+    projectId,
     requestBody,
   }: {
-    projId: number;
+    projectId: number;
     requestBody: ClassifierDatasetStatisticsRequest;
   }): CancelablePromise<ClassifierDatasetStatistics> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/classifier/project/{proj_id}/dataset-statistics",
+      url: "/classifier/project/{project_id}/dataset-statistics",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       body: requestBody,
       mediaType: "application/json",
