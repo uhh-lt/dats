@@ -14,11 +14,11 @@ from core.annotation.sentence_annotation_dto import (
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSentenceAnnotation(
-    CRUDBase[
+    SQLCRUDBase[
         SentenceAnnotationORM, SentenceAnnotationCreateIntern, SentenceAnnotationUpdate
     ]
 ):
@@ -270,7 +270,7 @@ class CRUDSentenceAnnotation(
         anno_ids = [anno_id_tuple[0] for anno_id_tuple in anno_ids]
 
         # 2. delete the annotations
-        num_deletions = self.remove_multi(
+        num_deletions = self.delete_multi(
             db=db,
             ids=anno_ids,
         )
@@ -314,7 +314,7 @@ class CRUDSentenceAnnotation(
         adoc_ids = list({removed_orm.tuple()[1] for removed_orm in removed_orms})
 
         # delete the sdocs
-        self.remove_multi(db=db, ids=anno_ids)
+        self.delete_multi(db=db, ids=anno_ids)
 
         # update the annotation document's timestamp
         for adoc_id in adoc_ids:

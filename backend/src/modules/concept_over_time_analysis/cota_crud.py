@@ -7,11 +7,11 @@ from modules.concept_over_time_analysis.cota_dto import (
 from modules.concept_over_time_analysis.cota_orm import (
     ConceptOverTimeAnalysisORM,
 )
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDConceptOverTimeAnalysis(
-    CRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
+    SQLCRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
 ):
     def read_by_project(
         self, db: Session, *, project_id: int

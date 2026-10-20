@@ -7,12 +7,12 @@ from sqlalchemy.orm import Session
 from config import conf
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 BATCH_SIZE = conf.postgres.batch_size
 
 
-class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
+class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
     ### READ OPERATIONS ###
 
     def read_by_project(self, db: Session, project_id: int) -> list[TagORM]:

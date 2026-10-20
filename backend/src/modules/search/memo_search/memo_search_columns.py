@@ -335,9 +335,9 @@ class MemoColumns(str, AbstractColumns):
     def _resolve_attached_object_name(db, crud: Crud, object_id: int) -> str:
         match crud:
             case Crud.SOURCE_DOCUMENT | Crud.CODE | Crud.TAG | Crud.SPAN_GROUP:
-                return crud.value.read(db, object_id).name
+                return crud.value.read(db=db, id=object_id).name
             case Crud.PROJECT:
-                return crud.value.read(db, object_id).title
+                return crud.value.read(db=db, id=object_id).title
             case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
                 return str(object_id)
             case _:

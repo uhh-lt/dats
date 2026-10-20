@@ -44,7 +44,7 @@ def create_doc_tag(
     if tag.parent_id is not None:
         authz_user.assert_in_same_project_as(Crud.TAG, tag.parent_id)
 
-        parent_tag = crud_tag.read(db, tag.parent_id)
+        parent_tag = crud_tag.read(db, id=tag.parent_id)
         validate.validate_condition(
             parent_tag.project_id == tag.project_id,
             "Parent tag needs to be in the same project",

@@ -6,11 +6,11 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisUpdateIntern,
 )
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDTimelineAnalysis(
-    CRUDBase[
+    SQLCRUDBase[
         TimelineAnalysisORM, TimelineAnalysisCreateIntern, TimelineAnalysisUpdateIntern
     ]
 ):

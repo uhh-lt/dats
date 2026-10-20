@@ -5,11 +5,11 @@ from config import conf
 from config_schema import SystemCodeConfig
 from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_orm import CodeORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 from utils.color_utils import get_next_color
 
 
-class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
+class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
 
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:

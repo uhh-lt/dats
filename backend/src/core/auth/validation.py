@@ -50,6 +50,6 @@ class Validate:
             # There's no good way to bind the value of `Crud` to the
             # type of `object_id`, so we switch off the type checker
             # for this line :(
-            return crud.value.read(self.db, id)  # type: ignore
+            return crud.value.read(db=self.db, id=id)  # type: ignore
         except NoSuchElementError:
             raise InvalidError("Object does not exist")

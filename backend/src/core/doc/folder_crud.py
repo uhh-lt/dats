@@ -12,10 +12,10 @@ from core.doc.folder_exceptions import (
     FolderMoveToNonNormalFolderError,
 )
 from core.doc.folder_orm import FolderORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
+class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
     def read_subfolders(
         self, db: Session, *, parent_folder_id: int | None
     ) -> list[FolderORM]:
@@ -108,7 +108,8 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
     ) -> list[FolderORM]:
         """Update multiple folders, each identified by its folder_id."""
         folders = {
-            f.id: f for f in self.read_by_ids(db, [u.folder_id for u in update_dtos])
+            f.id: f
+            for f in self.read_by_ids(db, ids=[u.folder_id for u in update_dtos])
         }
         for update_dto in update_dtos:
             self._assert_valid_move(

@@ -20,10 +20,10 @@ from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
+class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     ### CREATE OPERATIONS ###
 
     def create(self, db: Session, *, create_dto: MemoCreateIntern) -> MemoORM:

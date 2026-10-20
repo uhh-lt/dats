@@ -1,10 +1,10 @@
 from modules.perspectives.cluster_dto import ClusterCreateIntern, ClusterUpdateIntern
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]):
+class CRUDCluster(SQLCRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]):
     def read_or_create_outlier_cluster(
         self, db, *, aspect_id: int, level: int
     ) -> ClusterORM:

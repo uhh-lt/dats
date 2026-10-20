@@ -14,11 +14,11 @@ from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDBBoxAnnotation(
-    CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreateIntern, BBoxAnnotationUpdate]
+    SQLCRUDBase[BBoxAnnotationORM, BBoxAnnotationCreateIntern, BBoxAnnotationUpdate]
 ):
     ### CREATE OPERATIONS ###
 
@@ -270,7 +270,7 @@ class CRUDBBoxAnnotation(
         anno_ids = [anno_id_tuple[0] for anno_id_tuple in anno_ids]
 
         # 2. delete all by ids
-        num_deletions = self.remove_multi(
+        num_deletions = self.delete_multi(
             db=db,
             ids=anno_ids,
         )

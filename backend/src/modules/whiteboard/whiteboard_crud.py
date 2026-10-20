@@ -26,11 +26,11 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardUpdateIntern,
 )
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDWhiteboard(
-    CRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdateIntern]
+    SQLCRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdateIntern]
 ):
     def read_by_project(self, db: Session, *, project_id: int) -> list[WhiteboardORM]:
         db_obj = (
