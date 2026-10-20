@@ -81,7 +81,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 
 ### Verbs and Signatures
 
-- **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `read_by_filters`, `delete`, `delete_by_project`, `search_near_object`, `search_near_vector`. Do not reimplement them.
+- **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `read_by_filters`, `delete`, `delete_by_project`, `search_near_object`, `search_near_vector`. Do not override or reimplement them. (This is specific to Embedding CRUDs; SQL CRUDs override their base instead.)
 - **Subclass names**: use the same verbs with `_by_<field>` for lookups (`read_by_sdoc_id`, `read_by_aspect_id`, `delete_by_sdoc_id`, `delete_by_aspect_id`) and `search_near_<x>` for searches. `get_` and `find_` are forbidden, and so are `add_`/`remove_` (SQL-only verbs): use `create`/`delete`.
 - **Private helpers** (`_name`) are exempt from the verb, order and section rules, but still need a return annotation.
 - **Client first**: the first parameter after `self` is `client: WeaviateClient`; every parameter after it is keyword-only (`*`) and the project id is `project_id`. The SQL session plays no role here.
