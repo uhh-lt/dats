@@ -114,6 +114,9 @@ services:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
       PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
       DEFAULT_VECTORIZER_MODULE: "none"
+      # collections are only created by the backend (with multi-tenancy); an insert
+      # into a missing collection must fail instead of creating it without tenants
+      AUTOSCHEMA_ENABLED: "false"
       CLUSTER_HOSTNAME: "node1"
       LOG_LEVEL: "info"
       ENABLE_MODULES: "backup-filesystem"
