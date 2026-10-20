@@ -235,3 +235,66 @@ class TestJobUpdatedEmission:
         assert payload.status == JobStatus.FAILED
         assert payload.status_message == "export exploded"
         assert payload.finished is not None
+
+    def test_failing_finish_hook_emits_failed_status(
+        self, test_project: ProjectORM, test_user: UserORM
+    ):
+        """A job whose finish hook raises (e.g. enqueueing the next pipeline step
+        fails) ends with a FAILED JOB_UPDATED, never stays STARTED or claims FINISHED.
+        """
+        with patch("systems.job_system.job_events._publish_envelope_sync"):
+            job = _start_export_job(test_project)
+
+        with (
+            patch("systems.job_system.job_handler.Job", return_value=job),
+            patch(
+                "systems.job_system.job_handler.handle_job_finished",
+                side_effect=RuntimeError("enqueue failed"),
+            ),
+            patch(
+                "systems.job_system.job_events._publish_envelope_sync"
+            ) as mock_publish,
+            pytest.raises(RuntimeError, match="enqueue failed"),
+        ):
+            rq_job_handler(
+                jobtype=JobType.EXPORT,
+                handler=lambda payload, job: None,
+                payload=job.job.kwargs["payload"],
+            )
+
+        statuses = [_payload(e).status for e in _captured_envelopes(mock_publish)]
+        assert JobStatus.FINISHED not in statuses
+        payload = _payload(_captured_envelopes(mock_publish)[-1])
+        assert payload.status == JobStatus.FAILED
+        assert payload.status_message == "enqueue failed"
+
+    def test_failing_error_hook_still_emits_failed_status(
+        self, test_project: ProjectORM, test_user: UserORM
+    ):
+        """If the error hook raises as well, the FAILED JOB_UPDATED is still published."""
+        with patch("systems.job_system.job_events._publish_envelope_sync"):
+            job = _start_export_job(test_project)
+
+        def failing_handler(payload, job):
+            raise RuntimeError("export exploded")
+
+        with (
+            patch("systems.job_system.job_handler.Job", return_value=job),
+            patch(
+                "systems.job_system.job_handler.handle_job_error",
+                side_effect=RuntimeError("status update failed"),
+            ),
+            patch(
+                "systems.job_system.job_events._publish_envelope_sync"
+            ) as mock_publish,
+            pytest.raises(RuntimeError),
+        ):
+            rq_job_handler(
+                jobtype=JobType.EXPORT,
+                handler=failing_handler,
+                payload=job.job.kwargs["payload"],
+            )
+
+        payload = _payload(_captured_envelopes(mock_publish)[-1])
+        assert payload.status == JobStatus.FAILED
+        assert payload.status_message == "export exploded"
