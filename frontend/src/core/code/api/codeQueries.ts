@@ -21,7 +21,7 @@ export const codeQueries = {
         projectId === undefined
           ? skipToken
           : async () => {
-              const codes = await CodeService.getByProject({ projId: projectId });
+              const codes = await CodeService.getByProject({ projectId });
               return codes.reduce<CodeMap>((acc, code) => {
                 acc[code.id] = code;
                 return acc;

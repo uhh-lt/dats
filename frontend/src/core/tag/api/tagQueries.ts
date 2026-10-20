@@ -17,7 +17,7 @@ export const tagQueries = {
   byProject: (projectId: number | undefined) =>
     queryOptions({
       queryKey: [...tagQueries.byProjectScope(), projectId] as const,
-      queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projId: projectId }),
+      queryFn: projectId === undefined ? skipToken : () => TagService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
 

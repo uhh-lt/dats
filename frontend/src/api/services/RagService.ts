@@ -14,14 +14,14 @@ export class RagService {
    * @throws ApiError
    */
   public static ragSession({
-    projId,
+    projectId,
     topK,
     threshold,
     model,
     requestBody,
     sessionId,
   }: {
-    projId: number;
+    projectId: number;
     topK: number;
     threshold: number;
     model: string;
@@ -32,7 +32,7 @@ export class RagService {
       method: "POST",
       url: "/rag/rag_session",
       query: {
-        proj_id: projId,
+        project_id: projectId,
         top_k: topK,
         threshold: threshold,
         model: model,

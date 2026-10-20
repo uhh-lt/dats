@@ -65,7 +65,7 @@ export const sdocQueries = {
       queryKey: [...sdocQueries.idByFilenameScope(), projectId, filename] as const,
       queryFn: !filename
         ? skipToken
-        : () => ProjectService.resolveFilename({ projId: projectId, filename, onlyFinished: true }),
+        : () => ProjectService.resolveFilename({ projectId, filename, onlyFinished: true }),
       staleTime: Infinity,
     }),
 

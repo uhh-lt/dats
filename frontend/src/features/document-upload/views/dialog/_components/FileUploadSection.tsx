@@ -37,7 +37,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   const handleUpload = useCallback(async () => {
     if (files.length > 0) {
       await uploadDocumentMutation.mutateAsync({
-        projId: projectId,
+        projectId,
         formData: {
           settings: JSON.stringify(settings),
           // @ts-expect-error: ignore this error until we switch to new codegen heyapi.dev

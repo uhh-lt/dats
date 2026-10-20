@@ -89,12 +89,12 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<CodeRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<CodeRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/code/project/{proj_id}",
+      url: "/code/project/{project_id}",
       path: {
-        proj_id: projId,
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,

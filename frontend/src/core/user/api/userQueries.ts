@@ -25,7 +25,7 @@ export const userQueries = {
   byProject: (projectId: number | undefined) =>
     queryOptions({
       queryKey: [...userQueries.byProjectScope(), projectId] as const,
-      queryFn: projectId === undefined ? skipToken : () => UserService.getByProject({ projId: projectId }),
+      queryFn: projectId === undefined ? skipToken : () => UserService.getByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

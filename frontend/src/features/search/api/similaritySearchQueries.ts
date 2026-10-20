@@ -27,7 +27,7 @@ export const similaritySearchQueries = {
       queryKey: [...similaritySearchQueries.imageScope(), projectId, searchQuery, filter, topK, threshold] as const,
       queryFn: () =>
         SimsearchService.findSimilarImages({
-          projId: projectId,
+          projectId,
           threshold,
           topK,
           requestBody: { query: searchQuery, filter },
@@ -41,7 +41,7 @@ export const similaritySearchQueries = {
       queryKey: [...similaritySearchQueries.sentenceScope(), projectId, searchQuery, filter, topK, threshold] as const,
       queryFn: () =>
         SimsearchService.findSimilarSentences({
-          projId: projectId,
+          projectId,
           threshold,
           topK,
           requestBody: { filter, query: searchQuery },

@@ -31,7 +31,7 @@ export const ProjectDetails = memo(({ project }: ProjectDetailsProps) => {
   const handleProjectUpdate: SubmitHandler<ProjectUpdate> = useCallback(
     (data) => {
       updateProjectMutation.mutate({
-        projId: project.id,
+        projectId: project.id,
         requestBody: data,
       });
     },

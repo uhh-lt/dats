@@ -29,7 +29,7 @@ export function ProjectDangerZone({ project }: ProjectDangerZoneProps) {
         onAccept: () => {
           navigate({ to: "/projects" });
           deleteProject(
-            { projId: project.id },
+            { projectId: project.id },
             {
               onSuccess: () => navigate({ to: "/projects" }),
             },

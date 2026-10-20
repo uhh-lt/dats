@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.12.0" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.12.1" },
   "paths": {
     "/analysis/code_frequencies": {
       "post": {
@@ -709,14 +709,19 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/classifier/project/{proj_id}": {
+    "/classifier/project/{project_id}": {
       "get": {
         "tags": ["classifier"],
         "summary": "Returns all Classifiers of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -792,14 +797,19 @@
         }
       }
     },
-    "/classifier/project/{proj_id}/dataset-statistics": {
+    "/classifier/project/{project_id}/dataset-statistics": {
       "post": {
         "tags": ["classifier"],
         "summary": "Returns statistics of the dataset that would be created with these parameters",
         "operationId": "compute_dataset_statistics",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1033,14 +1043,19 @@
         }
       }
     },
-    "/code/project/{proj_id}": {
+    "/code/project/{project_id}": {
       "get": {
         "tags": ["code"],
         "summary": "Returns all Codes of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -1380,14 +1395,19 @@
         }
       }
     },
-    "/docprocessing/project/{proj_id}/search": {
+    "/docprocessing/project/{project_id}/search": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
         "operationId": "search_sdoc_health",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "doctype", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } },
           { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
           {
@@ -1421,14 +1441,19 @@
         }
       }
     },
-    "/docprocessing/project/{proj_id}/status/{status}/simple": {
+    "/docprocessing/project/{project_id}/status/{status}/simple": {
       "get": {
         "tags": ["docprocessing"],
         "summary": "Get all SourceDocumentStatusSimple for the Project with the given ID by status",
         "operationId": "get_simple_sdoc_status_by_project_and_status",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
         ],
         "responses": {
@@ -1451,14 +1476,19 @@
         }
       }
     },
-    "/docprocessing/project/{proj_id}": {
+    "/docprocessing/project/{project_id}": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Uploads one or multiple files to the Project with the given ID if it exists",
         "operationId": "upload_files",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -1480,14 +1510,19 @@
         }
       }
     },
-    "/docprocessing/project/{proj_id}/retry": {
+    "/docprocessing/project/{project_id}/retry": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Retries doc processing jobs for SourceDocuments in the given Project and document type",
         "operationId": "retry_failed_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "doctype", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } }
         ],
         "requestBody": {
@@ -1512,14 +1547,19 @@
         }
       }
     },
-    "/docprocessing/project/{proj_id}/recompute": {
+    "/docprocessing/project/{project_id}/recompute": {
       "post": {
         "tags": ["docprocessing"],
         "summary": "Recomputes the processing step for all SourceDocuments in the Project",
         "operationId": "recompute_processing_step",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "processing_step",
             "in": "query",
@@ -2806,14 +2846,19 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/perspectives/project/{proj_id}/aspects": {
+    "/perspectives/project/{project_id}/aspects": {
       "get": {
         "tags": ["perspectives"],
         "summary": "Returns all Aspects of the Project with the given ID if it exists",
         "operationId": "get_all_aspects",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -3228,14 +3273,19 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/project/{proj_id}": {
+    "/project/{project_id}": {
       "get": {
         "tags": ["project"],
         "summary": "Returns the Project with the given ID if it exists",
         "operationId": "get_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -3254,7 +3304,12 @@
         "operationId": "update_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -3277,7 +3332,12 @@
         "operationId": "delete_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -3291,14 +3351,19 @@
         }
       }
     },
-    "/project/{proj_id}/resolve_filename/{filename}": {
+    "/project/{project_id}/resolve_filename/{filename}": {
       "get": {
         "tags": ["project"],
         "summary": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
         "operationId": "resolve_filename",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "filename", "in": "path", "required": true, "schema": { "type": "string", "title": "Filename" } },
           {
             "name": "only_finished",
@@ -3474,14 +3539,19 @@
         }
       }
     },
-    "/projmeta/project/{proj_id}": {
+    "/projmeta/project/{project_id}": {
       "get": {
         "tags": ["projectMetadata"],
         "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -3510,7 +3580,12 @@
         "operationId": "rag_session",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
           {
             "name": "threshold",
@@ -4586,7 +4661,12 @@
         "operationId": "find_similar_sentences",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
           { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
         ],
@@ -4623,7 +4703,12 @@
         "operationId": "find_similar_images",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "top_k", "in": "query", "required": true, "schema": { "type": "integer", "title": "Top K" } },
           { "name": "threshold", "in": "query", "required": true, "schema": { "type": "number", "title": "Threshold" } }
         ],
@@ -5914,14 +5999,19 @@
         }
       }
     },
-    "/tag/project/{proj_id}": {
+    "/tag/project/{project_id}": {
       "get": {
         "tags": ["tag"],
         "summary": "Returns all Tags of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -6482,14 +6572,19 @@
         }
       }
     },
-    "/user/{proj_id}/user": {
+    "/user/{project_id}/user": {
       "get": {
         "tags": ["user"],
         "summary": "Returns all Users of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "responses": {
           "200": {
@@ -6516,7 +6611,12 @@
         "operationId": "associate_user_to_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
         ],
         "requestBody": {
           "required": true,
@@ -6618,14 +6718,19 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/{proj_id}/user/{user_id}": {
+    "/user/{project_id}/user/{user_id}": {
       "delete": {
         "tags": ["user"],
         "summary": "Dissociates the Users with the Project with the given ID if it exists",
         "operationId": "dissociate_user_from_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
         ],
         "responses": {

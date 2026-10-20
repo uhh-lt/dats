@@ -34,7 +34,7 @@ export const classifierQueries = {
     queryOptions({
       queryKey: [...classifierQueries.byProjectScope(), projectId] as const,
       queryFn: async () => {
-        const classifiers = await ClassifierService.getByProject({ projId: projectId });
+        const classifiers = await ClassifierService.getByProject({ projectId });
         return classifiers.reduce<ClassifierMap>((acc, classifier) => {
           acc[classifier.id] = classifier;
           return acc;
@@ -87,7 +87,7 @@ export const classifierQueries = {
           merge_children_into_parent: mergeChildren,
         };
 
-        return ClassifierService.computeDatasetStatistics({ projId: projectId, requestBody: request });
+        return ClassifierService.computeDatasetStatistics({ projectId, requestBody: request });
       },
     }),
 

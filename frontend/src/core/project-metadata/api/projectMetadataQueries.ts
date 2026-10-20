@@ -20,7 +20,7 @@ export const projectMetadataQueries = {
     queryOptions({
       queryKey: [...projectMetadataQueries.byProjectScope(), projectId] as const,
       queryFn: async () => {
-        const metadata = await ProjectMetadataService.getByProject({ projId: projectId });
+        const metadata = await ProjectMetadataService.getByProject({ projectId });
         return metadata.reduce<ProjectMetadataMap>((acc, m) => {
           acc[m.id] = m;
           return acc;
