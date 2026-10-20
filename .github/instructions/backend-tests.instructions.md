@@ -53,11 +53,15 @@ There are two levels of conftest:
 
 **Root `backend/test/conftest.py`** — global infrastructure, mostly `autouse`:
 
-- Points the app at test databases (env vars for Postgres, Weaviate, ES, Redis, filesystem).
+- Points the app at test databases (env vars for Postgres, Weaviate, ES, Redis, filesystem) and aborts the run unless they are isolated from the developer setup (`dats_test_utils.assert_isolated_from`).
+- Boots DATS with the same building blocks as production ([bootstrap.py](backend/src/bootstrap.py)), never with its own setup code.
 - Starts a background worker (session scope).
-- Drops and recreates the Postgres database (session scope).
-- Re-initializes repos, Weaviate collections, and system users **on function scope** — every test gets a clean database.
+- Drops the Postgres database and recreates it with the migrations (session scope).
+- Truncates all data stores and seeds them again (system users, Weaviate collections) **on function scope** — every test gets a clean database.
+- Builds the real app (`bootstrap.create_app`) and runs its lifespan once per session (`app_client`).
 - Provides `db_session`, `app`, `client`, `test_user`, `test_project`, `project_with_sdoc`.
+
+Clients authenticate by a test header instead of a JWT. For a client acting as another user, use `dats_test_utils.create_user_client(app_client, user)`; never open another `TestClient(app)` context, it would run a second lifespan.
 
 **Folder `conftest.py`** (e.g. `endpoints/search/conftest.py`) — test data:
 

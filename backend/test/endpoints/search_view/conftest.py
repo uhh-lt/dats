@@ -3,6 +3,7 @@ from typing import Any, Generator, TypedDict
 import pytest
 from fastapi.testclient import TestClient
 
+import dats_test_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from modules.search_view.search_view_crud import crud_search_view
@@ -176,8 +177,7 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
 # ---------------------------------------------------------------------------
 # Search views are personal: only the owner may update/delete them, and only
 # project members may create/list/reorder them. These fixtures build a second
-# project member and a non-member, each with their own app/client (auth is
-# overridden per-app via build_app, so a second user needs a second client).
+# project member and a non-member, each with their own client.
 
 
 @pytest.fixture(scope="function")
@@ -202,12 +202,11 @@ def other_member(db_session, test_project) -> UserORM:
 
 
 @pytest.fixture(scope="function")
-def other_member_client(other_member) -> Generator[TestClient, Any, None]:
+def other_member_client(app_client, other_member) -> Generator[TestClient, Any, None]:
     """A client authenticated as `other_member`."""
-    import dats_setup_utils
-
-    with TestClient(dats_setup_utils.build_app(other_member)) as c:
-        yield c
+    c = dats_test_utils.create_user_client(app_client, other_member)
+    yield c
+    c.close()
 
 
 @pytest.fixture(scope="function")
@@ -231,9 +230,8 @@ def non_member(db_session) -> UserORM:
 
 
 @pytest.fixture(scope="function")
-def non_member_client(non_member) -> Generator[TestClient, Any, None]:
+def non_member_client(app_client, non_member) -> Generator[TestClient, Any, None]:
     """A client authenticated as `non_member`."""
-    import dats_setup_utils
-
-    with TestClient(dats_setup_utils.build_app(non_member)) as c:
-        yield c
+    c = dats_test_utils.create_user_client(app_client, non_member)
+    yield c
+    c.close()

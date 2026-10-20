@@ -6,7 +6,8 @@ import pytest
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-import dats_setup_utils
+import bootstrap
+import dats_test_utils
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -202,9 +203,10 @@ def _make_memo(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_repos(init_postgres) -> None:
-    """Session-scoped override: wipe/seed external repos once for the search suite."""
-    dats_setup_utils.setup_repos()
+def setup_repos(prepare_data_stores) -> None:
+    """Session-scoped override: wipe/seed the data stores once for the search suite."""
+    bootstrap.delete_all_data()
+    bootstrap.ensure_system_data()
 
 
 @pytest.fixture(scope="session")
@@ -233,50 +235,22 @@ def seed_db_session(setup_repos) -> Generator[Session, Any, None]:
         db.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_weaviate_collections(setup_repos) -> None:
-    """Session-scoped override: create Weaviate collections once."""
-    dats_setup_utils.create_weaviate_collections()
-
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_users(seed_db_session) -> None:
-    """Session-scoped override: create system/demo/assistant users once."""
-    dats_setup_utils.create_system_users(seed_db_session)
-
-
 @pytest.fixture(scope="session")
 def test_user(seed_db_session) -> UserORM:
     """Session-scoped override: create the primary test user once."""
-    return dats_setup_utils.create_test_user(seed_db_session)
+    return dats_test_utils.create_test_user(seed_db_session)
 
 
 @pytest.fixture(scope="session")
 def test_project(seed_db_session, test_user) -> ProjectORM:
     """Session-scoped override: create the test project once."""
-    return dats_setup_utils.create_test_project(seed_db_session, test_user)
+    return dats_test_utils.create_test_project(seed_db_session, test_user)
 
 
 @pytest.fixture(scope="session")
 def project_with_sdoc(seed_db_session, test_project):
     """Session-scoped override: create the first source document once."""
-    return dats_setup_utils.create_project_with_sdoc(seed_db_session, test_project)
-
-
-@pytest.fixture(scope="session")
-def app(test_user: UserORM):
-    """Session-scoped app: built once. Auth override opens its own per-request
-    transaction (see build_app), so no long-lived test session is needed."""
-    return dats_setup_utils.build_app(test_user)
-
-
-@pytest.fixture(scope="session")
-def client(app):
-    """Session-scoped test client."""
-    from fastapi.testclient import TestClient
-
-    with TestClient(app) as c:
-        yield c
+    return dats_test_utils.create_project_with_sdoc(seed_db_session, test_project)
 
 
 @pytest.fixture(scope="session")
