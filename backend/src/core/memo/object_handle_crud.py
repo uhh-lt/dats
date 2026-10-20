@@ -170,9 +170,7 @@ class CRUDObjectHandle(
 
         return results
 
-    ### OTHER OPERATIONS ###
-
-    def resolve_handled_object(
+    def read_handled_object(
         self, db: Session, *, handle: ObjectHandleORM
     ) -> (
         CodeORM

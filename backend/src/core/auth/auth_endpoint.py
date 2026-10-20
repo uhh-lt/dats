@@ -23,6 +23,7 @@ from common.dependencies import (
     reusable_oauth2_scheme,
 )
 from core.auth.auth_exceptions import credentials_exception
+from core.auth.auth_service import AuthService
 from core.auth.authz_user import AuthzUser
 from core.auth.oauth_service import OAuthService
 from core.auth.refresh_token_crud import crud_refresh_token
@@ -97,7 +98,7 @@ def login(
         username=user_login_form_data.username,
         password=user_login_form_data.password,
     )
-    user = crud_user.authenticate(db=db, user_login=user_login)
+    user = AuthService().authenticate(db=db, user_login=user_login)
     if not user:
         raise credentials_exception
 

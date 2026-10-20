@@ -158,6 +158,18 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             for update_dto in update_dtos
         ]
 
+    def update_recent(self, db: Session, *, memo_id: int, user_id: int) -> None:
+        """Upsert a (user, memo) recents row, bumping last_opened to now."""
+        from sqlalchemy.dialects.postgresql import insert
+
+        insert_stmt = insert(MemoRecentORM).values(memo_id=memo_id, user_id=user_id)
+        upsert_stmt = insert_stmt.on_conflict_do_update(
+            index_elements=["user_id", "memo_id"],
+            set_={"last_opened": insert_stmt.excluded.last_opened},
+        )
+        db.execute(upsert_stmt)
+        db.flush()
+
     ### DELETE OPERATIONS ###
 
     def delete_bulk(self, db: Session, *, ids: list[int]) -> list[MemoORM]:
@@ -185,7 +197,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db.execute(stmt)
         db.flush()
 
-    def is_favorited(self, db: Session, *, memo_id: int, user_id: int) -> bool:
+    def exists_favorite(self, db: Session, *, memo_id: int, user_id: int) -> bool:
         return (
             db.query(MemoFavoriteLinkTable.memo_id)
             .filter(
@@ -195,18 +207,6 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             .first()
             is not None
         )
-
-    def record_recent(self, db: Session, *, memo_id: int, user_id: int) -> None:
-        """Upsert a (user, memo) recents row, bumping last_opened to now."""
-        from sqlalchemy.dialects.postgresql import insert
-
-        insert_stmt = insert(MemoRecentORM).values(memo_id=memo_id, user_id=user_id)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=["user_id", "memo_id"],
-            set_={"last_opened": insert_stmt.excluded.last_opened},
-        )
-        db.execute(upsert_stmt)
-        db.flush()
 
 
 crud_memo = CRUDMemo(MemoORM)
