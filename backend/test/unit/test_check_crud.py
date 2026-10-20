@@ -65,14 +65,14 @@ crud_sentence_embedding = CRUDSentenceEmbedding(collection_class=SentenceCollect
 """
 
 VALID_ELASTIC = """
-class CRUDElasticSdoc(ElasticCRUDBase[SdocIndex, ElasticSdoc]):
+class CRUDSdocElastic(ElasticCRUDBase[SdocIndex, ElasticSdoc]):
     ### OTHER OPERATIONS ###
 
     def search_by_content(self, client: Elasticsearch, *, project_id: int, query: str) -> list[ElasticSdoc]:
         return []
 
 
-crud_elastic_sdoc = CRUDElasticSdoc(index=SdocIndex, model=ElasticSdoc)
+crud_sdoc_elastic = CRUDSdocElastic(index=SdocIndex, model=ElasticSdoc)
 """
 
 
@@ -241,6 +241,18 @@ def test_check_crud_embedding_crud_requires_client_and_its_base() -> None:
         "keyword-only",
     }
     assert rules(VALID_EMBEDDING, "sentence_crud.py") >= {"crud-base", "first-param"}
+
+
+def test_check_crud_add_remove_verbs_are_sql_only() -> None:
+    """SQL CRUDs may use add_/remove_ for association rows; embedding and elastic CRUDs may not."""
+    sql = VALID_SQL.replace("def count_by_project(", "def remove_from_project(")
+    assert rules(sql) == set()
+    embedding = VALID_EMBEDDING.replace(
+        "def search_near_sentence(", "def remove_by_sentence("
+    )
+    assert rules(embedding, "sentence_embedding_crud.py") == {"method-verb"}
+    elastic = VALID_ELASTIC.replace("def search_by_content(", "def add_by_content(")
+    assert rules(elastic, "sdoc_elastic_crud.py") == {"method-verb"}
 
 
 def test_check_crud_elastic_crud_requires_its_base() -> None:
