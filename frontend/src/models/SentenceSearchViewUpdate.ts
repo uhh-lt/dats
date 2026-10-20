@@ -8,10 +8,28 @@ import type { SearchViewLayout } from "./SearchViewLayout";
 import type { SentAnnoColumns } from "./SentAnnoColumns";
 import type { Sort_SentAnnoColumns_ } from "./Sort_SentAnnoColumns_";
 export type SentenceSearchViewUpdate = {
+  /**
+   * Name of the SearchView
+   */
   name?: string | null;
+  /**
+   * Layout of the SearchView
+   */
   layout?: SearchViewLayout | null;
+  /**
+   * Filter of the SearchView
+   */
   filters?: Filter_SentAnnoColumns__Input | null;
+  /**
+   * Grouping of the SearchView (null = no grouping)
+   */
   group_by?: GroupConfig_SentAnnoColumns_ | null;
+  /**
+   * Sort order of the SearchView
+   */
   sorts?: Array<Sort_SentAnnoColumns_> | null;
+  /**
+   * Entity properties to render (null = the frontend's default selection)
+   */
   selected_properties?: Array<SentAnnoColumns> | null;
 };

@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type DocumentEmbeddingParams = {
+  /**
+   * The type of the MLJob
+   */
   ml_job_type: string;
   /**
    * Whether to recompute already processed documents

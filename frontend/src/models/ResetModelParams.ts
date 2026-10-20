@@ -6,5 +6,5 @@ export type ResetModelParams = {
   /**
    * Type of the PerspectivesJob
    */
-  perspectives_job_type?: string;
+  perspectives_job_type: string;
 };

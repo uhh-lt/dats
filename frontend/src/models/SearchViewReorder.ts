@@ -3,5 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type SearchViewReorder = {
+  /**
+   * IDs of the user's SearchViews in their new order
+   */
   view_ids: Array<number>;
 };

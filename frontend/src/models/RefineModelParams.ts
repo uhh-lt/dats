@@ -6,5 +6,5 @@ export type RefineModelParams = {
   /**
    * Type of the PerspectivesJob
    */
-  perspectives_job_type?: string;
+  perspectives_job_type: string;
 };

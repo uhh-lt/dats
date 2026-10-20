@@ -8024,11 +8024,11 @@
             "type": "string",
             "const": "add_missing_docs_to_aspect",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "add_missing_docs_to_aspect"
+            "description": "Type of the PerspectivesJob"
           }
         },
         "type": "object",
+        "required": ["perspectives_job_type"],
         "title": "AddMissingDocsToAspectParams"
       },
       "AnnoscalingConfirmSuggest": {
@@ -8088,11 +8088,17 @@
       },
       "AnnotationLLMAssistantJobResult": {
         "properties": {
-          "task_type": { "type": "string", "const": "ANNOTATION", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "ANNOTATION",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "results": {
             "items": { "$ref": "#/components/schemas/AnnotationResult" },
             "type": "array",
-            "title": "Results"
+            "title": "Results",
+            "description": "The annotation results, one per document"
           }
         },
         "type": "object",
@@ -8101,7 +8107,12 @@
       },
       "AnnotationParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "ANNOTATION", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "ANNOTATION",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8166,15 +8177,29 @@
       },
       "ApiKeyCreatedResponse": {
         "properties": {
-          "id": { "type": "integer", "title": "Id" },
-          "name": { "type": "string", "title": "Name" },
-          "prefix": { "type": "string", "title": "Prefix" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the ApiKey" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the ApiKey" },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix",
+            "description": "Public prefix of the ApiKey to identify it"
+          },
           "expires_at": {
             "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
-            "title": "Expires At"
+            "title": "Expires At",
+            "description": "Expiration timestamp of the ApiKey (None = never expires)"
           },
-          "created_at": { "type": "string", "format": "date-time", "title": "Created At" },
-          "api_key": { "type": "string", "title": "Api Key" }
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Created timestamp of the ApiKey"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key",
+            "description": "The full ApiKey. It is only returned once, on creation."
+          }
         },
         "type": "object",
         "required": ["id", "name", "prefix", "expires_at", "created_at", "api_key"],
@@ -8191,14 +8216,24 @@
       },
       "ApiKeyRead": {
         "properties": {
-          "id": { "type": "integer", "title": "Id" },
-          "name": { "type": "string", "title": "Name" },
-          "prefix": { "type": "string", "title": "Prefix" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the ApiKey" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the ApiKey" },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix",
+            "description": "Public prefix of the ApiKey to identify it"
+          },
           "expires_at": {
             "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
-            "title": "Expires At"
+            "title": "Expires At",
+            "description": "Expiration timestamp of the ApiKey (None = never expires)"
           },
-          "created_at": { "type": "string", "format": "date-time", "title": "Created At" }
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Created timestamp of the ApiKey"
+          }
         },
         "type": "object",
         "required": ["id", "name", "prefix", "expires_at", "created_at"],
@@ -8386,7 +8421,12 @@
       },
       "BBoxAnnoTimelineAnalysisFilter-Input": {
         "properties": {
-          "timeline_analysis_type": { "type": "string", "const": "bbox_annotation", "title": "Timeline Analysis Type" },
+          "timeline_analysis_type": {
+            "type": "string",
+            "const": "bbox_annotation",
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
+          },
           "filter": {
             "$ref": "#/components/schemas/Filter_BBoxColumns_-Input",
             "description": "The filter of the Concept"
@@ -8398,7 +8438,12 @@
       },
       "BBoxAnnoTimelineAnalysisFilter-Output": {
         "properties": {
-          "timeline_analysis_type": { "type": "string", "const": "bbox_annotation", "title": "Timeline Analysis Type" },
+          "timeline_analysis_type": {
+            "type": "string",
+            "const": "bbox_annotation",
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
+          },
           "filter": {
             "$ref": "#/components/schemas/Filter_BBoxColumns_-Output",
             "description": "The filter of the Concept"
@@ -8449,7 +8494,12 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "bboxAnnotation", "title": "Type" },
+          "type": {
+            "type": "string",
+            "const": "bboxAnnotation",
+            "title": "Type",
+            "description": "Type of the whiteboard node"
+          },
           "bboxAnnotationId": {
             "type": "integer",
             "title": "Bboxannotationid",
@@ -8618,20 +8668,40 @@
             "type": "string",
             "const": "bbox_annotation",
             "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
             "default": "bbox_annotation"
           },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_BBoxColumns_-Input",
-            "description": "The filter of the Concept"
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
+          },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" },
+            "type": "array",
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
+          },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/BBoxColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -8644,26 +8714,60 @@
             "type": "string",
             "const": "bbox_annotation",
             "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
             "default": "bbox_annotation"
           },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_BBoxColumns_-Output",
-            "description": "The filter of the Concept"
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
+          },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" },
+            "type": "array",
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
+          },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/BBoxColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           },
-          "id": { "type": "integer", "title": "Id" },
-          "user_id": { "type": "integer", "title": "User Id" },
-          "position": { "type": "integer", "title": "Position" },
-          "created": { "type": "string", "format": "date-time", "title": "Created" },
-          "updated": { "type": "string", "format": "date-time", "title": "Updated" }
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Position of the SearchView in the user's list"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SearchView"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SearchView"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
@@ -8673,26 +8777,36 @@
         "properties": {
           "name": {
             "anyOf": [{ "type": "string", "maxLength": 255, "minLength": 1 }, { "type": "null" }],
-            "title": "Name"
+            "title": "Name",
+            "description": "Name of the SearchView"
           },
-          "layout": { "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }] },
+          "layout": {
+            "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }],
+            "description": "Layout of the SearchView"
+          },
           "filters": {
             "anyOf": [
               { "$ref": "#/components/schemas/Filter_BBoxColumns_-Input", "description": "The filter of the Concept" },
               { "type": "null" }
-            ]
+            ],
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }] },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (null = no grouping)"
+          },
           "sorts": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Sorts"
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
           },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/BBoxColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (null = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -9066,7 +9180,7 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "border", "title": "Type" }
+          "type": { "type": "string", "const": "border", "title": "Type", "description": "Type of the whiteboard node" }
         },
         "type": "object",
         "required": [
@@ -9415,8 +9529,7 @@
             "type": "string",
             "const": "change_cluster",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "change_cluster"
+            "description": "Type of the PerspectivesJob"
           },
           "sdoc_ids": {
             "items": { "type": "integer" },
@@ -9431,7 +9544,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_ids", "cluster_id"],
+        "required": ["perspectives_job_type", "sdoc_ids", "cluster_id"],
         "title": "ChangeClusterParams"
       },
       "ChatSessionResponse": {
@@ -9616,7 +9729,12 @@
       },
       "ClassifierEvaluationOutput": {
         "properties": {
-          "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "evaluation",
+            "title": "Task Type",
+            "description": "The type of the Classifier Task"
+          },
           "evaluation": {
             "$ref": "#/components/schemas/ClassifierEvaluationRead",
             "description": "The Classifier Evaluation"
@@ -9645,7 +9763,12 @@
             "title": "Merge Children Into Parent",
             "description": "Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification"
           },
-          "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "evaluation",
+            "title": "Task Type",
+            "description": "The type of the Classifier Task"
+          },
           "classifier_id": {
             "type": "integer",
             "title": "Classifier Id",
@@ -9705,7 +9828,12 @@
       },
       "ClassifierInferenceOutput": {
         "properties": {
-          "task_type": { "type": "string", "const": "inference", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "inference",
+            "title": "Task Type",
+            "description": "The type of the Classifier Task"
+          },
           "result_statistics": {
             "items": { "$ref": "#/components/schemas/ClassifierData" },
             "type": "array",
@@ -9724,7 +9852,12 @@
       },
       "ClassifierInferenceParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "inference", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "inference",
+            "title": "Task Type",
+            "description": "The type of the Classifier Task"
+          },
           "classifier_id": {
             "type": "integer",
             "title": "Classifier Id",
@@ -10005,7 +10138,12 @@
       },
       "ClassifierTrainingOutput": {
         "properties": {
-          "task_type": { "type": "string", "const": "training", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "training",
+            "title": "Task Type",
+            "description": "The type of the Classifier Task"
+          },
           "classifier": { "$ref": "#/components/schemas/ClassifierRead", "description": "The trained Classifier" }
         },
         "type": "object",
@@ -10155,7 +10293,12 @@
             "$ref": "#/components/schemas/ClassifierAveraging",
             "description": "Evaluation metric averaging strategy"
           },
-          "task_type": { "type": "string", "const": "training", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "training",
+            "title": "Task Type",
+            "description": "The type of the Classifier Task"
+          },
           "classifier_name": {
             "type": "string",
             "title": "Classifier Name",
@@ -10543,7 +10686,7 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "code", "title": "Type" },
+          "type": { "type": "string", "const": "code", "title": "Type", "description": "Type of the whiteboard node" },
           "codeId": { "type": "integer", "title": "Codeid", "description": "ID of the code" },
           "parentCodeId": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
@@ -10804,7 +10947,12 @@
       },
       "CoreferenceResolutionParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "COREFERENCE_RESOLUTION", "title": "Ml Job Type" },
+          "ml_job_type": {
+            "type": "string",
+            "const": "COREFERENCE_RESOLUTION",
+            "title": "Ml Job Type",
+            "description": "The type of the MLJob"
+          },
           "recompute": {
             "type": "boolean",
             "title": "Recompute",
@@ -10927,11 +11075,11 @@
             "type": "string",
             "const": "create_aspect",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "create_aspect"
+            "description": "Type of the PerspectivesJob"
           }
         },
         "type": "object",
+        "required": ["perspectives_job_type"],
         "title": "CreateAspectParams"
       },
       "CreateClusterWithNameParams": {
@@ -10940,8 +11088,7 @@
             "type": "string",
             "const": "create_cluster_with_name",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "create_cluster_with_name"
+            "description": "Type of the PerspectivesJob"
           },
           "create_dto": {
             "$ref": "#/components/schemas/ClusterCreate",
@@ -10949,7 +11096,7 @@
           }
         },
         "type": "object",
-        "required": ["create_dto"],
+        "required": ["perspectives_job_type", "create_dto"],
         "title": "CreateClusterWithNameParams"
       },
       "CreateClusterWithSdocsParams": {
@@ -10958,8 +11105,7 @@
             "type": "string",
             "const": "create_cluster_with_sdocs",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "create_cluster_with_sdocs"
+            "description": "Type of the PerspectivesJob"
           },
           "sdoc_ids": {
             "items": { "type": "integer" },
@@ -10969,7 +11115,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_ids"],
+        "required": ["perspectives_job_type", "sdoc_ids"],
         "title": "CreateClusterWithSdocsParams"
       },
       "DateGranularity": {
@@ -10989,7 +11135,8 @@
           "strategy_type": {
             "type": "string",
             "enum": ["TAGGING_DEFAULT", "METADATA_DEFAULT", "SENTENCE_ANNOTATION_DEFAULT"],
-            "title": "Strategy Type"
+            "title": "Strategy Type",
+            "description": "The strategy to ground the LLM output in the document"
           }
         },
         "type": "object",
@@ -11004,7 +11151,12 @@
       },
       "DocTagRecommendationParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "TAG_RECOMMENDATION", "title": "Ml Job Type" },
+          "ml_job_type": {
+            "type": "string",
+            "const": "TAG_RECOMMENDATION",
+            "title": "Ml Job Type",
+            "description": "The type of the MLJob"
+          },
           "multi_class": {
             "type": "boolean",
             "title": "Multi Class",
@@ -11031,7 +11183,12 @@
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
       "DocumentEmbeddingParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "DOCUMENT_EMBEDDING", "title": "Ml Job Type" },
+          "ml_job_type": {
+            "type": "string",
+            "const": "DOCUMENT_EMBEDDING",
+            "title": "Ml Job Type",
+            "description": "The type of the MLJob"
+          },
           "recompute": {
             "type": "boolean",
             "title": "Recompute",
@@ -11278,7 +11435,12 @@
       },
       "ExportSelectedBboxAnnotationsParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_BBOX_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_BBOX_ANNOTATIONS",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "bbox_annotation_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11292,7 +11454,12 @@
       },
       "ExportSelectedCotaParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_COTA", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_COTA",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "cota_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11306,7 +11473,12 @@
       },
       "ExportSelectedMemosParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_MEMOS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_MEMOS",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "memo_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11320,7 +11492,12 @@
       },
       "ExportSelectedSdocsParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_SDOCS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_SDOCS",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11334,7 +11511,12 @@
       },
       "ExportSelectedSentenceAnnotationsParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_SENTENCE_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_SENTENCE_ANNOTATIONS",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "sentence_annotation_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11348,7 +11530,12 @@
       },
       "ExportSelectedSpanAnnotationsParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_SPAN_ANNOTATIONS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_SPAN_ANNOTATIONS",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "span_annotation_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11362,7 +11549,12 @@
       },
       "ExportSelectedTimelineAnalysesParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_TIMELINE_ANALYSES", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_TIMELINE_ANALYSES",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "timeline_analysis_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11376,7 +11568,12 @@
       },
       "ExportSelectedWhiteboardsParams": {
         "properties": {
-          "export_job_type": { "type": "string", "const": "SELECTED_WHITEBOARDS", "title": "Export Job Type" },
+          "export_job_type": {
+            "type": "string",
+            "const": "SELECTED_WHITEBOARDS",
+            "title": "Export Job Type",
+            "description": "The type of the export job (what to export)"
+          },
           "whiteboard_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -11390,7 +11587,12 @@
       },
       "FewShotParams": {
         "properties": {
-          "approach_type": { "type": "string", "const": "LLM_FEW_SHOT", "title": "Approach Type" },
+          "approach_type": {
+            "type": "string",
+            "const": "LLM_FEW_SHOT",
+            "title": "Approach Type",
+            "description": "The approach of the LLM Assistant job"
+          },
           "prompts": {
             "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
             "type": "array",
@@ -12094,7 +12296,12 @@
       },
       "FuzzyGroundingStrategyParams": {
         "properties": {
-          "strategy_type": { "type": "string", "const": "CONTEXT_ANCHORED_FUZZY_MATCHING", "title": "Strategy Type" },
+          "strategy_type": {
+            "type": "string",
+            "const": "CONTEXT_ANCHORED_FUZZY_MATCHING",
+            "title": "Strategy Type",
+            "description": "The strategy to ground the LLM output in the document"
+          },
           "fuzzy_threshold": {
             "type": "number",
             "maximum": 1,
@@ -12930,7 +13137,7 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "memo", "title": "Type" },
+          "type": { "type": "string", "const": "memo", "title": "Type", "description": "Type of the whiteboard node" },
           "memoId": { "type": "integer", "title": "Memoid", "description": "ID of the memo" }
         },
         "type": "object",
@@ -12995,19 +13202,44 @@
       },
       "MemoSearchViewCreate": {
         "properties": {
-          "entity_type": { "type": "string", "const": "memo", "title": "Entity Type", "default": "memo" },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "entity_type": {
+            "type": "string",
+            "const": "memo",
+            "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
+            "default": "memo"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_MemoColumns_-Input",
-            "description": "Column filter tree applied before grouping"
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
+          },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" },
+            "type": "array",
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
+          },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/MemoColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -13016,25 +13248,64 @@
       },
       "MemoSearchViewRead": {
         "properties": {
-          "entity_type": { "type": "string", "const": "memo", "title": "Entity Type", "default": "memo" },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "entity_type": {
+            "type": "string",
+            "const": "memo",
+            "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
+            "default": "memo"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_MemoColumns_-Output",
-            "description": "Column filter tree applied before grouping"
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
+          },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" },
+            "type": "array",
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
+          },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/MemoColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           },
-          "id": { "type": "integer", "title": "Id" },
-          "user_id": { "type": "integer", "title": "User Id" },
-          "position": { "type": "integer", "title": "Position" },
-          "created": { "type": "string", "format": "date-time", "title": "Created" },
-          "updated": { "type": "string", "format": "date-time", "title": "Updated" }
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Position of the SearchView in the user's list"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SearchView"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SearchView"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
@@ -13044,29 +13315,36 @@
         "properties": {
           "name": {
             "anyOf": [{ "type": "string", "maxLength": 255, "minLength": 1 }, { "type": "null" }],
-            "title": "Name"
+            "title": "Name",
+            "description": "Name of the SearchView"
           },
-          "layout": { "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }] },
+          "layout": {
+            "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }],
+            "description": "Layout of the SearchView"
+          },
           "filters": {
             "anyOf": [
-              {
-                "$ref": "#/components/schemas/Filter_MemoColumns_-Input",
-                "description": "Column filter tree applied before grouping"
-              },
+              { "$ref": "#/components/schemas/Filter_MemoColumns_-Input", "description": "Filter of the SearchView" },
               { "type": "null" }
-            ]
+            ],
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }] },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (null = no grouping)"
+          },
           "sorts": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Sorts"
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
           },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/MemoColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (null = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -13160,8 +13438,7 @@
             "type": "string",
             "const": "merge_clusters",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "merge_clusters"
+            "description": "Type of the PerspectivesJob"
           },
           "cluster_to_keep": {
             "type": "integer",
@@ -13175,17 +13452,23 @@
           }
         },
         "type": "object",
-        "required": ["cluster_to_keep", "cluster_to_merge"],
+        "required": ["perspectives_job_type", "cluster_to_keep", "cluster_to_merge"],
         "title": "MergeClustersParams"
       },
       "MetaType": { "type": "string", "enum": ["STRING", "NUMBER", "DATE", "BOOLEAN", "LIST"], "title": "MetaType" },
       "MetadataExtractionLLMAssistantJobResult": {
         "properties": {
-          "task_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "METADATA_EXTRACTION",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "results": {
             "items": { "$ref": "#/components/schemas/MetadataExtractionResult" },
             "type": "array",
-            "title": "Results"
+            "title": "Results",
+            "description": "The metadata extraction results, one per document"
           }
         },
         "type": "object",
@@ -13194,7 +13477,12 @@
       },
       "MetadataExtractionParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "METADATA_EXTRACTION", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "METADATA_EXTRACTION",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -13294,7 +13582,14 @@
         "title": "MlJobRead"
       },
       "NERInlineTagStrategyParams": {
-        "properties": { "strategy_type": { "type": "string", "const": "NER_INLINE_TAGS", "title": "Strategy Type" } },
+        "properties": {
+          "strategy_type": {
+            "type": "string",
+            "const": "NER_INLINE_TAGS",
+            "title": "Strategy Type",
+            "description": "The strategy to ground the LLM output in the document"
+          }
+        },
         "type": "object",
         "required": ["strategy_type"],
         "title": "NERInlineTagStrategyParams"
@@ -13327,7 +13622,7 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "note", "title": "Type" }
+          "type": { "type": "string", "const": "note", "title": "Type", "description": "Type of the whiteboard node" }
         },
         "type": "object",
         "required": [
@@ -14244,7 +14539,12 @@
       },
       "QuotationAttributionParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "QUOTATION_ATTRIBUTION", "title": "Ml Job Type" },
+          "ml_job_type": {
+            "type": "string",
+            "const": "QUOTATION_ATTRIBUTION",
+            "title": "Ml Job Type",
+            "description": "The type of the MLJob"
+          },
           "recompute": {
             "type": "boolean",
             "title": "Recompute",
@@ -14262,8 +14562,7 @@
             "type": "string",
             "const": "recompute_cluster_title_and_description",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "recompute_cluster_title_and_description"
+            "description": "Type of the PerspectivesJob"
           },
           "cluster_id": {
             "type": "integer",
@@ -14272,7 +14571,7 @@
           }
         },
         "type": "object",
-        "required": ["cluster_id"],
+        "required": ["perspectives_job_type", "cluster_id"],
         "title": "RecomputeClusterTitleAndDescriptionParams"
       },
       "RefineModelParams": {
@@ -14281,11 +14580,11 @@
             "type": "string",
             "const": "refine_model",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "refine_model"
+            "description": "Type of the PerspectivesJob"
           }
         },
         "type": "object",
+        "required": ["perspectives_job_type"],
         "title": "RefineModelParams"
       },
       "RemoveClusterParams": {
@@ -14294,13 +14593,12 @@
             "type": "string",
             "const": "remove_cluster",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "remove_cluster"
+            "description": "Type of the PerspectivesJob"
           },
           "cluster_id": { "type": "integer", "title": "Cluster Id", "description": "ID of the cluster to remove." }
         },
         "type": "object",
-        "required": ["cluster_id"],
+        "required": ["perspectives_job_type", "cluster_id"],
         "title": "RemoveClusterParams"
       },
       "ResetModelParams": {
@@ -14309,11 +14607,11 @@
             "type": "string",
             "const": "reset_model",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "reset_model"
+            "description": "Type of the PerspectivesJob"
           }
         },
         "type": "object",
+        "required": ["perspectives_job_type"],
         "title": "ResetModelParams"
       },
       "SDocStatus": { "type": "integer", "enum": [-100, 0, 1], "title": "SDocStatus" },
@@ -14403,8 +14701,8 @@
       },
       "SdocHealthSort": {
         "properties": {
-          "column": { "type": "string", "title": "Column" },
-          "direction": { "$ref": "#/components/schemas/SortDirection" }
+          "column": { "type": "string", "title": "Column", "description": "SourceDocument column to sort by" },
+          "direction": { "$ref": "#/components/schemas/SortDirection", "description": "Direction of the sort" }
         },
         "type": "object",
         "required": ["column", "direction"],
@@ -14464,7 +14762,7 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "sdoc", "title": "Type" },
+          "type": { "type": "string", "const": "sdoc", "title": "Type", "description": "Type of the whiteboard node" },
           "sdocId": { "type": "integer", "title": "Sdocid", "description": "ID of the source document" }
         },
         "type": "object",
@@ -14473,8 +14771,12 @@
       },
       "SdocSentencePair": {
         "properties": {
-          "sdoc_id": { "type": "integer", "title": "Sdoc Id" },
-          "sentence": { "type": "integer", "title": "Sentence" }
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "sentence": {
+            "type": "integer",
+            "title": "Sentence",
+            "description": "ID of the sentence within the document"
+          }
         },
         "type": "object",
         "required": ["sdoc_id", "sentence"],
@@ -14531,7 +14833,12 @@
       },
       "SdocTimelineAnalysisFilter-Input": {
         "properties": {
-          "timeline_analysis_type": { "type": "string", "const": "document", "title": "Timeline Analysis Type" },
+          "timeline_analysis_type": {
+            "type": "string",
+            "const": "document",
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
+          },
           "filter": {
             "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
             "description": "The filter of the Concept"
@@ -14543,7 +14850,12 @@
       },
       "SdocTimelineAnalysisFilter-Output": {
         "properties": {
-          "timeline_analysis_type": { "type": "string", "const": "document", "title": "Timeline Analysis Type" },
+          "timeline_analysis_type": {
+            "type": "string",
+            "const": "document",
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
+          },
           "filter": {
             "$ref": "#/components/schemas/Filter_SdocColumns_-Output",
             "description": "The filter of the Concept"
@@ -14618,7 +14930,14 @@
         "title": "SearchViewLayout"
       },
       "SearchViewReorder": {
-        "properties": { "view_ids": { "items": { "type": "integer" }, "type": "array", "title": "View Ids" } },
+        "properties": {
+          "view_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "View Ids",
+            "description": "IDs of the user's SearchViews in their new order"
+          }
+        },
         "type": "object",
         "required": ["view_ids"],
         "title": "SearchViewReorder"
@@ -14687,7 +15006,8 @@
           "timeline_analysis_type": {
             "type": "string",
             "const": "sentence_annotation",
-            "title": "Timeline Analysis Type"
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
           },
           "filter": {
             "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Input",
@@ -14703,7 +15023,8 @@
           "timeline_analysis_type": {
             "type": "string",
             "const": "sentence_annotation",
-            "title": "Timeline Analysis Type"
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
           },
           "filter": {
             "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Output",
@@ -14803,11 +15124,17 @@
       },
       "SentenceAnnotationLLMAssistantJobResult": {
         "properties": {
-          "task_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "results": {
             "items": { "$ref": "#/components/schemas/SentenceAnnotationResult" },
             "type": "array",
-            "title": "Results"
+            "title": "Results",
+            "description": "The sentence annotation results, one per document"
           }
         },
         "type": "object",
@@ -14822,7 +15149,12 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "sentenceAnnotation", "title": "Type" },
+          "type": {
+            "type": "string",
+            "const": "sentenceAnnotation",
+            "title": "Type",
+            "description": "Type of the whiteboard node"
+          },
           "sentenceAnnotationId": {
             "type": "integer",
             "title": "Sentenceannotationid",
@@ -14835,7 +15167,12 @@
       },
       "SentenceAnnotationParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "SENTENCE_ANNOTATION", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "SENTENCE_ANNOTATION",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -15057,7 +15394,12 @@
       },
       "SentenceEmbeddingParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "SENTENCE_EMBEDDING", "title": "Ml Job Type" },
+          "ml_job_type": {
+            "type": "string",
+            "const": "SENTENCE_EMBEDDING",
+            "title": "Ml Job Type",
+            "description": "The type of the MLJob"
+          },
           "recompute": {
             "type": "boolean",
             "title": "Recompute",
@@ -15075,29 +15417,43 @@
             "type": "string",
             "const": "sentence_annotation",
             "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
             "default": "sentence_annotation"
           },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Input",
-            "description": "The filter of the Concept"
+            "description": "Filter of the SearchView"
           },
           "group_by": {
-            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SentAnnoColumns_" }, { "type": "null" }]
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SentAnnoColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
           },
           "sorts": {
             "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
             "type": "array",
-            "title": "Sorts"
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
           },
           "selected_properties": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/SentAnnoColumns" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -15110,35 +15466,63 @@
             "type": "string",
             "const": "sentence_annotation",
             "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
             "default": "sentence_annotation"
           },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Output",
-            "description": "The filter of the Concept"
+            "description": "Filter of the SearchView"
           },
           "group_by": {
-            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SentAnnoColumns_" }, { "type": "null" }]
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SentAnnoColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
           },
           "sorts": {
             "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
             "type": "array",
-            "title": "Sorts"
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
           },
           "selected_properties": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/SentAnnoColumns" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           },
-          "id": { "type": "integer", "title": "Id" },
-          "user_id": { "type": "integer", "title": "User Id" },
-          "position": { "type": "integer", "title": "Position" },
-          "created": { "type": "string", "format": "date-time", "title": "Created" },
-          "updated": { "type": "string", "format": "date-time", "title": "Updated" }
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Position of the SearchView in the user's list"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SearchView"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SearchView"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
@@ -15148,9 +15532,13 @@
         "properties": {
           "name": {
             "anyOf": [{ "type": "string", "maxLength": 255, "minLength": 1 }, { "type": "null" }],
-            "title": "Name"
+            "title": "Name",
+            "description": "Name of the SearchView"
           },
-          "layout": { "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }] },
+          "layout": {
+            "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }],
+            "description": "Layout of the SearchView"
+          },
           "filters": {
             "anyOf": [
               {
@@ -15158,24 +15546,28 @@
                 "description": "The filter of the Concept"
               },
               { "type": "null" }
-            ]
+            ],
+            "description": "Filter of the SearchView"
           },
           "group_by": {
-            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SentAnnoColumns_" }, { "type": "null" }]
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SentAnnoColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (null = no grouping)"
           },
           "sorts": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Sorts"
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
           },
           "selected_properties": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/SentAnnoColumns" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (null = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -15728,7 +16120,12 @@
       },
       "SpanAnnoTimelineAnalysisFilter-Input": {
         "properties": {
-          "timeline_analysis_type": { "type": "string", "const": "span_annotation", "title": "Timeline Analysis Type" },
+          "timeline_analysis_type": {
+            "type": "string",
+            "const": "span_annotation",
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
+          },
           "filter": {
             "$ref": "#/components/schemas/Filter_SpanColumns_-Input",
             "description": "The filter of the Concept"
@@ -15740,7 +16137,12 @@
       },
       "SpanAnnoTimelineAnalysisFilter-Output": {
         "properties": {
-          "timeline_analysis_type": { "type": "string", "const": "span_annotation", "title": "Timeline Analysis Type" },
+          "timeline_analysis_type": {
+            "type": "string",
+            "const": "span_annotation",
+            "title": "Timeline Analysis Type",
+            "description": "Type of the Timeline Analysis"
+          },
           "filter": {
             "$ref": "#/components/schemas/Filter_SpanColumns_-Output",
             "description": "The filter of the Concept"
@@ -15919,7 +16321,12 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "spanAnnotation", "title": "Type" },
+          "type": {
+            "type": "string",
+            "const": "spanAnnotation",
+            "title": "Type",
+            "description": "Type of the whiteboard node"
+          },
           "spanAnnotationId": {
             "type": "integer",
             "title": "Spanannotationid",
@@ -16259,20 +16666,40 @@
             "type": "string",
             "const": "span_annotation",
             "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
             "default": "span_annotation"
           },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_SpanColumns_-Input",
-            "description": "The filter of the Concept"
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
+          },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" },
+            "type": "array",
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
+          },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/SpanColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -16285,26 +16712,60 @@
             "type": "string",
             "const": "span_annotation",
             "title": "Entity Type",
+            "description": "Searchable entity the SearchView is for",
             "default": "span_annotation"
           },
-          "project_id": { "type": "integer", "title": "Project Id" },
-          "name": { "type": "string", "maxLength": 255, "minLength": 1, "title": "Name" },
-          "layout": { "$ref": "#/components/schemas/SearchViewLayout" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SearchView belongs to"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the SearchView"
+          },
+          "layout": { "$ref": "#/components/schemas/SearchViewLayout", "description": "Layout of the SearchView" },
           "filters": {
             "$ref": "#/components/schemas/Filter_SpanColumns_-Output",
-            "description": "The filter of the Concept"
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (None = no grouping)"
+          },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" },
+            "type": "array",
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
+          },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/SpanColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (None = the frontend's default selection)"
           },
-          "id": { "type": "integer", "title": "Id" },
-          "user_id": { "type": "integer", "title": "User Id" },
-          "position": { "type": "integer", "title": "Position" },
-          "created": { "type": "string", "format": "date-time", "title": "Created" },
-          "updated": { "type": "string", "format": "date-time", "title": "Updated" }
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SearchView" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SearchView belongs to" },
+          "position": {
+            "type": "integer",
+            "title": "Position",
+            "description": "Position of the SearchView in the user's list"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SearchView"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the SearchView"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters", "id", "user_id", "position", "created", "updated"],
@@ -16314,26 +16775,36 @@
         "properties": {
           "name": {
             "anyOf": [{ "type": "string", "maxLength": 255, "minLength": 1 }, { "type": "null" }],
-            "title": "Name"
+            "title": "Name",
+            "description": "Name of the SearchView"
           },
-          "layout": { "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }] },
+          "layout": {
+            "anyOf": [{ "$ref": "#/components/schemas/SearchViewLayout" }, { "type": "null" }],
+            "description": "Layout of the SearchView"
+          },
           "filters": {
             "anyOf": [
               { "$ref": "#/components/schemas/Filter_SpanColumns_-Input", "description": "The filter of the Concept" },
               { "type": "null" }
-            ]
+            ],
+            "description": "Filter of the SearchView"
           },
-          "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }] },
+          "group_by": {
+            "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }],
+            "description": "Grouping of the SearchView (null = no grouping)"
+          },
           "sorts": {
             "anyOf": [
               { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array" },
               { "type": "null" }
             ],
-            "title": "Sorts"
+            "title": "Sorts",
+            "description": "Sort order of the SearchView"
           },
           "selected_properties": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/SpanColumns" }, "type": "array" }, { "type": "null" }],
-            "title": "Selected Properties"
+            "title": "Selected Properties",
+            "description": "Entity properties to render (null = the frontend's default selection)"
           }
         },
         "type": "object",
@@ -16345,8 +16816,7 @@
             "type": "string",
             "const": "split_cluster",
             "title": "Perspectives Job Type",
-            "description": "Type of the PerspectivesJob",
-            "default": "split_cluster"
+            "description": "Type of the PerspectivesJob"
           },
           "cluster_id": { "type": "integer", "title": "Cluster Id", "description": "ID of the cluster to split." },
           "split_into": {
@@ -16356,7 +16826,7 @@
           }
         },
         "type": "object",
-        "required": ["cluster_id", "split_into"],
+        "required": ["perspectives_job_type", "cluster_id", "split_into"],
         "title": "SplitClusterParams"
       },
       "StrategyInfo": {
@@ -16456,7 +16926,7 @@
             "title": "Bgalpha",
             "description": "Background color alpha of the text"
           },
-          "type": { "type": "string", "const": "tag", "title": "Type" },
+          "type": { "type": "string", "const": "tag", "title": "Type", "description": "Type of the whiteboard node" },
           "tagId": { "type": "integer", "title": "Tagid", "description": "ID of the tag" }
         },
         "type": "object",
@@ -16645,8 +17115,18 @@
       },
       "TaggingLLMAssistantJobResult": {
         "properties": {
-          "task_type": { "type": "string", "const": "TAGGING", "title": "Task Type" },
-          "results": { "items": { "$ref": "#/components/schemas/TaggingResult" }, "type": "array", "title": "Results" }
+          "task_type": {
+            "type": "string",
+            "const": "TAGGING",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
+          "results": {
+            "items": { "$ref": "#/components/schemas/TaggingResult" },
+            "type": "array",
+            "title": "Results",
+            "description": "The tagging results, one per document"
+          }
         },
         "type": "object",
         "required": ["task_type", "results"],
@@ -16654,7 +17134,12 @@
       },
       "TaggingParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "TAGGING", "title": "Task Type" },
+          "task_type": {
+            "type": "string",
+            "const": "TAGGING",
+            "title": "Task Type",
+            "description": "The type of the LLM Assistant task"
+          },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -16731,7 +17216,7 @@
           },
           "fontSize": { "type": "integer", "title": "Fontsize", "description": "Font size of the text" },
           "fontFamily": { "type": "string", "title": "Fontfamily", "description": "Font family of the text" },
-          "type": { "type": "string", "const": "text", "title": "Type" }
+          "type": { "type": "string", "const": "text", "title": "Type", "description": "Type of the whiteboard node" }
         },
         "type": "object",
         "required": [
@@ -17007,13 +17492,23 @@
       "UserAuthorizationHeaderData": {
         "properties": {
           "access_token": { "type": "string", "title": "Access Token", "description": "Value of the JWT" },
-          "access_token_expires": { "type": "string", "format": "date-time", "title": "Access Token Expires" },
+          "access_token_expires": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Access Token Expires",
+            "description": "Expiration timestamp of the access token"
+          },
           "refresh_token": {
             "type": "string",
             "title": "Refresh Token",
             "description": "For obtaining a new access token"
           },
-          "refresh_token_expires": { "type": "string", "format": "date-time", "title": "Refresh Token Expires" },
+          "refresh_token_expires": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Refresh Token Expires",
+            "description": "Expiration timestamp of the refresh token"
+          },
           "token_type": { "type": "string", "title": "Token Type", "description": "Type of the Token" }
         },
         "type": "object",
@@ -17259,7 +17754,7 @@
       "WhiteboardEdgeData": {
         "properties": {
           "type": { "$ref": "#/components/schemas/WhiteboardEdgeType", "description": "Type of the edge" },
-          "label": { "$ref": "#/components/schemas/WhiteboardEdgeLabelData" }
+          "label": { "$ref": "#/components/schemas/WhiteboardEdgeLabelData", "description": "Label of the edge" }
         },
         "type": "object",
         "required": ["type", "label"],
@@ -17515,9 +18010,17 @@
       },
       "WordLevelTranscription": {
         "properties": {
-          "text": { "type": "string", "title": "Text" },
-          "start_ms": { "type": "integer", "title": "Start Ms" },
-          "end_ms": { "type": "integer", "title": "End Ms" }
+          "text": { "type": "string", "title": "Text", "description": "The transcribed word" },
+          "start_ms": {
+            "type": "integer",
+            "title": "Start Ms",
+            "description": "Start of the word in the audio in milliseconds"
+          },
+          "end_ms": {
+            "type": "integer",
+            "title": "End Ms",
+            "description": "End of the word in the audio in milliseconds"
+          }
         },
         "type": "object",
         "required": ["text", "start_ms", "end_ms"],
@@ -17534,7 +18037,12 @@
       },
       "ZeroShotParams": {
         "properties": {
-          "approach_type": { "type": "string", "const": "LLM_ZERO_SHOT", "title": "Approach Type" },
+          "approach_type": {
+            "type": "string",
+            "const": "LLM_ZERO_SHOT",
+            "title": "Approach Type",
+            "description": "The approach of the LLM Assistant job"
+          },
           "prompts": {
             "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
             "type": "array",

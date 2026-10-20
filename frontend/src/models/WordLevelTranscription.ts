@@ -3,7 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export type WordLevelTranscription = {
+  /**
+   * The transcribed word
+   */
   text: string;
+  /**
+   * Start of the word in the audio in milliseconds
+   */
   start_ms: number;
+  /**
+   * End of the word in the audio in milliseconds
+   */
   end_ms: number;
 };

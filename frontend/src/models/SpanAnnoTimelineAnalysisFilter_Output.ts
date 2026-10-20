@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { Filter_SpanColumns__Output } from "./Filter_SpanColumns__Output";
 export type SpanAnnoTimelineAnalysisFilter_Output = {
+  /**
+   * Type of the Timeline Analysis
+   */
   timeline_analysis_type: string;
   /**
    * The filter of the Concept

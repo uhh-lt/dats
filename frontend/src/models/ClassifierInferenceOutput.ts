@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { ClassifierData } from "./ClassifierData";
 export type ClassifierInferenceOutput = {
+  /**
+   * The type of the Classifier Task
+   */
   task_type: string;
   /**
    * Statistics of the inference results

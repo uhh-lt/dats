@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type AnnotationParams = {
+  /**
+   * The type of the LLM Assistant task
+   */
   task_type: string;
   /**
    * IDs of the source documents to analyse

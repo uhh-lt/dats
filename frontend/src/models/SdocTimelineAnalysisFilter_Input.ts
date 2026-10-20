@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
 export type SdocTimelineAnalysisFilter_Input = {
+  /**
+   * Type of the Timeline Analysis
+   */
   timeline_analysis_type: string;
   /**
    * The filter of the Concept

@@ -70,5 +70,8 @@ export type BorderNodeData = {
    * Background color alpha of the text
    */
   bgalpha: number | null;
+  /**
+   * Type of the whiteboard node
+   */
   type: string;
 };

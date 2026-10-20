@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { TagRecommendationMethod } from "./TagRecommendationMethod";
 export type DocTagRecommendationParams = {
+  /**
+   * The type of the MLJob
+   */
   ml_job_type: string;
   /**
    * Tags are mutually exclusive if `False`

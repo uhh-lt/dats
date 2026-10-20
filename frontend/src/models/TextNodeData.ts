@@ -45,5 +45,8 @@ export type TextNodeData = {
    * Font family of the text
    */
   fontFamily: string;
+  /**
+   * Type of the whiteboard node
+   */
   type: string;
 };

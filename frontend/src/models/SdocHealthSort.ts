@@ -4,6 +4,12 @@
 /* eslint-disable */
 import type { SortDirection } from "./SortDirection";
 export type SdocHealthSort = {
+  /**
+   * SourceDocument column to sort by
+   */
   column: string;
+  /**
+   * Direction of the sort
+   */
   direction: SortDirection;
 };

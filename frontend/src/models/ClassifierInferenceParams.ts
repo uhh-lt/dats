@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ClassifierInferenceParams = {
+  /**
+   * The type of the Classifier Task
+   */
   task_type: string;
   /**
    * ID of the model to use for inference
