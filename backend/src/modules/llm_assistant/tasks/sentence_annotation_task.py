@@ -52,11 +52,30 @@ class SentenceAnnotationTask(
     task_name = "Sentence Annotation"
 
     @staticmethod
-    def _dedupe_parsed_items(
+    def _group_into_ranges(
         parsed_items: list[tuple[int, int]],
-    ) -> list[tuple[int, int]]:
-        """Remove duplicate sentence and code pairs while preserving their order."""
-        return list(dict.fromkeys(parsed_items))
+    ) -> list[tuple[int, int, int]]:
+        """Merge (sentence_id, code_id) pairs into (start, end, code_id) ranges.
+
+        The sentences of each code are sorted and every run of consecutive
+        sentences becomes one range. The LLM may return the pairs in any order.
+        """
+        sentence_ids_by_code: dict[int, set[int]] = {}
+        for sentence_id, code_id in parsed_items:
+            sentence_ids_by_code.setdefault(code_id, set()).add(sentence_id)
+
+        ranges: list[tuple[int, int, int]] = []
+        for code_id, sentence_ids in sentence_ids_by_code.items():
+            sorted_ids = sorted(sentence_ids)
+            start = previous = sorted_ids[0]
+            for sentence_id in sorted_ids[1:]:
+                if sentence_id != previous + 1:
+                    ranges.append((start, previous, code_id))
+                    start = sentence_id
+                previous = sentence_id
+            ranges.append((start, previous, code_id))
+
+        return sorted(ranges)
 
     @staticmethod
     def _dedupe_annotations(
@@ -190,7 +209,8 @@ class SentenceAnnotationTask(
         strategy = context.strategy
         sdoc_data = document.sdoc_data
         num_sentences = len(sdoc_data.sentences)
-        suggested_annotations: list[SentenceAnnotationCreate] = []
+        # (sentence_id, code_id) pairs of all responses, merged into ranges below
+        parsed_items: list[tuple[int, int]] = []
         raw_responses: list[str] = []
         errors: list[tuple[str, str | None]] = []
         for response_item in document.responses:
@@ -210,15 +230,16 @@ class SentenceAnnotationTask(
             parsed_response = strategy.parse_result(result=response.parsed)
             match strategy.data_tag:
                 case DataTag.SENTENCE:
-                    parsed_items = [
+                    parsed_items.extend(
                         (
                             response_item.message_id,
                             annotation.code_id,
                         )
                         for annotation in parsed_response
-                    ]
+                        if annotation.code_id in strategy.codeids2code_dict
+                    )
                 case DataTag.DOCUMENT:
-                    parsed_items = [
+                    parsed_items.extend(
                         (
                             annotation.sent_id - 1,
                             annotation.code_id,
@@ -227,51 +248,21 @@ class SentenceAnnotationTask(
                         if annotation.code_id in strategy.codeids2code_dict
                         and annotation.sent_id > 0
                         and annotation.sent_id <= num_sentences
-                    ]
+                    )
                 case _:
                     raise ValueError("Unknown DataTag!")  # type: ignore
 
-            parsed_items = self._dedupe_parsed_items(parsed_items)
-            if len(parsed_items) == 0:
-                continue
-
-            start = parsed_items[0][0]
-            previous_sentence_id = parsed_items[0][0]
-            previous_code_id = parsed_items[0][1]
-            for sentence_id, code_id in parsed_items[1:]:
-                if previous_sentence_id != sentence_id - 1:
-                    suggested_annotations.append(
-                        SentenceAnnotationCreate(
-                            sdoc_id=sdoc_data.id,
-                            sentence_id_start=start,
-                            sentence_id_end=previous_sentence_id,
-                            code_id=previous_code_id,
-                        )
-                    )
-                    start = sentence_id
-
-                if previous_code_id != code_id:
-                    suggested_annotations.append(
-                        SentenceAnnotationCreate(
-                            sdoc_id=sdoc_data.id,
-                            sentence_id_start=start,
-                            sentence_id_end=previous_sentence_id,
-                            code_id=previous_code_id,
-                        )
-                    )
-                    start = sentence_id
-
-                previous_sentence_id = sentence_id
-                previous_code_id = code_id
-
-            suggested_annotations.append(
-                SentenceAnnotationCreate(
-                    sdoc_id=sdoc_data.id,
-                    sentence_id_start=start,
-                    sentence_id_end=previous_sentence_id,
-                    code_id=previous_code_id,
-                )
+        suggested_annotations = [
+            SentenceAnnotationCreate(
+                sdoc_id=sdoc_data.id,
+                sentence_id_start=sentence_id_start,
+                sentence_id_end=sentence_id_end,
+                code_id=code_id,
             )
+            for sentence_id_start, sentence_id_end, code_id in self._group_into_ranges(
+                parsed_items
+            )
+        ]
 
         parsed_annotation_count = len(suggested_annotations)
         logger.debug(

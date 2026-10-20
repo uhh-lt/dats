@@ -29,6 +29,14 @@ class SentenceAnnotationCreate(SentenceAnnotationBaseDTO):
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
     sdoc_id: int = Field(description="SourceDocument the SentenceAnnotation refers to")
 
+    @model_validator(mode="after")
+    def validate_sentence_range(self):
+        if self.sentence_id_start > self.sentence_id_end:
+            raise ValueError(
+                "Sentence ID start must not be larger than sentence ID end."
+            )
+        return self
+
 
 # Properties for updating
 class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
