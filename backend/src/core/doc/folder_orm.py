@@ -1,15 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import (
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    String,
-    UniqueConstraint,
-    func,
-)
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.doc.folder_dto import FolderType
@@ -24,9 +16,7 @@ class FolderORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    folder_type: Mapped[FolderType] = mapped_column(
-        Enum(FolderType), nullable=False, index=True
-    )
+    folder_type: Mapped[FolderType] = mapped_column(String, nullable=False, index=True)
 
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
