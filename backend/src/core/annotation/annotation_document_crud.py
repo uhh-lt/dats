@@ -1,6 +1,7 @@
 import datetime
 
 from sqlalchemy import update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -87,21 +88,9 @@ class CRUDAnnotationDocument(
         user_id: int,
         sdoc_id: int,
     ) -> AnnotationDocumentORM:
-        db_obj = (
-            db.query(self.model)
-            .filter(
-                self.model.user_id == user_id, self.model.source_document_id == sdoc_id
-            )
-            .first()
-        )
-        if db_obj is None:
-            return self.create(
-                db=db,
-                create_dto=AnnotationDocumentCreate(
-                    user_id=user_id, source_document_id=sdoc_id
-                ),
-            )
-        return db_obj
+        return self.exists_or_create_multi(db=db, user_id=user_id, sdoc_ids=[sdoc_id])[
+            sdoc_id
+        ]
 
     def exists_or_create_multi(
         self,
@@ -110,11 +99,31 @@ class CRUDAnnotationDocument(
         user_id: int,
         sdoc_ids: list[int],
     ) -> dict[int, AnnotationDocumentORM]:
-        """Return annotation documents for a user, creating missing rows in bulk."""
+        """Return annotation documents for a user, creating missing rows in bulk.
+
+        Concurrent jobs (e.g. object detection and spacy of the same image) create the
+        same annotation document, so a check-then-insert would race. ON CONFLICT DO
+        NOTHING waits for the other transaction and skips the row if it committed.
+        """
         unique_sdoc_ids = list(dict.fromkeys(sdoc_ids))
         annotation_documents: list[AnnotationDocumentORM] = []
         for i in range(0, len(unique_sdoc_ids), conf.postgres.batch_size):
             batch_ids = unique_sdoc_ids[i : i + conf.postgres.batch_size]
+            db.execute(
+                insert(self.model)
+                .values(
+                    [
+                        {"user_id": user_id, "source_document_id": sdoc_id}
+                        for sdoc_id in batch_ids
+                    ]
+                )
+                .on_conflict_do_nothing(
+                    index_elements=[
+                        self.model.source_document_id,
+                        self.model.user_id,
+                    ]
+                )
+            )
             annotation_documents.extend(
                 db.query(self.model)
                 .filter(
@@ -123,27 +132,7 @@ class CRUDAnnotationDocument(
                 )
                 .all()
             )
-
-        existing_sdoc_ids = {
-            annotation_document.source_document_id
-            for annotation_document in annotation_documents
-        }
-        missing_sdoc_ids = [
-            sdoc_id for sdoc_id in unique_sdoc_ids if sdoc_id not in existing_sdoc_ids
-        ]
-        if missing_sdoc_ids:
-            annotation_documents.extend(
-                self.create_multi(
-                    db=db,
-                    create_dtos=[
-                        AnnotationDocumentCreate(
-                            user_id=user_id,
-                            source_document_id=sdoc_id,
-                        )
-                        for sdoc_id in missing_sdoc_ids
-                    ],
-                )
-            )
+        db.flush()
 
         return {
             annotation_document.source_document_id: annotation_document
