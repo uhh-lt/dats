@@ -1,5 +1,5 @@
 from common.job_type import JobType
-from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
@@ -46,8 +46,8 @@ def handle_text_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
         project_id=payload.project_id,
     )
 
-    crud_elastic_sdoc.create(
+    crud_sdoc_elastic.create(
         client=ElasticSearchRepo().get_client(),
         create_dto=esdoc,
-        proj_id=payload.project_id,
+        project_id=payload.project_id,
     )

@@ -24,15 +24,32 @@ class NoSuchObjectInElasticSearchError(NotFoundError):
         )
 
 
-class ElasticCrudBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOType]):
-    def __init__(self, index: type[IndexType], model: type[ModelDTOType]):
+class ElasticCRUDBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOType]):
+    def __init__(self, index: type[IndexType], model: type[ModelDTOType]) -> None:
+        """
+        Generic CRUD access to the per-project Elasticsearch index of a model
+        Args:
+            index: The index the documents are stored in
+            model: The DTO that documents are parsed into
+        """
         self.index = index
         self.model = model
 
+    ### CREATE OPERATIONS ###
+
     def create(
-        self, client: Elasticsearch, create_dto: CreateDTOType, proj_id: int
+        self, client: Elasticsearch, *, project_id: int, create_dto: CreateDTOType
     ) -> int:
-        index_name = self.index.get_index_name(proj_id)
+        """
+        Index a new document
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is used
+            create_dto: The document to index
+        Returns:
+            The ID of the indexed document
+        """
+        index_name = self.index.get_index_name(project_id=project_id)
         res = client.index(
             index=index_name,
             id=str(create_dto.get_id()),
@@ -40,49 +57,99 @@ class ElasticCrudBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOT
         )
         return int(res["_id"])
 
-    def read(self, client: Elasticsearch, id: int, proj_id: int) -> ModelDTOType:
-        index_name = self.index.get_index_name(proj_id)
+    ### READ OPERATIONS ###
+
+    def read(self, client: Elasticsearch, *, project_id: int, id: int) -> ModelDTOType:
+        """
+        Read a document by its ID
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is used
+            id: ID of the document
+        Returns:
+            The document
+        Raises:
+            NoSuchObjectInElasticSearchError: If the document does not exist
+        """
+        index_name = self.index.get_index_name(project_id=project_id)
         res = client.get(index=index_name, id=str(id), _source=True)
         if not res["found"]:
             raise NoSuchObjectInElasticSearchError(index_name=index_name, id=id)
         return self.model(**res["_source"])
 
+    ### UPDATE OPERATIONS ###
+
     def update(
-        self, client: Elasticsearch, id: int, update_dto: UpdateDTOType, proj_id: int
+        self,
+        client: Elasticsearch,
+        *,
+        project_id: int,
+        id: int,
+        update_dto: UpdateDTOType,
     ) -> ModelDTOType:
-        index_name = self.index.get_index_name(proj_id)
+        """
+        Update a document by its ID
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is used
+            id: ID of the document
+            update_dto: The fields to update
+        Returns:
+            The updated document
+        Raises:
+            NoSuchObjectInElasticSearchError: If the document does not exist
+        """
+        index_name = self.index.get_index_name(project_id=project_id)
 
         # Ensure the object exists before updating
-        self.read(client, id, proj_id)
+        self.read(client=client, project_id=project_id, id=id)
 
         # TODO: Check what this returns
         client.update(
             index=index_name, id=str(id), body={"doc": update_dto.model_dump()}
         )
-        return self.read(client, id, proj_id)
+        return self.read(client=client, project_id=project_id, id=id)
 
-    def delete(self, client: Elasticsearch, id: int, proj_id: int) -> None:
-        index_name = self.index.get_index_name(proj_id)
+    ### DELETE OPERATIONS ###
+
+    def delete(self, client: Elasticsearch, *, project_id: int, id: int) -> None:
+        """
+        Delete a document by its ID
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is used
+            id: ID of the document
+        """
+        index_name = self.index.get_index_name(project_id=project_id)
         client.delete(index=index_name, id=str(id))
+
+    ### OTHER OPERATIONS ###
 
     def search(
         self,
         client: Elasticsearch,
-        proj_id: int,
+        *,
+        project_id: int,
         query: dict[str, Any],
         limit: int | None = None,
         skip: int | None = None,
         highlight: dict[str, Any] | None = None,
     ) -> PaginatedElasticSearchHits:
         """
-        Helper function that can be reused to find SDocs or Memos with different queries.
-        :param query: The ElasticSearch query object in ES Query DSL
-        :param skip: The number of skipped elements
-        :param limit: The maximum number of returned elements
-        :return: A (possibly empty) list of Memo matching the query
-        :rtype: PaginatedElasticSearchHits
+        Helper function that can be reused to find documents with different queries.
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is searched
+            query: The ElasticSearch query object in ES Query DSL
+            limit: The maximum number of returned elements
+            skip: The number of skipped elements
+            highlight: Optional ElasticSearch highlight configuration
+        Returns:
+            A (possibly empty) paginated list of hits matching the query
+        Raises:
+            ValueError: If the index does not exist or the parameters are invalid
         """
-        index_name = self.index.get_index_name(proj_id)
+        index_name = self.index.get_index_name(project_id=project_id)
         if not client.indices.exists(index=index_name):
             raise ValueError(f"ElasticSearch Index '{index_name}' does not exist!")
 
