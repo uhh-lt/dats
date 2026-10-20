@@ -42,18 +42,22 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
             output = handler(payload=payload, job=job)
         else:
             output = handler(payload=payload, job=job)
+
+        # successfully finished job (a failing finish hook, e.g. enqueueing the next
+        # pipeline step, fails the job, so it is handled like a failing handler):
+        job.update(finished=datetime.now(UTC), publish=False)
+        handle_job_finished(jobtype, input=payload, output=output)
     except Exception as e:
         # erroneous job:
         job.update(status_message=str(e), finished=datetime.now(UTC), publish=False)
-        handle_job_error(jobtype, input=payload)
-        # RQ marks the job as FAILED only after this handler raised,
-        # so the final event has to carry the terminal status explicitly
-        publish_job_update(job, status_override=JobStatus.FAILED)
+        try:
+            handle_job_error(jobtype, input=payload)
+        finally:
+            # RQ marks the job as FAILED only after this handler raised,
+            # so the final event has to carry the terminal status explicitly
+            publish_job_update(job, status_override=JobStatus.FAILED)
         raise e
 
-    # successfully finished job:
-    job.update(finished=datetime.now(UTC), publish=False)
-    handle_job_finished(jobtype, input=payload, output=output)
     # RQ marks the job as FINISHED only after this handler returned,
     # so the final event has to carry the terminal status explicitly
     publish_job_update(job, output_override=output, status_override=JobStatus.FINISHED)
