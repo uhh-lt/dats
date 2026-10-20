@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 
 class SourceDocumentJobStatusORM(ORMBase):
+    # many to one (the id is the source document's id)
     id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),

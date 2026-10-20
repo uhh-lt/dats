@@ -27,7 +27,7 @@ class DocumentClusterORM(ORMBase):
     similarity: Mapped[float | None] = mapped_column(Float)
     is_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # many to many
+    # many to one
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_clusters",

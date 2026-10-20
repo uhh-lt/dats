@@ -30,7 +30,7 @@ class DocumentAspectORM(ORMBase):
     x: Mapped[float | None] = mapped_column(Float)
     y: Mapped[float | None] = mapped_column(Float)
 
-    # many to many
+    # many to one
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM",
         back_populates="document_aspects",

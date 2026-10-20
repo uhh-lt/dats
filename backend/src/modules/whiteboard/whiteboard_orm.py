@@ -31,6 +31,7 @@ class WhiteboardORM(ORMBase):
         index=False,
     )
 
+    # many to one
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),

@@ -40,7 +40,6 @@ class SourceDocumentMetadataORM(ORMBase):
         "ProjectMetadataORM", back_populates="sdoc_metadata"
     )
 
-    # many to one
     source_document_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
