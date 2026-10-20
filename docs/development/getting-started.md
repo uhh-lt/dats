@@ -121,6 +121,16 @@ Run `just` (or `just --list`) to see all available commands. The most common:
 | `just alembic migrate` / `check` / `revision "msg"` | Database migrations                                         |
 | `just docker up` / `down` / `logs` / `ps`           | Manage backing services                                     |
 
+Slow backend tests — classifier training on the GPU and tests that call the real LLM provider — carry pytest markers (`training`, `llm`) and are **deselected by default**. Select them explicitly:
+
+```bash
+just test backend -m training   # only the training tests
+just test backend -m llm        # only the LLM tests
+just test backend -m ""         # everything, including the slow tests
+```
+
+CI on pull requests and pushes runs only the default selection; the nightly workflow runs the full suite.
+
 ### Debugging
 
 Prefix any `dev` command with `DEBUG=true` to run the server under [debugpy](https://github.com/microsoft/debugpy) for attach debugging:
