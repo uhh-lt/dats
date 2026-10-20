@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { ClassifierEvaluationRead } from "./ClassifierEvaluationRead";
 export type ClassifierEvaluationOutput = {
+  /**
+   * The type of the Classifier Task
+   */
   task_type: string;
   /**
    * The Classifier Evaluation

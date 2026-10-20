@@ -6,7 +6,7 @@ export type RemoveClusterParams = {
   /**
    * Type of the PerspectivesJob
    */
-  perspectives_job_type?: string;
+  perspectives_job_type: string;
   /**
    * ID of the cluster to remove.
    */

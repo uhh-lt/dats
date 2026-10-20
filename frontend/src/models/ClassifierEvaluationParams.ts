@@ -16,6 +16,9 @@ export type ClassifierEvaluationParams = {
    * Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification
    */
   merge_children_into_parent: boolean;
+  /**
+   * The type of the Classifier Task
+   */
   task_type: string;
   /**
    * ID of the model to evaluate

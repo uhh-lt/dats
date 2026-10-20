@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { LLMAssistantPromptTemplates } from "./LLMAssistantPromptTemplates";
 export type FewShotParams = {
+  /**
+   * The approach of the LLM Assistant job
+   */
   approach_type: string;
   /**
    * The prompt templates to use for the job

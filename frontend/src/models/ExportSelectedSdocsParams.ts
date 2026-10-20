@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ExportSelectedSdocsParams = {
+  /**
+   * The type of the export job (what to export)
+   */
   export_job_type: string;
   /**
    * IDs of the source documents to export

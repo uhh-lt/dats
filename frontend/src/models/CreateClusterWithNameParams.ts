@@ -7,7 +7,7 @@ export type CreateClusterWithNameParams = {
   /**
    * Type of the PerspectivesJob
    */
-  perspectives_job_type?: string;
+  perspectives_job_type: string;
   /**
    * DTO for creating a new cluster.
    */

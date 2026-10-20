@@ -6,7 +6,7 @@ export type ChangeClusterParams = {
   /**
    * Type of the PerspectivesJob
    */
-  perspectives_job_type?: string;
+  perspectives_job_type: string;
   /**
    * List of source document IDs to change the cluster for.
    */

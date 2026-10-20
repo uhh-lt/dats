@@ -104,6 +104,9 @@ export type ClassifierTrainingParams = {
    * Evaluation metric averaging strategy
    */
   averaging: ClassifierAveraging;
+  /**
+   * The type of the Classifier Task
+   */
   task_type: string;
   /**
    * Name of the model to train

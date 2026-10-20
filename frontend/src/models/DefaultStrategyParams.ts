@@ -6,9 +6,15 @@
  * Params for single-strategy tasks (tagging, metadata, sentence annotation).
  */
 export type DefaultStrategyParams = {
+  /**
+   * The strategy to ground the LLM output in the document
+   */
   strategy_type: DefaultStrategyParams.strategy_type;
 };
 export namespace DefaultStrategyParams {
+  /**
+   * The strategy to ground the LLM output in the document
+   */
   export enum strategy_type {
     TAGGING_DEFAULT = "TAGGING_DEFAULT",
     METADATA_DEFAULT = "METADATA_DEFAULT",

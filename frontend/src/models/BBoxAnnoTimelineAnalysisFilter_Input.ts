@@ -4,6 +4,9 @@
 /* eslint-disable */
 import type { Filter_BBoxColumns__Input } from "./Filter_BBoxColumns__Input";
 export type BBoxAnnoTimelineAnalysisFilter_Input = {
+  /**
+   * Type of the Timeline Analysis
+   */
   timeline_analysis_type: string;
   /**
    * The filter of the Concept

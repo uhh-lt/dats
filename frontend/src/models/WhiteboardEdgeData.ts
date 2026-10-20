@@ -9,5 +9,8 @@ export type WhiteboardEdgeData = {
    * Type of the edge
    */
   type: WhiteboardEdgeType;
+  /**
+   * Label of the edge
+   */
   label: WhiteboardEdgeLabelData;
 };

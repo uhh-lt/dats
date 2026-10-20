@@ -11,6 +11,9 @@ export type BBoxAnnotationNodeData = {
    * Background color alpha of the text
    */
   bgalpha: number | null;
+  /**
+   * Type of the whiteboard node
+   */
   type: string;
   /**
    * ID of the bbox annotation

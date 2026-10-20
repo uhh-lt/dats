@@ -3,6 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 export type FuzzyGroundingStrategyParams = {
+  /**
+   * The strategy to ground the LLM output in the document
+   */
   strategy_type: string;
   /**
    * Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes
