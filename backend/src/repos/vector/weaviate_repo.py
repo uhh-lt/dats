@@ -57,14 +57,27 @@ class WeaviateRepo(RepoBase, metaclass=SingletonMeta):
 
     def remove_data(self) -> None:
         """
-        Removes all Weaviate collections.
-        This deletes all collections in the Weaviate instance.
+        Removes the Weaviate collections of this instance.
+        With a collection postfix (e.g. the tests), only the collections ending with
+        it are deleted, so that tests never wipe the collections of the dev instance
+        that shares the same Weaviate. Without a postfix, all collections are deleted.
         """
         if self._client is None:
             raise RuntimeError("WeaviateRepo is not connected. Call connect() first.")
 
-        logger.warning("Dropping all Weaviate indices!")
-        self._client.collections.delete_all()
+        postfix = conf.weaviate.collection_postfix
+        if not postfix:
+            logger.warning("Dropping all Weaviate collections!")
+            self._client.collections.delete_all()
+            return
+
+        names = [
+            name
+            for name in self._client.collections.list_all(simple=True)
+            if name.endswith(postfix)
+        ]
+        logger.warning(f"Dropping the Weaviate collections {names}!")
+        self._client.collections.delete(names)
 
     def get_client(self):
         """Return the Weaviate client instance"""
