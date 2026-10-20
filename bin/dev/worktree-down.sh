@@ -59,10 +59,18 @@ while [ -n "${pid}" ] && [ "${pid}" -gt 1 ]; do
 	pid="$(sed 's/^.*) //' "/proc/${pid}/stat" 2>/dev/null | awk '{print $2}')"
 done
 
+# Field 5 of /proc/<pid>/stat is the process group (field 3 after stripping "(comm)").
+pgid_of() { sed 's/^.*) //' "/proc/$1/stat" 2>/dev/null | awk '{print $3}'; }
+
+# The commands of the caller's pipeline (e.g. "worktree-down | tail") are siblings, not ancestors,
+# but share this script's process group: they must survive, too, or the script dies of SIGPIPE.
+own_pgid="$(pgid_of $$)"
+
 # Stop dev servers (uvicorn, vite, workers) running inside the worktree.
 for proc in /proc/[0-9]*; do
 	pid="${proc#/proc/}"
 	[[ "${protected}" == *" ${pid} "* ]] && continue
+	[[ "$(pgid_of "${pid}")" == "${own_pgid}" ]] && continue
 	cwd="$(readlink "${proc}/cwd" 2>/dev/null || true)"
 	if [[ "${cwd}" == "${TARGET}" || "${cwd}" == "${TARGET}/"* ]]; then
 		kill "${pid}" 2>/dev/null || true
