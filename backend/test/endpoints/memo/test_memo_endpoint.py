@@ -462,6 +462,90 @@ def test_delete_memos_bulk_rejects_memo_from_non_member_project(
 
 
 # ===========================================================================
+# BULK UPDATE MEMOS (PATCH /memo/bulk/update) TESTS
+# ===========================================================================
+
+
+def test_update_memos_bulk_favorite_only(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A favorite-only bulk update toggles the requesting user's favorites.
+
+    `user` favorited `code_memo_a` but not `code_memo_b`; the update flips both.
+    The entries carry no shared field, so the memos' data stays unchanged.
+    """
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+
+    response = client.patch(
+        "/memo/bulk/update",
+        json=[
+            {"memo_id": memo_a.id, "is_favorite": False},
+            {"memo_id": memo_b.id, "is_favorite": True},
+        ],
+    )
+
+    assert response.status_code == 200, response.text
+    by_id = {m.id: m for m in (MemoRead.model_validate(i) for i in response.json())}
+    assert by_id[memo_a.id].is_favorite is False
+    assert by_id[memo_b.id].is_favorite is True
+    assert by_id[memo_a.id].title == "Code Memo A"
+    assert by_id[memo_b.id].title == "Code Memo B"
+    # Confirm through the single-memo endpoint.
+    assert MemoRead.model_validate(client.get(f"/memo/{memo_b.id}").json()).is_favorite
+
+
+def test_update_memos_bulk_shared_fields(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A bulk update of shared fields changes only the given fields of each memo."""
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+
+    response = client.patch(
+        "/memo/bulk/update",
+        json=[
+            {"memo_id": memo_a.id, "title": "Renamed A"},
+            {"memo_id": memo_b.id, "icon": "🔥"},
+        ],
+    )
+
+    assert response.status_code == 200, response.text
+    by_id = {m.id: m for m in (MemoRead.model_validate(i) for i in response.json())}
+    assert by_id[memo_a.id].title == "Renamed A"
+    assert by_id[memo_a.id].content == memo_a.content
+    assert by_id[memo_b.id].title == "Code Memo B"
+    assert by_id[memo_b.id].icon == "🔥"
+
+
+def test_update_memos_bulk_shared_fields_and_favorite(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """One entry may change shared fields and the favorite at the same time."""
+    memo_b = memo_project["code_memo_b"]
+
+    response = client.patch(
+        "/memo/bulk/update",
+        json=[{"memo_id": memo_b.id, "title": "Renamed B", "is_favorite": True}],
+    )
+
+    assert response.status_code == 200, response.text
+    (memo_read,) = [MemoRead.model_validate(i) for i in response.json()]
+    assert memo_read.title == "Renamed B"
+    assert memo_read.is_favorite is True
+
+
+def test_update_memos_bulk_rejects_entry_without_updatable_field(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """An entry with only a memo_id has nothing to update -> 422."""
+    response = client.patch(
+        "/memo/bulk/update", json=[{"memo_id": memo_project["code_memo_a"].id}]
+    )
+    assert response.status_code == 422, response.text
+
+
+# ===========================================================================
 # FAVORITE / UNFAVORITE MEMO (PATCH /memo/{memo_id} with is_favorite) TESTS
 # ===========================================================================
 #
