@@ -37,8 +37,11 @@ export const MemoEditorPane = memo(({ memoId, renderToolbar, onDelete }: MemoEdi
     return null;
   }
 
+  // key by memo id: useMemoPersistence owns the draft and the id it saves to, so switching
+  // the memo must remount it (this also flushes the pending changes of the previous memo)
   return (
     <MemoEditorPaneContent
+      key={memo.id}
       memo={memo}
       attachedObject={attachedObject}
       attachedObjectType={attachedObjectType}
@@ -84,7 +87,6 @@ function MemoEditorPaneContent({
       <Divider />
       <Box sx={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
         <MemoEditor
-          key={memo.id}
           memo={memo}
           attachedObject={attachedObject}
           attachedObjectType={attachedObjectType}
