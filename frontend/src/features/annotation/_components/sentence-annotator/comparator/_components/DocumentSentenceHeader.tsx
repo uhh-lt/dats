@@ -135,7 +135,11 @@ function DocumentSentenceHeaderPart({ userId, numSentenceDigits, annotator }: Do
           backgroundColor: "rgba(0, 0, 0, 0.04)",
         }}
       />
-      <Typography style={{ flexGrow: 1, flexBasis: 1, paddingLeft: "16px" }} variant="h6">
+      <Typography
+        style={{ flexGrow: 1, flexBasis: 1, paddingLeft: "16px" }}
+        variant="h6"
+        sx={{ "& .MuiTypography-root": { font: "inherit" } }}
+      >
         {userId ? (
           <Stack direction="row" alignItems="center">
             <UserRenderer user={userId} />

@@ -22,6 +22,9 @@ import { AnnotationMenu, AnnotationMenuHandle } from "../annotation-menu";
 import { BlockComparisonRow } from "./_components/BlockComparisonRow";
 import { useBlockPartition } from "./_hooks/useBlockPartition";
 
+// the header text is an h6; the user renderer's own Typography would reset it to body1
+const inheritHeaderFont = { "& .MuiTypography-root": { font: "inherit" } };
+
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
 };
@@ -484,7 +487,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
         <Stack direction="row" width="100%" sx={{ mb: 2, borderBottom: "1px solid #e8eaed", pb: 1, flexShrink: 0 }}>
           {/* Left Column Header */}
           <Box sx={{ flexGrow: 1, flexBasis: 0, display: "flex", alignItems: "center", pl: 2 }}>
-            <Typography variant="h6">
+            <Typography variant="h6" sx={inheritHeaderFont}>
               {effectiveLeftUserId ? (
                 <Stack direction="row" alignItems="center" gap={1}>
                   <UserRenderer user={effectiveLeftUserId} />
@@ -546,7 +549,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
 
           {/* Right Column Header */}
           <Box sx={{ flexGrow: 1, flexBasis: 0, display: "flex", alignItems: "center", pl: 2 }}>
-            <Typography variant="h6">
+            <Typography variant="h6" sx={inheritHeaderFont}>
               {effectiveRightUserId ? (
                 <Stack direction="row" alignItems="center" gap={1}>
                   <UserRenderer user={effectiveRightUserId} />
