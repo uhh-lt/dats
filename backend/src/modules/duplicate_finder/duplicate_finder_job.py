@@ -8,6 +8,7 @@ from pydantic import Field
 from common.doc_type import DocType
 from common.job_type import JobType
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import (
     EndpointGeneration,
@@ -54,16 +55,17 @@ def find_duplicates_job(
     t0 = time.time()
     with sqlr.transaction() as db:
         if payload.tag_id is not None:
-            result = crud_word_frequency.read_by_project_and_doctype_and_tag(
+            wf_orms = crud_word_frequency.read_by_project_and_doctype_and_tag(
                 db,
                 project_id=payload.project_id,
                 doctype=DocType.text,
                 tag_id=payload.tag_id,
             )
         else:
-            result = crud_word_frequency.read_by_project_and_doctype(
+            wf_orms = crud_word_frequency.read_by_project_and_doctype(
                 db, project_id=payload.project_id, doctype=DocType.text
             )
+        result = [WordFrequencyRead.model_validate(wf) for wf in wf_orms]
     t1 = time.time()
     logger.info(f"query took: {t1 - t0}")
 
