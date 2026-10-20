@@ -25,13 +25,12 @@ os.environ["RQ_WORKERS_GPU"] = "1"
 
 from typing import Any, Generator
 
+import dats_test_utils
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-import bootstrap
-import dats_test_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 
@@ -91,26 +90,20 @@ def start_workers() -> Generator[None, Any, Any]:
 # DATA STORES
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="session", autouse=True)
-def prepare_data_stores() -> None:
-    """Before running tests, connect like a server process and create the
-    database from scratch with the migrations."""
-    bootstrap.connect_repos()
-    bootstrap.init_services()
-    dats_test_utils.recreate_test_database()
+def start_dats() -> None:
+    dats_test_utils.start_dats()
 
 
 @pytest.fixture(scope="function", autouse=True)
-def setup_repos(prepare_data_stores) -> None:
-    """Every test starts with empty, freshly seeded data stores."""
-    bootstrap.delete_all_data()
-    bootstrap.ensure_system_data()
+def clean_data_stores(start_dats) -> None:
+    dats_test_utils.clean_data_stores()
 
 
 # ---------------------------------------------------------------------------
 # DB SESSION
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function")
-def db_session(setup_repos) -> Generator[Session, Any, None]:
+def db_session(clean_data_stores) -> Generator[Session, Any, None]:
     from repos.db.sql_repo import SQLRepo
 
     with SQLRepo().transaction() as db:
@@ -122,10 +115,7 @@ def db_session(setup_repos) -> Generator[Session, Any, None]:
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="session")
 def app() -> FastAPI:
-    """The real DATS app (see main.py), authenticating by a test header."""
-    app = bootstrap.create_app()
-    dats_test_utils.install_test_auth(app)
-    return app
+    return dats_test_utils.create_test_app()
 
 
 @pytest.fixture(scope="session")
