@@ -104,8 +104,8 @@ def import_timeline_analysis_to_proj(
                 name=ta.name,
                 project_id=project_id,
                 timeline_analysis_type=TimelineAnalysisType(ta.type),
-                concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),
-                settings=transformed_settings.model_dump_json(),
+                concepts=jsonable_encoder(transformed_concepts),
+                settings=transformed_settings.model_dump(mode="json"),
             )
         )
 

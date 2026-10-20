@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from core.annotation.bbox_annotation_dto import BBoxAnnotationRead
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
@@ -307,7 +307,9 @@ class WhiteboardCreate(WhiteboardBaseDTO):
 
 
 class WhiteboardCreateIntern(WhiteboardCreate):
-    content: str | None = Field(description="Content of the Whiteboard", default=None)
+    content: dict[str, Any] | None = Field(
+        description="Content of the Whiteboard as JSON", default=None
+    )
 
 
 # Properties for updating
@@ -329,8 +331,8 @@ class WhiteboardUpdateIntern(BaseModel, UpdateDTOBase):
         description="Title of the Whiteboard",
         default=None,
     )
-    content: str | None = Field(
-        description="Content of the Whiteboard",
+    content: dict[str, Any] | None = Field(
+        description="Content of the Whiteboard as JSON",
         default=None,
     )
 
@@ -342,11 +344,6 @@ class WhiteboardRead(WhiteboardBaseDTO):
     created: datetime = Field(description="Created timestamp of the Whiteboard")
     updated: datetime = Field(description="Updated timestamp of the Whiteboard")
     content: WhiteboardContent = Field(description="Content of the Whiteboard")
-
-    @field_validator("content", mode="before")
-    @classmethod
-    def json_loads_content(cls, v: str) -> WhiteboardContent:
-        return WhiteboardContent.model_validate_json(v)
 
     model_config = ConfigDict(from_attributes=True)
 

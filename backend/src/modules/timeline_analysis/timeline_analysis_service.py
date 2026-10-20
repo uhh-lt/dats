@@ -54,9 +54,7 @@ def update_timeline_analysis(
         exclude_unset=True, exclude={"concepts", "settings"}
     )
     if update_dto.settings is not None:
-        update_data["settings"] = srsly.json_dumps(
-            jsonable_encoder(update_dto.settings)
-        )
+        update_data["settings"] = jsonable_encoder(update_dto.settings)
     if update_data:
         db_obj = crud_timeline_analysis.update(
             db,
@@ -136,7 +134,7 @@ def update_timeline_analysis(
         db,
         id=id,
         update_dto=TimelineAnalysisUpdateIntern(
-            concepts=srsly.json_dumps(jsonable_encoder(list(new_concepts.values()))),
+            concepts=jsonable_encoder(list(new_concepts.values())),
         ),
     )
 
@@ -166,7 +164,7 @@ def recompute_timeline_analysis(db: Session, id: int) -> TimelineAnalysisORM:
         db,
         id=id,
         update_dto=TimelineAnalysisUpdateIntern(
-            concepts=srsly.json_dumps(jsonable_encoder(list(concepts.values()))),
+            concepts=jsonable_encoder(list(concepts.values())),
         ),
     )
 

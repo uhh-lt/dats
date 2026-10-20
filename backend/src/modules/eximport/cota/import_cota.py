@@ -108,9 +108,9 @@ def import_cota_to_proj(
             COTACreateIntern(
                 name=cota.name,
                 project_id=project_id,
-                concepts=srsly.json_dumps(jsonable_encoder(transformed_concepts)),
-                timeline_settings=transformed_timeline_settings.model_dump_json(),
-                training_settings=transformed_training_settings.model_dump_json(),
+                concepts=jsonable_encoder(transformed_concepts),
+                timeline_settings=transformed_timeline_settings.model_dump(mode="json"),
+                training_settings=transformed_training_settings.model_dump(mode="json"),
             )
         )
 

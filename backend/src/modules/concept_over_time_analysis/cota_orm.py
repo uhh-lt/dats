@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from repos.db.orm_base import ORMBase
@@ -13,34 +15,34 @@ class ConceptOverTimeAnalysisORM(ORMBase):
         String, nullable=True, index=False
     )
 
-    # JSON representation of a list of COTAConcepts (see DTO)
-    concepts: Mapped[str] = mapped_column(
-        String,
-        server_default="[]",
+    # list of COTAConcepts (see DTO)
+    concepts: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("'[]'::jsonb"),
         nullable=False,
         index=False,
     )
 
-    # JSON representation of a list of COTASentences that form the searchspace (see DTO)
-    search_space: Mapped[str] = mapped_column(
-        String,
-        server_default="[]",
+    # list of COTASentences that form the search space (see DTO)
+    search_space: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("'[]'::jsonb"),
         nullable=False,
         index=False,
     )
 
-    # JSON representation of COTATimelineSettings
-    timeline_settings: Mapped[str] = mapped_column(
-        String,
-        server_default="{}",
+    # COTATimelineSettings (see DTO)
+    timeline_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("'{}'::jsonb"),
         nullable=False,
         index=False,
     )
 
-    # JSON representation of COTATrainingSettings
-    training_settings: Mapped[str] = mapped_column(
-        String,
-        server_default="{}",
+    # COTATrainingSettings (see DTO)
+    training_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("'{}'::jsonb"),
         nullable=False,
         index=False,
     )

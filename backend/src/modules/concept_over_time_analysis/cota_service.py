@@ -1,6 +1,5 @@
 import shutil
 
-import srsly
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -80,18 +79,16 @@ class COTAService(metaclass=SingletonMeta):
         )
 
         if cota_update.concepts is not None:
-            update_data["concepts"] = srsly.json_dumps(
-                jsonable_encoder(cota_update.concepts)
-            )
+            update_data["concepts"] = jsonable_encoder(cota_update.concepts)
 
         if cota_update.training_settings is not None:
-            update_data["training_settings"] = srsly.json_dumps(
-                jsonable_encoder(cota_update.training_settings)
+            update_data["training_settings"] = jsonable_encoder(
+                cota_update.training_settings
             )
 
         if cota_update.timeline_settings is not None:
-            update_data["timeline_settings"] = srsly.json_dumps(
-                jsonable_encoder(cota_update.timeline_settings)
+            update_data["timeline_settings"] = jsonable_encoder(
+                cota_update.timeline_settings
             )
 
         # build the update DTO only now: it rejects being created without any field
@@ -126,7 +123,7 @@ class COTAService(metaclass=SingletonMeta):
             db=db,
             id=cota_id,
             update_dto=COTAUpdateIntern(
-                search_space=srsly.json_dumps(jsonable_encoder([])),
+                search_space=[],
                 last_refinement_job_id=None,
             ),
         )
@@ -156,17 +153,14 @@ class COTAService(metaclass=SingletonMeta):
             idx = f"{cota_sentence_id.sdoc_id}_{cota_sentence_id.sentence_id}"
             cota_sentence_id2_cota_sentence[idx].concept_annotation = concept_id
 
-        # json dump the search space
-        search_space_str = srsly.json_dumps(
-            jsonable_encoder(list(cota_sentence_id2_cota_sentence.values()))
-        )
+        search_space = jsonable_encoder(list(cota_sentence_id2_cota_sentence.values()))
 
         # update the cota in db
         db_obj = crud_cota.update(
             db=db,
             id=cota_id,
             update_dto=COTAUpdateIntern(
-                search_space=search_space_str,
+                search_space=search_space,
             ),
         )
 
@@ -195,17 +189,14 @@ class COTAService(metaclass=SingletonMeta):
             idx = f"{cota_sentence_id.sdoc_id}_{cota_sentence_id.sentence_id}"
             del cota_sentence_id2_cota_sentence[idx]
 
-        # json dump the search space
-        search_space_str = srsly.json_dumps(
-            jsonable_encoder(list(cota_sentence_id2_cota_sentence.values()))
-        )
+        search_space = jsonable_encoder(list(cota_sentence_id2_cota_sentence.values()))
 
         # update the cota in db
         db_obj = crud_cota.update(
             db=db,
             id=cota_id,
             update_dto=COTAUpdateIntern(
-                search_space=search_space_str,
+                search_space=search_space,
             ),
         )
 
