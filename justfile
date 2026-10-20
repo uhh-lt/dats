@@ -89,16 +89,16 @@ lint target *files:
     case "$target" in
       backend)
         cd backend
-        if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix --config=pyproject.toml src test
-        else uv run ruff check --fix --config=pyproject.toml "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix src test
+        else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
         cd frontend
         if [ ${#rel[@]} -eq 0 ]; then npx eslint . --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs
         else npx eslint --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs "${rel[@]}"; fi ;;
       ray)
         cd ray
-        if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix --config=pyproject.toml src
-        else uv run ruff check --fix --config=pyproject.toml "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix src
+        else uv run ruff check --fix "${rel[@]}"; fi ;;
     esac
 
 [arg("files", help="Optional repo-relative files, e.g. frontend/src/App.tsx")]
@@ -112,12 +112,12 @@ format target *files:
     case "$target" in
       backend)
         cd backend
-        if [ ${#rel[@]} -eq 0 ]; then uv run ruff format --config=pyproject.toml src test
-        else uv run ruff format --config=pyproject.toml "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then uv run ruff format src test
+        else uv run ruff format "${rel[@]}"; fi ;;
       ray)
         cd ray
-        if [ ${#rel[@]} -eq 0 ]; then uv run ruff format --config=pyproject.toml src
-        else uv run ruff format --config=pyproject.toml "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then uv run ruff format src
+        else uv run ruff format "${rel[@]}"; fi ;;
       frontend)
         cd frontend
         if [ ${#rel[@]} -eq 0 ]; then npx prettier --write --no-color --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore . | sed '/ (unchanged)$/d'

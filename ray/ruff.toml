@@ -1,3 +1,7 @@
+# The only ruff config of this component (editors and `just lint` both use it).
+# Every top-level module in `src` is first-party for the import sorting.
+src = ["src"]
+
 [lint]
 # I: isort-compatible import sorting
 # W291: Trailing whitespace
