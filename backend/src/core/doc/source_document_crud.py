@@ -1,7 +1,6 @@
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from common.exception_handler import exception_handler
@@ -39,31 +38,24 @@ class CRUDSourceDocument(
     def create(
         self, db: Session, *, create_dto: SourceDocumentCreate
     ) -> SourceDocumentORM:
-        try:
-            # If folder_id not provided, create a folder with same name as the document
-            if create_dto.folder_id is None:
-                folder_create = FolderCreate(
-                    name=create_dto.filename,
-                    folder_type=FolderType.SDOC_FOLDER,
-                    project_id=create_dto.project_id,
-                )
-                created_folder = crud_folder.create(db=db, create_dto=folder_create)
+        # If folder_id not provided, create a folder with same name as the document
+        if create_dto.folder_id is None:
+            folder_create = FolderCreate(
+                name=create_dto.filename,
+                folder_type=FolderType.SDOC_FOLDER,
+                project_id=create_dto.project_id,
+            )
+            created_folder = crud_folder.create(db=db, create_dto=folder_create)
 
-                # Create the source document with the folder_id
-                create_dto = create_dto.model_copy(
-                    update={"folder_id": created_folder.id}
-                )
+            # Create the source document with the folder_id
+            create_dto = create_dto.model_copy(update={"folder_id": created_folder.id})
 
-            dto_obj_data = jsonable_encoder(create_dto)
-            db_obj = self.model(**dto_obj_data)
-            db.add(db_obj)
-            db.flush()
-            db.refresh(db_obj)
-            return db_obj
-
-        except SQLAlchemyError as e:
-            db.rollback()
-            raise e
+        dto_obj_data = jsonable_encoder(create_dto)
+        db_obj = self.model(**dto_obj_data)
+        db.add(db_obj)
+        db.flush()
+        db.refresh(db_obj)
+        return db_obj
 
     ### READ OPERATIONS ###
 

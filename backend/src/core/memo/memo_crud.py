@@ -207,7 +207,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             set_={"last_opened": insert_stmt.excluded.last_opened},
         )
         db.execute(upsert_stmt)
-        db.commit()
+        db.flush()
 
 
 crud_memo = CRUDMemo(MemoORM)
