@@ -25,12 +25,12 @@ os.environ["RQ_WORKERS_GPU"] = "1"
 
 from typing import Any, Generator
 
-import dats_test_utils
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+import dats_test_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 

@@ -56,19 +56,6 @@ Documentation = "https://github.com/uhh-lt/dats/wiki"
 Repository = "https://github.com/uhh-lt/dats.git"
 Issues = "https://github.com/uhh-lt/dats/issues"
 
-[tool.ruff]
-extend = "./ruff.toml"
-src = ["src"]
-
-[tool.ruff.lint.isort]
-known-first-party = [
-    "apps",
-    "dto",
-    "models",
-    "config",
-    "utils"
-]
-
 [tool.pyright]
 include = ["src", "test"]
 exclude = ["**/__pycache__", "**/.venv", "**/node_modules", "**/.*"]

@@ -2,11 +2,11 @@ from datetime import timedelta
 from typing import Any, Generator, TypedDict
 from uuid import uuid4
 
-import dats_test_utils
 import pytest
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+import dats_test_utils
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
