@@ -4,598 +4,140 @@ paths:
   - "backend/**"
 ---
 
-# Info
+# Backend
 
-The backend is built using Python with FastAPI as the web framework.
-It provides RESTful API endpoints for the frontend to interact with.
-It follows a modular architecture, separating concerns into different folders and files.
+Cross-cutting rules for all backend code (Python, FastAPI). The patterns of a single file kind live in their own instruction files, which apply automatically by file suffix:
 
-## Libraries and Frameworks
+| File kind                                 | Instructions                             |
+| ----------------------------------------- | ---------------------------------------- |
+| `*_orm.py`                                | `backend-orm.instructions.md`            |
+| `*_dto.py`                                | `backend-dto.instructions.md`            |
+| `*_crud.py` (SQL)                         | `backend-crud.instructions.md`           |
+| `*_embedding_crud.py` (Weaviate)          | `backend-embedding-crud.instructions.md` |
+| `*_elastic_crud.py` (Elasticsearch)       | `backend-elastic-crud.instructions.md`   |
+| `*_service.py` (incl. transactions)       | `backend-service.instructions.md`        |
+| `*_endpoint.py` (incl. authz, deps, sync) | `backend-endpoint.instructions.md`       |
+| `backend/test/**`                         | `backend-tests.instructions.md`          |
 
-Dependencies are listed in pyproject.toml and managed with uv.
+## Libraries
 
-- FastAPI for building the API (REST endpoints)
-- SQLAlchemy for database interactions
-- Alembic for database migrations
-- Pydantic for data validation
-- Omegaconf for configuration management
-- Loguru for logging
+Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use what is there:
 
-## Databases
-
-The backend works with multiple databases:
-
-- PostgreSQL as the primary relational database
-- Weaviate for vector storage and similarity search
-- Elasticsearch for full-text search capabilities
-- Filesystem storage for storing uploaded files
+- FastAPI (REST API), SQLAlchemy 2.0 (ORM), Alembic (migrations), Pydantic v2 (DTOs, config schema)
+- OmegaConf (config loading), Loguru (logging), RQ (job queue)
+- `weaviate` client (vectors), `elasticsearch` client (full-text search)
 
 ## Folder Structure
 
-- `/backend/configs`: Configuration files for different environments
-- `/backend/src`: Main application code
-  - `/common`: Utility functions and helpers
-  - `/core`: Core application logic. All core concepts are implemented here.
-  - `/migrations`: Alembic database migrations
-  - `/modules`: Application logic organized by feature. Modules use core services and systems to implement features.
-  - `/repos`: Connections to external services, e.g., databases, file storage, etc.
-  - `/systems`: Reusable systems that can be plugged into application logic
-- `/backend/tests`: Test cases for the backend code
-
-The codebase uses strict architectural layers enforced by linters:
-
-**Rules**:
-
-- Core CANNOT import from modules
-- DTOs CANNOT import services, repos, ORMs, or endpoints
-- Endpoints can ONLY import DTOs from their own folder
-
-**Reference**: [check_core.py](backend/lint/check_core.py)
-
-## File Naming Conventions
-
-The purpose of the file is reflected in its name.
-We use the following suffixes to indicate file types:
-
-- `*_endpoint.py`: API endpoint definitions
-
-- `*_dto.py`: Pydantic schemas (Data Transfer Objects) for request and response validation of payloads
-- `*_orm.py`: SQL Database models and schemas
-- `*_crud.py`: CRUD operations for database models (SQL)
-
-- `*_collection.py`: Weaviate collection schemas
-- `*_embedding_crud.py`: CRUD operations for embeddings stored in Weaviate
-
-- `*_elastic_index.py`: Elasticsearch index schemas
-- `*_elastic_crud.py`: CRUD operations for Elasticsearch indices
-
-- `*_system.py`: Reusable systems that encapsulate specific functionality
-- `*_service.py`: Business logic and service layer implementations
-- `*_repo.py`: Data access layer and repository implementations
-- `*_utils.py`: Utility functions and helpers
-
-## Code Style & Formatting
-
-Coding guidelines for writing Python code across all `.py` files in this repository.
-
-### Import Organization
-
-Organize imports in three groups using isort-compatible ordering (enforced by ruff):
-
-1. Standard library imports
-2. Third-party imports
-3. Local application imports (absolute imports preferred)
-
-Use `TYPE_CHECKING` to avoid circular imports:
-
-```python
-from datetime import datetime
-from typing import TYPE_CHECKING
-
-from sqlalchemy import Integer, String, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from repos.db.orm_base import ORMBase
-
-if TYPE_CHECKING:
-    from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-```
-
-**Reference**: [code_orm.py](backend/src/core/code/code_orm.py)
-
-### Type Hints
-
-- Use modern Python 3.11+ syntax: `list`, `dict`, `Type | None` (PEP 604 union operator)
-- SQLAlchemy ORM fields use `Mapped[]` type annotations
-- Add type hints to all function signatures and class attributes
-- No runtime type checking required
-
-```python
-def read_by_names(
-    self, db: Session, project_id: int, names: list[str]
-) -> list[CodeORM]:
-    # implementation
-```
-
-### Naming Conventions
-
-- **Variables/Functions**: `snake_case` (e.g., `project_id`, `read_by_names`)
-- **Classes**: `PascalCase` (e.g., `CodeORM`, `CodeCreate`, `CRUDCode`)
-- **Constants**: `UPPER_SNAKE_CASE` (e.g., `SYSTEM_USER_ID`, `BATCH_SIZE`)
-- **Private/Internal**: Leading underscore `_internal_helper` for internal functions
-
-### Code Formatting
-
-- Enforced by ruff with black-compatible formatting
-- No trailing whitespace
-- Newline at end of file
-- Follow existing codebase line length patterns
-
-## Architecture Patterns
-
-### ORM Pattern (SQLAlchemy 2.0)
-
-All ORMs inherit from `ORMBase` and use modern SQLAlchemy 2.0 `Mapped[]` syntax:
-
-```python
-from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from repos.db.orm_base import ORMBase
-
-class CodeORM(ORMBase):
-    # Primary key with index
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-
-    # Required fields
-    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    is_system: Mapped[bool] = mapped_column(Boolean, nullable=False)
-
-    # Optional fields (use Type | None)
-    description: Mapped[str | None] = mapped_column(String)
-
-    # Auto-generated timestamps
-    created: Mapped[datetime | None] = mapped_column(
-        DateTime, server_default=func.now(), index=True
-    )
-
-    # Foreign keys with cascade delete
-    project_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("project.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-
-    # Relationships with explicit cascades
-    project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
-    span_annotations: Mapped[list["SpanAnnotationORM"]] = relationship(
-        "SpanAnnotationORM",
-        back_populates="code",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-```
-
-**Key patterns**:
-
-- Table names auto-generated from class name (strips "ORM" suffix)
-- Use `Mapped[]` for type-safe columns
-- Explicit cascade rules: `cascade="all, delete-orphan"`, `passive_deletes=True`
-- Index frequently queried foreign keys
-
-**Reference**: [code_orm.py](backend/src/core/code/code_orm.py), [orm_base.py](backend/src/repos/db/orm_base.py)
-
-### DTO Pattern (Pydantic)
-
-Use three-tier DTO pattern for data validation:
-
-```python
-from pydantic import BaseModel, Field, ConfigDict
-from repos.db.dto_base import UpdateDTOBase
-
-# 1. BASE DTO - Shared properties
-class CodeBaseDTO(BaseModel):
-    name: str = Field(description="Name of the Code")
-    color: str = Field(description="Color of the Code")
-    enabled: bool = Field(default=True, description="...")
-
-# 2. CREATE DTO - For creation, includes required relationships
-class CodeCreate(CodeBaseDTO):
-    project_id: int = Field(description="Project the Code belongs to")
-    color: str = Field(default_factory=get_next_color)
-    is_system: bool = Field(description="Is the Code a system code")
-
-# 3. UPDATE DTO - All fields optional, extends UpdateDTOBase
-class CodeUpdate(BaseModel, UpdateDTOBase):
-    name: str | None = Field(default=None)
-    color: str | None = Field(default=None)
-    parent_id: int | None = Field(default=None)
-
-# 4. READ DTO - Matches ORM structure, for API responses
-class CodeRead(CodeBaseDTO):
-    id: int = Field(description="ID of the Code")
-    project_id: int
-    created: datetime
-
-    model_config = ConfigDict(from_attributes=True)  # Enable ORM conversion
-```
-
-**Key patterns**:
-
-- Create DTOs specify defaults and required fields
-- Update DTOs must extend `UpdateDTOBase` (validates at least one field is set)
-- Read DTOs use `from_attributes=True` for automatic ORM conversion
-- Use `Field()` with descriptions for OpenAPI documentation
-
-**Reference**: [code_dto.py](backend/src/core/code/code_dto.py), [dto_base.py](backend/src/repos/db/dto_base.py)
-
-### CRUD Pattern
-
-CRUD classes inherit from `CRUDBase[ORMType, CreateDTOType, UpdateDTOType]` and follow strict method ordering enforced by linters:
-
-1. `create*` methods
-2. `read*` methods
-3. `update*` methods
-4. `delete*` methods
-5. Other methods
-
-```python
-from repos.db.crud_base import CRUDBase
-from core.code.code_orm import CodeORM
-from core.code.code_dto import CodeCreate, CodeUpdate
-
-class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
-    ### CREATE OPERATIONS ###
-    def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
-        dto_obj_data = jsonable_encoder(create_dto)
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
-
-    ### READ OPERATIONS ###
-    def read_by_name(self, db: Session, code_name: str) -> list[CodeORM]:
-        return db.query(self.model).filter(self.model.name == code_name).all()
-
-    def read_by_project(self, db: Session, *, proj_id: int) -> list[CodeORM]:
-        return db.query(self.model).filter(self.model.project_id == proj_id).all()
-
-    ### UPDATE OPERATIONS ###
-    # Inherited from CRUDBase
-
-    ### DELETE OPERATIONS ###
-    # Inherited from CRUDBase
-```
-
-**Base CRUD methods** available from `CRUDBase`:
-
-- `read(db, id)` - Read single with error handling
-- `read_by_ids(db, ids)` - Batch read maintaining order
-- `read_multi(db, skip, limit)` - Paginated read
-- `exists(db, id)` - Existence check
-- `create(db, create_dto)` - Generic creation
-- `update(db, id, update_dto)` - Generic update with validation
-- `delete(db, id)` - Generic deletion
-
-**Reference**: [code_crud.py](backend/src/core/code/code_crud.py), [crud_base.py](backend/src/repos/db/crud_base.py), [check_crud.py](backend/lint/check_crud.py)
-
-### Service Layer Pattern
-
-Services contain business logic and orchestrate multiple CRUD operations:
-
-```python
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-
-def compute_tag_statistics(
-    db: Session, sdoc_ids: set[int], top_k: int = 20
-) -> list[TagStat]:
-    """Compute tag statistics for given source documents."""
-    # Business logic combining multiple queries
-    count = func.count().label("count")
-
-    filtered_query = (
-        db.query(TagORM, count)
-        .join(SourceDocumentTagLinkTable)
-        .filter(SourceDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)))
-        .group_by(TagORM.id)
-        .order_by(count.desc())
-        .limit(top_k)
-    )
-
-    global_query = (
-        db.query(TagORM.id, count)
-        .join(SourceDocumentTagLinkTable)
-        .filter(TagORM.id.in_([tag.id for tag, _ in filtered_res]))
-        .group_by(TagORM.id)
-    )
-
-    # Combine results
-    return [
-        TagStat(tag=tag, filtered_count=fcount, global_count=gcount)
-        for (tag, fcount), (tid, gcount) in zip(filtered_res, global_res)
-    ]
-```
-
-**Key patterns**:
-
-- Services coordinate multiple CRUD operations
-- Contain complex business logic that doesn't belong in CRUD
-- Return DTOs or domain-specific types
-- Handle transaction boundaries when needed
-
-**Reference**: [statistics_service.py](backend/src/modules/statistics/statistics_service.py)
-
-## FastAPI Patterns
-
-### Endpoint Organization
-
-One router per endpoint file with consistent structure:
-
-```python
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
-
-from common.dependencies import get_db_session, get_current_user
-from core.auth.authz_user import AuthzUser
-from core.code.code_dto import CodeRead, CodeCreate
-
-router = APIRouter(
-    prefix="/code",
-    dependencies=[Depends(get_current_user)],  # Global auth requirement
-    tags=["code"],
-)
-
-@router.post(
-    "",
-    response_model=CodeRead,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create a new code",
-)
-def create_code(
-    *,
-    db: Session = Depends(get_db_session),
-    create_dto: CodeCreate,
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    """Create a new code in the project."""
-    authz_user.assert_in_project(create_dto.project_id)
-    db_code = crud_code.create(db=db, create_dto=create_dto)
-    return db_code
-```
-
-**Key patterns**:
-
-- Router prefix matches resource name (plural)
-- Global dependencies for authentication
-- Tags for OpenAPI grouping
-- Explicit response models and status codes
-- Summary and docstrings for documentation
-
-### Dependency Injection
-
-Standard dependencies used throughout:
-
-```python
-from fastapi import Depends
-from sqlalchemy.orm import Session
-
-from common.dependencies import get_db_session, get_current_user, skip_limit_params
-from core.auth.authz_user import AuthzUser
-from core.user.user_orm import UserORM
-
-# Database session
-db: Session = Depends(get_db_session)
-
-# Current authenticated user
-user: UserORM = Depends(get_current_user)
-
-# Authorization helper (also injects user + db)
-authz_user: AuthzUser = Depends()
-
-# Pagination parameters
-params: dict[str, int] = Depends(skip_limit_params)
-```
-
-### Authorization Pattern
-
-Use `AuthzUser` for project-based authorization:
-
-```python
-from core.auth.authz_user import AuthzUser
-from common.crud_enum import Crud
-
-@router.get("/{code_id}")
-def get_code(
-    *,
-    code_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> CodeRead:
-    # Check user is in same project as code
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-
-    code = crud_code.read(db, code_id)
-    return code
-```
-
-**AuthzUser methods**:
-
-- `assert_in_project(project_id: int)` - Verify user is project member
-- `assert_in_same_project_as(crud: Crud, object_id: int)` - Verify user can access object
-- Automatically raises `ForbiddenError` (HTTP 403) on failure
-
-**Reference**: [authz_user.py](backend/src/core/auth/authz_user.py)
+- `backend/configs/`: YAML config (`base.yaml`, `default.yaml`, `version.yaml`)
+- `backend/lint/`: custom architecture lint scripts (see below)
+- `backend/test/`: tests
+- `backend/src/`: application code, every top-level folder is an import root (`from core.code.code_crud import crud_code`)
+  - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud`, `DATSEvent`, `SingletonMeta`, `exception_handler`, FastAPI dependencies)
+  - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...)
+  - `modules/`: features built on `core` and `systems` (analysis, search, export/import, doc processing, ...)
+  - `systems/`: reusable infrastructure (`job_system`, `event_system`, `search_system`, `websocket_system`, `mcp_system`)
+  - `repos/`: connections to external services (SQL, Weaviate, Elasticsearch, Redis, filesystem, LLM, Ray, Docling, mail); see `repos/README.md` for the repo lifecycle
+  - `utils/`: process-level helpers (`import_by_suffix`, logger setup, image/GPU utils)
+  - `migrations/`: Alembic migrations
+  - `config.py`, `config_schema.py`, `bootstrap.py`: configuration and startup
+
+### Layer Rules
+
+| Rule                                                                              | Script                    |
+| --------------------------------------------------------------------------------- | ------------------------- |
+| CRUD conventions (see the three CRUD instruction files)                           | `lint/check_crud.py`      |
+| `core` never imports from `modules`                                               | `lint/check_core.py`      |
+| `*_dto.py` never imports `*_service`, `*_repo`, `*_orm` or `*_endpoint`           | `lint/check_dtos.py`      |
+| `*_endpoint.py` imports `*_dto` modules from its own folder only                  | `lint/check_endpoints.py` |
+| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only | `lint/check_repos.py`     |
+| `*_service.py` never imports `*_endpoint`                                         | `lint/check_services.py`  |
+
+Only `check_crud.py` runs automatically (`just lint backend` and pre-commit). Run the others by hand from `backend/` (`uv run python lint/check_core.py`); they still report some existing violations, so make sure you add no new ones.
+
+## File Naming
+
+The suffix states the role of a file. Several suffixes are auto-imported by `import_by_suffix` (`bootstrap.py`, `worker.py`, `sql_repo.py`), so new files of these kinds need no registration.
+
+- `*_orm.py`: SQLAlchemy models
+- `*_dto.py`: Pydantic models (API payloads, CRUD inputs, job inputs/outputs)
+- `*_crud.py`: SQL CRUD
+- `*_collection.py` / `*_embedding_dto.py` / `*_embedding_crud.py`: Weaviate collection, object identifier, CRUD
+- `*_elastic_index.py` / `*_elastic_dto.py` / `*_elastic_crud.py`: Elasticsearch index, documents, CRUD
+- `*_service.py`: business logic
+- `*_endpoint.py`: one FastAPI router (auto-mounted by `bootstrap.create_app`)
+- `*_job.py`: background job handlers registered with `@register_job`
+- `*_exceptions.py`: module-specific exceptions
+- `*_repo.py`: external service connection (only in `repos/`)
+- `*_utils.py`: helpers
+
+## Code Style
+
+Ruff formats and lints (`backend/ruff.toml`; `just format backend`, `just lint backend`), including import sorting and trailing whitespace / final newline.
+
+- **Imports**: absolute imports from the `src` roots, grouped stdlib / third-party / first-party (ruff `I`). Import other ORMs for type hints under `if TYPE_CHECKING:`. To break a runtime import cycle, import inside the function.
+- **Typing**: annotate every function signature (parameters and return). Use builtin generics and PEP 604 unions (`list[int]`, `dict[str, int]`, `T | None`), not `List`/`Optional`.
+- **Naming**: `snake_case` functions and variables, `PascalCase` classes, `UPPER_SNAKE_CASE` constants, `_leading_underscore` for module- or class-private helpers. Project ids are `project_id`, never `proj_id`.
+- **Singletons**: services and repos use `metaclass=SingletonMeta` (`common/singleton_meta.py`); CRUDs are module-level instances (`crud_code`).
 
 ## Error Handling
 
-### Exception Decorator Pattern
+`common/exception_handler.py` maps exceptions to HTTP responses. Decorating an exception class with `@exception_handler(status.HTTP_...)` registers it; `bootstrap.create_app` installs all handlers, which log the error and return its message as plain text with that status. Undecorated exceptions become HTTP 500.
 
-Use decorator-based exception handling for consistent HTTP responses:
+- **Not found (404)**: subclass `NotFoundError` from `common/exception_handler.py`. Subclasses inherit the 404 mapping and need no decorator. Existing ones: `NoSuchElementError` (SQL, `repos/db/crud_base.py`), `NoSuchObjectInElasticSearchError`, the `WeaviateObject*NotFoundException`s (`repos/vector/weaviate_exceptions.py`).
+- **Forbidden (403)**: `ForbiddenError` (`core/auth/authz_user.py`), raised by the `AuthzUser` assertions.
+- **Bad request (400)**: `InvalidError` (`core/auth/validation.py`) and the module-specific errors in `*_exceptions.py` files (folder, search system, export/import).
+- **Duplicates (409)**: unique violations need no own exception: `bootstrap.py` maps an `IntegrityError` caused by a `UniqueViolation` to 409.
+- **Domain errors**: declare them in `<module>_exceptions.py` (or the CRUD file that raises them), decorated with `@exception_handler` when the client must see a specific status.
+- **Messages**: the message is sent to the client, so never put secrets, tokens or credentials in it.
 
 ```python
-from common.exception_handler import exception_handler
 from fastapi import status
 
-@exception_handler(status.HTTP_404_NOT_FOUND)
-class NoSuchElementError(Exception):
-    def __init__(self, model: Type[ORMModelType], **kwargs):
-        self.model = model
-        self.model_name = model.__name__.replace("ORM", "")
-        super().__init__(f"There exists no {self.model_name} with: {kwargs}!")
+from common.exception_handler import exception_handler
 
-@exception_handler(status.HTTP_403_FORBIDDEN)
-class ForbiddenError(Exception):
-    def __init__(self):
-        super().__init__("User is not authorized")
 
-@exception_handler(status.HTTP_409_CONFLICT)
-class DuplicateError(Exception):
-    def __init__(self, model: Type[ORMModelType], **kwargs):
-        super().__init__(f"Duplicate {model.__name__}: {kwargs}")
-```
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class FolderMoveCycleError(Exception):
+    """Raised when a folder is moved into itself or one of its descendants."""
 
-**Usage**:
-
-```python
-# Exceptions automatically converted to proper HTTP responses with logging
-if not obj:
-    raise NoSuchElementError(CodeORM, id=code_id)
-
-if not authz_user.in_project(project_id):
-    raise ForbiddenError()
-```
-
-**Reference**: [exception_handler.py](backend/src/common/exception_handler.py)
-
-## Database Patterns
-
-### Query Patterns
-
-Use SQLAlchemy ORM with explicit joins and filters:
-
-```python
-def read_by_project_and_tag(
-    self, db: Session, *, proj_id: int, tag_id: int
-) -> list[SourceDocumentORM]:
-    """Read source documents by project and tag."""
-    return (
-        db.query(self.model)
-        .join(SourceDocumentORM, TagORM.source_documents)
-        .filter(
-            self.model.project_id == proj_id,
-            TagORM.id == tag_id,
+    def __init__(self, folder_id: int, target_folder_id: int) -> None:
+        super().__init__(
+            f"Cannot move folder {folder_id} into itself or its descendants "
+            f"(target folder {target_folder_id})."
         )
-        .order_by(self.model.created.desc())
-        .all()
-    )
-```
-
-### Batch Operations
-
-Use configurable batch size for large operations:
-
-```python
-from config import conf
-
-BATCH_SIZE = conf.postgres.batch_size  # From config
-
-def process_in_batches(db: Session, ids: list[int]) -> None:
-    """Process IDs in batches to avoid memory issues."""
-    for i in range(0, len(ids), BATCH_SIZE):
-        batch_ids = ids[i : i + BATCH_SIZE]
-        batch_objects = (
-            db.query(self.model)
-            .filter(self.model.id.in_(batch_ids))
-            .all()
-        )
-        # Process batch
-        db.commit()  # Commit per batch
-```
-
-### Transaction Handling
-
-Explicit commits in CRUD with rollback on error:
-
-```python
-def create(self, db: Session, *, create_dto: CreateDTO) -> ORM:
-    """Create new database object."""
-    try:
-        db_obj = self.model(**jsonable_encoder(create_dto))
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.error("Database error during creation: {}", e)
-        raise
 ```
 
 ## Enums and Constants
 
-### String Enums
+- Enums that cross the API subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value. Shared enums live in `common/` (`DocType`, `JobType`, `MetaType`, `Crud`); module enums live in the module's `*_dto.py`.
+- Constants are module-level `UPPER_SNAKE_CASE` in the module that owns them (`SYSTEM_USER_ID`, `ASSISTANT_ZEROSHOT_ID`, ... in `core/user/user_crud.py`).
+- Tunables (batch sizes, limits, timeouts) come from the config, not literals: `BATCH_SIZE = conf.postgres.batch_size`.
 
-Inherit from `str, Enum` for JSON serialization:
+## Configuration
 
-```python
-from enum import Enum
+`config.py` merges `configs/base.yaml`, `configs/default.yaml` and `configs/version.yaml` with OmegaConf (environment values via `${oc.env:NAME, default}`) and validates the result into the Pydantic `BackendConfigSchema` (`config_schema.py`, `extra="forbid"`).
 
-class DocType(str, Enum):
-    """Document type enumeration."""
-    text = "text"
-    image = "image"
-    video = "video"
-    audio = "audio"
-```
+- Read config with `from config import conf` (`conf.postgres.batch_size`, `conf.api.max_upload_file_size`). Never load the YAML files yourself.
+- A new config key needs an entry in the YAML file and a typed field in `config_schema.py`.
+- Hosts, ports and secrets come from `backend/.env` through `${oc.env:...}`; never hard-code them.
 
-**Key pattern**: Multiple inheritance from `str` and `Enum` ensures proper JSON serialization
+## Logging
 
-### Constants
+Use Loguru: `from loguru import logger`, never the stdlib `logging` module. Messages are f-strings (`logger.info(f"Created project {project_id}")`). Use `debug` for noisy details, `warning` for recoverable problems and `error` for failures; exceptions raised to the client are already logged by their handler.
 
-```python
-# Module-level constants
-SYSTEM_USER_ID: int = 1
-ASSISTANT_ZEROSHOT_ID: int = 9990
+## Background Jobs
 
-# Config-driven constants
-from config import conf
-
-BATCH_SIZE = conf.postgres.batch_size
-MAX_UPLOAD_SIZE = conf.api.max_upload_size_mb * 1024 * 1024
-```
-
-## Additional Patterns
-
-### Logging
-
-Use `loguru` for structured logging:
+Jobs are functions in `*_job.py` files, registered with the decorator from `systems/job_system`. The job opens its own transaction and delegates to a service:
 
 ```python
-from loguru import logger
+from common.job_type import JobType
+from repos.db.sql_repo import SQLRepo
+from systems.job_system.job_dto import EndpointGeneration, Job, JobTiming
+from systems.job_system.job_register_decorator import register_job
 
-# Info logging
-logger.info("Processing started for project {}", project_id)
+sqlr = SQLRepo()
 
-# Error logging with context
-logger.error("Failed to process document {}: {}", doc_id, error)
-
-# Debug logging (filtered by log level in production)
-logger.debug("Query results: {}", results)
-
-# Warning for recoverable issues
-logger.warning("Deprecated API usage detected: {}", endpoint)
-```
-
-### Job Registration Pattern
-
-Use decorator-based job registration for background tasks:
-
-```python
-from modules.jobs.job_decorator import register_job
-from modules.jobs.job_dto import JobType, EndpointGeneration, JobTiming
 
 @register_job(
     job_type=JobType.ML,
@@ -605,38 +147,12 @@ from modules.jobs.job_dto import JobType, EndpointGeneration, JobTiming
     result_ttl=JobTiming.NINETY_DAYS,
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:
-    """Execute ML job based on type."""
-    match payload.ml_job_type:
-        case MLJobType.QUOTATION_ATTRIBUTION:
-            QuoteService().perform_quotation_detection(...)
-        case MLJobType.TAG_RECOMMENDATION:
-            DocumentClassificationService().classify_untagged_documents(...)
-        case _:
-            raise ValueError(f"Unknown job type: {payload.ml_job_type}")
+    with sqlr.transaction() as db:
+        match payload.ml_job_type:
+            case MLJobType.QUOTATION_ATTRIBUTION:
+                QuoteService().perform_quotation_detection(db=db, project_id=payload.project_id, ...)
 ```
 
-**Key concepts**:
-
-- Jobs auto-registered via decorator
-- Type-safe input via Pydantic
-- Match/case pattern for job routing
-- Configurable TTL and device assignment
-
-**Reference**: [ml_job.py](backend/src/modules/ml/ml_job.py)
-
-## Configuration Management
-
-Use OmegaConf for hierarchical configuration:
-
-```python
-from omegaconf import OmegaConf
-
-# Load configuration
-conf = OmegaConf.load("configs/development.yaml")
-
-# Type-safe access
-db_host = conf.postgres.host
-batch_size = conf.postgres.batch_size
-```
-
-**Reference**: [config.py](backend/src/config.py)
+- Add the job type to `JobType` (`common/job_type.py`) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
+- `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(JobType.X, <X>JobInput(...))`.
+- See [ml_job.py](backend/src/modules/ml/ml_job.py) and `systems/job_system/README.md`.

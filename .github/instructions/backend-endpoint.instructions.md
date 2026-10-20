@@ -77,6 +77,7 @@ router = APIRouter(
 ### Function Naming
 
 - **CRUD prefixes are fixed**: `create_*` (never `add_*`, never `create_new_*`), `get_*` (never `read_*`), `update_*`, `delete_*`. No mixing.
+- **Handlers vs. CRUDs**: route handlers use `get_*`, while the CRUDs they call use `read_*` (see `backend-crud.instructions.md`).
 - **Canonical names**: `get_by_id`, `get_by_project`, `update_by_id`, `delete_by_id`; bulk variants end in `*_bulk`.
 - **Computations/jobs** use descriptive verbs, e.g. `search_sdocs`, `word_frequency_analysis`, `suggest`.
 
@@ -89,12 +90,12 @@ router = APIRouter(
 
 ### Imports
 
-- **Own-folder DTOs only**: An endpoint may only import `*_dto` modules from its own folder — enforced by `backend/lint/check_endpoints.py`.
+- **Own-folder DTOs only**: An endpoint may only import `*_dto` modules from its own folder. The rule is checked by `backend/lint/check_endpoints.py`, but the script does not run automatically yet and still reports existing violations.
 
 ## Examples
 
 See:
 
-- [backend/src/core/code/code_endpoint.py](../../../backend/src/core/code/code_endpoint.py) — canonical CRUD with sync (create/get/update/delete + bulk).
-- [backend/src/modules/concept_over_time_analysis/cota_endpoint.py](../../../backend/src/modules/concept_over_time_analysis/cota_endpoint.py) — canonical section blocks including job operations.
-- [backend/src/modules/word_frequency/word_frequency_endpoint.py](../../../backend/src/modules/word_frequency/word_frequency_endpoint.py) — POST computations without sync.
+- [backend/src/core/code/code_endpoint.py](backend/src/core/code/code_endpoint.py) — canonical CRUD with sync (create/get/update/delete + bulk).
+- [backend/src/modules/concept_over_time_analysis/cota_endpoint.py](backend/src/modules/concept_over_time_analysis/cota_endpoint.py) — canonical section blocks including job operations.
+- [backend/src/modules/word_frequency/word_frequency_endpoint.py](backend/src/modules/word_frequency/word_frequency_endpoint.py) — POST computations without sync.
