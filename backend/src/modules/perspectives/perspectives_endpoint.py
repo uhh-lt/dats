@@ -402,7 +402,9 @@ def _build_document_visualization(
         docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
-            cluster_id2cluster[dc.cluster_id]
+            assert doc.x is not None and doc.y is not None, (
+                f"Document {doc.sdoc_id} has no coordinates"
+            )
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
@@ -418,7 +420,9 @@ def _build_document_visualization(
         docs = []
         for doc in document_aspects:
             dc = sdoc_id2dc[doc.sdoc_id]
-            cluster_id2cluster[dc.cluster_id]
+            assert doc.x is not None and doc.y is not None, (
+                f"Document {doc.sdoc_id} has no coordinates"
+            )
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,

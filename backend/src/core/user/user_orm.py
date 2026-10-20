@@ -69,6 +69,13 @@ class UserORM(ORMBase):
         passive_deletes=True,
     )
 
+    api_keys: Mapped[list["ApiKeyORM"]] = relationship(
+        "ApiKeyORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     # many to many
     projects: Mapped[list["ProjectORM"]] = relationship(
         "ProjectORM", secondary="ProjectUserLinkTable".lower(), back_populates="users"
@@ -79,10 +86,6 @@ class UserORM(ORMBase):
         secondary="MemoFavoriteLinkTable".lower(),
         back_populates="favorited_by_users",
         passive_deletes=True,
-    )
-
-    api_keys: Mapped[list["ApiKeyORM"]] = relationship(
-        "ApiKeyORM", back_populates="user"
     )
 
     def get_project_id(self) -> None:

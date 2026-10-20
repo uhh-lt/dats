@@ -16,24 +16,21 @@ class ClusterORM(ORMBase):
 
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False)
     is_user_edited: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    name: Mapped[str | None] = mapped_column(String, nullable=True)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    top_words: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
-    top_word_scores: Mapped[list[float] | None] = mapped_column(
-        ARRAY(Float), nullable=True
-    )
+    name: Mapped[str | None] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(Text)
+    top_words: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    top_word_scores: Mapped[list[float] | None] = mapped_column(ARRAY(Float))
     level: Mapped[int] = mapped_column(Integer)
-    top_docs: Mapped[list[int] | None] = mapped_column(ARRAY(Integer), nullable=True)
+    top_docs: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
 
     # 2D coordinates for visualization
-    x: Mapped[float] = mapped_column(Float, nullable=True)
-    y: Mapped[float] = mapped_column(Float, nullable=True)
+    x: Mapped[float | None] = mapped_column(Float)
+    y: Mapped[float | None] = mapped_column(Float)
 
     # many to one
     parent_cluster_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("cluster.id", ondelete="SET NULL"),
-        nullable=True,
         index=True,
     )
     parent_cluster: Mapped["ClusterORM | None"] = relationship(
@@ -50,7 +47,10 @@ class ClusterORM(ORMBase):
 
     # many to many
     document_clusters: Mapped[list["DocumentClusterORM"]] = relationship(
-        "DocumentClusterORM", back_populates="cluster", cascade="all, delete-orphan"
+        "DocumentClusterORM",
+        back_populates="cluster",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",

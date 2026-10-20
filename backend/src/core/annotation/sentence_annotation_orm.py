@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.code.code_orm import CodeORM
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
+    from core.code.code_orm import CodeORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
 

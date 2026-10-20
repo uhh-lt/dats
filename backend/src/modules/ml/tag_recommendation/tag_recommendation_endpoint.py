@@ -96,7 +96,8 @@ def get_all_tagrecommendations_from_job(
                 recommendation.predicted_tag_id for recommendation in recommendations
             ],
             scores=[
-                recommendation.prediction_score for recommendation in recommendations
+                recommendation.prediction_score or 0.0
+                for recommendation in recommendations
             ],
         )
         for sdoc_id, recommendations in sdoc2recommendations.items()

@@ -12,19 +12,19 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from repos.db.orm_base import ORMBase
+
 if TYPE_CHECKING:
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
     from core.user.user_orm import UserORM
-
-from repos.db.orm_base import ORMBase
 
 
 class MemoORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     uuid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    icon: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    icon: Mapped[str | None] = mapped_column(String(64))
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     content_json: Mapped[str] = mapped_column(String, nullable=False, index=False)
     created: Mapped[datetime] = mapped_column(
@@ -46,6 +46,7 @@ class MemoORM(ORMBase):
         foreign_keys="objecthandle.c.memo_id",
     )
 
+    # many to one
     attached_to_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey(
@@ -63,7 +64,6 @@ class MemoORM(ORMBase):
         foreign_keys="memo.c.attached_to_id",
     )
 
-    # many to one
     project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
@@ -143,3 +143,6 @@ class MemoRecentORM(ORMBase):
     __table_args__ = (
         Index("ix_memorecent_user_last_opened", "user_id", "last_opened"),
     )
+
+    def get_project_id(self) -> int:
+        return self.memo.get_project_id()

@@ -34,7 +34,7 @@ class SpanGroupORM(ORMBase):
     )
 
     # many to one
-    annotation_document_id = mapped_column(
+    annotation_document_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("annotationdocument.id", ondelete="CASCADE"),
         nullable=False,

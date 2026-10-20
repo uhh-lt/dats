@@ -70,7 +70,9 @@ class TagORM(ORMBase):
         nullable=True,
         index=True,
     )
-    parent: Mapped["TagORM"] = relationship("TagORM", remote_side=[id])
+    parent: Mapped["TagORM | None"] = relationship(
+        "TagORM", remote_side=[id], back_populates="children"
+    )
     children: Mapped[list["TagORM"]] = relationship(
         "TagORM",
         back_populates="parent",
