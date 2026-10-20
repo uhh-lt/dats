@@ -47,7 +47,7 @@ def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
         sents = SimSearchService().find_similar_sentences(
             db=db,
             sdoc_ids_to_search=None,
-            proj_id=cota.project_id,
+            project_id=cota.project_id,
             query=concept.description,
             top_k=cota.training_settings.search_space_topk,
             threshold=cota.training_settings.search_space_threshold,

@@ -83,7 +83,7 @@ def import_users_to_proj(
             continue
         # Associate the user with the project
         imported_user = ProjectService().associate_user(
-            db=db, proj_id=project_id, user_id=user.id
+            db=db, project_id=project_id, user_id=user.id
         )
         imported_user_ids.append(imported_user.id)
 

@@ -182,17 +182,17 @@ class WebsocketService(metaclass=SingletonMeta):
         self,
         event: DATSEventBase,
         *,
-        proj_id: int | None = None,
+        project_id: int | None = None,
         proj_db_obj: ProjectORM | None = None,
         exclude_user_id: int | None = None,
     ):
         """Send an event to all members of a project, optionally excluding one user."""
-        if not proj_db_obj and proj_id is None:
-            raise ValueError("You must provide either 'proj_id' or 'proj_db_obj'")
+        if not proj_db_obj and project_id is None:
+            raise ValueError("You must provide either 'project_id' or 'proj_db_obj'")
         if not proj_db_obj:
-            assert proj_id is not None
+            assert project_id is not None
             with SQLRepo().transaction() as db:
-                proj_db_obj = crud_project.read(db=db, id=proj_id)
+                proj_db_obj = crud_project.read(db=db, id=project_id)
                 user_ids = self._project_user_ids(proj_db_obj, exclude_user_id)
         else:
             user_ids = self._project_user_ids(proj_db_obj, exclude_user_id)

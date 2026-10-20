@@ -43,43 +43,43 @@ class SourceDocumentNotFoundInFilesystemError(Exception):
 
 @exception_handler(status.HTTP_404_NOT_FOUND)
 class FileNotFoundInFilesystemError(Exception):
-    def __init__(self, proj_id: int, filename: str | Path, dst: str | Path):
+    def __init__(self, project_id: int, filename: str | Path, dst: str | Path):
         super().__init__(
-            f"The file '{filename}' of Project {proj_id} cannot be found in the DATS Filesystem at {dst}"
+            f"The file '{filename}' of Project {project_id} cannot be found in the DATS Filesystem at {dst}"
         )
 
 
 @exception_handler(status.HTTP_409_CONFLICT)
 class FileAlreadyExistsInFilesystemError(Exception):
-    def __init__(self, proj_id: int, filename: str | Path):
+    def __init__(self, project_id: int, filename: str | Path):
         super().__init__(
-            f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
+            f"Cannot store the file '{filename}' of Project {project_id} because there is a file with the "
             f"same name in the DATS Filesystem associated with a SourceDocument!"
         )
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
 class FileDeletionNotAllowedError(Exception):
-    def __init__(self, proj_id: int, sdoc_id: int, filename: str | Path, dst: str):
+    def __init__(self, project_id: int, sdoc_id: int, filename: str | Path, dst: str):
         super().__init__(
-            f"Cannot remove the file '{filename}' of Project {proj_id} because it is associated"
+            f"Cannot remove the file '{filename}' of Project {project_id} because it is associated"
             f" with SourceDocument {sdoc_id}!"
         )
 
 
 @exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
 class FileRemovalError(Exception):
-    def __init__(self, proj_id: int, filename: str | Path, dst: str):
+    def __init__(self, project_id: int, filename: str | Path, dst: str):
         super().__init__(
-            f"Cannot remove the file '{filename}' of Project {proj_id} at {dst}!"
+            f"Cannot remove the file '{filename}' of Project {project_id} at {dst}!"
         )
 
 
 @exception_handler(status.HTTP_409_CONFLICT)
 class ProjectAlreadyExistsInFilesystemError(Exception):
-    def __init__(self, proj_id: int):
+    def __init__(self, project_id: int):
         super().__init__(
-            f"Cannot create directory structure for Project {proj_id} because it already exists!"
+            f"Cannot create directory structure for Project {project_id} because it already exists!"
         )
 
 
@@ -200,10 +200,10 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         shutil.rmtree(self.temp_files_root)
         self.temp_files_root.mkdir(parents=True)
 
-    def purge_project_data(self, proj_id: int) -> None:
-        proj_dir_path = self.get_project_root_dir_path(proj_id=proj_id)
+    def purge_project_data(self, project_id: int) -> None:
+        proj_dir_path = self.get_project_root_dir_path(project_id=project_id)
         logger.warning(
-            f"Removing ALL FILES of project with ID={proj_id} ({proj_dir_path})!"
+            f"Removing ALL FILES of project with ID={project_id} ({proj_dir_path})!"
         )
         shutil.rmtree(proj_dir_path)
 
@@ -213,14 +213,16 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         )
         self.get_path_to_sdoc_file(sdoc=sdoc, raise_if_not_exists=True).unlink()
 
-    def remove_all_project_sdoc_files(self, proj_id: int) -> None:
-        logger.info(f"Removing all SourceDocument Files of project with ID={proj_id}")
+    def remove_all_project_sdoc_files(self, project_id: int) -> None:
+        logger.info(
+            f"Removing all SourceDocument Files of project with ID={project_id}"
+        )
         for f in map(
             Path,
-            os.scandir(self._get_project_dir_sdocs_root_path(proj_id=proj_id)),
+            os.scandir(self._get_project_dir_sdocs_root_path(project_id=project_id)),
         ):
             logger.info(
-                f"Removing SourceDocument File {f.name} of project with ID={proj_id}"
+                f"Removing SourceDocument File {f.name} of project with ID={project_id}"
             )
             f.unlink(missing_ok=False)
 
@@ -272,7 +274,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
             )
 
         dst_path = self._get_dst_path_for_project_sdoc_file(
-            proj_id=sdoc.project_id, filename=filename
+            project_id=sdoc.project_id, filename=filename
         )
         if raise_if_not_exists and not dst_path.exists():
             logger.error(
@@ -284,17 +286,17 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
             raise SourceDocumentNotFoundInFilesystemError(sdoc=sdoc, dst=str(dst_path))
         return dst_path
 
-    def get_project_root_dir_path(self, proj_id: int) -> Path:
-        return self.proj_root.joinpath(f"{proj_id}/")
+    def get_project_root_dir_path(self, project_id: int) -> Path:
+        return self.proj_root.joinpath(f"{project_id}/")
 
-    def _get_project_dir_sdocs_root_path(self, proj_id: int) -> Path:
-        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("docs/")
+    def _get_project_dir_sdocs_root_path(self, project_id: int) -> Path:
+        return self.get_project_root_dir_path(project_id=project_id).joinpath("docs/")
 
     def _get_dst_path_for_project_sdoc_file(
-        self, proj_id: int, filename: str | Path
+        self, project_id: int, filename: str | Path
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
-        return self._get_project_dir_sdocs_root_path(proj_id=proj_id).joinpath(
+        return self._get_project_dir_sdocs_root_path(project_id=project_id).joinpath(
             f"{filename}"
         )
 
@@ -302,9 +304,9 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         filename = Path(self.truncate_filename(filename))
         return self.temp_files_root.joinpath(f"{filename}")
 
-    def _project_sdoc_file_exists(self, proj_id: int, filename: str | Path) -> bool:
+    def _project_sdoc_file_exists(self, project_id: int, filename: str | Path) -> bool:
         return (
-            self._get_project_dir_sdocs_root_path(proj_id=proj_id)
+            self._get_project_dir_sdocs_root_path(project_id=project_id)
             .joinpath(f"{filename}")
             .exists()
         )
@@ -312,12 +314,12 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
     def _temp_file_exists(self, filename: str | Path) -> bool:
         return self.get_dst_path_for_temp_file(filename).exists()
 
-    def create_directory_structure_for_project(self, proj_id: int) -> Path | None:
+    def create_directory_structure_for_project(self, project_id: int) -> Path | None:
         paths = [
-            self.get_models_root_path(proj_id=proj_id),
-            self.get_plots_root_path(proj_id=proj_id),
-            self.get_dataloaders_root_dir(proj_id=proj_id),
-            self._get_project_dir_sdocs_root_path(proj_id=proj_id),
+            self.get_models_root_path(project_id=project_id),
+            self.get_plots_root_path(project_id=project_id),
+            self.get_dataloaders_root_dir(project_id=project_id),
+            self._get_project_dir_sdocs_root_path(project_id=project_id),
         ]
         for dst_path in paths:
             try:
@@ -325,7 +327,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
                     logger.warning(
                         "Cannot create project directory structure because it already exists!"
                     )
-                    raise ProjectAlreadyExistsInFilesystemError(proj_id=proj_id)
+                    raise ProjectAlreadyExistsInFilesystemError(project_id=project_id)
                 dst_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 # FIXME Flo: Throw or what?!
@@ -334,24 +336,24 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         return paths[-1]
 
     def _create_directory_structure_for_project_file(
-        self, proj_id: int, filename: str | Path
+        self, project_id: int, filename: str | Path
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
         dst_path = self._get_dst_path_for_project_sdoc_file(
-            proj_id=proj_id, filename=filename
+            project_id=project_id, filename=filename
         )
         if dst_path.exists():
             try:
                 self._safe_remove_file_from_project_dir(
-                    proj_id=proj_id, filename=filename
+                    project_id=project_id, filename=filename
                 )
             except FileDeletionNotAllowedError:
                 logger.warning(
-                    f"File {filename} already exists in Project {proj_id} and a SourceDocument with that filename"
+                    f"File {filename} already exists in Project {project_id} and a SourceDocument with that filename"
                     " exists in the DB. Cannot overwrite it!"
                 )
                 raise FileAlreadyExistsInFilesystemError(
-                    proj_id=proj_id, filename=filename
+                    project_id=project_id, filename=filename
                 )
 
         elif not dst_path.parent.exists():
@@ -386,7 +388,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         for file in files:
             if not file.exists():
                 raise FileNotFoundInFilesystemError(
-                    proj_id=-1, filename=file.name, dst=file
+                    project_id=-1, filename=file.name, dst=file
                 )
 
         temp_file = self.create_temp_file(fn=fn)
@@ -458,7 +460,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         fn = Path(self.truncate_filename(fn))
         p = self.temp_files_root / fn
         if not p.exists():
-            raise FileNotFoundInFilesystemError(proj_id=-1, filename=fn, dst=p)
+            raise FileNotFoundInFilesystemError(project_id=-1, filename=fn, dst=p)
 
         relative_url = str(p.relative_to(self.root_dir))
         if relative:
@@ -482,10 +484,10 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         return url.urljoin(self.base_url, relative_url)
 
     def extract_archive_in_project(
-        self, proj_id: int, archive_path: Path
+        self, project_id: int, archive_path: Path
     ) -> list[Path]:
         archive_path_in_project = self._get_dst_path_for_project_sdoc_file(
-            proj_id=proj_id, filename=archive_path.name
+            project_id=project_id, filename=archive_path.name
         )
         dst = archive_path_in_project.parent
 
@@ -528,13 +530,13 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         logger.info(f"Extracting archive at {archive_path_in_project}... Done!")
         return extracted_file_paths
 
-    def move_file_to_project_sdoc_files(self, proj_id: int, src_file: Path) -> Path:
+    def move_file_to_project_sdoc_files(self, project_id: int, src_file: Path) -> Path:
         if not (src_file.exists() and src_file.is_file()):
             raise ValueError(f"File {src_file} does not exist!")
 
         fn = Path(self.truncate_filename(src_file.name))
         in_project_dst = self._create_directory_structure_for_project_file(
-            proj_id=proj_id, filename=fn
+            project_id=project_id, filename=fn
         )
 
         # move the file
@@ -542,19 +544,19 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         return in_project_dst
 
     def _safe_remove_file_from_project_dir(
-        self, proj_id: int, filename: str | Path
+        self, project_id: int, filename: str | Path
     ) -> None:
         # We need to check whether an SDoc with that filename exists in the DB. If not, we can overwrite it.
         from core.doc.source_document_crud import crud_sdoc
         from repos.db.sql_repo import SQLRepo
 
         dst_path = self._get_dst_path_for_project_sdoc_file(
-            proj_id=proj_id, filename=filename
+            project_id=project_id, filename=filename
         )
 
         if not dst_path.exists():
             logger.warning(
-                f"File {filename} does not exist in Project {proj_id} at {dst_path}. Nothing to remove!"
+                f"File {filename} does not exist in Project {project_id} at {dst_path}. Nothing to remove!"
             )
             return
 
@@ -562,7 +564,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
             try:
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,
-                    project_id=proj_id,
+                    project_id=project_id,
                     filename=filename.name if isinstance(filename, Path) else filename,
                     only_finished=False,
                 )
@@ -570,10 +572,10 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
                     dst_path.unlink()
                 else:
                     logger.error(
-                        f"File {filename} is associated with a SourceDocument in Project {proj_id} and cannot be removed!"
+                        f"File {filename} is associated with a SourceDocument in Project {project_id} and cannot be removed!"
                     )
                     raise FileDeletionNotAllowedError(
-                        proj_id=proj_id,
+                        project_id=project_id,
                         sdoc_id=sdoc.id,
                         filename=filename,
                         dst=str(dst_path),
@@ -583,10 +585,10 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
 
         if dst_path.exists():
             logger.error(
-                f"Failed to remove file {filename} in Project {proj_id} at {dst_path}!"
+                f"Failed to remove file {filename} in Project {project_id} at {dst_path}!"
             )
             raise FileRemovalError(
-                proj_id=proj_id, filename=filename, dst=str(dst_path)
+                project_id=project_id, filename=filename, dst=str(dst_path)
             )
 
     def store_uploaded_file(
@@ -609,7 +611,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         return filepath
 
     def store_uploaded_file_in_project_dir(
-        self, proj_id: int, uploaded_file: UploadFile
+        self, project_id: int, uploaded_file: UploadFile
     ) -> Path:
         try:
             if uploaded_file.filename is None:
@@ -619,10 +621,10 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
 
             fn = Path(self.truncate_filename(uploaded_file.filename))
             in_project_dst = self._create_directory_structure_for_project_file(
-                proj_id=proj_id, filename=fn
+                project_id=project_id, filename=fn
             )
             logger.info(
-                f"Storing Uploaded File {fn} in Project {proj_id} directory at {in_project_dst.relative_to(self.root_dir)} ..."
+                f"Storing Uploaded File {fn} in Project {project_id} directory at {in_project_dst.relative_to(self.root_dir)} ..."
             )
             self.store_uploaded_file(
                 uploaded_file=uploaded_file, filepath=in_project_dst, fn=fn
@@ -637,18 +639,18 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
             raise e
 
     def build_source_document_create_dto_from_file(
-        self, proj_id: int, filename: str | Path, **extra_data
+        self, project_id: int, filename: str | Path, **extra_data
     ) -> tuple[Path, SourceDocumentCreate]:
         filename = self.truncate_filename(filename)
         dst_path = self._get_dst_path_for_project_sdoc_file(
-            proj_id=proj_id, filename=filename
+            project_id=project_id, filename=filename
         )
         if not dst_path.exists():
             logger.error(
-                f"File '{filename}' in Project {proj_id} cannot be found in Filesystem at {dst_path}!"
+                f"File '{filename}' in Project {project_id} cannot be found in Filesystem at {dst_path}!"
             )
             raise FileNotFoundInFilesystemError(
-                proj_id=proj_id, filename=filename, dst=str(dst_path)
+                project_id=project_id, filename=filename, dst=str(dst_path)
             )
 
         mime_type = magic.from_file(dst_path, mime=True)
@@ -663,34 +665,35 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
         create_dto = SourceDocumentCreate(
             filename=filename,
             doctype=doctype,
-            project_id=proj_id,
+            project_id=project_id,
             folder_id=None,  # Create folder automatically
             **extra_data,
         )
         return dst_path, create_dto
 
-    def get_plots_root_path(self, proj_id: int) -> Path:
-        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("plots")
+    def get_plots_root_path(self, project_id: int) -> Path:
+        return self.get_project_root_dir_path(project_id=project_id).joinpath("plots")
 
     def get_plot_path(
         self,
-        proj_id: int,
+        project_id: int,
         plot_name: str,
     ) -> Path:
-        name = self.get_plots_root_path(proj_id=proj_id) / f"{plot_name}"
+        name = self.get_plots_root_path(project_id=project_id) / f"{plot_name}"
         return name
 
-    def get_models_root_path(self, proj_id: int) -> Path:
-        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("models")
+    def get_models_root_path(self, project_id: int) -> Path:
+        return self.get_project_root_dir_path(project_id=project_id).joinpath("models")
 
     def get_model_dir(
         self,
-        proj_id: int,
+        project_id: int,
         model_name: str,
         model_prefix: str = "cota_",
     ) -> Path:
         name = (
-            self.get_models_root_path(proj_id=proj_id) / f"{model_prefix}{model_name}"
+            self.get_models_root_path(project_id=project_id)
+            / f"{model_prefix}{model_name}"
         )
         return name
 
@@ -703,29 +706,33 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
 
     def model_exists(
         self,
-        proj_id: int,
+        project_id: int,
         model_name: str,
         model_prefix: str = "cota_",
     ) -> bool:
-        return self.get_model_dir(proj_id=proj_id, model_name=model_name).exists()
+        return self.get_model_dir(project_id=project_id, model_name=model_name).exists()
 
-    def get_dataloaders_root_dir(self, proj_id: int) -> Path:
-        return self.get_project_root_dir_path(proj_id=proj_id).joinpath("dataloaders")
+    def get_dataloaders_root_dir(self, project_id: int) -> Path:
+        return self.get_project_root_dir_path(project_id=project_id).joinpath(
+            "dataloaders"
+        )
 
     def get_dataloader_filename(
         self,
-        proj_id: int,
+        project_id: int,
         dataloader_name: str,
         dataloader_prefix: str = "cota_",
     ) -> Path:
-        return self.get_dataloaders_root_dir(proj_id=proj_id).joinpath(dataloader_name)
+        return self.get_dataloaders_root_dir(project_id=project_id).joinpath(
+            dataloader_name
+        )
 
     def dataloader_exists(
         self,
-        proj_id: int,
+        project_id: int,
         dataloader_name: str,
         dataloader_prefix: str = "cota_",
     ) -> bool:
         return self.get_dataloader_filename(
-            proj_id=proj_id, dataloader_name=dataloader_name
+            project_id=project_id, dataloader_name=dataloader_name
         ).exists()

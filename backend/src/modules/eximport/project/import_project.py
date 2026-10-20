@@ -157,7 +157,7 @@ def import_project(
     db: Session,
     fsr: FilesystemRepo,
     path_to_dir: Path,
-    proj_id: int,
+    project_id: int,
 ) -> None:
     organized_files = __organize_import_files(import_dir=path_to_dir)
 
@@ -171,7 +171,7 @@ def import_project(
                     organized_files[ExportEntity.SDOC]
                 )
                 path_to_temp_import_dir = fsr.create_temp_dir(
-                    f"import_project_{proj_id}_sdocs"
+                    f"import_project_{project_id}_sdocs"
                 )
                 with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
                     zip_ref.extractall(path_to_temp_import_dir)
@@ -189,4 +189,4 @@ def import_project(
             continue
 
         data = organized_data[entity]
-        entity.import_entity(db=db, data=data, project_id=proj_id)
+        entity.import_entity(db=db, data=data, project_id=project_id)

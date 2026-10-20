@@ -61,7 +61,7 @@ class DocProcessingService(metaclass=SingletonMeta):
 
             # 2. store uploaded file
             file_path = self.fsr.store_uploaded_file_in_project_dir(
-                proj_id=project_id, uploaded_file=uploaded_file
+                project_id=project_id, uploaded_file=uploaded_file
             )
 
             # 3. start correct job based on type

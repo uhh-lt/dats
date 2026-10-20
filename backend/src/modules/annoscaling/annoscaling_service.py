@@ -80,7 +80,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def __suggest_similar_sentences(
         self,
-        proj_id: int,
+        project_id: int,
         pos_sdoc_sent_ids: list[tuple[int, int]],
         neg_sdoc_sent_ids: list[tuple[int, int]],
         top_k: int,
@@ -92,7 +92,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         for sdoc_id, sent_id in pos_sdoc_sent_ids:
             search_result = crud_sentence_embedding.search_near_sentence(
                 client=client,
-                project_id=proj_id,
+                project_id=project_id,
                 id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
                 k=top_k,
                 threshold=0.0,
@@ -123,7 +123,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         for sdoc_id, sent_id in candidates:
             search_result = crud_sentence_embedding.search_near_sentence(
                 client=client,
-                project_id=proj_id,
+                project_id=project_id,
                 id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
                 k=1,
                 threshold=0.0,

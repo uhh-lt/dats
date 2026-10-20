@@ -261,5 +261,5 @@ class ImportService(metaclass=SingletonMeta):
             db=db,
             fsr=self.fsr,
             path_to_dir=path_to_temp_import_dir,
-            proj_id=payload.project_id,
+            project_id=payload.project_id,
         )

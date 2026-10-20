@@ -56,19 +56,19 @@ def get_classifier_info(
 
 
 @router.get(
-    "/project/{proj_id}",
+    "/project/{project_id}",
     response_model=list[ClassifierRead],
     summary="Returns all Classifiers of the Project with the given ID",
 )
 def get_by_project(
     *,
-    proj_id: int,
+    project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> list[ClassifierRead]:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    proj_db_obj = crud_project.read(db=db, id=project_id)
     result = [ClassifierRead.model_validate(c) for c in proj_db_obj.classifiers]
     result.sort(key=lambda c: c.id)
     return result
@@ -134,23 +134,23 @@ def delete_by_id(
 
 
 @router.post(
-    "/project/{proj_id}/dataset-statistics",
+    "/project/{project_id}/dataset-statistics",
     response_model=ClassifierDatasetStatistics,
     summary="Returns statistics of the dataset that would be created with these parameters",
 )
 def compute_dataset_statistics(
     *,
-    proj_id: int,
+    project_id: int,
     request: ClassifierDatasetStatisticsRequest,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> ClassifierDatasetStatistics:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
     tcs = ClassifierService().get_model_service(request.model)
     return tcs.compute_dataset_statistics(
         db=db,
-        project_id=proj_id,
+        project_id=project_id,
         tag_ids=request.tag_ids,
         user_ids=request.user_ids,
         class_ids=request.class_ids,

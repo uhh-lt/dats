@@ -69,7 +69,7 @@ def filter_keyword_stats(
     # compute keyword stats
     authz_user.assert_in_project(project_id)
     keyword_stats = compute_keyword_statistics(
-        db=db, proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
+        db=db, project_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
         keyword_stats.sort(key=lambda x: x.global_count, reverse=True)

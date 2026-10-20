@@ -77,19 +77,19 @@ def get_by_id(
 
 
 @router.get(
-    "/project/{proj_id}",
+    "/project/{project_id}",
     response_model=list[TagRead],
     summary="Returns all Tags of the Project with the given ID",
 )
 def get_by_project(
     *,
-    proj_id: int,
+    project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> list[TagRead]:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    proj_db_obj = crud_project.read(db=db, id=project_id)
     return [TagRead.model_validate(tag) for tag in proj_db_obj.tags]
 
 

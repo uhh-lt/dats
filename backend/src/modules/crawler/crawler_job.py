@@ -84,7 +84,7 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
 
     # move the zip to the project to import it afterward
     result = fsr.move_file_to_project_sdoc_files(
-        proj_id=payload.project_id, src_file=export_zip_path
+        project_id=payload.project_id, src_file=export_zip_path
     )
 
     return CrawlerJobOutput(crawled_data_zip=result)

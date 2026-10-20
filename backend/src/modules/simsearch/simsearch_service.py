@@ -75,7 +75,7 @@ class SimSearchService(metaclass=SingletonMeta):
     def find_similar_sentences(
         self,
         db: Session,
-        proj_id: int,
+        project_id: int,
         query: str | list[str] | int,
         top_k: int,
         threshold: float,
@@ -89,7 +89,7 @@ class SimSearchService(metaclass=SingletonMeta):
         results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
             vector=query_emb,
-            project_id=proj_id,
+            project_id=project_id,
             k=top_k,
             threshold=threshold,
             sdoc_ids=sdoc_ids_to_search,
@@ -107,20 +107,20 @@ class SimSearchService(metaclass=SingletonMeta):
     def find_similar_sentences_with_filter(
         self,
         db: Session,
-        proj_id: int,
+        project_id: int,
         query: str | list[str] | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],
     ) -> list[SimSearchSentenceHit]:
         filtered_sdoc_ids, _ = filter_sdoc_ids(
-            db=db, project_id=proj_id, folder_id=None, filter=filter
+            db=db, project_id=project_id, folder_id=None, filter=filter
         )
 
         return SimSearchService().find_similar_sentences(
             db=db,
             sdoc_ids_to_search=filtered_sdoc_ids,
-            proj_id=proj_id,
+            project_id=project_id,
             query=query,
             top_k=top_k,
             threshold=threshold,
@@ -130,7 +130,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self,
         db: Session,
         sdoc_ids_to_search: list[int],
-        proj_id: int,
+        project_id: int,
         query: str | list[str] | int,
         top_k: int,
         threshold: float,
@@ -143,7 +143,7 @@ class SimSearchService(metaclass=SingletonMeta):
         results = crud_image_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
             vector=query_emb,
-            project_id=proj_id,
+            project_id=project_id,
             k=top_k,
             threshold=threshold,
             sdoc_ids=sdoc_ids_to_search,
@@ -160,20 +160,20 @@ class SimSearchService(metaclass=SingletonMeta):
     def find_similar_images_with_filter(
         self,
         db: Session,
-        proj_id: int,
+        project_id: int,
         query: str | list[str] | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],
     ) -> list[SimSearchImageHit]:
         filtered_sdoc_ids, _ = filter_sdoc_ids(
-            db=db, project_id=proj_id, folder_id=None, filter=filter
+            db=db, project_id=project_id, folder_id=None, filter=filter
         )
 
         return SimSearchService().find_similar_images(
             db=db,
             sdoc_ids_to_search=filtered_sdoc_ids,
-            proj_id=proj_id,
+            project_id=project_id,
             query=query,
             top_k=top_k,
             threshold=threshold,

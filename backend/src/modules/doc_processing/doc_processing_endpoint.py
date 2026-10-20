@@ -40,24 +40,24 @@ def get_search_columns_by_doctype(
 
 
 @router.post(
-    "/project/{proj_id}/search",
+    "/project/{project_id}/search",
     response_model=SdocHealthResult,
     summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
 )
 def search_sdoc_health(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     doctype: DocType,
     sorts: list[SdocHealthSort],
     page: int,
     page_size: int,
     authz_user: AuthzUser = Depends(),
 ) -> SdocHealthResult:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
     return DocProcessingService().search_sdoc_health(
         db=db,
-        project_id=proj_id,
+        project_id=project_id,
         doctype=doctype,
         sorts=sorts,
         page=page,
@@ -66,22 +66,22 @@ def search_sdoc_health(
 
 
 @router.get(
-    "/project/{proj_id}/status/{status}/simple",
+    "/project/{project_id}/status/{status}/simple",
     response_model=list[SourceDocumentStatusSimple],
     summary="Get all SourceDocumentStatusSimple for the Project with the given ID by status",
 )
 def get_simple_sdoc_status_by_project_and_status(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     status: SDocStatus,
     authz_user: AuthzUser = Depends(),
 ) -> list[SourceDocumentStatusSimple]:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
     return [
         SourceDocumentStatusSimple.model_validate(sdoc)
         for sdoc in crud_sdoc.read_by_project_and_status(
-            db=db, project_id=proj_id, status=status
+            db=db, project_id=project_id, status=status
         )
     ]
 
@@ -90,13 +90,13 @@ def get_simple_sdoc_status_by_project_and_status(
 
 
 @router.post(
-    "/project/{proj_id}",
+    "/project/{project_id}",
     response_model=int,
     summary="Uploads one or multiple files to the Project with the given ID if it exists",
 )
 def upload_files(
     *,
-    proj_id: int,
+    project_id: int,
     settings: str = Form(..., description="ProcessingSettings as JSON string"),
     uploaded_files: list[UploadFile] = File(
         ...,
@@ -110,51 +110,51 @@ def upload_files(
         settings_obj = ProcessingSettings.model_validate_json(settings)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid settings: {e}")
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
     jobs = DocProcessingService().start_preprocessing(
-        project_id=proj_id, uploaded_files=uploaded_files, settings=settings_obj
+        project_id=project_id, uploaded_files=uploaded_files, settings=settings_obj
     )
     return len(jobs)
 
 
 @router.post(
-    "/project/{proj_id}/retry",
+    "/project/{project_id}/retry",
     response_model=str,
     summary="Retries doc processing jobs for SourceDocuments in the given Project and document type",
 )
 def retry_failed_sdocs(
     *,
-    proj_id: int,
+    project_id: int,
     doctype: DocType,
     sdoc_ids: list[int],
     authz_user: AuthzUser = Depends(),
 ) -> str:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
     return DocProcessingService().retry_jobs(
-        project_id=proj_id,
+        project_id=project_id,
         doctype=doctype,
         sdoc_ids=sdoc_ids,
     )
 
 
 @router.post(
-    "/project/{proj_id}/recompute",
+    "/project/{project_id}/recompute",
     response_model=int,
     summary="Recomputes the processing step for all SourceDocuments in the Project",
 )
 def recompute_processing_step(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     processing_step: str,
     sdoc_ids: list[int],
     settings: ProcessingSettings,
     authz_user: AuthzUser = Depends(),
 ) -> int:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
     jobs = DocProcessingService().recompute_processing_step(
         db=db,
-        project_id=proj_id,
+        project_id=project_id,
         sdoc_ids=sdoc_ids,
         processing_step=processing_step,
         settings=settings,

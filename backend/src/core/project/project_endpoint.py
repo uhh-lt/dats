@@ -53,24 +53,24 @@ def create_project(
 
 
 @router.get(
-    "/{proj_id}",
+    "/{project_id}",
     response_model=ProjectRead,
     summary="Returns the Project with the given ID if it exists",
 )
 def get_project(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    db_obj = crud_project.read(db=db, id=proj_id)
+    db_obj = crud_project.read(db=db, id=project_id)
     return ProjectRead.model_validate(db_obj)
 
 
 @router.get(
-    "/{proj_id}/resolve_filename/{filename}",
+    "/{project_id}/resolve_filename/{filename}",
     response_model=int,
     summary=(
         "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
@@ -79,19 +79,19 @@ def get_project(
 def resolve_filename(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     filename: str,
     only_finished: bool = True,
     authz_user: AuthzUser = Depends(),
 ) -> int:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
     sdoc = crud_sdoc.read_by_filename(
-        db=db, project_id=proj_id, only_finished=only_finished, filename=filename
+        db=db, project_id=project_id, only_finished=only_finished, filename=filename
     )
     if sdoc is None:
         raise NoSuchElementError(
-            SourceDocumentORM, project_id=proj_id, filename=filename
+            SourceDocumentORM, project_id=project_id, filename=filename
         )
     return sdoc.id
 
@@ -132,22 +132,22 @@ def count_sdocs_with_status(
 
 
 @router.patch(
-    "/{proj_id}",
+    "/{project_id}",
     response_model=ProjectRead,
     summary="Updates the Project with the given ID.",
 )
 def update_project(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     proj: ProjectUpdate,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
-    authz_user.assert_in_project(proj_id)
-    db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
+    authz_user.assert_in_project(project_id)
+    db_obj = crud_project.update(db=db, id=project_id, update_dto=proj)
     result = ProjectRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=proj_id)
+    ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=project_id)
     return result
 
 
@@ -155,22 +155,22 @@ def update_project(
 
 
 @router.delete(
-    "/{proj_id}",
+    "/{project_id}",
     response_model=ProjectRead,
     summary="Removes the Project with the given ID.",
 )
 def delete_project(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
     # Capture the member ids and payload BEFORE deletion: the delete cascades the
     # membership rows, so the post-commit background task cannot re-read them.
-    member_ids = [user.id for user in crud_project.read(db=db, id=proj_id).users]
-    db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
+    member_ids = [user.id for user in crud_project.read(db=db, id=project_id).users]
+    db_obj = ProjectService().delete_project(db=db, project_id=project_id)
     result = ProjectRead.model_validate(db_obj)
     ws.emit_to_users(DATSEvent.PROJECT_DELETED, result, user_ids=member_ids)
     return result

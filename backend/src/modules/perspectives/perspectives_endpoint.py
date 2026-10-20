@@ -102,19 +102,19 @@ def create_aspect(
 
 
 @router.get(
-    "/project/{proj_id}/aspects",
+    "/project/{project_id}/aspects",
     response_model=list[AspectRead],
     summary="Returns all Aspects of the Project with the given ID if it exists",
 )
 def get_all_aspects(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[AspectRead]:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    project = crud_project.read(db=db, id=proj_id)
+    project = crud_project.read(db=db, id=project_id)
     aspects = [AspectRead.model_validate(a) for a in project.aspects]
     return aspects
 

@@ -194,7 +194,7 @@ def import_sdocs_to_proj(
         # 1. Move the source files to the project repository
         source_file = source_file_by_name[sdoc_export.filename]
         repo_path = fsr.move_file_to_project_sdoc_files(
-            proj_id=project_id, src_file=source_file
+            project_id=project_id, src_file=source_file
         )
         relative_url = str(repo_path.relative_to(fsr.root_dir))
         # generate thumbnail if needed

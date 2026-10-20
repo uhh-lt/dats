@@ -124,7 +124,7 @@ def _import_text_sdocs(
             sentence_ends = [len(content)]
 
         file_path = fsr._get_dst_path_for_project_sdoc_file(
-            proj_id=project.id, filename=sdoc.filename
+            project_id=project.id, filename=sdoc.filename
         )
         relative_file_path = file_path.relative_to(fsr.root_dir)
         data_dtos.append(
@@ -164,7 +164,7 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
     """Persist a minimal ClassifierORM row with a dummy on-disk model dir."""
     model_dir = Path(
         FilesystemRepo().get_model_dir(
-            proj_id=test_project.id,
+            project_id=test_project.id,
             model_name="testclf",
             model_prefix="test_classifier_",
         )

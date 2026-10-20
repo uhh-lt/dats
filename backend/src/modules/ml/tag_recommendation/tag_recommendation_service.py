@@ -109,7 +109,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
     def __suggest_similar_documents(
         self,
         client: WeaviateClient,
-        proj_id: int,
+        project_id: int,
         pos_sdoc_ids: set[int],
         neg_sdoc_ids: set[int],
         top_k: int,
@@ -122,7 +122,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         for sdoc_id in pos_sdoc_ids:
             search_result = crud_document_embedding.search_near_sdoc(
                 client=client,
-                project_id=proj_id,
+                project_id=project_id,
                 sdoc_id=sdoc_id,
                 k=top_k,
                 threshold=0.0,
@@ -152,7 +152,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             for sdoc_id in candidates:
                 search_result = crud_document_embedding.search_near_sdoc(
                     client=client,
-                    project_id=proj_id,
+                    project_id=project_id,
                     sdoc_id=sdoc_id,
                     k=1,
                     threshold=0.0,
@@ -211,7 +211,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             neg_sodc_ids = {item for items in neg_sodc_ids_lists for item in items}
             similar_docs = self.__suggest_similar_documents(
                 client=client,
-                proj_id=project_id,
+                project_id=project_id,
                 pos_sdoc_ids=pos_sdocs_ids,
                 neg_sdoc_ids=neg_sodc_ids,
                 top_k=10,
@@ -292,7 +292,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         """simply get suggestions only using positive examples"""
         similar_docs = self.__suggest_similar_documents(
             client=client,
-            proj_id=project_id,
+            project_id=project_id,
             pos_sdoc_ids=sdoc_ids,
             neg_sdoc_ids=set(),
             top_k=10,

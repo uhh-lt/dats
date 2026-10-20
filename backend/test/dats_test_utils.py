@@ -276,7 +276,7 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
     )
 
     file_path = FilesystemRepo()._get_dst_path_for_project_sdoc_file(
-        proj_id=test_project.id, filename=sdoc.filename
+        project_id=test_project.id, filename=sdoc.filename
     )
     relative_file_path = os.path.relpath(file_path, FilesystemRepo().root_dir)
     sdoc_data = crud_sdoc_data.create(

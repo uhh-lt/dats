@@ -31,7 +31,7 @@ def project_with_user(db_session, test_project) -> ProjectWithUser:
 
     # Add the user to the project
     ps = ProjectService()
-    ps.associate_user(db=db_session, proj_id=test_project.id, user_id=user.id)
+    ps.associate_user(db=db_session, project_id=test_project.id, user_id=user.id)
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()

@@ -63,11 +63,11 @@ def __count_keywords(
 
 
 def compute_keyword_statistics(
-    db: Session, proj_id: int, sdoc_ids: set[int], top_k: int = 20
+    db: Session, project_id: int, sdoc_ids: set[int], top_k: int = 20
 ) -> list[KeywordStat]:
     # 1. query keyword project metadadta
     project_metadata = crud_project_meta.read_by_project_and_key(
-        db=db, project_id=proj_id, key="keywords"
+        db=db, project_id=project_id, key="keywords"
     )
     project_metadata_ids = [pm.id for pm in project_metadata]
     if len(project_metadata_ids) == 0:

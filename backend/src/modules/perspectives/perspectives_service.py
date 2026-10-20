@@ -288,7 +288,7 @@ class PerspectivesService:
 
         # 2. Compute the 2D coordinates
         umap_model_path = self.fsr.get_model_dir(
-            proj_id=project_id,
+            project_id=project_id,
             model_prefix="umap_",
             model_name=f"aspect_{aspect_id}_{embedding_model}",
         )
@@ -367,7 +367,7 @@ class PerspectivesService:
 
         # Save the map thumbnail
         output_path = self.fsr.get_plot_path(
-            proj_id=aspect.project_id,
+            project_id=aspect.project_id,
             plot_name=f"aspect_{aspect_id}_map_thumbnail.png",
         )
         plt.savefig(output_path, dpi=dpi, pad_inches=0)
