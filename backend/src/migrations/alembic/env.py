@@ -16,9 +16,11 @@ import_by_suffix("_orm.py")
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
+# Interpret the config file for Python logging, unless the caller already set up
+# logging (bootstrap.migrate_database).
+if config.config_file_name is not None and config.attributes.get(
+    "configure_logger", True
+):
     fileConfig(config.config_file_name)
 
 # add your model's MetaData object here

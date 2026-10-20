@@ -1,4 +1,3 @@
-import inspect
 import multiprocessing as mp
 import os
 import signal
@@ -9,59 +8,40 @@ from loguru import logger
 from rq import SimpleWorker, Worker
 from rq.worker_pool import WorkerPool
 
+from bootstrap import (
+    close_repos,
+    connect_repos,
+    init_logging,
+    init_services,
+    register_jobs,
+)
 from repos.redis_repo import RedisRepo
 from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
-from utils.logger import setup_logging
 
-setup_logging()
+init_logging()
 
 
 # ==============================================================================
 # CUSTOM WORKER CLASSES
 # ==============================================================================
-def init_repos_and_services() -> list[RepoBase]:
-    """Dynamically init all repos (connecting them) and init services."""
-    logger.info(
-        f"Worker {os.getpid()} initializing repository connections & services..."
-    )
-    repos = []
-    repo_modules = import_by_suffix("_repo.py")
-    repo_modules.sort(key=lambda x: x.__name__.split(".")[-1])
-    for module in repo_modules:
-        for name, cls in inspect.getmembers(module, inspect.isclass):
-            if (
-                issubclass(cls, RepoBase)
-                and cls is not RepoBase
-                and cls.__module__ == module.__name__
-            ):
-                repo_instance = cls()
-                repo_instance.connect()
-                repos.append(repo_instance)
-
-    # Setup services lazily
-    from systems.job_system.job_service import JobService
-
-    JobService().initialize()
-
-    # Build the JOB_UPDATED event model so job emission works in worker processes
-    from common.dats_event import build_job_event_models
-
-    build_job_event_models()
-
+def _start_job_process() -> list[RepoBase]:
+    """Startup of a process that executes jobs: register the jobs, connect all
+    repos and init the services. Returns the connected repos."""
+    register_jobs()
+    repos = connect_repos()
+    init_services()
     return repos
 
 
-def teardown_repos_and_services(repos: list[RepoBase]):
-    """Safely closes all connections."""
-    logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
-
-    for repo in repos:
-        try:
-            logger.info(f"Closing {repo.__class__.__name__}...")
-            repo.close_connection()
-        except Exception as e:
-            logger.error(f"Failed to close {repo.__class__.__name__}: {e}")
+def _preload_modules() -> None:
+    """Import all expensive modules once in the parent process, so the forked
+    job processes inherit them instead of importing them again. The repos are
+    instantiated (hollow singletons) but NOT connected."""
+    register_jobs()
+    for suffix in ["_repo.py", "_service.py", "_orm.py", "_dto.py", "_crud.py"]:
+        import_by_suffix(suffix)
+    import modules.doc_processing.doc_processing_pipeline  # noqa: F401
 
 
 class DATSWorker(Worker):
@@ -80,7 +60,7 @@ class DATSWorker(Worker):
         RQ's main_work_horse() ends with os._exit(), which reclaims all of the
         horse's connections/sockets, so no explicit teardown is needed (or run).
         """
-        init_repos_and_services()
+        _start_job_process()
         super().main_work_horse(job, queue)
 
 
@@ -88,26 +68,18 @@ class DATSSimpleWorker(SimpleWorker):
     """Custom simple worker (does NOT fork per job - used for CPU/API)"""
 
     def work(self, *args, **kwargs):
-        repos = init_repos_and_services()
+        repos = _start_job_process()
         try:
             super().work(*args, **kwargs)
         finally:
-            teardown_repos_and_services(repos)
+            close_repos(repos)
 
 
 # ==============================================================================
 # COMMAND: work
 # ==============================================================================
 def do_work(device: str):
-    # import all expensive stuff before forking, so that imports are only done once
-    # (Hollow Singletons are instantiated here, but NOT connected yet!)
-    import_by_suffix("_repo.py")
-    import_by_suffix("_service.py")
-    import_by_suffix("_orm.py")
-    import_by_suffix("_dto.py")
-    import_by_suffix("_crud.py")
-    import_by_suffix("_job.py")
-    import modules.doc_processing.doc_processing_pipeline  # noqa: F401
+    _preload_modules()
 
     ctx = mp.get_context("fork")
 
