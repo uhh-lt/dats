@@ -96,9 +96,7 @@ def test_get_by_project_if_not_exists(client: TestClient):
 testdata_project_metadata_update = [
     pytest.param({"description": "Updated Description"}, id="update_description"),
     pytest.param({"key": "updated_key"}, id="update_key"),
-    pytest.param({"read_only": False}, id="update_read_only"),
     pytest.param({"metatype": MetaType.STRING}, id="update_metatype"),
-    pytest.param({"doctype": DocType.text}, id="update_doctype"),
     pytest.param({"key": "new_key", "description": "new_desc"}, id="update_multiple"),
 ]
 
@@ -123,6 +121,31 @@ def test_update_by_id(
     assert updated.read_only == payload.get("read_only", metadata.read_only)
     assert updated.metatype == payload.get("metatype", metadata.metatype)
     assert updated.doctype == payload.get("doctype", metadata.doctype)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        # empty PATCH body
+        pytest.param({}, id="empty"),
+        # read_only is not updatable, so nothing is updated
+        pytest.param({"read_only": False}, id="read_only"),
+        # doctype is not updatable, so nothing is updated
+        pytest.param({"doctype": DocType.text}, id="doctype"),
+    ],
+)
+def test_update_by_id_rejects_update_without_updatable_field(
+    client: TestClient,
+    project_with_metadata,
+    payload: dict,
+):
+    """A PATCH that sets none of key, metatype or description is rejected with 422."""
+    metadata = project_with_metadata["metadata"][0]
+
+    resp = client.patch(f"/projmeta/{metadata.id}", json=payload)
+
+    assert resp.status_code == 422, resp.text
+    assert "At least one field to update has to be set" in resp.text
 
 
 def test_update_by_id_if_not_exists(
