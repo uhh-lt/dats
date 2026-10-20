@@ -9,10 +9,10 @@ from core.auth.auth_exceptions import credentials_exception
 from core.auth.refresh_token_dto import RefreshTokenCreate
 from core.auth.refresh_token_orm import RefreshTokenORM
 from core.auth.security import generate_refresh_token
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
+class CRUDRefreshToken(SQLCRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
     ### CREATE OPERATIONS ###
 
     def create(self, db: Session, user_id: int) -> RefreshTokenORM:

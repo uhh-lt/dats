@@ -64,7 +64,7 @@ class AuthzUser:
         # type of `object_id`, so we switch off the type checker
         # for this line :(
         try:
-            objs = crud.value.read_by_ids(self.db, object_ids)  # type: ignore
+            objs = crud.value.read_by_ids(db=self.db, ids=object_ids)  # type: ignore
         except NoSuchElementError:
             # Do not leak which ids exist: a missing object is indistinguishable
             # from an unauthorized one. Mirrors read_crud (single-entity path).
@@ -134,6 +134,6 @@ class AuthzUser:
             # There's no good way to bind the value of `Crud` to the
             # type of `object_id`, so we switch off the type checker
             # for this line :(
-            return crud.value.read(self.db, id)  # type: ignore
+            return crud.value.read(db=self.db, id=id)  # type: ignore
         except NoSuchElementError:
             self.deny_access("Object does not exist")

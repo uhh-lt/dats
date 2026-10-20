@@ -12,7 +12,7 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataUpdate,
 )
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from repos.db.crud_base import CRUDBase, NoSuchElementError
+from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
 
 
 # TODO: wohin damit?
@@ -33,7 +33,7 @@ def is_correct_type(
 
 
 class CRUDSourceDocumentMetadata(
-    CRUDBase[
+    SQLCRUDBase[
         SourceDocumentMetadataORM,
         SourceDocumentMetadataCreate,
         SourceDocumentMetadataUpdate,

@@ -7,11 +7,11 @@ from modules.ml.source_document_job_status_dto import (
     SourceDocumentJobStatusUpdate,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSourceDocumentJobStatus(
-    CRUDBase[
+    SQLCRUDBase[
         SourceDocumentJobStatusORM,
         SourceDocumentJobStatusCreate,
         SourceDocumentJobStatusUpdate,

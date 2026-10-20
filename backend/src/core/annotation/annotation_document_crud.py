@@ -10,11 +10,13 @@ from core.annotation.annotation_document_dto import (
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from repos.db.crud_base import CRUDBase, NoSuchElementError
+from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
 
 
 class CRUDAnnotationDocument(
-    CRUDBase[AnnotationDocumentORM, AnnotationDocumentCreate, AnnotationDocumentUpdate]
+    SQLCRUDBase[
+        AnnotationDocumentORM, AnnotationDocumentCreate, AnnotationDocumentUpdate
+    ]
 ):
     ### READ OPERATIONS ###
 

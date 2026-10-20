@@ -29,7 +29,7 @@ class NoSuchElementError(Exception):
         super().__init__(f"There exists no {self.model_name} with: {kwargs} !")
 
 
-class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
+class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def __init__(self, model: Type[ORMModelType]):
         """
         Generic CRUD access with default methods to Create, Read, Update, Delete ORM models.
@@ -40,14 +40,42 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         """
         self.model = model
 
-    def read(self, db: Session, id: int) -> ORMModelType:
+    ### CREATE OPERATIONS ###
+
+    def create(
+        self,
+        db: Session,
+        *,
+        create_dto: CreateDTOType,
+    ) -> ORMModelType:
+        dto_obj_data = jsonable_encoder(create_dto)
+        db_obj = self.model(**dto_obj_data)
+        db.add(db_obj)
+        db.flush()
+        db.refresh(db_obj)
+        return db_obj
+
+    def create_multi(
+        self,
+        db: Session,
+        *,
+        create_dtos: list[CreateDTOType],
+    ) -> list[ORMModelType]:
+        db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
+        db.add_all(db_objs)
+        db.flush()
+        return db_objs
+
+    ### READ OPERATIONS ###
+
+    def read(self, db: Session, *, id: int) -> ORMModelType:
         db_obj = db.query(self.model).filter(self.model.id == id).first()
         if db_obj is None:
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 
     def read_by_ids(
-        self, db: Session, ids: list[int], id_field: str = "id"
+        self, db: Session, *, ids: list[int], id_field: str = "id"
     ) -> list[ORMModelType]:
         if not ids:
             return []
@@ -87,35 +115,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     ) -> list[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> bool:
-        exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
-        if not exists and raise_error:
-            raise NoSuchElementError(self.model, id=id)
-        return exists
-
-    def create(
-        self,
-        db: Session,
-        *,
-        create_dto: CreateDTOType,
-    ) -> ORMModelType:
-        dto_obj_data = jsonable_encoder(create_dto)
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.flush()
-        db.refresh(db_obj)
-        return db_obj
-
-    def create_multi(
-        self,
-        db: Session,
-        *,
-        create_dtos: list[CreateDTOType],
-    ) -> list[ORMModelType]:
-        db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
-        db.add_all(db_objs)
-        db.flush()
-        return db_objs
+    ### UPDATE OPERATIONS ###
 
     def update(
         self,
@@ -148,7 +148,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
-        db_objects = self.read_by_ids(db, ids)
+        db_objects = self.read_by_ids(db=db, ids=ids)
 
         for db_obj, update_dto in zip(db_objects, update_dtos):
             obj_data = jsonable_encoder(db_obj.as_dict())
@@ -159,6 +159,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.add_all(db_objects)
         db.flush()
         return db_objects
+
+    ### DELETE OPERATIONS ###
 
     def delete(
         self,
@@ -171,7 +173,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.flush()
         return db_obj
 
-    def remove_multi(
+    def delete_multi(
         self,
         db: Session,
         *,
@@ -203,3 +205,11 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.flush()
 
         return total_deleted_count
+
+    ### OTHER OPERATIONS ###
+
+    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> bool:
+        exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
+        if not exists and raise_error:
+            raise NoSuchElementError(self.model, id=id)
+        return exists

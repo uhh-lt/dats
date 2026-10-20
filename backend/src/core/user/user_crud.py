@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from core.auth.security import generate_password_hash, verify_password
 from core.user.user_dto import UserCreate, UserLogin, UserUpdate
 from core.user.user_orm import UserORM
-from repos.db.crud_base import CRUDBase, NoSuchElementError
+from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
 
 SYSTEM_USER_ID: int = 1
 DEMO_USER_ID: int = 2
@@ -19,7 +19,7 @@ SYSTEM_USER_IDS = [
 ]
 
 
-class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
+class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
     ### CREATE OPERATIONS ###
 
     def create(self, db: Session, *, create_dto: UserCreate) -> UserORM:

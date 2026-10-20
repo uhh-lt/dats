@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from config import conf
 from core.annotation.span_text_dto import SpanTextCreate
 from core.annotation.span_text_orm import SpanTextORM
-from repos.db.crud_base import CRUDBase, UpdateNotAllowed
+from repos.db.crud_base import SQLCRUDBase, UpdateNotAllowed
 
 BATCH_SIZE = conf.postgres.batch_size
 
 
-class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
+class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
     ### CREATE OPERATIONS ###
 
     def create(self, db: Session, *, create_dto: SpanTextCreate) -> SpanTextORM:

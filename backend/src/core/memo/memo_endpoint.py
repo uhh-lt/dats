@@ -304,7 +304,7 @@ def delete_memos_bulk(
 ) -> list[MemoRead]:
     authz_user.assert_in_same_project_as_many(Crud.MEMO, memo_ids)
 
-    memos = crud_memo.read_by_ids(db, memo_ids)
+    memos = crud_memo.read_by_ids(db, ids=memo_ids)
 
     # Build the DTOs grouped by project BEFORE deleting: the attached object must
     # still exist. A bulk delete may span multiple projects, so emit one event per

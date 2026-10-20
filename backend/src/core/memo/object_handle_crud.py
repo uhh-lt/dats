@@ -27,13 +27,15 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from repos.db.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
+from repos.db.crud_base import NoSuchElementError, SQLCRUDBase, UpdateNotAllowed
 from repos.db.sql_utils import aggregate_ids
 
 BATCH_SIZE = conf.postgres.batch_size
 
 
-class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]):
+class CRUDObjectHandle(
+    SQLCRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]
+):
     __obj_id_crud_map = {
         "code_id": crud_code,
         "tag_id": crud_tag,

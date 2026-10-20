@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 
 from core.auth.api_key_dto import ApiKeyCreate, ApiKeyRead
 from core.auth.api_key_orm import ApiKeyORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDApiKey(CRUDBase[ApiKeyORM, ApiKeyCreate, Never]):
+class CRUDApiKey(SQLCRUDBase[ApiKeyORM, ApiKeyCreate, Never]):
     def create(
         self,
         db: Session,

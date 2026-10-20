@@ -17,7 +17,7 @@ from core.doc.source_document_dto import (
 )
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
 from repos.filesystem_repo import FilesystemRepo
 from systems.event_system.events import source_document_deleted
@@ -32,7 +32,7 @@ class SourceDocumentPreprocessingUnfinishedError(Exception):
 
 
 class CRUDSourceDocument(
-    CRUDBase[SourceDocumentORM, SourceDocumentCreate, SourceDocumentUpdate]
+    SQLCRUDBase[SourceDocumentORM, SourceDocumentCreate, SourceDocumentUpdate]
 ):
     ### CREATE OPERATIONS ###
 

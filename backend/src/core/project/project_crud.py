@@ -6,10 +6,10 @@ from core.user.user_crud import (
     crud_user,
 )
 from core.user.user_orm import UserORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
+class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
     ### OTHER OPERATIONS ###
 
     def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:

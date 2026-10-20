@@ -10,7 +10,7 @@ from modules.search_view.search_view_dto import (
     search_view_read_from_orm,
 )
 from modules.search_view.search_view_orm import SearchViewORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
@@ -19,7 +19,7 @@ class InvalidSearchViewOrderError(Exception):
 
 
 class CRUDSearchView(
-    CRUDBase[SearchViewORM, SearchViewCreateUnion, SearchViewUpdateUnion]
+    SQLCRUDBase[SearchViewORM, SearchViewCreateUnion, SearchViewUpdateUnion]
 ):
     ### CREATE OPERATIONS ###
 

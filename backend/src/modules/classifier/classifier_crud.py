@@ -8,10 +8,10 @@ from modules.classifier.classifier_dto import (
     ClassifierUpdate,
 )
 from modules.classifier.classifier_orm import ClassifierEvaluationORM, ClassifierORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]):
+class CRUDClassifier(SQLCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]):
     def create(
         self,
         db: Session,

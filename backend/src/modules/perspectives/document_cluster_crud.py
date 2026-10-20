@@ -9,13 +9,13 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import CRUDBase, NoSuchElementError
+from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
 
 BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDDocumentCluster(
-    CRUDBase[DocumentClusterORM, DocumentClusterCreate, DocumentClusterUpdate]
+    SQLCRUDBase[DocumentClusterORM, DocumentClusterCreate, DocumentClusterUpdate]
 ):
     ### READ OPERATIONS ###
 
@@ -136,7 +136,7 @@ class CRUDDocumentCluster(
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
-        db_objects = self.read_by_ids(db, ids)
+        db_objects = self.read_by_ids(db, ids=ids)
 
         for db_obj, update_dto in zip(db_objects, update_dtos):
             obj_data = jsonable_encoder(db_obj.as_dict())

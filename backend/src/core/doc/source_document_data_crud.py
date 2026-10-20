@@ -3,11 +3,11 @@ from core.doc.source_document_data_dto import (
     SourceDocumentDataUpdate,
 )
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSourceDocumentData(
-    CRUDBase[
+    SQLCRUDBase[
         SourceDocumentDataORM,
         SourceDocumentDataCreate,
         SourceDocumentDataUpdate,

@@ -19,11 +19,11 @@ from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSpanAnnotation(
-    CRUDBase[SpanAnnotationORM, SpanAnnotationCreateIntern, SpanAnnotationUpdate]
+    SQLCRUDBase[SpanAnnotationORM, SpanAnnotationCreateIntern, SpanAnnotationUpdate]
 ):
     def create(
         self, db: Session, *, user_id: int, create_dto: SpanAnnotationCreate
@@ -313,7 +313,7 @@ class CRUDSpanAnnotation(
         anno_ids = [anno_id_tuple[0] for anno_id_tuple in anno_ids]
 
         # 2. delete all by ids
-        num_deletions = self.remove_multi(
+        num_deletions = self.delete_multi(
             db=db,
             ids=anno_ids,
         )
@@ -369,7 +369,7 @@ class CRUDSpanAnnotation(
         adoc_ids = list({removed_orm.tuple()[1] for removed_orm in removed_orms})
 
         # delete the sdocs
-        self.remove_multi(db=db, ids=anno_ids)
+        self.delete_multi(db=db, ids=anno_ids)
 
         # update the annotation document's timestamp
         for adoc_id in adoc_ids:

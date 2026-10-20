@@ -8,11 +8,11 @@ from modules.word_frequency.word_frequency_dto import (
     WordFrequencyRead,
 )
 from modules.word_frequency.word_frequency_orm import WordFrequencyORM
-from repos.db.crud_base import CRUDBase, UpdateNotAllowed
+from repos.db.crud_base import SQLCRUDBase, UpdateNotAllowed
 
 
 class CRUDWordFrequency(
-    CRUDBase[
+    SQLCRUDBase[
         WordFrequencyORM,
         WordFrequencyCreate,
         UpdateNotAllowed,

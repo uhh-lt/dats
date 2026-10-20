@@ -14,13 +14,13 @@ from modules.perspectives.document_aspect_dto import (
 )
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import CRUDBase, NoSuchElementError
+from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
 
 BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDDocumentAspect(
-    CRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate]
+    SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate]
 ):
     def read(self, db: Session, id: tuple[int, int]) -> DocumentAspectORM:
         """
@@ -204,7 +204,7 @@ class CRUDDocumentAspect(
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
-        db_objects = self.read_by_ids(db, ids)
+        db_objects = self.read_by_ids(db, ids=ids)
 
         for db_obj, update_dto in zip(db_objects, update_dtos):
             obj_data = jsonable_encoder(db_obj.as_dict())

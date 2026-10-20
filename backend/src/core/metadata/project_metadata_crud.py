@@ -11,11 +11,11 @@ from core.metadata.project_metadata_dto import (
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDProjectMetadata(
-    CRUDBase[
+    SQLCRUDBase[
         ProjectMetadataORM,
         ProjectMetadataCreate,
         ProjectMetadataUpdate,

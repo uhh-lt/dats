@@ -11,10 +11,10 @@ from core.annotation.span_group_orm import (
     SpanAnnotationSpanGroupLinkTable,
     SpanGroupORM,
 )
-from repos.db.crud_base import CRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):
+class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):
     def create(
         self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
     ) -> SpanGroupORM:
