@@ -38,6 +38,11 @@ repos:
         entry: just lint backend
         language: system
         files: ^backend/.*\.py$
+      - id: lint-backend-crud
+        name: "Lint: Backend CRUD conventions"
+        entry: uv run --project backend python backend/lint/check_crud.py
+        language: system
+        files: ^backend/(src/.*_crud\.py|lint/check_crud\.py)$
       - id: lint-ray
         name: "Lint: Ray"
         entry: just lint ray
