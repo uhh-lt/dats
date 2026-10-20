@@ -8,8 +8,8 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from common.exception_handler import exception_handler
 from core.user.user_orm import UserORM
-from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 
 @exception_handler(status.HTTP_403_FORBIDDEN)

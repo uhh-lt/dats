@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session, joinedload
 from core.auth.security import generate_password_hash
 from core.user.user_dto import UserCreate, UserUpdate
 from core.user.user_orm import UserORM
-from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.sql_exceptions import NoSuchElementError
 
 SYSTEM_USER_ID: int = 1
 DEMO_USER_ID: int = 2

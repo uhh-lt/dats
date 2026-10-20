@@ -37,7 +37,7 @@ from core.user.user_dto import (
     UserRead,
 )
 from core.user.user_orm import UserORM
-from repos.db.crud_base import NoSuchElementError
+from repos.db.sql_exceptions import NoSuchElementError
 from repos.mail_repo import MailRepo
 
 CONTENT_PREFIX = "/content/projects/"
