@@ -14,7 +14,8 @@ Rules (the rule id is printed with every violation):
     crud-base        The CRUD class derives from the base class of its file kind (see above).
     singleton        A module-level singleton `crud_<name> = CRUD<...>(...)` follows the class.
     method-verb      Public method names start with an allowed verb (ALLOWED_VERBS below);
-                     'get' and 'find' are forbidden (use 'read' / 'search').
+                     'get' and 'find' are forbidden (use 'read' / 'search'); embedding and
+                     elastic CRUDs must not use 'add' / 'remove' (use 'create' / 'delete').
     method-order     Public methods are ordered create -> read -> update -> delete -> other.
     section-comment  Every public method sits below the section comment of its group:
                      `### CREATE|READ|UPDATE|DELETE|OTHER OPERATIONS ###`.
@@ -52,8 +53,8 @@ OTHER_VERBS = [
     "link",  # create association rows (tags <-> sdocs, spans <-> groups)
     "unlink",  # delete association rows
     "set",  # replace a set of associations (set_tags, set_labels)
-    "add",  # add to a collection / group (add_to_span_group, add_embedding)
-    "remove",  # remove from a collection / group, or delete by filter returning ids
+    "add",  # SQL only: add to a collection / group (add_to_span_group)
+    "remove",  # SQL only: remove from a collection / group (remove_from_span_group)
     "duplicate",  # copy an entity (whiteboards, timeline and cota analyses)
     "merge",  # merge entities (clusters)
     "reorder",  # change the order of entities (search views)
@@ -65,6 +66,8 @@ OTHER_VERBS = [
 ]
 ALLOWED_VERBS = GROUPS[:4] + OTHER_VERBS
 FORBIDDEN_VERBS = {"get": "read", "find": "read' or 'search"}
+# Verbs that only SQL CRUDs may use (association rows); the others say create/delete.
+SQL_ONLY_VERBS = {"add": "create", "remove": "delete"}
 
 SECTION_RE = re.compile(r"^\s*###\s*([A-Z]+)\s+OPERATIONS\s*###\s*$")
 
@@ -262,6 +265,17 @@ def check_source(path: Path, source: str) -> list[Violation]:
                     m.lineno,
                     "method-verb",
                     f"Verb '{v}' is forbidden, use '{FORBIDDEN_VERBS[v]}'.",
+                    c,
+                    m.name,
+                )
+            )
+        elif v in SQL_ONLY_VERBS and kind is not SQL:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "method-verb",
+                    f"Verb '{v}' is only allowed in SQL CRUDs, use '{SQL_ONLY_VERBS[v]}'.",
                     c,
                     m.name,
                 )
