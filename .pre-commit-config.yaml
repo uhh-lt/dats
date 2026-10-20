@@ -43,6 +43,13 @@ repos:
         entry: uv run --project backend python backend/lint/check_crud.py
         language: system
         files: ^backend/(src/.*_crud\.py|lint/check_crud\.py)$
+      - id: lint-backend-dto
+        name: "Lint: Backend DTO conventions"
+        entry: uv run --project backend python backend/lint/check_dtos.py
+        language: system
+        # checks all DTOs: base classes and ORM names are resolved across modules
+        pass_filenames: false
+        files: ^backend/(src/.*_(dto|orm)\.py|src/repos/.*dto_base\.py|src/repos/vector/weaviate_models\.py|lint/check_dtos\.py)$
       - id: lint-ray
         name: "Lint: Ray"
         entry: just lint ray
