@@ -38,7 +38,7 @@ class TagStat(BaseModel):
 
 
 class SpanEntityStatsQueryParameters(BaseModel):
-    proj_id: int = Field(
+    project_id: int = Field(
         description="The ID of the Project the SourceDocuments have to belong to."
     )
     sdoc_ids: set[int] = Field(

@@ -17,7 +17,7 @@ class RAGService(metaclass=SingletonMeta):
 
     def retrieval_augmented_generation_with_session(
         self,
-        proj_id: int,
+        project_id: int,
         query: str | list[str] | int,
         top_k: int,
         threshold: float,
@@ -30,7 +30,7 @@ class RAGService(metaclass=SingletonMeta):
         similar_sentences = self.sims.find_similar_sentences(
             db=db,
             sdoc_ids_to_search=sdoc_ids,
-            proj_id=proj_id,
+            project_id=project_id,
             query=query,
             top_k=top_k,
             threshold=threshold,

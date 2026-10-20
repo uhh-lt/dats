@@ -68,19 +68,19 @@ def get_by_id(
 
 
 @router.get(
-    "/project/{proj_id}",
+    "/project/{project_id}",
     response_model=list[ProjectMetadataRead],
     summary="Returns all ProjectMetadata of the Project with the given ID if it exists",
 )
 def get_by_project(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
+    project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ProjectMetadataRead]:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    db_objs = crud_project_meta.read_by_project(db=db, project_id=proj_id)
+    db_objs = crud_project_meta.read_by_project(db=db, project_id=project_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
 

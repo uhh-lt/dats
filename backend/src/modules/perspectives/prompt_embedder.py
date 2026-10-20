@@ -115,7 +115,7 @@ class PromptEmbedder:
                 )
 
             model_dir = FilesystemRepo().get_model_dir(
-                proj_id=input.project_id,
+                project_id=input.project_id,
                 model_name=input.model_name,
                 model_prefix=f"prompt_embedder_{input.modality}_",
             )
@@ -133,7 +133,7 @@ class PromptEmbedder:
                     )
 
                 checkpoint_dir = FilesystemRepo().get_model_dir(
-                    proj_id=input.project_id,
+                    project_id=input.project_id,
                     model_name=input.model_name,
                     model_prefix=f"prompt_embedder_chkpt_{input.modality}_",
                 )

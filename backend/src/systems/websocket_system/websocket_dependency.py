@@ -80,7 +80,7 @@ class WebsocketEmitter:
         self._background_tasks.add_task(
             self._websocket_service.broadcast_to_project_users,
             event=event,
-            proj_id=project_id,
+            project_id=project_id,
             exclude_user_id=exclude_user_id,
         )
         logger.debug(

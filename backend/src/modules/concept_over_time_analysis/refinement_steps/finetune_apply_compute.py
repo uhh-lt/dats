@@ -31,7 +31,7 @@ def finetune_apply_compute(
     if __has_min_concept_sentence_annotations(cota=cota, search_space=search_space):
         concept_ids: list[str] = [concept.id for concept in cota.concepts]
         model_path = FilesystemRepo().get_model_dir(
-            proj_id=cota.project_id, model_name=str(cota.id), model_prefix="cota_"
+            project_id=cota.project_id, model_name=str(cota.id), model_prefix="cota_"
         )
 
         # 1. train model

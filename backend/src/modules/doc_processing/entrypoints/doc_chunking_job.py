@@ -99,7 +99,7 @@ def _prepare_chunk_output_path(project_id: int, output_path: Path) -> None:
     if output_path.exists():
         try:
             fsr._safe_remove_file_from_project_dir(
-                proj_id=project_id, filename=output_path.name
+                project_id=project_id, filename=output_path.name
             )
         except FileDeletionNotAllowedError:
             logger.warning(
@@ -107,7 +107,7 @@ def _prepare_chunk_output_path(project_id: int, output_path: Path) -> None:
                 "and a SourceDocument with that filename exists in the DB. Cannot overwrite it!"
             )
             raise FileAlreadyExistsInFilesystemError(
-                proj_id=project_id, filename=output_path.name
+                project_id=project_id, filename=output_path.name
             )
 
 

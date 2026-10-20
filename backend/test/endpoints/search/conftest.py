@@ -301,7 +301,7 @@ def search_project(
         ),
     )
     file_path = FilesystemRepo()._get_dst_path_for_project_sdoc_file(
-        proj_id=project.id, filename=sdoc_two.filename
+        project_id=project.id, filename=sdoc_two.filename
     )
     relative_file_path = file_path.relative_to(FilesystemRepo().root_dir)
     crud_sdoc_data.create(

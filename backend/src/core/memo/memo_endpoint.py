@@ -54,12 +54,12 @@ def create_memo(
         attached_object = crud.value.read(db=db, id=attached_object_id)
     except NoSuchElementError:
         authz_user.deny_access("Attached object does not exist")
-    proj_id = attached_object.get_project_id()
-    if proj_id is None:
+    project_id = attached_object.get_project_id()
+    if project_id is None:
         raise ValueError("Attached object has no project")
 
     # check if user is authorized to add memo to the attached object
-    authz_user.assert_in_project(project_id=proj_id)
+    authz_user.assert_in_project(project_id=project_id)
 
     db_obj = crud_memo.create_for_attached_object(
         db=db,
@@ -68,7 +68,7 @@ def create_memo(
         create_dto=MemoCreateIntern(
             **memo.model_dump(),
             user_id=authz_user.user.id,
-            project_id=proj_id,
+            project_id=project_id,
             uuid=str(uuid4()),
         ),
     )
@@ -78,7 +78,7 @@ def create_memo(
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
     )
-    ws.emit_to_project(DATSEvent.MEMO_CREATED, result, project_id=proj_id)
+    ws.emit_to_project(DATSEvent.MEMO_CREATED, result, project_id=project_id)
     return result
 
 
@@ -146,12 +146,12 @@ def get_memos_by_attached_object_id(
         attached_object = crud.value.read(db=db, id=attached_obj_id)
     except NoSuchElementError:
         authz_user.deny_access("Attached object does not exist")
-    proj_id = attached_object.get_project_id()
-    if proj_id is None:
+    project_id = attached_object.get_project_id()
+    if project_id is None:
         raise ValueError("Attached object has no project")
 
     # check if user is authorized to get memo from the attached object
-    authz_user.assert_in_project(project_id=proj_id)
+    authz_user.assert_in_project(project_id=project_id)
 
     return get_object_memos(db_obj=attached_object, db=db, user_id=authz_user.user.id)
 
@@ -349,10 +349,10 @@ def generate_memo_suggestion(
         attached_object = crud.value.read(db=db, id=attached_obj_id)
     except NoSuchElementError:
         authz_user.deny_access("Attached object does not exist")
-    proj_id = attached_object.get_project_id()
-    if proj_id is None:
+    project_id = attached_object.get_project_id()
+    if project_id is None:
         raise ValueError("Attached object has no project")
 
-    authz_user.assert_in_project(project_id=proj_id)
+    authz_user.assert_in_project(project_id=project_id)
 
     return generate_memo_llm(attached_object, db, model=model)

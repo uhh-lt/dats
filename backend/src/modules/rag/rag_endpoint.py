@@ -18,7 +18,7 @@ router = APIRouter(
     summary="Answer a query using Retrieval-Augmented Generation (RAG)",
 )
 def rag_session(
-    proj_id: int,
+    project_id: int,
     query: str | list[str] | int,
     top_k: int,
     threshold: float,
@@ -28,10 +28,10 @@ def rag_session(
     session_id: str | None = None,
     db: Session = Depends(get_db_session),
 ) -> ChatSessionResponse:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
     response, session_id = RAGService().retrieval_augmented_generation_with_session(
-        proj_id=proj_id,
+        project_id=project_id,
         query=query,
         top_k=top_k,
         threshold=threshold,

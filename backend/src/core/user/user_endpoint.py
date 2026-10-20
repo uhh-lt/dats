@@ -40,19 +40,19 @@ def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicU
 
 
 @router.get(
-    "/{proj_id}/user",
+    "/{project_id}/user",
     response_model=list[UserRead],
     summary="Returns all Users of the Project with the given ID",
 )
 def get_by_project(
     *,
-    proj_id: int,
+    project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> list[UserRead]:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    proj_db_obj = crud_project.read(db=db, id=project_id)
     return [UserRead.model_validate(user) for user in proj_db_obj.users]
 
 
@@ -94,30 +94,32 @@ def update_me(
 
 
 @router.patch(
-    "/{proj_id}/user",
+    "/{project_id}/user",
     response_model=ProjectUserLinks,
     summary="Associates an existing User to the Project with the given ID if it exists",
 )
 def associate_user_to_project(
     *,
-    proj_id: int,
+    project_id: int,
     user: ProjectAddUser,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectUserLinks:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
     user_db_obj = crud_user.read_by_email(db=db, email=user.email)
-    ProjectService().associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
+    ProjectService().associate_user(
+        db=db, project_id=project_id, user_id=user_db_obj.id
+    )
     result = ProjectUserLinks(
-        project_id=proj_id,
+        project_id=project_id,
         users=[
             UserRead.model_validate(u)
-            for u in crud_project.read(db=db, id=proj_id).users
+            for u in crud_project.read(db=db, id=project_id).users
         ],
     )
-    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=proj_id)
+    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=project_id)
     return result
 
 
@@ -149,27 +151,27 @@ def delete_me(
 
 
 @router.delete(
-    "/{proj_id}/user/{user_id}",
+    "/{project_id}/user/{user_id}",
     response_model=ProjectUserLinks,
     summary="Dissociates the Users with the Project with the given ID if it exists",
 )
 def dissociate_user_from_project(
     *,
-    proj_id: int,
+    project_id: int,
     user_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectUserLinks:
-    authz_user.assert_in_project(proj_id)
+    authz_user.assert_in_project(project_id)
 
-    crud_project.dissociate_user(db=db, project_id=proj_id, user_id=user_id)
+    crud_project.dissociate_user(db=db, project_id=project_id, user_id=user_id)
     result = ProjectUserLinks(
-        project_id=proj_id,
+        project_id=project_id,
         users=[
             UserRead.model_validate(u)
-            for u in crud_project.read(db=db, id=proj_id).users
+            for u in crud_project.read(db=db, id=project_id).users
         ],
     )
-    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=proj_id)
+    ws.emit_to_project(DATSEvent.PROJECT_USERS_LINKED, result, project_id=project_id)
     return result

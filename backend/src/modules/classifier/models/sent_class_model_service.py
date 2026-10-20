@@ -834,7 +834,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # Create the Trainer
         model_name: str = str(uuid4())
         model_dir = FilesystemRepo().get_model_dir(
-            proj_id=payload.project_id,
+            project_id=payload.project_id,
             model_name=model_name,
             model_prefix="sent_classifier",
         )

@@ -36,8 +36,8 @@ class ProjectService(metaclass=SingletonMeta):
         cls.js = JobService()
         return super(ProjectService, cls).__new__(cls)
 
-    def associate_user(self, *, db: Session, proj_id: int, user_id: int) -> UserORM:
-        crud_project.associate_user(db=db, project_id=proj_id, user_id=user_id)
+    def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserORM:
+        crud_project.associate_user(db=db, project_id=project_id, user_id=user_id)
         return crud_user.read(db=db, id=user_id)
 
     def create_project(
@@ -48,10 +48,10 @@ class ProjectService(metaclass=SingletonMeta):
         project_id = proj.id
 
         # 2) associate the system users
-        self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
-        self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_ZEROSHOT_ID)
-        self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_FEWSHOT_ID)
-        self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_TRAINED_ID)
+        self.associate_user(db=db, project_id=project_id, user_id=SYSTEM_USER_ID)
+        self.associate_user(db=db, project_id=project_id, user_id=ASSISTANT_ZEROSHOT_ID)
+        self.associate_user(db=db, project_id=project_id, user_id=ASSISTANT_FEWSHOT_ID)
+        self.associate_user(db=db, project_id=project_id, user_id=ASSISTANT_TRAINED_ID)
 
         # 3) associate the user that created the project
         if creating_user_id not in [
@@ -60,7 +60,7 @@ class ProjectService(metaclass=SingletonMeta):
             ASSISTANT_FEWSHOT_ID,
             ASSISTANT_TRAINED_ID,
         ]:
-            self.associate_user(db=db, proj_id=project_id, user_id=creating_user_id)
+            self.associate_user(db=db, project_id=project_id, user_id=creating_user_id)
 
         # 4) create system codes
         crud_code.create_system_codes_for_project(db=db, project_id=project_id)
@@ -71,7 +71,7 @@ class ProjectService(metaclass=SingletonMeta):
         )
 
         # 6) create filesystem directory structure
-        self.fsr.create_directory_structure_for_project(proj_id=project_id)
+        self.fsr.create_directory_structure_for_project(project_id=project_id)
 
         # 7) create elasticsearch indices for this project
         client = self.es_repo.get_client()
@@ -97,27 +97,27 @@ class ProjectService(metaclass=SingletonMeta):
             raise ValueError("Failed to reload freshly created project from DB")
         return fresh
 
-    def delete_project(self, db: Session, *, proj_id: int) -> ProjectORM:
+    def delete_project(self, db: Session, *, project_id: int) -> ProjectORM:
         # 1) delete the project and all connected data via cascading delete
-        proj_db_obj = crud_project.delete(db=db, id=proj_id)
+        proj_db_obj = crud_project.delete(db=db, id=project_id)
 
         # 2) delete the files from filesystem
-        self.fsr.purge_project_data(proj_id=proj_id)
+        self.fsr.purge_project_data(project_id=project_id)
 
         # 3) delete elasticsearch indices for this project
         client = self.es_repo.get_client()
-        crud_sdoc_elastic.index.delete_index(client=client, project_id=proj_id)
+        crud_sdoc_elastic.index.delete_index(client=client, project_id=project_id)
 
         # 4) delete weaviate embeddings and related search indices for this project
         client = self.weaviate.get_client()
         # remove all vector embeddings stored in Weaviate
-        crud_document_embedding.delete_by_project(client=client, project_id=proj_id)
-        crud_image_embedding.delete_by_project(client=client, project_id=proj_id)
-        crud_sentence_embedding.delete_by_project(client=client, project_id=proj_id)
-        crud_aspect_embedding.delete_by_project(client=client, project_id=proj_id)
-        crud_cluster_embedding.delete_by_project(client=client, project_id=proj_id)
+        crud_document_embedding.delete_by_project(client=client, project_id=project_id)
+        crud_image_embedding.delete_by_project(client=client, project_id=project_id)
+        crud_sentence_embedding.delete_by_project(client=client, project_id=project_id)
+        crud_aspect_embedding.delete_by_project(client=client, project_id=project_id)
+        crud_cluster_embedding.delete_by_project(client=client, project_id=project_id)
 
         # 5) delete redis entries for this project
-        self.js.remove_jobs_by_project(project_id=proj_id)
+        self.js.remove_jobs_by_project(project_id=project_id)
 
         return proj_db_obj
