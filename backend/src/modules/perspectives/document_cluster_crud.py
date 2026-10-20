@@ -182,12 +182,8 @@ class CRUDDocumentCluster(
             )  # Recommended for bulk updates
         )
 
-        try:
-            db.execute(stmt)
-            db.flush()
-        except Exception:
-            db.rollback()
-            raise  # Re-raise the database exception (e.g., IntegrityError)
+        db.execute(stmt)
+        db.flush()
 
     def set_labels(
         self,
