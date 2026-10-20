@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from typing import Generator
 
 from loguru import logger
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
@@ -68,15 +68,28 @@ class SQLRepo(RepoBase, metaclass=SingletonMeta):
         self._session_maker = None
 
     def remove_data(self) -> None:
-        """Clear all data by dropping tables, preserving the DB and connections."""
+        """Clear all data by truncating all tables (and resetting their id
+        sequences), preserving the schema, the migration state and the connections."""
         if self._engine is None:
             raise RuntimeError("SQLRepo is not connected.")
 
-        from repos.db.orm_base import ORMBase
+        if not database_exists(self._engine.url):
+            return
 
-        if database_exists(self._engine.url):
-            logger.warning("Dropping all tables to clean data!")
-            ORMBase.metadata.drop_all(self._engine)
+        tables = [
+            table
+            for table in inspect(self._engine).get_table_names()
+            if table != "alembic_version"
+        ]
+        if len(tables) == 0:
+            return
+
+        logger.warning("Truncating all tables to clean data!")
+        quoted_tables = ", ".join(f'"{table}"' for table in tables)
+        with self._engine.begin() as conn:
+            conn.execute(
+                text(f"TRUNCATE TABLE {quoted_tables} RESTART IDENTITY CASCADE")
+            )
 
     def drop_database(self) -> None:
         """Drop the entire database (use with caution)."""
@@ -85,6 +98,8 @@ class SQLRepo(RepoBase, metaclass=SingletonMeta):
 
         if database_exists(self._engine.url):
             logger.warning("Dropping existing DB!")
+            # close the pooled connections, an open session blocks the drop
+            self._engine.dispose()
             drop_database(self._engine.url)
 
     def create_database_if_not_exists(self) -> None:

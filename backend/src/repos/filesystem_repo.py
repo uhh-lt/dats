@@ -24,6 +24,7 @@ from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
 )
+from repos.repo_base import RepoBase
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
@@ -98,7 +99,7 @@ class ErroneousArchiveException(Exception):
         )
 
 
-class FilesystemRepo(metaclass=SingletonMeta):
+class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         root_dir = conf.filesystem.root_directory
         cls.root_dir = root_dir

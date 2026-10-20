@@ -18,7 +18,7 @@ class AsyncRedisRepo(RepoBase, metaclass=SingletonMeta):
     database (`rq_idx`) never affects pub/sub state.
 
     Like all repos, it is auto-discovered and connected by the central repo
-    setup in `main.py` / `worker.py`. Note that `connect()` only constructs
+    setup in `bootstrap.py`. Note that `connect()` only constructs
     the client (which is synchronous); the connection is established lazily
     on first use by the async consumer (the websocket manager).
     """
