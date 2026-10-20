@@ -149,8 +149,9 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         # A favorite-only update has no shared fields, so there is nothing to
         # update — return the memo as-is. We must not re-validate an empty
         # MemoUpdate (its validator requires at least one field).
-        shared_data = update_dto.model_dump(exclude={"is_favorite"}, exclude_unset=True)
-        if shared_data:
+        shared_fields = update_dto.shared_fields_set()
+        if shared_fields:
+            shared_data = update_dto.model_dump(include=shared_fields)
             shared_update = MemoUpdate.model_validate(shared_data)
             return super().update(db=db, id=id, update_dto=shared_update)
         return self.read(db=db, id=id)

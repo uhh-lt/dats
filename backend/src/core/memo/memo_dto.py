@@ -61,8 +61,13 @@ class MemoUpdate(BaseModel):
     PER_USER_FIELDS: ClassVar[frozenset[str]] = frozenset({"is_favorite"})
 
     def shared_fields_set(self) -> set[str]:
-        """Return the set of shared (project-visible) fields that were provided."""
-        return set(self.model_fields_set) - self.PER_USER_FIELDS
+        """Return the set of shared (project-visible) fields that were provided.
+
+        Only MemoUpdate's own fields count: subclasses add identifiers (e.g. the
+        memo_id of MemoUpdateBulk) that are not memo data.
+        """
+        memo_fields = set(MemoUpdate.model_fields) - self.PER_USER_FIELDS
+        return memo_fields & self.model_fields_set
 
     @model_validator(mode="after")
     def check_at_least_one_field_is_set(self) -> "MemoUpdate":
