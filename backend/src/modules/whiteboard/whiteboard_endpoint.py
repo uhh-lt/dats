@@ -148,11 +148,10 @@ def update_by_id(
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
-    update_dto = WhiteboardUpdateIntern(
-        **whiteboard.model_dump(exclude_unset=True, exclude={"content"}),
-    )
+    update_data = whiteboard.model_dump(exclude_unset=True, exclude={"content"})
     if whiteboard.content is not None:
-        update_dto.content = whiteboard.content.model_dump_json(exclude_unset=True)
+        update_data["content"] = whiteboard.content.model_dump_json(exclude_unset=True)
+    update_dto = WhiteboardUpdateIntern(**update_data)
 
     db_obj = crud_whiteboard.update(
         db=db,

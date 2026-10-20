@@ -106,7 +106,7 @@ class COTACreate(ConceptOverTimeAnalysisBaseDTO):
     )
 
 
-class COTACreateIntern(COTACreate, UpdateDTOBase):
+class COTACreateIntern(COTACreate):
     timeline_settings: str | None = Field(
         description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
         default=None,

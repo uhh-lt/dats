@@ -4,6 +4,8 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from repos.db.dto_base import UpdateDTOBase
+
 """
  Flo:
  We have to create different Create and Read DTOs for every Object Type it can be attached to so that the
@@ -38,7 +40,7 @@ class MemoBaseDTO(BaseModel):
 
 
 # Properties to update
-class MemoUpdate(BaseModel):
+class MemoUpdate(BaseModel, UpdateDTOBase):
     title: str | None = Field(description="Title of the Memo", default=None)
     icon: str | None = Field(
         default=None,
@@ -70,10 +72,7 @@ class MemoUpdate(BaseModel):
         return memo_fields & self.model_fields_set
 
     @model_validator(mode="after")
-    def check_at_least_one_field_is_set(self) -> "MemoUpdate":
-        if not self.model_fields_set:
-            raise ValueError("At least one field has to be provided for an update")
-
+    def check_fields_not_null(self) -> "MemoUpdate":
         required_fields = {"title", "content", "content_json"}
         invalid_fields = {
             field
@@ -90,15 +89,6 @@ class MemoUpdate(BaseModel):
 # Properties to update in bulk
 class MemoUpdateBulk(MemoUpdate):
     memo_id: int = Field(description="ID of the Memo to update")
-
-    @model_validator(mode="after")
-    def check_at_least_one_updatable_field(self) -> "MemoUpdateBulk":
-        # memo_id is always set, so the inherited "at least one field" check would
-        # pass trivially; require at least one actual updatable field instead.
-        updatable = {"title", "icon", "content", "content_json", "is_favorite"}
-        if not updatable.intersection(self.model_fields_set):
-            raise ValueError("At least one updatable field has to be provided")
-        return self
 
 
 # Properties to create
@@ -137,3 +127,5 @@ class MemoRead(MemoReadBaseDTO):
     attached_object_type: AttachedObjectType = Field(
         description="Type of the Object the ID refers to"
     )
+    # Not built from MemoORM: memo_utils combines MemoInDB with the attached object.
+    model_config = ConfigDict(from_attributes=False)

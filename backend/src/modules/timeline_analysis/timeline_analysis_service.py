@@ -57,11 +57,15 @@ def update_timeline_analysis(
         update_data["settings"] = srsly.json_dumps(
             jsonable_encoder(update_dto.settings)
         )
-    db_obj = crud_timeline_analysis.update(
-        db,
-        id=id,
-        update_dto=TimelineAnalysisUpdateIntern(**update_data),
-    )
+    if update_data:
+        db_obj = crud_timeline_analysis.update(
+            db,
+            id=id,
+            update_dto=TimelineAnalysisUpdateIntern(**update_data),
+        )
+    else:
+        # only the concepts are updated
+        db_obj = crud_timeline_analysis.read(db, id=id)
     ta = TimelineAnalysisRead.model_validate(db_obj)
 
     # check if we even need to update concepts
