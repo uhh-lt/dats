@@ -21,6 +21,25 @@ Always run tests via `just test backend` (which wraps `bin/dev/backend-test.sh`)
 
 Tests are configured in [pyproject.toml](backend/pyproject.toml) (`testpaths = ["test"]`, `pythonpath = "src"`).
 
+### Slow Tests (Markers)
+
+Slow or externally dependent tests carry a pytest marker and are **deselected by default** (`-m "not training and not llm"` in `addopts`):
+
+| Marker     | Use for                                                            |
+| ---------- | ------------------------------------------------------------------ |
+| `training` | Tests that train classifier models on the GPU                      |
+| `llm`      | Tests that call the real LLM provider configured in `backend/.env` |
+
+```bash
+just test backend -m training   # only the training tests
+just test backend -m llm        # only the LLM tests
+just test backend -m ""         # everything
+```
+
+A `-m` on the command line replaces the default, so selecting a file that only contains marked tests needs `-m` too. Markers are strict: register a new one in `pyproject.toml` before using it.
+
+Mark every new test that trains a model or calls the LLM provider. CI on pull requests and pushes ([backend_checks.yml](.github/workflows/backend_checks.yml)) runs only the default selection; [nightly_checks.yml](.github/workflows/nightly_checks.yml) runs all tests every night.
+
 ## Test Layout
 
 - Tests live under `backend/test/`. Endpoint tests live under `backend/test/endpoints/`.

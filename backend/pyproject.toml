@@ -118,6 +118,13 @@ pythonpath = "src"
 addopts = [
     "--import-mode=importlib",
     "-ra -q",
+    "--strict-markers",
+    # Slow tests are opt-in: select them with `-m training`, `-m llm` or `-m ""` (everything).
+    "-m", "not training and not llm",
+]
+markers = [
+    "training: trains classifier models on the GPU (slow)",
+    "llm: calls the real LLM provider configured in backend/.env",
 ]
 testpaths = [
     "test"

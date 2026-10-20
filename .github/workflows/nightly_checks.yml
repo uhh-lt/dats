@@ -1,0 +1,41 @@
+# Runs the full backend test suite every night, including the slow tests that
+# the default selection skips (pytest markers `training` and `llm`), and uploads
+# the classifier metrics. It can also be started manually.
+name: nightly-checks
+on:
+  schedule:
+    # 04:00 UTC = 05:00 in Hamburg in winter (CET), 06:00 in summer (CEST).
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+jobs:
+  nightly-checks:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare environment
+        uses: ./.github/actions/prepare-env
+        with:
+          backend: true
+          hf_token: ${{ secrets.HF_HUB_TOKEN }}
+      - name: Install backend dependencies
+        run: just install backend
+      - name: Start docker containers
+        working-directory: docker
+        run: |
+          source .env
+          COMPOSE_PROFILES="" docker compose up --wait --quiet-pull
+      - name: Pytest runs all tests without errors
+        run: just test backend -m ""
+      - name: Upload classifier metrics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: classifier-metrics
+          path: backend/test-results/*-classification.csv
+          if-no-files-found: ignore
+      - name: Cleanup
+        if: always()
+        uses: ./.github/actions/cleanup
+        with:
+          backend: true

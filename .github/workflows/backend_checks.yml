@@ -51,13 +51,6 @@ jobs:
           COMPOSE_PROFILES="" docker compose up --wait --quiet-pull
       - name: Pytest runs without errors
         run: just test backend
-      - name: Upload classifier metrics
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: classifier-metrics
-          path: backend/test-results/*-classification.csv
-          if-no-files-found: ignore
       - name: Database migrates without errors
         run: just alembic migrate
       - name: Database schema is up-to-date after migration
