@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 
 class WordFrequencyORM(ORMBase):
+    # many to one
     sdoc_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),

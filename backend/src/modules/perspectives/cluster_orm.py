@@ -27,7 +27,7 @@ class ClusterORM(ORMBase):
     x: Mapped[float | None] = mapped_column(Float)
     y: Mapped[float | None] = mapped_column(Float)
 
-    # many to one
+    # hierarchy reference
     parent_cluster_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("cluster.id", ondelete="SET NULL"),
@@ -40,6 +40,7 @@ class ClusterORM(ORMBase):
         "ClusterORM", back_populates="parent_cluster"
     )
 
+    # many to one
     aspect_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("aspect.id", ondelete="CASCADE"), nullable=False, index=True
     )
