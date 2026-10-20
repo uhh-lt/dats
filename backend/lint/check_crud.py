@@ -2,103 +2,423 @@
 """
 check_crud.py
 
-This script enforces rules for CRUD files:
-1. The main class must be named starting with 'CRUD'.
-2. Methods in the CRUD class must be ordered: create*, read*, update*, delete*, then others.
-3. Method names must start with: create, read, update, delete, or be after those.
+Enforces the unified conventions for the three CRUD kinds in backend/src:
+
+    *_embedding_crud.py  Weaviate embedding CRUD,  base EmbeddingCRUDBase, first param `client`
+    *_elastic_crud.py    Elasticsearch CRUD,       base ElasticCRUDBase,   first param `client`
+    *_crud.py            SQL CRUD (everything else), base SQLCRUDBase,     first param `db`
+
+Rules (the rule id is printed with every violation):
+
+    crud-class       Exactly one top-level class whose name starts with 'CRUD'.
+    crud-base        The CRUD class derives from the base class of its file kind (see above).
+    singleton        A module-level singleton `crud_<name> = CRUD<...>(...)` follows the class.
+    method-verb      Public method names start with an allowed verb (ALLOWED_VERBS below);
+                     'get' and 'find' are forbidden (use 'read' / 'search').
+    method-order     Public methods are ordered create -> read -> update -> delete -> other.
+    section-comment  Every public method sits below the section comment of its group:
+                     `### CREATE|READ|UPDATE|DELETE|OTHER OPERATIONS ###`.
+    first-param      The first parameter after self/cls is `db` (SQL) or `client` (embedding/elastic).
+    keyword-only     All parameters after the first one are keyword-only (`*` after db/client).
+    return-annotation  Every method (except dunder methods) has a return annotation.
+    no-commit        No `.commit(` / `.rollback(` calls; transactions belong to the caller.
+    no-proj-id       No parameter named `proj_id` (use `project_id`).
+    no-read-dto      No method returns a type whose name ends with 'Read' (CRUDs return ORMs / models).
+
+Usage:
+    check_crud.py                 check every *_crud.py file below backend/src
+    check_crud.py FILE [FILE...]  check the given files (non-CRUD files are ignored;
+                                  passing check_crud.py itself checks everything)
 """
 
 import ast
-import os
+import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
-CRUD_PREFIXES = ["create", "read", "update", "delete"]
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+SRC_ROOT = REPO_ROOT / "backend" / "src"
+
+# Method groups in their required order. The first four groups are matched by
+# their verb; every other allowed verb belongs to the "other" group.
+GROUPS = ["create", "read", "update", "delete", "other"]
+
+# Allowed verbs of the "other" group, derived from the existing CRUDs.
+OTHER_VERBS = [
+    "exists",  # existence checks (exists_by_name, exists_or_create)
+    "search",  # similarity / full-text search (embedding and elastic CRUDs)
+    "count",  # aggregate counts
+    "link",  # create association rows (tags <-> sdocs, spans <-> groups)
+    "unlink",  # delete association rows
+    "set",  # replace a set of associations (set_tags, set_labels)
+    "add",  # add to a collection / group (add_to_span_group, add_embedding)
+    "remove",  # remove from a collection / group, or delete by filter returning ids
+    "duplicate",  # copy an entity (whiteboards, timeline and cota analyses)
+    "merge",  # merge entities (clusters)
+    "reorder",  # change the order of entities (search views)
+    "associate",  # add a user to a project
+    "dissociate",  # remove a user from a project
+    "revoke",  # invalidate a token
+    "favorite",  # mark a memo as favorite
+    "unfavorite",  # unmark a memo as favorite
+]
+ALLOWED_VERBS = GROUPS[:4] + OTHER_VERBS
+FORBIDDEN_VERBS = {"get": "read", "find": "read' or 'search"}
+
+SECTION_RE = re.compile(r"^\s*###\s*([A-Z]+)\s+OPERATIONS\s*###\s*$")
 
 
-def find_crud_files(root):
-    for dirpath, _, filenames in os.walk(root):
-        for filename in filenames:
-            if filename.endswith("_crud.py"):
-                yield os.path.join(dirpath, filename)
+@dataclass(frozen=True)
+class CrudKind:
+    name: str
+    base: str
+    first_param: str
 
 
-def check_crud_class_and_method_order(crud_path):
-    with open(crud_path, encoding="utf-8") as f:
-        source = f.read()
+SQL = CrudKind("SQL", "SQLCRUDBase", "db")
+EMBEDDING = CrudKind("embedding", "EmbeddingCRUDBase", "client")
+ELASTIC = CrudKind("elastic", "ElasticCRUDBase", "client")
+
+
+@dataclass(frozen=True)
+class Violation:
+    path: str
+    line: int
+    rule: str
+    message: str
+    cls: str | None = None
+    method: str | None = None
+
+    def __str__(self) -> str:
+        where = ".".join(x for x in (self.cls, self.method) if x)
+        where = f" {where}:" if where else ""
+        return f"{self.path}:{self.line}: [{self.rule}]{where} {self.message}"
+
+
+def crud_kind(path: Path) -> CrudKind:
+    if path.name.endswith("_embedding_crud.py"):
+        return EMBEDDING
+    if path.name.endswith("_elastic_crud.py"):
+        return ELASTIC
+    return SQL
+
+
+def method_verb(name: str) -> str:
+    return name.lstrip("_").split("_")[0]
+
+
+def method_group(name: str) -> str:
+    verb = method_verb(name)
+    if verb in FORBIDDEN_VERBS:
+        return "read"
+    return verb if verb in GROUPS[:4] else "other"
+
+
+def base_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Subscript):
+        node = node.value
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def annotation_names(node: ast.expr) -> list[str]:
+    """All type names referenced by an annotation, including string annotations."""
+    names = []
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Name):
+            names.append(sub.id)
+        elif isinstance(sub, ast.Attribute):
+            names.append(sub.attr)
+        elif isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+            try:
+                names.extend(annotation_names(ast.parse(sub.value, mode="eval").body))
+            except SyntaxError:
+                pass
+    return names
+
+
+def is_static(func: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    return any(
+        isinstance(d, ast.Name) and d.id == "staticmethod" for d in func.decorator_list
+    )
+
+
+def check_source(path: Path, source: str) -> list[Violation]:
+    p = str(path)
     try:
-        tree = ast.parse(source, filename=crud_path)
-    except Exception as e:
-        print(f"Violation in {crud_path}: Could not parse file: {e}")
-        return False
+        tree = ast.parse(source, filename=p)
+    except SyntaxError as e:
+        return [Violation(p, e.lineno or 0, "parse", f"Could not parse file: {e}")]
 
-    crud_class = None
-    for node in tree.body:
-        if isinstance(node, ast.ClassDef) and node.name.startswith("CRUD"):
-            crud_class = node
-            break
+    kind = crud_kind(path)
+    violations: list[Violation] = []
 
-    if not crud_class:
-        print(f"Violation in {crud_path}: No class starting with 'CRUD' found.")
-        return False
-
-    methods = [n.name for n in crud_class.body if isinstance(n, ast.FunctionDef)]
-
-    if not methods:
-        # No methods in CRUD class is allowed, just skip
-        return True
-
-    def get_method_order(methods):
-        order = []
-        for name in methods:
-            clean_name = name.lstrip("_")
-            for idx, prefix in enumerate(CRUD_PREFIXES):
-                if clean_name.startswith(prefix):
-                    order.append(idx)
-                    break
-            else:
-                order.append(len(CRUD_PREFIXES))  # "other"
-        return order
-
-    order = get_method_order(methods)
-    last_seen = -1
-    first_non_crud_idx = None
-    for i, idx in enumerate(order):
-        if idx < len(CRUD_PREFIXES):
-            if first_non_crud_idx is not None:
-                print(
-                    f"Violation in {crud_path}: CRUD method '{methods[i]}' found after non-CRUD method '{methods[first_non_crud_idx]}' in class '{crud_class.name}'."
+    # no-commit / no-proj-id apply to the whole file
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in ("commit", "rollback")
+        ):
+            violations.append(
+                Violation(p, node.lineno, "no-commit", f"Calls .{node.func.attr}().")
+            )
+        if isinstance(node, ast.arg) and node.arg == "proj_id":
+            violations.append(
+                Violation(
+                    p,
+                    node.lineno,
+                    "no-proj-id",
+                    "Parameter 'proj_id' (use 'project_id').",
                 )
-                print("  Found methods in order:")
-                for name in methods:
-                    print(f"    {name}")
-                return False
-            if idx < last_seen:
-                print(
-                    f"Violation in {crud_path}: Method order in class '{crud_class.name}' is incorrect."
+            )
+
+    # crud-class
+    crud_classes = [
+        n
+        for n in tree.body
+        if isinstance(n, ast.ClassDef) and n.name.startswith("CRUD")
+    ]
+    if len(crud_classes) != 1:
+        found = ", ".join(c.name for c in crud_classes) or "none"
+        violations.append(
+            Violation(
+                p,
+                1,
+                "crud-class",
+                f"Expected exactly one class 'CRUD<...>', found: {found}.",
+            )
+        )
+    if not crud_classes:
+        return violations
+    crud_class = crud_classes[0]
+    c = crud_class.name
+
+    # crud-base
+    bases = [base_name(b) for b in crud_class.bases]
+    if kind.base not in bases:
+        violations.append(
+            Violation(
+                p,
+                crud_class.lineno,
+                "crud-base",
+                f"{kind.name} CRUD must derive from '{kind.base}' (found: {', '.join(str(b) for b in bases) or 'none'}).",
+                cls=c,
+            )
+        )
+
+    # singleton
+    has_singleton = any(
+        isinstance(n, ast.Assign)
+        and n.lineno > crud_class.lineno
+        and any(isinstance(t, ast.Name) and t.id.startswith("crud_") for t in n.targets)
+        and isinstance(n.value, ast.Call)
+        and isinstance(n.value.func, ast.Name)
+        and n.value.func.id == c
+        for n in tree.body
+    )
+    if not has_singleton:
+        violations.append(
+            Violation(
+                p,
+                crud_class.lineno,
+                "singleton",
+                f"Missing module-level singleton 'crud_<name> = {c}(...)' after the class.",
+                cls=c,
+            )
+        )
+
+    methods = [
+        n
+        for n in crud_class.body
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and not (n.name.startswith("__") and n.name.endswith("__"))
+    ]
+    public = [m for m in methods if not m.name.startswith("_")]
+
+    # section comments inside the class body: (line, group)
+    lines = source.splitlines()
+    end = crud_class.end_lineno or len(lines)
+    sections = [
+        (i + 1, m.group(1).lower())
+        for i in range(crud_class.lineno, end)
+        if (m := SECTION_RE.match(lines[i]))
+    ]
+
+    last_group_idx = -1
+    for m in public:
+        v = method_verb(m.name)
+        group = method_group(m.name)
+
+        # method-verb
+        if v in FORBIDDEN_VERBS:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "method-verb",
+                    f"Verb '{v}' is forbidden, use '{FORBIDDEN_VERBS[v]}'.",
+                    c,
+                    m.name,
                 )
-                print("  Found methods in order:")
-                for name in methods:
-                    print(f"    {name}")
-                return False
-            last_seen = idx
-        else:
-            if first_non_crud_idx is None:
-                first_non_crud_idx = i
-    return True
+            )
+        elif v not in ALLOWED_VERBS:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "method-verb",
+                    f"Verb '{v}' is not allowed (allowed: {', '.join(ALLOWED_VERBS)}).",
+                    c,
+                    m.name,
+                )
+            )
+
+        # method-order
+        group_idx = GROUPS.index(group)
+        if group_idx < last_group_idx:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "method-order",
+                    f"'{group}' method after a '{GROUPS[last_group_idx]}' method "
+                    "(order: create, read, update, delete, other).",
+                    c,
+                    m.name,
+                )
+            )
+        last_group_idx = max(last_group_idx, group_idx)
+
+        # section-comment
+        def_line = m.decorator_list[0].lineno if m.decorator_list else m.lineno
+        above = [s for s in sections if s[0] < def_line]
+        section = above[-1][1] if above else None
+        if section != group:
+            found = f"'### {section.upper()} OPERATIONS ###'" if section else "none"
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "section-comment",
+                    f"Must be below '### {group.upper()} OPERATIONS ###' (found: {found}).",
+                    c,
+                    m.name,
+                )
+            )
+
+        # first-param / keyword-only
+        positional = m.args.posonlyargs + m.args.args
+        if not is_static(m):
+            positional = positional[1:]
+        first = positional[0].arg if positional else None
+        if first != kind.first_param:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "first-param",
+                    f"First parameter must be '{kind.first_param}' (found: {first or 'none'}).",
+                    c,
+                    m.name,
+                )
+            )
+        extra = positional[1:] if first == kind.first_param else positional
+        extra_names = [a.arg for a in extra]
+        if m.args.vararg:
+            extra_names.append(f"*{m.args.vararg.arg}")
+        if extra_names:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "keyword-only",
+                    f"Parameters after '{kind.first_param}' must be keyword-only: {', '.join(extra_names)}.",
+                    c,
+                    m.name,
+                )
+            )
+
+    for m in methods:
+        # return-annotation
+        if m.returns is None:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "return-annotation",
+                    "Missing return annotation.",
+                    c,
+                    m.name,
+                )
+            )
+            continue
+        # no-read-dto
+        read_types = sorted(
+            {n for n in annotation_names(m.returns) if n.endswith("Read")}
+        )
+        if read_types:
+            violations.append(
+                Violation(
+                    p,
+                    m.lineno,
+                    "no-read-dto",
+                    f"Returns Read DTO(s): {', '.join(read_types)}.",
+                    c,
+                    m.name,
+                )
+            )
+
+    return violations
 
 
-def main():
-    root = Path(__file__).parent.parent / "src"
-    all_ok = True
-    for crud in find_crud_files(root):
-        ok = check_crud_class_and_method_order(crud)
-        if not ok:
-            all_ok = False
-    if not all_ok:
-        sys.exit(1)
-    print("All CRUD checks passed.")
+def display_path(path: Path) -> Path:
+    try:
+        return path.resolve().relative_to(REPO_ROOT)
+    except ValueError:
+        return path
+
+
+def check_file(path: Path) -> list[Violation]:
+    violations = check_source(display_path(path), path.read_text(encoding="utf-8"))
+    return sorted(violations, key=lambda v: v.line)
+
+
+def find_crud_files(root: Path) -> list[Path]:
+    return sorted(root.rglob("*_crud.py"))
+
+
+def main(argv: list[str]) -> int:
+    if any(a in ("-h", "--help") for a in argv):
+        print(__doc__)
+        return 0
+
+    paths = [Path(a) for a in argv]
+    if not paths or any(p.name == Path(__file__).name for p in paths):
+        files = find_crud_files(SRC_ROOT)
+    else:
+        files = [p for p in paths if p.name.endswith("_crud.py")]
+
+    violations = [v for f in files for v in check_file(f)]
+    for v in violations:
+        print(v)
+    if violations:
+        counts: dict[str, int] = {}
+        for v in violations:
+            counts[v.rule] = counts.get(v.rule, 0) + 1
+        summary = ", ".join(f"{r}: {n}" for r, n in sorted(counts.items()))
+        print(
+            f"\n{len(violations)} CRUD violation(s) in {len(files)} file(s) ({summary})."
+        )
+        print("Run 'check_crud.py --help' for the rules.")
+        return 1
+    print(f"All CRUD checks passed ({len(files)} file(s)).")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
