@@ -93,6 +93,7 @@ lint target *files:
           uv run ruff check --fix src test
           uv run python lint/check_crud.py
           uv run python lint/check_dtos.py
+          uv run python lint/check_orm.py
         else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
         cd frontend

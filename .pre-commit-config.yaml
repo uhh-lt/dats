@@ -50,6 +50,11 @@ repos:
         # checks all DTOs: base classes and ORM names are resolved across modules
         pass_filenames: false
         files: ^backend/(src/.*_(dto|orm)\.py|src/repos/.*dto_base\.py|src/repos/vector/weaviate_models\.py|lint/check_dtos\.py)$
+      - id: lint-backend-orm
+        name: "Lint: Backend ORM conventions"
+        entry: uv run --project backend python backend/lint/check_orm.py
+        language: system
+        files: ^backend/(src/.*_orm\.py|lint/check_orm\.py)$
       - id: lint-ray
         name: "Lint: Ray"
         entry: just lint ray
