@@ -81,6 +81,7 @@ We use the following terms throughout the project:
 
 - **API client generation**: `frontend/src/api` is generated from the backend's OpenAPI spec — never hand-edit it. After changing backend endpoints or DTOs, regenerate with `just update-api` (requires a running backend).
 - **SQL Database migrations**: Never write SQL migrations by hand. Change the `*_orm.py` model, then run `just alembic revision "msg"` and `just alembic migrate`. After generating a migration, check whether existing data must be migrated and write the migration code. Production holds live data that may need to be updated.
+- **Backend startup**: every entry point (API, worker, setup, migrations, tests) boots DATS with the building blocks in `backend/src/bootstrap.py`. Change startup there, never in an entry point.
 - **Testing**: Backend tests live in `backend/test/`; run them with `just test backend` after changing backend behavior. Tests require a running database and use a separate test database.
 
 ## General Guidelines

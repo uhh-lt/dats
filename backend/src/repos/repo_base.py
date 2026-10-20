@@ -15,8 +15,8 @@ class RepoBase(ABC):
     2. **Connection Management**: Implement `connect()` and `close_connection()` methods to manage
     the lifecycle of external connections (databases, APIs, etc.).
 
-    3. **Reset Functionality**: Implement `reset_data()` to clear or reinitialize data for setup/testing
-    purposes. This replaces the old behavior where reset was handled in `__init__`.
+    3. **Reset Functionality**: Implement `remove_data()` to clear all data for setup/testing
+    purposes.
 
     4. **Singleton Pattern**: All repositories should use `SingletonMeta` to ensure only one instance
     exists per process.
@@ -54,7 +54,7 @@ class RepoBase(ABC):
             self._connected = False
             logger.info("Closed connection to MyRepo service")
 
-        def reset_data(self) -> None:
+        def remove_data(self) -> None:
             # Clear all data, recreate indices, etc.
             if self._connected:
                 self._client.clear_all()
@@ -63,40 +63,10 @@ class RepoBase(ABC):
 
     ## Usage in Application Lifecycle
 
-    ### Startup (lifespan in main.py)
-    ```python
-    from utils.import_utils import import_by_suffix
-
-    # Import all repos to register them
-    import_by_suffix("_repo.py")
-
-    # Connect all repos
-    from repos.db.sql_repo import SQLRepo
-    from repos.elastic.elastic_repo import ElasticSearchRepo
-
-    SQLRepo().connect()
-    ElasticSearchRepo().connect()
-    ```
-
-    ### Shutdown (lifespan in main.py)
-    ```python
-    # Close all connections
-    SQLRepo().close_connection()
-    ElasticSearchRepo().close_connection()
-    ```
-
-    ### Setup (setup.py)
-    ```python
-    from repos.db.sql_repo import SQLRepo
-    from repos.elastic.elastic_repo import ElasticSearchRepo
-
-    # Connect and reset for fresh setup
-    SQLRepo().connect()
-    SQLRepo().reset_data()
-
-    ElasticSearchRepo().connect()
-    ElasticSearchRepo().reset_data()
-    ```
+    Repositories are connected, reset and closed only by the building blocks in
+    `bootstrap.py` (e.g. `connect_repos`, `delete_all_data`, `close_repos`),
+    which all entry points (API, workers, setup, tests) share. Every subclass of
+    `RepoBase` in a `*_repo.py` file is discovered and connected automatically.
     """
 
     @abstractmethod
