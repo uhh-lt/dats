@@ -1,5 +1,5 @@
-# Unit tests do not need the dev stack: override the session/function autouse
-# fixtures of test/conftest.py (workers, postgres, weaviate, users) with no-ops.
+# Unit tests do not need the dev stack: override the autouse fixtures of
+# test/conftest.py (workers, data stores) with no-ops.
 import pytest
 
 
@@ -9,20 +9,10 @@ def start_workers() -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def init_postgres() -> None:
+def prepare_data_stores() -> None:
     return None
 
 
 @pytest.fixture(scope="function", autouse=True)
 def setup_repos() -> None:
-    return None
-
-
-@pytest.fixture(scope="function", autouse=True)
-def setup_weaviate_collections() -> None:
-    return None
-
-
-@pytest.fixture(scope="function", autouse=True)
-def setup_users() -> None:
     return None

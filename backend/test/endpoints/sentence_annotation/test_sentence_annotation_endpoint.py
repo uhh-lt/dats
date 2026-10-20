@@ -78,7 +78,7 @@ def test_add_sentence_annotione_bulk_if_not_exists(
         code_id=9999,
         sdoc_id=9999,
     )
-    resp = client.put("/sentence/bulk/create/", json=[payload.model_dump()])
+    resp = client.put("/sentence/bulk/create", json=[payload.model_dump()])
 
     assert resp.status_code == 403, resp.text
 

@@ -1,8 +1,13 @@
+# The test environment must be set before DATS is imported
+# ruff: noqa: E402
 import os
 
 # ---------------------------------------------------------------------------
 # SETUP TEST ENVIRONMENT
 # ---------------------------------------------------------------------------
+
+# The environment of the developer setup, before the test overrides below:
+DEVELOPER_ENVIRONMENT = dict(os.environ)
 
 # Use databases different from production / development for testing:
 os.environ["FILESYSTEM_ROOT_DIRECTORY"] = "docker/test_repo"
@@ -25,9 +30,16 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-import dats_setup_utils
+import bootstrap
+import dats_test_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+
+# Never touch the developer's data: check before any fixture resets a data store
+try:
+    dats_test_utils.assert_isolated_from(DEVELOPER_ENVIRONMENT)
+except RuntimeError as e:
+    pytest.exit(str(e), returncode=1)
 
 
 # ---------------------------------------------------------------------------
@@ -76,25 +88,22 @@ def start_workers() -> Generator[None, Any, Any]:
 
 
 # ---------------------------------------------------------------------------
-# INIT POSTGRES DB
+# DATA STORES
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="session", autouse=True)
-def init_postgres() -> None:
-    """Before running tests, nuke the PostgreSQL database and create a new one."""
-    from repos.db.sql_repo import SQLRepo
-
-    sqlr = SQLRepo()
-    sqlr.connect()
-    sqlr.drop_database()
-    sqlr.create_database_if_not_exists()
+def prepare_data_stores() -> None:
+    """Before running tests, connect like a server process and create the
+    database from scratch with the migrations."""
+    bootstrap.connect_repos()
+    bootstrap.init_services()
+    dats_test_utils.recreate_test_database()
 
 
-# ---------------------------------------------------------------------------
-# INIT REPOS
-# ---------------------------------------------------------------------------
 @pytest.fixture(scope="function", autouse=True)
-def setup_repos(init_postgres) -> None:
-    dats_setup_utils.setup_repos()
+def setup_repos(prepare_data_stores) -> None:
+    """Every test starts with empty, freshly seeded data stores."""
+    bootstrap.delete_all_data()
+    bootstrap.ensure_system_data()
 
 
 # ---------------------------------------------------------------------------
@@ -109,37 +118,32 @@ def db_session(setup_repos) -> Generator[Session, Any, None]:
 
 
 # ---------------------------------------------------------------------------
-# WEAVIATE COLLECTIONS
+# APP & CLIENTS
 # ---------------------------------------------------------------------------
-@pytest.fixture(scope="function", autouse=True)
-def setup_weaviate_collections(setup_repos) -> None:
-    dats_setup_utils.create_weaviate_collections()
+@pytest.fixture(scope="session")
+def app() -> FastAPI:
+    """The real DATS app (see main.py), authenticating by a test header."""
+    app = bootstrap.create_app()
+    dats_test_utils.install_test_auth(app)
+    return app
 
 
-# ---------------------------------------------------------------------------
-# SYSTEM USERS
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="function", autouse=True)
-def setup_users(db_session) -> None:
-    dats_setup_utils.create_system_users(db_session)
-
-
-# ---------------------------------------------------------------------------
-# APP
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="function")
-def app(test_user: UserORM) -> FastAPI:
-    # See main.py! This function should replicate our main.py application entrypoint!
-    return dats_setup_utils.build_app(test_user)
-
-
-# ---------------------------------------------------------------------------
-# CLIENT
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="function")
-def client(app):
+@pytest.fixture(scope="session")
+def app_client(app: FastAPI) -> Generator[TestClient, Any, None]:
+    """Runs the app's lifespan once for the whole test session, like a server
+    process. Send requests with the user clients, not with this one."""
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture(scope="function")
+def client(
+    app_client: TestClient, test_user: UserORM
+) -> Generator[TestClient, Any, None]:
+    """A client that sends its requests as the test user."""
+    c = dats_test_utils.create_user_client(app_client, test_user)
+    yield c
+    c.close()
 
 
 # ---------------------------------------------------------------------------
@@ -148,16 +152,16 @@ def client(app):
 @pytest.fixture(scope="function")
 def test_user(db_session) -> UserORM:
     """Create a test user."""
-    return dats_setup_utils.create_test_user(db_session)
+    return dats_test_utils.create_test_user(db_session)
 
 
 @pytest.fixture(scope="function")
 def test_project(db_session, test_user) -> ProjectORM:
     """Create a project for the test user"""
-    return dats_setup_utils.create_test_project(db_session, test_user)
+    return dats_test_utils.create_test_project(db_session, test_user)
 
 
 @pytest.fixture(scope="function")
-def project_with_sdoc(db_session, test_project) -> dats_setup_utils.ProjectWithSdoc:
+def project_with_sdoc(db_session, test_project) -> dats_test_utils.ProjectWithSdoc:
     """Create a project for the test user with a source document."""
-    return dats_setup_utils.create_project_with_sdoc(db_session, test_project)
+    return dats_test_utils.create_project_with_sdoc(db_session, test_project)

@@ -3,10 +3,10 @@ from datetime import date
 from typing import TypedDict
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+import dats_test_utils
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from config import conf
@@ -39,10 +39,15 @@ from core.user.user_orm import UserORM
 
 
 @pytest.fixture(scope="function")
-def error_client(app: FastAPI) -> Generator[TestClient, None, None]:
+def error_client(
+    app_client: TestClient, test_user: UserORM
+) -> Generator[TestClient, None, None]:
     """Return a client that exposes unhandled endpoint exceptions as HTTP 500."""
-    with TestClient(app, raise_server_exceptions=False) as test_client:
-        yield test_client
+    test_client = dats_test_utils.create_user_client(
+        app_client, test_user, raise_server_exceptions=False
+    )
+    yield test_client
+    test_client.close()
 
 
 class LLMAssistantProject(TypedDict):
