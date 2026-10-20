@@ -53,9 +53,13 @@ class UserLogin(BaseModel):
 
 class UserAuthorizationHeaderData(BaseModel):
     access_token: str = Field(description="Value of the JWT")
-    access_token_expires: datetime
+    access_token_expires: datetime = Field(
+        description="Expiration timestamp of the access token"
+    )
     refresh_token: str = Field(description="For obtaining a new access token")
-    refresh_token_expires: datetime
+    refresh_token_expires: datetime = Field(
+        description="Expiration timestamp of the refresh token"
+    )
     token_type: str = Field(description="Type of the Token")
 
 

@@ -1,8 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Generic, Literal, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from repos.db.dto_base import UpdateDTOBase
 
 if TYPE_CHECKING:
     from modules.search_view.search_view_orm import SearchViewORM
@@ -51,18 +53,28 @@ class SearchViewBase(BaseModel, Generic[T]):
 
     # Declared on the base so generic code (CRUD) can read it; each concrete
     # subclass narrows it to a `Literal[...]` discriminator.
-    entity_type: SearchEntityType
+    entity_type: SearchEntityType = Field(
+        description="Searchable entity the SearchView is for"
+    )
 
-    project_id: int
-    name: str = Field(min_length=1, max_length=255)
-    layout: SearchViewLayout
-    filters: Filter[T]
-    group_by: GroupConfig[T] | None = None
-    sorts: list[Sort[T]] = Field(default_factory=list)
-    # The entity properties the user chose to render. `None` = the frontend's
-    # default selection. Any valid column of the entity is accepted; which columns
-    # are actually renderable is a frontend concern and not validated here.
-    selected_properties: list[T] | None = None
+    project_id: int = Field(description="Project the SearchView belongs to")
+    name: str = Field(
+        description="Name of the SearchView", min_length=1, max_length=255
+    )
+    layout: SearchViewLayout = Field(description="Layout of the SearchView")
+    filters: Filter[T] = Field(description="Filter of the SearchView")
+    group_by: GroupConfig[T] | None = Field(
+        description="Grouping of the SearchView (None = no grouping)", default=None
+    )
+    sorts: list[Sort[T]] = Field(
+        description="Sort order of the SearchView", default_factory=list
+    )
+    # Any valid column of the entity is accepted; which columns are actually
+    # renderable is a frontend concern and not validated here.
+    selected_properties: list[T] | None = Field(
+        description="Entity properties to render (None = the frontend's default selection)",
+        default=None,
+    )
 
     @field_validator("name")
     @classmethod
@@ -103,24 +115,30 @@ class SearchViewBase(BaseModel, Generic[T]):
 
 
 class MemoSearchViewBase(SearchViewBase[MemoColumns]):
-    entity_type: Literal[SearchEntityType.MEMO] = SearchEntityType.MEMO
+    entity_type: Literal[SearchEntityType.MEMO] = Field(
+        description="Searchable entity the SearchView is for",
+        default=SearchEntityType.MEMO,
+    )
 
 
 class SpanSearchViewBase(SearchViewBase[SpanColumns]):
-    entity_type: Literal[SearchEntityType.SPAN_ANNOTATION] = (
-        SearchEntityType.SPAN_ANNOTATION
+    entity_type: Literal[SearchEntityType.SPAN_ANNOTATION] = Field(
+        description="Searchable entity the SearchView is for",
+        default=SearchEntityType.SPAN_ANNOTATION,
     )
 
 
 class SentenceSearchViewBase(SearchViewBase[SentAnnoColumns]):
-    entity_type: Literal[SearchEntityType.SENTENCE_ANNOTATION] = (
-        SearchEntityType.SENTENCE_ANNOTATION
+    entity_type: Literal[SearchEntityType.SENTENCE_ANNOTATION] = Field(
+        description="Searchable entity the SearchView is for",
+        default=SearchEntityType.SENTENCE_ANNOTATION,
     )
 
 
 class BBoxSearchViewBase(SearchViewBase[BBoxColumns]):
-    entity_type: Literal[SearchEntityType.BBOX_ANNOTATION] = (
-        SearchEntityType.BBOX_ANNOTATION
+    entity_type: Literal[SearchEntityType.BBOX_ANNOTATION] = Field(
+        description="Searchable entity the SearchView is for",
+        default=SearchEntityType.BBOX_ANNOTATION,
     )
 
 
@@ -143,71 +161,69 @@ class BBoxSearchViewCreate(BBoxSearchViewBase):
     pass
 
 
-SearchViewCreateUnion = Union[
-    MemoSearchViewCreate,
-    SpanSearchViewCreate,
-    SentenceSearchViewCreate,
-    BBoxSearchViewCreate,
-]
+SearchViewCreateUnion = (
+    MemoSearchViewCreate
+    | SpanSearchViewCreate
+    | SentenceSearchViewCreate
+    | BBoxSearchViewCreate
+)
 
 
 # --- Read ---
 
 
 class MemoSearchViewRead(MemoSearchViewBase):
-    id: int
-    user_id: int
-    position: int
-    created: datetime
-    updated: datetime
+    id: int = Field(description="ID of the SearchView")
+    user_id: int = Field(description="User the SearchView belongs to")
+    position: int = Field(description="Position of the SearchView in the user's list")
+    created: datetime = Field(description="Created timestamp of the SearchView")
+    updated: datetime = Field(description="Updated timestamp of the SearchView")
     model_config = ConfigDict(from_attributes=True)
 
 
 class SpanSearchViewRead(SpanSearchViewBase):
-    id: int
-    user_id: int
-    position: int
-    created: datetime
-    updated: datetime
+    id: int = Field(description="ID of the SearchView")
+    user_id: int = Field(description="User the SearchView belongs to")
+    position: int = Field(description="Position of the SearchView in the user's list")
+    created: datetime = Field(description="Created timestamp of the SearchView")
+    updated: datetime = Field(description="Updated timestamp of the SearchView")
     model_config = ConfigDict(from_attributes=True)
 
 
 class SentenceSearchViewRead(SentenceSearchViewBase):
-    id: int
-    user_id: int
-    position: int
-    created: datetime
-    updated: datetime
+    id: int = Field(description="ID of the SearchView")
+    user_id: int = Field(description="User the SearchView belongs to")
+    position: int = Field(description="Position of the SearchView in the user's list")
+    created: datetime = Field(description="Created timestamp of the SearchView")
+    updated: datetime = Field(description="Updated timestamp of the SearchView")
     model_config = ConfigDict(from_attributes=True)
 
 
 class BBoxSearchViewRead(BBoxSearchViewBase):
-    id: int
-    user_id: int
-    position: int
-    created: datetime
-    updated: datetime
+    id: int = Field(description="ID of the SearchView")
+    user_id: int = Field(description="User the SearchView belongs to")
+    position: int = Field(description="Position of the SearchView in the user's list")
+    created: datetime = Field(description="Created timestamp of the SearchView")
+    updated: datetime = Field(description="Updated timestamp of the SearchView")
     model_config = ConfigDict(from_attributes=True)
 
 
-SearchViewReadUnion = Union[
-    MemoSearchViewRead,
-    SpanSearchViewRead,
-    SentenceSearchViewRead,
-    BBoxSearchViewRead,
-]
+SearchViewReadUnion = (
+    MemoSearchViewRead
+    | SpanSearchViewRead
+    | SentenceSearchViewRead
+    | BBoxSearchViewRead
+)
 
 # Dispatch from the stored entity_type to the concrete Read DTO, used to validate a
 # SearchViewORM into the correctly-typed read model.
 _ENTITY_TYPE_TO_READ: dict[
     SearchEntityType,
     type[
-        Union[
-            MemoSearchViewRead,
-            SpanSearchViewRead,
-            SentenceSearchViewRead,
-            BBoxSearchViewRead,
-        ]
+        MemoSearchViewRead
+        | SpanSearchViewRead
+        | SentenceSearchViewRead
+        | BBoxSearchViewRead
     ],
 ] = {
     SearchEntityType.MEMO: MemoSearchViewRead,
@@ -230,7 +246,7 @@ def search_view_read_from_orm(view: "SearchViewORM") -> SearchViewReadUnion:
 # --- Update ---
 
 
-class SearchViewUpdate(BaseModel, Generic[T]):
+class SearchViewUpdate(BaseModel, UpdateDTOBase, Generic[T]):
     """Patch payload. Omitted fields are left unchanged; providing a field replaces it.
 
     "Omitted" vs "explicitly null" is distinguished via `model_fields_set`:
@@ -242,12 +258,25 @@ class SearchViewUpdate(BaseModel, Generic[T]):
     `entity_type` is intentionally absent: a view's entity is fixed at creation.
     """
 
-    name: str | None = Field(default=None, min_length=1, max_length=255)
-    layout: SearchViewLayout | None = None
-    filters: Filter[T] | None = None
-    group_by: GroupConfig[T] | None = None
-    sorts: list[Sort[T]] | None = None
-    selected_properties: list[T] | None = None
+    name: str | None = Field(
+        description="Name of the SearchView", default=None, min_length=1, max_length=255
+    )
+    layout: SearchViewLayout | None = Field(
+        description="Layout of the SearchView", default=None
+    )
+    filters: Filter[T] | None = Field(
+        description="Filter of the SearchView", default=None
+    )
+    group_by: GroupConfig[T] | None = Field(
+        description="Grouping of the SearchView (null = no grouping)", default=None
+    )
+    sorts: list[Sort[T]] | None = Field(
+        description="Sort order of the SearchView", default=None
+    )
+    selected_properties: list[T] | None = Field(
+        description="Entity properties to render (null = the frontend's default selection)",
+        default=None,
+    )
 
     @field_validator("name")
     @classmethod
@@ -276,19 +305,21 @@ class BBoxSearchViewUpdate(SearchViewUpdate[BBoxColumns]):
     pass
 
 
-SearchViewUpdateUnion = Union[
-    MemoSearchViewUpdate,
-    SpanSearchViewUpdate,
-    SentenceSearchViewUpdate,
-    BBoxSearchViewUpdate,
-]
+SearchViewUpdateUnion = (
+    MemoSearchViewUpdate
+    | SpanSearchViewUpdate
+    | SentenceSearchViewUpdate
+    | BBoxSearchViewUpdate
+)
 
 
 # --- Reorder ---
 
 
 class SearchViewReorder(BaseModel):
-    view_ids: list[int]
+    view_ids: list[int] = Field(
+        description="IDs of the user's SearchViews in their new order"
+    )
 
     @field_validator("view_ids")
     @classmethod

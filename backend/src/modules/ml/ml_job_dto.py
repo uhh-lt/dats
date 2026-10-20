@@ -18,14 +18,18 @@ class MLJobType(StrEnum):
 
 
 class QuotationAttributionParams(BaseModel):
-    ml_job_type: Literal[MLJobType.QUOTATION_ATTRIBUTION]
+    ml_job_type: Literal[MLJobType.QUOTATION_ATTRIBUTION] = Field(
+        description="The type of the MLJob"
+    )
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
 
 
 class DocTagRecommendationParams(BaseModel):
-    ml_job_type: Literal[MLJobType.TAG_RECOMMENDATION]
+    ml_job_type: Literal[MLJobType.TAG_RECOMMENDATION] = Field(
+        description="The type of the MLJob"
+    )
     multi_class: bool = Field(
         default=False, description="Tags are mutually exclusive if `False`"
     )
@@ -40,21 +44,27 @@ class DocTagRecommendationParams(BaseModel):
 
 
 class CoreferenceResolutionParams(BaseModel):
-    ml_job_type: Literal[MLJobType.COREFERENCE_RESOLUTION]
+    ml_job_type: Literal[MLJobType.COREFERENCE_RESOLUTION] = Field(
+        description="The type of the MLJob"
+    )
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
 
 
 class DocumentEmbeddingParams(BaseModel):
-    ml_job_type: Literal[MLJobType.DOCUMENT_EMBEDDING]
+    ml_job_type: Literal[MLJobType.DOCUMENT_EMBEDDING] = Field(
+        description="The type of the MLJob"
+    )
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )
 
 
 class SentenceEmbeddingParams(BaseModel):
-    ml_job_type: Literal[MLJobType.SENTENCE_EMBEDDING]
+    ml_job_type: Literal[MLJobType.SENTENCE_EMBEDDING] = Field(
+        description="The type of the MLJob"
+    )
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
     )

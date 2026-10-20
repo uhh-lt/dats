@@ -4,9 +4,9 @@ from repos.db.dto_base import UpdateDTOBase
 
 
 class WordLevelTranscription(BaseModel):
-    text: str
-    start_ms: int
-    end_ms: int
+    text: str = Field(description="The transcribed word")
+    start_ms: int = Field(description="Start of the word in the audio in milliseconds")
+    end_ms: int = Field(description="End of the word in the audio in milliseconds")
 
 
 class SourceDocumentDataBase(BaseModel):

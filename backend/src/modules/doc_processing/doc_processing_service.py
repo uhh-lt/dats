@@ -128,7 +128,16 @@ class DocProcessingService(metaclass=SingletonMeta):
 
         # sorting
         if len(sorts) > 0:
-            query = query.order_by(*[s.get_sqlalchemy_expression() for s in sorts])
+            for s in sorts:
+                assert hasattr(SourceDocumentORM, s.column), (
+                    f"Invalid column: {s.column}"
+                )
+            query = query.order_by(
+                *[
+                    s.direction.apply(getattr(SourceDocumentORM, s.column))
+                    for s in sorts
+                ]
+            )
         else:
             query = query.order_by(SourceDocumentORM.name.asc())
 

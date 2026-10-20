@@ -342,7 +342,9 @@ class ClassifierTrainingParams(
     ClassifierTrainingSettings,
     ClassifierDatasetSelectionParams,
 ):
-    task_type: Literal[ClassifierTask.TRAINING]
+    task_type: Literal[ClassifierTask.TRAINING] = Field(
+        description="The type of the Classifier Task"
+    )
     # required
     classifier_name: str = Field(description="Name of the model to train")
     base_name: str = Field(description="Name of the base model")
@@ -352,7 +354,9 @@ class ClassifierTrainingParams(
 
 
 class ClassifierEvaluationParams(ClassifierDatasetSelectionParams):
-    task_type: Literal[ClassifierTask.EVALUATION]
+    task_type: Literal[ClassifierTask.EVALUATION] = Field(
+        description="The type of the Classifier Task"
+    )
     classifier_id: int = Field(description="ID of the model to evaluate")
     averaging: ClassifierAveraging | None = Field(
         default=None,
@@ -361,7 +365,9 @@ class ClassifierEvaluationParams(ClassifierDatasetSelectionParams):
 
 
 class ClassifierInferenceParams(BaseModel):
-    task_type: Literal[ClassifierTask.INFERENCE]
+    task_type: Literal[ClassifierTask.INFERENCE] = Field(
+        description="The type of the Classifier Task"
+    )
     classifier_id: int = Field(description="ID of the model to use for inference")
     sdoc_ids: list[int] = Field(
         description="List of SourceDocument IDs to apply the classifier on"
@@ -385,19 +391,25 @@ class ClassifierJobInput(JobInputBase):
 
 
 class ClassifierTrainingOutput(BaseModel):
-    task_type: Literal[ClassifierTask.TRAINING]
+    task_type: Literal[ClassifierTask.TRAINING] = Field(
+        description="The type of the Classifier Task"
+    )
     classifier: ClassifierRead = Field(description="The trained Classifier")
 
 
 class ClassifierEvaluationOutput(BaseModel):
-    task_type: Literal[ClassifierTask.EVALUATION]
+    task_type: Literal[ClassifierTask.EVALUATION] = Field(
+        description="The type of the Classifier Task"
+    )
     evaluation: ClassifierEvaluationRead = Field(
         description="The Classifier Evaluation"
     )
 
 
 class ClassifierInferenceOutput(BaseModel):
-    task_type: Literal[ClassifierTask.INFERENCE]
+    task_type: Literal[ClassifierTask.INFERENCE] = Field(
+        description="The type of the Classifier Task"
+    )
     result_statistics: list[ClassifierData] = Field(
         description="Statistics of the inference results"
     )

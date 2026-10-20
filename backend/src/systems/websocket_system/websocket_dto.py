@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny, model_validator
 
@@ -32,7 +32,7 @@ class WebSocketEnvelope(BaseModel):
     kind: Literal["users", "all"] = Field(
         description="Delivery scope: 'users' targets specific connections, 'all' reaches every connected client."
     )
-    user_ids: List[int] | None = Field(
+    user_ids: list[int] | None = Field(
         description="Target user IDs when kind='users'; None when kind='all'."
     )
     exclude_user_id: int | None = Field(
