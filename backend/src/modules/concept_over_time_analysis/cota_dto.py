@@ -1,11 +1,9 @@
 from datetime import date as date_type
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Literal
+from typing import Any, ClassVar, Literal
 
-import srsly
 from pydantic import BaseModel, ConfigDict, Field
-from pydantic.functional_validators import field_validator
 
 from modules.analysis.analysis_dto import DateGroupBy
 from repos.db.dto_base import UpdateDTOBase
@@ -107,18 +105,17 @@ class COTACreate(ConceptOverTimeAnalysisBaseDTO):
 
 
 class COTACreateIntern(COTACreate):
-    timeline_settings: str | None = Field(
-        description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
+    timeline_settings: dict[str, Any] | None = Field(
+        description="Timeline Settings of the ConceptOverTimeAnalysis as JSON.",
         default=None,
     )
-    training_settings: str | None = Field(
-        description="JSON Representation of the Training Settings of the ConceptOverTimeAnalysis.",
+    training_settings: dict[str, Any] | None = Field(
+        description="Training Settings of the ConceptOverTimeAnalysis as JSON.",
         default=None,
     )
-    concepts: str | None = Field(
+    concepts: list[dict[str, Any]] | None = Field(
         description=(
-            "JSON Representation of the list of Concepts that are "
-            "part of the ConceptOverTimeAnalysis"
+            "List of Concepts that are part of the ConceptOverTimeAnalysis as JSON"
         ),
         default=None,
     )
@@ -158,25 +155,24 @@ class COTAUpdateIntern(BaseModel, UpdateDTOBase):
         description="Name of the ConceptOverTimeAnalysis",
         default=None,
     )
-    timeline_settings: str | None = Field(
-        description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
+    timeline_settings: dict[str, Any] | None = Field(
+        description="Timeline Settings of the ConceptOverTimeAnalysis as JSON.",
         default=None,
     )
-    training_settings: str | None = Field(
-        description="JSON Representation of the Training Settings of the ConceptOverTimeAnalysis.",
+    training_settings: dict[str, Any] | None = Field(
+        description="Training Settings of the ConceptOverTimeAnalysis as JSON.",
         default=None,
     )
-    concepts: str | None = Field(
+    concepts: list[dict[str, Any]] | None = Field(
         description=(
-            "JSON Representation of the list of Concepts that are "
-            "part of the ConceptOverTimeAnalysis"
+            "List of Concepts that are part of the ConceptOverTimeAnalysis as JSON"
         ),
         default=None,
     )
-    search_space: str | None = Field(
+    search_space: list[dict[str, Any]] | None = Field(
         description=(
-            "JSON Representation of the list of Sentences that form the search space "
-            "of the ConceptOverTimeAnalysis"
+            "List of Sentences that form the search space "
+            "of the ConceptOverTimeAnalysis as JSON"
         ),
         default=None,
     )
@@ -211,86 +207,6 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
     updated: datetime = Field(
         description="Updated timestamp of the ConceptOverTimeAnalysis"
     )
-
-    @field_validator("concepts", mode="before")
-    @classmethod
-    def json_loads_concepts(cls, v: str | list) -> list[COTAConcept]:
-        if isinstance(v, str):
-            # v is a JSON string from the DB
-            data = srsly.json_loads(v)
-            if isinstance(data, list):
-                if len(data) == 0:
-                    return []
-                elif isinstance(data[0], dict):
-                    return [COTAConcept(**concept) for concept in data]
-        elif isinstance(v, list):
-            if len(v) == 0:
-                return []
-            elif isinstance(v[0], dict):
-                return [COTAConcept(**concept) for concept in v]
-            elif isinstance(v[0], COTAConcept):
-                return v
-
-        raise ValueError(
-            "Invalid value for concepts. "
-            "Must be a JSON string or a list of COTAConcepts."
-        )
-
-    @field_validator("search_space", mode="before")
-    @classmethod
-    def json_loads_ss(cls, v: str | list) -> list[COTASentence]:
-        if isinstance(v, str):
-            # v is a JSON string from the DB
-            data = srsly.json_loads(v)
-            if isinstance(data, list):
-                if len(data) == 0:
-                    return []
-                elif isinstance(data[0], dict):
-                    return [COTASentence(**sentence) for sentence in data]
-        elif isinstance(v, list):
-            if len(v) == 0:
-                return []
-            elif isinstance(v[0], dict):
-                return [COTASentence(**sentence) for sentence in v]
-            elif isinstance(v[0], COTASentence):
-                return v
-
-        raise ValueError(
-            "Invalid value for search_space. "
-            "Must be a JSON string or a list of COTASentences."
-        )
-
-    @field_validator("timeline_settings", mode="before")
-    @classmethod
-    def json_loads_timeline_settings(cls, v: str | dict) -> COTATimelineSettings:
-        if isinstance(v, str):
-            # v is a JSON string from the DB
-            data = srsly.json_loads(v)
-            if isinstance(data, dict):
-                return COTATimelineSettings(**data)
-        elif isinstance(v, dict):
-            return COTATimelineSettings(**v)
-
-        raise ValueError(
-            "Invalid value for timeline_settings. "
-            "Must be a JSON string or a dict of COTATimelineSettings."
-        )
-
-    @field_validator("training_settings", mode="before")
-    @classmethod
-    def json_loads_training_settings(cls, v: str | dict) -> COTATrainingSettings:
-        if isinstance(v, str):
-            # v is a JSON string from the DB
-            data = srsly.json_loads(v)
-            if isinstance(data, dict):
-                return COTATrainingSettings(**data)
-        elif isinstance(v, dict):
-            return COTATrainingSettings(**v)
-
-        raise ValueError(
-            "Invalid value for training_settings. "
-            "Must be a JSON string or a dict of COTATrainingSettings."
-        )
 
     model_config = ConfigDict(from_attributes=True)
 

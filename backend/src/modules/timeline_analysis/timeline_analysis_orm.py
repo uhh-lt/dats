@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from repos.db.orm_base import ORMBase
@@ -13,18 +15,18 @@ class TimelineAnalysisORM(ORMBase):
         String, nullable=False, index=False
     )
 
-    # JSON representation of a list of TimelineAnalysisConcepts (see DTO)
-    concepts: Mapped[str] = mapped_column(
-        String,
-        server_default="[]",
+    # list of TimelineAnalysisConcepts (see DTO)
+    concepts: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("'[]'::jsonb"),
         nullable=False,
         index=False,
     )
 
-    # JSON representation of TimelineAnalysisSettings (see DTO)
-    settings: Mapped[str] = mapped_column(
-        String,
-        server_default="{}",
+    # TimelineAnalysisSettings (see DTO)
+    settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("'{}'::jsonb"),
         nullable=False,
         index=False,
     )

@@ -150,7 +150,9 @@ def update_by_id(
 
     update_data = whiteboard.model_dump(exclude_unset=True, exclude={"content"})
     if whiteboard.content is not None:
-        update_data["content"] = whiteboard.content.model_dump_json(exclude_unset=True)
+        update_data["content"] = whiteboard.content.model_dump(
+            mode="json", exclude_unset=True
+        )
     update_dto = WhiteboardUpdateIntern(**update_data)
 
     db_obj = crud_whiteboard.update(

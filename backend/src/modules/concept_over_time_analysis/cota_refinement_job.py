@@ -1,4 +1,3 @@
-import srsly
 from fastapi.encoders import jsonable_encoder
 
 from common.job_type import JobType
@@ -62,9 +61,8 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
 
         # 3. store in db
         job.update(current_step=2)
-        search_space_str = srsly.json_dumps(jsonable_encoder(search_space))
         crud_cota.update(
             db=db,
             id=cota.id,
-            update_dto=COTAUpdateIntern(search_space=search_space_str),
+            update_dto=COTAUpdateIntern(search_space=jsonable_encoder(search_space)),
         )

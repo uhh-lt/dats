@@ -71,7 +71,7 @@ def import_whiteboards_to_proj(
             WhiteboardCreateIntern(
                 title=wb.title,
                 project_id=project_id,
-                content=transformed_content.model_dump_json(),
+                content=transformed_content.model_dump(mode="json"),
             )
         )
 

@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -22,9 +23,10 @@ class WhiteboardORM(ORMBase):
     )
 
     title: Mapped[str] = mapped_column(String, nullable=False, index=False)
-    content: Mapped[str] = mapped_column(
-        String,
-        server_default='{"nodes":[],"edges":[]}',
+    # WhiteboardContent (see DTO)
+    content: Mapped[dict[str, Any]] = mapped_column(
+        JSONB(none_as_null=True),
+        server_default=text("""'{"nodes":[],"edges":[]}'::jsonb"""),
         nullable=False,
         index=False,
     )

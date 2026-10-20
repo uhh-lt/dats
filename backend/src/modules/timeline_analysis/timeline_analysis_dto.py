@@ -1,10 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar, Literal
+from typing import Any, ClassVar, Literal
 
-import srsly
 from pydantic import BaseModel, ConfigDict, Field
-from pydantic.functional_validators import field_validator
 
 from modules.analysis.analysis_dto import DateGroupBy
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
@@ -142,15 +140,12 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
 
 
 class TimelineAnalysisCreateIntern(TimelineAnalysisCreate):
-    settings: str | None = Field(
-        description="JSON Representation of the TimelineAnalysisSettings.",
+    settings: dict[str, Any] | None = Field(
+        description="TimelineAnalysisSettings as JSON.",
         default=None,
     )
-    concepts: str | None = Field(
-        description=(
-            "JSON Representation of the list of Concepts that are "
-            "part of the TimelineAnalysis"
-        ),
+    concepts: list[dict[str, Any]] | None = Field(
+        description="List of Concepts that are part of the TimelineAnalysis as JSON",
         default=None,
     )
 
@@ -180,15 +175,12 @@ class TimelineAnalysisUpdateIntern(BaseModel, UpdateDTOBase):
         description="Name of the TimelineAnalysis",
         default=None,
     )
-    settings: str | None = Field(
-        description="JSON Representation of the Timeline Settings of the TimelineAnalysis.",
+    settings: dict[str, Any] | None = Field(
+        description="TimelineAnalysisSettings as JSON.",
         default=None,
     )
-    concepts: str | None = Field(
-        description=(
-            "JSON Representation of the list of Concepts that are "
-            "part of the TimelineAnalysis"
-        ),
+    concepts: list[dict[str, Any]] | None = Field(
+        description="List of Concepts that are part of the TimelineAnalysis as JSON",
         default=None,
     )
 
@@ -204,46 +196,6 @@ class TimelineAnalysisRead(TimelineAnalysisBaseDTO):
     )
     created: datetime = Field(description="Created timestamp of the TimelineAnalysis")
     updated: datetime = Field(description="Updated timestamp of the TimelineAnalysis")
-
-    @field_validator("concepts", mode="before")
-    @classmethod
-    def json_loads_concepts(cls, v: str | list) -> list[TimelineAnalysisConcept]:
-        if isinstance(v, str):
-            # v is a JSON string from the DB
-            data = srsly.json_loads(v)
-            if isinstance(data, list):
-                if len(data) == 0:
-                    return []
-                elif isinstance(data[0], dict):
-                    return [TimelineAnalysisConcept(**concept) for concept in data]
-        elif isinstance(v, list):
-            if len(v) == 0:
-                return []
-            elif isinstance(v[0], dict):
-                return [TimelineAnalysisConcept(**concept) for concept in v]
-            elif isinstance(v[0], TimelineAnalysisConcept):
-                return v
-
-        raise ValueError(
-            "Invalid value for concepts. "
-            "Must be a JSON string or a list of TimelineAnalysisConcepts."
-        )
-
-    @field_validator("settings", mode="before")
-    @classmethod
-    def json_loads_settings(cls, v: str | dict) -> TimelineAnalysisSettings:
-        if isinstance(v, str):
-            # v is a JSON string from the DB
-            data = srsly.json_loads(v)
-            if isinstance(data, dict):
-                return TimelineAnalysisSettings(**data)
-        elif isinstance(v, dict):
-            return TimelineAnalysisSettings(**v)
-
-        raise ValueError(
-            "Invalid value for settings. "
-            "Must be a JSON string or a dict of TimelineAnalysisSettings."
-        )
 
     model_config = ConfigDict(from_attributes=True)
 
