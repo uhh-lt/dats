@@ -6,26 +6,40 @@ from core.doc.sdoc_elastic_dto import (
     ElasticSearchDocumentUpdate,
 )
 from core.doc.sdoc_elastic_index import SdocIndex
-from repos.elastic.elastic_crud_base import ElasticCrudBase
+from repos.elastic.elastic_crud_base import ElasticCRUDBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 from systems.event_system.events import (
     source_document_deleted,
 )
 
 
-class CRUDElasticSdoc(
-    ElasticCrudBase[
+class CRUDSdocElastic(
+    ElasticCRUDBase[
         SdocIndex,
         ElasticSearchDocument,
         ElasticSearchDocumentCreate,
         ElasticSearchDocumentUpdate,
     ]
 ):
+    ### CREATE OPERATIONS ###
+    # Inherited from ElasticCRUDBase
+
+    ### READ OPERATIONS ###
+    # Inherited from ElasticCRUDBase
+
+    ### UPDATE OPERATIONS ###
+    # Inherited from ElasticCRUDBase
+
+    ### DELETE OPERATIONS ###
+    # Inherited from ElasticCRUDBase
+
+    ### OTHER OPERATIONS ###
+
     def search_sdocs_by_content_query(
         self,
-        *,
         client: Elasticsearch,
-        proj_id: int,
+        *,
+        project_id: int,
         sdoc_ids: set[int] | None,
         query: str,
         use_simple_query: bool = True,
@@ -33,6 +47,20 @@ class CRUDElasticSdoc(
         limit: int | None = None,
         skip: int | None = None,
     ) -> PaginatedElasticSearchHits:
+        """
+        Full-text search over the content of the SourceDocuments of a project
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is searched
+            sdoc_ids: SourceDocument IDs to restrict the search to, or None to search all
+            query: The search query
+            use_simple_query: Use a simple_query_string instead of a query_string query
+            highlight: Return highlighted matches of the content
+            limit: The maximum number of returned elements
+            skip: The number of skipped elements
+        Returns:
+            A (possibly empty) paginated list of hits matching the query
+        """
         if use_simple_query:
             q = {
                 "simple_query_string": {
@@ -55,7 +83,7 @@ class CRUDElasticSdoc(
 
         return self.search(
             client=client,
-            proj_id=proj_id,
+            project_id=project_id,
             query={"bool": {"must": bool_must_query}},
             limit=limit,
             skip=skip,
@@ -63,17 +91,17 @@ class CRUDElasticSdoc(
         )
 
 
-crud_elastic_sdoc = CRUDElasticSdoc(index=SdocIndex, model=ElasticSearchDocument)
+crud_sdoc_elastic = CRUDSdocElastic(index=SdocIndex, model=ElasticSearchDocument)
 
 # Handle events
 
 
 @source_document_deleted.connect
-def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
+def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> None:
     from repos.elastic.elastic_repo import ElasticSearchRepo
 
-    crud_elastic_sdoc.delete(
+    crud_sdoc_elastic.delete(
         client=ElasticSearchRepo().get_client(),
+        project_id=project_id,
         id=sdoc_id,
-        proj_id=project_id,
     )

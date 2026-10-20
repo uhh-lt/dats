@@ -16,7 +16,7 @@ from repos.elastic.elastic_repo import ElasticSearchRepo
 
 
 def _search_highlights(client: Elasticsearch, project_id: int, term: str):
-    index = SdocIndex().get_index_name(proj_id=project_id)
+    index = SdocIndex().get_index_name(project_id=project_id)
     query = {
         "_source": ["content"],
         "query": {

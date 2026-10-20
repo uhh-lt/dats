@@ -6,7 +6,7 @@ from common.doc_type import DocType
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
 from core.doc.folder_orm import FolderORM
-from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
@@ -175,9 +175,9 @@ def find_sdoc_ids(
         else:
             skip = None
             limit = None
-        return crud_elastic_sdoc.search_sdocs_by_content_query(
+        return crud_sdoc_elastic.search_sdocs_by_content_query(
             client=ElasticSearchRepo().get_client(),
-            proj_id=project_id,
+            project_id=project_id,
             query=search_query,
             sdoc_ids=filtered_sdoc_ids,
             use_simple_query=not expert_mode,

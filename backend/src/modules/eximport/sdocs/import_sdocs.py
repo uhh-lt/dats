@@ -11,7 +11,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
-from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
@@ -313,9 +313,9 @@ def import_sdocs_to_proj(
             )
 
         # 6. Add the source documents to the Elasticsearch index
-        crud_elastic_sdoc.create(
+        crud_sdoc_elastic.create(
             client=ElasticSearchRepo().get_client(),
-            proj_id=project_id,
+            project_id=project_id,
             create_dto=ElasticSearchDocumentCreate(
                 project_id=project_id,
                 sdoc_id=created_sdoc.id,
