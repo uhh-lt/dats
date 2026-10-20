@@ -450,13 +450,14 @@ def test_span_annotation_job_covers_all_approaches_strategies_and_data_tags(
 @pytest.mark.parametrize(
     "approach_type,data_tag",
     [
-        # Document mode may merge consecutive classified sentences into ranges.
+        # Document mode classifies all sentences in one prompt.
         pytest.param(
             ApproachType.LLM_ZERO_SHOT,
             "<document>",
             id="zero-shot-document",
         ),
-        # Per-sentence mode processes every sentence in an independent prompt.
+        # Per-sentence mode processes every sentence in an independent prompt;
+        # the suggestions of all prompts are merged into ranges like in document mode.
         pytest.param(
             ApproachType.LLM_ZERO_SHOT,
             "<sentence>",
@@ -476,7 +477,11 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
     approach_type: ApproachType,
     data_tag: str,
 ) -> None:
-    """Sentence jobs persist valid FACT ranges without duplicate suggestions."""
+    """Sentence jobs persist valid, maximal FACT ranges without duplicate suggestions.
+
+    Whatever the LLM classifies, consecutive FACT sentences are merged into one range,
+    so two FACT ranges never touch.
+    """
     payload = _sentence_annotation_payload(
         client,
         llm_assistant_project,
@@ -523,8 +528,8 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
         covered_sentence_ids.extend(range(start, end + 1))
 
     assert len(covered_sentence_ids) == len(set(covered_sentence_ids))
-    if data_tag == "<sentence>":
-        assert all(start == end for start, end in ranges)
+    for (_, previous_end), (next_start, _) in zip(ranges, ranges[1:]):
+        assert next_start > previous_end + 1, f"FACT ranges not merged: {ranges}"
 
 
 # ===========================================================================
