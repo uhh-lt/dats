@@ -1,25 +1,15 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.annotation.span_group_orm import SpanGroupORM
-from core.code.code_orm import CodeORM
-from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_dto import (
     AttachedObjectType,
     MemoCreateIntern,
-    MemoInDB,
-    MemoRead,
     MemoUpdate,
     MemoUpdateBulk,
 )
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
-from core.project.project_orm import ProjectORM
-from core.tag.tag_orm import TagORM
 from repos.db.crud_base import SQLCRUDBase
 
 
@@ -172,86 +162,6 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     def delete_bulk(self, db: Session, *, ids: list[int]) -> list[MemoORM]:
         """Delete multiple memos by ID, returning the deleted ORM objects."""
         return [self.delete(db=db, id=memo_id) for memo_id in ids]
-
-    # TODO Flo: Not sure if this actually belongs here...
-    @staticmethod
-    def get_memo_read_dto_from_orm(
-        db: Session, db_obj: MemoORM, user_id: int | None = None
-    ) -> MemoRead:
-        # Flo: this is necessary to avoid circular imports.
-        from core.memo.object_handle_crud import crud_object_handle
-
-        attached_to = crud_object_handle.resolve_handled_object(
-            db=db, handle=db_obj.attached_to
-        )
-
-        memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-        favorite = (
-            crud_memo.is_favorited(db, memo_id=db_obj.id, user_id=user_id)
-            if user_id is not None
-            else False
-        )
-        memo_data = memo_as_in_db_dto.model_dump(exclude={"attached_to", "is_favorite"})
-        if isinstance(attached_to, CodeORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.code,
-            )
-        elif isinstance(attached_to, SpanAnnotationORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.span_annotation,
-            )
-        elif isinstance(attached_to, SpanGroupORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.span_group,
-            )
-        elif isinstance(attached_to, BBoxAnnotationORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.bbox_annotation,
-            )
-        elif isinstance(attached_to, SentenceAnnotationORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.sentence_annotation,
-            )
-        elif isinstance(attached_to, SourceDocumentORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.source_document,
-            )
-        elif isinstance(attached_to, ProjectORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.project,
-            )
-        elif isinstance(attached_to, TagORM):
-            return MemoRead(
-                **memo_data,
-                is_favorite=favorite,
-                attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.tag,
-            )
-        else:
-            raise NotImplementedError(
-                f"Unknown AttachedObjectType: {type(attached_to)}"
-            )
 
     ### FAVORITE OPERATIONS ###
 

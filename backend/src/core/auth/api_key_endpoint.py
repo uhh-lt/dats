@@ -78,7 +78,10 @@ def list_api_keys(
     db: Session = Depends(get_db_session),
     current_user: UserORM = Depends(get_current_user),
 ) -> list[ApiKeyRead]:
-    return crud_api_key.get_multi_by_user(db=db, user_id=current_user.id)
+    return [
+        ApiKeyRead.model_validate(db_key)
+        for db_key in crud_api_key.read_by_user(db=db, user_id=current_user.id)
+    ]
 
 
 # --- delete operations
@@ -95,7 +98,7 @@ def delete_api_key(
     current_user: UserORM = Depends(get_current_user),
     ws: WebsocketEmitter = Depends(),
 ) -> ApiKeyRead:
-    db_key = crud_api_key.get_by_id(db=db, key_id=key_id)
+    db_key = crud_api_key.read_if_exists(db=db, id=key_id)
 
     if not db_key or db_key.user_id != current_user.id:
         raise HTTPException(

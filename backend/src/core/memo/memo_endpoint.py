@@ -19,7 +19,7 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_generation_service import generate_memo_llm
 from core.memo.memo_orm import MemoORM
-from core.memo.memo_utils import get_object_memos
+from core.memo.memo_utils import get_memo_read_dto_from_orm, get_object_memos
 from repos.db.crud_base import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -103,9 +103,7 @@ def get_recent_memos(
         db=db, user_id=authz_user.user.id, project_id=project_id, limit=limit
     )
     return [
-        crud_memo.get_memo_read_dto_from_orm(
-            db=db, db_obj=db_obj, user_id=authz_user.user.id
-        )
+        get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=authz_user.user.id)
         for db_obj in db_objs
     ]
 
@@ -124,9 +122,7 @@ def get_by_id(
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
 
     db_obj = crud_memo.read(db=db, id=memo_id)
-    return crud_memo.get_memo_read_dto_from_orm(
-        db=db, db_obj=db_obj, user_id=authz_user.user.id
-    )
+    return get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=authz_user.user.id)
 
 
 @router.get(
@@ -182,7 +178,7 @@ def update_by_id(
     db_obj = crud_memo.update(
         db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
     )
-    result = crud_memo.get_memo_read_dto_from_orm(
+    result = get_memo_read_dto_from_orm(
         db=db, db_obj=db_obj, user_id=authz_user.user.id
     )
 
@@ -217,9 +213,7 @@ def update_memos_bulk(
         db=db, user_id=authz_user.user.id, update_dtos=memos
     )
     results = [
-        crud_memo.get_memo_read_dto_from_orm(
-            db=db, db_obj=db_obj, user_id=authz_user.user.id
-        )
+        get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=authz_user.user.id)
         for db_obj in db_objs
     ]
     if not results:
@@ -232,7 +226,7 @@ def update_memos_bulk(
     if has_shared_changes:
 
         def to_dto(db_obj: MemoORM) -> MemoRead:
-            return crud_memo.get_memo_read_dto_from_orm(
+            return get_memo_read_dto_from_orm(
                 db=db, db_obj=db_obj, user_id=authz_user.user.id
             )
 
@@ -281,8 +275,8 @@ def delete_by_id(
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
     memo = crud_memo.read(db=db, id=memo_id)
-    memo_read = crud_memo.get_memo_read_dto_from_orm(
-        db, memo, user_id=authz_user.user.id
+    memo_read = get_memo_read_dto_from_orm(
+        db=db, db_obj=memo, user_id=authz_user.user.id
     )
     crud_memo.delete(db=db, id=memo_id)
 
@@ -314,9 +308,7 @@ def delete_memos_bulk(
         groups.setdefault(memo.project_id, []).append(memo)
     results_by_project = {
         project_id: [
-            crud_memo.get_memo_read_dto_from_orm(
-                db=db, db_obj=memo, user_id=authz_user.user.id
-            )
+            get_memo_read_dto_from_orm(db=db, db_obj=memo, user_id=authz_user.user.id)
             for memo in group
         ]
         for project_id, group in groups.items()

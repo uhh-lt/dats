@@ -62,7 +62,7 @@ def resolve_user(request: Request | WebSocket, db: Session, token: str) -> UserO
     """Resolves a token (API key or JWT) to the corresponding user, raising 401 if invalid."""
     if token.startswith("dats_"):
         hashed_token = hash_api_key(token)
-        db_key = crud_api_key.get_by_hashed_key(db=db, hashed_key=hashed_token)
+        db_key = crud_api_key.read_by_hashed_key(db=db, hashed_key=hashed_token)
 
         if not db_key:
             raise credentials_exception
