@@ -10,7 +10,7 @@ from modules.doc_processing.doc_processing_pipeline import (
     handle_job_started,
 )
 from systems.job_system.cuda_utils import ensure_cuda_available
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobInputBase, JobStatus
 from systems.job_system.job_events import publish_job_update
 from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
@@ -44,14 +44,17 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
             output = handler(payload=payload, job=job)
     except Exception as e:
         # erroneous job:
-        job.update(status_message=str(e))
+        job.update(status_message=str(e), finished=datetime.now(UTC), publish=False)
         handle_job_error(jobtype, input=payload)
+        # RQ marks the job as FAILED only after this handler raised,
+        # so the final event has to carry the terminal status explicitly
+        publish_job_update(job, status_override=JobStatus.FAILED)
         raise e
-    finally:
-        # always set the time the job ended
-        job.update(finished=datetime.now(UTC))
 
     # successfully finished job:
+    job.update(finished=datetime.now(UTC), publish=False)
     handle_job_finished(jobtype, input=payload, output=output)
-    publish_job_update(job, output_override=output)
+    # RQ marks the job as FINISHED only after this handler returned,
+    # so the final event has to carry the terminal status explicitly
+    publish_job_update(job, output_override=output, status_override=JobStatus.FINISHED)
     return output

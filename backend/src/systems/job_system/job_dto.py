@@ -63,6 +63,7 @@ class Job:
         steps: list[str] | None = None,
         finished: datetime | None = None,
         device: str | None = None,
+        publish: bool = True,
     ):
         if steps is not None:
             self.job.meta["steps"] = steps
@@ -73,6 +74,9 @@ class Job:
         if finished is not None:
             self.job.meta["finished"] = finished
         self.job.save_meta()
+
+        if not publish:
+            return
 
         from systems.job_system.job_events import publish_job_update
 
