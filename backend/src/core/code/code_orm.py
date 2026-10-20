@@ -82,7 +82,6 @@ class CodeORM(ORMBase):
     parent_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("code.id", ondelete="CASCADE"),
-        nullable=True,
         index=True,
     )
     parent: Mapped["CodeORM | None"] = relationship(

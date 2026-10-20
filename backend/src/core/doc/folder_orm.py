@@ -51,7 +51,6 @@ class FolderORM(ORMBase):
     parent_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("folder.id", ondelete="CASCADE"),
-        nullable=True,
         index=True,
     )
     parent: Mapped["FolderORM | None"] = relationship(
