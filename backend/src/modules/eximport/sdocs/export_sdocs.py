@@ -119,7 +119,7 @@ def __export_sdocs(
             client=client, project_id=sdoc.project_id
         ):
             try:
-                doc_embedding = crud_document_embedding.get_embedding(
+                doc_embedding = crud_document_embedding.read(
                     client=client,
                     project_id=sdoc.project_id,
                     id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
@@ -132,7 +132,7 @@ def __export_sdocs(
         if crud_sentence_embedding._tenant_exists(
             client=client, project_id=sdoc.project_id
         ):
-            sentence_embeddings = crud_sentence_embedding.get_embeddings_by_sdoc_id(
+            sentence_embeddings = crud_sentence_embedding.read_by_sdoc_id(
                 client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
             )
             sentence_embeddings = [se.embedding for se in sentence_embeddings]
@@ -144,7 +144,7 @@ def __export_sdocs(
                 client=client, project_id=sdoc.project_id
             ):
                 try:
-                    image_embedding = crud_image_embedding.get_embedding(
+                    image_embedding = crud_image_embedding.read(
                         client=client,
                         project_id=sdoc.project_id,
                         id=ImageObjectIdentifier(sdoc_id=sdoc.id),

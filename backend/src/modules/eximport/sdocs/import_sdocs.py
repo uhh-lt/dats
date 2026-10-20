@@ -282,7 +282,7 @@ def import_sdocs_to_proj(
         client = WeaviateRepo().get_client()
         # Document embeddings
         if sdoc_export.document_embedding is not None:
-            crud_document_embedding.add_embedding(
+            crud_document_embedding.create(
                 client=client,
                 project_id=project_id,
                 id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
@@ -290,7 +290,7 @@ def import_sdocs_to_proj(
             )
 
         # Sentence embeddings
-        crud_sentence_embedding.add_embedding_batch(
+        crud_sentence_embedding.create_multi(
             client=client,
             project_id=project_id,
             ids=[
@@ -305,7 +305,7 @@ def import_sdocs_to_proj(
             sdoc_export.image_embedding is not None
             and DocType(sdoc_export.doctype) == DocType.image
         ):
-            crud_image_embedding.add_embedding(
+            crud_image_embedding.create(
                 client=client,
                 project_id=project_id,
                 id=ImageObjectIdentifier(sdoc_id=created_sdoc.id),

@@ -445,7 +445,7 @@ class PerspectivesService:
             )
 
             # Store embeddings in the vector DB
-            crud_aspect_embedding.add_embedding_batch(
+            crud_aspect_embedding.create_multi(
                 client=client,
                 project_id=aspect.project_id,
                 ids=[
@@ -536,7 +536,7 @@ class PerspectivesService:
 
         # ... and their embeddings
         embeddings = np.array(
-            crud_aspect_embedding.get_embeddings(
+            crud_aspect_embedding.read_by_ids(
                 client=client,
                 project_id=aspect.project_id,
                 ids=[
@@ -947,7 +947,7 @@ class PerspectivesService:
         coordinates = np.array([[da.x, da.y] for da in doc_aspects])
         embedding_sdoc_ids = np.array([da.sdoc_id for da in doc_aspects])
         embeddings = np.array(
-            crud_aspect_embedding.get_embeddings(
+            crud_aspect_embedding.read_by_ids(
                 client=client,
                 project_id=aspect.project_id,
                 ids=[
@@ -1005,7 +1005,7 @@ class PerspectivesService:
 
         # 4. Store the clusters in the databases ...
         # ... store the cluster embeddings in vector DB
-        crud_cluster_embedding.add_embedding_batch(
+        crud_cluster_embedding.create_multi(
             client=client,
             project_id=aspect.project_id,
             ids=[
@@ -1327,7 +1327,7 @@ class PerspectivesService:
             for da in doc_aspects
         ]
         document_embeddings = np.array(
-            crud_aspect_embedding.get_embeddings(
+            crud_aspect_embedding.read_by_ids(
                 client=client,
                 project_id=aspect.project_id,
                 ids=embedding_ids,
@@ -1335,7 +1335,7 @@ class PerspectivesService:
         )
 
         # - Read all cluster embeddings, but exclude the cluster to remove
-        te_search_result = crud_cluster_embedding.find_embeddings_by_aspect_id(
+        te_search_result = crud_cluster_embedding.read_by_aspect_id(
             client=client,
             project_id=aspect.project_id,
             aspect_id=cluster.aspect_id,
@@ -1402,7 +1402,7 @@ class PerspectivesService:
         # 2. Cluster Removal: Remove the cluster from the database
         self._log_status_step(1)
         crud_cluster.delete(db=db, id=params.cluster_id)
-        crud_cluster_embedding.remove_embedding(
+        crud_cluster_embedding.delete(
             client=client,
             project_id=aspect.project_id,
             id=ClusterObjectIdentifier(
@@ -1453,7 +1453,7 @@ class PerspectivesService:
         # 2. Delete the merged cluster from the database
         self._log_status_step(1)
         crud_cluster.delete(db=db, id=params.cluster_to_merge)
-        crud_cluster_embedding.remove_embedding(
+        crud_cluster_embedding.delete(
             client=self.weaviate.get_client(),
             project_id=aspect.project_id,
             id=ClusterObjectIdentifier(
@@ -1501,7 +1501,7 @@ class PerspectivesService:
         # 1. Remove the cluster from the database
         self._log_status_step(0)
         crud_cluster.delete(db=db, id=params.cluster_id)
-        crud_cluster_embedding.remove_embedding(
+        crud_cluster_embedding.delete(
             client=self.weaviate.get_client(),
             project_id=aspect.project_id,
             id=ClusterObjectIdentifier(

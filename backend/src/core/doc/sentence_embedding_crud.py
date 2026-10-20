@@ -3,33 +3,84 @@ from weaviate.classes.query import Filter
 
 from core.doc.sentence_collection import SentenceCollection
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
-from repos.vector.embedding_crud_base import CRUDBase
-from repos.vector.weaviate_models import EmbeddingSearchResult
+from repos.vector.embedding_crud_base import EmbeddingCRUDBase
+from repos.vector.weaviate_models import EmbeddingSearchResult, SimSearchResult
 from systems.event_system.events import source_document_deleted
 
 
-class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollection]):
+class CRUDSentenceEmbedding(
+    EmbeddingCRUDBase[SentenceObjectIdentifier, SentenceCollection]
+):
     """
     CRUD operations for sentence embeddings in Weaviate
     """
 
+    ### CREATE OPERATIONS ###
+    # Inherited from EmbeddingCRUDBase
+
+    ### READ OPERATIONS ###
+
+    def read_by_sdoc_id(
+        self, client: WeaviateClient, *, project_id: int, sdoc_id: int
+    ) -> list[EmbeddingSearchResult[SentenceObjectIdentifier]]:
+        """
+        Get all sentence embeddings for a given SourceDocument by sdoc_id
+        Args:
+            client: Weaviate client
+            project_id: The project ID
+            sdoc_id: The SourceDocument ID
+        Returns:
+            List of EmbeddingSearchResult[SentenceObjectIdentifier]
+        """
+        return self.read_by_filters(
+            client=client,
+            project_id=project_id,
+            filters=Filter.by_property(
+                self.collection_class.properties["sdoc_id"].name
+            ).equal(sdoc_id),
+        )
+
+    ### DELETE OPERATIONS ###
+
+    def delete_by_sdoc_id(
+        self, client: WeaviateClient, *, project_id: int, sdoc_id: int
+    ) -> None:
+        """
+        Remove all embeddings for a given SourceDocument by sdoc_id
+        Args:
+            client: Weaviate client
+            project_id: The project ID
+            sdoc_id: The SourceDocument ID
+        """
+        collection = self._get_collection(client=client, project_id=project_id)
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["sdoc_id"].name
+                ).equal(sdoc_id)
+            )
+
+    ### OTHER OPERATIONS ###
+
     def search_near_sentence(
         self,
         client: WeaviateClient,
+        *,
         project_id: int,
         id: SentenceObjectIdentifier,
         k: int,
         threshold: float,
-    ):
+    ) -> list[SimSearchResult[SentenceObjectIdentifier]]:
         """
-        Search for documents near a SourceDocument
+        Search for sentences near a given sentence
         Args:
+            client: Weaviate client
             project_id: The project ID
-            sdoc_id: The SourceDocument ID to search near
+            id: The identifier of the sentence to search near
             k: The number of nearest neighbors to return
-            threshold: The minimum distance for a match
+            threshold: The minimum similarity for a match
         Returns:
-            List of SimSearchResult[DocumentObjectIdentifier]
+            List of SimSearchResult[SentenceObjectIdentifier]
         """
         return self.search_near_object(
             client=client,
@@ -42,24 +93,25 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
     def search_near_vector_in_sdoc_ids(
         self,
         client: WeaviateClient,
+        *,
         project_id: int,
         vector: list[float],
         k: int,
         threshold: float,
         sdoc_ids: list[int] | None,
-    ):
+    ) -> list[SimSearchResult[SentenceObjectIdentifier]]:
         """
         Search for sentences near a given vector in specific SourceDocument IDs
         Args:
+            client: Weaviate client
             project_id: The project ID
             vector: The vector to search for
             k: The number of nearest neighbors to return
-            threshold: The minimum distance for a match
+            threshold: The minimum similarity for a match
             sdoc_ids: List of SourceDocument IDs to search in if provided
         Returns:
             List of SimSearchResult[SentenceObjectIdentifier]
         """
-
         filters = (
             Filter.by_property(
                 self.collection_class.properties["sdoc_id"].name
@@ -76,42 +128,6 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
             threshold=threshold,
         )
 
-    def get_embeddings_by_sdoc_id(
-        self, client: WeaviateClient, project_id: int, sdoc_id: int
-    ) -> list[EmbeddingSearchResult[SentenceObjectIdentifier]]:
-        """
-        Get all sentence embeddings for a given SourceDocument by sdoc_id
-        Args:
-            project_id: The project ID
-            sdoc_id: The SourceDocument ID
-        Returns:
-            List of SentenceObjectIdentifier
-        """
-        return self.find_embeddings_by_filters(
-            client=client,
-            project_id=project_id,
-            filters=Filter.by_property(
-                self.collection_class.properties["sdoc_id"].name
-            ).equal(sdoc_id),
-        )
-
-    def remove_by_sdoc_id(
-        self, client: WeaviateClient, project_id: int, sdoc_id: int
-    ) -> None:
-        """
-        Remove all embeddings for a given SourceDocument by sdoc_id
-        Args:
-            project_id: The project ID
-            sdoc_id: The SourceDocument ID
-        """
-        collection = self._get_collection(client=client, project_id=project_id)
-        if self._tenant_exists(client=client, project_id=project_id):
-            collection.data.delete_many(
-                where=Filter.by_property(
-                    self.collection_class.properties["sdoc_id"].name
-                ).equal(sdoc_id)
-            )
-
 
 crud_sentence_embedding = CRUDSentenceEmbedding(
     collection_class=SentenceCollection,
@@ -122,9 +138,9 @@ crud_sentence_embedding = CRUDSentenceEmbedding(
 
 
 @source_document_deleted.connect
-def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
+def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> None:
     from repos.vector.weaviate_repo import WeaviateRepo
 
-    crud_sentence_embedding.remove_by_sdoc_id(
+    crud_sentence_embedding.delete_by_sdoc_id(
         client=WeaviateRepo().get_client(), project_id=project_id, sdoc_id=sdoc_id
     )

@@ -256,10 +256,10 @@ def remove_aspect_by_id(
     aspect = crud_aspect.read(db=db, id=aspect_id)
     project_id = aspect.get_project_id()
 
-    crud_cluster_embedding.delete_embeddings_by_aspect(
+    crud_cluster_embedding.delete_by_aspect_id(
         client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
-    crud_aspect_embedding.delete_embeddings_by_aspect(
+    crud_aspect_embedding.delete_by_aspect_id(
         client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
     db_obj = crud_aspect.delete(db=db, id=aspect_id)
@@ -571,7 +571,7 @@ def get_cluster_similarities(
         )
 
     # Fetch the cluster embeddings
-    cluster_embeddings = crud_cluster_embedding.get_embeddings(
+    cluster_embeddings = crud_cluster_embedding.read_by_ids(
         client=weaviate,
         project_id=aspect.project_id,
         ids=[

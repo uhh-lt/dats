@@ -60,7 +60,7 @@ def finetune_apply_compute(
                 sentence.concept_similarities[concept_id] = similarity
 
     else:
-        embeddings = crud_sentence_embedding.get_embeddings(
+        embeddings = crud_sentence_embedding.read_by_ids(
             client=WeaviateRepo().get_client(),
             project_id=cota.project_id,
             ids=[
