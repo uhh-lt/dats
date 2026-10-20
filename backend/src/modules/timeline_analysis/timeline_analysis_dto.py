@@ -85,7 +85,7 @@ class TimelineAnalysisConcept(TimelineAnalysisConceptForExport):
     )
 
 
-class TimelineAnalysisConceptUpdate(BaseModel):
+class TimelineAnalysisConceptUpdate(BaseModel, UpdateDTOBase):
     id: str = Field(description="ID of the Concept")
     name: str = Field(description="Name of the Concept")
     description: str = Field(description="Description of the Concept")
@@ -133,7 +133,7 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
     project_id: int = Field(description="Project the TimelineAnalysis belongs to")
 
 
-class TimelineAnalysisCreateIntern(TimelineAnalysisCreate, UpdateDTOBase):
+class TimelineAnalysisCreateIntern(TimelineAnalysisCreate):
     settings: str | None = Field(
         description="JSON Representation of the TimelineAnalysisSettings.",
         default=None,

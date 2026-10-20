@@ -70,32 +70,32 @@ class COTAService(metaclass=SingletonMeta):
         # make sure that cota with cota_id exists
         crud_cota.read(db=db, id=cota_id)
 
-        update_dto_as_in_db = COTAUpdateIntern(
-            **cota_update.model_dump(
-                exclude={
-                    "concepts",
-                    "training_settings",
-                    "timeline_settings",
-                },
-                exclude_none=True,
-            ),
+        update_data = cota_update.model_dump(
+            exclude={
+                "concepts",
+                "training_settings",
+                "timeline_settings",
+            },
+            exclude_none=True,
         )
 
         if cota_update.concepts is not None:
-            concepts_str = srsly.json_dumps(jsonable_encoder(cota_update.concepts))
-            update_dto_as_in_db.concepts = concepts_str
+            update_data["concepts"] = srsly.json_dumps(
+                jsonable_encoder(cota_update.concepts)
+            )
 
         if cota_update.training_settings is not None:
-            training_settings_str = srsly.json_dumps(
+            update_data["training_settings"] = srsly.json_dumps(
                 jsonable_encoder(cota_update.training_settings)
             )
-            update_dto_as_in_db.training_settings = training_settings_str
 
         if cota_update.timeline_settings is not None:
-            timeline_settings_str = srsly.json_dumps(
+            update_data["timeline_settings"] = srsly.json_dumps(
                 jsonable_encoder(cota_update.timeline_settings)
             )
-            update_dto_as_in_db.timeline_settings = timeline_settings_str
+
+        # build the update DTO only now: it rejects being created without any field
+        update_dto_as_in_db = COTAUpdateIntern(**update_data)
 
         # update the cota in db
         db_obj = crud_cota.update(db=db, id=cota_id, update_dto=update_dto_as_in_db)

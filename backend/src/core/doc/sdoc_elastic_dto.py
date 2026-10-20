@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from pydantic import Field
 
+from repos.db.dto_base import UpdateDTOBase
 from repos.elastic.elastic_dto_base import ElasticSearchModelBase
 
 
@@ -30,5 +31,5 @@ class ElasticSearchDocumentCreate(ElasticSearchDocument):
     pass
 
 
-class ElasticSearchDocumentUpdate(ElasticSearchModelBase):
+class ElasticSearchDocumentUpdate(ElasticSearchModelBase, UpdateDTOBase):
     pass
