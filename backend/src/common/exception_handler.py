@@ -1,7 +1,7 @@
 import traceback
 from collections.abc import Callable
 
-from fastapi import Request
+from fastapi import Request, status
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
@@ -45,3 +45,12 @@ def exception_handler(
         return exception_class
 
     return decorator
+
+
+@exception_handler(status.HTTP_404_NOT_FOUND)
+class NotFoundError(Exception):
+    """
+    Base class for all errors that signal a missing object (SQL row, Weaviate
+    object, Elasticsearch document). FastAPI resolves exception handlers along
+    the MRO, so every subclass is mapped to HTTP 404 without its own decorator.
+    """
