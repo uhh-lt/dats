@@ -1,8 +1,12 @@
+from datetime import datetime
 from typing import Any, Generic, Type, TypeVar
+from uuid import UUID as PyUUID
 
 from loguru import logger
 from weaviate import WeaviateClient
+from weaviate.classes.config import DataType
 from weaviate.classes.query import MetadataQuery
+from weaviate.collections import Collection
 from weaviate.collections.classes.filters import _Filters
 from weaviate.types import UUID
 
@@ -21,37 +25,66 @@ from repos.vector.weaviate_models import (
 ID = TypeVar("ID", bound=ObjectIdentifier)
 COLLECTION = TypeVar("COLLECTION", bound=BaseCollection)
 
+# Python types that are accepted for the scalar Weaviate property data types
+DATATYPE_TO_PYTHON_TYPE: dict[DataType, tuple[type, ...]] = {
+    DataType.TEXT: (str,),
+    DataType.INT: (int,),
+    DataType.NUMBER: (int, float),
+    DataType.BOOL: (bool,),
+    DataType.DATE: (datetime,),
+    DataType.UUID: (str, PyUUID),
+    DataType.TEXT_ARRAY: (list,),
+    DataType.INT_ARRAY: (list,),
+    DataType.NUMBER_ARRAY: (list,),
+    DataType.BOOL_ARRAY: (list,),
+    DataType.DATE_ARRAY: (list,),
+    DataType.UUID_ARRAY: (list,),
+}
 
-class CRUDBase(Generic[ID, COLLECTION]):
+
+class EmbeddingCRUDBase(Generic[ID, COLLECTION]):
     """
     Base class for CRUD operations with Weaviate vector database
 
-    Generic type T is the type of the object identifier, which must
-    be a subclass of ObjectIdentifier
+    Generic type ID is the type of the object identifier, which must
+    be a subclass of ObjectIdentifier. Generic type COLLECTION is the
+    Weaviate collection the embeddings are stored in.
     """
 
     def __init__(
         self,
         collection_class: Type[COLLECTION],
         object_identifier: Type[ID],
-    ):
-        """Initialize with collection class"""
+    ) -> None:
+        """
+        Initialize with collection class and object identifier
+        Args:
+            collection_class: The Weaviate collection the embeddings are stored in
+            object_identifier: The class that identifies an object in the collection
+        """
         self.object_identifier = object_identifier
         self.collection_class = collection_class
 
-    def _get_collection(self, client: WeaviateClient, project_id: int):
-        """Get the collection from weaviate client"""
+    def _get_collection(self, client: WeaviateClient, *, project_id: int) -> Collection:
+        """
+        Get the tenant-specific collection from the Weaviate client
+        Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
+        Returns:
+            The collection scoped to the project's tenant
+        """
         tenant_name = self.collection_class.get_tenant_name(project_id)
         return client.collections.get(
             self.collection_class.get_collection_name()
         ).with_tenant(tenant=tenant_name)
 
-    def _tenant_exists(self, client: WeaviateClient, project_id: int) -> bool:
+    def _tenant_exists(self, client: WeaviateClient, *, project_id: int) -> bool:
         """
         Check if the tenant for the given project ID exists in Weaviate
         Args:
             client: Weaviate client
-            project_id: Project ID
+            project_id: ID of the project (tenant)
         Returns:
             True if tenant exists, False otherwise
         """
@@ -86,17 +119,31 @@ class CRUDBase(Generic[ID, COLLECTION]):
                 raise ValueError(f"Invalid property '{key}' in properties")
 
             expected_type = valid_key_datatype[key]
-            if not isinstance(value, eval(expected_type.value)):
+            python_types = DATATYPE_TO_PYTHON_TYPE.get(expected_type)
+            if python_types is None:
+                raise ValueError(
+                    f"Property '{key}' has unsupported data type '{expected_type}'"
+                )
+            if not isinstance(value, python_types):
                 raise ValueError(
                     f"Property '{key}' must be of type '{expected_type}', got '{type(value)}'"
                 )
 
-    def add_embedding(
-        self, client: WeaviateClient, project_id: int, id: ID, embedding: list[float]
+    ### CREATE OPERATIONS ###
+
+    def create(
+        self,
+        client: WeaviateClient,
+        *,
+        project_id: int,
+        id: ID,
+        embedding: list[float],
     ) -> None:
         """
         Add a single embedding to Weaviate
         Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
             id: Object identifier
             embedding: Vector embedding
         """
@@ -108,9 +155,10 @@ class CRUDBase(Generic[ID, COLLECTION]):
             vector=embedding,
         )
 
-    def add_embedding_batch(
+    def create_multi(
         self,
         client: WeaviateClient,
+        *,
         project_id: int,
         ids: list[ID],
         embeddings: list[list[float]],
@@ -118,13 +166,15 @@ class CRUDBase(Generic[ID, COLLECTION]):
         """
         Add multiple embeddings to Weaviate in a batch
         Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
             ids: List of object identifiers
             embeddings: List of vector embeddings
         Returns:
             List of UUIDs of the created objects
         Raises:
             ValueError: If the lengths of ids and embeddings do not match
-            WeaviateVectorLengthError: If the embedding dimensions do not match the collection's dimensions
+            WeaviateBatchImportError: If any object could not be imported
         """
 
         collection = self._get_collection(client=client, project_id=project_id)
@@ -153,37 +203,19 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
         return uuids
 
-    def remove_embedding(self, client: WeaviateClient, project_id: int, id: ID) -> bool:
-        """
-        Remove an embedding from Weaviate
-        Args:
-            id: Object identifier
-        """
-        collection = self._get_collection(client=client, project_id=project_id)
-        return collection.data.delete_by_id(id.uuidv5())
+    ### READ OPERATIONS ###
 
-    def remove_embeddings_by_project(
-        self, client: WeaviateClient, project_id: int
-    ) -> None:
-        """
-        Remove all embeddings for a project.
-        Internally, this completely removes the tenant from Weaviate.
-        Args:
-            project_id: Project ID
-        """
-        client.collections.get(
-            self.collection_class.get_collection_name()
-        ).tenants.remove([f"Project{project_id}"])
-
-    def get_embedding(
-        self, client: WeaviateClient, project_id: int, id: ID
-    ) -> list[float]:
+    def read(self, client: WeaviateClient, *, project_id: int, id: ID) -> list[float]:
         """
         Get an embedding from Weaviate
         Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
             id: Object identifier
         Returns:
-            Object with embedding or None if not found
+            The embedding of the object
+        Raises:
+            WeaviateObjectIDNotFoundException: If the object does not exist
         """
         collection = self._get_collection(client=client, project_id=project_id)
         obj = collection.query.fetch_object_by_id(id.uuidv5(), include_vector=True)
@@ -192,15 +224,19 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
         return obj.vector["default"]  # type: ignore
 
-    def get_embeddings(
-        self, client: WeaviateClient, project_id: int, ids: list[ID]
+    def read_by_ids(
+        self, client: WeaviateClient, *, project_id: int, ids: list[ID]
     ) -> list[list[float]]:
         """
         Get multiple embeddings from Weaviate
         Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
             ids: List of object identifiers
         Returns:
-            List of embeddings
+            List of embeddings in the same order as the given ids
+        Raises:
+            WeaviateObjectIDNotFoundException: If any of the objects does not exist
         """
         uuid_list = [id.uuidv5() for id in ids]
         collection = self._get_collection(client=client, project_id=project_id)
@@ -224,16 +260,17 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
         return result
 
-    def find_embeddings_by_filters(
-        self, client: WeaviateClient, project_id: int, filters: _Filters
+    def read_by_filters(
+        self, client: WeaviateClient, *, project_id: int, filters: _Filters
     ) -> list[EmbeddingSearchResult[ID]]:
         """
         Get embeddings from Weaviate based on filters
         Args:
-            project_id: ID of the project
+            client: Weaviate client
+            project_id: ID of the project (tenant)
             filters: Weaviate filters to apply
         Returns:
-            List of embeddings
+            List of matching objects with their embeddings
         """
         collection = self._get_collection(client=client, project_id=project_id)
 
@@ -266,24 +303,58 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
         return embeddings
 
+    ### DELETE OPERATIONS ###
+
+    def delete(self, client: WeaviateClient, *, project_id: int, id: ID) -> bool:
+        """
+        Remove an embedding from Weaviate
+        Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
+            id: Object identifier
+        Returns:
+            True if the object was deleted, False if it did not exist
+        """
+        collection = self._get_collection(client=client, project_id=project_id)
+        return collection.data.delete_by_id(id.uuidv5())
+
+    def delete_by_project(self, client: WeaviateClient, *, project_id: int) -> None:
+        """
+        Remove all embeddings for a project.
+        Internally, this completely removes the tenant from Weaviate.
+        Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
+        """
+        client.collections.get(
+            self.collection_class.get_collection_name()
+        ).tenants.remove([self.collection_class.get_tenant_name(project_id)])
+
+    ### OTHER OPERATIONS ###
+
     def search_near_object(
         self,
         client: WeaviateClient,
-        project_id,
+        *,
+        project_id: int,
         id: ID,
         k: int,
         threshold: float,
         filters: _Filters | None = None,
     ) -> list[SimSearchResult[ID]]:
         """
-        Finds up-to k objects near (cosine-similarity) the given object in Weaviate using its UUID
+        Finds up-to k objects near (cosine-similarity) the given object in Weaviate
         Args:
-            uuid: UUID of the object
+            client: Weaviate client
+            project_id: ID of the project (tenant)
+            id: Object identifier of the object to search near
             k: Number of similar objects to find
             threshold: Minimum similarity score to consider an object as similar
             filters: Optional filters to apply
         Returns:
             List of objects found
+        Raises:
+            WeaviateObjectUUIDNotFoundException: If the object does not exist
         """
         collection = self._get_collection(client=client, project_id=project_id)
         uuid = id.uuidv5()
@@ -313,6 +384,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
     def search_near_vector(
         self,
         client: WeaviateClient,
+        *,
         project_id: int,
         vector: list[float],
         k: int,
@@ -322,6 +394,8 @@ class CRUDBase(Generic[ID, COLLECTION]):
         """
         Finds up-to k objects near (cosine-similarity) the given vector in Weaviate
         Args:
+            client: Weaviate client
+            project_id: ID of the project (tenant)
             vector: Vector to search for
             k: Number of similar objects to find
             threshold: Minimum similarity score to consider an object as similar

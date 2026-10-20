@@ -73,7 +73,9 @@ class EmbeddingService(metaclass=SingletonMeta):
 
         client = self.weaviate.get_client()
         if recompute:
-            crud_sentence_embedding.remove_embeddings_by_project(client, project_id)
+            crud_sentence_embedding.delete_by_project(
+                client=client, project_id=project_id
+            )
 
         while num_processed != 0:
             num_processed = self._process_sentences_batch(
@@ -126,9 +128,9 @@ class EmbeddingService(metaclass=SingletonMeta):
         ]
 
         # Store the embeddings of a batch of documents
-        crud_sentence_embedding.add_embedding_batch(
-            client,
-            project_id,
+        crud_sentence_embedding.create_multi(
+            client=client,
+            project_id=project_id,
             ids=ids,
             embeddings=embeddings,
         )
@@ -159,7 +161,7 @@ class EmbeddingService(metaclass=SingletonMeta):
 
         client = self.weaviate.get_client()
         if recompute:
-            crud_document_embedding.remove_embeddings_by_project(
+            crud_document_embedding.delete_by_project(
                 client=client, project_id=project_id
             )
 
@@ -208,7 +210,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         embeddings = self.llm.llm_embed(content).tolist()
 
         # Store the embeddings
-        crud_document_embedding.add_embedding_batch(
+        crud_document_embedding.create_multi(
             client=client,
             project_id=project_id,
             ids=[DocumentObjectIdentifier(sdoc_id=sdoc_id) for sdoc_id in sdoc_ids],

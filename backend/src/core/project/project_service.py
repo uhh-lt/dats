@@ -111,21 +111,11 @@ class ProjectService(metaclass=SingletonMeta):
         # 4) delete weaviate embeddings and related search indices for this project
         client = self.weaviate.get_client()
         # remove all vector embeddings stored in Weaviate
-        crud_document_embedding.remove_embeddings_by_project(
-            client=client, project_id=proj_id
-        )
-        crud_image_embedding.remove_embeddings_by_project(
-            client=client, project_id=proj_id
-        )
-        crud_sentence_embedding.remove_embeddings_by_project(
-            client=client, project_id=proj_id
-        )
-        crud_aspect_embedding.remove_embeddings_by_project(
-            client=client, project_id=proj_id
-        )
-        crud_cluster_embedding.remove_embeddings_by_project(
-            client=client, project_id=proj_id
-        )
+        crud_document_embedding.delete_by_project(client=client, project_id=proj_id)
+        crud_image_embedding.delete_by_project(client=client, project_id=proj_id)
+        crud_sentence_embedding.delete_by_project(client=client, project_id=proj_id)
+        crud_aspect_embedding.delete_by_project(client=client, project_id=proj_id)
+        crud_cluster_embedding.delete_by_project(client=client, project_id=proj_id)
 
         # 5) delete redis entries for this project
         self.js.remove_jobs_by_project(project_id=proj_id)
