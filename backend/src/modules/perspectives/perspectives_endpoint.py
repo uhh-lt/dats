@@ -32,6 +32,7 @@ from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
     PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
+    PerspectivesJobType,
 )
 from modules.perspectives.perspectives_vis_dto import (
     PerspectivesClusterSimilarities,
@@ -74,7 +75,7 @@ def create_aspect(
 
     db_aspect = crud_aspect.create(db=db, create_dto=aspect)
 
-    params = CreateAspectParams()
+    params = CreateAspectParams(perspectives_job_type=PerspectivesJobType.CREATE_ASPECT)
     job = js.start_job(
         JobType.PERSPECTIVES,
         payload=PerspectivesJobInput(

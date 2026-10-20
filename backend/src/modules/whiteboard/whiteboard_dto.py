@@ -81,31 +81,43 @@ class WhiteboardNodeType(str, Enum):
 
 
 class TextNodeData(WhiteboardTextData):
-    type: Literal[WhiteboardNodeType.TEXT]
+    type: Literal[WhiteboardNodeType.TEXT] = Field(
+        description="Type of the whiteboard node"
+    )
 
 
 class NoteNodeData(WhiteboardBackgroundColorData, WhiteboardTextData):
-    type: Literal[WhiteboardNodeType.NOTE]
+    type: Literal[WhiteboardNodeType.NOTE] = Field(
+        description="Type of the whiteboard node"
+    )
 
 
 class BorderNodeData(
     WhiteboardBackgroundColorData, WhiteboardTextData, WhiteboardBorderData
 ):
-    type: Literal[WhiteboardNodeType.BORDER]
+    type: Literal[WhiteboardNodeType.BORDER] = Field(
+        description="Type of the whiteboard node"
+    )
 
 
 class SdocNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.SDOC]
+    type: Literal[WhiteboardNodeType.SDOC] = Field(
+        description="Type of the whiteboard node"
+    )
     sdocId: int = Field(description="ID of the source document")
 
 
 class MemoNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.MEMO]
+    type: Literal[WhiteboardNodeType.MEMO] = Field(
+        description="Type of the whiteboard node"
+    )
     memoId: int = Field(description="ID of the memo")
 
 
 class CodeNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.CODE]
+    type: Literal[WhiteboardNodeType.CODE] = Field(
+        description="Type of the whiteboard node"
+    )
     codeId: int = Field(description="ID of the code")
     parentCodeId: int | None = Field(
         description="ID of the parent code",
@@ -114,26 +126,34 @@ class CodeNodeData(WhiteboardBackgroundColorData):
 
 
 class TagNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.TAG]
+    type: Literal[WhiteboardNodeType.TAG] = Field(
+        description="Type of the whiteboard node"
+    )
     tagId: int = Field(description="ID of the tag")
 
 
 class SpanAnnotationNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.SPAN_ANNOTATION]
+    type: Literal[WhiteboardNodeType.SPAN_ANNOTATION] = Field(
+        description="Type of the whiteboard node"
+    )
     spanAnnotationId: int = Field(
         description="ID of the span annotation",
     )
 
 
 class SentenceAnnotationNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.SENTENCE_ANNOTATION]
+    type: Literal[WhiteboardNodeType.SENTENCE_ANNOTATION] = Field(
+        description="Type of the whiteboard node"
+    )
     sentenceAnnotationId: int = Field(
         description="ID of the sentence annotation",
     )
 
 
 class BBoxAnnotationNodeData(WhiteboardBackgroundColorData):
-    type: Literal[WhiteboardNodeType.BBOX_ANNOTATION]
+    type: Literal[WhiteboardNodeType.BBOX_ANNOTATION] = Field(
+        description="Type of the whiteboard node"
+    )
     bboxAnnotationId: int = Field(
         description="ID of the bbox annotation",
     )
@@ -204,7 +224,7 @@ class WhiteboardEdgeType(str, Enum):
 
 class WhiteboardEdgeData(BaseModel):
     type: WhiteboardEdgeType = Field(description="Type of the edge")
-    label: WhiteboardEdgeLabelData
+    label: WhiteboardEdgeLabelData = Field(description="Label of the edge")
 
 
 class WhiteboardEdge(BaseModel):

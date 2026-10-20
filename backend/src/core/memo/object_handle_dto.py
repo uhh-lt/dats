@@ -1,18 +1,38 @@
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # Properties shared across all DTOs
 class ObjectHandleBaseDTO(BaseModel):
-    user_id: int | None = None
-    project_id: int | None = None
-    code_id: int | None = None
-    source_document_id: int | None = None
-    span_annotation_id: int | None = None
-    sentence_annotation_id: int | None = None
-    span_group_id: int | None = None
-    bbox_annotation_id: int | None = None
-    tag_id: int | None = None
-    memo_id: int | None = None
+    user_id: int | None = Field(
+        description="User the ObjectHandle refers to", default=None
+    )
+    project_id: int | None = Field(
+        description="Project the ObjectHandle refers to", default=None
+    )
+    code_id: int | None = Field(
+        description="Code the ObjectHandle refers to", default=None
+    )
+    source_document_id: int | None = Field(
+        description="SourceDocument the ObjectHandle refers to", default=None
+    )
+    span_annotation_id: int | None = Field(
+        description="SpanAnnotation the ObjectHandle refers to", default=None
+    )
+    sentence_annotation_id: int | None = Field(
+        description="SentenceAnnotation the ObjectHandle refers to", default=None
+    )
+    span_group_id: int | None = Field(
+        description="SpanGroup the ObjectHandle refers to", default=None
+    )
+    bbox_annotation_id: int | None = Field(
+        description="BBoxAnnotation the ObjectHandle refers to", default=None
+    )
+    tag_id: int | None = Field(
+        description="Tag the ObjectHandle refers to", default=None
+    )
+    memo_id: int | None = Field(
+        description="Memo the ObjectHandle refers to", default=None
+    )
 
     @model_validator(mode="after")
     def check_at_least_one_not_null(self):
@@ -31,5 +51,5 @@ class ObjectHandleCreate(ObjectHandleBaseDTO):
 
 # Properties for reading (as in ORM)
 class ObjectHandleRead(ObjectHandleBaseDTO):
-    id: int
+    id: int = Field(description="ID of the ObjectHandle")
     model_config = ConfigDict(from_attributes=True)

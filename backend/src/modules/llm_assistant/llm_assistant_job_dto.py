@@ -31,21 +31,27 @@ class DocumentBasedTaskParams(SpecificTaskParameters):
 
 
 class TaggingParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.TAGGING]
+    task_type: Literal[TaskType.TAGGING] = Field(
+        description="The type of the LLM Assistant task"
+    )
     tag_ids: list[int] = Field(
         description="IDs of the tags to use for the document tagging"
     )
 
 
 class MetadataExtractionParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.METADATA_EXTRACTION]
+    task_type: Literal[TaskType.METADATA_EXTRACTION] = Field(
+        description="The type of the LLM Assistant task"
+    )
     project_metadata_ids: list[int] = Field(
         description="IDs of the project metadata to use for the metadata extraction"
     )
 
 
 class AnnotationParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.ANNOTATION]
+    task_type: Literal[TaskType.ANNOTATION] = Field(
+        description="The type of the LLM Assistant task"
+    )
     code_ids: list[int] = Field(
         description="IDs of the codes to use for the annotation"
     )
@@ -56,7 +62,9 @@ class AnnotationParams(DocumentBasedTaskParams):
 
 
 class SentenceAnnotationParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.SENTENCE_ANNOTATION]
+    task_type: Literal[TaskType.SENTENCE_ANNOTATION] = Field(
+        description="The type of the LLM Assistant task"
+    )
     code_ids: list[int] = Field(
         description="IDs of the codes to use for the sentence annotation"
     )
@@ -105,7 +113,9 @@ class SpecificApproachParameters(BaseModel):
 
 
 class ZeroShotParams(SpecificApproachParameters):
-    approach_type: Literal[ApproachType.LLM_ZERO_SHOT]
+    approach_type: Literal[ApproachType.LLM_ZERO_SHOT] = Field(
+        description="The approach of the LLM Assistant job"
+    )
     prompts: list[LLMAssistantPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
@@ -113,7 +123,9 @@ class ZeroShotParams(SpecificApproachParameters):
 
 
 class FewShotParams(SpecificApproachParameters):
-    approach_type: Literal[ApproachType.LLM_FEW_SHOT]
+    approach_type: Literal[ApproachType.LLM_FEW_SHOT] = Field(
+        description="The approach of the LLM Assistant job"
+    )
     prompts: list[LLMAssistantPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
@@ -146,15 +158,19 @@ class DefaultStrategyParams(SpecificStrategyParameters):
         StrategyType.TAGGING_DEFAULT,
         StrategyType.METADATA_DEFAULT,
         StrategyType.SENTENCE_ANNOTATION_DEFAULT,
-    ]
+    ] = Field(description="The strategy to ground the LLM output in the document")
 
 
 class NERInlineTagStrategyParams(SpecificStrategyParameters):
-    strategy_type: Literal[StrategyType.NER_INLINE_TAGS]
+    strategy_type: Literal[StrategyType.NER_INLINE_TAGS] = Field(
+        description="The strategy to ground the LLM output in the document"
+    )
 
 
 class FuzzyGroundingStrategyParams(SpecificStrategyParameters):
-    strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING]
+    strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING] = Field(
+        description="The strategy to ground the LLM output in the document"
+    )
     fuzzy_threshold: float = Field(
         default=0.85,
         ge=0,
@@ -236,8 +252,12 @@ class TaggingResult(LLMAssistantResultWithStatus):
 
 
 class TaggingLLMAssistantJobResult(BaseModel):
-    task_type: Literal[TaskType.TAGGING]
-    results: list[TaggingResult]
+    task_type: Literal[TaskType.TAGGING] = Field(
+        description="The type of the LLM Assistant task"
+    )
+    results: list[TaggingResult] = Field(
+        description="The tagging results, one per document"
+    )
 
 
 class MetadataExtractionResult(LLMAssistantResultWithStatus):
@@ -251,8 +271,12 @@ class MetadataExtractionResult(LLMAssistantResultWithStatus):
 
 
 class MetadataExtractionLLMAssistantJobResult(BaseModel):
-    task_type: Literal[TaskType.METADATA_EXTRACTION]
-    results: list[MetadataExtractionResult]
+    task_type: Literal[TaskType.METADATA_EXTRACTION] = Field(
+        description="The type of the LLM Assistant task"
+    )
+    results: list[MetadataExtractionResult] = Field(
+        description="The metadata extraction results, one per document"
+    )
 
 
 class AnnotationResult(LLMAssistantResultWithStatus):
@@ -267,8 +291,12 @@ class AnnotationResult(LLMAssistantResultWithStatus):
 
 
 class AnnotationLLMAssistantJobResult(BaseModel):
-    task_type: Literal[TaskType.ANNOTATION]
-    results: list[AnnotationResult]
+    task_type: Literal[TaskType.ANNOTATION] = Field(
+        description="The type of the LLM Assistant task"
+    )
+    results: list[AnnotationResult] = Field(
+        description="The annotation results, one per document"
+    )
 
 
 class SentenceAnnotationResult(LLMAssistantResultWithStatus):
@@ -283,8 +311,12 @@ class SentenceAnnotationResult(LLMAssistantResultWithStatus):
 
 
 class SentenceAnnotationLLMAssistantJobResult(BaseModel):
-    task_type: Literal[TaskType.SENTENCE_ANNOTATION]
-    results: list[SentenceAnnotationResult]
+    task_type: Literal[TaskType.SENTENCE_ANNOTATION] = Field(
+        description="The type of the LLM Assistant task"
+    )
+    results: list[SentenceAnnotationResult] = Field(
+        description="The sentence annotation results, one per document"
+    )
 
 
 class LLMAssistantJobOutput(JobOutputBase):

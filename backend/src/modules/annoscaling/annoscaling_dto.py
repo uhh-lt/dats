@@ -9,8 +9,8 @@ class AnnoscalingSuggest(BaseModel):
 
 
 class SdocSentencePair(BaseModel):
-    sdoc_id: int = Field()
-    sentence: int = Field()
+    sdoc_id: int = Field(description="ID of the source document")
+    sentence: int = Field(description="ID of the sentence within the document")
 
 
 class AnnoscalingConfirmSuggest(BaseModel):

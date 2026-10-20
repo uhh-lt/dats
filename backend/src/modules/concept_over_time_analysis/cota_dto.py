@@ -58,7 +58,7 @@ class COTATimelineSettings(BaseModel):
     )
 
 
-class DimensionalityReductionAlgorithm(Enum):
+class DimensionalityReductionAlgorithm(str, Enum):
     UMAP = "umap"
     PCA = "pca"
     TSNE = "tsne"

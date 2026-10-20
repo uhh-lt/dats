@@ -23,36 +23,26 @@ class PerspectivesJobType(str, Enum):
 
 class CreateAspectParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.CREATE_ASPECT] = Field(
-        default=PerspectivesJobType.CREATE_ASPECT,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
 
 
 class AddMissingDocsToAspectParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT] = (
-        Field(
-            default=PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT,
-            description="Type of the PerspectivesJob",
-        )
+        Field(description="Type of the PerspectivesJob")
     )
 
 
 class CreateClusterWithNameParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.CREATE_CLUSTER_WITH_NAME] = (
-        Field(
-            default=PerspectivesJobType.CREATE_CLUSTER_WITH_NAME,
-            description="Type of the PerspectivesJob",
-        )
+        Field(description="Type of the PerspectivesJob")
     )
     create_dto: ClusterCreate = Field(description="DTO for creating a new cluster.")
 
 
 class CreateClusterWithSdocsParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS] = (
-        Field(
-            default=PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS,
-            description="Type of the PerspectivesJob",
-        )
+        Field(description="Type of the PerspectivesJob")
     )
     sdoc_ids: list[int] = Field(
         description="List of source document IDs to include in the cluster."
@@ -61,16 +51,14 @@ class CreateClusterWithSdocsParams(BaseModel):
 
 class RemoveClusterParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.REMOVE_CLUSTER] = Field(
-        default=PerspectivesJobType.REMOVE_CLUSTER,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
     cluster_id: int = Field(description="ID of the cluster to remove.")
 
 
 class MergeClustersParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.MERGE_CLUSTERS] = Field(
-        default=PerspectivesJobType.MERGE_CLUSTERS,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
     cluster_to_keep: int = Field(description="ID of the cluster to keep after merging.")
     cluster_to_merge: int = Field(
@@ -80,8 +68,7 @@ class MergeClustersParams(BaseModel):
 
 class SplitClusterParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.SPLIT_CLUSTER] = Field(
-        default=PerspectivesJobType.SPLIT_CLUSTER,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
     cluster_id: int = Field(description="ID of the cluster to split.")
     split_into: int | None = Field(
@@ -91,8 +78,7 @@ class SplitClusterParams(BaseModel):
 
 class ChangeClusterParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.CHANGE_CLUSTER] = Field(
-        default=PerspectivesJobType.CHANGE_CLUSTER,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
     sdoc_ids: list[int] = Field(
         description="List of source document IDs to change the cluster for."
@@ -104,25 +90,20 @@ class ChangeClusterParams(BaseModel):
 
 class RefineModelParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.REFINE_MODEL] = Field(
-        default=PerspectivesJobType.REFINE_MODEL,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
 
 
 class ResetModelParams(BaseModel):
     perspectives_job_type: Literal[PerspectivesJobType.RESET_MODEL] = Field(
-        default=PerspectivesJobType.RESET_MODEL,
-        description="Type of the PerspectivesJob",
+        description="Type of the PerspectivesJob"
     )
 
 
 class RecomputeClusterTitleAndDescriptionParams(BaseModel):
     perspectives_job_type: Literal[
         PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION
-    ] = Field(
-        default=PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION,
-        description="Type of the PerspectivesJob",
-    )
+    ] = Field(description="Type of the PerspectivesJob")
     cluster_id: int = Field(
         description="ID of the cluster to recompute title and description for."
     )

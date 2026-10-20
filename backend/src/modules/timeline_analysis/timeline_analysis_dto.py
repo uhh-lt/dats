@@ -39,22 +39,30 @@ class TAAnnotationAggregationType(str, Enum):
 
 
 class SdocTimelineAnalysisFilter(BaseModel):
-    timeline_analysis_type: Literal[TimelineAnalysisType.DOCUMENT]
+    timeline_analysis_type: Literal[TimelineAnalysisType.DOCUMENT] = Field(
+        description="Type of the Timeline Analysis"
+    )
     filter: Filter[SdocColumns] = Field(description="The filter of the Concept")
 
 
 class SentAnnoTimelineAnalysisFilter(BaseModel):
-    timeline_analysis_type: Literal[TimelineAnalysisType.SENT_ANNO]
+    timeline_analysis_type: Literal[TimelineAnalysisType.SENT_ANNO] = Field(
+        description="Type of the Timeline Analysis"
+    )
     filter: Filter[SentAnnoColumns] = Field(description="The filter of the Concept")
 
 
 class SpanAnnoTimelineAnalysisFilter(BaseModel):
-    timeline_analysis_type: Literal[TimelineAnalysisType.SPAN_ANNO]
+    timeline_analysis_type: Literal[TimelineAnalysisType.SPAN_ANNO] = Field(
+        description="Type of the Timeline Analysis"
+    )
     filter: Filter[SpanColumns] = Field(description="The filter of the Concept")
 
 
 class BBoxAnnoTimelineAnalysisFilter(BaseModel):
-    timeline_analysis_type: Literal[TimelineAnalysisType.BBOX_ANNO]
+    timeline_analysis_type: Literal[TimelineAnalysisType.BBOX_ANNO] = Field(
+        description="Type of the Timeline Analysis"
+    )
     filter: Filter[BBoxColumns] = Field(description="The filter of the Concept")
 
 

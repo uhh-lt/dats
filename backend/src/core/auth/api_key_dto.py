@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from dateutil.relativedelta import relativedelta
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExpiryDuration(str, Enum):
@@ -28,24 +28,28 @@ class ExpiryDuration(str, Enum):
 
 
 class ApiKeyCreate(BaseModel):
-    name: str
-    prefix: str
-    hashed_key: str
-    expires_at: datetime | None
-    created_at: datetime
-    user_id: int
+    name: str = Field(description="Name of the ApiKey")
+    prefix: str = Field(description="Public prefix of the ApiKey to identify it")
+    hashed_key: str = Field(description="Hash of the full ApiKey")
+    expires_at: datetime | None = Field(
+        description="Expiration timestamp of the ApiKey (None = never expires)"
+    )
+    created_at: datetime = Field(description="Created timestamp of the ApiKey")
+    user_id: int = Field(description="User the ApiKey belongs to")
 
 
 class ApiKeyRead(BaseModel):
-    id: int
-    name: str
-    prefix: str
-    expires_at: datetime | None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
+    id: int = Field(description="ID of the ApiKey")
+    name: str = Field(description="Name of the ApiKey")
+    prefix: str = Field(description="Public prefix of the ApiKey to identify it")
+    expires_at: datetime | None = Field(
+        description="Expiration timestamp of the ApiKey (None = never expires)"
+    )
+    created_at: datetime = Field(description="Created timestamp of the ApiKey")
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ApiKeyCreatedResponse(ApiKeyRead):
-    api_key: str  # full key — shown only once on creation
+    api_key: str = Field(
+        description="The full ApiKey. It is only returned once, on creation."
+    )

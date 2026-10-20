@@ -1,13 +1,17 @@
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.doc_type import DocType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
-from core.doc.source_document_orm import SourceDocumentORM
 from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from systems.job_system.job_dto import JobInputBase
 from systems.search_system.sorting import SortDirection
+
+if TYPE_CHECKING:
+    from core.doc.source_document_orm import SourceDocumentORM
 
 
 class ProcessingSettings(BaseModel):
@@ -65,7 +69,7 @@ class SdocStatusRow(BaseModel):
     )
 
     @classmethod
-    def from_sdoc_orm(cls, sdoc: SourceDocumentORM) -> "SdocStatusRow":
+    def from_sdoc_orm(cls, sdoc: "SourceDocumentORM") -> "SdocStatusRow":
         status_fields = PROCESSING_JOBS[DocType(sdoc.doctype)]
         status: dict[str, SDocStatus] = {s: getattr(sdoc, s) for s in status_fields}
         return cls(
@@ -85,10 +89,5 @@ class SdocHealthResult(BaseModel):
 
 
 class SdocHealthSort(BaseModel):
-    column: str
-    direction: SortDirection
-
-    def get_sqlalchemy_expression(self):
-        assert hasattr(SourceDocumentORM, self.column), f"Invalid column: {self.column}"
-        orm_column = getattr(SourceDocumentORM, self.column)
-        return self.direction.apply(orm_column)
+    column: str = Field(description="SourceDocument column to sort by")
+    direction: SortDirection = Field(description="Direction of the sort")

@@ -1,6 +1,5 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import List
 
 from pydantic import BaseModel, Field
 from sqlalchemy import func
@@ -45,12 +44,12 @@ class SampledSdocsResults(BaseModel):
     )
 
 
-class DateGroupBy(Enum):
+class DateGroupBy(str, Enum):
     YEAR = "YEAR"
     MONTH = "MONTH"
     DAY = "DAY"
 
-    def apply(self, column: InstrumentedAttribute[datetime | date]) -> List:
+    def apply(self, column: InstrumentedAttribute[datetime | date]) -> list:
         match self:
             case DateGroupBy.YEAR:
                 return [func.extract("year", column)]
