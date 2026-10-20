@@ -89,7 +89,9 @@ lint target *files:
     case "$target" in
       backend)
         cd backend
-        if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix src test
+        if [ ${#rel[@]} -eq 0 ]; then
+          uv run ruff check --fix src test
+          uv run python lint/check_crud.py
         else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
         cd frontend
