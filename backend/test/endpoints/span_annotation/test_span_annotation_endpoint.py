@@ -92,9 +92,7 @@ def test_add_span_annotations_bulk_if_not_exists(
         span_text="Span",
     )
 
-    resp = client.put(
-        "/span/bulk/create/", json=[payload.model_dump(exclude_none=True)]
-    )
+    resp = client.put("/span/bulk/create", json=[payload.model_dump(exclude_none=True)])
 
     assert resp.status_code == 403, resp.text
 
