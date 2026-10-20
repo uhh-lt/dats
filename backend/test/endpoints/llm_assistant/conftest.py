@@ -298,7 +298,7 @@ def llm_assistant_project(
     person_code = crud_code.read_by_name_and_project(
         db=db_session,
         code_name="PERSON",
-        proj_id=test_project.id,
+        project_id=test_project.id,
     )
     assert person_code is not None, "The default PERSON system code is missing"
     fact_code = crud_code.create(

@@ -112,7 +112,7 @@ def import_sdocs_to_proj(
     # 2. Check if documents with the same filename already exist in the project
     for sdoc in sdoc_collection.source_documents:
         existing_sdoc = crud_sdoc.read_by_filename(
-            db=db, proj_id=project_id, filename=sdoc.filename, only_finished=False
+            db=db, project_id=project_id, filename=sdoc.filename, only_finished=False
         )
         if existing_sdoc is not None:
             error_messages.append(
@@ -152,7 +152,7 @@ def import_sdocs_to_proj(
         sdoc_folder_names.add(sdoc.folder_name)
     for sdoc_folder_name in sdoc_folder_names:
         existing_folder = crud_folder.read_by_name_and_project(
-            db=db, folder_name=sdoc_folder_name, proj_id=project_id
+            db=db, folder_name=sdoc_folder_name, project_id=project_id
         )
         if (
             existing_folder is not None
@@ -203,7 +203,7 @@ def import_sdocs_to_proj(
 
         # 2.1 Create the sdoc folder (if it does not already exist)
         sdoc_folder = crud_folder.read_by_name_and_project(
-            db=db, folder_name=sdoc_export.folder_name, proj_id=project_id
+            db=db, folder_name=sdoc_export.folder_name, project_id=project_id
         )
         if sdoc_folder is None:
             sdoc_folder = crud_folder.create(

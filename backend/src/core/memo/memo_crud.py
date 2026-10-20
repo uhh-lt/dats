@@ -19,9 +19,9 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     def create(self, db: Session, *, create_dto: MemoCreateIntern) -> MemoORM:
         raise NotImplementedError()
 
-    def __create_memo(
-        self, create_dto: MemoCreateIntern, db: Session, oh_db_obj: ObjectHandleORM
-    ):
+    def _create_memo(
+        self, db: Session, *, create_dto: MemoCreateIntern, oh_db_obj: ObjectHandleORM
+    ) -> MemoORM:
         # create the Memo
         dto_obj_data = jsonable_encoder(create_dto)
         dto_obj_data["attached_to_id"] = oh_db_obj.id
@@ -36,6 +36,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     def create_for_attached_object(
         self,
         db: Session,
+        *,
         attached_object_id: int,
         attached_object_type: AttachedObjectType,
         create_dto: MemoCreateIntern,
@@ -76,7 +77,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
         # create an ObjectHandle for the attached object
         oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
-        db_obj = self.__create_memo(create_dto, db, oh_db_obj)
+        db_obj = self._create_memo(db=db, create_dto=create_dto, oh_db_obj=oh_db_obj)
         return db_obj
 
     ### READ OPERATIONS ###
@@ -163,10 +164,10 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         """Delete multiple memos by ID, returning the deleted ORM objects."""
         return [self.delete(db=db, id=memo_id) for memo_id in ids]
 
-    ### FAVORITE OPERATIONS ###
+    ### OTHER OPERATIONS ###
 
     def favorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
-        self.exists(db, id=memo_id, raise_error=True)
+        self.exists(db=db, id=memo_id, raise_error=True)
 
         from sqlalchemy.dialects.postgresql import insert
 
@@ -194,8 +195,6 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             .first()
             is not None
         )
-
-    ### RECENT OPERATIONS ###
 
     def record_recent(self, db: Session, *, memo_id: int, user_id: int) -> None:
         """Upsert a (user, memo) recents row, bumping last_opened to now."""

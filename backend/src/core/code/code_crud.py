@@ -5,7 +5,7 @@ from config import conf
 from config_schema import SystemCodeConfig
 from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_orm import CodeORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from utils.color_utils import get_next_color
 
 
@@ -23,19 +23,19 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         return db_obj
 
     def create_system_codes_for_project(
-        self, db: Session, proj_id: int
+        self, db: Session, *, project_id: int
     ) -> list[CodeORM]:
         created: list[CodeORM] = []
 
         def __create_recursively(
             code_list: list[SystemCodeConfig], parent_code_id: int | None = None
-        ):
+        ) -> None:
             for system_code in code_list:
                 create_dto = CodeCreate(
                     name=system_code.name,
                     color=get_next_color(),
                     description=system_code.desc,
-                    project_id=proj_id,
+                    project_id=project_id,
                     parent_id=parent_code_id,
                     is_system=True,
                     enabled=system_code.enabled,
@@ -44,7 +44,7 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 existing_code_id = self.read_id_by_name_and_project(
                     db,
                     code_name=create_dto.name,
-                    proj_id=create_dto.project_id,
+                    project_id=create_dto.project_id,
                 )
 
                 if existing_code_id is None:
@@ -64,45 +64,57 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     ### READ OPERATIONS ###
 
-    def read_by_name(self, db: Session, code_name: str) -> list[CodeORM]:
+    def read_by_name(self, db: Session, *, code_name: str) -> list[CodeORM]:
         return db.query(self.model).filter(self.model.name == code_name).all()
 
     def read_by_names(
-        self, db: Session, project_id: int, names: list[str]
+        self, db: Session, *, project_id: int, names: list[str]
+    ) -> list[CodeORM]:
+        if not names:
+            return []
+
+        db_objs: list[CodeORM] = []
+        for i in range(0, len(names), BATCH_SIZE):
+            batch_names = names[i : i + BATCH_SIZE]
+            db_objs.extend(
+                db.query(self.model)
+                .filter(
+                    self.model.project_id == project_id,
+                    self.model.name.in_(batch_names),
+                )
+                .all()
+            )
+        return db_objs
+
+    def read_system_codes_by_project(
+        self, db: Session, *, project_id: int
     ) -> list[CodeORM]:
         return (
             db.query(self.model)
-            .filter(self.model.project_id == project_id, self.model.name.in_(names))
-            .all()
-        )
-
-    def read_system_codes_by_project(self, db: Session, proj_id: int) -> list[CodeORM]:
-        return (
-            db.query(self.model)
-            .filter(self.model.project_id == proj_id, self.model.is_system == True)  # noqa: E712
+            .filter(self.model.project_id == project_id, self.model.is_system == True)  # noqa: E712
             .all()
         )
 
     def read_by_name_and_project(
-        self, db: Session, code_name: str, proj_id: int
+        self, db: Session, *, code_name: str, project_id: int
     ) -> CodeORM | None:
         return (
             db.query(self.model)
-            .filter(self.model.name == code_name, self.model.project_id == proj_id)
+            .filter(self.model.name == code_name, self.model.project_id == project_id)
             .first()
         )
 
     def read_id_by_name_and_project(
-        self, db: Session, *, code_name: str, proj_id: int
+        self, db: Session, *, code_name: str, project_id: int
     ) -> int | None:
         code_id = (
             db.query(self.model.id)
-            .filter(self.model.name == code_name, self.model.project_id == proj_id)
+            .filter(self.model.name == code_name, self.model.project_id == project_id)
             .first()
         )
         return code_id[0] if code_id else None
 
-    def read_with_children(self, db: Session, *, code_id) -> list[CodeORM]:
+    def read_with_children(self, db: Session, *, code_id: int) -> list[CodeORM]:
         topq = (
             db.query(self.model.id)
             .filter(self.model.id == code_id)
@@ -119,11 +131,11 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### UPDATE OPERATIONS ###
 
     def update_with_children(
-        self, db: Session, *, code_id, update_dto: CodeUpdate
+        self, db: Session, *, code_id: int, update_dto: CodeUpdate
     ) -> CodeORM:
         if update_dto.enabled is None:
-            return self.update(db, id=code_id, update_dto=update_dto)
-        codes = self.read_with_children(db, code_id=code_id)
+            return self.update(db=db, id=code_id, update_dto=update_dto)
+        codes = self.read_with_children(db=db, code_id=code_id)
         obj_data = jsonable_encoder(codes[0].as_dict())
         update_data = update_dto.model_dump(exclude_unset=True)
         for field in obj_data:

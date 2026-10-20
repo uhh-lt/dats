@@ -13,6 +13,8 @@ from repos.db.crud_base import SQLCRUDBase
 class CRUDConceptOverTimeAnalysis(
     SQLCRUDBase[ConceptOverTimeAnalysisORM, COTACreateIntern, COTAUpdateIntern]
 ):
+    ### READ OPERATIONS ###
+
     def read_by_project(
         self, db: Session, *, project_id: int
     ) -> list[ConceptOverTimeAnalysisORM]:
@@ -25,12 +27,14 @@ class CRUDConceptOverTimeAnalysis(
         )
         return db_objs
 
+    ### OTHER OPERATIONS ###
+
     def duplicate_by_id(
         self, db: Session, *, cota_id: int
     ) -> ConceptOverTimeAnalysisORM:
-        db_obj = self.read(db, id=cota_id)
+        db_obj = self.read(db=db, id=cota_id)
         return self.create(
-            db,
+            db=db,
             create_dto=COTACreateIntern(
                 project_id=db_obj.project_id,
                 name=db_obj.name + " (Copy)",

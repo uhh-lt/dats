@@ -12,6 +12,8 @@ from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDClassifier(SQLCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]):
+    ### CREATE OPERATIONS ###
+
     def create(
         self,
         db: Session,
@@ -21,7 +23,7 @@ class CRUDClassifier(SQLCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpda
         tags: list[TagORM],
     ) -> ClassifierORM:
         classifier = super().create(
-            db,
+            db=db,
             create_dto=create_dto,
         )
         if len(codes) > 0:
@@ -32,8 +34,10 @@ class CRUDClassifier(SQLCRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpda
         db.refresh(classifier)
         return classifier
 
+    ### OTHER OPERATIONS ###
+
     def add_evaluation(
-        self, db: Session, create_dto: ClassifierEvaluationCreate
+        self, db: Session, *, create_dto: ClassifierEvaluationCreate
     ) -> ClassifierORM:
         classifier = self.read(db=db, id=create_dto.classifier_id)
         classifier.evaluations.append(

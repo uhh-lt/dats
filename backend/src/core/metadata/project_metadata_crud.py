@@ -29,19 +29,19 @@ class CRUDProjectMetadata(
         db_obj = super().create(db=db, create_dto=create_dto)
 
         # we have to create sdoc metadata for all existing sdocs
-        self.__create_all_sdoc_metadata(
+        self._create_all_sdoc_metadata(
             db=db, project_metadata=db_obj, metatype=create_dto.metatype
         )
 
         return db_obj
 
-    def __create_all_sdoc_metadata(
+    def _create_all_sdoc_metadata(
         self,
         db: Session,
         *,
         project_metadata: ProjectMetadataORM,
         metatype: MetaType | str,
-    ):
+    ) -> None:
         metadata_create_dtos = [
             SourceDocumentMetadataCreate.with_metatype(
                 source_document_id=sdoc.id,
@@ -54,13 +54,13 @@ class CRUDProjectMetadata(
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
     def create_project_metadata_for_project(
-        self, db: Session, proj_id: int
+        self, db: Session, *, project_id: int
     ) -> list[ProjectMetadataORM]:
         created: list[ProjectMetadataORM] = []
 
         for project_metadata in conf.project_metadata:
             create_dto = ProjectMetadataCreate(
-                project_id=proj_id,
+                project_id=project_id,
                 key=project_metadata.key,
                 metatype=project_metadata.metatype,
                 read_only=project_metadata.read_only,
@@ -75,7 +75,7 @@ class CRUDProjectMetadata(
     ### READ OPERATIONS ###
 
     def read_by_project_and_key(
-        self, db: Session, project_id: int, key: str
+        self, db: Session, *, project_id: int, key: str
     ) -> list[ProjectMetadataORM]:
         db_objs = (
             db.query(self.model)
@@ -88,7 +88,7 @@ class CRUDProjectMetadata(
         return db_objs
 
     def read_by_project_and_doctype(
-        self, db: Session, project_id: int, doctype: DocType
+        self, db: Session, *, project_id: int, doctype: DocType
     ) -> list[ProjectMetadataORM]:
         db_objs = (
             db.query(self.model)
@@ -101,7 +101,13 @@ class CRUDProjectMetadata(
         return db_objs
 
     def read_by_project_and_key_and_metatype_and_doctype(
-        self, db: Session, project_id: int, key: str, metatype: str, doctype: str
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        key: str,
+        metatype: str,
+        doctype: str,
     ) -> ProjectMetadataORM | None:
         return (
             db.query(self.model)
@@ -118,11 +124,11 @@ class CRUDProjectMetadata(
         self,
         db: Session,
         *,
-        proj_id: int,
+        project_id: int,
         skip: int | None = None,
         limit: int | None = None,
     ) -> list[ProjectMetadataORM]:
-        query = db.query(self.model).filter(self.model.project_id == proj_id)
+        query = db.query(self.model).filter(self.model.project_id == project_id)
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
@@ -133,9 +139,9 @@ class CRUDProjectMetadata(
     ### UPDATE OPERATIONS ###
 
     def update(
-        self, db: Session, *, metadata_id: int, update_dto: ProjectMetadataUpdate
+        self, db: Session, *, id: int, update_dto: ProjectMetadataUpdate
     ) -> ProjectMetadataORM:
-        db_obj = self.read(db=db, id=metadata_id)
+        db_obj = self.read(db=db, id=id)
         if db_obj.read_only:
             logger.warning(
                 (
@@ -154,19 +160,17 @@ class CRUDProjectMetadata(
                 update_dto.metatype is not None
                 and db_obj.metatype != update_dto.metatype
             ):
-                crud_sdoc_meta.delete_by_project_metadata(
-                    db, project_metadata_id=metadata_id
-                )
+                crud_sdoc_meta.delete_by_project_metadata(db=db, project_metadata_id=id)
 
                 # we have to create sdoc metadata for all existing sdocs (as we deleted them before)
-                self.__create_all_sdoc_metadata(
+                self._create_all_sdoc_metadata(
                     db=db,
                     project_metadata=db_obj,
                     metatype=update_dto.metatype,
                 )
 
             # update metadata
-            metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
+            metadata_orm = super().update(db=db, id=id, update_dto=update_dto)
 
             return metadata_orm
 
@@ -175,6 +179,7 @@ class CRUDProjectMetadata(
     def exists_by_project_and_key_and_metatype_and_doctype(
         self,
         db: Session,
+        *,
         project_id: int,
         key: str,
         metatype: MetaType,

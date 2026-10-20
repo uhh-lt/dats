@@ -14,6 +14,8 @@ class CRUDTimelineAnalysis(
         TimelineAnalysisORM, TimelineAnalysisCreateIntern, TimelineAnalysisUpdateIntern
     ]
 ):
+    ### READ OPERATIONS ###
+
     def read_by_project(
         self, db: Session, *, project_id: int
     ) -> list[TimelineAnalysisORM]:
@@ -26,12 +28,14 @@ class CRUDTimelineAnalysis(
         )
         return db_obj
 
+    ### OTHER OPERATIONS ###
+
     def duplicate_by_id(
         self, db: Session, *, timeline_analysis_id: int, user_id: int
     ) -> TimelineAnalysisORM:
-        db_obj = self.read(db, id=timeline_analysis_id)
+        db_obj = self.read(db=db, id=timeline_analysis_id)
         return self.create(
-            db,
+            db=db,
             create_dto=TimelineAnalysisCreateIntern(
                 project_id=db_obj.project_id,
                 name=db_obj.name + " (Copy)",

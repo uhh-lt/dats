@@ -46,10 +46,10 @@ class CorefService(metaclass=SingletonMeta):
         language_metadata = (
             crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
                 db,
-                project_id,
-                "language",
-                MetaType.STRING.value,
-                DocType.text.value,
+                project_id=project_id,
+                key="language",
+                metatype=MetaType.STRING.value,
+                doctype=DocType.text.value,
             )
         )
         if language_metadata is None:
@@ -197,7 +197,7 @@ class CorefService(metaclass=SingletonMeta):
         db_code = crud_code.read_by_name_and_project(
             db,
             code_name=name,
-            proj_id=project_id,
+            project_id=project_id,
         )
         if db_code is None:
             raise ValueError(f"Code '{name}' not found for project {project_id}")

@@ -45,7 +45,7 @@ def export_all_sdocs(
     fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
-    sdocs = crud_sdoc.read_by_project(db=db, proj_id=project_id, only_finished=False)
+    sdocs = crud_sdoc.read_by_project(db=db, project_id=project_id, only_finished=False)
     return __export_sdocs(
         db=db,
         fsr=fsr,

@@ -163,7 +163,7 @@ def dissociate_user_from_project(
 ) -> ProjectUserLinks:
     authz_user.assert_in_project(proj_id)
 
-    crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
+    crud_project.dissociate_user(db=db, project_id=proj_id, user_id=user_id)
     result = ProjectUserLinks(
         project_id=proj_id,
         users=[

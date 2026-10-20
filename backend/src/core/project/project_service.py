@@ -37,7 +37,7 @@ class ProjectService(metaclass=SingletonMeta):
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, proj_id: int, user_id: int) -> UserORM:
-        crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
+        crud_project.associate_user(db=db, project_id=proj_id, user_id=user_id)
         return crud_user.read(db=db, id=user_id)
 
     def create_project(
@@ -63,10 +63,12 @@ class ProjectService(metaclass=SingletonMeta):
             self.associate_user(db=db, proj_id=project_id, user_id=creating_user_id)
 
         # 4) create system codes
-        crud_code.create_system_codes_for_project(db=db, proj_id=project_id)
+        crud_code.create_system_codes_for_project(db=db, project_id=project_id)
 
         # 5) create project metadata
-        crud_project_meta.create_project_metadata_for_project(db=db, proj_id=project_id)
+        crud_project_meta.create_project_metadata_for_project(
+            db=db, project_id=project_id
+        )
 
         # 6) create filesystem directory structure
         self.fsr.create_directory_structure_for_project(proj_id=project_id)

@@ -102,7 +102,7 @@ def login(
         raise credentials_exception
 
     (access_token, access_token_expires) = generate_jwt(user)
-    refresh_token = crud_refresh_token.create(db, user.id)
+    refresh_token = crud_refresh_token.create(db, user_id=user.id)
 
     response.set_cookie(
         AUTHORIZATION,
@@ -132,8 +132,8 @@ def logout(
     dto: RefreshAccessTokenData = Depends(),
     response: Response,
 ) -> None:
-    token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
-    crud_refresh_token.revoke(db, token)
+    token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
+    crud_refresh_token.revoke(db, token=token)
     response.delete_cookie(AUTHORIZATION, secure=True, httponly=True, samesite="strict")
 
 
@@ -147,13 +147,13 @@ def refresh_access_token(
     dto: RefreshAccessTokenData = Depends(),
     response: Response,
 ) -> UserAuthorizationHeaderData:
-    token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
-    crud_refresh_token.revoke(db, token)
+    token = crud_refresh_token.read_and_verify(db, token_str=dto.refresh_token)
+    crud_refresh_token.revoke(db, token=token)
     # Remove very old refresh tokens to prevent our database from filling up
-    crud_refresh_token.delete_old_refresh_tokens(db, token.user_id)
+    crud_refresh_token.delete_old_refresh_tokens(db, user_id=token.user_id)
 
     (access_token, access_token_expires) = generate_jwt(token.user)
-    new_token = crud_refresh_token.create(db, token.user.id)
+    new_token = crud_refresh_token.create(db, user_id=token.user.id)
 
     response.set_cookie(
         AUTHORIZATION,
@@ -217,7 +217,9 @@ async def oidc_callback(
 
     (access_token, access_token_expires) = generate_jwt(user)
 
-    refresh_token = await run_in_threadpool(crud_refresh_token.create, db, user.id)
+    refresh_token = await run_in_threadpool(
+        crud_refresh_token.create, db, user_id=user.id
+    )
 
     auth_data = UserAuthorizationHeaderData(
         access_token=access_token,

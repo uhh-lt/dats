@@ -2,16 +2,13 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import CursorResult, select, tuple_, update
 from sqlalchemy.orm import Session
 
-from config import conf
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_cluster_dto import (
     DocumentClusterCreate,
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
-
-BATCH_SIZE = conf.postgres.batch_size
+from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
 
 
 class CRUDDocumentCluster(
@@ -19,7 +16,7 @@ class CRUDDocumentCluster(
 ):
     ### READ OPERATIONS ###
 
-    def read(self, db: Session, id: tuple[int, int]) -> DocumentClusterORM:
+    def read(self, db: Session, *, id: tuple[int, int]) -> DocumentClusterORM:
         """
         Read a DocumentClusterORM by a tuple of (sdoc_id, cluster_id).
         """
@@ -37,7 +34,7 @@ class CRUDDocumentCluster(
         return db_obj
 
     def read_by_ids(
-        self, db: Session, ids: list[tuple[int, int]]
+        self, db: Session, *, ids: list[tuple[int, int]]
     ) -> list[DocumentClusterORM]:
         """
         Read DocumentClusterORMs by a list of (sdoc_id, cluster_id) tuples.
@@ -102,8 +99,6 @@ class CRUDDocumentCluster(
         db: Session,
         *,
         id: tuple[int, int],
-        sdoc_id: int,
-        cluster_id: int,
         update_dto: DocumentClusterUpdate,
     ) -> DocumentClusterORM:
         """
@@ -136,7 +131,7 @@ class CRUDDocumentCluster(
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
-        db_objects = self.read_by_ids(db, ids=ids)
+        db_objects = self.read_by_ids(db=db, ids=ids)
 
         for db_obj, update_dto in zip(db_objects, update_dtos):
             obj_data = jsonable_encoder(db_obj.as_dict())

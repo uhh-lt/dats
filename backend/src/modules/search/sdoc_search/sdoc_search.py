@@ -28,7 +28,7 @@ from systems.search_system.sorting import Sort
 def find_sdocs_info(db: Session, project_id: int) -> list[ColumnInfo[SdocColumns]]:
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
-        for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
+        for pm in crud_project_meta.read_by_project(db=db, project_id=project_id)
     ]
     metadata_column_info = [
         ColumnInfo.from_project_metadata(pm)

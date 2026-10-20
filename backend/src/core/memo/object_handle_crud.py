@@ -3,7 +3,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from config import conf
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -27,10 +26,13 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from repos.db.crud_base import NoSuchElementError, SQLCRUDBase, UpdateNotAllowed
+from repos.db.crud_base import (
+    BATCH_SIZE,
+    NoSuchElementError,
+    SQLCRUDBase,
+    UpdateNotAllowed,
+)
 from repos.db.sql_utils import aggregate_ids
-
-BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDObjectHandle(
@@ -73,6 +75,8 @@ class CRUDObjectHandle(
         AttachedObjectType.project: "project_id",
     }
 
+    ### CREATE OPERATIONS ###
+
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
         try:
             with db.begin_nested():  # create a database savepoint
@@ -98,8 +102,10 @@ class CRUDObjectHandle(
                 # Flo: Re-raise Exception since it's not a UC Violation
                 raise e
 
+    ### READ OPERATIONS ###
+
     def read_by_attached_object_id(
-        self, db: Session, obj_id_key: str, obj_id_val: int
+        self, db: Session, *, obj_id_key: str, obj_id_val: int
     ) -> ObjectHandleORM:
         if obj_id_key not in self.__obj_id_orm_type_map.keys():
             raise ValueError("Unknown Object ID!")
@@ -164,8 +170,10 @@ class CRUDObjectHandle(
 
         return results
 
+    ### OTHER OPERATIONS ###
+
     def resolve_handled_object(
-        self, db: Session, handle: ObjectHandleORM
+        self, db: Session, *, handle: ObjectHandleORM
     ) -> (
         CodeORM
         | TagORM

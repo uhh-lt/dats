@@ -87,7 +87,7 @@ def resolve_filename(
     authz_user.assert_in_project(proj_id)
 
     sdoc = crud_sdoc.read_by_filename(
-        db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
+        db=db, project_id=proj_id, only_finished=only_finished, filename=filename
     )
     if sdoc is None:
         raise NoSuchElementError(
@@ -124,7 +124,7 @@ def count_sdocs_with_status(
 ) -> int:
     authz_user.assert_in_project(project_id)
     return crud_sdoc.count_by_project_and_status(
-        db=db, proj_id=project_id, status=status
+        db=db, project_id=project_id, status=status
     )
 
 

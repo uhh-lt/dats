@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from common.exception_handler import exception_handler
 from common.sdoc_status_enum import SDocStatus
-from config import conf
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
@@ -16,12 +15,10 @@ from core.doc.source_document_dto import (
 )
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
 from repos.filesystem_repo import FilesystemRepo
 from systems.event_system.events import source_document_deleted
-
-BATCH_SIZE = conf.postgres.batch_size
 
 
 @exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -83,7 +80,7 @@ class CRUDSourceDocument(
         self,
         db: Session,
         *,
-        proj_id: int,
+        project_id: int,
         tag_id: int,
         only_finished: bool = True,
         skip: int | None = None,
@@ -92,12 +89,14 @@ class CRUDSourceDocument(
         query = db.query(self.model).join(SourceDocumentORM, TagORM.source_documents)
         if only_finished:
             query = query.filter(
-                self.model.project_id == proj_id,
+                self.model.project_id == project_id,
                 self.model.processed_status == SDocStatus.finished.value,
                 TagORM.id == tag_id,
             )
         else:
-            query = query.filter(self.model.project_id == proj_id, TagORM.id == tag_id)
+            query = query.filter(
+                self.model.project_id == project_id, TagORM.id == tag_id
+            )
 
         if skip is not None:
             query = query.offset(skip)
@@ -110,7 +109,7 @@ class CRUDSourceDocument(
         self,
         db: Session,
         *,
-        proj_id: int,
+        project_id: int,
         only_finished: bool = True,
         skip: int | None = None,
         limit: int | None = None,
@@ -119,11 +118,11 @@ class CRUDSourceDocument(
 
         if only_finished:
             query = query.filter(
-                self.model.project_id == proj_id,
+                self.model.project_id == project_id,
                 self.model.processed_status == SDocStatus.finished.value,
             )
         else:
-            query = query.filter(self.model.project_id == proj_id)
+            query = query.filter(self.model.project_id == project_id)
 
         if skip is not None:
             query = query.offset(skip)
@@ -133,28 +132,28 @@ class CRUDSourceDocument(
         return query.all()
 
     def read_by_name(
-        self, db: Session, *, name: str, proj_id: int
+        self, db: Session, *, name: str, project_id: int
     ) -> SourceDocumentORM | None:
         return (
             db.query(self.model)
-            .filter(self.model.name == name, self.model.project_id == proj_id)
+            .filter(self.model.name == name, self.model.project_id == project_id)
             .first()
         )
 
     def read_by_filename(
-        self, db: Session, *, proj_id: int, only_finished: bool = True, filename: str
+        self, db: Session, *, project_id: int, only_finished: bool = True, filename: str
     ) -> SourceDocumentORM | None:
         query = db.query(self.model)
 
         if only_finished:
             query = query.filter(
-                self.model.project_id == proj_id,
+                self.model.project_id == project_id,
                 self.model.filename == filename,
                 self.model.processed_status == SDocStatus.finished.value,
             )
         else:
             query = query.filter(
-                self.model.project_id == proj_id, self.model.filename == filename
+                self.model.project_id == project_id, self.model.filename == filename
             )
         return query.first()
 
@@ -270,16 +269,16 @@ class CRUDSourceDocument(
     ### OTHER OPERATIONS ###
 
     def count_by_project_and_status(
-        self, db: Session, *, proj_id: int, status: SDocStatus | None = None
+        self, db: Session, *, project_id: int, status: SDocStatus | None = None
     ) -> int:
         query = db.query(self.model)
         if status is not None:
             query = query.filter(
-                self.model.project_id == proj_id,
+                self.model.project_id == project_id,
                 self.model.processed_status == status.value,
             )
         else:
-            query = query.filter(self.model.project_id == proj_id)
+            query = query.filter(self.model.project_id == project_id)
         return query.with_entities(func.count()).scalar()
 
 

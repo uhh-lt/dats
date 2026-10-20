@@ -4,13 +4,12 @@ from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from config import conf
 from core.annotation.annotation_document_dto import (
     AnnotationDocumentCreate,
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
 
 
 class CRUDAnnotationDocument(
@@ -46,8 +45,8 @@ class CRUDAnnotationDocument(
         db: Session,
         *,
         id: int,
-    ) -> AnnotationDocumentORM | None:
-        self.update(
+    ) -> AnnotationDocumentORM:
+        return self.update(
             db=db,
             id=id,
             update_dto=AnnotationDocumentUpdate(
@@ -57,9 +56,12 @@ class CRUDAnnotationDocument(
 
     def update_timestamps(self, db: Session, *, ids: list[int]) -> None:
         """Update annotation-document timestamps using batched SQL statements."""
+        if not ids:
+            return
+
         updated = datetime.datetime.now(datetime.UTC)
-        for i in range(0, len(ids), conf.postgres.batch_size):
-            batch_ids = ids[i : i + conf.postgres.batch_size]
+        for i in range(0, len(ids), BATCH_SIZE):
+            batch_ids = ids[i : i + BATCH_SIZE]
             db.execute(
                 update(self.model)
                 .where(self.model.id.in_(batch_ids))
@@ -107,10 +109,13 @@ class CRUDAnnotationDocument(
         same annotation document, so a check-then-insert would race. ON CONFLICT DO
         NOTHING waits for the other transaction and skips the row if it committed.
         """
+        if not sdoc_ids:
+            return {}
+
         unique_sdoc_ids = list(dict.fromkeys(sdoc_ids))
         annotation_documents: list[AnnotationDocumentORM] = []
-        for i in range(0, len(unique_sdoc_ids), conf.postgres.batch_size):
-            batch_ids = unique_sdoc_ids[i : i + conf.postgres.batch_size]
+        for i in range(0, len(unique_sdoc_ids), BATCH_SIZE):
+            batch_ids = unique_sdoc_ids[i : i + BATCH_SIZE]
             db.execute(
                 insert(self.model)
                 .values(

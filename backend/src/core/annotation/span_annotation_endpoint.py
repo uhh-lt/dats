@@ -316,7 +316,7 @@ def delete_span_annotations_bulk(
 ) -> list[SpanAnnotationDeleted]:
     authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
 
-    db_objs = crud_span_anno.remove_bulk(db=db, ids=span_anno_ids)
+    db_objs = crud_span_anno.delete_bulk(db=db, ids=span_anno_ids)
     results = [SpanAnnotationDeleted.model_validate(db_obj) for db_obj in db_objs]
     if results:
         ws.emit_to_projects_grouped(

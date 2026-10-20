@@ -206,7 +206,7 @@ class AnnotationTask(
         )
 
         logger.info("Deleting {} previous span annotations.", len(previous_annotations))
-        crud_span_anno.remove_bulk(
+        crud_span_anno.delete_bulk(
             db=context.db, ids=[annotation.id for annotation in previous_annotations]
         )
 
