@@ -255,7 +255,7 @@ def record_recent_memo(
 ) -> None:
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
 
-    crud_memo.record_recent(db=db, memo_id=memo_id, user_id=authz_user.user.id)
+    crud_memo.update_recent(db=db, memo_id=memo_id, user_id=authz_user.user.id)
 
 
 # --- delete operations

@@ -110,7 +110,7 @@ def __generate_export_df_for_memos(
         )
 
         # Resolve the attached object to a unique identifier
-        attached_to = crud_object_handle.resolve_handled_object(
+        attached_to = crud_object_handle.read_handled_object(
             db=db, handle=memo.attached_to
         )
         match attached_to:

@@ -73,13 +73,13 @@ def get_memo_read_dto_from_orm(
 ) -> MemoRead:
     from core.memo.object_handle_crud import crud_object_handle
 
-    attached_to = crud_object_handle.resolve_handled_object(
+    attached_to = crud_object_handle.read_handled_object(
         db=db, handle=db_obj.attached_to
     )
 
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     favorite = (
-        crud_memo.is_favorited(db=db, memo_id=db_obj.id, user_id=user_id)
+        crud_memo.exists_favorite(db=db, memo_id=db_obj.id, user_id=user_id)
         if user_id is not None
         else False
     )

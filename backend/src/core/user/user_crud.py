@@ -2,8 +2,8 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from core.auth.security import generate_password_hash, verify_password
-from core.user.user_dto import UserCreate, UserLogin, UserUpdate
+from core.auth.security import generate_password_hash
+from core.user.user_dto import UserCreate, UserUpdate
 from core.user.user_orm import UserORM
 from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
 
@@ -85,22 +85,6 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             hashed_pwd = generate_password_hash(update_dto.password)
             update_dto.password = hashed_pwd
         return super().update(db=db, id=id, update_dto=update_dto)
-
-    ### OTHER OPERATIONS ###
-
-    def authenticate(self, db: Session, *, user_login: UserLogin) -> UserORM | None:
-        try:
-            user = self.read_by_email(db=db, email=user_login.username)
-        except NoSuchElementError:
-            # Don't tell users if the email or the password was wrong
-            # to prevent email guessing attacks
-            return None
-
-        if not verify_password(
-            plain_password=user_login.password, hashed_password=user.password
-        ):
-            return None
-        return user
 
 
 crud_user = CRUDUser(UserORM)

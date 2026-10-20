@@ -1,12 +1,11 @@
 from typing import Generic, Type, TypeVar
 
-from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import CursorResult, delete
 from sqlalchemy.orm import Session
 
-from common.exception_handler import NotFoundError, exception_handler
+from common.exception_handler import NotFoundError
 from config import conf
 from repos.db.orm_base import ORMBase
 
@@ -21,7 +20,6 @@ class UpdateNotAllowed(BaseModel):
     pass
 
 
-@exception_handler(status.HTTP_404_NOT_FOUND)
 class NoSuchElementError(NotFoundError):
     def __init__(self, model: Type[ORMModelType], **kwargs):
         self.model = model
