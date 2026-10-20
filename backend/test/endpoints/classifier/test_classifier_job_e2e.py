@@ -524,6 +524,7 @@ def _report_inference(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.training
 @pytest.mark.parametrize("payload", classifier_training_params)
 def test_span_classifier_train_eval_infer(
     client: TestClient,
@@ -663,6 +664,7 @@ def test_span_classifier_train_eval_infer(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.training
 @pytest.mark.parametrize("payload", classifier_training_params)
 def test_document_classifier_train_eval_infer(
     client: TestClient,
@@ -806,6 +808,7 @@ def test_document_classifier_train_eval_infer(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.training
 @pytest.mark.parametrize("payload", classifier_training_params)
 def test_sentence_classifier_train_eval_infer(
     client: TestClient,

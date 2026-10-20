@@ -312,6 +312,7 @@ def _sentence_annotation_payload(
 # ===========================================================================
 
 
+@pytest.mark.llm
 def test_tagging_job_returns_current_and_exact_suggested_tags(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
@@ -333,6 +334,7 @@ def test_tagging_job_returns_current_and_exact_suggested_tags(
     assert result.reasoning
 
 
+@pytest.mark.llm
 def test_metadata_job_extracts_all_supported_value_types(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
@@ -363,6 +365,7 @@ def test_metadata_job_extracts_all_supported_value_types(
     }
 
 
+@pytest.mark.llm
 @pytest.mark.parametrize(
     "approach_type,strategy_type,data_tag,use_small_overlapping_chunks",
     [
@@ -447,6 +450,7 @@ def test_span_annotation_job_covers_all_approaches_strategies_and_data_tags(
     ]
 
 
+@pytest.mark.llm
 @pytest.mark.parametrize(
     "approach_type,data_tag",
     [
@@ -537,6 +541,7 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
 # ===========================================================================
 
 
+@pytest.mark.llm
 def test_finished_job_can_be_read_listed_but_not_aborted_or_retried(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
@@ -562,6 +567,7 @@ def test_finished_job_can_be_read_listed_but_not_aborted_or_retried(
     assert retry_response.json() is False
 
 
+@pytest.mark.llm
 def test_failed_job_can_be_retried_and_fails_again_with_the_same_invalid_model(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
