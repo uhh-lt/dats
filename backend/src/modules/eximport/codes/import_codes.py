@@ -160,7 +160,7 @@ class CodeImporter:
 
         # Check if code already exists
         existing_code = crud_code.read_by_name_and_project(
-            db=self.db, code_name=code.code_name, proj_id=self.project_id
+            db=self.db, code_name=code.code_name, project_id=self.project_id
         )
 
         if existing_code:

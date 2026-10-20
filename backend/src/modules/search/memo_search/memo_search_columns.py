@@ -368,10 +368,10 @@ class MemoColumns(str, AbstractColumns):
                 # Annotations have no name; they round-trip by their stringified id.
                 return int(name)
             case Crud.SOURCE_DOCUMENT:
-                found = crud.value.read_by_name(db, name=name, proj_id=project_id)  # type: ignore
+                found = crud.value.read_by_name(db, name=name, project_id=project_id)  # type: ignore
             case Crud.CODE:
                 found = crud.value.read_by_name_and_project(
-                    db, code_name=name, proj_id=project_id
+                    db, code_name=name, project_id=project_id
                 )  # type: ignore
             case Crud.TAG:
                 found = crud.value.read_by_name_and_project(

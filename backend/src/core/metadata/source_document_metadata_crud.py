@@ -12,7 +12,7 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataUpdate,
 )
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
 
 
 # TODO: wohin damit?
@@ -48,7 +48,7 @@ class CRUDSourceDocumentMetadata(
 
         # check if ProjectMetadata exists
         project_metadata = ProjectMetadataRead.model_validate(
-            crud_project_meta.read(db, id=create_dto.project_metadata_id)
+            crud_project_meta.read(db=db, id=create_dto.project_metadata_id)
         )
 
         # check if value has the correct type
@@ -58,7 +58,7 @@ class CRUDSourceDocumentMetadata(
             )
 
         # create metadata
-        metadata_orm = super().create(db, create_dto=create_dto)
+        metadata_orm = super().create(db=db, create_dto=create_dto)
 
         return metadata_orm
 
@@ -101,14 +101,14 @@ class CRUDSourceDocumentMetadata(
         self,
         db: Session,
         *,
-        proj_id: int,
+        project_id: int,
         skip: int | None = None,
         limit: int | None = None,
     ) -> list[SourceDocumentMetadataORM]:
         query = (
             db.query(self.model)
             .join(SourceDocumentMetadataORM.project_metadata)
-            .filter(ProjectMetadataORM.project_id == proj_id)
+            .filter(ProjectMetadataORM.project_id == project_id)
         )
         if skip is not None:
             query = query.offset(skip)
@@ -145,19 +145,25 @@ class CRUDSourceDocumentMetadata(
         keys: list[str],
         sdoc_id: int,
     ) -> list[tuple[ProjectMetadataORM, SourceDocumentMetadataORM]]:
-        query = (
-            db.query(ProjectMetadataORM, SourceDocumentMetadataORM)
-            .join(SourceDocumentMetadataORM.project_metadata)
-            .filter(
-                ProjectMetadataORM.key.in_(keys),
-                SourceDocumentMetadataORM.source_document_id == sdoc_id,
+        if not keys:
+            return []
+
+        results: list[tuple[ProjectMetadataORM, SourceDocumentMetadataORM]] = []
+        for i in range(0, len(keys), BATCH_SIZE):
+            batch_keys = keys[i : i + BATCH_SIZE]
+            query = (
+                db.query(ProjectMetadataORM, SourceDocumentMetadataORM)
+                .join(SourceDocumentMetadataORM.project_metadata)
+                .filter(
+                    ProjectMetadataORM.key.in_(batch_keys),
+                    SourceDocumentMetadataORM.source_document_id == sdoc_id,
+                )
             )
-        )
-        results = query.all()
-        return [(r[0], r[1]) for r in results]
+            results.extend((r[0], r[1]) for r in query.all())
+        return results
 
     def read_by_sdoc(
-        self, db: Session, sdoc_id: int
+        self, db: Session, *, sdoc_id: int
     ) -> list[SourceDocumentMetadataORM]:
         db_objs = (
             db.query(self.model)
@@ -169,9 +175,9 @@ class CRUDSourceDocumentMetadata(
     ### UPDATE OPERATIONS ###
 
     def update(
-        self, db: Session, *, metadata_id: int, update_dto: SourceDocumentMetadataUpdate
+        self, db: Session, *, id: int, update_dto: SourceDocumentMetadataUpdate
     ) -> SourceDocumentMetadataORM:
-        db_obj = self.read(db=db, id=metadata_id)
+        db_obj = self.read(db=db, id=id)
         if db_obj.project_metadata.read_only:
             logger.warning(
                 (
@@ -191,7 +197,7 @@ class CRUDSourceDocumentMetadata(
                 )
 
             # update metadata
-            metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
+            metadata_orm = super().update(db=db, id=id, update_dto=update_dto)
 
             return metadata_orm
 
@@ -202,7 +208,7 @@ class CRUDSourceDocumentMetadata(
         for update_dto in update_dtos:
             db_obj = self.update(
                 db=db,
-                metadata_id=update_dto.id,
+                id=update_dto.id,
                 update_dto=SourceDocumentMetadataUpdate(
                     **update_dto.model_dump(exclude={"id"})
                 ),
@@ -261,7 +267,9 @@ class CRUDSourceDocumentMetadata(
 
     ### DELETE OPERATIONS ###
 
-    def delete_by_project_metadata(self, db: Session, *, project_metadata_id: int):
+    def delete_by_project_metadata(
+        self, db: Session, *, project_metadata_id: int
+    ) -> None:
         db.query(self.model).filter(
             SourceDocumentMetadataORM.project_metadata_id == project_metadata_id
         ).delete()

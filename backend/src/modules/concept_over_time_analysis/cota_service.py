@@ -39,7 +39,7 @@ class COTAService(metaclass=SingletonMeta):
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
             for pm in crud_project_meta.read_by_project(
-                db=db, proj_id=cota_create.project_id
+                db=db, project_id=cota_create.project_id
             )
         ]
         project_metadata = [

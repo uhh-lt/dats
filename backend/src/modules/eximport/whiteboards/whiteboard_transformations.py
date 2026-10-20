@@ -441,7 +441,7 @@ def transform_nodes_for_import(
                 )
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,
-                    proj_id=project_id,
+                    project_id=project_id,
                     filename=node.data.sdoc_filename,
                     only_finished=False,
                 )

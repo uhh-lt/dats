@@ -127,6 +127,8 @@ class CRUDSearchView(
         db.refresh(view)
         return view
 
+    ### OTHER OPERATIONS ###
+
     def reorder(
         self,
         db: Session,

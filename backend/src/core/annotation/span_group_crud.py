@@ -15,6 +15,8 @@ from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
     ) -> SpanGroupORM:
@@ -24,12 +26,14 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
         )
 
         return super().create(
-            db,
+            db=db,
             create_dto=SpanGroupCreateIntern(
                 name=create_dto.name,
                 annotation_document_id=adoc.id,
             ),
         )
+
+    ### READ OPERATIONS ###
 
     def read_by_user_and_sdoc(
         self,
@@ -55,6 +59,8 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
 
     def read_by_name(self, db: Session, *, name: str) -> SpanGroupORM | None:
         return db.query(self.model).filter(self.model.name == name).first()
+
+    ### OTHER OPERATIONS ###
 
     def link_groups_spans_batch(
         self, db: Session, *, links: dict[int, list[int]]

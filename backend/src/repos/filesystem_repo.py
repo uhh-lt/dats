@@ -562,7 +562,7 @@ class FilesystemRepo(RepoBase, metaclass=SingletonMeta):
             try:
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,
-                    proj_id=proj_id,
+                    project_id=proj_id,
                     filename=filename.name if isinstance(filename, Path) else filename,
                     only_finished=False,
                 )

@@ -14,7 +14,7 @@ from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
 class CRUDBBoxAnnotation(
@@ -175,18 +175,24 @@ class CRUDBBoxAnnotation(
         sdoc_id: int,
         exclude_disabled_codes: bool = True,
     ) -> list[BBoxAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .join(self.model.annotation_document)
-            .where(
-                AnnotationDocumentORM.user_id.in_(user_ids),
-                AnnotationDocumentORM.source_document_id == sdoc_id,
-            )
-        )
-        if exclude_disabled_codes:
-            query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
+        if not user_ids:
+            return []
 
-        return query.all()
+        db_objs: list[BBoxAnnotationORM] = []
+        for i in range(0, len(user_ids), BATCH_SIZE):
+            batch_user_ids = user_ids[i : i + BATCH_SIZE]
+            query = (
+                db.query(self.model)
+                .join(self.model.annotation_document)
+                .where(
+                    AnnotationDocumentORM.user_id.in_(batch_user_ids),
+                    AnnotationDocumentORM.source_document_id == sdoc_id,
+                )
+            )
+            if exclude_disabled_codes:
+                query = query.join(self.model.code).where(CodeORM.enabled == True)  # noqa: E712
+            db_objs.extend(query.all())
+        return db_objs
 
     def read_by_code_and_user(
         self,
@@ -213,7 +219,7 @@ class CRUDBBoxAnnotation(
     def update(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
     ) -> BBoxAnnotationORM:
-        bbox_anno = super().update(db, id=id, update_dto=update_dto)
+        bbox_anno = super().update(db=db, id=id, update_dto=update_dto)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
 
@@ -224,7 +230,7 @@ class CRUDBBoxAnnotation(
     ) -> list[BBoxAnnotationORM]:
         return [
             self.update(
-                db,
+                db=db,
                 id=update_dto.bbox_annotation_id,
                 update_dto=BBoxAnnotationUpdate(code_id=update_dto.code_id),
             )
@@ -234,7 +240,7 @@ class CRUDBBoxAnnotation(
     ### DELETE OPERATIONS ###
 
     def delete(self, db: Session, *, id: int) -> BBoxAnnotationORM:
-        bbox_anno = super().delete(db, id=id)
+        bbox_anno = super().delete(db=db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
 
@@ -243,7 +249,7 @@ class CRUDBBoxAnnotation(
     def delete_bulk(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationORM]:
         bbox_annos = []
         for id in ids:
-            bbox_annos.append(self.delete(db, id=id))
+            bbox_annos.append(self.delete(db=db, id=id))
 
         # find the annotation document ids
         adoc_ids = {bbox_anno.annotation_document_id for bbox_anno in bbox_annos}

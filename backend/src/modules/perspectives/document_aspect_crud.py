@@ -3,7 +3,6 @@ from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session
 
 from common.doc_type import DocType
-from config import conf
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
@@ -14,15 +13,15 @@ from modules.perspectives.document_aspect_dto import (
 )
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
-
-BATCH_SIZE = conf.postgres.batch_size
+from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
 
 
 class CRUDDocumentAspect(
     SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate]
 ):
-    def read(self, db: Session, id: tuple[int, int]) -> DocumentAspectORM:
+    ### READ OPERATIONS ###
+
+    def read(self, db: Session, *, id: tuple[int, int]) -> DocumentAspectORM:
         """
         Read a DocumentAspectORM by a tuple of (sdoc_id, aspect_id).
         """
@@ -40,7 +39,7 @@ class CRUDDocumentAspect(
         return db_obj
 
     def read_by_ids(
-        self, db: Session, ids: list[tuple[int, int]]
+        self, db: Session, *, ids: list[tuple[int, int]]
     ) -> list[DocumentAspectORM]:
         """
         Read DocumentAspectORMs by a list of (sdoc_id, aspect_id) tuples.
@@ -77,7 +76,7 @@ class CRUDDocumentAspect(
         return result
 
     def read_by_aspect_and_sdoc_ids(
-        self, db, *, sdoc_ids: list[int], aspect_id: int
+        self, db: Session, *, sdoc_ids: list[int], aspect_id: int
     ) -> list[DocumentAspectORM]:
         if not sdoc_ids:
             return []
@@ -110,7 +109,7 @@ class CRUDDocumentAspect(
         return result
 
     def read_by_aspect_and_cluster_id(
-        self, db, *, aspect_id: int, cluster_id: int
+        self, db: Session, *, aspect_id: int, cluster_id: int
     ) -> list[DocumentAspectORM]:
         return (
             db.query(self.model)
@@ -122,7 +121,9 @@ class CRUDDocumentAspect(
             .all()
         )
 
-    def read_by_aspect_id(self, db, *, aspect_id: int) -> list[DocumentAspectORM]:
+    def read_by_aspect_id(
+        self, db: Session, *, aspect_id: int
+    ) -> list[DocumentAspectORM]:
         return (
             db.query(self.model)
             .filter(
@@ -132,7 +133,7 @@ class CRUDDocumentAspect(
         )
 
     def read_all_with_clusters_of_level(
-        self, db, *, aspect_id: int, level: int
+        self, db: Session, *, aspect_id: int, level: int
     ) -> list[DocumentAspectORM]:
         return (
             db.query(self.model)
@@ -190,6 +191,8 @@ class CRUDDocumentAspect(
 
         return query.all()
 
+    ### UPDATE OPERATIONS ###
+
     def update_multi(
         self,
         db: Session,
@@ -204,7 +207,7 @@ class CRUDDocumentAspect(
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
-        db_objects = self.read_by_ids(db, ids=ids)
+        db_objects = self.read_by_ids(db=db, ids=ids)
 
         for db_obj, update_dto in zip(db_objects, update_dtos):
             obj_data = jsonable_encoder(db_obj.as_dict())

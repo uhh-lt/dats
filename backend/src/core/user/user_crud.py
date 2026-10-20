@@ -1,10 +1,11 @@
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from core.auth.security import generate_password_hash, verify_password
 from core.user.user_dto import UserCreate, UserLogin, UserUpdate
 from core.user.user_orm import UserORM
-from repos.db.crud_base import NoSuchElementError, SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, NoSuchElementError, SQLCRUDBase
 
 SYSTEM_USER_ID: int = 1
 DEMO_USER_ID: int = 2
@@ -31,8 +32,6 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
     def create_with_id(
         self, db: Session, *, create_dto: UserCreate, id: int
     ) -> UserORM:
-        from fastapi.encoders import jsonable_encoder
-
         # hashes the PW before storing in DB
         hashed_pwd = generate_password_hash(create_dto.password)
         create_dto.password = hashed_pwd
@@ -68,8 +67,15 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
         return user
 
     def read_by_emails(self, db: Session, *, emails: list[str]) -> list[UserORM]:
-        stmt = select(self.model).where(self.model.email.in_(emails))
-        return list(db.scalars(stmt).all())
+        if not emails:
+            return []
+
+        db_objs: list[UserORM] = []
+        for i in range(0, len(emails), BATCH_SIZE):
+            batch_emails = emails[i : i + BATCH_SIZE]
+            stmt = select(self.model).where(self.model.email.in_(batch_emails))
+            db_objs.extend(db.scalars(stmt).all())
+        return db_objs
 
     ### UPDATE OPERATIONS ###
 
@@ -82,7 +88,7 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
 
     ### OTHER OPERATIONS ###
 
-    def authenticate(self, db: Session, user_login: UserLogin) -> UserORM | None:
+    def authenticate(self, db: Session, *, user_login: UserLogin) -> UserORM | None:
         try:
             user = self.read_by_email(db=db, email=user_login.username)
         except NoSuchElementError:

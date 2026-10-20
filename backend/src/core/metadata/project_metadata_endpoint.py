@@ -80,7 +80,7 @@ def get_by_project(
 ) -> list[ProjectMetadataRead]:
     authz_user.assert_in_project(proj_id)
 
-    db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
+    db_objs = crud_project_meta.read_by_project(db=db, project_id=proj_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
 
@@ -103,9 +103,7 @@ def update_by_id(
 ) -> ProjectMetadataRead:
     authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
 
-    db_obj = crud_project_meta.update(
-        db=db, metadata_id=metadata_id, update_dto=metadata
-    )
+    db_obj = crud_project_meta.update(db=db, id=metadata_id, update_dto=metadata)
     result = ProjectMetadataRead.model_validate(db_obj)
     ws.emit_to_project(
         DATSEvent.PROJECT_METADATA_UPDATED,

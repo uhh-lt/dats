@@ -1,11 +1,8 @@
 from sqlalchemy.orm import Session
 
-from config import conf
 from core.annotation.span_text_dto import SpanTextCreate
 from core.annotation.span_text_orm import SpanTextORM
-from repos.db.crud_base import SQLCRUDBase, UpdateNotAllowed
-
-BATCH_SIZE = conf.postgres.batch_size
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
 
 
 class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
@@ -68,6 +65,9 @@ class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
     def read_all_by_text_unordered(
         self, db: Session, *, texts: list[str]
     ) -> list[SpanTextORM]:
+        if not texts:
+            return []
+
         db_objects: list[SpanTextORM] = []
 
         # Process in batches
@@ -82,7 +82,9 @@ class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(self, db: Session, *, id: int, update_dto):
+    def update(
+        self, db: Session, *, id: int, update_dto: UpdateNotAllowed
+    ) -> SpanTextORM:
         # Flo: We no not want to update SpanText
         raise NotImplementedError()
 

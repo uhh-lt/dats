@@ -12,10 +12,12 @@ from core.doc.folder_exceptions import (
     FolderMoveToNonNormalFolderError,
 )
 from core.doc.folder_orm import FolderORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
 class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
+    ### READ OPERATIONS ###
+
     def read_subfolders(
         self, db: Session, *, parent_folder_id: int | None
     ) -> list[FolderORM]:
@@ -26,48 +28,89 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             .all()
         )
 
-    def read_by_project(self, db: Session, *, proj_id: int) -> list[FolderORM]:
+    def read_by_project(self, db: Session, *, project_id: int) -> list[FolderORM]:
         return (
             db.query(self.model)
-            .filter(self.model.project_id == proj_id)
+            .filter(self.model.project_id == project_id)
             .order_by(self.model.name)
             .all()
         )
 
     def read_by_project_and_type(
-        self, db: Session, *, proj_id: int, folder_type: FolderType
+        self, db: Session, *, project_id: int, folder_type: FolderType
     ) -> list[FolderORM]:
         return (
             db.query(self.model)
             .filter(
-                self.model.project_id == proj_id, self.model.folder_type == folder_type
+                self.model.project_id == project_id,
+                self.model.folder_type == folder_type,
             )
             .order_by(self.model.name)
             .all()
         )
 
     def read_by_name_and_project(
-        self, db: Session, folder_name: str, proj_id: int
+        self, db: Session, *, folder_name: str, project_id: int
     ) -> FolderORM | None:
         return (
             db.query(self.model)
-            .filter(self.model.name == folder_name, self.model.project_id == proj_id)
+            .filter(self.model.name == folder_name, self.model.project_id == project_id)
             .first()
         )
 
     def read_by_names(
         self,
         db: Session,
+        *,
         project_id: int,
         names: list[str],
         folder_type: FolderType | None = None,
     ) -> list[FolderORM]:
-        query = db.query(self.model).filter(
-            self.model.project_id == project_id, self.model.name.in_(names)
+        if not names:
+            return []
+
+        db_objs: list[FolderORM] = []
+        for i in range(0, len(names), BATCH_SIZE):
+            batch_names = names[i : i + BATCH_SIZE]
+            query = db.query(self.model).filter(
+                self.model.project_id == project_id, self.model.name.in_(batch_names)
+            )
+            if folder_type is not None:
+                query = query.filter(self.model.folder_type == folder_type)
+            db_objs.extend(query.all())
+        return db_objs
+
+    ### UPDATE OPERATIONS ###
+
+    def update(self, db: Session, *, id: int, update_dto: FolderUpdate) -> FolderORM:
+        folder = self.read(db=db, id=id)
+        self._assert_valid_move(db=db, folder=folder, update_dto=update_dto)
+        return super().update(db=db, id=id, update_dto=update_dto)
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: list[FolderUpdateBulk]
+    ) -> list[FolderORM]:
+        """Update multiple folders, each identified by its folder_id."""
+        folders = {
+            f.id: f
+            for f in self.read_by_ids(db=db, ids=[u.folder_id for u in update_dtos])
+        }
+        for update_dto in update_dtos:
+            self._assert_valid_move(
+                db=db, folder=folders[update_dto.folder_id], update_dto=update_dto
+            )
+        # Delegate to the base bulk update: one read_by_ids + one flush. Strip the
+        # bulk wrapper down to a plain FolderUpdate (drops the folder_id helper field).
+        return self.update_multi(
+            db,
+            ids=[u.folder_id for u in update_dtos],
+            update_dtos=[
+                FolderUpdate.model_validate(u.model_dump(exclude_unset=True))
+                for u in update_dtos
+            ],
         )
-        if folder_type is not None:
-            query = query.filter(self.model.folder_type == folder_type)
-        return query.all()
+
+    ### OTHER OPERATIONS ###
 
     def _assert_valid_move(
         self, db: Session, *, folder: FolderORM, update_dto: FolderUpdate
@@ -97,34 +140,6 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
                 if ancestor.parent_id is not None
                 else None
             )
-
-    def update(self, db: Session, *, id: int, update_dto: FolderUpdate) -> FolderORM:
-        folder = self.read(db=db, id=id)
-        self._assert_valid_move(db=db, folder=folder, update_dto=update_dto)
-        return super().update(db=db, id=id, update_dto=update_dto)
-
-    def update_bulk(
-        self, db: Session, *, update_dtos: list[FolderUpdateBulk]
-    ) -> list[FolderORM]:
-        """Update multiple folders, each identified by its folder_id."""
-        folders = {
-            f.id: f
-            for f in self.read_by_ids(db, ids=[u.folder_id for u in update_dtos])
-        }
-        for update_dto in update_dtos:
-            self._assert_valid_move(
-                db=db, folder=folders[update_dto.folder_id], update_dto=update_dto
-            )
-        # Delegate to the base bulk update: one read_by_ids + one flush. Strip the
-        # bulk wrapper down to a plain FolderUpdate (drops the folder_id helper field).
-        return self.update_multi(
-            db,
-            ids=[u.folder_id for u in update_dtos],
-            update_dtos=[
-                FolderUpdate.model_validate(u.model_dump(exclude_unset=True))
-                for u in update_dtos
-            ],
-        )
 
 
 crud_folder = CRUDFolder(FolderORM)

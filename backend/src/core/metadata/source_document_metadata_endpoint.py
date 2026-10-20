@@ -99,7 +99,7 @@ def update_by_id(
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
 
-    db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
+    db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
     result = SourceDocumentMetadataRead.model_validate(db_obj)
     ws.emit_to_project(
         DATSEvent.SDOC_METADATA_UPDATED,

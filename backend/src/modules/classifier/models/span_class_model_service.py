@@ -1157,7 +1157,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # Delete existing annotations (if requested by the user)
         if parameters.delete_existing_work:
-            crud_span_anno.remove_by_user_sdocs_codes(
+            crud_span_anno.delete_by_user_sdocs_codes(
                 db=db,
                 user_id=ASSISTANT_TRAINED_ID,
                 sdoc_ids=parameters.sdoc_ids,

@@ -69,7 +69,7 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
         system_code_ids = {
             code.name: code.id
             for code in crud_code.read_system_codes_by_project(
-                db=trans, proj_id=payload.project_id
+                db=trans, project_id=payload.project_id
             )
         }
         adoc = crud_adoc.exists_or_create(

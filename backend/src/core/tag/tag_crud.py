@@ -4,22 +4,19 @@ from typing import Iterable
 from sqlalchemy import CursorResult, delete, func, select
 from sqlalchemy.orm import Session
 
-from config import conf
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
-from repos.db.crud_base import SQLCRUDBase
-
-BATCH_SIZE = conf.postgres.batch_size
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
 class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
     ### READ OPERATIONS ###
 
-    def read_by_project(self, db: Session, project_id: int) -> list[TagORM]:
+    def read_by_project(self, db: Session, *, project_id: int) -> list[TagORM]:
         return db.query(TagORM).filter(TagORM.project_id == project_id).all()
 
     def read_by_name_and_project(
-        self, db: Session, name: str, project_id: int
+        self, db: Session, *, name: str, project_id: int
     ) -> TagORM | None:
         return (
             db.query(TagORM)
@@ -30,18 +27,26 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
     def read_by_names(
         self,
         db: Session,
+        *,
         project_id: int,
         names: list[str],
     ) -> list[TagORM]:
-        return (
-            db.query(TagORM)
-            .filter(TagORM.name.in_(names), TagORM.project_id == project_id)
-            .all()
-        )
+        if not names:
+            return []
+
+        db_objs: list[TagORM] = []
+        for i in range(0, len(names), BATCH_SIZE):
+            batch_names = names[i : i + BATCH_SIZE]
+            db_objs.extend(
+                db.query(TagORM)
+                .filter(TagORM.name.in_(batch_names), TagORM.project_id == project_id)
+                .all()
+            )
+        return db_objs
 
     # for all tags in the project
     def read_tag_sdoc_counts(
-        self, db: Session, project_id: int, sdoc_ids: list[int]
+        self, db: Session, *, project_id: int, sdoc_ids: list[int]
     ) -> dict[int, int]:
         """
         Counts how many of the specified source documents (sdoc_ids) have each tag in the project.
@@ -147,7 +152,7 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
     ### OTHER OPERATIONS ###
 
     def exists_by_project_and_tag_name_and_parent_id(
-        self, db: Session, tag_name: str, project_id: int, parent_id: int | None
+        self, db: Session, *, tag_name: str, project_id: int, parent_id: int | None
     ) -> bool:
         if parent_id:
             return (
@@ -238,7 +243,7 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
         # current state
         from core.doc.source_document_crud import crud_sdoc
 
-        current_tag_ids = [tag.id for tag in crud_sdoc.read(db, id=sdoc_id).tags]
+        current_tag_ids = [tag.id for tag in crud_sdoc.read(db=db, id=sdoc_id).tags]
 
         # find tags to be added and removed
         add_tag_ids = list(set(tag_ids) - set(current_tag_ids))

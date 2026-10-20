@@ -14,7 +14,7 @@ from core.annotation.sentence_annotation_dto import (
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
 class CRUDSentenceAnnotation(
@@ -153,16 +153,22 @@ class CRUDSentenceAnnotation(
         user_ids: list[int],
         sdoc_id: int,
     ) -> list[SentenceAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .join(self.model.annotation_document)
-            .where(
-                AnnotationDocumentORM.user_id.in_(user_ids),
-                AnnotationDocumentORM.source_document_id == sdoc_id,
-            )
-        )
+        if not user_ids:
+            return []
 
-        return query.all()
+        db_objs: list[SentenceAnnotationORM] = []
+        for i in range(0, len(user_ids), BATCH_SIZE):
+            batch_user_ids = user_ids[i : i + BATCH_SIZE]
+            query = (
+                db.query(self.model)
+                .join(self.model.annotation_document)
+                .where(
+                    AnnotationDocumentORM.user_id.in_(batch_user_ids),
+                    AnnotationDocumentORM.source_document_id == sdoc_id,
+                )
+            )
+            db_objs.extend(query.all())
+        return db_objs
 
     def read_by_code_and_user(
         self, db: Session, *, code_id: int, user_id: int
@@ -187,29 +193,40 @@ class CRUDSentenceAnnotation(
         if not code_ids:
             return []
 
-        query = db.query(self.model).filter(self.model.code_id.in_(code_ids))
-        return query.all()
+        db_objs: list[SentenceAnnotationORM] = []
+        for i in range(0, len(code_ids), BATCH_SIZE):
+            batch_code_ids = code_ids[i : i + BATCH_SIZE]
+            query = db.query(self.model).filter(self.model.code_id.in_(batch_code_ids))
+            db_objs.extend(query.all())
+        return db_objs
 
     def read_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[SentenceAnnotationORM]:
-        query = (
-            db.query(self.model)
-            .join(self.model.annotation_document)
-            .filter(
-                AnnotationDocumentORM.user_id == user_id,
-                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                self.model.code_id.in_(code_ids),
+        if not sdoc_ids or not code_ids:
+            return []
+
+        db_objs: list[SentenceAnnotationORM] = []
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+            query = (
+                db.query(self.model)
+                .join(self.model.annotation_document)
+                .filter(
+                    AnnotationDocumentORM.user_id == user_id,
+                    AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
+                    self.model.code_id.in_(code_ids),
+                )
             )
-        )
-        return query.all()
+            db_objs.extend(query.all())
+        return db_objs
 
     ### UPDATE OPERATIONS ###
 
     def update(
         self, db: Session, *, id: int, update_dto: SentenceAnnotationUpdate
     ) -> SentenceAnnotationORM:
-        sentence_anno = super().update(db, id=id, update_dto=update_dto)
+        sentence_anno = super().update(db=db, id=id, update_dto=update_dto)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
 
@@ -220,7 +237,7 @@ class CRUDSentenceAnnotation(
     ) -> list[SentenceAnnotationORM]:
         return [
             self.update(
-                db,
+                db=db,
                 id=update_dto.sent_annotation_id,
                 update_dto=SentenceAnnotationUpdate(code_id=update_dto.code_id),
             )
@@ -230,7 +247,7 @@ class CRUDSentenceAnnotation(
     ### DELETE OPERATIONS ###
 
     def delete(self, db: Session, *, id: int) -> SentenceAnnotationORM:
-        sentence_anno = super().delete(db, id=id)
+        sentence_anno = super().delete(db=db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
 
@@ -241,7 +258,7 @@ class CRUDSentenceAnnotation(
     ) -> list[SentenceAnnotationORM]:
         sentence_annos = []
         for id in ids:
-            sentence_annos.append(self.delete(db, id=id))
+            sentence_annos.append(self.delete(db=db, id=id))
 
         # find the annotation document ids
         adoc_ids = {
@@ -296,24 +313,32 @@ class CRUDSentenceAnnotation(
 
         return ids
 
-    def remove_by_user_sdocs_codes(
+    def delete_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[int]:
-        # find all span annotations to be removed
-        query = (
-            db.query(self.model.id, AnnotationDocumentORM.id)
-            .join(self.model.annotation_document)
-            .filter(
-                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                AnnotationDocumentORM.user_id == user_id,
-                self.model.code_id.in_(code_ids),
-            )
-        )
-        removed_orms = query.all()
-        anno_ids = [removed_orm.tuple()[0] for removed_orm in removed_orms]
-        adoc_ids = list({removed_orm.tuple()[1] for removed_orm in removed_orms})
+        if not sdoc_ids or not code_ids:
+            return []
 
-        # delete the sdocs
+        # find all annotations to be removed
+        anno_ids: list[int] = []
+        adoc_id_set: set[int] = set()
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+            query = (
+                db.query(self.model.id, AnnotationDocumentORM.id)
+                .join(self.model.annotation_document)
+                .filter(
+                    AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
+                    AnnotationDocumentORM.user_id == user_id,
+                    self.model.code_id.in_(code_ids),
+                )
+            )
+            for removed_orm in query.all():
+                anno_ids.append(removed_orm.tuple()[0])
+                adoc_id_set.add(removed_orm.tuple()[1])
+        adoc_ids = list(adoc_id_set)
+
+        # delete the annotations
         self.delete_multi(db=db, ids=anno_ids)
 
         # update the annotation document's timestamp
@@ -321,6 +346,8 @@ class CRUDSentenceAnnotation(
             crud_adoc.update_timestamp(db=db, id=adoc_id)
 
         return anno_ids
+
+    ### OTHER OPERATIONS ###
 
     def count_by_codes_and_sdocs_and_user(
         self,
@@ -330,17 +357,25 @@ class CRUDSentenceAnnotation(
         sdoc_ids: list[int],
         user_id: int,
     ) -> dict[int, int]:
-        result = (
-            db.query(self.model.code_id, func.count(self.model.id))
-            .join(self.model.annotation_document)
-            .where(
-                self.model.code_id.in_(code_ids),
-                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                AnnotationDocumentORM.user_id == user_id,
+        if not code_ids or not sdoc_ids:
+            return {}
+
+        results: dict[int, int] = {}
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+            query = (
+                db.query(self.model.code_id, func.count(self.model.id))
+                .join(self.model.annotation_document)
+                .where(
+                    self.model.code_id.in_(code_ids),
+                    AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
+                    AnnotationDocumentORM.user_id == user_id,
+                )
+                .group_by(self.model.code_id)
             )
-            .group_by(self.model.code_id)
-        )
-        return {code_id: count for code_id, count in result.all()}
+            for code_id, count in query.all():
+                results[code_id] = results.get(code_id, 0) + count
+        return results
 
 
 crud_sentence_anno = CRUDSentenceAnnotation(SentenceAnnotationORM)

@@ -28,7 +28,7 @@ def find_sentence_annotations_info(
 ) -> list[ColumnInfo[SentAnnoColumns]]:
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
-        for pm in crud_project_meta.read_by_project(db=db, proj_id=project_id)
+        for pm in crud_project_meta.read_by_project(db=db, project_id=project_id)
     ]
     metadata_column_info = [
         ColumnInfo.from_project_metadata(pm)

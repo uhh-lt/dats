@@ -10,11 +10,16 @@ from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
+    ### READ OPERATIONS ###
+
+    def read_by_title(self, db: Session, *, title: str) -> ProjectORM | None:
+        return db.query(self.model).filter(self.model.title == title).first()
+
     ### OTHER OPERATIONS ###
 
-    def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+    def associate_user(self, db: Session, *, project_id: int, user_id: int) -> UserORM:
         # 1) read project
-        proj_db_obj = self.read(db=db, id=proj_id)
+        proj_db_obj = self.read(db=db, id=project_id)
 
         # 2) add user to project
         user_db_obj = crud_user.read(db=db, id=user_id)
@@ -24,9 +29,9 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return user_db_obj
 
-    def dissociate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+    def dissociate_user(self, db: Session, *, project_id: int, user_id: int) -> UserORM:
         # 1) read project
-        proj_db_obj = self.read(db=db, id=proj_id)
+        proj_db_obj = self.read(db=db, id=project_id)
 
         # 2) remove user from project
         user_db_obj = crud_user.read(db=db, id=user_id)
@@ -36,13 +41,10 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return user_db_obj
 
-    def exists_by_title(self, db: Session, title: str) -> bool:
+    def exists_by_title(self, db: Session, *, title: str) -> bool:
         return (
             db.query(self.model).filter(self.model.title == title).first() is not None
         )
-
-    def read_by_title(self, db: Session, *, title: str) -> ProjectORM | None:
-        return db.query(self.model).filter(self.model.title == title).first()
 
 
 crud_project = CRUDProject(ProjectORM)

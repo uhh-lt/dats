@@ -43,7 +43,9 @@ def upgrade() -> None:
         proj_id = row.id
         print("Processing project:", proj_id)
 
-        sdocs = crud_sdoc.read_by_project(db=db, proj_id=proj_id, only_finished=False)  # type: ignore
+        sdocs = crud_sdoc.read_by_project(
+            db=db, project_id=proj_id, only_finished=False
+        )  # type: ignore
 
         # 3. Use the filesystem repo to get the URL of the Source Document
         urls = []

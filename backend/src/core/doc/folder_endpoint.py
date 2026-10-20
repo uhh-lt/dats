@@ -97,7 +97,7 @@ def get_folders_by_project_and_type(
 ) -> list[FolderRead]:
     authz_user.assert_in_project(project_id)
     folders = crud_folder.read_by_project_and_type(
-        db=db, proj_id=project_id, folder_type=folder_type
+        db=db, project_id=project_id, folder_type=folder_type
     )
     return [FolderRead.model_validate(folder) for folder in folders]
 
