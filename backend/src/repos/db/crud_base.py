@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import CursorResult, delete
 from sqlalchemy.orm import Session
 
-from common.exception_handler import exception_handler
+from common.exception_handler import NotFoundError, exception_handler
 from config import conf
 from repos.db.orm_base import ORMBase
 
@@ -22,7 +22,7 @@ class UpdateNotAllowed(BaseModel):
 
 
 @exception_handler(status.HTTP_404_NOT_FOUND)
-class NoSuchElementError(Exception):
+class NoSuchElementError(NotFoundError):
     def __init__(self, model: Type[ORMModelType], **kwargs):
         self.model = model
         self.model_name = model.__name__.replace("ORM", "")

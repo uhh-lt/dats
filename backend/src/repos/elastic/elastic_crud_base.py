@@ -1,10 +1,9 @@
 from typing import Any, Generic, TypeVar
 
 from elasticsearch import Elasticsearch, helpers
-from fastapi import status
 from pydantic import BaseModel
 
-from common.exception_handler import exception_handler
+from common.exception_handler import NotFoundError
 from repos.elastic.elastic_dto_base import (
     ElasticSearchHit,
     ElasticSearchModelBase,
@@ -18,8 +17,7 @@ UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
 IndexType = TypeVar("IndexType", bound=IndexBase)
 
 
-@exception_handler(status.HTTP_404_NOT_FOUND)
-class NoSuchObjectInElasticSearchError(Exception):
+class NoSuchObjectInElasticSearchError(NotFoundError):
     def __init__(self, index_name: str, id: int):
         super().__init__(
             (f"There exists no Object with ID={id} in Index {index_name} ")
