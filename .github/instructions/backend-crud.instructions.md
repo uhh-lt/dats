@@ -13,8 +13,8 @@ SQL CRUD modules are the PostgreSQL data-access layer for one ORM entity. Each f
 ## File Structure
 
 ```python
-# 1. Imports: sqlalchemy, own-entity ORM + DTOs, SQLCRUDBase (+ NoSuchElementError / UpdateNotAllowed),
-#    other crud_* singletons when needed.
+# 1. Imports: sqlalchemy, own-entity ORM + DTOs, SQLCRUDBase (+ UpdateNotAllowed),
+#    NoSuchElementError (repos.db.sql_exceptions), own <module>_exceptions, other crud_* singletons.
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -25,10 +25,7 @@ from repos.db.crud_base import SQLCRUDBase
 # 2. Module constants (only if the file batches queries itself)
 BATCH_SIZE = conf.postgres.batch_size
 
-# 3. Optional: module-specific exceptions (decorated with @exception_handler)
-
-
-# 4. The CRUD class, generic over [ORM, CreateDTO, UpdateDTO]
+# 3. The CRUD class, generic over [ORM, CreateDTO, UpdateDTO]
 class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
     def create_system_codes_for_project(self, db: Session, *, project_id: int) -> list[CodeORM]: ...
@@ -56,7 +53,7 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def exists_by_name(self, db: Session, *, code_name: str) -> bool: ...
 
 
-# 5. The singleton: crud_<name> = CRUD<Entity>(<Entity>ORM)
+# 4. The singleton: crud_<name> = CRUD<Entity>(<Entity>ORM)
 crud_code = CRUDCode(CodeORM)
 ```
 
@@ -71,8 +68,9 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 - **Generic parameters**: `SQLCRUDBase[<Entity>ORM, <Create DTO>, <Update DTO>]`. Use the `...CreateIntern` / `...UpdateIntern` DTO when the ORM needs fields the API DTO lacks. If the entity is never updated, use `UpdateNotAllowed` from `crud_base`.
 - **Sections**: group methods under `### CREATE OPERATIONS ###`, `### READ OPERATIONS ###`, `### UPDATE OPERATIONS ###`, `### DELETE OPERATIONS ###`, `### OTHER OPERATIONS ###`, in that order. Omit empty sections, or keep the header with a `# Inherited from <Base>` comment.
 - **Verbs**: public method names start with `create`, `read`, `update` or `delete` (their own sections), or with one of the OTHER verbs: `exists`, `search`, `count`, `link`, `unlink`, `set`, `add`, `remove`, `duplicate`, `merge`, `reorder`, `associate`, `dissociate`, `revoke`, `favorite`, `unfavorite`. `add`/`remove` are for association rows only (`add_to_span_group`, `remove_from_span_group`). `get_` and `find_` are forbidden. Use `_multi` for list variants and `_by_<field>[_and_<field>]` for lookups (`read_by_hashed_key`, `delete_by_adoc`, `exists_favorite`). Upserts are updates (`crud_memo.update_recent`).
+- **CRUDs vs. handlers**: CRUDs use `read_*`, while endpoint handlers use `get_*` (see `backend-endpoint.instructions.md`).
 - **Private helpers** (`_name`) are exempt from the verb, order and section rules, but still need a return annotation.
-- **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `read_multi`, `exists`, `update`, `update_multi`, `delete`, `delete_multi`. Override them instead of adding near-duplicates.
+- **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `read_multi`, `exists`, `update`, `update_multi`, `delete`, `delete_multi`. Override them instead of adding near-duplicates. (This is SQL-specific: Embedding and Elastic CRUDs must not override their bases.)
 - **Lint**: `backend/lint/check_crud.py` enforces these conventions. It runs in `just lint backend` and in the `Lint: Backend CRUD conventions` pre-commit hook (so also in CI).
 
 ### Signatures
@@ -81,7 +79,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 - Project ids are always named `project_id`, never `proj_id`.
 - Every method has a return annotation; docstrings use the `Args:` / `Returns:` style.
 - Overrides keep the base parameter names (`create_dto`, `update_dto`, `id`, `ids`) and add extra keyword parameters (e.g. `user_id`, `codes`).
-- Return ORM objects (`<Entity>ORM`, `list[<Entity>ORM]`, `<Entity>ORM | None`), ids, counts (`int`) or `dict[int, ...]` mappings, never Read DTOs. Building DTOs is the service's job.
+- Return ORM objects (`<Entity>ORM`, `list[<Entity>ORM]`, `<Entity>ORM | None`), ids, counts (`int`) or `dict[int, ...]` mappings, never Read DTOs. DTOs are built outside the CRUD: in the module's service if it has one (`whiteboard_service.read_whiteboard_data`), in a module `*_utils.py` when several modules need it (`memo_utils.get_memo_read_dto_from_orm`), otherwise in the endpoint or job (`api_key_endpoint`, `duplicate_finder_job`).
 
 ### Session Handling
 
@@ -92,16 +90,19 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 ### Batching
 
-- Every `.in_()` over a list that comes from a method argument runs in chunks of `BATCH_SIZE = conf.postgres.batch_size`: `for i in range(0, len(ids), BATCH_SIZE): batch_ids = ids[i : i + BATCH_SIZE]`. Lists built inside the method with a known small bound are exempt.
+- Every `.in_()` over a list that comes from a method argument runs in chunks of `BATCH_SIZE = conf.postgres.batch_size`: `for i in range(0, len(ids), BATCH_SIZE): batch_ids = ids[i : i + BATCH_SIZE]`. Exempt are only:
+  - lists built inside the method with a known small bound;
+  - the second list of a two-list filter when it is bounded by the project (`code_ids`, `tag_ids`): only the unbounded list (`sdoc_ids`) is chunked (see `crud_span_anno.read_by_user_sdocs_codes`, `crud_tag.count_by_tags_and_sdocs_and_user`);
+  - filters that cannot be split into separate queries, such as `notin_(...)` and `.any(... .in_(...))` (see `crud_sdoc.read_all_without_tags`, `crud_sdoc.read_by_tags`).
 - Return early on empty input (`if not ids: return []` / `return 0` / `return {}`).
 - Bulk deletes use `delete(Model).where(...)` via `db.execute`, `assert isinstance(result, CursorResult)` and sum `result.rowcount` (see `SQLCRUDBase.delete_multi`).
 - `read_by_ids`-style methods return results in input order and raise `NoSuchElementError` for missing ids.
 
 ### Errors
 
-- Missing rows raise `NoSuchElementError(self.model, <field>=<value>, ...)`, a subclass of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). `read`, `read_by_ids` and `exists(raise_error=True)` already do this. Lookups that may legitimately miss return `<Entity>ORM | None` instead.
+- Missing rows raise `NoSuchElementError(self.model, <field>=<value>, ...)`, from `repos/db/sql_exceptions.py`, a subclass of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). `read`, `read_by_ids` and `exists(raise_error=True)` already do this. Lookups that may legitimately miss return `<Entity>ORM | None` instead.
 - Invalid arguments raise `ValueError`; an intentionally unsupported base method raises `NotImplementedError`.
-- New domain errors are declared in the same file with `@exception_handler(status.HTTP_...)`.
+- Domain exceptions live in `<module>_exceptions.py` (decorated with `@exception_handler(status.HTTP_...)` unless they subclass `NotFoundError`), never in the CRUD file. E.g. `InvalidSearchViewOrderError` in `modules/search_view/search_view_exceptions.py`, `SourceDocumentPreprocessingUnfinishedError` in `core/doc/source_document_exceptions.py`.
 
 ### Dependencies
 

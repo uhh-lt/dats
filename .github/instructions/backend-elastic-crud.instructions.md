@@ -74,7 +74,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 
 ### Verbs and Signatures
 
-- **Base methods**: `create`, `read`, `update`, `delete`, `search`. Do not override them.
+- **Base methods**: `create`, `read`, `update`, `delete`, `search`. Do not override them. (This is specific to Elastic CRUDs; SQL CRUDs override their base instead.)
 - **Subclass names**: use the same verbs with `_by_<field>` for lookups and `search_<what>` for searches. `get_` and `find_` are forbidden, and so are `add_`/`remove_` (SQL-only verbs): use `create`/`delete`.
 - **Private helpers** (`_name`) are exempt from the verb, order and section rules, but still need a return annotation.
 - **Client first**: the first parameter after `self` is `client: Elasticsearch`; every parameter after it is keyword-only (`*`) and the project id is `project_id`, never `proj_id`. Never a `db: Session`.
@@ -89,7 +89,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 
 ### Errors
 
-- Missing documents raise the base's `NoSuchObjectInElasticSearchError`, a subclass of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). Invalid query arguments raise `ValueError`.
+- Missing documents raise `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), a subclass of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). Invalid query arguments raise `ValueError`.
 
 ### Cleanup
 
