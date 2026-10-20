@@ -44,7 +44,7 @@ class AspectORM(ORMBase):
     tag_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("tag.id", ondelete="CASCADE"),
-        index=False,
+        index=True,
     )
     tag: Mapped["TagORM | None"] = relationship("TagORM")
 

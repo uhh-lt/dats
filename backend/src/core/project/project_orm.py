@@ -149,8 +149,14 @@ class ProjectORM(ORMBase):
 
 class ProjectUserLinkTable(ORMBase):
     project_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("project.id"), primary_key=True
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("user.id"), primary_key=True
+        Integer,
+        ForeignKey("user.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )

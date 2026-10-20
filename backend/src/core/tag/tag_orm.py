@@ -100,8 +100,14 @@ class TagORM(ORMBase):
 
 class SourceDocumentTagLinkTable(ORMBase):
     source_document_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=True
+        Integer,
+        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     tag_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True
+        Integer,
+        ForeignKey("tag.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
