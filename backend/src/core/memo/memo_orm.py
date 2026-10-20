@@ -103,14 +103,14 @@ class MemoFavoriteLinkTable(ORMBase):
         Integer,
         ForeignKey("memo.id", ondelete="CASCADE"),
         primary_key=True,
+        index=True,
     )
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("user.id", ondelete="CASCADE"),
         primary_key=True,
+        index=True,
     )
-
-    __table_args__ = (Index("ix_memofavoritelinktable_memo_id", "memo_id"),)
 
 
 class MemoRecentORM(ORMBase):
@@ -124,11 +124,13 @@ class MemoRecentORM(ORMBase):
         Integer,
         ForeignKey("user.id", ondelete="CASCADE"),
         primary_key=True,
+        index=True,
     )
     memo_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("memo.id", ondelete="CASCADE"),
         primary_key=True,
+        index=True,
     )
     last_opened: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

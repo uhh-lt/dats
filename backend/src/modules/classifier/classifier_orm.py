@@ -131,15 +131,29 @@ class ClassifierEvaluationORM(ORMBase):
 
 class ClassifierCodeLinkTable(ORMBase):
     classifier_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("classifier.id", ondelete="CASCADE"), primary_key=True
+        Integer,
+        ForeignKey("classifier.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     code_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("code.id"), primary_key=True
+        Integer,
+        ForeignKey("code.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
 
 
 class ClassifierTagLinkTable(ORMBase):
     classifier_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("classifier.id", ondelete="CASCADE"), primary_key=True
+        Integer,
+        ForeignKey("classifier.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
-    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tag.id"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("tag.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
