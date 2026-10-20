@@ -19,7 +19,7 @@ just test backend -k memo_info  # by test name
 
 Always run tests via `just test backend` (which wraps `bin/dev/backend-test.sh`): it loads `backend/.env` and sets `PYTHONPATH` before invoking pytest. Extra arguments are forwarded to pytest. Bare `pytest` misses this environment setup.
 
-Tests are configured in [pyproject.toml](backend/pyproject.toml) (`testpaths = ["test"]`, `pythonpath = "src"`).
+Tests are configured in [pyproject.toml](backend/pyproject.toml) (`testpaths = ["test"]`, `pythonpath = ["src", "test"]`, so the conftests can import `dats_test_utils`).
 
 ### Slow Tests (Markers)
 
@@ -54,7 +54,7 @@ There are two levels of conftest:
 **Root `backend/test/conftest.py`** — global infrastructure, mostly `autouse`:
 
 - Points the app at test databases (env vars for Postgres, Weaviate, ES, Redis, filesystem) and aborts the run unless they are isolated from the developer setup (`dats_test_utils.assert_isolated_from`).
-- Boots DATS with the same building blocks as production ([bootstrap.py](backend/src/bootstrap.py)), never with its own setup code.
+- Boots DATS with the same functions as production ([bootstrap.py](backend/src/bootstrap.py)), never with its own setup code. The fixtures only declare the scopes; their bodies are one function each in [dats_test_utils.py](backend/test/dats_test_utils.py) (`start_dats`, `clean_data_stores`, `create_test_app`), so suites that override a fixture's scope (e.g. `endpoints/search`) reuse the same code.
 - Starts a background worker (session scope).
 - Drops the Postgres database and recreates it with the migrations (session scope).
 - Truncates all data stores and seeds them again (system users, Weaviate collections) **on function scope** — every test gets a clean database.

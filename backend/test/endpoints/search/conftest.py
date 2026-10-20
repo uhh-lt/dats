@@ -2,12 +2,11 @@ from datetime import timedelta
 from typing import Any, Generator, TypedDict
 from uuid import uuid4
 
+import dats_test_utils
 import pytest
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-import bootstrap
-import dats_test_utils
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -203,14 +202,13 @@ def _make_memo(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_repos(prepare_data_stores) -> None:
-    """Session-scoped override: wipe/seed the data stores once for the search suite."""
-    bootstrap.delete_all_data()
-    bootstrap.ensure_system_data()
+def clean_data_stores(start_dats) -> None:
+    """Session-scoped override: clean the data stores once for the search suite."""
+    dats_test_utils.clean_data_stores()
 
 
 @pytest.fixture(scope="session")
-def seed_db_session(setup_repos) -> Generator[Session, Any, None]:
+def seed_db_session(clean_data_stores) -> Generator[Session, Any, None]:
     """Session-scoped session used ONLY to build the seed data.
 
     All seed objects are committed during setup; teardown just closes the

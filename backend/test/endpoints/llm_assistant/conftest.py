@@ -2,11 +2,11 @@ from collections.abc import Generator
 from datetime import date
 from typing import TypedDict
 
+import dats_test_utils
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-import dats_test_utils
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from config import conf

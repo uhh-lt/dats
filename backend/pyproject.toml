@@ -108,13 +108,13 @@ known-first-party = [
 [tool.pyright]
 include = ["src", "test"]
 exclude = ["**/__pycache__", "**/.venv", "**/node_modules", "**/.*"]
-extraPaths = ["src"]
+extraPaths = ["src", "test"]
 reportIncompatibleMethodOverride = false
 reportIncompatibleVariableOverride = false
 reportUnreachable = true
 
 [tool.pytest.ini_options]
-pythonpath = "src"
+pythonpath = ["src", "test"]
 addopts = [
     "--import-mode=importlib",
     "-ra -q",

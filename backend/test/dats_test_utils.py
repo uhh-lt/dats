@@ -1,10 +1,10 @@
-"""Test-only helpers for the DATS test suites.
+"""Startup of DATS for the tests, and the helpers the test suites share.
 
-The tests boot DATS with the same building blocks as production (see
-`bootstrap.py`). This module only holds what is specific to testing: the
-isolation guard, the authenticated test clients and the factories for the
-generic test data. It lives in `src/` because pytest runs with
-`--import-mode=importlib`, so the conftests cannot import modules from `test/`.
+The tests boot DATS with the same functions as production (see `bootstrap.py`).
+This module composes them into one function per conftest fixture, so the
+conftests only declare the fixture scopes, and adds what is specific to testing:
+the isolation guard, the authenticated test clients and the factories for the
+generic test data.
 """
 
 import json
@@ -19,14 +19,15 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+import bootstrap
 from common.doc_type import DocType
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 
-# The tests authenticate with this header instead of a JWT (see `install_test_auth`)
-TEST_USER_HEADER = "x-dats-test-user"
+# The tests authenticate with this header instead of a JWT (see `_install_test_auth`)
+_TEST_USER_HEADER = "x-dats-test-user"
 
 
 # ==============================================================================
@@ -108,7 +109,7 @@ def assert_isolated_from(developer_environment: Mapping[str, str]) -> None:
 
 def _load_config(environment: Mapping[str, str]) -> dict[str, Any]:
     """Load the DATS configuration for `environment` in a fresh interpreter."""
-    src_dir = str(Path(__file__).resolve().parent)
+    src_dir = str(Path(__file__).resolve().parents[1] / "src")
     env = dict(environment)
     env["PYTHONPATH"] = os.pathsep.join(
         [src_dir, *filter(None, [env.get("PYTHONPATH")])]
@@ -128,24 +129,40 @@ def _load_config(environment: Mapping[str, str]) -> dict[str, Any]:
 
 
 # ==============================================================================
-# DATABASE
+# STARTUP
 # ==============================================================================
-def recreate_test_database() -> None:
-    """Drop the test database and create it again from the migrations."""
-    from bootstrap import migrate_database
+def start_dats() -> None:
+    """Start DATS in the test process like a server process: connect all repos,
+    init the services, and create the test database from scratch with the
+    migrations."""
     from repos.db.sql_repo import SQLRepo
 
-    sql_repo = SQLRepo()
-    sql_repo.connect()
-    sql_repo.drop_database()
-    migrate_database()
+    bootstrap.connect_repos()
+    bootstrap.init_services()
+    SQLRepo().drop_database()
+    bootstrap.migrate_database()
+
+
+def clean_data_stores() -> None:
+    """Empty all data stores and create the system data again, so a test starts
+    from a fresh DATS instance."""
+    bootstrap.delete_all_data()
+    bootstrap.ensure_system_data()
+
+
+def create_test_app() -> FastAPI:
+    """Create the real DATS app (see `main.py`), authenticating the requests by
+    a test header instead of a JWT."""
+    app = bootstrap.create_app()
+    _install_test_auth(app)
+    return app
 
 
 # ==============================================================================
 # CLIENTS
 # ==============================================================================
-def install_test_auth(app: FastAPI) -> None:
-    """Authenticate the requests by the email in the `TEST_USER_HEADER` header
+def _install_test_auth(app: FastAPI) -> None:
+    """Authenticate the requests by the email in the `_TEST_USER_HEADER` header
     instead of a JWT.
 
     The user is resolved through a FRESH transaction per request (exactly like
@@ -159,7 +176,7 @@ def install_test_auth(app: FastAPI) -> None:
     from repos.db.sql_repo import SQLRepo
 
     def _get_test_user(request: Request) -> Generator[UserORM, None, None]:
-        email = request.headers.get(TEST_USER_HEADER)
+        email = request.headers.get(_TEST_USER_HEADER)
         if email is None:
             raise HTTPException(status_code=401, detail="No test user header")
         with SQLRepo().transaction() as db:
@@ -180,7 +197,7 @@ def create_user_client(
     one process serves one app.
     """
     client = TestClient(
-        app_client.app, headers={TEST_USER_HEADER: user.email}, **kwargs
+        app_client.app, headers={_TEST_USER_HEADER: user.email}, **kwargs
     )
     client.portal = app_client.portal
     return client

@@ -9,10 +9,10 @@ def start_workers() -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def prepare_data_stores() -> None:
+def start_dats() -> None:
     return None
 
 
 @pytest.fixture(scope="function", autouse=True)
-def setup_repos() -> None:
+def clean_data_stores() -> None:
     return None
