@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
@@ -66,3 +68,18 @@ def test_update_dto_base_does_not_count_unset_defaults() -> None:
     update = FooUpdate(name="new")
     assert update.model_fields_set == {"name"}
     assert update.model_dump(exclude_unset=True) == {"name": "new"}
+
+
+class BarUpdate(BaseModel, UpdateDTOBase):
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
+
+    name: str | None = Field(description="Name of the Bar", default=None)
+    parent_id: int | None = Field(description="Parent of the Bar", default=None)
+
+
+def test_update_dto_base_rejects_explicit_null_for_non_nullable_field() -> None:
+    """A field in non_nullable_fields may be omitted, but not set to null."""
+    with pytest.raises(ValidationError, match="Fields cannot be null: name"):
+        BarUpdate.model_validate({"name": None})
+    assert BarUpdate(parent_id=None).model_fields_set == {"parent_id"}
+    assert BarUpdate(name="new").name == "new"

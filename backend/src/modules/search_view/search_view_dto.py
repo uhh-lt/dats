@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -257,6 +257,11 @@ class SearchViewUpdate(BaseModel, UpdateDTOBase, Generic[T]):
 
     `entity_type` is intentionally absent: a view's entity is fixed at creation.
     """
+
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"name", "layout", "filters"}
+    )
 
     name: str | None = Field(
         description="Name of the SearchView", default=None, min_length=1, max_length=255

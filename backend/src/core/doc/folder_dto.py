@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -36,6 +37,9 @@ class FolderCreate(FolderBaseDTO):
 
 
 class FolderUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
+
     name: str | None = Field(default=None, description="Updated name of the folder")
     parent_id: int | None = Field(default=None, description="Updated parent folder ID")
 

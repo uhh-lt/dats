@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -19,6 +20,11 @@ class UserCreate(UserBaseDTO):
 
 # Properties for updating
 class UserUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"email", "first_name", "last_name", "password"}
+    )
+
     email: str | None = Field(description="E-Mail of the User", default=None)
     first_name: str | None = Field(description="First name of the User", default=None)
     last_name: str | None = Field(description="Last name of the User", default=None)

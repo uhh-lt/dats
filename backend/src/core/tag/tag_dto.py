@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,6 +23,9 @@ class TagCreate(TagBaseDTO):
 
 # Properties for updating
 class TagUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
+
     name: str | None = Field(description="Name of the Tag", default=None)
     color: str | None = Field(description="Color of the Tag", default=None)
     description: str | None = Field(description="Description of the Tag", default=None)

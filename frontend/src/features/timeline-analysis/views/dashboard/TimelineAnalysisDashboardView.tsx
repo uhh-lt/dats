@@ -112,6 +112,10 @@ export function TimelineAnalysisDashboardView() {
     table,
     row,
   }) => {
+    if (!values.title || values.title === row.original.title) {
+      table.setEditingRow(null); //exit editing mode
+      return; // not provided OR no change
+    }
     updateTimelineAnalysis(
       {
         timelineAnalysisId: row.original.id,

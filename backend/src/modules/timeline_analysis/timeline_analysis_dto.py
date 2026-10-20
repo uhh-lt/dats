@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Literal
+from typing import ClassVar, Literal
 
 import srsly
 from pydantic import BaseModel, ConfigDict, Field
@@ -156,6 +156,11 @@ class TimelineAnalysisCreateIntern(TimelineAnalysisCreate):
 
 
 class TimelineAnalysisUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"name", "settings", "concepts"}
+    )
+
     name: str | None = Field(
         description="Name of the TimelineAnalysis",
         default=None,

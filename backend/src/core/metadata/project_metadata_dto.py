@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.doc_type import DocType
@@ -29,6 +31,11 @@ class ProjectMetadataCreate(ProjectMetadataBaseDTO):
 
 # Properties for updating
 class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL columns: omit to keep the value, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"key", "metatype", "description"}
+    )
+
     key: str | None = Field(description="Key of the ProjectMetadata", default=None)
     metatype: MetaType | None = Field(
         description="Type of the ProjectMetadata", default=None
