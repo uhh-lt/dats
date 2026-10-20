@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 
 from common.dats_event import DATSEvent, DATSEventBase
-from systems.job_system.job_dto import Job, JobOutputBase
+from systems.job_system.job_dto import Job, JobOutputBase, JobStatus
 
 if TYPE_CHECKING:
     import redis
@@ -112,7 +112,9 @@ def _publish_to_project_users_sync(project_id: int, event: DATSEventBase) -> Non
 
 
 def publish_job_update(
-    job: Job, output_override: JobOutputBase | Any | None = None
+    job: Job,
+    output_override: JobOutputBase | Any | None = None,
+    status_override: JobStatus | None = None,
 ) -> None:
     """Publish a JOB_UPDATED event carrying the full per-type JobRead payload.
 
@@ -138,6 +140,8 @@ def publish_job_update(
         job_read = concrete_model.from_rq_job(job)
         if output_override is not None:
             job_read.output = output_override
+        if status_override is not None:
+            job_read.status = status_override
 
         event_model = DATS_EVENT_TO_MODEL.get(DATSEvent.JOB_UPDATED)
         if event_model is None:

@@ -7,6 +7,8 @@ a running websocket subscriber.
 
 Covered behavior:
 - JOB_UPDATED is emitted on enqueue (start_job), update, stop, and retry.
+- The last JOB_UPDATED of a job run carries its terminal status (FINISHED /
+  FAILED), although RQ sets that status only after the handler returned.
 - The emitted envelope has kind="users", targets the project's member ids, and
   carries the full per-type JobRead payload.
 - An emission failure does NOT fail the job (never-raise contract).
@@ -21,7 +23,8 @@ from common.job_type import JobType
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from modules.eximport.export_job_dto import ExportJobInput, ExportJobType
-from systems.job_system.job_dto import Job, JobRead
+from systems.job_system.job_dto import Job, JobRead, JobStatus
+from systems.job_system.job_handler import rq_job_handler
 from systems.job_system.job_service import JobService
 from systems.websocket_system.websocket_dto import WebSocketEnvelope
 
@@ -171,3 +174,64 @@ class TestJobUpdatedEmission:
         assert not mock_publish.called, (
             "Internal pipeline jobs (publish_updates=False) must not publish events"
         )
+
+    def test_finished_job_emits_finished_status(
+        self, test_project: ProjectORM, test_user: UserORM
+    ):
+        """The last JOB_UPDATED of a successful job carries FINISHED and its finished time.
+
+        RQ sets FINISHED only after rq_job_handler returned, so the handler must publish
+        the terminal status explicitly; otherwise clients never see the job finish.
+        """
+        with patch("systems.job_system.job_events._publish_envelope_sync"):
+            job = _start_export_job(test_project)
+
+        with (
+            patch("systems.job_system.job_handler.Job", return_value=job),
+            patch(
+                "systems.job_system.job_events._publish_envelope_sync"
+            ) as mock_publish,
+        ):
+            rq_job_handler(
+                jobtype=JobType.EXPORT,
+                handler=lambda payload, job: None,
+                payload=job.job.kwargs["payload"],
+            )
+
+        payload = _payload(_captured_envelopes(mock_publish)[-1])
+        assert payload.job_id == job.get_id()
+        assert payload.status == JobStatus.FINISHED
+        assert payload.finished is not None
+
+    def test_failed_job_emits_failed_status(
+        self, test_project: ProjectORM, test_user: UserORM
+    ):
+        """The last JOB_UPDATED of a raising job carries FAILED and the error message.
+
+        RQ sets FAILED only after rq_job_handler raised, so the handler must publish
+        the terminal status explicitly; otherwise clients never see the job fail.
+        """
+        with patch("systems.job_system.job_events._publish_envelope_sync"):
+            job = _start_export_job(test_project)
+
+        def failing_handler(payload, job):
+            raise RuntimeError("export exploded")
+
+        with (
+            patch("systems.job_system.job_handler.Job", return_value=job),
+            patch(
+                "systems.job_system.job_events._publish_envelope_sync"
+            ) as mock_publish,
+            pytest.raises(RuntimeError, match="export exploded"),
+        ):
+            rq_job_handler(
+                jobtype=JobType.EXPORT,
+                handler=failing_handler,
+                payload=job.job.kwargs["payload"],
+            )
+
+        payload = _payload(_captured_envelopes(mock_publish)[-1])
+        assert payload.job_id == job.get_id()
+        assert payload.status == JobStatus.FAILED
+        assert payload.status_message == "export exploded"
+        assert payload.finished is not None

@@ -89,9 +89,10 @@ user-visible status is conveyed through the sdoc-status polling instead.
 
 | Transition          | Emission site                                                        |
 | ------------------- | -------------------------------------------------------------------- |
-| Progress / meta     | `Job.update()` — after `save_meta()` (covers in-job progress + fail) |
+| Progress / meta     | `Job.update()` — after `save_meta()` (in-job progress)               |
 | Started             | `rq_job_handler`, right after the job is picked up                   |
-| Finished            | `rq_job_handler`, after `handle_job_finished`, with `output_override` |
+| Finished (FINISHED) | `rq_job_handler`, after `handle_job_finished`, with `output_override` and `status_override` |
+| Failed (FAILED)     | `rq_job_handler`, after `handle_job_error`, with `status_override`   |
 | Enqueued (QUEUED)   | `JobService.start_job`                                               |
 | Aborted (CANCELED)  | `JobService.stop_job`                                                |
 | Retried (QUEUED)    | `JobService.retry_job`                                               |
@@ -104,7 +105,7 @@ RQ workers are **sync** processes with no event loop and no websocket
 connections — they cannot use the async `WebsocketService`. The bridge is
 [job_events.py](job_events.py):
 
-1. `publish_job_update(job, output_override=None)` builds the concrete
+1. `publish_job_update(job, output_override=None, status_override=None)` builds the concrete
    per-type `JobRead` (via the registered `read_model`, NOT the generic
    union — union validation would fail), resolves the project's member ids,
    and wraps it in a `WebSocketEnvelope`.
@@ -122,9 +123,13 @@ Two invariants make this safe:
 
 - **Emission never fails a job.** Every function in `job_events.py` swallows
   exceptions and only logs them.
-- **The FINISHED event carries the output.** RQ only persists the return
-  value *after* the handler returns, so the final emit passes the output
-  explicitly via `output_override`.
+- **The final event carries the terminal status and the output.** RQ only
+  sets FINISHED / FAILED and persists the return value *after* the handler
+  returned or raised. While `rq_job_handler` runs, the RQ status is still
+  STARTED, so the final emit passes the status explicitly via
+  `status_override` (and the output via `output_override`). Without it,
+  clients never see a job finish: they do not poll while the websocket is
+  connected.
 
 ### The `JOB_UPDATED` event model
 
