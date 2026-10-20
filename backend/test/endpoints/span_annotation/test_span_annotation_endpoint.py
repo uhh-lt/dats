@@ -531,6 +531,11 @@ def test_remove_from_group_ok(
     assert deleted.code_id == code.id
     assert deleted.begin == span_annotation.begin
     assert deleted.end == span_annotation.end
+    assert span_group.id not in deleted.group_ids
+
+    groups_resp = client.get(f"/span/{span_annotation.id}/groups")
+    assert groups_resp.status_code == 200, groups_resp.text
+    assert groups_resp.json() == []
 
 
 def test_remove_from_group_not_exists(client: TestClient):

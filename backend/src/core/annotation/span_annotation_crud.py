@@ -436,6 +436,9 @@ class CRUDSpanAnnotation(
         self, db: Session, *, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
         span_db_obj = self.read(db=db, id=span_id)
+        group_db_obj = crud_span_group.read(db=db, id=group_id)
+        if group_db_obj in span_db_obj.span_groups:
+            span_db_obj.span_groups.remove(group_db_obj)
         db.flush()
         db.refresh(span_db_obj)
         return span_db_obj
