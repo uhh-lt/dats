@@ -67,7 +67,6 @@ class TagORM(ORMBase):
     parent_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("tag.id", ondelete="CASCADE"),
-        nullable=True,
         index=True,
     )
     parent: Mapped["TagORM | None"] = relationship(

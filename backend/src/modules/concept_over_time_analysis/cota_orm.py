@@ -11,9 +11,7 @@ from repos.db.orm_base import ORMBase
 class ConceptOverTimeAnalysisORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    last_refinement_job_id: Mapped[str | None] = mapped_column(
-        String, nullable=True, index=False
-    )
+    last_refinement_job_id: Mapped[str | None] = mapped_column(String, index=False)
 
     # list of COTAConcepts (see DTO)
     concepts: Mapped[list[dict[str, Any]]] = mapped_column(
