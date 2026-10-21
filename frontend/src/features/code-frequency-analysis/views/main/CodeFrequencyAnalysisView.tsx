@@ -9,19 +9,19 @@ import { getRouteApi } from "@tanstack/react-router";
 import { CodeFrequencyPlot } from "./_components/CodeFrequencyPlot";
 import { CodeOccurrenceTable } from "./_components/CodeOccurrenceTable";
 
-const CodeFrequencyRouteApi = getRouteApi("/_auth/project/$projectId/analysis/code-frequency");
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/code-frequency");
 
 export function CodeFrequencyAnalysisView() {
   // global client state (react-router)
-  const projectId = CodeFrequencyRouteApi.useParams({ select: (params) => params.projectId });
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // custom hook
   const { codeTree } = useComputeCodeTree();
 
   // global client state (URL)
-  const [selectedCode, setSelectedCode] = useURLConnector(CodeFrequencyRouteApi, "selectedCode");
-  const [selectedUserIds, setSelectedUserIds] = useURLConnector(CodeFrequencyRouteApi, "selectedUserIds");
-  const [selectedDocTypes, setSelectedDocTypes] = useURLConnector(CodeFrequencyRouteApi, "selectedDocTypes");
+  const [selectedCode, setSelectedCode] = useURLConnector(routeApi, "selectedCode");
+  const [selectedUserIds, setSelectedUserIds] = useURLConnector(routeApi, "selectedUserIds");
+  const [selectedDocTypes, setSelectedDocTypes] = useURLConnector(routeApi, "selectedDocTypes");
 
   return (
     <ContentContentLayout

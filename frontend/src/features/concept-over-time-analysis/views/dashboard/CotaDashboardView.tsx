@@ -14,14 +14,14 @@ import { CotaHooks } from "../../api/cotaHooks";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 
-const COTADashboardRouteAPI = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/");
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/");
 
 export function CotaDashboardView() {
   // global client state
-  const projectId = COTADashboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const { cotasByProjectOptions } = COTADashboardRouteAPI.useRouteContext();
+  const { cotasByProjectOptions } = routeApi.useRouteContext();
   const { data: userAnalysis } = useSuspenseQuery({
     ...cotasByProjectOptions,
     select: (data) => Object.values(data),
@@ -105,7 +105,7 @@ export function CotaDashboardView() {
     );
   };
 
-  const navigate = COTADashboardRouteAPI.useNavigate();
+  const navigate = routeApi.useNavigate();
   const handleOpenAnalysis = (row: AnalysisDashboardRow) => {
     dispatch(CotaActions.onOpenCota({ analysisId: row.id }));
     navigate({ to: "./$cotaId", params: { cotaId: row.id } });

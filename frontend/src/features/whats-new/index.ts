@@ -1,2 +1,2 @@
 export * from "./api/githubReleaseQueries";
-export * from "./WhatsNewDialog";
+export * from "./views/dialog/WhatsNewDialog";

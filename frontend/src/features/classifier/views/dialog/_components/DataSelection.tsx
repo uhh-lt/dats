@@ -6,9 +6,9 @@ import { Alert, Box, Card, CardContent, CardHeader, CircularProgress, Divider, S
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { UseQueryResult } from "@tanstack/react-query";
 import { ClassifierDataPlot } from "../../../_components/ClassifierDataPlot";
-import { ClassifierSignalStats } from "../../../_components/ClassifierSignalStats";
-import { ProblematicSdocsTable } from "../../../_components/ProblematicSdocsTable";
-import { UnannotatedSdocsNotice } from "../../../_components/UnannotatedSdocsNotice";
+import { ClassifierSignalStats } from "./ClassifierSignalStats";
+import { ProblematicSdocsTable } from "./ProblematicSdocsTable";
+import { UnannotatedSdocsNotice } from "./UnannotatedSdocsNotice";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface DataSelectionProps {

@@ -1,5 +1,5 @@
 export * from "./api/perspectivesQueries";
 export { perspectivesReducer } from "./store/perspectivesSlice";
-export * from "./views/dashboard/PerspectiveDashboardView";
-export * from "./views/list/PerspectivesListView";
+export * from "./views/detail/PerspectiveView";
+export * from "./views/dashboard/PerspectivesDashboardView";
 export * from "./views/map/PerspectivesMapView";

@@ -11,14 +11,14 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { WhiteboardHooks } from "../../api/whiteboardHooks";
 import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
-const WhiteboardDashboardRouteAPI = getRouteApi("/_auth/project/$projectId/whiteboard/");
+const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/");
 
 export function WhiteboardDashboardView() {
   // route params
-  const projectId = WhiteboardDashboardRouteAPI.useParams({ select: (params) => params.projectId });
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const { whiteboardsByProjectOptions } = WhiteboardDashboardRouteAPI.useRouteContext();
+  const { whiteboardsByProjectOptions } = routeApi.useRouteContext();
   const { data: projectWhiteboards } = useSuspenseQuery({
     ...whiteboardsByProjectOptions,
     select: (data) => Object.values(data),
@@ -98,7 +98,7 @@ export function WhiteboardDashboardView() {
     );
   };
 
-  const navigate = WhiteboardDashboardRouteAPI.useNavigate();
+  const navigate = routeApi.useNavigate();
   const handleOpenAnalysis = (row: AnalysisDashboardRow) => {
     console.log("Opening Whiteboard " + row.id);
     navigate({ to: "./$whiteboardId", params: { whiteboardId: row.id } });

@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { perspectivesQueries, PerspectivesListView } from "@features/perspectives";
+import { perspectivesQueries, PerspectivesDashboardView } from "@features/perspectives";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -15,5 +15,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/")(
     await context.queryClient.ensureQueryData(context.aspectsByProjectOptions);
   },
   pendingComponent: () => <CircularProgress />,
-  component: PerspectivesListView,
+  component: PerspectivesDashboardView,
 });
