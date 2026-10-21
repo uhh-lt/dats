@@ -20,7 +20,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_auth")({
-  beforeLoad: async ({ context, location }) => {
+  beforeLoad: ({ context, location }) => {
     if (!context.auth.isAuthenticated) {
       throw redirect({
         to: "/login",
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_auth")({
   notFoundComponent: AuthRouteNotFound,
 });
 
-export function AuthRouteFrame({
+function AuthRouteFrame({
   children,
   projectId,
   showRouteProgress = false,

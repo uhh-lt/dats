@@ -15,12 +15,12 @@ interface DATSRouterContext {
 }
 
 export const Route = createRootRouteWithContext<DATSRouterContext>()({
-  component: RootRoute,
-  errorComponent: RootErrorBoundary,
-  notFoundComponent: NotFound,
+  component: RootRouteLayout,
+  errorComponent: RootRouteErrorBoundary,
+  notFoundComponent: RootRouteNotFound,
 });
 
-function RootRoute() {
+function RootRouteLayout() {
   return (
     <>
       <CssBaseline />
@@ -31,7 +31,7 @@ function RootRoute() {
   );
 }
 
-function RootErrorBoundary({ error, reset }: ErrorComponentProps) {
+function RootRouteErrorBoundary({ error, reset }: ErrorComponentProps) {
   return (
     <>
       <CssBaseline />
@@ -53,7 +53,7 @@ function RootErrorBoundary({ error, reset }: ErrorComponentProps) {
   );
 }
 
-function NotFound() {
+function RootRouteNotFound() {
   return (
     <>
       <Stack
