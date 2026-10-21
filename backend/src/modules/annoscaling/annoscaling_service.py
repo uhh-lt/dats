@@ -7,12 +7,13 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_crud import crud_span_anno
-from core.annotation.span_annotation_dto import SpanAnnotationCreate
+from core.annotation.span_annotation_dto import SpanAnnotationCreate, SpanAnnotationRead
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
+from modules.annoscaling.annoscaling_dto import AnnoscalingResult
 from modules.simsearch.simsearch_dto import SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -32,6 +33,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def confirm_suggestions(
         self,
+        *,
         db: Session,
         project_id: int,
         user_id: int,
@@ -39,7 +41,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         reject_code_id: int,
         accept: list[tuple[int, int]],
         reject: list[tuple[int, int]],
-    ) -> list[SpanAnnotationORM]:
+    ) -> list[SpanAnnotationRead]:
         sdoc_ids = list({sdoc for sdoc, _ in accept + reject})
         sdoc_data = crud_sdoc_data.read_by_ids(db, ids=sdoc_ids)
         sdocs = {sdoc.id: sdoc for sdoc in sdoc_data}
@@ -76,7 +78,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
             )
             to_create.append(span_anno)
 
-        return crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
+        db_objs = crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
+        return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
     def __suggest_similar_sentences(
         self,
@@ -162,13 +165,14 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def suggest(
         self,
+        *,
         db: Session,
         project_id: int,
         user_ids: list[int],
         code_id: int,
         reject_code_id: int,
         top_k: int,
-    ) -> list[tuple[int, int, str]]:
+    ) -> list[AnnoscalingResult]:
         start_time = perf_counter_ns()
         # takes 4ms (small project)
         occurrences = self.__get_annotations(db, project_id, user_ids, code_id)
@@ -207,7 +211,11 @@ class AnnoScalingService(metaclass=SingletonMeta):
         for hit in hits:
             starts, ends, content = sim_doc_sentences[hit.sdoc_id]
             text = content[starts[hit.sentence_id] : ends[hit.sentence_id]]
-            results.append((hit.sdoc_id, hit.sentence_id, text))
+            results.append(
+                AnnoscalingResult(
+                    sdoc_id=hit.sdoc_id, sentence_id=hit.sentence_id, text=text
+                )
+            )
         return results
 
     def __get_sdoc_sent_ids(

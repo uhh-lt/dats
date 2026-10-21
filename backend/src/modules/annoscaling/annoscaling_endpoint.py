@@ -35,7 +35,7 @@ def suggest(
 ) -> list[AnnoscalingResult]:
     authz_user.assert_in_project(dto.project_id)
 
-    result = ass.suggest(
+    return ass.suggest(
         db=db,
         project_id=dto.project_id,
         user_ids=[authz_user.user.id],
@@ -43,11 +43,6 @@ def suggest(
         reject_code_id=dto.reject_cide_id,
         top_k=dto.top_k,
     )
-
-    return [
-        AnnoscalingResult(sdoc_id=sdoc, sentence_id=sent, text=text)
-        for sdoc, sent, text in result
-    ]
 
 
 @router.post(
@@ -65,7 +60,7 @@ def confirm_suggestions(
 ) -> list[SpanAnnotationRead]:
     authz_user.assert_in_project(dto.project_id)
 
-    db_objs = ass.confirm_suggestions(
+    results = ass.confirm_suggestions(
         db=db,
         project_id=dto.project_id,
         user_id=authz_user.user.id,
@@ -74,7 +69,6 @@ def confirm_suggestions(
         accept=[(a.sdoc_id, a.sentence) for a in dto.accept],
         reject=[(r.sdoc_id, r.sentence) for r in dto.reject],
     )
-    results = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
         ws.emit_to_project(
             DATSEvent.SPAN_ANNOTATION_CREATED_BATCH,

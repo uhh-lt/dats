@@ -20,7 +20,6 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
-from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 
@@ -208,7 +207,7 @@ class COTAService(metaclass=SingletonMeta):
         *,
         db: Session,
         payload: COTARefinementJobInput,
-    ) -> ConceptOverTimeAnalysisORM:
+    ) -> COTARead:
         # make sure the cota exists
         crud_cota.read(db=db, id=payload.cota_id)
 
@@ -219,10 +218,11 @@ class COTAService(metaclass=SingletonMeta):
         )
 
         # update last refinement job id
-        return crud_cota.update(
+        db_obj = crud_cota.update(
             db=db,
             id=payload.cota_id,
             update_dto=COTAUpdateIntern(
                 last_refinement_job_id=job.get_id(),
             ),
         )
+        return COTARead.model_validate(db_obj)
