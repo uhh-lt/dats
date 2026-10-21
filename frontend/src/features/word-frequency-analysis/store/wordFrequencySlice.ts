@@ -2,20 +2,21 @@ import { createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 
-const WordFrequencySlice = createSlice({
+const initialState: TableState = initialTableState;
+
+const wordFrequencySlice = createSlice({
   name: "wordFrequency",
-  initialState: initialTableState as TableState,
+  initialState,
   reducers: {
     ...tableReducer,
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(ProjectActions.changeProject, (state) => {
-        resetProjectTableState(state);
-      })
-      .addDefaultCase(() => {});
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'wordFrequency' state.");
+      resetProjectTableState(state);
+    });
   },
 });
 
-export const WordFrequencyActions = WordFrequencySlice.actions;
-export const wordFrequencyReducer = { [WordFrequencySlice.name]: WordFrequencySlice.reducer };
+export const WordFrequencyActions = wordFrequencySlice.actions;
+export const wordFrequencyReducer = { [wordFrequencySlice.name]: wordFrequencySlice.reducer };

@@ -27,7 +27,7 @@ import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useAppSelector } from "@store/storeHooks";
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Annotation, Annotations } from "../../_types/Annotation";
-import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../../store/codeShortcutSlice";
+import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../../store/codeShortcutsSlice";
 import { useComputeCodesForSelection } from "./_hooks/useComputeCodesForSelection";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();

@@ -1,5 +1,5 @@
 export * from "./api/similaritySearchQueries";
-export { searchReducer } from "./store/documentSearchSlice";
+export { documentSearchReducer } from "./store/documentSearchSlice";
 export { imageSearchReducer } from "./store/imageSearchSlice";
 export { sentenceSearchReducer } from "./store/sentenceSearchSlice";
 export * from "./views/document-search/DocumentSearchView";

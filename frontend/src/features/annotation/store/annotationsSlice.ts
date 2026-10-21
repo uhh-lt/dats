@@ -1,13 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
-import { RootState } from "@store/store";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
+import { persistStorage } from "@store/persistStorage";
 import { AnnotationMode } from "../_types/AnnotationMode";
 import { TagStyle } from "../_types/TagStyle";
-const storage = createWebStorage("local");
 
-export interface AnnoState {
+export interface AnnotationsState {
   // project state:
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
   hoveredCodeId: number | undefined; // the code hovered in the code explorer, used to compute highlightings.
@@ -19,7 +17,7 @@ export interface AnnoState {
   tagStyle: TagStyle; // position of the tag in the Annotator.
 }
 
-const initialState: AnnoState = {
+const initialState: AnnotationsState = {
   // project state:
   selectedCodeId: undefined,
   hoveredCodeId: undefined,
@@ -31,7 +29,7 @@ const initialState: AnnoState = {
   tagStyle: TagStyle.Inline,
 };
 
-const annoSlice = createSlice({
+const annotationsSlice = createSlice({
   name: "annotations",
   initialState,
   reducers: {
@@ -109,7 +107,7 @@ const annoSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
-      console.log("Project changed! Resetting 'anno' state.");
+      console.log("Project changed! Resetting 'annotations' state.");
       state.selectedCodeId = initialState.selectedCodeId;
       state.hoveredCodeId = initialState.hoveredCodeId;
       state.mostRecentCodeId = initialState.mostRecentCodeId;
@@ -119,17 +117,16 @@ const annoSlice = createSlice({
   },
 });
 
-export const AnnoActions = annoSlice.actions;
+export const AnnotationsActions = annotationsSlice.actions;
 
-export const isHiddenCodeId = (codeId: number) => (state: RootState) =>
-  state.annotations.hiddenCodeIds.indexOf(codeId) !== -1;
-
-export const annoReducer = {
-  [annoSlice.name]: persistReducer(
+export const annotationsReducer = {
+  [annotationsSlice.name]: persistReducer(
     {
-      key: annoSlice.name,
-      storage,
+      key: annotationsSlice.name,
+      storage: persistStorage,
+      // hovering is transient, a reload must not restore it
+      blacklist: ["hoveredCodeId"],
     },
-    annoSlice.reducer,
+    annotationsSlice.reducer,
   ),
 };

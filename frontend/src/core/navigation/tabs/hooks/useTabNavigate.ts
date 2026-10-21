@@ -15,7 +15,7 @@ type RelaxedNavigateArgs<TOptions> =
  * Programmatic navigation helper for tabbed project routes.
  *
  * Use this hook instead of `useNavigate` when navigation should respect the tab history
- * stored in Redux (`tabSlice`). It keeps route typing from TanStack Router and applies
+ * stored in Redux (`tabsSlice`). It keeps route typing from TanStack Router and applies
  * tab-aware restore semantics:
  *
  * - If navigating to a project route that already has an open tab and no explicit

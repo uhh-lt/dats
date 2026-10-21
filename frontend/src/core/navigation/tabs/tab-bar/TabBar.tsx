@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { toTabNavigateArgs } from "../../_utils/TabRouteTargetUtils";
-import { selectProjectTabs, TabActions } from "../../tabSlice";
+import { selectProjectTabs, TabsActions } from "../../tabsSlice";
 import { useTabManager } from "../hooks/useTabManager";
 import { DragCloneRenderer } from "./_components/DragCloneRenderer";
 import { DraggableTab } from "./_components/DraggableTab";
@@ -33,7 +33,7 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useRouterState({ select: (state) => state.location });
-  const tabs = useAppSelector(selectProjectTabs(projectId));
+  const tabs = useAppSelector((state) => selectProjectTabs(state, projectId));
   const tabManager = useTabManager(projectId);
 
   const activeTabIndex = useMemo(() => {
@@ -71,7 +71,7 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
 
       if (overId && activeId !== overId) {
         dispatch(
-          TabActions.reorderTabs({
+          TabsActions.reorderTabs({
             projectId,
             sourceTabId: activeId,
             destinationTabId: overId,

@@ -1,8 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-const storage = createWebStorage("local");
+import { persistStorage } from "@store/persistStorage";
 
 interface ImageSearchState {
   // project state:
@@ -75,13 +74,11 @@ const imageSearchSlice = createSlice({
 // actions
 export const ImageSearchActions = imageSearchSlice.actions;
 
-// selectors
-export const getSelectedDocumentIds = (state: ImageSearchState) => state.selectedDocumentIds;
 export const imageSearchReducer = {
   [imageSearchSlice.name]: persistReducer(
     {
       key: imageSearchSlice.name,
-      storage,
+      storage: persistStorage,
     },
     imageSearchSlice.reducer,
   ),

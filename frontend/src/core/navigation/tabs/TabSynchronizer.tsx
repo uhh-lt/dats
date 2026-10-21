@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { TabRouteSearch, TabRouteState } from "../_types/TabData";
-import { TabActions } from "../tabSlice";
+import { TabsActions } from "../tabsSlice";
 
 function isRouteSearchCandidate(value: unknown): value is TabRouteSearch {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -59,7 +59,7 @@ export function TabSynchronizer() {
     };
 
     dispatch(
-      TabActions.addOrUpdateTab({
+      TabsActions.addOrUpdateTab({
         projectId,
         tab: {
           id: location.pathname,

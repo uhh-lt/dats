@@ -26,7 +26,7 @@ export function KeywordStats(props: KeywordStatsProps) {
 }
 
 function KeywordStatsContent({ projectId, sdocIds, ...props }: KeywordStatsProps) {
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+  const sortStatsByGlobal = useAppSelector((state) => state.documentSearch.sortStatsByGlobal);
   const keywordStats = useQuery(statisticsQueries.keywordStats(projectId, sdocIds, sortStatsByGlobal));
   return (
     <>

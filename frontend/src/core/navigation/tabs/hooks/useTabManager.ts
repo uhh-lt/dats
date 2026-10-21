@@ -3,7 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { TabData } from "../../_types/TabData";
 import { toTabNavigateArgs } from "../../_utils/TabRouteTargetUtils";
-import { selectProjectTabState, TabActions } from "../../tabSlice";
+import { selectProjectTabState, TabsActions } from "../../tabsSlice";
 
 type Direction = "left" | "right";
 
@@ -12,7 +12,7 @@ export function useTabManager(projectId: number) {
   const navigate = useNavigate();
   const currentPathname = useRouterState({ select: (state) => state.location.pathname });
 
-  const { tabsById, tabOrder } = useAppSelector(selectProjectTabState(projectId));
+  const { tabsById, tabOrder } = useAppSelector((state) => selectProjectTabState(state, projectId));
 
   const currentIndex = useMemo(() => tabOrder.indexOf(currentPathname), [tabOrder, currentPathname]);
 
@@ -40,7 +40,7 @@ export function useTabManager(projectId: number) {
         }
       }
 
-      dispatch(TabActions.removeTab({ projectId, tabId: tabIdToRemove }));
+      dispatch(TabsActions.removeTab({ projectId, tabId: tabIdToRemove }));
     },
     [currentPathname, dispatch, navigate, navigateToTab, projectId, tabOrder, tabsById],
   );
@@ -71,7 +71,7 @@ export function useTabManager(projectId: number) {
   }, [closeTab, currentIndex, tabOrder]);
 
   const closeAllTabs = useCallback(() => {
-    dispatch(TabActions.closeAllTabs({ projectId }));
+    dispatch(TabsActions.closeAllTabs({ projectId }));
     navigate({ to: `/project/${projectId}/search` });
   }, [dispatch, navigate, projectId]);
 
@@ -89,7 +89,7 @@ export function useTabManager(projectId: number) {
         navigateToTab(tabsById[fromTabId]);
       }
 
-      dispatch(TabActions.closeTabsToRight({ projectId, fromTabId }));
+      dispatch(TabsActions.closeTabsToRight({ projectId, fromTabId }));
     },
     [currentPathname, dispatch, navigateToTab, projectId, tabOrder, tabsById],
   );

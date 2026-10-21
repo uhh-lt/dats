@@ -3,7 +3,7 @@ import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationLocalFilterTable, sentenceAnnotationQueries } from "@core/sentence-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
+import { SentAnnotationAnalysisActions } from "../../../store/sentAnnotationAnalysisSlice";
 import { SentAnnotationAnalysisRouteAPI } from "../_hooks/sentAnnotationAnalysisRouteAPI";
 import { SentAnnotationAnalysisTableToolbarLeft } from "./SentAnnotationAnalysisTableToolbarLeft";
 import { SentAnnotationAnalysisTableToolbarRight } from "./SentAnnotationAnalysisTableToolbarRight";
@@ -21,11 +21,11 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
   // redux state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.sentAnnotationAnalysis.rowSelectionModel,
-    SentAnnotationsActions.onRowSelectionChange,
+    SentAnnotationAnalysisActions.onRowSelectionChange,
   );
   const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.sentAnnotationAnalysis.columnVisibilityModel,
-    SentAnnotationsActions.onColumnVisibilityChange,
+    SentAnnotationAnalysisActions.onColumnVisibilityChange,
   );
 
   const columnVisibilityModel = TableInfoHooks.useColumnVisibility(

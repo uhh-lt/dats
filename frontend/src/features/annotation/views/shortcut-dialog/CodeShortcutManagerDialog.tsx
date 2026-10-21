@@ -26,10 +26,10 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo, useState } from "react";
 import {
   CODE_SHORTCUT_KEYS,
-  CodeShortcutActions,
+  CodeShortcutsActions,
   CodeShortcutKey,
   selectCodeShortcuts,
-} from "../../store/codeShortcutSlice";
+} from "../../store/codeShortcutsSlice";
 
 interface CodeShortcutManagerDialogProps {
   projectId: number;
@@ -70,7 +70,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
       }
 
       dispatch(
-        CodeShortcutActions.assign({
+        CodeShortcutsActions.assign({
           userId: user.id,
           projectId,
           key,
@@ -87,7 +87,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
         return;
       }
 
-      dispatch(CodeShortcutActions.clear({ userId: user.id, projectId, key }));
+      dispatch(CodeShortcutsActions.clear({ userId: user.id, projectId, key }));
     },
     [dispatch, projectId, user],
   );
@@ -100,7 +100,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
     openConfirmationDialog({
       type: "DELETE",
       text: "Do you really want to clear all code shortcuts for this project?",
-      onAccept: () => dispatch(CodeShortcutActions.clearAll({ userId: user.id, projectId })),
+      onAccept: () => dispatch(CodeShortcutsActions.clearAll({ userId: user.id, projectId })),
     });
   }, [dispatch, openConfirmationDialog, projectId, user]);
 

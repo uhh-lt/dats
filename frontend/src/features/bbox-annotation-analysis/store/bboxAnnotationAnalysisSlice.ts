@@ -1,24 +1,24 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 
-const BBoxAnnotationsSlice = createSlice({
+const initialState: TableState = initialTableState;
+
+const bboxAnnotationAnalysisSlice = createSlice({
   name: "bboxAnnotationAnalysis",
-  initialState: {
-    ...initialTableState,
-  },
+  initialState,
   reducers: {
     ...tableReducer,
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(ProjectActions.changeProject, (state) => {
-        console.log("Project changed! Resetting 'bboxAnnotationAnalysis' state.");
-        resetProjectTableState(state);
-      })
-      .addDefaultCase(() => {});
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'bboxAnnotationAnalysis' state.");
+      resetProjectTableState(state);
+    });
   },
 });
 
-export const BBoxAnnotationsActions = BBoxAnnotationsSlice.actions;
-export const bboxAnnotationAnalysisReducer = { [BBoxAnnotationsSlice.name]: BBoxAnnotationsSlice.reducer };
+export const BBoxAnnotationAnalysisActions = bboxAnnotationAnalysisSlice.actions;
+export const bboxAnnotationAnalysisReducer = {
+  [bboxAnnotationAnalysisSlice.name]: bboxAnnotationAnalysisSlice.reducer,
+};

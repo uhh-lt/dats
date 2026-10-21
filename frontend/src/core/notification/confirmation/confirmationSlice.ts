@@ -1,4 +1,4 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { ConfirmationEvent } from "./_types/ConfirmationEvent";
 
 interface ConfirmationState {

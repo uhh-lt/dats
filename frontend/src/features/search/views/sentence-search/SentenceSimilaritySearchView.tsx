@@ -19,7 +19,7 @@ import {
   addSpanAnnotationFilter,
   toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
-import { SearchActions } from "../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
@@ -31,7 +31,7 @@ export function SentenceSimilaritySearchView() {
   // redux (global client state)
   const dispatch = useAppDispatch();
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
-  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
+  const expandedTagIds = useAppSelector((state) => state.documentSearch.expandedTagIds);
   const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
 
   // sentence similarity search feature
@@ -83,7 +83,7 @@ export function SentenceSimilaritySearchView() {
 
   // tag explorer handlers
   const handleExpandedTagIdsChange = useCallback(
-    (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
+    (ids: string[]) => dispatch(DocumentSearchActions.setExpandedTagIds(ids)),
     [dispatch],
   );
 

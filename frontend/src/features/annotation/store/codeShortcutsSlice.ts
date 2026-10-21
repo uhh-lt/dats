@@ -1,9 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-
-const storage = createWebStorage("local");
+import { persistStorage } from "@store/persistStorage";
 
 export type CodeShortcutKey = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 
@@ -11,7 +9,7 @@ export const CODE_SHORTCUT_KEYS: CodeShortcutKey[] = ["1", "2", "3", "4", "5", "
 
 export type CodeShortcutBindings = Partial<Record<CodeShortcutKey, number>>;
 
-interface CodeShortcutState {
+interface CodeShortcutsState {
   bindingsByUserAndProject: Record<string, Record<string, CodeShortcutBindings>>;
 }
 
@@ -33,11 +31,11 @@ interface ReconcileCodeShortcutsPayload extends CodeShortcutScope {
   validCodeIds: number[];
 }
 
-const initialState: CodeShortcutState = {
+const initialState: CodeShortcutsState = {
   bindingsByUserAndProject: {},
 };
 
-const codeShortcutSlice = createSlice({
+const codeShortcutsSlice = createSlice({
   name: "codeShortcuts",
   initialState,
   reducers: {
@@ -89,6 +87,8 @@ const codeShortcutSlice = createSlice({
   },
 });
 
+export const CodeShortcutsActions = codeShortcutsSlice.actions;
+
 const EMPTY_BINDINGS: CodeShortcutBindings = {};
 
 export const selectCodeShortcuts = (state: RootState, userId: number | undefined, projectId: number | undefined) => {
@@ -99,14 +99,12 @@ export const selectCodeShortcuts = (state: RootState, userId: number | undefined
   return state.codeShortcuts.bindingsByUserAndProject[userId]?.[projectId] ?? EMPTY_BINDINGS;
 };
 
-export const CodeShortcutActions = codeShortcutSlice.actions;
-
-export const codeShortcutReducer = {
-  [codeShortcutSlice.name]: persistReducer(
+export const codeShortcutsReducer = {
+  [codeShortcutsSlice.name]: persistReducer(
     {
-      key: codeShortcutSlice.name,
-      storage,
+      key: codeShortcutsSlice.name,
+      storage: persistStorage,
     },
-    codeShortcutSlice.reducer,
+    codeShortcutsSlice.reducer,
   ),
 };

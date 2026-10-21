@@ -17,7 +17,7 @@ import { useJumpToSpanAnnotation } from "../../_hooks/useJumpToSpanAnnotation";
 import { useSpanAnnotationHighlight } from "../../_hooks/useSpanAnnotationHighlight";
 import { useSpanAnnotationResize } from "../../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../_types/Annotation";
-import { AnnoActions } from "../../store/annoSlice";
+import { AnnotationsActions } from "../../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../annotation-menu";
 import { BlockComparisonRow } from "./_components/BlockComparisonRow";
 import { useBlockPartition } from "./_hooks/useBlockPartition";
@@ -428,7 +428,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     if (!draft) return;
     startCreate(draft.annotation, codeId, () => {
       if (!isNewCode) {
-        dispatch(AnnoActions.moveCodeToTop(codeId));
+        dispatch(AnnotationsActions.moveCodeToTop(codeId));
       }
     });
   };
@@ -445,7 +445,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
         code_id: codeId,
       };
       const pending = toPendingSpanAnnotation(requestBody, user?.id);
-      startCreate(pending, codeId, () => dispatch(AnnoActions.moveCodeToTop(codeId)));
+      startCreate(pending, codeId, () => dispatch(AnnotationsActions.moveCodeToTop(codeId)));
     }
   };
 
@@ -453,7 +453,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     if (draft) {
       if (reason === "backdropClick") {
         startCreate(draft.annotation, draft.annotation.code_id, () =>
-          dispatch(AnnoActions.moveCodeToTop(draft.annotation.code_id)),
+          dispatch(AnnotationsActions.moveCodeToTop(draft.annotation.code_id)),
         );
       }
     }

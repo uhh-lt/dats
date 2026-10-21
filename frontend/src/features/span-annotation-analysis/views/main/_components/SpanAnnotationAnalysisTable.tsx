@@ -3,7 +3,7 @@ import { SpanColumns } from "@models/SpanColumns";
 import { SpanAnnotationLocalFilterTable, spanAnnotationQueries } from "@core/span-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
+import { SpanAnnotationAnalysisActions } from "../../../store/spanAnnotationAnalysisSlice";
 import { SpanAnnotationAnalysisRouteAPI } from "../_hooks/spanAnnotationAnalysisRouteAPI";
 import { SpanAnnotationAnalysisTableToolbarLeft } from "./SpanAnnotationAnalysisTableToolbarLeft";
 import { SpanAnnotationAnalysisTableToolbarRight } from "./SpanAnnotationAnalysisTableToolbarRight";
@@ -21,11 +21,11 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
   // redux state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.rowSelectionModel,
-    SpanAnnotationsActions.onRowSelectionChange,
+    SpanAnnotationAnalysisActions.onRowSelectionChange,
   );
   const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.columnVisibilityModel,
-    SpanAnnotationsActions.onColumnVisibilityChange,
+    SpanAnnotationAnalysisActions.onColumnVisibilityChange,
   );
 
   const columnVisibilityModel = TableInfoHooks.useColumnVisibility(
