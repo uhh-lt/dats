@@ -408,4 +408,15 @@ export default defineConfig(
     plugins: { local: datsRulesPlugin },
     rules: { "local/filter-slice-shape": "error" },
   },
+  // ENTITY RENDERERS (see .github/instructions/frontend-entity-renderer.instructions.md)
+  {
+    files: ["src/**/*.tsx"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/entity-renderer-location": "error" },
+  },
+  {
+    files: ["src/core/*/renderer/*Renderer.tsx", "src/core/annotation/AnnotationSummaryRow.tsx"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/entity-renderer-conventions": "error" },
+  },
 );
