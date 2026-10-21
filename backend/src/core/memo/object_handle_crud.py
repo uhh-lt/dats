@@ -73,6 +73,7 @@ class CRUDObjectHandle(
 
     ### CREATE OPERATIONS ###
 
+    # check_crud: allow override-multi (a savepoint per handle returns the existing one on a unique violation)
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
         try:
             with db.begin_nested():  # create a database savepoint

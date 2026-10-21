@@ -1,4 +1,3 @@
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -25,27 +24,35 @@ class CRUDSourceDocument(
 ):
     ### CREATE OPERATIONS ###
 
-    def create(
-        self, db: Session, *, create_dto: SourceDocumentCreate
-    ) -> SourceDocumentORM:
-        # If folder_id not provided, create a folder with same name as the document
-        if create_dto.folder_id is None:
-            folder_create = FolderCreate(
-                name=create_dto.filename,
-                folder_type=FolderType.SDOC_FOLDER,
-                project_id=create_dto.project_id,
-            )
-            created_folder = crud_folder.create(db=db, create_dto=folder_create)
+    def create_multi(
+        self, db: Session, *, create_dtos: list[SourceDocumentCreate]
+    ) -> list[SourceDocumentORM]:
+        # Documents without folder_id get a folder with the same name as the document
+        without_folder = [dto for dto in create_dtos if dto.folder_id is None]
+        folders = crud_folder.create_multi(
+            db=db,
+            create_dtos=[
+                FolderCreate(
+                    name=dto.filename,
+                    folder_type=FolderType.SDOC_FOLDER,
+                    project_id=dto.project_id,
+                )
+                for dto in without_folder
+            ],
+        )
+        folder_id_by_dto = {
+            id(dto): folder.id for dto, folder in zip(without_folder, folders)
+        }
 
-            # Create the source document with the folder_id
-            create_dto = create_dto.model_copy(update={"folder_id": created_folder.id})
-
-        dto_obj_data = jsonable_encoder(create_dto)
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.flush()
-        db.refresh(db_obj)
-        return db_obj
+        return super().create_multi(
+            db=db,
+            create_dtos=[
+                dto.model_copy(update={"folder_id": folder_id_by_dto[id(dto)]})
+                if dto.folder_id is None
+                else dto
+                for dto in create_dtos
+            ],
+        )
 
     ### READ OPERATIONS ###
 
