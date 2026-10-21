@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { toSorts } from "@core/filter";
+import { sortingModelSearchParam, toSorts } from "@core/filter";
 import { healthQueries, HealthView } from "@features/health";
 import { DocType } from "@models/DocType";
 import { CircularProgress } from "@mui/material";
@@ -9,14 +9,7 @@ import { z } from "zod";
 
 const healthSearchSchema = z.object({
   doctype: z.nativeEnum(DocType).default(DocType.TEXT),
-  sortingModel: z
-    .array(
-      z.object({
-        id: z.string(),
-        desc: z.boolean(),
-      }),
-    )
-    .default([]),
+  sortingModel: sortingModelSearchParam(),
   fetchSize: z.coerce.number().default(20),
 });
 

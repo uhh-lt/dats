@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { PerspectiveDashboardView, perspectivesQueries } from "@features/perspectives";
 import { CircularProgress } from "@mui/material";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$aspectId/")({
   staticData: {
@@ -9,16 +9,14 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$as
     icon: Icon.MAP,
     getTitle: ({ queryClient, params }) => {
       const aspects = queryClient.getQueryData(perspectivesQueries.aspectsByProject(Number(params.projectId)).queryKey);
-      return aspects?.[Number(params.aspectId)]?.name ?? "Aspect";
+      return `Aspect ${aspects?.[Number(params.aspectId)]?.name ?? ""}`;
     },
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ aspectsByProjectOptions: perspectivesQueries.aspectsByProject(params.projectId) }),
   loader: async ({ context, params }) => {
     const aspects = await context.queryClient.ensureQueryData(context.aspectsByProjectOptions);
-    if (!aspects[params.aspectId]) {
-      throw new Error(`Aspect ${params.aspectId} not found in project ${params.projectId}`);
-    }
+    if (!aspects[params.aspectId]) throw notFound();
   },
   pendingComponent: () => <CircularProgress />,
   component: PerspectiveDashboardView,

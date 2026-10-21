@@ -1,11 +1,5 @@
 import { Icon } from "@components/icons";
-import {
-  deserializeFilterFromSearchParam,
-  FILTER_EXPERT_MODE_PARAM,
-  FILTER_PARAM,
-  MyFilter,
-  toSorts,
-} from "@core/filter";
+import { booleanSearchParam, FILTER_PARAM, filterSearchParams, sortingModelSearchParam, toSorts } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { sdocQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
@@ -17,36 +11,13 @@ import { z } from "zod";
 
 const documentSearchSchema = z.object({
   searchQuery: z.string().default(""),
-  [FILTER_PARAM]: z
-    .custom<string | MyFilter<SdocColumns>>()
-    .default("")
-    .transform((value) => deserializeFilterFromSearchParam<SdocColumns>(value, "root")),
-  [FILTER_EXPERT_MODE_PARAM]: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((value) => value === true || value === "true")
-    .default(false),
-  searchExpertMode: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((value) => value === true || value === "true")
-    .default(false),
+  ...filterSearchParams<SdocColumns>(),
+  searchExpertMode: booleanSearchParam(false),
   selectedFolderId: z.coerce.number().default(-1),
-  sortingModel: z
-    .array(
-      z.object({
-        id: z.string(),
-        desc: z.boolean(),
-      }),
-    )
-    .default([]),
+  sortingModel: sortingModelSearchParam(),
   fetchSize: z.coerce.number().default(20),
-  showFolders: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((value) => value === true || value === "true")
-    .default(true),
-  showChildFolders: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((value) => value === true || value === "true")
-    .default(false),
+  showFolders: booleanSearchParam(true),
+  showChildFolders: booleanSearchParam(false),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/search")({

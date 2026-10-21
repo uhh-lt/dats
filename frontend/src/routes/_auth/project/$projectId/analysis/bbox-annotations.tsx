@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
+import { filterSearchParams, sortingModelSearchParam } from "@core/filter";
 import { BBoxAnnotationAnalysisView } from "@features/bbox-annotation-analysis";
 import { BBoxColumns } from "@models/BBoxColumns";
 import { createFileRoute } from "@tanstack/react-router";
@@ -7,22 +7,8 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
 const bboxAnnotationAnalysisSearchSchema = z.object({
-  [FILTER_PARAM]: z
-    .custom<string | MyFilter<BBoxColumns>>()
-    .default("")
-    .transform((value) => deserializeFilterFromSearchParam<BBoxColumns>(value, "root")),
-  [FILTER_EXPERT_MODE_PARAM]: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((value) => value === true || value === "true")
-    .default(false),
-  sortingModel: z
-    .array(
-      z.object({
-        id: z.string(),
-        desc: z.boolean(),
-      }),
-    )
-    .default([]),
+  ...filterSearchParams<BBoxColumns>(),
+  sortingModel: sortingModelSearchParam(),
   fetchSize: z.coerce.number().default(20),
 });
 

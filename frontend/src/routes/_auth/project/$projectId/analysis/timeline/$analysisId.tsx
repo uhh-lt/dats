@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { timelineAnalysisQueries, TimelineAnalysisView } from "@features/timeline-analysis";
 import { CircularProgress } from "@mui/material";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/timeline/$analysisId")({
   staticData: {
@@ -17,8 +17,9 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ timelineAnalysesByProjectOptions: timelineAnalysisQueries.byProject(params.projectId) }),
-  loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(context.timelineAnalysesByProjectOptions);
+  loader: async ({ context, params }) => {
+    const timelineAnalyses = await context.queryClient.ensureQueryData(context.timelineAnalysesByProjectOptions);
+    if (!timelineAnalyses[params.analysisId]) throw notFound();
   },
   pendingComponent: () => <CircularProgress />,
   component: TimelineAnalysisView,

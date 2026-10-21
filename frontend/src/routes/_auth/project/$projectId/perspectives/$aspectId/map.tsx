@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { perspectivesQueries, PerspectivesMapView } from "@features/perspectives";
 import { CircularProgress } from "@mui/material";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$aspectId/map")({
   staticData: {
@@ -16,9 +16,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$as
   context: ({ params }) => ({ aspectsByProjectOptions: perspectivesQueries.aspectsByProject(params.projectId) }),
   loader: async ({ context, params }) => {
     const aspects = await context.queryClient.ensureQueryData(context.aspectsByProjectOptions);
-    if (!aspects[params.aspectId]) {
-      throw new Error(`Aspect ${params.aspectId} not found in project ${params.projectId}`);
-    }
+    if (!aspects[params.aspectId]) throw notFound();
   },
   pendingComponent: () => <CircularProgress />,
   component: PerspectivesMapView,
