@@ -9,7 +9,7 @@ import { Button, Dialog, DialogActions, DialogContent, Stack, Tooltip, Typograph
 import { useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 
 interface ClusterCreationDialogProps {
   aspectId: number;

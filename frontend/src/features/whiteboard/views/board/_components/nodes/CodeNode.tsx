@@ -1,7 +1,7 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { CodeHooks, CodeRenderer } from "@core/code";
-import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { spanAnnotationQueries } from "@core/span-annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeNodeData } from "@models/CodeNodeData";
@@ -46,13 +46,13 @@ export function CodeNode(props: NodeProps<CodeNode>) {
   const bboxAnnotations = useQuery(bboxAnnotationQueries.byUserCode(props.data.codeId));
   const spanAnnotations = useQuery(spanAnnotationQueries.byUserCode(props.data.codeId));
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.CODE, props.data.codeId);
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.CODE, props.data.codeId));
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes
   // then we need to invalidate these child codes, on code update
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
-  const projectCodes = CodeHooks.useGetAllCodesList();
+  const projectCodes = CodeHooks.useGetAllCodes();
   const childCodes = useMemo(() => {
     return projectCodes.data?.filter((projectcode) => projectcode.parent_id === props.data.codeId) ?? [];
   }, [props.data.codeId, projectCodes.data]);

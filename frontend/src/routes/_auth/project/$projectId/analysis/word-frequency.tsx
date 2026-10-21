@@ -1,5 +1,11 @@
 import { Icon } from "@components/icons";
-import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
+import {
+  deserializeFilterFromSearchParam,
+  FILTER_EXPERT_MODE_PARAM,
+  FILTER_PARAM,
+  MyFilter,
+  toSorts,
+} from "@core/filter";
 import { wordFrequencyQueries, WordFrequencyView } from "@features/word-frequency-analysis";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress } from "@mui/material";
@@ -42,11 +48,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    wordFrequencyTableOptions: wordFrequencyQueries.table({
+    wordFrequencyTableOptions: wordFrequencyQueries.search({
       projectId: params.projectId,
-      filter: deps[FILTER_PARAM],
-      sortingModel: deps.sortingModel,
-      fetchSize: deps.fetchSize,
+      requestBody: { filter: deps[FILTER_PARAM], sorts: toSorts<WordFrequencyColumns>(deps.sortingModel) },
+      pageSize: deps.fetchSize,
     }),
   }),
   loader: async ({ context }) => {

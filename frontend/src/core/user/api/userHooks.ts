@@ -19,9 +19,9 @@ const useGetUser = (userId: number | null | undefined) => {
 };
 
 // USER MUTATIONS
-const useUpdate = () =>
+const useUpdateMe = () =>
   useMutation({
-    mutationKey: [...userQueries.all(), "update"],
+    mutationKey: [...userQueries.all(), "updateMe"],
     mutationFn: UserService.updateMe,
     meta: {
       datsEvent: "USER_UPDATED",
@@ -74,7 +74,7 @@ const useGetAllUsers = <T = UserRead[]>({ select, enabled }: UseProjectUsersQuer
 
 export const UserHooks = {
   useGetUser,
-  useUpdate,
+  useUpdateMe,
   useAddUserToProject,
   useRemoveUserFromProject,
   useRegister,

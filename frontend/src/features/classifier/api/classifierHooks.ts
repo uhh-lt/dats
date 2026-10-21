@@ -61,7 +61,7 @@ const useDeleteClassifier = () =>
  * (from training settings or, in the evaluation flow, from the selected classifier),
  * and fetches the dataset statistics.
  */
-function useDatasetStatistics() {
+const useGetDatasetStatistics = () => {
   // dialog state
   const model = useAppSelector((state) => state.classifier.context.model);
   const projectId = useAppSelector((state) => state.classifier.context.projectId);
@@ -89,13 +89,12 @@ function useDatasetStatistics() {
   });
 
   return { model, datasetStats };
-}
+};
 
 export const ClassifierHooks = {
   useGetAllClassifiers,
-  useComputeDatasetStatistics,
   useStartClassifierJob,
   useUpdateClassifier,
   useDeleteClassifier,
-  useDatasetStatistics,
+  useGetDatasetStatistics,
 };

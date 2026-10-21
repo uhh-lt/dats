@@ -1,5 +1,5 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { SdocHooks, SdocRenderer } from "@core/source-document";
 import { tagQueries } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -39,7 +39,7 @@ export function SdocNode(props: NodeProps<SdocNode>) {
   // global server state (react-query)
   const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
   const tagIds = useQuery(tagQueries.idsBySdoc(props.data.sdocId));
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId);
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SOURCE_DOCUMENT, props.data.sdocId));
 
   const docType = sdoc.data?.doctype;
 

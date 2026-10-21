@@ -40,7 +40,7 @@ interface ProfileHomeProps {
 }
 
 export function ProfileHome({ user }: ProfileHomeProps) {
-  const updateUserMutation = UserHooks.useUpdate();
+  const updateUserMutation = UserHooks.useUpdateMe();
   const { logout } = useAuth();
   const openSnackbar = useOpenSnackbar();
 

@@ -47,7 +47,7 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
 
   // dialog
   const dispatch = useAppDispatch();
-  const metadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
   const dialog = useDialog();
   const [selectedCodeId, setSelectedCodeId] = useState<number | null>(null);
   const handleOpenDialog = useCallback(

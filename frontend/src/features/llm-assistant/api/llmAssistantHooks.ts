@@ -3,7 +3,7 @@ import { ApproachType } from "@models/ApproachType";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { llmAssistantQueries } from "./llmAssistantQueries";
+import { ExistingAnnotationCountParams, llmAssistantQueries } from "./llmAssistantQueries";
 
 const useStartLLMAssistantJob = () =>
   useMutation({
@@ -34,12 +34,7 @@ const useDetermineApproach = () =>
     },
   });
 
-const useCountExistingAssistantAnnotations = (params: {
-  taskType: TaskType | undefined;
-  approachType: ApproachType;
-  sdocIds: number[];
-  codeIds: number[];
-}) =>
+const useGetExistingAnnotationCount = (params: ExistingAnnotationCountParams) =>
   useQuery({
     ...llmAssistantQueries.existingAnnotationCount(params),
     enabled: params.taskType === TaskType.SENTENCE_ANNOTATION || params.taskType === TaskType.ANNOTATION,
@@ -49,5 +44,5 @@ export const LlmAssistantHooks = {
   useStartLLMAssistantJob,
   useCreatePromptTemplates,
   useDetermineApproach,
-  useCountExistingAssistantAnnotations,
+  useGetExistingAnnotationCount,
 };

@@ -27,7 +27,7 @@ export function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddD
   const dialog = useDialog();
 
   // global server state
-  const metadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

@@ -4,7 +4,7 @@ import { ApproachType } from "@models/ApproachType";
 import { TaskType } from "@models/TaskType";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
-interface ExistingAnnotationCountParams {
+export interface ExistingAnnotationCountParams {
   taskType: TaskType | undefined;
   approachType: ApproachType;
   sdocIds: number[];

@@ -1,4 +1,4 @@
-export * from "./api/perspectiveQueries";
+export * from "./api/perspectivesQueries";
 export { perspectivesReducer } from "./store/perspectivesSlice";
 export * from "./views/dashboard/PerspectiveDashboardView";
 export * from "./views/list/PerspectivesListView";

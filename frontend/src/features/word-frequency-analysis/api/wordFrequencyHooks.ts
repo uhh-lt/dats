@@ -4,7 +4,7 @@ import { wordFrequencyQueries } from "./wordFrequencyQueries";
 
 const useExportWordFrequencies = () =>
   useMutation({
-    mutationKey: [...wordFrequencyQueries.all(), "export"],
+    mutationKey: [...wordFrequencyQueries.all(), "exportWordFrequencies"],
     mutationFn: WordFrequencyService.wordFrequencyAnalysisExport,
   });
 

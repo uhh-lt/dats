@@ -30,7 +30,7 @@ export function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
-  const metadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
   return (
     <>

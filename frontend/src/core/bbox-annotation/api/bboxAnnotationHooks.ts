@@ -12,7 +12,7 @@ import { bboxAnnotationQueries } from "./bboxAnnotationQueries";
 // BBOX MUTATIONS
 const useCreateBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.all(), "create"],
+    mutationKey: [...bboxAnnotationQueries.all(), "createBBoxAnnotation"],
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
     meta: {
@@ -23,7 +23,7 @@ const useCreateBBoxAnnotation = () =>
 
 const useUpdateBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "update"],
+    mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "updateBBoxAnnotation"],
     mutationFn: (variables: { bboxToUpdate: BBoxAnnotationRead | number; requestBody: BBoxAnnotationUpdate }) =>
       BboxAnnotationService.updateById({
         bboxId: typeof variables.bboxToUpdate === "number" ? variables.bboxToUpdate : variables.bboxToUpdate.id,
@@ -71,7 +71,7 @@ const useUpdateBBoxAnnotation = () =>
 
 const useUpdateBulkBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.all(), "updateBulk"],
+    mutationKey: [...bboxAnnotationQueries.all(), "updateBulkBBoxAnnotation"],
     mutationFn: BboxAnnotationService.updateBboxAnnotationsBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_UPDATED_BATCH",
@@ -81,7 +81,7 @@ const useUpdateBulkBBoxAnnotation = () =>
 
 const useDeleteBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "delete"],
+    mutationKey: [...bboxAnnotationQueries.optimisticMutationScope(), "deleteBBoxAnnotation"],
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | number }) =>
       BboxAnnotationService.deleteById({
         bboxId: typeof variables.bboxToDelete === "number" ? variables.bboxToDelete : variables.bboxToDelete.id,
@@ -114,7 +114,7 @@ const useDeleteBBoxAnnotation = () =>
 
 const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
-    mutationKey: [...bboxAnnotationQueries.all(), "deleteBulk"],
+    mutationKey: [...bboxAnnotationQueries.all(), "deleteBulkBBoxAnnotation"],
     mutationFn: BboxAnnotationService.deleteBboxAnnotationsBulk,
     meta: {
       datsEvent: "BBOX_ANNOTATION_DELETED_BATCH",

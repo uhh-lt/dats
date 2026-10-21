@@ -27,7 +27,7 @@ export const SelectSentenceAnnotationsDialog = memo(
     const dialog = useDialog();
 
     // global server state
-    const metadata = ProjectMetadataHooks.useGetProjectMetadataList();
+    const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
     // maximize
     const { isMaximized, toggleMaximize } = useDialogMaximize();

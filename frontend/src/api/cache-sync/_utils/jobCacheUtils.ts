@@ -15,7 +15,7 @@ import { documentUploadQueries } from "@features/document-upload/api/documentUpl
 import { duplicateFinderQueries } from "@features/duplicate-finder/api/duplicateFinderQueries";
 import { llmAssistantQueries } from "@features/llm-assistant/api/llmAssistantQueries";
 import { mlAutomationQueries } from "@features/ml-automation/api/mlAutomationQueries";
-import { perspectiveQueries } from "@features/perspectives/api/perspectiveQueries";
+import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
 import { importQueries } from "@features/project-settings/api/importQueries";
 import { timelineAnalysisQueries } from "@features/timeline-analysis/api/timelineAnalysisQueries";
 import { whiteboardQueries } from "@features/whiteboard/api/whiteboardQueries";
@@ -76,7 +76,7 @@ export function handleJobUpdate(job: JobRead): void {
       if (job.status === JobStatus.FINISHED) handleCOTARefinementJobFinished(job);
       break;
     case PerspectivesJobRead.job_type.PERSPECTIVES:
-      upsertJob(job, perspectiveQueries.job);
+      upsertJob(job, perspectivesQueries.job);
       writeAspectMostRecentJob(job);
       if (job.status === JobStatus.FINISHED) handlePerspectivesJobFinished(job);
       break;
@@ -122,7 +122,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.FOLDERS:
-      queryClient.invalidateQueries({ queryKey: folderQueries.ofProjectScope(projectId) });
+      queryClient.invalidateQueries({ queryKey: folderQueries.byProjectOfProjectScope(projectId) });
       break;
     case ImportJobType.PROJECT_METADATA:
       queryClient.invalidateQueries({ queryKey: projectMetadataQueries.byProject(projectId).queryKey });
@@ -140,7 +140,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.DOCUMENTS:
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchOfProjectScope(projectId) });
       break;
     case ImportJobType.MEMOS:
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
@@ -153,7 +153,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: timelineAnalysisQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
-      queryClient.invalidateQueries({ queryKey: sdocQueries.searchByProject(projectId) });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchOfProjectScope(projectId) });
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
     case ImportJobType.BBOX_ANNOTATIONS:
@@ -204,7 +204,7 @@ function handleClassifierJobFinished(job: ClassifierJobRead) {
 // The backend starts a perspectives job only when no other job of the aspect is running, so every update belongs to
 // the aspect's most recent job.
 function writeAspectMostRecentJob(job: PerspectivesJobRead) {
-  queryClient.setQueryData(perspectiveQueries.aspectsByProject(job.project_id).queryKey, (old) => {
+  queryClient.setQueryData(perspectivesQueries.aspectsByProject(job.project_id).queryKey, (old) => {
     const aspect = old?.[job.input.aspect_id];
     if (!old || !aspect || aspect.most_recent_job_id === job.job_id) return old;
     return { ...old, [aspect.id]: { ...aspect, most_recent_job_id: job.job_id } };
@@ -213,8 +213,8 @@ function writeAspectMostRecentJob(job: PerspectivesJobRead) {
 
 // A finished perspectives job recomputed the aspect's visualization data.
 function handlePerspectivesJobFinished(job: PerspectivesJobRead) {
-  queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(job.input.aspect_id) });
-  queryClient.invalidateQueries({ queryKey: perspectiveQueries.clusterSimilarities(job.input.aspect_id).queryKey });
+  queryClient.invalidateQueries({ queryKey: perspectivesQueries.visualizationOfAspectScope(job.input.aspect_id) });
+  queryClient.invalidateQueries({ queryKey: perspectivesQueries.clusterSimilarities(job.input.aspect_id).queryKey });
 }
 
 // A finished COTA refinement job updated the COTA — refresh the project's COTAs.

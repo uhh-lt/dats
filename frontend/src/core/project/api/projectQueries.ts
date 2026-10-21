@@ -6,10 +6,10 @@ import { queryOptions } from "@tanstack/react-query";
 /**
  * Query factory for projects.
  *
- *   projectQueries.all()                              ["project"]
- *   projectQueries.userProjects()                     ["project", "user"]
- *   projectQueries.sdocStatusCount(projectId, status) ["project", "sdocStatusCount", projectId, status]
- *   projectQueries.sdocStatusSimple(projectId, status) ["project", "sdocStatusSimple", projectId, status]
+ *   projectQueries.all()                                ["project"]
+ *   projectQueries.userProjects()                       ["project", "user"]
+ *   projectQueries.sdocStatusCount(projectId, status)   ["project", "sdocStatusCount", projectId, status]
+ *   projectQueries.sdocStatusSimple(projectId, status)  ["project", "sdocStatusSimple", projectId, status]
  */
 export const projectQueries = {
   all: () => ["project"] as const,
@@ -23,16 +23,18 @@ export const projectQueries = {
     }),
 
   // number of documents of a project with the given processing status
+  sdocStatusCountScope: () => [...projectQueries.all(), "sdocStatusCount"] as const,
   sdocStatusCount: (projectId: number, status: SDocStatus) =>
     queryOptions({
-      queryKey: [...projectQueries.all(), "sdocStatusCount", projectId, status] as const,
+      queryKey: [...projectQueries.sdocStatusCountScope(), projectId, status] as const,
       queryFn: () => ProjectService.countSdocsWithStatus({ projectId, status }),
     }),
 
   // simple processing status of all documents of a project with the given status
+  sdocStatusSimpleScope: () => [...projectQueries.all(), "sdocStatusSimple"] as const,
   sdocStatusSimple: (projectId: number, status: SDocStatus) =>
     queryOptions({
-      queryKey: [...projectQueries.all(), "sdocStatusSimple", projectId, status] as const,
+      queryKey: [...projectQueries.sdocStatusSimpleScope(), projectId, status] as const,
       queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
     }),
 };

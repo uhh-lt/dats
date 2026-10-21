@@ -19,7 +19,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Markdown from "react-markdown";
-import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface ChatMessage {

@@ -63,7 +63,7 @@ export const ProjectMetadataTable = memo((props: ProjectMetadataTableProps) => {
 
 function ProjectMetadataTableWithoutMetadata(props: SharedProjectMetadataTableProps) {
   // global server state
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
   if (projectMetadata.isSuccess) {
     return <ProjectMetadataTableContent {...props} projectMetadata={projectMetadata.data} />;

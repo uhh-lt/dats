@@ -28,23 +28,24 @@ interface SdocSearchRequest {
  * Query factory for source documents (sdocs).
  *
  *   sdocQueries.all()                        ["sdoc"]
- *   sdocQueries.detail(sdocId)               ["sdoc", "detail", sdocId]
+ *   sdocQueries.byId(sdocId)                 ["sdoc", "detail", sdocId]
  *   sdocQueries.data(sdocId)                 ["sdoc", "data", sdocId]
  *   sdocQueries.idByFilename(pid, filename)  ["sdoc", "idByFilename", pid, filename]
  *   sdocQueries.sameFolder(sdocId)           ["sdoc", "sameFolder", sdocId]
  *   sdocQueries.thumbnailUrl(sdocId)         ["sdoc", "thumbnailUrl", sdocId]
  *   sdocQueries.idsByTag(tagId)              ["sdoc", "idsByTag", tagId]
  *   sdocQueries.annotators(sdocId)           ["sdoc", "annotators", sdocId]
- *   sdocQueries.search(params)               ["sdoc", "search", projectId, ...]
+ *   sdocQueries.tableInfo(projectId)         ["tableInfo", "sdoc", projectId]
+ *   sdocQueries.search(request)              ["sdoc", "search", projectId, request]
  */
 export const sdocQueries = {
   all: () => ["sdoc"] as const,
 
   // a single sdoc
-  detailScope: () => [...sdocQueries.all(), "detail"] as const,
-  detail: (sdocId: number) =>
+  byIdScope: () => [...sdocQueries.all(), "detail"] as const,
+  byId: (sdocId: number) =>
     queryOptions({
-      queryKey: [...sdocQueries.detailScope(), sdocId] as const,
+      queryKey: [...sdocQueries.byIdScope(), sdocId] as const,
       queryFn: () => SourceDocumentService.getById({ sdocId }),
       staleTime: Infinity,
     }),
@@ -118,10 +119,10 @@ export const sdocQueries = {
   // and folders. Used by the search page and the sdoc filter table.
   searchScope: () => [...sdocQueries.all(), "search"] as const,
   // prefix of all document searches of one project, for invalidation
-  searchByProject: (projectId: number) => [...sdocQueries.searchScope(), projectId] as const,
+  searchOfProjectScope: (projectId: number) => [...sdocQueries.searchScope(), projectId] as const,
   search: (request: SdocSearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...sdocQueries.searchByProject(request.projectId), request] as const,
+      queryKey: [...sdocQueries.searchOfProjectScope(request.projectId), request] as const,
       queryFn: async ({ pageParam }) => {
         const { projectId, searchQuery, filter, sorts, pageSize, ...options } = request;
         const data = await SearchService.searchSdocs({
@@ -135,7 +136,7 @@ export const sdocQueries = {
         });
 
         Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
-          queryClient.setQueryData(sdocQueries.detail(parseInt(sdocId)).queryKey, sdoc);
+          queryClient.setQueryData(sdocQueries.byId(parseInt(sdocId)).queryKey, sdoc);
           queryClient.setQueryData(sdocQueries.idByFilename(projectId, sdoc.filename).queryKey, sdoc.id);
         });
 

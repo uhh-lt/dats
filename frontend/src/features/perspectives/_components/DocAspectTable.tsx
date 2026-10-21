@@ -7,8 +7,8 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
-import { PerspectivesHooks } from "../api/perspectiveHooks";
-import { perspectiveQueries } from "../api/perspectiveQueries";
+import { PerspectivesHooks } from "../api/perspectivesHooks";
+import { perspectivesQueries } from "../api/perspectivesQueries";
 
 interface DocAspectTableProps {
   aspectId: number;
@@ -129,7 +129,7 @@ export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTabl
 });
 
 function ContentRenderer({ aspectId, sdocId }: { aspectId: number; sdocId: number }) {
-  const content = useQuery(perspectiveQueries.docAspect(aspectId, sdocId));
+  const content = useQuery(perspectivesQueries.docAspect(aspectId, sdocId));
   if (!content.data) return null;
   return content.data;
 }

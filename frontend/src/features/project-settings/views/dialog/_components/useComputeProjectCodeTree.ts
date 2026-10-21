@@ -20,7 +20,7 @@ const dummyRootNode: CodeRead = {
 
 export const useComputeProjectCodeTree = () => {
   // global server state
-  const allCodes = CodeHooks.useGetAllCodesList();
+  const allCodes = CodeHooks.useGetAllCodes();
 
   // computed
   const codeTree: Node<ITree<CodeRead>> | null = useMemo(() => {

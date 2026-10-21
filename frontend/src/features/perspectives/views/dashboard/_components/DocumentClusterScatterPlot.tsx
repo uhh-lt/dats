@@ -4,7 +4,7 @@ import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useMemo } from "react";
 import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
-import { PerspectivesHooks } from "../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
 interface DocumentClusterScatterPlotProps {
   aspectId: number;

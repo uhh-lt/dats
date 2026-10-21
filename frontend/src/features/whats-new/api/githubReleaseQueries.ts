@@ -5,14 +5,15 @@ import { GitHubRelease, isGitHubRelease } from "../_types/githubRelease";
  * Query factory for the GitHub release notes.
  *
  *   githubReleaseQueries.all()        ["githubRelease"]
- *   githubReleaseQueries.byTag(tag)   ["githubRelease", tag]
+ *   githubReleaseQueries.byTag(tag)   ["githubRelease", "tag", tag]
  */
 export const githubReleaseQueries = {
   all: () => ["githubRelease"] as const,
 
+  byTagScope: () => [...githubReleaseQueries.all(), "tag"] as const,
   byTag: (tag: string) =>
     queryOptions({
-      queryKey: [...githubReleaseQueries.all(), tag] as const,
+      queryKey: [...githubReleaseQueries.byTagScope(), tag] as const,
       queryFn: async (): Promise<GitHubRelease> => {
         const response = await fetch(
           `https://api.github.com/repos/uhh-lt/dats/releases/tags/${encodeURIComponent(tag)}`,

@@ -1,6 +1,6 @@
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeHooks, CodeRenderer } from "@core/code";
-import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { spanAnnotationQueries } from "@core/span-annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -44,7 +44,7 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   // global server state (react-query)
   const annotation = useQuery(spanAnnotationQueries.byId(props.data.spanAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId);
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId));
 
   // effects
   useEffect(() => {

@@ -2,7 +2,7 @@ import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/Gene
 import { ImageCropper } from "@components/ImageCropper";
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
 import { CodeHooks, CodeRenderer } from "@core/code";
-import { MemoHooks, useOpenMemoDialog } from "@core/memo";
+import { memoQueries, useOpenMemoDialog } from "@core/memo";
 import { SdocHooks } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationNodeData } from "@models/BBoxAnnotationNodeData";
@@ -46,7 +46,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   const annotation = useQuery(bboxAnnotationQueries.byId(props.data.bboxAnnotationId));
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
-  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
+  const memos = useQuery(memoQueries.byAttachedObject(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId));
 
   // effects
   useEffect(() => {

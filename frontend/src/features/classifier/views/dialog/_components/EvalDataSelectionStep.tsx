@@ -22,7 +22,7 @@ export function EvalDataSelectionStep() {
   }, [dispatch]);
 
   // dataset statistics (shared with DataSelection via props)
-  const { datasetStats } = ClassifierHooks.useDatasetStatistics();
+  const { datasetStats } = ClassifierHooks.useGetDatasetStatistics();
 
   const handleNext = () => {
     dispatch(ClassifierActions.nextClassifierDialogStep());

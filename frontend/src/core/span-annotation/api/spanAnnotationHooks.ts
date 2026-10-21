@@ -13,7 +13,7 @@ import { spanAnnotationQueries } from "./spanAnnotationQueries";
 // SPAN MUTATIONS
 const useCreateBulkAnnotations = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "createBulk"],
+    mutationKey: [...spanAnnotationQueries.all(), "createBulkAnnotations"],
     mutationFn: SpanAnnotationService.createSpanAnnotationsBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED_BATCH",
@@ -23,7 +23,7 @@ const useCreateBulkAnnotations = () =>
 
 const useCreateSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "create"],
+    mutationKey: [...spanAnnotationQueries.all(), "createSpanAnnotation"],
     mutationFn: (variables: SpanAnnotationCreate) =>
       SpanAnnotationService.createSpanAnnotation({ requestBody: variables }),
     meta: {
@@ -34,7 +34,7 @@ const useCreateSpanAnnotation = () =>
 
 const useUpdateSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "update"],
+    mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "updateSpanAnnotation"],
     mutationFn: (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | number;
       requestBody: SpanAnnotationUpdate;
@@ -92,7 +92,7 @@ const useUpdateSpanAnnotation = () =>
 
 const useUpdateBulkSpan = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "updateBulk"],
+    mutationKey: [...spanAnnotationQueries.all(), "updateBulkSpan"],
     mutationFn: SpanAnnotationService.updateSpanAnnotationsBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_UPDATED_BATCH",
@@ -102,7 +102,7 @@ const useUpdateBulkSpan = () =>
 
 const useDeleteSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "delete"],
+    mutationKey: [...spanAnnotationQueries.optimisticMutationScope(), "deleteSpanAnnotation"],
     mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | number }) =>
       SpanAnnotationService.deleteById({
         spanId:
@@ -141,7 +141,7 @@ const useDeleteSpanAnnotation = () =>
 
 const useDeleteBulkSpanAnnotation = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "deleteBulk"],
+    mutationKey: [...spanAnnotationQueries.all(), "deleteBulkSpanAnnotation"],
     mutationFn: SpanAnnotationService.deleteSpanAnnotationsBulk,
     meta: {
       datsEvent: "SPAN_ANNOTATION_DELETED_BATCH",
@@ -151,7 +151,7 @@ const useDeleteBulkSpanAnnotation = () =>
 
 const useCountBySdocsAndUser = () =>
   useMutation({
-    mutationKey: [...spanAnnotationQueries.all(), "count"],
+    mutationKey: [...spanAnnotationQueries.all(), "countBySdocsAndUser"],
     mutationFn: SpanAnnotationService.countAnnotations,
   });
 

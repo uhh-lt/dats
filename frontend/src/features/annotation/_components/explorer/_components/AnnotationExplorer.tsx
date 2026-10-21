@@ -29,7 +29,7 @@ export function AnnotationExplorer<T extends AnnotationRead>({
   const filter = useDebounce(filterValue, 300);
 
   // code filtering
-  const projectCodes = CodeHooks.useGetAllCodesList();
+  const projectCodes = CodeHooks.useGetAllCodes();
   const [filterCodeIds, setFilterCodeIds] = useState<number[]>([]);
   const codes = useMemo(() => {
     const annotationCodeIds = new Set(annotations?.map((annotation) => annotation.code_id));

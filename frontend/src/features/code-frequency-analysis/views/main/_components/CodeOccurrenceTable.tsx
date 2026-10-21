@@ -64,13 +64,7 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds, docTypes }: Co
   const code = CodeHooks.useGetCode(codeId);
 
   // computed
-  const codeOccurrences = CodeFrequencyHooks.useCodeOccurrencesQuery(
-    projectId,
-    userIds,
-    codeId,
-    docTypes,
-    withChildren,
-  );
+  const codeOccurrences = CodeFrequencyHooks.useGetCodeOccurrences(projectId, userIds, codeId, docTypes, withChildren);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);

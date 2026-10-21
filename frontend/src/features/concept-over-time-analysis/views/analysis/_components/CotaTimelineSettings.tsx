@@ -19,7 +19,7 @@ interface CotaSettingsProps {
 
 export function CotaTimelineSettings({ cota }: CotaSettingsProps) {
   // global server state (react-query)
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetAllProjectMetadata();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );

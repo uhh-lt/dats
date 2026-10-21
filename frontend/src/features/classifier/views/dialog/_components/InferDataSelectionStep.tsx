@@ -15,7 +15,7 @@ export function InferDataSelectionStep() {
   const dispatch = useAppDispatch();
 
   // global server state
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
   // selection state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(

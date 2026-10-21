@@ -3,7 +3,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
-import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;

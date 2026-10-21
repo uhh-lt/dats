@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { PerspectivesHooks } from "../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
 interface Data {
   clusterId: number;

@@ -1,21 +1,16 @@
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
-import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
-import { SortDirection } from "@models/SortDirection";
-import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
+import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
-interface WordFrequencyTableParams {
-  projectId: number;
-  filter: MyFilter<WordFrequencyColumns>;
-  sortingModel: { id: string; desc: boolean }[];
-  fetchSize: number;
-}
+/** The arguments of the word frequency search, as the backend takes them (the page is added by the query). */
+type WordFrequencySearchRequest = Omit<Parameters<typeof WordFrequencyService.wordFrequencyAnalysis>[0], "page">;
 
 /**
  * Query factory for the word frequency analysis.
  *
- *   wordFrequencyQueries.all()             ["wordFrequency"]
- *   wordFrequencyQueries.table(params)     ["wordFrequency", "table", projectId, ...]
+ *   wordFrequencyQueries.all()                 ["wordFrequency"]
+ *   wordFrequencyQueries.tableInfo(projectId)  ["tableInfo", "wordFrequency", projectId]
+ *   wordFrequencyQueries.search(request)       ["wordFrequency", "search", request]
  */
 export const wordFrequencyQueries = {
   all: () => ["wordFrequency"] as const,
@@ -28,23 +23,11 @@ export const wordFrequencyQueries = {
       staleTime: Infinity,
     }),
 
-  tableScope: () => [...wordFrequencyQueries.all(), "table"] as const,
-  table: ({ projectId, filter, sortingModel, fetchSize }: WordFrequencyTableParams) =>
+  searchScope: () => [...wordFrequencyQueries.all(), "search"] as const,
+  search: (request: WordFrequencySearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...wordFrequencyQueries.tableScope(), projectId, filter, sortingModel, fetchSize] as const,
-      queryFn: ({ pageParam }) =>
-        WordFrequencyService.wordFrequencyAnalysis({
-          projectId,
-          requestBody: {
-            filter,
-            sorts: sortingModel.map((sort) => ({
-              column: sort.id as WordFrequencyColumns,
-              direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-            })),
-          },
-          page: pageParam,
-          pageSize: fetchSize,
-        }),
+      queryKey: [...wordFrequencyQueries.searchScope(), request] as const,
+      queryFn: ({ pageParam }) => WordFrequencyService.wordFrequencyAnalysis({ ...request, page: pageParam }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

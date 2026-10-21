@@ -5,12 +5,14 @@ import type { QueryRequest_SpanColumns_ } from "@models/QueryRequest_SpanColumns
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
- * Span annotations.
+ * Query factory for span annotations.
  *
- *   spanAnnotationQueries.all()                      ["spanAnnotation"]
- *   spanAnnotationQueries.byId(spanId)               ["spanAnnotation", "detail", spanId]
- *   spanAnnotationQueries.byUserCode(codeId)         ["spanAnnotation", "userCode", codeId]
- *   spanAnnotationQueries.bySdoc(sdocId, userId)     ["spanAnnotation", "sdoc", sdocId, userId]
+ *   spanAnnotationQueries.all()                   ["spanAnnotation"]
+ *   spanAnnotationQueries.byId(spanId)            ["spanAnnotation", "detail", spanId]
+ *   spanAnnotationQueries.byUserCode(codeId)      ["spanAnnotation", "userCode", codeId]
+ *   spanAnnotationQueries.bySdoc(sdocId, userId)  ["spanAnnotation", "sdoc", sdocId, userId]
+ *   spanAnnotationQueries.tableInfo(projectId)    ["tableInfo", "span", projectId]
+ *   spanAnnotationQueries.search(request)         ["spanAnnotation", "search", request]
  */
 export const spanAnnotationQueries = {
   all: () => ["spanAnnotation"] as const,

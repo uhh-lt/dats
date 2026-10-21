@@ -5,39 +5,36 @@ import { MyFilter } from "@core/filter";
 import { AspectRead } from "@models/AspectRead";
 import { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@models/ClusterRead";
-import { CodeRead } from "@models/CodeRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { SdocColumns } from "@models/SdocColumns";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AspectMap, perspectiveQueries } from "./perspectiveQueries";
+import { AspectMap, perspectivesQueries } from "./perspectivesQueries";
 
 interface UseProjectAspectsQueryParams<T> {
   select?: (data: AspectMap) => T;
   enabled?: boolean;
 }
 
-const useProjectAspectsQuery = <T = AspectMap>({ select, enabled }: UseProjectAspectsQueryParams<T>) => {
+const useGetAllAspectsMap = <T = AspectMap>({ select, enabled }: UseProjectAspectsQueryParams<T> = {}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    ...perspectiveQueries.aspectsByProject(projectId!),
+    ...perspectivesQueries.aspectsByProject(projectId!),
     select,
     enabled: projectId !== undefined && (enabled ?? true),
   });
 };
 
 const useGetAspect = (aspectId: number | null | undefined) =>
-  useProjectAspectsQuery({
+  useGetAllAspectsMap({
     select: (data) => data[aspectId!],
     enabled: !!aspectId,
   });
 
-const useGetAllAspectsList = () => useProjectAspectsQuery({ select: (data) => Object.values(data) });
-
 const useCreateAspect = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.all(), "createAspect"],
+    mutationKey: [...perspectivesQueries.all(), "createAspect"],
     mutationFn: PerspectivesService.createAspect,
     meta: {
       datsEvent: "ASPECT_CREATED",
@@ -47,17 +44,17 @@ const useCreateAspect = () =>
 
 const useUpdateAspect = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.all(), "updateAspect"],
+    mutationKey: [...perspectivesQueries.all(), "updateAspect"],
     mutationFn: PerspectivesService.updateAspectById,
     meta: {
       datsEvent: "ASPECT_UPDATED",
-      successMessage: (data: CodeRead) => `Updated aspect ${data.name}`,
+      successMessage: (data: AspectRead) => `Updated aspect ${data.name}`,
     },
   });
 
 const useDeleteAspect = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.all(), "deleteAspect"],
+    mutationKey: [...perspectivesQueries.all(), "deleteAspect"],
     mutationFn: PerspectivesService.removeAspectById,
     meta: {
       datsEvent: "ASPECT_DELETED",
@@ -67,7 +64,7 @@ const useDeleteAspect = () =>
 
 const useStartPerspectivesJob = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.job.all(), "start"],
+    mutationKey: [...perspectivesQueries.job.all(), "start"],
     mutationFn: PerspectivesService.startPerspectivesJob,
     meta: {
       datsEvent: "JOB_UPDATED",
@@ -77,7 +74,7 @@ const useStartPerspectivesJob = () =>
 
 const useUpdateClusterDetails = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.all(), "updateClusterDetails"],
+    mutationKey: [...perspectivesQueries.all(), "updateClusterDetails"],
     mutationFn: PerspectivesService.updateClusterDetails,
     meta: {
       datsEvent: "CLUSTER_UPDATED",
@@ -87,7 +84,7 @@ const useUpdateClusterDetails = () =>
 
 const useRAGChat = () =>
   useMutation({
-    mutationKey: [...perspectiveQueries.all(), "rAGChat"],
+    mutationKey: [...perspectivesQueries.all(), "rAGChat"],
     mutationFn: RagService.ragSession,
   });
 
@@ -95,19 +92,20 @@ const useGetDocVisualization = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useQuery({
-    ...perspectiveQueries.visualization(aspectId, searchQuery, filter as MyFilter<SdocColumns>),
+    ...perspectivesQueries.visualization(aspectId, searchQuery, filter as MyFilter<SdocColumns>),
     placeholderData: (previous) => previous,
   });
 };
 
-// These two mutations read the perspectives slice (current search query and filter), which is why they live in the
-// feature and not in perspectivesMutations.ts.
+// These two mutations read the perspectives slice (current search query and filter). They write the visualization they
+// return into its cache themselves: the visualization depends on the search query and filter of this user, so there
+// is no DATS event for it.
 
 const useLabelDocs = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useMutation({
-    mutationKey: [...perspectiveQueries.all(), "labelDocs"],
+    mutationKey: [...perspectivesQueries.all(), "labelDocs"],
     mutationFn: (sdocIds: number[]) =>
       PerspectivesService.acceptLabel({
         aspectId,
@@ -120,7 +118,7 @@ const useLabelDocs = (aspectId: number) => {
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(
-        perspectiveQueries.visualization(
+        perspectivesQueries.visualization(
           aspectId,
           searchQuery,
           filter as Body_perspectives_visualize_documents["filter"],
@@ -138,7 +136,7 @@ const useUnlabelDocs = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
   const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
   return useMutation({
-    mutationKey: [...perspectiveQueries.all(), "unlabelDocs"],
+    mutationKey: [...perspectivesQueries.all(), "unlabelDocs"],
     mutationFn: (sdocIds: number[]) =>
       PerspectivesService.revertLabel({
         aspectId,
@@ -151,7 +149,7 @@ const useUnlabelDocs = (aspectId: number) => {
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(
-        perspectiveQueries.visualization(
+        perspectivesQueries.visualization(
           aspectId,
           searchQuery,
           filter as Body_perspectives_visualize_documents["filter"],
@@ -166,9 +164,7 @@ const useUnlabelDocs = (aspectId: number) => {
 };
 
 export const PerspectivesHooks = {
-  useProjectAspectsQuery,
   useGetAspect,
-  useGetAllAspectsList,
   useCreateAspect,
   useUpdateAspect,
   useDeleteAspect,

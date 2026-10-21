@@ -6,7 +6,7 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { Box, Button, Divider, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo } from "react";
-import { PerspectivesHooks } from "../../../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../../../../store/perspectivesSlice";
 import { MapCodeStats } from "./MapCodeStats";
 import { MapKeywordStats } from "./MapKeywordStats";
@@ -28,7 +28,7 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   const count = selectedSdocIds.length;
 
   // filter
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {

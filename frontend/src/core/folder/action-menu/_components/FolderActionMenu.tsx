@@ -42,7 +42,7 @@ export function FolderActionMenu(props: FolderMenuProps) {
     ];
   }, [allFolders.data]);
 
-  const allSdocFoldersMap = FolderHooks.useProjectFoldersQuery({ folderType: FolderType.SDOC_FOLDER });
+  const allSdocFoldersMap = FolderHooks.useGetAllFoldersMap({ folderType: FolderType.SDOC_FOLDER });
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!allFoldersWithRoot || !allSdocFoldersMap.data) return undefined;
 

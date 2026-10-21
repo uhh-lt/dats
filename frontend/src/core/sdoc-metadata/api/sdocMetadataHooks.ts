@@ -90,23 +90,9 @@ const useUpdateBulkSdocMetadata = () =>
     },
   });
 
-const useSdocMetadataQuery = <T = SdocMetadataMap>({
-  sdocId,
-  select,
-}: {
-  sdocId: number | null | undefined;
-  select?: (data: SdocMetadataMap) => T;
-}) =>
-  useQuery({
-    ...sdocMetadataQueries.bySdoc(sdocId),
-    select,
-  });
-
-// number of sdocs that have a valid date for a date metadata
 export const SdocMetadataHooks = {
   useGetSdocMetadata,
   useGetSdocMetadataByProjectMetadataId,
   useGetSdocMetadataBulk,
   useUpdateBulkSdocMetadata,
-  useSdocMetadataQuery,
 };

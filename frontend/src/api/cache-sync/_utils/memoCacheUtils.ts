@@ -42,7 +42,7 @@ export function invalidateAttachedObjectMemoIds(
 ): void {
   switch (attachedObjectType) {
     case "source_document":
-      queryClient.invalidateQueries({ queryKey: sdocQueries.detail(attachedObjectId).queryKey });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.byId(attachedObjectId).queryKey });
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "tag":

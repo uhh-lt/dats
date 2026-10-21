@@ -32,7 +32,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { PerspectivesHooks } from "../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
 interface AspectTemplate {
   name: string;

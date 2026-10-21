@@ -2,7 +2,6 @@ import { CodeService } from "@api/services/CodeService";
 import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
 import { CodeMap, codeQueries } from "./codeQueries";
 
 // CODE QUERIES
@@ -28,21 +27,16 @@ const useGetCode = (codeId: number | null | undefined) =>
     enabled: !!codeId,
   });
 
-const useSelectEnabledCodes = () => {
-  return useCallback((data: CodeMap) => Object.values(data).filter((code) => code.enabled), []);
-};
+const selectEnabledCodes = (data: CodeMap) => Object.values(data).filter((code) => code.enabled);
 
-const useGetAllCodesList = () => useGetAllCodesMap({ select: (data) => Object.values(data) });
+const useGetAllCodes = () => useGetAllCodesMap({ select: (data) => Object.values(data) });
 
-const useGetEnabledCodes = () => {
-  const selectEnabledCodes = useSelectEnabledCodes();
-  return useGetAllCodesMap({ select: selectEnabledCodes });
-};
+const useGetEnabledCodes = () => useGetAllCodesMap({ select: selectEnabledCodes });
 
 // CODE MUTATIONS
 const useCreateCode = () => {
   return useMutation({
-    mutationKey: [...codeQueries.all(), "create"],
+    mutationKey: [...codeQueries.all(), "createCode"],
     mutationFn: CodeService.createCode,
     meta: {
       datsEvent: "CODE_CREATED",
@@ -53,7 +47,7 @@ const useCreateCode = () => {
 
 const useUpdateCode = () =>
   useMutation({
-    mutationKey: [...codeQueries.all(), "update"],
+    mutationKey: [...codeQueries.all(), "updateCode"],
     mutationFn: CodeService.updateById,
     meta: {
       datsEvent: "CODE_UPDATED",
@@ -63,7 +57,7 @@ const useUpdateCode = () =>
 
 const useDeleteCode = () => {
   return useMutation({
-    mutationKey: [...codeQueries.all(), "delete"],
+    mutationKey: [...codeQueries.all(), "deleteCode"],
     mutationFn: CodeService.deleteById,
     meta: {
       datsEvent: "CODE_DELETED",
@@ -75,8 +69,7 @@ const useDeleteCode = () => {
 export const CodeHooks = {
   useGetAllCodesMap,
   useGetCode,
-  useSelectEnabledCodes,
-  useGetAllCodesList,
+  useGetAllCodes,
   useGetEnabledCodes,
   useCreateCode,
   useUpdateCode,

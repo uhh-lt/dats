@@ -5,7 +5,14 @@ import type { QueryRequest_BBoxColumns_ } from "@models/QueryRequest_BBoxColumns
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
- * Bounding box annotations.
+ * Query factory for bounding box annotations.
+ *
+ *   bboxAnnotationQueries.all()                   ["bboxAnnotation"]
+ *   bboxAnnotationQueries.byId(bboxId)            ["bboxAnnotation", "detail", bboxId]
+ *   bboxAnnotationQueries.byUserCode(codeId)      ["bboxAnnotation", "userCode", codeId]
+ *   bboxAnnotationQueries.bySdoc(sdocId, userId)  ["bboxAnnotation", "sdoc", sdocId, userId]
+ *   bboxAnnotationQueries.tableInfo(projectId)    ["tableInfo", "bbox", projectId]
+ *   bboxAnnotationQueries.search(request)         ["bboxAnnotation", "search", request]
  */
 export const bboxAnnotationQueries = {
   all: () => ["bboxAnnotation"] as const,

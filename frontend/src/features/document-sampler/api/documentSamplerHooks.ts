@@ -8,7 +8,7 @@ const documentSamplerKey = ["documentSampler"] as const;
 // What happens with the sampled documents depends on the view (it maps them to the chart), so the callback is passed in.
 const useSampleSdocsByTags = ({ onSuccess }: { onSuccess: (data: SampledSdocsResults[]) => void }) =>
   useMutation({
-    mutationKey: [...documentSamplerKey, "aggregateSdocsByTags"],
+    mutationKey: [...documentSamplerKey, "sampleSdocsByTags"],
     mutationFn: AnalysisService.sampleSdocsByTags,
     onSuccess,
   });

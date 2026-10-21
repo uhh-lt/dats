@@ -1,5 +1,4 @@
 import { ProjectService } from "@api/services/ProjectService";
-import { ProjectCreate } from "@models/ProjectCreate";
 import { ProjectRead } from "@models/ProjectRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { projectQueries } from "./projectQueries";
@@ -18,9 +17,7 @@ const useGetProject = (projectId: number | null | undefined) =>
 const useCreateProject = () => {
   return useMutation({
     mutationKey: [...projectQueries.all(), "createProject"],
-    mutationFn: async ({ requestBody }: { requestBody: ProjectCreate }) => {
-      return await ProjectService.createProject({ requestBody });
-    },
+    mutationFn: ProjectService.createProject,
     meta: {
       datsEvent: "PROJECT_CREATED",
       successMessage: (project: ProjectRead) => `Successfully Created Project "${project.title}" (ID: ${project.id})`,
@@ -48,22 +45,9 @@ const useDeleteProject = () =>
     },
   });
 
-interface UseProjectsQueryParams<T> {
-  select?: (data: ProjectRead[]) => T;
-  enabled?: boolean;
-}
-
-const useGetAllProjects = <T = ProjectRead[]>({ select, enabled }: UseProjectsQueryParams<T> = {}) =>
-  useQuery({
-    ...projectQueries.userProjects(),
-    select,
-    enabled,
-  });
-
 export const ProjectHooks = {
   useGetProject,
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
-  useGetAllProjects,
 };
