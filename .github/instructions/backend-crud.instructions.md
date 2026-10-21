@@ -100,9 +100,9 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 ### Errors
 
-- Missing rows raise `NoSuchElementError(self.model, <field>=<value>, ...)`, from `repos/db/sql_exceptions.py`, a subclass of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). `read`, `read_by_ids` and `exists(raise_error=True)` already do this. Lookups that may legitimately miss return `<Entity>ORM | None` instead.
+- Missing rows raise `NoSuchElementError(self.model, <field>=<value>, ...)`, from `repos/db/sql_exceptions.py`, a subclass of `NotFoundError` (`common/common_exceptions.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). `read`, `read_by_ids` and `exists(raise_error=True)` already do this. Lookups that may legitimately miss return `<Entity>ORM | None` instead.
 - Invalid arguments raise `ValueError`; an intentionally unsupported base method raises `NotImplementedError`.
-- Domain exceptions live in `<module>_exceptions.py` (decorated with `@exception_handler(status.HTTP_...)` unless they subclass `NotFoundError`), never in the CRUD file. E.g. `InvalidSearchViewOrderError` in `modules/search_view/search_view_exceptions.py`, `SourceDocumentPreprocessingUnfinishedError` in `core/doc/source_document_exceptions.py`.
+- Every exception class lives in `<module>_exceptions.py`, never in the CRUD file, including `NotFoundError` subclasses. Decorate it with `@exception_handler(status.HTTP_...)` unless it subclasses `NotFoundError`. E.g. `InvalidSearchViewOrderError` in `modules/search_view/search_view_exceptions.py`, `SourceDocumentPreprocessingUnfinishedError` in `core/doc/source_document_exceptions.py`.
 
 ### Dependencies
 

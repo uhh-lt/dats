@@ -9,7 +9,7 @@ found in one place:
     modules/<module>/<module>_exceptions.py   module and core exceptions
     repos/**/<component>_exceptions.py         repo exceptions, next to the repo
     systems/**/<component>_exceptions.py       system exceptions, next to the system
-    common/exception_handler.py                the handler infrastructure (NotFoundError)
+    common/common_exceptions.py                shared exceptions (NotFoundError)
 
 Rules (the rule id is printed with every violation):
 
@@ -33,7 +33,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SRC_ROOT = REPO_ROOT / "backend" / "src"
 
-ALLOWED_FILES = {"common/exception_handler.py"}
 BUILTIN_EXCEPTIONS = {
     name
     for name, obj in vars(builtins).items()
@@ -93,10 +92,7 @@ def exception_names(trees: list[ast.Module]) -> set[str]:
 
 
 def is_allowed(path: Path) -> bool:
-    p = path.as_posix()
-    return path.name.endswith("_exceptions.py") or any(
-        p.endswith(a) for a in ALLOWED_FILES
-    )
+    return path.name.endswith("_exceptions.py")
 
 
 def check_source(path: Path, source: str, known: set[str]) -> list[Violation]:

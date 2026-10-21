@@ -94,7 +94,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 - **Filters by property**: build filters with `Filter.by_property(self.collection_class.properties["<field>"].name)`, never with a hard-coded property string. Use `.equal(value)` for one id and `.contains_any(ids)` for an optional id list (pass `filters=None` when the list is empty or `None`).
 - **Collection access**: use `self._get_collection(client=..., project_id=...)`; never call `client.collections.get(...)` directly.
 - **Bulk deletes check the tenant**: wrap every `collection.data.delete_many(...)` in `if self._tenant_exists(client=client, project_id=project_id):`, so cleanup does not fail for projects without data.
-- **Errors**: missing objects raise `WeaviateObjectIDNotFoundException` / `WeaviateObjectIDsNotFoundException` / `WeaviateObjectUUIDNotFoundException` (`repos/vector/weaviate_exceptions.py`), all subclasses of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`).
+- **Errors**: missing objects raise `WeaviateObjectIDNotFoundException` / `WeaviateObjectIDsNotFoundException` / `WeaviateObjectUUIDNotFoundException` (`repos/vector/weaviate_exceptions.py`), all subclasses of `NotFoundError` (`common/common_exceptions.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`).
 
 ### Cleanup
 

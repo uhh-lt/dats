@@ -13,7 +13,8 @@ _spec.loader.exec_module(check_exceptions)
 EXCEPTIONS = """
 from fastapi import status
 
-from common.exception_handler import NotFoundError, exception_handler
+from common.common_exceptions import NotFoundError
+from common.exception_handler import exception_handler
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
@@ -60,8 +61,15 @@ def rules(source: str, filename: str) -> set[str]:
         ),
         # exception classes next to a repo
         pytest.param(EXCEPTIONS, "repos/filesystem_exceptions.py", set(), id="repo"),
-        # the handler infrastructure defines NotFoundError
-        pytest.param(EXCEPTIONS, "common/exception_handler.py", set(), id="handler"),
+        # shared exceptions (NotFoundError) live in common/common_exceptions.py
+        pytest.param(EXCEPTIONS, "common/common_exceptions.py", set(), id="common"),
+        # the handler infrastructure is no exception module
+        pytest.param(
+            EXCEPTIONS,
+            "common/exception_handler.py",
+            {"exception-location"},
+            id="handler",
+        ),
         # no exception classes at all
         pytest.param(NO_EXCEPTIONS, "modules/example/example_dto.py", set(), id="dto"),
         # exception classes in a service
@@ -93,7 +101,7 @@ def test_check_exceptions_resolves_exception_classes_transitively() -> None:
         "StrictExampleNotFound",
     ]
     assert str(violations[0]).startswith(
-        "modules/example/example_job.py:8: [exception-location] InvalidExampleError:"
+        "modules/example/example_job.py:9: [exception-location] InvalidExampleError:"
     )
 
 

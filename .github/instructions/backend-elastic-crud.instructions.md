@@ -89,7 +89,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 
 ### Errors
 
-- Missing documents raise `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), a subclass of `NotFoundError` (`common/exception_handler.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). Invalid query arguments raise `ValueError`.
+- Missing documents raise `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), a subclass of `NotFoundError` (`common/common_exceptions.py`, mapped to HTTP 404; subclasses need no own `@exception_handler`). Invalid query arguments raise `ValueError`.
 
 ### Cleanup
 
