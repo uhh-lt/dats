@@ -1384,3 +1384,165 @@ const filterSliceShapeRule = {
 
 datsRulesPlugin.rules["filter-table-shape"] = filterTableShapeRule;
 datsRulesPlugin.rules["filter-slice-shape"] = filterSliceShapeRule;
+
+// ROUTE OPTIONS (see .github/instructions/frontend-route.instructions.md)
+const ROUTE_OPTION_ORDER = [
+  "staticData",
+  "params",
+  "validateSearch",
+  "beforeLoad",
+  "loaderDeps",
+  "context",
+  "loader",
+  "pendingComponent",
+  "component",
+  "errorComponent",
+  "notFoundComponent",
+];
+const ENSURE_METHODS = new Set(["ensureQueryData", "ensureInfiniteQueryData"]);
+
+/** @param {import("estree").Node | undefined | null} node */
+const unwrapFunctionBody = (node) =>
+  node && (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression") ? node : undefined;
+
+/** @param {import("estree").Property} property */
+const propertyName = (property) =>
+  property.key.type === "Identifier"
+    ? property.key.name
+    : property.key.type === "Literal"
+      ? String(property.key.value)
+      : "";
+
+/** Finds return statements with a value that belong to the function itself (not to nested functions). */
+const findValueReturns = (fn) => {
+  if (fn.type === "ArrowFunctionExpression" && fn.body.type !== "BlockStatement") return [fn.body];
+  const found = [];
+  const visit = (node) => {
+    if (!node || typeof node.type !== "string") return;
+    if (node !== fn && /Function/.test(node.type)) return;
+    if (node.type === "ReturnStatement" && node.argument) found.push(node);
+    for (const key of Object.keys(node)) {
+      if (key === "parent") continue;
+      const child = node[key];
+      if (Array.isArray(child)) child.forEach(visit);
+      else if (child && typeof child === "object") visit(child);
+    }
+  };
+  visit(fn.body);
+  return found;
+};
+
+/** @type {Rule.RuleModule} */
+const routeOptionsRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "File routes declare their options in a fixed order, build query options only in `context`, and the loader only awaits them.",
+    },
+    messages: {
+      order: "Route option '{{name}}' must come before '{{previous}}' (order: {{order}}).",
+      pending: "A route with a `loader` needs `pendingComponent: () => <CircularProgress />`.",
+      loaderReturn: "The `loader` returns nothing; it only awaits the query options from `context`.",
+      loaderOptions:
+        "The `loader` awaits the query options built in `context` (`context.queryClient.{{method}}(context.xxxOptions)`); it never builds them.",
+      contextName: "Route context option '{{name}}' must be named after the data it loads and end with 'Options'.",
+      beforeLoadReturn: "`beforeLoad` is only for guards (throw redirect / notFound); it never returns context.",
+      validateSearch: "`validateSearch` uses `zodValidator(<page>SearchSchema)`.",
+      tabStaticData:
+        "A page route of a project needs `staticData: { tab: true, icon, getTitle }` (missing: {{missing}}).",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = (context.filename || context.getFilename()).split(path.sep).join("/");
+    const isProjectPage =
+      /\/routes\/_auth\/project\/\$projectId\/.+/.test(filename) && !filename.endsWith("/route.tsx");
+
+    return {
+      "CallExpression[callee.type='CallExpression'][callee.callee.name='createFileRoute'] > ObjectExpression"(node) {
+        /** @type {Record<string, import("estree").Property>} */
+        const options = {};
+        let previous;
+        for (const property of node.properties) {
+          if (property.type !== "Property") continue;
+          const name = propertyName(property);
+          options[name] = property;
+          const index = ROUTE_OPTION_ORDER.indexOf(name);
+          if (index === -1) continue;
+          if (previous && ROUTE_OPTION_ORDER.indexOf(previous) > index) {
+            context.report({
+              node: property,
+              messageId: "order",
+              data: { name, previous, order: ROUTE_OPTION_ORDER.join(", ") },
+            });
+          }
+          previous = name;
+        }
+
+        if (options.loader && !options.pendingComponent) {
+          context.report({ node: options.loader, messageId: "pending" });
+        }
+
+        const loader = unwrapFunctionBody(options.loader?.value);
+        if (loader) {
+          for (const ret of findValueReturns(loader)) context.report({ node: ret, messageId: "loaderReturn" });
+        }
+
+        const beforeLoad = unwrapFunctionBody(options.beforeLoad?.value);
+        if (beforeLoad) {
+          for (const ret of findValueReturns(beforeLoad)) context.report({ node: ret, messageId: "beforeLoadReturn" });
+        }
+
+        const routeContext = unwrapFunctionBody(options.context?.value);
+        if (routeContext && routeContext.body.type === "ObjectExpression") {
+          for (const property of routeContext.body.properties) {
+            if (property.type !== "Property") continue;
+            const name = propertyName(property);
+            if (!name.endsWith("Options") || name === "Options") {
+              context.report({ node: property, messageId: "contextName", data: { name } });
+            }
+          }
+        }
+
+        const validateSearch = options.validateSearch?.value;
+        if (
+          validateSearch &&
+          !(
+            validateSearch.type === "CallExpression" &&
+            validateSearch.callee.type === "Identifier" &&
+            validateSearch.callee.name === "zodValidator"
+          )
+        ) {
+          context.report({ node: validateSearch, messageId: "validateSearch" });
+        }
+
+        if (isProjectPage) {
+          const staticData = options.staticData?.value;
+          const keys =
+            staticData && staticData.type === "ObjectExpression"
+              ? staticData.properties.filter((p) => p.type === "Property").map(propertyName)
+              : [];
+          const missing = ["tab", "icon", "getTitle"].filter((key) => !keys.includes(key));
+          if (missing.length > 0) {
+            context.report({ node, messageId: "tabStaticData", data: { missing: missing.join(", ") } });
+          }
+        }
+      },
+      "Property[key.name='loader'] CallExpression[callee.type='MemberExpression']"(node) {
+        const method = node.callee.property.type === "Identifier" ? node.callee.property.name : "";
+        if (!ENSURE_METHODS.has(method)) return;
+        const argument = node.arguments[0];
+        const isContextOption =
+          argument &&
+          argument.type === "MemberExpression" &&
+          argument.object.type === "Identifier" &&
+          argument.object.name === "context";
+        if (!isContextOption) context.report({ node, messageId: "loaderOptions", data: { method } });
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["route-options"] = routeOptionsRule;

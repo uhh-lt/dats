@@ -419,4 +419,10 @@ export default defineConfig(
     plugins: { local: datsRulesPlugin },
     rules: { "local/entity-renderer-conventions": "error" },
   },
+  // ROUTE OPTIONS (see .github/instructions/frontend-route.instructions.md)
+  {
+    files: ["src/routes/**/*.tsx"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/route-options": "error" },
+  },
 );
