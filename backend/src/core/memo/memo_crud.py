@@ -12,7 +12,10 @@ from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     ### CREATE OPERATIONS ###
 
-    def create(self, db: Session, *, create_dto: MemoCreateIntern) -> MemoORM:
+    def create_multi(
+        self, db: Session, *, create_dtos: list[MemoCreateIntern]
+    ) -> list[MemoORM]:
+        # a memo needs an object handle: use create_for_attached_object
         raise NotImplementedError()
 
     def _create_memo(

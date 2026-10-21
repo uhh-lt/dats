@@ -188,8 +188,6 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
             train_loss=[],
             train_data_stats=[],
         ),
-        codes=[],
-        tags=[],
     )
     db_session.commit()
     return {"classifier_id": clf.id, "model_dir": model_dir}

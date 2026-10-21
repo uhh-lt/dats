@@ -146,6 +146,27 @@ SearchViewCreateUnion = (
 )
 
 
+class SearchViewCreateIntern(BaseModel):
+    """A search view as stored: the service serializes a SearchViewCreateUnion."""
+
+    name: str = Field(description="Name of the SearchView")
+    entity_type: str = Field(description="Searchable entity the SearchView is for")
+    layout: str = Field(description="Layout of the SearchView")
+    filters: dict[str, object] = Field(description="Serialized filter tree")
+    group_by: dict[str, object] | None = Field(
+        description="Serialized grouping, or None"
+    )
+    sorts: list[dict[str, object]] = Field(description="Serialized sorts")
+    selected_properties: list[str] | None = Field(
+        description="Selected property columns, or None for the default"
+    )
+    project_id: int = Field(description="Project the SearchView belongs to")
+    user_id: int = Field(description="User the SearchView belongs to")
+    position: int = Field(
+        description="Position among the user's views of the entity type"
+    )
+
+
 # --- Read ---
 
 

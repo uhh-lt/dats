@@ -24,11 +24,19 @@ SYSTEM_USER_IDS = [
 class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
     ### CREATE OPERATIONS ###
 
-    def create(self, db: Session, *, create_dto: UserCreate) -> UserORM:
+    def create_multi(
+        self, db: Session, *, create_dtos: list[UserCreate]
+    ) -> list[UserORM]:
         # Flo: hashes the PW before storing in DB
-        hashed_pwd = generate_password_hash(create_dto.password)
-        create_dto.password = hashed_pwd
-        return super().create(db=db, create_dto=create_dto)
+        return super().create_multi(
+            db=db,
+            create_dtos=[
+                create_dto.model_copy(
+                    update={"password": generate_password_hash(create_dto.password)}
+                )
+                for create_dto in create_dtos
+            ],
+        )
 
     def create_with_id(
         self, db: Session, *, create_dto: UserCreate, id: int
@@ -80,12 +88,22 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(self, db: Session, *, id: int, update_dto: UserUpdate) -> UserORM:
+    def update_multi(
+        self, db: Session, *, ids: list[int], update_dtos: list[UserUpdate]
+    ) -> list[UserORM]:
         # Flo: hashes the PW before storing in DB
-        if update_dto.password:
-            hashed_pwd = generate_password_hash(update_dto.password)
-            update_dto.password = hashed_pwd
-        return super().update(db=db, id=id, update_dto=update_dto)
+        return super().update_multi(
+            db=db,
+            ids=ids,
+            update_dtos=[
+                update_dto.model_copy(
+                    update={"password": generate_password_hash(update_dto.password)}
+                )
+                if update_dto.password
+                else update_dto
+                for update_dto in update_dtos
+            ],
+        )
 
 
 crud_user = CRUDUser(UserORM)
