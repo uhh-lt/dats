@@ -109,6 +109,14 @@ const useGetAllTags = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryPa
   });
 };
 
+const selectTagsMap = (tags: TagRead[]) =>
+  tags.reduce<Record<number, TagRead>>((acc, tag) => {
+    acc[tag.id] = tag;
+    return acc;
+  }, {});
+
+const useGetAllTagsMap = () => useGetAllTags({ select: selectTagsMap });
+
 export const TagHooks = {
   useGetTag,
   useCreateTag,
@@ -120,4 +128,5 @@ export const TagHooks = {
   useBulkUpdateTags,
   useCountBySdocsAndUser,
   useGetAllTags,
+  useGetAllTagsMap,
 };

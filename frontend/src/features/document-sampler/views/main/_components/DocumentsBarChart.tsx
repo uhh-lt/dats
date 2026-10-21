@@ -1,3 +1,4 @@
+import { TagHooks } from "@core/tag";
 import { CardProps } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback } from "react";
@@ -13,12 +14,19 @@ interface DocumentsBarChartProps {
 export const DocumentsBarChart = memo(({ cardProps, onChartRefresh }: DocumentsBarChartProps) => {
   const isFixedSamplingStrategy = useAppSelector((state) => state.documentSampler.isFixedSamplingStrategy);
 
+  // global server state
+  const tagsMap = TagHooks.useGetAllTagsMap();
+
   // Memoize chart rendering function
   const renderChart = useCallback(
     (chartData: ChartDataPoint[]) => (
       <ResponsiveContainer>
         <BarChart data={chartData}>
-          <XAxis dataKey={(chartDatum: ChartDataPoint) => chartDatum.tags.map((tag) => tag.name).join(", ")} />
+          <XAxis
+            dataKey={(chartDatum: ChartDataPoint) =>
+              chartDatum.tagIds.map((tagId) => tagsMap.data?.[tagId]?.name ?? tagId).join(", ")
+            }
+          />
           <YAxis />
           <CartesianGrid stroke="#eee" />
           <Tooltip />
@@ -34,7 +42,7 @@ export const DocumentsBarChart = memo(({ cardProps, onChartRefresh }: DocumentsB
         </BarChart>
       </ResponsiveContainer>
     ),
-    [isFixedSamplingStrategy],
+    [isFixedSamplingStrategy, tagsMap.data],
   );
 
   return (

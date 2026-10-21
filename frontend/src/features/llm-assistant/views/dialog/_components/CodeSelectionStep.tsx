@@ -15,12 +15,12 @@ export const CodeSelectionStep = memo(() => {
   const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const selectedDocuments = useAppSelector((state) => state.llmAssistant.documentIds);
   const taskType = useAppSelector((state) => state.llmAssistant.method);
-  const savedCodes = useAppSelector((state) => state.llmAssistant.codes);
+  const savedCodeIds = useAppSelector((state) => state.llmAssistant.codeIds);
   const dispatch = useAppDispatch();
 
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(() =>
-    Object.fromEntries(savedCodes.map((code) => [code.id, true])),
+    Object.fromEntries(savedCodeIds.map((codeId) => [codeId, true])),
   );
 
   // initiate next step (get the generated prompts)
@@ -34,12 +34,13 @@ export const CodeSelectionStep = memo(() => {
         return;
       }
 
+      const codeIds = codes.map((code) => code.id);
       const params = {
         task_type: taskType,
         project_id: projectId,
         specific_task_parameters: {
           task_type: taskType,
-          code_ids: codes.map((code) => code.id),
+          code_ids: codeIds,
           sdoc_ids: selectedDocuments,
         },
       };
@@ -51,9 +52,9 @@ export const CodeSelectionStep = memo(() => {
             dispatch(
               LLMAssistantActions.goToSettings({
                 approach: data,
-                tags: [],
-                metadata: [],
-                codes: codes,
+                tagIds: [],
+                projectMetadataIds: [],
+                codeIds,
               }),
             );
           },

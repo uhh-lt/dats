@@ -118,10 +118,6 @@ export const sentenceSearchReducer = {
 
 - Only `configureStore` with every `...xReducer` spread into `reducer`, the redux-persist serializable-check exemption, and the `AppDispatch` / `RootState` / `AppThunk` types. Nothing else is defined there.
 
-## Known deviations
-
-- `llmAssistantSlice` (`tags`, `metadata`, `codes`) and `documentSamplerSlice` (`aggregationGroups`) store entity copies instead of ids (issue uhh-lt/dats#777).
-
 ## Examples
 
 - [sentenceSearchSlice.ts](../../frontend/src/features/search/store/sentenceSearchSlice.ts) — table composition, project reset, persistence.

@@ -1,15 +1,12 @@
 import { ApproachRecommendation } from "@models/ApproachRecommendation";
 import { ApproachType } from "@models/ApproachType";
-import { CodeRead } from "@models/CodeRead";
 import { DefaultStrategyParams } from "@models/DefaultStrategyParams";
 import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
 import { NERInlineTagStrategyParams } from "@models/NERInlineTagStrategyParams";
-import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { StrategyType } from "@models/StrategyType";
-import { TagRead } from "@models/TagRead";
 import { TaskType } from "@models/TaskType";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { LLMAssistantEvent } from "../_types/LLMAssistantEvent";
@@ -27,9 +24,9 @@ interface LLMAssistantState {
   method?: TaskType;
   documentIds: number[];
   step: number;
-  tags: TagRead[];
-  metadata: ProjectMetadataRead[];
-  codes: CodeRead[];
+  tagIds: number[];
+  projectMetadataIds: number[];
+  codeIds: number[];
   strategy?: StrategyType;
   strategyParams?: LLMAssistantStrategyParams;
   approach: ApproachType;
@@ -47,9 +44,9 @@ const initialState: LLMAssistantState = {
   modelId: "default",
   method: undefined,
   step: 0,
-  tags: [],
-  metadata: [],
-  codes: [],
+  tagIds: [],
+  projectMetadataIds: [],
+  codeIds: [],
   strategy: undefined,
   strategyParams: undefined,
   approach: ApproachType.LLM_ZERO_SHOT,
@@ -86,17 +83,17 @@ const llmAssistantSlice = createSlice({
       state,
       action: PayloadAction<{
         approach: ApproachRecommendation;
-        tags: TagRead[];
-        metadata: ProjectMetadataRead[];
-        codes: CodeRead[];
+        tagIds: number[];
+        projectMetadataIds: number[];
+        codeIds: number[];
       }>,
     ) => {
       state.step = 2;
       state.approachRecommendation = action.payload.approach;
       state.approach = action.payload.approach.recommended_approach;
-      state.tags = action.payload.tags;
-      state.metadata = action.payload.metadata;
-      state.codes = action.payload.codes;
+      state.tagIds = action.payload.tagIds;
+      state.projectMetadataIds = action.payload.projectMetadataIds;
+      state.codeIds = action.payload.codeIds;
     },
     // Step 3: Save all settings and go to the prompt editor
     goToPromptEditor: (
@@ -165,9 +162,9 @@ const llmAssistantSlice = createSlice({
       state.modelId = initialState.modelId;
       state.method = initialState.method;
       state.step = initialState.step;
-      state.tags = initialState.tags;
-      state.metadata = initialState.metadata;
-      state.codes = initialState.codes;
+      state.tagIds = initialState.tagIds;
+      state.projectMetadataIds = initialState.projectMetadataIds;
+      state.codeIds = initialState.codeIds;
       state.strategy = initialState.strategy;
       state.strategyParams = initialState.strategyParams;
       state.prompts = initialState.prompts;

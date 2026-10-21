@@ -1,4 +1,5 @@
 import { EditableTypography } from "@components/EditableTypography";
+import { TagHooks } from "@core/tag";
 import { TagRead } from "@models/TagRead";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
@@ -25,17 +26,19 @@ import { memo, useCallback, useState } from "react";
 import { DocumentSamplerActions } from "../../../store/documentSamplerSlice";
 
 interface TagGroupCreatorProps {
-  tags: TagRead[];
-  aggregationGroups: Record<string, TagRead[]>;
+  aggregationGroups: Record<string, number[]>;
   cardProps?: CardProps;
 }
 
-export const TagGroupCreator = memo(({ tags, aggregationGroups, cardProps = {} }: TagGroupCreatorProps) => {
+export const TagGroupCreator = memo(({ aggregationGroups, cardProps = {} }: TagGroupCreatorProps) => {
   const dispatch = useAppDispatch();
 
-  const selectedTagIds = Object.values(aggregationGroups)
-    .flat()
-    .map((tag) => tag.id);
+  // global server state
+  const tags = TagHooks.useGetAllTags();
+  const tagsMap = TagHooks.useGetAllTagsMap();
+
+  const tagsMapData = tagsMap.data ?? {};
+  const selectedTagIds = Object.values(aggregationGroups).flat();
   const groupsAreEmpty = Object.keys(aggregationGroups).length === 0;
 
   // Memoize callbacks
@@ -57,7 +60,7 @@ export const TagGroupCreator = memo(({ tags, aggregationGroups, cardProps = {} }
   const handleUpdateGroupTags = useCallback(
     (groupName: string): UseAutocompleteProps<TagRead, true, false, false>["onChange"] =>
       (_, newValue: TagRead[]) => {
-        dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tags: newValue }));
+        dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tagIds: newValue.map((tag) => tag.id) }));
       },
     [dispatch],
   );
@@ -196,7 +199,7 @@ export const TagGroupCreator = memo(({ tags, aggregationGroups, cardProps = {} }
             Reset
           </Button>
         </Stack>
-        {Object.entries(aggregationGroups).map(([groupName, groupTags]) => (
+        {Object.entries(aggregationGroups).map(([groupName, groupTagIds]) => (
           <Box
             key={groupName}
             sx={{ mb: 1 }}
@@ -218,9 +221,9 @@ export const TagGroupCreator = memo(({ tags, aggregationGroups, cardProps = {} }
             />
             <Autocomplete
               multiple
-              value={groupTags}
+              value={groupTagIds.filter((tagId) => tagId in tagsMapData).map((tagId) => tagsMapData[tagId])}
               onChange={handleUpdateGroupTags(groupName)}
-              options={tags}
+              options={tags.data ?? []}
               getOptionLabel={(option) => option.name}
               getOptionDisabled={(option) => selectedTagIds.includes(option.id)}
               renderTags={(tagValue, getTagProps) =>
