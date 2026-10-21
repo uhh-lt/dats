@@ -18,7 +18,7 @@ from systems.search_system.filtering import Filter
 
 
 class SimSearchService(metaclass=SingletonMeta):
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         cls.emb = EmbeddingService()
         cls.weaviate = WeaviateRepo()
         return super(SimSearchService, cls).__new__(cls)
