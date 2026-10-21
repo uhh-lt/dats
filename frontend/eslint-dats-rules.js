@@ -1176,3 +1176,134 @@ const dialogConventionsRule = {
 };
 
 datsRulesPlugin.rules["dialog-conventions"] = dialogConventionsRule;
+
+// FILTER TABLES AND FILTER SLICES (see .github/instructions/frontend-filter.instructions.md)
+
+/**
+ * A `<Prefix>FilterTable.tsx` exports exactly the three variants `<Prefix>ReduxFilterTable`, `<Prefix>URLFilterTable` and
+ * `<Prefix>LocalFilterTable`, and types its columns without `as MRT_ColumnDef` casts.
+ * @type {Rule.RuleModule}
+ */
+const filterTableShapeRule = {
+  meta: {
+    type: "problem",
+    docs: { description: "Enforce the exports and the column typing of a <Prefix>FilterTable.tsx." },
+    messages: {
+      missingVariant: "{{file}} must export {{name}} (every filter table has a Redux, URL and Local variant).",
+      extraExport: "{{file}} may only export its three variants; move '{{name}}' to its own file.",
+      columnCast:
+        "Do not cast to MRT_ColumnDef. Annotate the map callback instead: tableInfo.map((column): MRT_ColumnDef<Row> => ...).",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = context.filename || context.getFilename();
+    const base = path.basename(filename);
+    const prefix = base.replace(/FilterTable\.tsx$/, "");
+    if (!prefix || prefix === base) return {};
+    const expected = ["Redux", "URL", "Local"].map((variant) => `${prefix}${variant}FilterTable`);
+    const exported = new Set();
+    const isColumnDef = (type) =>
+      (type.type === "TSTypeReference" &&
+        type.typeName.type === "Identifier" &&
+        type.typeName.name === "MRT_ColumnDef") ||
+      (type.type === "TSArrayType" && isColumnDef(type.elementType));
+
+    return {
+      ExportNamedDeclaration(node) {
+        const names = node.declaration
+          ? node.declaration.type === "VariableDeclaration"
+            ? node.declaration.declarations.map((declarator) => declarator.id.name)
+            : [node.declaration.id?.name]
+          : node.specifiers.map((specifier) => specifier.exported.name);
+        names.forEach((name) => {
+          if (expected.includes(name)) {
+            exported.add(name);
+            return;
+          }
+          context.report({ node, messageId: "extraExport", data: { file: base, name } });
+        });
+      },
+      ExportDefaultDeclaration(node) {
+        context.report({ node, messageId: "extraExport", data: { file: base, name: "default" } });
+      },
+      TSAsExpression(node) {
+        if (isColumnDef(node.typeAnnotation)) context.report({ node, messageId: "columnCast" });
+      },
+      "Program:exit"(node) {
+        expected
+          .filter((name) => !exported.has(name))
+          .forEach((name) => context.report({ node, messageId: "missingVariant", data: { file: base, name } }));
+      },
+    };
+  },
+};
+
+/**
+ * A `<prefix>FilterSlice.ts` creates the slice `<prefix>Filter` from `filterReducer`, resets it on project change with
+ * `resetProjectFilterState`, and exports `default<Prefix>FilterExpression`, `<Prefix>FilterActions` and
+ * `<prefix>FilterReducer` (the prefix may be written in any case, e.g. SATFilterActions for satFilterSlice.ts).
+ * @type {Rule.RuleModule}
+ */
+const filterSliceShapeRule = {
+  meta: {
+    type: "problem",
+    docs: { description: "Enforce the shape of a <prefix>FilterSlice.ts." },
+    messages: {
+      sliceName: "The slice in {{file}} must be named '{{expected}}'.",
+      reducers: "A filter slice uses the shared reducers: `reducers: filterReducer`.",
+      missingExport: "{{file}} must export {{name}}.",
+      missingReset:
+        "A filter slice resets on ProjectActions.changeProject with resetProjectFilterState({ state, defaultFilterExpression }).",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = context.filename || context.getFilename();
+    const base = path.basename(filename);
+    const sliceName = base.replace(/Slice\.ts$/, "");
+    if (!sliceName.endsWith("Filter") || sliceName === "Filter") return {};
+    const prefix = sliceName.slice(0, -"Filter".length);
+    const expectedExports = {
+      [`default${prefix}FilterExpression`.toLowerCase()]: `default<${prefix}>FilterExpression`,
+      [`${prefix}FilterActions`.toLowerCase()]: `<${prefix}>FilterActions`,
+      [`${prefix}FilterReducer`.toLowerCase()]: `${prefix}FilterReducer`,
+    };
+    const exported = new Set();
+    let resets = false;
+
+    return {
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator"(node) {
+        const name = node.id.name;
+        const key = name.toLowerCase();
+        if (!(key in expectedExports)) return;
+        // the reducer is spelled exactly like the slice, the others may write the prefix in upper case
+        if (key === `${prefix}FilterReducer`.toLowerCase() && name !== `${prefix}FilterReducer`) return;
+        exported.add(key);
+      },
+      "CallExpression[callee.name='createSlice'] > ObjectExpression"(node) {
+        const property = (key) => node.properties.find((p) => p.type === "Property" && p.key.name === key);
+        const name = property("name");
+        if (!name || name.value.type !== "Literal" || name.value.value !== sliceName) {
+          context.report({ node: name ?? node, messageId: "sliceName", data: { file: base, expected: sliceName } });
+        }
+        const reducers = property("reducers");
+        if (!reducers || reducers.value.type !== "Identifier" || reducers.value.name !== "filterReducer") {
+          context.report({ node: reducers ?? node, messageId: "reducers" });
+        }
+      },
+      "CallExpression[callee.name='resetProjectFilterState']"() {
+        resets = true;
+      },
+      "Program:exit"(node) {
+        Object.entries(expectedExports)
+          .filter(([key]) => !exported.has(key))
+          .forEach(([, name]) => context.report({ node, messageId: "missingExport", data: { file: base, name } }));
+        if (!resets) context.report({ node, messageId: "missingReset" });
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["filter-table-shape"] = filterTableShapeRule;
+datsRulesPlugin.rules["filter-slice-shape"] = filterSliceShapeRule;

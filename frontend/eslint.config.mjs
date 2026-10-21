@@ -386,8 +386,6 @@ export default defineConfig(
   // REDUX SLICE CONVENTIONS (see .github/instructions/frontend-slice.instructions.md)
   {
     files: ["src/**/*Slice.ts"],
-    // TODO: owned by the filter group, remove once it follows the slice conventions
-    ignores: ["src/core/source-document/table/sdocTableFilterSlice.ts"],
     plugins: { local: datsRulesPlugin },
     rules: { "local/slice-conventions": "error" },
   },
@@ -397,5 +395,17 @@ export default defineConfig(
     ignores: ["src/core/filter/filter-dialogs/**"],
     plugins: { local: datsRulesPlugin },
     rules: { "local/dialog-conventions": "error" },
+  },
+  // FILTER TABLES AND FILTER SLICES (see .github/instructions/frontend-filter.instructions.md)
+  {
+    files: ["src/**/*FilterTable.tsx"],
+    ignores: ["src/core/filter/**"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/filter-table-shape": "error" },
+  },
+  {
+    files: ["src/**/*FilterSlice.ts"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/filter-slice-shape": "error" },
   },
 );
