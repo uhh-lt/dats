@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_crud import crud_adoc
@@ -27,28 +27,23 @@ class CRUDSentenceAnnotation(
     def create(
         self, db: Session, *, user_id: int, create_dto: SentenceAnnotationCreate
     ) -> SentenceAnnotationORM:
-        # get or create the annotation document
-        adoc = crud_adoc.exists_or_create(
-            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
+        return self.create_bulk(db=db, user_id=user_id, create_dtos=[create_dto])[0]
+
+    def create_multi(
+        self,
+        db: Session,
+        *,
+        create_dtos: list[SentenceAnnotationCreateIntern],
+    ) -> list[SentenceAnnotationORM]:
+        db_objs = super().create_multi(db=db, create_dtos=create_dtos)
+
+        # update all affected annotation documents' timestamp
+        adoc_ids = list(
+            {create_dto.annotation_document_id for create_dto in create_dtos}
         )
+        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
-        # create the SentenceAnnotation
-        db_obj = super().create(
-            db=db,
-            create_dto=SentenceAnnotationCreateIntern(
-                project_id=adoc.source_document.project_id,
-                uuid=str(uuid4()),
-                sentence_id_start=create_dto.sentence_id_start,
-                sentence_id_end=create_dto.sentence_id_end,
-                code_id=create_dto.code_id,
-                annotation_document_id=adoc.id,
-            ),
-        )
-
-        # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=adoc.id)
-
-        return db_obj
+        return db_objs
 
     def create_bulk(
         self, db: Session, *, user_id: int, create_dtos: list[SentenceAnnotationCreate]
@@ -70,7 +65,7 @@ class CRUDSentenceAnnotation(
         )
 
         # create the annotations
-        annotations = self.create_multi(
+        return self.create_multi(
             db=db,
             create_dtos=[
                 SentenceAnnotationCreateIntern(
@@ -84,11 +79,6 @@ class CRUDSentenceAnnotation(
                 for create_dto in create_dtos
             ],
         )
-        crud_adoc.update_timestamps(
-            db=db,
-            ids=list({annotation.annotation_document_id for annotation in annotations}),
-        )
-        return annotations
 
     ### READ OPERATIONS ###
 
@@ -223,53 +213,51 @@ class CRUDSentenceAnnotation(
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, id: int, update_dto: SentenceAnnotationUpdate
-    ) -> SentenceAnnotationORM:
-        sentence_anno = super().update(db=db, id=id, update_dto=update_dto)
-        # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
+    def update_multi(
+        self,
+        db: Session,
+        *,
+        ids: list[int],
+        update_dtos: list[SentenceAnnotationUpdate],
+    ) -> list[SentenceAnnotationORM]:
+        annos = super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
-        return sentence_anno
+        # update the annotation documents' timestamp
+        crud_adoc.update_timestamps(
+            db=db, ids=list({anno.annotation_document_id for anno in annos})
+        )
+
+        return annos
 
     def update_bulk(
         self, db: Session, *, update_dtos: list[SentenceAnnotationUpdateBulk]
     ) -> list[SentenceAnnotationORM]:
-        return [
-            self.update(
-                db=db,
-                id=update_dto.sent_annotation_id,
-                update_dto=SentenceAnnotationUpdate(code_id=update_dto.code_id),
-            )
-            for update_dto in update_dtos
-        ]
+        return self.update_multi(
+            db=db,
+            ids=[update_dto.sent_annotation_id for update_dto in update_dtos],
+            update_dtos=[
+                SentenceAnnotationUpdate(code_id=update_dto.code_id)
+                for update_dto in update_dtos
+            ],
+        )
 
     ### DELETE OPERATIONS ###
 
-    def delete(self, db: Session, *, id: int) -> SentenceAnnotationORM:
-        sentence_anno = super().delete(db=db, id=id)
-        # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
+    def delete_multi(self, db: Session, *, ids: list[int]) -> int:
+        adoc_ids = self._read_adoc_ids(db=db, ids=ids)
+        num_deletions = super().delete_multi(db=db, ids=ids)
 
-        return sentence_anno
+        # update the annotation documents' timestamp
+        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
+
+        return num_deletions
 
     def delete_bulk(
         self, db: Session, *, ids: list[int]
     ) -> list[SentenceAnnotationORM]:
-        sentence_annos = []
-        for id in ids:
-            sentence_annos.append(self.delete(db=db, id=id))
-
-        # find the annotation document ids
-        adoc_ids = {
-            sentence_anno.annotation_document_id for sentence_anno in sentence_annos
-        }
-
-        # update the annotation documents' timestamp
-        for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(db=db, id=adoc_id)
-
-        return sentence_annos
+        annos = self.read_by_ids(db=db, ids=ids)
+        self.delete_multi(db=db, ids=ids)
+        return annos
 
     def delete_by_sdoc(
         self,
@@ -295,21 +283,17 @@ class CRUDSentenceAnnotation(
         return num_deletions
 
     def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
-        # find all sentence annotations to be removed
-        query = db.query(self.model).filter(
-            self.model.annotation_document_id == adoc_id
+        # find all annotations to be removed
+        ids = list(
+            db.scalars(
+                select(self.model.id).where(
+                    self.model.annotation_document_id == adoc_id
+                )
+            )
         )
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
 
-        # update the annotation document's timestamp
-        from core.annotation.annotation_document_crud import crud_adoc
-
-        crud_adoc.update_timestamp(db=db, id=adoc_id)
-
-        # delete the sentence annotations
-        query.delete()
-        db.flush()
+        # delete them (updates the annotation document's timestamp)
+        self.delete_multi(db=db, ids=ids)
 
         return ids
 
@@ -321,11 +305,10 @@ class CRUDSentenceAnnotation(
 
         # find all annotations to be removed
         anno_ids: list[int] = []
-        adoc_id_set: set[int] = set()
         for i in range(0, len(sdoc_ids), BATCH_SIZE):
             batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
             query = (
-                db.query(self.model.id, AnnotationDocumentORM.id)
+                db.query(self.model.id)
                 .join(self.model.annotation_document)
                 .filter(
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
@@ -333,17 +316,10 @@ class CRUDSentenceAnnotation(
                     self.model.code_id.in_(code_ids),
                 )
             )
-            for removed_orm in query.all():
-                anno_ids.append(removed_orm.tuple()[0])
-                adoc_id_set.add(removed_orm.tuple()[1])
-        adoc_ids = list(adoc_id_set)
+            anno_ids.extend(row[0] for row in query.all())
 
-        # delete the annotations
+        # delete them (updates the annotation documents' timestamp)
         self.delete_multi(db=db, ids=anno_ids)
-
-        # update the annotation document's timestamp
-        for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(db=db, id=adoc_id)
 
         return anno_ids
 
@@ -376,6 +352,21 @@ class CRUDSentenceAnnotation(
             for code_id, count in query.all():
                 results[code_id] = results.get(code_id, 0) + count
         return results
+
+    def _read_adoc_ids(self, db: Session, *, ids: list[int]) -> list[int]:
+        """Read the distinct annotation document ids of the given annotations."""
+        adoc_ids: set[int] = set()
+        unique_ids = list(dict.fromkeys(ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            adoc_ids.update(
+                db.scalars(
+                    select(self.model.annotation_document_id).where(
+                        self.model.id.in_(batch_ids)
+                    )
+                )
+            )
+        return list(adoc_ids)
 
 
 crud_sentence_anno = CRUDSentenceAnnotation(SentenceAnnotationORM)

@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_crud import crud_adoc
@@ -25,25 +26,7 @@ class CRUDBBoxAnnotation(
     def create(
         self, db: Session, *, user_id: int, create_dto: BBoxAnnotationCreate
     ) -> BBoxAnnotationORM:
-        # get or create the annotation document
-        adoc = crud_adoc.exists_or_create(
-            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
-        )
-
-        # create the BboxAnnotation (create_multi updates the adoc's timestamp)
-        return super().create(
-            db=db,
-            create_dto=BBoxAnnotationCreateIntern(
-                project_id=adoc.source_document.project_id,
-                uuid=str(uuid4()),
-                x_min=create_dto.x_min,
-                x_max=create_dto.x_max,
-                y_min=create_dto.y_min,
-                y_max=create_dto.y_max,
-                code_id=create_dto.code_id,
-                annotation_document_id=adoc.id,
-            ),
-        )
+        return self.create_bulk(db=db, user_id=user_id, create_dtos=[create_dto])[0]
 
     def create_multi(
         self,
@@ -74,11 +57,11 @@ class CRUDBBoxAnnotation(
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
         # find or create annotation documents for each sdoc_id
-        adoc_id_by_sdoc_id: dict[int, int] = {}
-        for sdoc_id in sdoc_ids:
-            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
-                db=db, user_id=user_id, sdoc_id=sdoc_id
-            ).id
+        adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
+            db=db,
+            user_id=user_id,
+            sdoc_ids=list(sdoc_ids),
+        )
 
         # create the annotations
         return self.create_multi(
@@ -92,7 +75,7 @@ class CRUDBBoxAnnotation(
                     x_min=create_dto.x_min,
                     y_min=create_dto.y_min,
                     code_id=create_dto.code_id,
-                    annotation_document_id=adoc_id_by_sdoc_id[create_dto.sdoc_id],
+                    annotation_document_id=adoc_by_sdoc_id[create_dto.sdoc_id].id,
                 )
                 for create_dto in create_dtos
             ],
@@ -206,49 +189,49 @@ class CRUDBBoxAnnotation(
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
-    ) -> BBoxAnnotationORM:
-        bbox_anno = super().update(db=db, id=id, update_dto=update_dto)
-        # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
+    def update_multi(
+        self,
+        db: Session,
+        *,
+        ids: list[int],
+        update_dtos: list[BBoxAnnotationUpdate],
+    ) -> list[BBoxAnnotationORM]:
+        annos = super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
-        return bbox_anno
+        # update the annotation documents' timestamp
+        crud_adoc.update_timestamps(
+            db=db, ids=list({anno.annotation_document_id for anno in annos})
+        )
+
+        return annos
 
     def update_bulk(
         self, db: Session, *, update_dtos: list[BBoxAnnotationUpdateBulk]
     ) -> list[BBoxAnnotationORM]:
-        return [
-            self.update(
-                db=db,
-                id=update_dto.bbox_annotation_id,
-                update_dto=BBoxAnnotationUpdate(code_id=update_dto.code_id),
-            )
-            for update_dto in update_dtos
-        ]
+        return self.update_multi(
+            db=db,
+            ids=[update_dto.bbox_annotation_id for update_dto in update_dtos],
+            update_dtos=[
+                BBoxAnnotationUpdate(code_id=update_dto.code_id)
+                for update_dto in update_dtos
+            ],
+        )
 
     ### DELETE OPERATIONS ###
 
-    def delete(self, db: Session, *, id: int) -> BBoxAnnotationORM:
-        bbox_anno = super().delete(db=db, id=id)
-        # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
-
-        return bbox_anno
-
-    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationORM]:
-        bbox_annos = []
-        for id in ids:
-            bbox_annos.append(self.delete(db=db, id=id))
-
-        # find the annotation document ids
-        adoc_ids = {bbox_anno.annotation_document_id for bbox_anno in bbox_annos}
+    def delete_multi(self, db: Session, *, ids: list[int]) -> int:
+        adoc_ids = self._read_adoc_ids(db=db, ids=ids)
+        num_deletions = super().delete_multi(db=db, ids=ids)
 
         # update the annotation documents' timestamp
-        for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(db=db, id=adoc_id)
+        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
-        return bbox_annos
+        return num_deletions
+
+    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationORM]:
+        annos = self.read_by_ids(db=db, ids=ids)
+        self.delete_multi(db=db, ids=ids)
+        return annos
 
     def delete_by_sdoc(
         self,
@@ -273,29 +256,35 @@ class CRUDBBoxAnnotation(
 
         return num_deletions
 
-    def delete_by_adoc(
-        self,
-        db: Session,
-        *,
-        adoc_id: int,
-    ) -> list[int]:
-        # find all bbox annotations to be removed
-        query = db.query(self.model).filter(
-            self.model.annotation_document_id == adoc_id
+    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
+        # find all annotations to be removed
+        ids = list(
+            db.scalars(
+                select(self.model.id).where(
+                    self.model.annotation_document_id == adoc_id
+                )
+            )
         )
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
 
-        # update the annotation document's timestamp
-        from core.annotation.annotation_document_crud import crud_adoc
-
-        crud_adoc.update_timestamp(db=db, id=adoc_id)
-
-        # delete the bbox annotations
-        query.delete()
-        db.flush()
+        # delete them (updates the annotation document's timestamp)
+        self.delete_multi(db=db, ids=ids)
 
         return ids
+
+    def _read_adoc_ids(self, db: Session, *, ids: list[int]) -> list[int]:
+        """Read the distinct annotation document ids of the given annotations."""
+        adoc_ids: set[int] = set()
+        unique_ids = list(dict.fromkeys(ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            adoc_ids.update(
+                db.scalars(
+                    select(self.model.annotation_document_id).where(
+                        self.model.id.in_(batch_ids)
+                    )
+                )
+            )
+        return list(adoc_ids)
 
 
 crud_bbox_anno = CRUDBBoxAnnotation(BBoxAnnotationORM)
