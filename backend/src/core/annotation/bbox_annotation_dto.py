@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -30,6 +31,9 @@ class BBoxAnnotationCreate(BBoxAnnotationBaseDTO):
 
 # Properties for updating
 class BBoxAnnotationUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL column: omit to keep the code, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"code_id"})
+
     code_id: int | None = Field(
         default=None, description="Code the BBoxAnnotation refers to"
     )
@@ -84,9 +88,6 @@ class BBoxAnnotationUpdate(BaseModel, UpdateDTOBase):
 
             if self.y_min > self.y_max:
                 raise ValueError("y_min must not be larger than y_max.")
-
-        if "code_id" in self.model_fields_set and self.code_id is None:
-            raise ValueError("code_id must not be null.")
 
         return self
 

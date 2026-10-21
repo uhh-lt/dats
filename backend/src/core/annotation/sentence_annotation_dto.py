@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -40,6 +41,9 @@ class SentenceAnnotationCreate(SentenceAnnotationBaseDTO):
 
 # Properties for updating
 class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
+    # NOT NULL column: omit to keep the code, an explicit null is rejected
+    non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"code_id"})
+
     code_id: int | None = Field(
         default=None, description="Code the SentenceAnnotation refers to"
     )
@@ -76,9 +80,6 @@ class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
                 raise ValueError(
                     "Sentence ID start must not be larger than sentence ID end."
                 )
-
-        if "code_id" in self.model_fields_set and self.code_id is None:
-            raise ValueError("code_id must not be null.")
 
         return self
 
