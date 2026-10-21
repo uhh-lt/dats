@@ -1,7 +1,7 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { CodeRead } from "@models/CodeRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { MouseEvent, memo, useCallback } from "react";
 
 interface CodeEditMenuItemProps {

@@ -25,7 +25,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import * as d3 from "d3";
 import { useState } from "react";

@@ -1,6 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { Settings } from "@mui/icons-material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useMemo } from "react";
 import { useTabNavigate } from "../../tabs";
 import { CommandItem } from "../_types/CommandItem";

@@ -3,7 +3,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { Box, CircularProgress, Dialog, DialogContent, Typography } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useCallback } from "react";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { MemoAttachedObject, MemoEditor, useMemoEditorData, useMemoPersistence } from "../editor";

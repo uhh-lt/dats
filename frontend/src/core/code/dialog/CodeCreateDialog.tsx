@@ -5,7 +5,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";

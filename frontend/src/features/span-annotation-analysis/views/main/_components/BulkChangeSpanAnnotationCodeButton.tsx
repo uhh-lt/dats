@@ -1,7 +1,7 @@
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { SpanAnnotationAnalysisActions } from "../../../store/spanAnnotationAnalysisSlice";

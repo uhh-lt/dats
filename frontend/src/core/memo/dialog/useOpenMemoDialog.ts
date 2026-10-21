@@ -1,4 +1,4 @@
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useCallback } from "react";
 import { MemoDialogEvent } from "./_types/MemoDialogEvent";
 

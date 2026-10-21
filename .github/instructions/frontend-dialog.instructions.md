@@ -1,8 +1,8 @@
 ---
-applyTo: "frontend/src/**/*Dialog.tsx, frontend/src/store/global/dialogBusSlice.ts"
+applyTo: "frontend/src/**/*Dialog.tsx, frontend/src/store/global/dialogBus*.ts"
 paths:
   - "frontend/src/**/*Dialog.tsx"
-  - "frontend/src/store/global/dialogBusSlice.ts"
+  - "frontend/src/store/global/dialogBus*.ts"
 ---
 
 # Dialog Pattern
@@ -67,10 +67,10 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 
 ### Open State: choose by who opens the dialog
 
-1. **Dialog bus** (`store/global/dialogBusSlice.ts`): the dialog is opened by components that are not its parent (several openers, other features, menus, shortcuts). Mount it once (the project route layout, or the view that needs it), open it with `useOpenDialog(key)` from anywhere:
+1. **Dialog bus** (types and slice in `store/global/dialogBusSlice.ts`, hooks and the callback store in `store/global/dialogBusHooks.ts`): the dialog is opened by components that are not its parent (several openers, other features, menus, shortcuts). Mount it once (the project route layout, or the view that needs it), open it with `useOpenDialog(key)` from anywhere:
    - Dialog: `const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("key");`
    - Opener: `const openCodeEditDialog = useOpenDialog("codeEdit"); openCodeEditDialog({ code });`, or `openX(data, onSuccess)` with a callback.
-   - A new key: a `<Name>DialogData` interface (always a named type, even for one field; `undefined` for no data), one line in `DialogPayloadMap`, one entry in `initialState`, and for a callback one line in `DialogCallbackMap` plus `keysWithCallbacks`.
+   - A new key: a `<Name>DialogData` interface (always a named type, even for one field; `undefined` for no data), one line in `DialogPayloadMap`, one entry in `initialState`, and for a callback one line in `DialogCallbackMap` plus `keysWithCallbacks` (hooks file). The slice file follows the slice conventions and holds no React code.
    - Callbacks are kept outside Redux by the bus. Never put functions into a slice.
    - `close` keeps `data` (the content stays rendered during the exit transition). Gate content with `{dialogData && ...}`.
    - A domain may wrap the opener in a hook with its own signature (`useOpenMemoDialog`).

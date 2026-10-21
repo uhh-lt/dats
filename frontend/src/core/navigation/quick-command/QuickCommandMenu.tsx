@@ -9,7 +9,7 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useNavigate } from "@tanstack/react-router";
 import { SyntheticEvent, useCallback, useRef } from "react";
 import { useDefaultCommands } from "./_hooks/useDefaultCommands";

@@ -9,7 +9,7 @@ import { CodeUpdate } from "@models/CodeUpdate";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";

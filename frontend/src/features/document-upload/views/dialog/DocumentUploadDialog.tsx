@@ -1,7 +1,7 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Dialog, Stack } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { DocumentUploadJobsView } from "./_components/DocumentUploadJobsView";
 import { FileUploadSection } from "./_components/FileUploadSection";
 import { UrlCrawlerSection } from "./_components/UrlCrawlerSection";

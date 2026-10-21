@@ -5,7 +5,7 @@ import { TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
 import { AppBar, Dialog, DialogContent, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { SyntheticEvent, useCallback, useState } from "react";
 import { ProjectImport } from "./_components/project-import/ProjectImport";
 import { ProjectCodes } from "./_components/ProjectCodes";

@@ -1,6 +1,6 @@
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Box, Typography } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 
 export function NoDocumentsPlaceholder() {
   const openDocumentUploadDialog = useOpenDialog("documentUpload");

@@ -7,7 +7,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeNodeData } from "@models/CodeNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useMemo, useRef } from "react";

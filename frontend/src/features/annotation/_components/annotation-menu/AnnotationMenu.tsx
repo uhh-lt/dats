@@ -23,7 +23,7 @@ import {
   Typography,
   UseAutocompleteProps,
 } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Annotation, Annotations } from "../../_types/Annotation";

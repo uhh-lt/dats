@@ -1,4 +1,4 @@
-import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 import { useTabManager, useTabNavigate } from "../../tabs";
