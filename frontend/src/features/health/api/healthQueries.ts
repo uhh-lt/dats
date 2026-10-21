@@ -1,21 +1,16 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { DocType } from "@models/DocType";
-import { SortDirection } from "@models/SortDirection";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
-interface SdocHealthTableParams {
-  projectId: number;
-  doctype: DocType;
-  sortingModel: { id: string; desc: boolean }[];
-  fetchSize: number;
-}
+/** The arguments of the health search, as the backend takes them (the page is added by the query). */
+type SdocHealthSearchRequest = Omit<Parameters<typeof DocprocessingService.searchSdocHealth>[0], "page">;
 
 /**
  * Query factory for the sdoc health view.
  *
  *   healthQueries.all()                    ["health"]
  *   healthQueries.columns(doctype)         ["health", "columns", doctype]
- *   healthQueries.table(params)            ["health", "table", projectId, doctype, ...]
+ *   healthQueries.search(request)          ["health", "search", request]
  */
 export const healthQueries = {
   all: () => ["health"] as const,
@@ -28,21 +23,11 @@ export const healthQueries = {
       staleTime: Infinity,
     }),
 
-  tableScope: () => [...healthQueries.all(), "table"] as const,
-  table: ({ projectId, doctype, sortingModel, fetchSize }: SdocHealthTableParams) =>
+  searchScope: () => [...healthQueries.all(), "search"] as const,
+  search: (request: SdocHealthSearchRequest) =>
     infiniteQueryOptions({
-      queryKey: [...healthQueries.tableScope(), projectId, doctype, sortingModel, fetchSize] as const,
-      queryFn: ({ pageParam }) =>
-        DocprocessingService.searchSdocHealth({
-          projectId,
-          doctype,
-          requestBody: sortingModel.map((sort) => ({
-            column: sort.id,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-          page: pageParam,
-          pageSize: fetchSize,
-        }),
+      queryKey: [...healthQueries.searchScope(), request] as const,
+      queryFn: ({ pageParam }) => DocprocessingService.searchSdocHealth({ ...request, page: pageParam }),
       initialPageParam: 0,
       getNextPageParam: (_lastGroup, groups) => groups.length,
       staleTime: 1000 * 60 * 5,

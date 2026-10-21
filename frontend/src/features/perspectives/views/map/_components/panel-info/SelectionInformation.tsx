@@ -13,8 +13,8 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
-import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
-import { perspectiveQueries } from "../../../../api/perspectiveQueries";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { perspectivesQueries } from "../../../../api/perspectivesQueries";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
@@ -51,7 +51,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   // global server state
   const metadata = SdocMetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
   const documentTagIds = useQuery(tagQueries.idsBySdoc(selectedSdocIds[selectedSdocIdsIndex]));
-  const docClusters = useQuery(perspectiveQueries.clustersBySdoc(aspectId, selectedSdocIds[selectedSdocIdsIndex]));
+  const docClusters = useQuery(perspectivesQueries.clustersBySdoc(aspectId, selectedSdocIds[selectedSdocIdsIndex]));
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 

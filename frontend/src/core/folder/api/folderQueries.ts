@@ -18,7 +18,7 @@ export const folderQueries = {
   // all folders of a project and type, as a map by folder id
   byProjectScope: () => [...folderQueries.all(), "project"] as const,
   // prefix of all folder types of one project (for invalidation)
-  ofProjectScope: (projectId: number) => [...folderQueries.byProjectScope(), projectId] as const,
+  byProjectOfProjectScope: (projectId: number) => [...folderQueries.byProjectScope(), projectId] as const,
   byProject: (projectId: number | undefined, folderType: FolderType) =>
     queryOptions({
       queryKey: [...folderQueries.byProjectScope(), projectId, folderType] as const,

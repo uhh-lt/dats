@@ -67,19 +67,20 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
     setUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
   }, []);
 
-  const crawlUrlsMutation = DocumentUploadHooks.useStartCrawlerJob();
-  const handleImport = useCallback(async () => {
-    if (urls.length > 0) {
-      await crawlUrlsMutation.mutateAsync({
+  const { mutate: startCrawlerJob, isPending: isCrawlPending } = DocumentUploadHooks.useStartCrawlerJob();
+  const handleImport = useCallback(() => {
+    if (urls.length === 0) return;
+    startCrawlerJob(
+      {
         requestBody: {
           settings: settings,
           project_id: projectId,
           urls: urls,
         },
-      });
-      setUrls([]);
-    }
-  }, [urls, crawlUrlsMutation, settings, projectId]);
+      },
+      { onSuccess: () => setUrls([]) },
+    );
+  }, [urls, startCrawlerJob, settings, projectId]);
 
   return (
     <DialogSection
@@ -143,7 +144,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
         variant="contained"
         color="primary"
         onClick={handleImport}
-        loading={crawlUrlsMutation.isPending}
+        loading={isCrawlPending}
         loadingPosition="start"
         startIcon={<PlayCircle />}
         disabled={urls.length === 0}

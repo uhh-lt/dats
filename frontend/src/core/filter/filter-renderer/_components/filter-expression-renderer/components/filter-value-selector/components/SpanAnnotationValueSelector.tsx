@@ -7,7 +7,7 @@ import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelect
 export const SpanAnnotationValueSelector = memo(
   ({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
     // global server state (react-query)
-    const projectCodes = CodeHooks.useGetAllCodesList();
+    const projectCodes = CodeHooks.useGetAllCodes();
     const codeTree = useWithLevel(projectCodes.data || []);
 
     const [value, setValue] = useState<string[]>(() => {

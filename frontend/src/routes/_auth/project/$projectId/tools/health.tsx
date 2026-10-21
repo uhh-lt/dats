@@ -1,4 +1,5 @@
 import { Icon } from "@components/icons";
+import { toSorts } from "@core/filter";
 import { healthQueries, HealthView } from "@features/health";
 import { DocType } from "@models/DocType";
 import { CircularProgress } from "@mui/material";
@@ -30,11 +31,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
     healthTableColumnsOptions: healthQueries.columns(deps.doctype),
-    healthTableOptions: healthQueries.table({
+    healthTableOptions: healthQueries.search({
       projectId: params.projectId,
       doctype: deps.doctype,
-      sortingModel: deps.sortingModel,
-      fetchSize: deps.fetchSize,
+      requestBody: toSorts(deps.sortingModel),
+      pageSize: deps.fetchSize,
     }),
   }),
   loader: async ({ context }) => {

@@ -32,7 +32,7 @@ const useCreateBulkSentenceAnnotation = () =>
 
 const useUpdateSentenceAnnotation = () =>
   useMutation({
-    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "update"],
+    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "updateSentenceAnnotation"],
     mutationFn: (variables: {
       sentenceAnnoToUpdate: SentenceAnnotationRead | number;
       update: SentenceAnnotationUpdate;
@@ -135,7 +135,7 @@ const useUpdateBulkSentenceAnno = () =>
 
 const useDeleteSentenceAnnotation = () =>
   useMutation({
-    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "delete"],
+    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteSentenceAnnotation"],
     mutationFn: (sentAnnoToDelete: SentenceAnnotationRead | number) =>
       SentenceAnnotationService.deleteById({
         sentenceAnnoId: typeof sentAnnoToDelete === "number" ? sentAnnoToDelete : sentAnnoToDelete.id,
@@ -191,7 +191,7 @@ const useDeleteBulkSentenceAnnotation = () =>
 
 const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
   useMutation({
-    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteBulkSingleSdoc"],
+    mutationKey: [...sentenceAnnotationQueries.optimisticMutationScope(), "deleteBulkSentenceAnnotationSingleSdoc"],
     mutationFn: (sentAnnosToDelete: SentenceAnnotationRead[]) =>
       SentenceAnnotationService.deleteSentenceAnnotationsBulk({
         requestBody: sentAnnosToDelete.map((anno) => anno.id),

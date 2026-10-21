@@ -1,32 +1,7 @@
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import { COTARead } from "@models/COTARead";
-import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { cotaQueries } from "./cotaQueries";
-
-/**
- * Convenience hook for components that need a single COTA by ID but have no route context.
- * For route-backed components, use useSuspenseQuery with projectCotasQueryOptions directly.
- */
-const useGetCotaById = (cotaId: number | null | undefined) => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-
-  return useQuery({
-    ...cotaQueries.byProject(projectId!),
-    select: (data) => (cotaId != null ? data[cotaId] : undefined),
-    enabled: projectId !== undefined && cotaId != null,
-  });
-};
-
-const useGetProjectCotaList = () => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-
-  return useQuery({
-    ...cotaQueries.byProject(projectId!),
-    select: (data) => Object.values(data),
-    enabled: projectId !== undefined,
-  });
-};
 
 const useCreateCota = () =>
   useMutation({
@@ -109,8 +84,6 @@ const useRefineCota = () =>
   });
 
 export const CotaHooks = {
-  useGetCotaById,
-  useGetProjectCotaList,
   useCreateCota,
   useDuplicateCota,
   useUpdateCota,

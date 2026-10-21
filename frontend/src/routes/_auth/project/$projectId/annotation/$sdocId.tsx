@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
     tab: true,
     icon: Icon.ANNOTATION,
     getTitle: ({ queryClient, params }) => {
-      const sdoc = queryClient.getQueryData(sdocQueries.detail(Number(params.sdocId)).queryKey);
+      const sdoc = queryClient.getQueryData(sdocQueries.byId(Number(params.sdocId)).queryKey);
       return `Document ${sdoc?.name ?? ""}`;
     },
   },
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
   validateSearch: zodValidator(annotationSearchSchema),
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
-    sdocDetailOptions: sdocQueries.detail(params.sdocId),
+    sdocDetailOptions: sdocQueries.byId(params.sdocId),
     sdocDataOptions: sdocQueries.data(params.sdocId),
   }),
   loader: async ({ context }) => {

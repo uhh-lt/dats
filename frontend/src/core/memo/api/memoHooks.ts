@@ -24,7 +24,7 @@ const useMemoSearchInfo = (projectId: number) =>
 // MEMO MUTATIONS
 const useCreateMemo = () =>
   useMutation({
-    mutationKey: [...memoQueries.all(), "create"],
+    mutationKey: [...memoQueries.all(), "createMemo"],
     mutationFn: MemoService.createMemo,
     meta: {
       datsEvent: "MEMO_CREATED",
@@ -34,7 +34,7 @@ const useCreateMemo = () =>
 
 const useUpdateMemo = () =>
   useMutation({
-    mutationKey: [...memoQueries.all(), "update"],
+    mutationKey: [...memoQueries.all(), "updateMemo"],
     mutationFn: MemoService.updateById,
     meta: {
       datsEvent: "MEMO_UPDATED",
@@ -44,7 +44,7 @@ const useUpdateMemo = () =>
 
 const useUpdateMemos = () =>
   useMutation({
-    mutationKey: [...memoQueries.all(), "updateBulk"],
+    mutationKey: [...memoQueries.all(), "updateMemos"],
     mutationFn: MemoService.updateMemosBulk,
     meta: {
       datsEvent: "MEMO_UPDATED_BATCH",
@@ -54,7 +54,7 @@ const useUpdateMemos = () =>
 
 const useDeleteMemo = () =>
   useMutation({
-    mutationKey: [...memoQueries.all(), "delete"],
+    mutationKey: [...memoQueries.all(), "deleteMemo"],
     mutationFn: MemoService.deleteById,
     meta: {
       datsEvent: "MEMO_DELETED",
@@ -64,7 +64,7 @@ const useDeleteMemo = () =>
 
 const useDeleteMemos = () =>
   useMutation({
-    mutationKey: [...memoQueries.all(), "deleteBulk"],
+    mutationKey: [...memoQueries.all(), "deleteMemos"],
     mutationFn: ({ memoIds }: { memoIds: number[] }) => MemoService.deleteMemosBulk({ requestBody: memoIds }),
     meta: {
       datsEvent: "MEMO_DELETED_BATCH",
@@ -74,7 +74,7 @@ const useDeleteMemos = () =>
 
 const useRecordRecentMemo = () =>
   useMutation({
-    mutationKey: [...memoQueries.all(), "recordRecent"],
+    mutationKey: [...memoQueries.all(), "recordRecentMemo"],
     mutationFn: ({ memoId }: { memoId: number; projectId: number }) => MemoService.recordRecentMemo({ memoId }),
     // The recent memos are private to the user, so there is no DATS event for this: refresh them here.
     onSuccess: (_data, { projectId }) => {

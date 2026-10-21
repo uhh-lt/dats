@@ -45,7 +45,7 @@ interface TimelineAnalysisSettingsProps {
 
 export function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettingsProps) {
   // global server state (react-query)
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetAllProjectMetadata();
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );

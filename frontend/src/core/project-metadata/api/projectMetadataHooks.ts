@@ -7,7 +7,7 @@ import { ProjectMetadataMap, projectMetadataQueries } from "./projectMetadataQue
 // PROJECT METADATA QUERIES
 // The queries themselves live in projectMetadataQueries. The hooks below only derive data from them.
 
-const useProjectMetadataQuery = <T>({
+const useGetAllProjectMetadataMap = <T>({
   select,
   enabled,
 }: {
@@ -23,12 +23,12 @@ const useProjectMetadataQuery = <T>({
 };
 
 const useGetProjectMetadata = (metadataId: number | null | undefined) =>
-  useProjectMetadataQuery({
+  useGetAllProjectMetadataMap({
     select: (data) => data[metadataId!],
     enabled: !!metadataId,
   });
 
-const useGetProjectMetadataList = () => useProjectMetadataQuery({ select: (data) => Object.values(data) });
+const useGetAllProjectMetadata = () => useGetAllProjectMetadataMap({ select: (data) => Object.values(data) });
 
 // PROJECT METADATA MUTATIONS
 const useCreateProjectMetadata = () =>
@@ -65,9 +65,8 @@ const useDeleteProjectMetadata = () =>
   });
 
 export const ProjectMetadataHooks = {
-  useProjectMetadataQuery,
   useGetProjectMetadata,
-  useGetProjectMetadataList,
+  useGetAllProjectMetadata,
   useCreateProjectMetadata,
   useUpdateProjectMetadata,
   useDeleteProjectMetadata,

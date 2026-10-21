@@ -15,7 +15,7 @@ import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
-import { perspectiveQueries } from "@features/perspectives/api/perspectiveQueries";
+import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
 import { apiKeyQueries } from "@features/profile/api/apiKeyQueries";
 import { tagRecommendationQueries } from "@features/tag-recommendations/api/tagRecommendationQueries";
 import { timelineAnalysisQueries } from "@features/timeline-analysis/api/timelineAnalysisQueries";
@@ -96,7 +96,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.all() });
       queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.all() });
       queryClient.invalidateQueries({ queryKey: whiteboardQueries.byProject(code.project_id).queryKey });
-      queryClient.invalidateQueries({ queryKey: statisticsQueries.codeStatsByCode(code.id) });
+      queryClient.invalidateQueries({ queryKey: statisticsQueries.codeStatsOfCodeScope(code.id) });
       break;
     }
 
@@ -242,10 +242,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // ── Aspects (perspectives) ──────────────────────────────────────────────
     case "ASPECT_CREATED":
     case "ASPECT_UPDATED":
-      upsertMapItem(perspectiveQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload);
+      upsertMapItem(perspectivesQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload);
       break;
     case "ASPECT_DELETED":
-      removeMapItem(perspectiveQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload.id);
+      removeMapItem(perspectivesQueries.aspectsByProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Clusters (perspectives) ─────────────────────────────────────────────
@@ -253,10 +253,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // names and descriptions within derived data, so they are invalidated.
     case "CLUSTER_UPDATED": {
       const cluster = event.payload;
-      sweepPrefix<ClusterRead[]>([...perspectiveQueries.clustersBySdocScope(), cluster.aspect_id], (old) =>
+      sweepPrefix<ClusterRead[]>([...perspectivesQueries.clustersBySdocScope(), cluster.aspect_id], (old) =>
         old?.map((existing) => (existing.id === cluster.id ? cluster : existing)),
       );
-      queryClient.invalidateQueries({ queryKey: perspectiveQueries.visualizationOfAspectScope(cluster.aspect_id) });
+      queryClient.invalidateQueries({ queryKey: perspectivesQueries.visualizationOfAspectScope(cluster.aspect_id) });
       break;
     }
 
@@ -302,15 +302,15 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 
     // ── Source documents ────────────────────────────────────────────────────
     case "SDOC_UPDATED":
-      setSingle(sdocQueries.detail(event.payload.id).queryKey, event.payload);
+      setSingle(sdocQueries.byId(event.payload.id).queryKey, event.payload);
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "SDOC_DELETED":
-      removeSingle(sdocQueries.detail(event.payload.id).queryKey);
+      removeSingle(sdocQueries.byId(event.payload.id).queryKey);
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
     case "SDOC_DELETED_BATCH":
-      event.payload.forEach((sdoc) => removeSingle(sdocQueries.detail(sdoc.id).queryKey));
+      event.payload.forEach((sdoc) => removeSingle(sdocQueries.byId(sdoc.id).queryKey));
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       break;
 
@@ -505,7 +505,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         queryClient.setQueryData(tagQueries.idsBySdoc(Number(sdocId)).queryKey, tagIds);
       });
       queryClient.invalidateQueries({ queryKey: tagQueries.sdocCountScope() });
-      queryClient.invalidateQueries({ queryKey: statisticsQueries.tagScope() });
+      queryClient.invalidateQueries({ queryKey: statisticsQueries.tagStatsScope() });
       break;
 
     // ── Source document metadata ────────────────────────────────────────────

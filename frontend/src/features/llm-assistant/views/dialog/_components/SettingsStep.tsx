@@ -119,7 +119,7 @@ export const SettingsStep = memo(() => {
   );
   const codeIds = useMemo(() => codes.map((code) => code.id), [codes]);
   const isAnnotationTask = method === TaskType.ANNOTATION || method === TaskType.SENTENCE_ANNOTATION;
-  const existingAnnotations = LlmAssistantHooks.useCountExistingAssistantAnnotations({
+  const existingAnnotations = LlmAssistantHooks.useGetExistingAnnotationCount({
     taskType: method,
     approachType,
     sdocIds,

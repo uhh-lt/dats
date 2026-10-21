@@ -5,8 +5,14 @@ import type { QueryRequest_SentAnnoColumns_ } from "@models/QueryRequest_SentAnn
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
- * Sentence annotations. The per-sdoc query returns the annotations grouped by sentence
+ * Query factory for sentence annotations. The per-sdoc query returns the annotations grouped by sentence
  * (SentenceAnnotatorResult), not a flat list.
+ *
+ *   sentenceAnnotationQueries.all()                   ["sentenceAnnotation"]
+ *   sentenceAnnotationQueries.byId(sentenceAnnoId)    ["sentenceAnnotation", "detail", sentenceAnnoId]
+ *   sentenceAnnotationQueries.bySdoc(sdocId, userId)  ["sentenceAnnotation", "sdoc", sdocId, userId]
+ *   sentenceAnnotationQueries.tableInfo(projectId)    ["tableInfo", "sentence", projectId]
+ *   sentenceAnnotationQueries.search(request)         ["sentenceAnnotation", "search", request]
  */
 export const sentenceAnnotationQueries = {
   all: () => ["sentenceAnnotation"] as const,

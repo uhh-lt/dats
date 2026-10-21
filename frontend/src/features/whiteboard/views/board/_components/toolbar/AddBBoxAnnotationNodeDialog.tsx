@@ -29,7 +29,7 @@ export const AddBBoxAnnotationNodeDialog = memo(
     const { isMaximized, toggleMaximize } = useDialogMaximize();
 
     // global server state
-    const metadata = ProjectMetadataHooks.useGetProjectMetadataList();
+    const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
     return (
       <>

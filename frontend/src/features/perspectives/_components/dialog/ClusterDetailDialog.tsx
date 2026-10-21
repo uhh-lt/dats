@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
-import { PerspectivesHooks } from "../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";

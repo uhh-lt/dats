@@ -2,7 +2,7 @@ import { DocType } from "@models/DocType";
 import { useQuery } from "@tanstack/react-query";
 import { codeFrequencyQueries } from "./codeFrequencyQueries";
 
-const useCodeOccurrencesQuery = (
+const useGetCodeOccurrences = (
   projectId: number,
   userIds: number[],
   codeId: number | null | undefined,
@@ -15,5 +15,5 @@ const useCodeOccurrencesQuery = (
   });
 
 export const CodeFrequencyHooks = {
-  useCodeOccurrencesQuery,
+  useGetCodeOccurrences,
 };

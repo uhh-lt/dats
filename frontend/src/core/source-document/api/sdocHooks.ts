@@ -37,7 +37,7 @@ const useUpdateName = () =>
 
 const useGetDocument = (sdocId: number | null | undefined) =>
   useQuery({
-    ...sdocQueries.detail(sdocId!),
+    ...sdocQueries.byId(sdocId!),
     enabled: !!sdocId,
   });
 

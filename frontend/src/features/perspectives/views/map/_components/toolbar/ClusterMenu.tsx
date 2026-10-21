@@ -20,7 +20,7 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
-import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 
 interface ClusterMenuProps {
   aspectId: number;

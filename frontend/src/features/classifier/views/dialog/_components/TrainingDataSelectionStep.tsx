@@ -27,7 +27,7 @@ export function TrainingDataSelectionStep() {
   const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
 
   // dataset statistics (shared with DataSelection via props)
-  const { datasetStats } = ClassifierHooks.useDatasetStatistics();
+  const { datasetStats } = ClassifierHooks.useGetDatasetStatistics();
 
   const handleNext = () => {
     if (model === undefined || task === undefined || trainingSettings === undefined) return;

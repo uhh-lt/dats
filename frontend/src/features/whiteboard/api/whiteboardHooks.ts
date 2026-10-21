@@ -1,22 +1,7 @@
 import { WhiteboardService } from "@api/services/WhiteboardService";
 import { WhiteboardRead } from "@models/WhiteboardRead";
-import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { whiteboardQueries } from "./whiteboardQueries";
-
-/**
- * Convenience hook for components that need a single whiteboard by ID but have no route context
- * (e.g., the tab bar navigation). Reads projectId from Redux store.
- * For components that DO have route context, use useSuspenseQuery with projectWhiteboardsQueryOptions directly.
- */
-const useGetWhiteboardById = (whiteboardId: number | null | undefined) => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  return useQuery({
-    ...whiteboardQueries.byProject(projectId!),
-    select: (data) => (whiteboardId != null ? data[whiteboardId] : undefined),
-    enabled: projectId !== undefined && whiteboardId != null,
-  });
-};
 
 const useCreateWhiteboard = () =>
   useMutation({
@@ -59,7 +44,6 @@ const useDeleteWhiteboard = () =>
   });
 
 export const WhiteboardHooks = {
-  useGetWhiteboardById,
   useCreateWhiteboard,
   useUpdateWhiteboard,
   useDuplicateWhiteboard,

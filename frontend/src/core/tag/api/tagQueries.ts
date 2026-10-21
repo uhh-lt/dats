@@ -2,7 +2,7 @@ import { TagService } from "@api/services/TagService";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 /**
- * Query factory for tags. Keys are hierarchical: domain -> scope -> params.
+ * Query factory for tags.
  *
  *   tagQueries.all()                         ["tag"]
  *   tagQueries.byProject(projectId)          ["tag", "project", projectId]

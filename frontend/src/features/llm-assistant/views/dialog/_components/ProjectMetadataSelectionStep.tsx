@@ -24,7 +24,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
   );
 
   // global server state
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadataList();
+  const projectMetadata = ProjectMetadataHooks.useGetAllProjectMetadata();
   const filteredProjectMetadata = useMemo(() => {
     if (!projectMetadata.data) return [];
     return projectMetadata.data.filter((metadata) => metadata.doctype === DocType.TEXT && metadata.read_only === false);

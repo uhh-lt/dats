@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { PerspectivesHooks } from "../../../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 interface PositionSettingsProps {
   aspectId: number;

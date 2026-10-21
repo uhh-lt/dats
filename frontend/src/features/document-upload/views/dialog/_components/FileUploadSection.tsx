@@ -33,20 +33,21 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
     setFiles(files);
   }, []);
 
-  const uploadDocumentMutation = DocumentUploadHooks.useUploadDocument();
-  const handleUpload = useCallback(async () => {
-    if (files.length > 0) {
-      await uploadDocumentMutation.mutateAsync({
+  const { mutate: uploadDocument, isPending: isUploadPending } = DocumentUploadHooks.useUploadDocument();
+  const handleUpload = useCallback(() => {
+    if (files.length === 0) return;
+    uploadDocument(
+      {
         projectId,
         formData: {
           settings: JSON.stringify(settings),
           // @ts-expect-error: ignore this error until we switch to new codegen heyapi.dev
           uploaded_files: Array.from(files),
         },
-      });
-      setFiles([]);
-    }
-  }, [files, projectId, settings, uploadDocumentMutation]);
+      },
+      { onSuccess: () => setFiles([]) },
+    );
+  }, [files, projectId, settings, uploadDocument]);
 
   return (
     <DialogSection
@@ -64,7 +65,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
         variant="contained"
         color="primary"
         onClick={handleUpload}
-        loading={uploadDocumentMutation.isPending}
+        loading={isUploadPending}
         loadingPosition="start"
         startIcon={<PlayCircle />}
         disabled={files.length === 0}

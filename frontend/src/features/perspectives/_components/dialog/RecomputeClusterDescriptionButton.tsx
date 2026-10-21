@@ -1,7 +1,7 @@
 import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { IconButton, Tooltip } from "@mui/material";
-import { PerspectivesHooks } from "../../api/perspectiveHooks";
+import { PerspectivesHooks } from "../../api/perspectivesHooks";
 
 interface RecomputeClusterDescriptionButtonProps {
   aspectId: number;
