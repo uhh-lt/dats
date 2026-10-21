@@ -1,0 +1,392 @@
+import { BboxAnnotationHooks, bboxAnnotationQueries } from "@core/bbox-annotation";
+import { sdocMetadataQueries } from "@core/sdoc-metadata";
+import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import * as d3 from "d3";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { useAuth } from "@core/auth";
+import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
+import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { toPendingBboxAnnotation } from "../_hooks/pendingBboxAnnotation";
+import { useBboxAnnotationResize } from "../_hooks/useBboxAnnotationResize";
+import { Annotation } from "../../../_types/Annotation";
+import { AnnotationsActions } from "../../../store/annotationsSlice";
+import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
+import { SVGBBox } from "./SVGBBox";
+import { SVGBBoxText } from "./SVGBBoxCodeIndicator";
+
+interface ImageAnnotatorProps {
+  sdocData: SourceDocumentDataRead;
+}
+
+const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationRead => {
+  return "x_min" in annotation;
+};
+
+export function ImageAnnotator(props: ImageAnnotatorProps) {
+  const heightMetadata = useQuery(sdocMetadataQueries.bySdocAndKey(props.sdocData.id, "height"));
+
+  if (heightMetadata.isSuccess) {
+    return <ImageAnnotatorWithHeight sdocData={props.sdocData} height={heightMetadata.data.int_value!} />;
+  } else if (heightMetadata.isError) {
+    return <div>{heightMetadata.error.message}</div>;
+  } else if (heightMetadata.isLoading) {
+    return <div>Loading...</div>;
+  } else {
+    return <>Something went wrong!</>;
+  }
+}
+
+function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { height: number }) {
+  // references to svg elements
+  const svgRef = useRef<SVGSVGElement>(null);
+  const gZoomRef = useRef<SVGGElement>(null);
+  const gDragRef = useRef<SVGGElement>(null);
+  const rectRef = useRef<SVGRectElement>(null);
+  const imgRef = useRef<SVGImageElement>(null);
+  const codeSelectorRef = useRef<AnnotationMenuHandle>(null);
+
+  // global client state (URL search params)
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
+
+  // global client state (redux)
+  const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
+  const dispatch = useAppDispatch();
+
+  // global server state (react query)
+  const annotations = useQuery(bboxAnnotationQueries.bySdoc(sdocData.id, visibleUserId));
+
+  // resize controller
+  const resizeController = useBboxAnnotationResize(imgRef);
+
+  // annotations already sent to the server but not yet persisted; kept visible until the real
+  // annotation lands in the cache so the highlight never flickers. Keyed by unique negative ids.
+  const [pendingAnnotations, setPendingAnnotations] = useState<BBoxAnnotationRead[]>([]);
+
+  // computed (filter hidden code ids, apply resize preview override, append pending annotations)
+  const data = useMemo(() => {
+    const filtered = (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));
+    const preview = resizeController.previewAnnotation;
+    const withPreview = preview ? filtered.map((bbox) => (bbox.id === preview.id ? preview : bbox)) : filtered;
+    return pendingAnnotations.length > 0 ? [...withPreview, ...pendingAnnotations] : withPreview;
+  }, [annotations.data, hiddenCodeIds, resizeController.previewAnnotation, pendingAnnotations]);
+
+  // local client state
+  const [isZooming, setIsZooming] = useState(true);
+  const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationRead | null>(null);
+  const [hoveredBboxId, setHoveredBboxId] = useState<number | null>(null);
+
+  // mutations for create, update, delete
+  const { user } = useAuth();
+  const openSnackbar = useOpenSnackbar();
+  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
+  const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
+  const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
+
+  // click handling
+  const handleClick = useCallback(
+    (event: React.MouseEvent, bbox: BBoxAnnotationRead) => {
+      if (resizeController.shouldIgnoreMouseUp()) return;
+      event.preventDefault();
+      const rect = event.currentTarget.getBoundingClientRect();
+      const position = {
+        left: rect.left,
+        top: rect.top + rect.height,
+      };
+      codeSelectorRef.current!.open(position, [bbox]);
+      setSelectedBbox(bbox);
+    },
+    [codeSelectorRef, resizeController],
+  );
+
+  // drag handling
+  const drag = useMemo(() => d3.drag<SVGGElement, unknown>(), []);
+
+  const handleDragStart = (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+    if (!rectRef.current) return;
+
+    const myRect = d3.select(rectRef.current);
+    myRect
+      .attr("xOrigin", event.x)
+      .attr("yOrigin", event.y)
+      .attr("x", event.x)
+      .attr("width", 0)
+      .attr("y", event.y)
+      .attr("height", 0);
+  };
+
+  const handleDrag = (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+    if (!rectRef.current) return;
+
+    const myRect = d3.select(rectRef.current);
+    const myImage = d3.select(imgRef.current).node()!.getBBox();
+
+    const x = parseInt(myRect.attr("xOrigin"));
+    const y = parseInt(myRect.attr("yOrigin"));
+    const w = Math.abs(event.x - x);
+    const h = Math.abs(event.y - y);
+
+    if (event.x < x && event.y < y) {
+      const maxWidth = x;
+      const maxHeight = y;
+      myRect
+        .attr("y", Math.max(0, y - h))
+        .attr("x", Math.max(0, x - w))
+        .attr("width", Math.min(w, maxWidth))
+        .attr("height", Math.min(h, maxHeight));
+    } else if (event.x < x) {
+      const maxWidth = x;
+      const maxHeight = myImage.height - y;
+      myRect
+        .attr("x", Math.max(0, x - w))
+        .attr("width", Math.min(w, maxWidth))
+        .attr("height", Math.min(h, maxHeight));
+    } else if (event.y < y) {
+      const maxWidth = myImage.width - x;
+      const maxHeight = y;
+      myRect
+        .attr("width", Math.min(w, maxWidth))
+        .attr("y", Math.max(0, y - h))
+        .attr("height", Math.min(h, maxHeight));
+    } else {
+      const maxWidth = myImage.width - x;
+      const maxHeight = myImage.height - y;
+      myRect.attr("width", Math.min(w, maxWidth)).attr("height", Math.min(h, maxHeight));
+    }
+  };
+
+  const handleDragEnd = () => {
+    const myRect = d3.select(rectRef.current);
+    const width = parseInt(myRect.attr("width"));
+    const height = parseInt(myRect.attr("height"));
+
+    // only open the code selector if the rect is big enough
+    if (width > 10 && height > 10) {
+      // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
+      if (user?.id !== visibleUserId) {
+        openSnackbar({
+          severity: "warning",
+          text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+        });
+        resetRect();
+        return;
+      }
+
+      const boundingBox = myRect.node()!.getBoundingClientRect();
+      const position = {
+        left: boundingBox.left,
+        top: boundingBox.top + boundingBox.height,
+      };
+      codeSelectorRef.current!.open(position);
+    } else {
+      resetRect();
+    }
+  };
+
+  const resetRect = () => {
+    const myRect = d3.select(rectRef.current);
+    myRect.attr("width", 0).attr("height", 0);
+  };
+
+  // zoom handling
+  const zoom = useMemo(() => d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.5, 5]), []);
+
+  const handleZoom = useCallback((e: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+    d3.select(gZoomRef.current).attr("transform", e.transform.toString());
+  }, []);
+
+  // init component, so that zoom is default
+  useEffect(() => {
+    if (svgRef.current) {
+      const svg = d3.select<SVGSVGElement, unknown>(svgRef.current!);
+      zoom.on("zoom", handleZoom);
+      svg.call(zoom);
+    }
+  }, [zoom, svgRef, handleZoom]);
+
+  // button handlers
+  const toggleZoom = () => {
+    const svg = d3.select<SVGSVGElement, unknown>(svgRef.current!);
+    const gDrag = d3.select<SVGGElement, unknown>(gDragRef.current!);
+
+    if (isZooming) {
+      svg.on(".zoom", null);
+
+      drag.on("start", handleDragStart);
+      drag.on("drag", handleDrag);
+      drag.on("end", handleDragEnd);
+      gDrag.call(drag);
+    } else {
+      gDrag.on(".drag", null);
+
+      zoom.on("zoom", handleZoom);
+      svg.call(zoom);
+    }
+    setIsZooming(!isZooming);
+  };
+
+  const resetZoom = () => {
+    const svg = d3.select<SVGSVGElement, unknown>(svgRef.current!);
+    svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+  };
+
+  // send a create request and keep the annotation visible (pending) until the real one is cached.
+  const startCreate = (requestBody: BBoxAnnotationCreate, onSuccess?: () => void) => {
+    const pending = toPendingBboxAnnotation(requestBody, user?.id);
+    setPendingAnnotations((prev) => [...prev, pending]);
+    createMutation.mutate(requestBody, {
+      onSuccess,
+      // remove the pending preview once the real annotation is in the cache (or the request failed)
+      onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
+    });
+  };
+
+  // code selector events
+  const onCodeSelectorAddCode = (codeId: number) => {
+    const myRect = d3.select(rectRef.current);
+    const x = parseInt(myRect.attr("x"));
+    const y = parseInt(myRect.attr("y"));
+    const width = parseInt(myRect.attr("width"));
+    const height = parseInt(myRect.attr("height"));
+    startCreate({
+      code_id: codeId,
+      sdoc_id: sdocData.id,
+      x_min: x,
+      x_max: x + width,
+      y_min: y,
+      y_max: y + height,
+    });
+  };
+
+  const onCodeSelectorEditCode = (_annotationToEdit: Annotation, codeId: number) => {
+    if (selectedBbox) {
+      updateMutation.mutate({
+        bboxToUpdate: selectedBbox,
+        requestBody: {
+          code_id: codeId,
+        },
+      });
+    } else {
+      console.error("This should never happen! (onCodeSelectorEditCode)");
+    }
+  };
+
+  const openConfirmationDialog = useOpenConfirmationDialog();
+  const onCodeSelectorDeleteCode = () => {
+    if (selectedBbox) {
+      openConfirmationDialog({
+        text: `Do you really want to remove the BBoxAnnotation ${selectedBbox.id}? You can reassign it later!`,
+        onAccept: () => {
+          deleteMutation.mutate({ bboxToDelete: selectedBbox });
+        },
+      });
+    } else {
+      console.error("This should never happen! (onCodeSelectorDeleteCode)");
+    }
+  };
+
+  const onCodeSelectorClose = () => {
+    resetRect(); // reset selection
+    setSelectedBbox(null); // reset selected bounding box
+  };
+
+  const onCodeSelectorDuplicateCode = (annotationToDuplicate: Annotation, codeId: number) => {
+    if (!isBboxAnnotation(annotationToDuplicate)) {
+      return;
+    }
+    startCreate(
+      {
+        code_id: codeId,
+        sdoc_id: annotationToDuplicate.sdoc_id,
+        x_min: annotationToDuplicate.x_min,
+        x_max: annotationToDuplicate.x_max,
+        y_min: annotationToDuplicate.y_min,
+        y_max: annotationToDuplicate.y_max,
+      },
+      () => dispatch(AnnotationsActions.moveCodeToTop(codeId)),
+    );
+  };
+
+  return (
+    <>
+      <Toolbar variant="dense" disableGutters>
+        <ButtonGroup>
+          <Button onClick={() => toggleZoom()} variant={isZooming ? "contained" : "outlined"}>
+            Zoom
+          </Button>
+          <Button onClick={() => toggleZoom()} variant={!isZooming ? "contained" : "outlined"}>
+            Annotate
+          </Button>
+        </ButtonGroup>
+        <Button onClick={() => resetZoom()} variant="outlined" sx={{ ml: 2, flexShrink: 0 }}>
+          Reset Zoom
+        </Button>
+        <Typography variant="body1" component="div" sx={{ ml: 2 }}>
+          Hint:{" "}
+          {isZooming
+            ? "Try to drag the image & use mouse wheel to zoom. Click boxes to edit annotations."
+            : "Drag to create annotations. Click boxes to edit annotations."}
+        </Typography>
+      </Toolbar>
+
+      <AnnotationMenu
+        ref={codeSelectorRef}
+        onAdd={onCodeSelectorAddCode}
+        onEdit={onCodeSelectorEditCode}
+        onDelete={onCodeSelectorDeleteCode}
+        onClose={onCodeSelectorClose}
+        onDuplicate={onCodeSelectorDuplicateCode}
+      />
+      <svg
+        ref={svgRef}
+        width="100%"
+        height={Math.max(500, height) + "px"}
+        style={{ cursor: isZooming ? "move" : "auto" }}
+      >
+        <g ref={gZoomRef}>
+          <g ref={gDragRef} style={{ cursor: isZooming ? "move" : "crosshair" }}>
+            <image
+              ref={imgRef}
+              href={encodeURI("/content/" + sdocData.repo_url)}
+              style={{ outline: "1px solid black" }}
+            />
+            <rect
+              ref={rectRef}
+              x={0}
+              y={0}
+              stroke={"black"}
+              strokeWidth={3}
+              fill={"transparent"}
+              width={0}
+              height={0}
+            ></rect>
+          </g>
+          <g>
+            {data.map((bbox) => (
+              <SVGBBox
+                key={bbox.id}
+                bbox={bbox}
+                onClick={(event) => handleClick(event, bbox)}
+                onMouseEnter={() => setHoveredBboxId(bbox.id)}
+                onMouseLeave={() => setHoveredBboxId(null)}
+                isHovered={hoveredBboxId === bbox.id || resizeController.previewAnnotation?.id === bbox.id}
+                onResizeStart={resizeController.handleResizeStart}
+                style={{ cursor: "pointer" }}
+              />
+            ))}
+          </g>
+          <g>
+            {data.map((bbox) => (
+              <SVGBBoxText key={bbox.id} bbox={bbox} onClick={(event) => handleClick(event, bbox)} />
+            ))}
+          </g>
+        </g>
+      </svg>
+    </>
+  );
+}

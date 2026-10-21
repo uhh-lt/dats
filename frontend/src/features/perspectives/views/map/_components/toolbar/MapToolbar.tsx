@@ -7,11 +7,11 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { getRouteApi } from "@tanstack/react-router";
 import { ChangeEvent, memo, useEffect, useMemo, useState } from "react";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterMenuButton } from "./ClusterMenuButton";
 import { ClusterReviewButtons } from "./ClusterReviewButtons";
+import { PerspectivesMapRouteAPI } from "../../_hooks/perspectivesMapRouteAPI";
 
 const filterStateSelector = (state: RootState) => state.perspectives;
 
@@ -19,10 +19,8 @@ interface MapToolbarProps {
   aspectId: number;
 }
 
-const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
-
 export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
-  const { projectId } = routeApi.useParams();
+  const { projectId } = PerspectivesMapRouteAPI.useParams();
   // keeps its identity, so that the memoized filter dialog does not re-render with every render
   const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
 

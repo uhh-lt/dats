@@ -80,9 +80,9 @@ export default defineConfig(
   {
     files: [
       "src/core/source-document/info-panel/_components/related-panel/RelatedPanel.tsx",
-      "src/features/annotation/_components/explorer/_components/AnnotationExplorer.tsx",
-      "src/features/annotation/_components/sentence-annotator/annotator/SentenceAnnotator.tsx",
-      "src/features/annotation/_components/sentence-annotator/comparator/SentenceAnnotationComparison.tsx",
+      "src/features/annotation/views/main/_components/explorer/_components/AnnotationExplorer.tsx",
+      "src/features/annotation/views/main/_components/sentence-annotator/annotator/SentenceAnnotator.tsx",
+      "src/features/annotation/views/main/_components/sentence-annotator/comparator/SentenceAnnotationComparison.tsx",
       "src/features/llm-assistant/views/dialog/_components/LLMJobListItem.tsx",
       "src/features/perspectives/views/map/_components/panel-info/statistics/MapCodeStats.tsx",
       "src/features/perspectives/views/map/_components/panel-info/statistics/MapKeywordStats.tsx",

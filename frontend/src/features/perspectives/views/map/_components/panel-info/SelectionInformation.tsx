@@ -10,14 +10,12 @@ import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 import { perspectivesQueries } from "../../../../api/perspectivesQueries";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
+import { PerspectivesMapRouteAPI } from "../../_hooks/perspectivesMapRouteAPI";
 
 interface SelectionInformationProps {
   aspectId: number;
@@ -56,7 +54,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   // filtering
-  const { projectId: routeProjectId } = routeApi.useParams();
+  const { projectId: routeProjectId } = PerspectivesMapRouteAPI.useParams();
   const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(routeProjectId));
   const handleAddMetadataFilter = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
     // the column of a metadata filter is the project_metadata_id

@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { PerspectiveDashboardView, perspectivesQueries } from "@features/perspectives";
+import { PerspectiveView, perspectivesQueries } from "@features/perspectives";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
@@ -19,5 +19,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$as
     if (!aspects[params.aspectId]) throw notFound();
   },
   pendingComponent: () => <CircularProgress />,
-  component: PerspectiveDashboardView,
+  component: PerspectiveView,
 });

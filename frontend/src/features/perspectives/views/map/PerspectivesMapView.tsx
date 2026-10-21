@@ -1,17 +1,15 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { useAppDispatch } from "@store/storeHooks";
-import { getRouteApi } from "@tanstack/react-router";
 import { ClusterJobProgressDialog } from "../../_components/ClusterJobProgressDialog";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { MapContent } from "./_components/MapContent";
 import { InfoPanel } from "./_components/panel-info/InfoPanel";
 import { SettingsPanel } from "./_components/panel-settings/SettingsPanel";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
+import { PerspectivesMapRouteAPI } from "./_hooks/perspectivesMapRouteAPI";
 
 export function PerspectivesMapView() {
-  const { projectId, aspectId } = routeApi.useParams();
+  const { projectId, aspectId } = PerspectivesMapRouteAPI.useParams();
 
   // dispatch changeMap Event!
   const dispatch = useAppDispatch();

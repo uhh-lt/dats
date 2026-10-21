@@ -15,7 +15,7 @@ import { TimelineAnalysisHooks } from "../../api/timelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 
-const TimelineAnalysisRouteAPI = getRouteApi("/_auth/project/$projectId/analysis/timeline/");
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/timeline/");
 
 interface TimelineAnaylsisDashboardRow extends AnalysisDashboardRow {
   type: TimelineAnalysisType;
@@ -32,10 +32,10 @@ const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
 
 export function TimelineAnalysisDashboardView() {
   // global client state
-  const projectId = TimelineAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const { timelineAnalysesByProjectOptions } = TimelineAnalysisRouteAPI.useRouteContext();
+  const { timelineAnalysesByProjectOptions } = routeApi.useRouteContext();
   const { data: userAnalysis } = useSuspenseQuery({
     ...timelineAnalysesByProjectOptions,
     select: (data) => Object.values(data),
@@ -131,7 +131,7 @@ export function TimelineAnalysisDashboardView() {
     );
   };
 
-  const navigate = TimelineAnalysisRouteAPI.useNavigate();
+  const navigate = routeApi.useNavigate();
   const handleOpenAnalysis = (row: TimelineAnaylsisDashboardRow) => {
     dispatch(
       TimelineAnalysisActions.onOpenTimelineAnalysis({
