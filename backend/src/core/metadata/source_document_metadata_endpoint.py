@@ -8,9 +8,9 @@ from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
-    SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
+    SourceDocumentMetadataUpdateBulk,
 )
 from core.metadata.source_document_metadata_service import (
     SourceDocumentMetadataService,
@@ -105,7 +105,9 @@ def update_by_id(
     result = SourceDocumentMetadataService().update_metadata(
         db=db,
         update_dtos=[
-            SourceDocumentMetadataBulkUpdate(id=metadata_id, **metadata.model_dump())
+            SourceDocumentMetadataUpdateBulk(
+                sdoc_metadata_id=metadata_id, **metadata.model_dump()
+            )
         ],
     )[0]
     ws.emit_to_project(
@@ -124,12 +126,12 @@ def update_by_id(
 def update_bulk(
     *,
     db: Session = Depends(get_db_session),
-    metadatas: list[SourceDocumentMetadataBulkUpdate],
+    metadatas: list[SourceDocumentMetadataUpdateBulk],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SourceDocumentMetadataRead]:
     authz_user.assert_in_same_project_as_many(
-        Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
+        Crud.SOURCE_DOCUMENT_METADATA, [m.sdoc_metadata_id for m in metadatas]
     )
     results = SourceDocumentMetadataService().update_metadata(
         db=db, update_dtos=metadatas

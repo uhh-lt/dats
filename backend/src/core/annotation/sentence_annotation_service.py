@@ -92,7 +92,7 @@ class SentenceAnnotationService(metaclass=SingletonMeta):
         """
         db_objs = crud_sentence_anno.update_multi(
             db=db,
-            ids=[update_dto.sent_annotation_id for update_dto in update_dtos],
+            ids=[update_dto.sentence_annotation_id for update_dto in update_dtos],
             update_dtos=[
                 SentenceAnnotationUpdate(code_id=update_dto.code_id)
                 for update_dto in update_dtos

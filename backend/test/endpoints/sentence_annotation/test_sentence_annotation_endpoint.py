@@ -301,7 +301,7 @@ def test_update_sent_anno_annotations_bulk_parametrized(
     else:
         original_anno = sa2
     target_code_id = new_code.id if params["code_mode"] == "new" else old_code.id
-    payload = {"sent_annotation_id": original_anno.id, "code_id": target_code_id}
+    payload = {"sentence_annotation_id": original_anno.id, "code_id": target_code_id}
     resp = client.patch("/sentence/bulk/update", json=[payload])
 
     assert resp.status_code == 200, resp.text
@@ -326,8 +326,8 @@ def test_update_sent_anno_annotations_bulk_not_exists(
 
     non_existsing_id = 6666
     payload = [
-        {"sent_annotation_id": sa.id, "code_id": code.id},
-        {"sent_annotation_id": non_existsing_id, "code_id": code.id},
+        {"sentence_annotation_id": sa.id, "code_id": code.id},
+        {"sentence_annotation_id": non_existsing_id, "code_id": code.id},
     ]
     resp = client.patch("/sentence/bulk/update", json=payload)
 

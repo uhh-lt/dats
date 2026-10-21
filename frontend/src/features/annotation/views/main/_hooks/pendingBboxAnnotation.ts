@@ -17,6 +17,7 @@ let nextPendingId = -1;
 export function toPendingBboxAnnotation(
   requestBody: BBoxAnnotationCreate,
   userId: number | undefined,
+  projectId: number,
 ): BBoxAnnotationRead {
   return {
     ...requestBody,
@@ -24,6 +25,7 @@ export function toPendingBboxAnnotation(
     created: "",
     updated: "",
     user_id: userId || SYSTEM_USER_ID,
+    project_id: projectId,
     memo_ids: [],
   };
 }

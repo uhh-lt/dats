@@ -36,6 +36,10 @@ export type SpanAnnotationDeleted = {
    */
   sdoc_id: number;
   /**
+   * Project the SpanAnnotation belongs to
+   */
+  project_id: number;
+  /**
    * Created timestamp of the SpanAnnotation
    */
   created: string;

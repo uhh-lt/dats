@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
-    SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
+    SourceDocumentMetadataUpdateBulk,
 )
 
 
@@ -15,7 +15,7 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         return super(SourceDocumentMetadataService, cls).__new__(cls)
 
     def update_metadata(
-        self, db: Session, *, update_dtos: list[SourceDocumentMetadataBulkUpdate]
+        self, db: Session, *, update_dtos: list[SourceDocumentMetadataUpdateBulk]
     ) -> list[SourceDocumentMetadataRead]:
         """
         Update user-editable source document metadata, each identified by its id.
@@ -32,8 +32,10 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
             ValueError: If a value has the wrong type for its metadata key.
         """
         # 1) skip read-only metadata: only the system may change it
-        metadatas = crud_sdoc_meta.read_by_ids(db=db, ids=[u.id for u in update_dtos])
-        writable: list[SourceDocumentMetadataBulkUpdate] = []
+        metadatas = crud_sdoc_meta.read_by_ids(
+            db=db, ids=[u.sdoc_metadata_id for u in update_dtos]
+        )
+        writable: list[SourceDocumentMetadataUpdateBulk] = []
         for metadata, update_dto in zip(metadatas, update_dtos):
             if metadata.project_metadata.read_only:
                 logger.warning(
@@ -46,9 +48,11 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
         # 2) update the writable ones
         crud_sdoc_meta.update_multi(
             db=db,
-            ids=[u.id for u in writable],
+            ids=[u.sdoc_metadata_id for u in writable],
             update_dtos=[
-                SourceDocumentMetadataUpdate(**u.model_dump(exclude={"id"}))
+                SourceDocumentMetadataUpdate(
+                    **u.model_dump(exclude={"sdoc_metadata_id"})
+                )
                 for u in writable
             ],
         )

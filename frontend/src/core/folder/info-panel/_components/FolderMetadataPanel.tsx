@@ -76,7 +76,7 @@ function FolderDoctypeMetadataPanel({ doctype, sdocIds, onAddMetadataFilter }: F
     (metadataIds: number[]) => (data: SourceDocumentMetadataUpdate) => {
       updateMetadataMutation({
         requestBody: metadataIds.map((sdocMetadataId) => ({
-          id: sdocMetadataId,
+          sdoc_metadata_id: sdocMetadataId,
           str_value: data.str_value,
           int_value: data.int_value,
           date_value: data.date_value,

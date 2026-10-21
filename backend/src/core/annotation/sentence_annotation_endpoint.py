@@ -229,12 +229,12 @@ def update_sentence_annotations_bulk(
     for sent_anno in sent_annos:
         authz_user.assert_in_same_project_as(Crud.CODE, sent_anno.code_id)
         authz_user.assert_in_same_project_as(
-            Crud.SENTENCE_ANNOTATION, sent_anno.sent_annotation_id
+            Crud.SENTENCE_ANNOTATION, sent_anno.sentence_annotation_id
         )
         validate.validate_objects_in_same_project(
             [
                 (Crud.CODE, sent_anno.code_id),
-                (Crud.SENTENCE_ANNOTATION, sent_anno.sent_annotation_id),
+                (Crud.SENTENCE_ANNOTATION, sent_anno.sentence_annotation_id),
             ]
         )
 

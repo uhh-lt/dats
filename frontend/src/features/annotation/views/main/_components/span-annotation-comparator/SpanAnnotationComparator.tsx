@@ -364,7 +364,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       };
 
       // store the draft annotation in local state; it is rendered via the pendingAnnotations override
-      setDraft({ side, annotation: toPendingSpanAnnotation(requestBody, user?.id) });
+      setDraft({ side, annotation: toPendingSpanAnnotation(requestBody, user?.id, sdocData.project_id) });
 
       const target = selectionStartElement;
       if (target) {
@@ -444,7 +444,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
         sdoc_id: annotation.sdoc_id,
         code_id: codeId,
       };
-      const pending = toPendingSpanAnnotation(requestBody, user?.id);
+      const pending = toPendingSpanAnnotation(requestBody, user?.id, sdocData.project_id);
       startCreate(pending, codeId, () => dispatch(AnnotationsActions.moveCodeToTop(codeId)));
     }
   };

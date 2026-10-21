@@ -38,7 +38,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
     updateAnnotationBulkMutation(
       {
         requestBody: dialogData.annotationIds.map((annotation) => ({
-          sent_annotation_id: annotation,
+          sentence_annotation_id: annotation,
           code_id: selectedCodeId,
         })),
       },

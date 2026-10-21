@@ -237,7 +237,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // send a create request and keep the annotation visible (pending) until the real one is cached.
   const startCreate = (requestBody: BBoxAnnotationCreate, onSuccess?: () => void) => {
-    const pending = toPendingBboxAnnotation(requestBody, user?.id);
+    const pending = toPendingBboxAnnotation(requestBody, user?.id, sdocData.project_id);
     setPendingAnnotations((prev) => [...prev, pending]);
     createMutation.mutate(requestBody, {
       onSuccess,
