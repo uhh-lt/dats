@@ -107,7 +107,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 ### Dependencies
 
 - A CRUD may call other `crud_*` singletons (e.g. `crud_span_anno` uses `crud_adoc`, `crud_span_text`). To break circular imports, import the other singleton inside the method (`from core.doc.source_document_crud import crud_sdoc`).
-- SQL CRUDs do not touch other stores. The one exception is `crud_sdoc.delete`, which removes the file and sends `source_document_deleted`. The listeners that clean up Weaviate and Elasticsearch are covered in `backend-embedding-crud.instructions.md` and `backend-elastic-crud.instructions.md`.
+- SQL CRUDs touch only the SQL database: they import no other repo (only `repos.db.*`), no Weaviate/Elasticsearch/Redis client and no embedding CRUD, elastic CRUD or service. A side effect on another store (files, Weaviate, Elasticsearch) belongs in a service, e.g. `SourceDocumentService.delete_multi` and `FolderService.delete_folder`, which delete documents from all stores. `check_crud.py` enforces this (`sql-only`).
 - No business logic, authentication or permission checks. Those belong in services (e.g. user authentication lives in `core/auth/auth_service.py`, not in `crud_user`).
 
 ## Variations

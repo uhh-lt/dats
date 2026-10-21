@@ -36,7 +36,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
   - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud`, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
   - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...)
   - `modules/`: features built on `core` and `systems` (analysis, search, export/import, doc processing, ...)
-  - `systems/`: reusable infrastructure (`job_system`, `event_system`, `search_system`, `websocket_system`, `mcp_system`)
+  - `systems/`: reusable infrastructure (`job_system`, `search_system`, `websocket_system`, `mcp_system`)
   - `repos/`: connections to external services (SQL, Weaviate, Elasticsearch, Redis, filesystem, LLM, Ray, Docling, mail); see `repos/README.md` for the repo lifecycle
   - `utils/`: process-level helpers (`import_by_suffix`, logger setup, image/GPU utils)
   - `migrations/`: Alembic migrations

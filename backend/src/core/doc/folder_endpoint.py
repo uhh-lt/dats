@@ -14,6 +14,7 @@ from core.doc.folder_dto import (
     FolderUpdate,
     FolderUpdateBulk,
 )
+from core.doc.folder_service import FolderService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -169,9 +170,6 @@ def delete_by_id(
     ws: WebsocketEmitter = Depends(),
 ) -> FolderRead:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    folder = crud_folder.read(db=db, id=folder_id)
-    project_id = folder.get_project_id()
-    db_obj = crud_folder.delete(db=db, id=folder_id)
-    result = FolderRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.FOLDER_DELETED, result, project_id=project_id)
+    result = FolderService().delete_folder(db=db, folder_id=folder_id)
+    ws.emit_to_project(DATSEvent.FOLDER_DELETED, result, project_id=result.project_id)
     return result

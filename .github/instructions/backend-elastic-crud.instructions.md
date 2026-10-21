@@ -11,7 +11,7 @@ Elastic CRUD modules are the data-access layer for one Elasticsearch index. Each
 ## File Structure
 
 ```python
-# 1. Imports: Elasticsearch client, own ES DTOs, own index, the base, result DTOs, the event
+# 1. Imports: Elasticsearch client, own ES DTOs, own index, the base, result DTOs
 from elasticsearch import Elasticsearch
 
 from core.doc.sdoc_elastic_dto import (
@@ -22,7 +22,6 @@ from core.doc.sdoc_elastic_dto import (
 from core.doc.sdoc_elastic_index import SdocIndex
 from repos.elastic.elastic_crud_base import ElasticCRUDBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
-from systems.event_system.events import source_document_deleted
 
 
 # 2. The CRUD class, generic over [Index, Model, CreateDTO, UpdateDTO]
@@ -49,18 +48,6 @@ class CRUDSdocElastic(
 # 3. The singleton, built with keyword arguments
 crud_sdoc_elastic = CRUDSdocElastic(index=SdocIndex, model=ElasticSearchDocument)
 
-# 4. Event handlers
-
-# Handle events
-
-
-@source_document_deleted.connect
-def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> None:
-    from repos.elastic.elastic_repo import ElasticSearchRepo
-
-    crud_sdoc_elastic.delete(
-        client=ElasticSearchRepo().get_client(), project_id=project_id, id=sdoc_id
-    )
 ```
 
 ## Rules
@@ -93,7 +80,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 
 ### Cleanup
 
-- **Delete with the source document**: the file ends with a `# Handle events` block that connects `@source_document_deleted.connect` to `handle_source_document_deleted(sender, sdoc_id: int, project_id: int)`, imports `ElasticSearchRepo` inside the function and calls the CRUD's `delete`.
+- **Delete with the source document**: CRUDs need no cleanup code for deleted source documents. `SourceDocumentService.delete_multi` deletes their Elasticsearch documents with `crud_sdoc_elastic.delete_multi` (inherited from `ElasticCRUDBase`, skips missing ids). A new index keyed by sdoc id is cleaned up there too. Do not add event listeners.
 - **Project lifecycle**: a new index must be created in `ProjectService.create_project` (`crud_<x>_elastic.index.create_index(client=..., project_id=...)`) and removed in `ProjectService.delete_project` (`.index.delete_index(...)`).
 - No business logic or result enrichment (joining SQL data, building Read DTOs). That belongs in the search services (`modules/search/sdoc_search/sdoc_search.py`).
 
@@ -101,4 +88,4 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int) -> Non
 
 See:
 
-- [sdoc_elastic_crud.py](backend/src/core/doc/sdoc_elastic_crud.py) — the reference module: content search building a `bool` query with an optional `terms` filter, singleton and event handler.
+- [sdoc_elastic_crud.py](backend/src/core/doc/sdoc_elastic_crud.py) — the reference module: content search building a `bool` query with an optional `terms` filter, and the singleton.

@@ -26,6 +26,10 @@ Rules (the rule id is printed with every violation):
     no-commit        No `.commit(` / `.rollback(` calls; transactions belong to the caller.
     no-proj-id       No parameter named `proj_id` (use `project_id`).
     no-read-dto      No method returns a type whose name ends with 'Read' (CRUDs return ORMs / models).
+    sql-only         SQL CRUDs touch only the SQL database: no imports of other repos
+                     (only repos.db.*), of weaviate / elasticsearch / redis / rq, or of
+                     *_embedding_crud, *_elastic_crud, *_collection, *_elastic_index and
+                     *_service modules. Side effects on other stores belong in a service.
 
 Usage:
     check_crud.py                 check every *_crud.py file below backend/src
@@ -83,6 +87,28 @@ class CrudKind:
 SQL = CrudKind("SQL", "SQLCRUDBase", "db")
 EMBEDDING = CrudKind("embedding", "EmbeddingCRUDBase", "client")
 ELASTIC = CrudKind("elastic", "ElasticCRUDBase", "client")
+
+# sql-only: modules a SQL CRUD must not import (other stores and services)
+FORBIDDEN_SQL_IMPORT_ROOTS = {"weaviate", "elasticsearch", "redis", "rq"}
+FORBIDDEN_SQL_IMPORT_SUFFIXES = (
+    "_embedding_crud",
+    "_elastic_crud",
+    "_collection",
+    "_elastic_index",
+    "_service",
+)
+
+
+def forbidden_sql_import(module: str) -> str | None:
+    """Why a SQL CRUD must not import `module`, or None if it may."""
+    root = module.split(".")[0]
+    if root in FORBIDDEN_SQL_IMPORT_ROOTS:
+        return f"'{module}' is another store"
+    if root == "repos" and not module.startswith("repos.db."):
+        return f"'{module}' is another repo (only repos.db.* is allowed)"
+    if module.endswith(FORBIDDEN_SQL_IMPORT_SUFFIXES):
+        return f"'{module}' belongs to another store or a service"
+    return None
 
 
 @dataclass(frozen=True)
@@ -172,7 +198,7 @@ def check_source(path: Path, source: str) -> list[Violation]:
     kind = crud_kind(path)
     violations: list[Violation] = []
 
-    # no-commit / no-proj-id apply to the whole file
+    # no-commit / no-proj-id / sql-only apply to the whole file
     for node in ast.walk(tree):
         if (
             isinstance(node, ast.Call)
@@ -182,6 +208,24 @@ def check_source(path: Path, source: str) -> list[Violation]:
             violations.append(
                 Violation(p, node.lineno, "no-commit", f"Calls .{node.func.attr}().")
             )
+        if kind is SQL and isinstance(node, (ast.Import, ast.ImportFrom)):
+            modules = (
+                [a.name for a in node.names]
+                if isinstance(node, ast.Import)
+                else [node.module or ""]
+            )
+            for module in modules:
+                reason = forbidden_sql_import(module)
+                if reason:
+                    violations.append(
+                        Violation(
+                            p,
+                            node.lineno,
+                            "sql-only",
+                            f"SQL CRUDs only touch the SQL database: {reason}. "
+                            "Move the side effect into a service that calls this CRUD.",
+                        )
+                    )
         if isinstance(node, ast.arg) and node.arg == "proj_id":
             violations.append(
                 Violation(

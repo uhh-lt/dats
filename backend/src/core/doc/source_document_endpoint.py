@@ -9,6 +9,7 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_dto import SourceDocumentRead, SourceDocumentUpdate
+from core.doc.source_document_service import SourceDocumentService
 from repos.filesystem_repo import FilesystemRepo
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -169,11 +170,8 @@ def delete_by_id(
 ) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    db_obj = crud_sdoc.delete(db=db, id=sdoc_id)
-    result = SourceDocumentRead.model_validate(db_obj)
-    ws.emit_to_project(
-        DATSEvent.SDOC_DELETED, result, project_id=db_obj.get_project_id()
-    )
+    result = SourceDocumentService().delete(db=db, sdoc_id=sdoc_id)
+    ws.emit_to_project(DATSEvent.SDOC_DELETED, result, project_id=result.project_id)
     return result
 
 
@@ -191,12 +189,12 @@ def delete_sdocs_bulk(
 ) -> list[SourceDocumentRead]:
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
 
-    db_objs = crud_sdoc.delete_bulk(db=db, ids=sdoc_ids)
-    results = [SourceDocumentRead.model_validate(db_obj) for db_obj in db_objs]
-    if results:
-        ws.emit_to_projects_grouped(
+    results = SourceDocumentService().delete_multi(db=db, sdoc_ids=sdoc_ids)
+    # one batch event per project
+    for project_id in {result.project_id for result in results}:
+        ws.emit_to_project(
             DATSEvent.SDOC_DELETED_BATCH,
-            db_objs,
-            to_dto=SourceDocumentRead.model_validate,
+            [result for result in results if result.project_id == project_id],
+            project_id=project_id,
         )
     return results

@@ -1,6 +1,7 @@
 from loguru import logger
 from weaviate import WeaviateClient
 from weaviate.classes.config import Configure, Property, VectorDistances
+from weaviate.classes.query import Filter
 
 from config import conf
 from utils.import_utils import import_by_suffix
@@ -82,3 +83,25 @@ class BaseCollection:
         client.collections.get(cls.get_collection_name()).tenants.remove(
             [cls.get_tenant_name(project_id)]
         )
+
+    @classmethod
+    def delete_by_sdoc_ids(
+        cls, client: WeaviateClient, project_id: int, sdoc_ids: list[int]
+    ) -> None:
+        """Removes all objects of the given SourceDocuments from the tenant of
+        project_id. Collections without an `sdoc_id` property are left untouched."""
+        if "sdoc_id" not in cls.properties or not sdoc_ids:
+            return
+        collection = client.collections.get(cls.get_collection_name())
+        tenant_name = cls.get_tenant_name(project_id)
+        if not collection.tenants.exists(tenant_name):
+            return
+        where = Filter.by_property(cls.properties["sdoc_id"].name).contains_any(
+            sdoc_ids
+        )
+        # one call deletes at most QUERY_MAXIMUM_RESULTS objects, so repeat
+        # until nothing matches (or nothing could be deleted)
+        while True:
+            result = collection.with_tenant(tenant_name).data.delete_many(where=where)
+            if result.matches == 0 or result.successful == 0:
+                break
