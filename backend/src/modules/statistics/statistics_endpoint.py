@@ -5,11 +5,7 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
-from modules.statistics.statistics_service import (
-    compute_code_statistics,
-    compute_keyword_statistics,
-    compute_tag_statistics,
-)
+from modules.statistics.statistics_service import StatisticsService
 
 router = APIRouter(
     prefix="/statistics",
@@ -39,7 +35,7 @@ def filter_code_stats(
 
     # compute code stats
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    code_stats = compute_code_statistics(
+    code_stats = StatisticsService().compute_code_statistics(
         db=db, code_id=code_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
@@ -68,7 +64,7 @@ def filter_keyword_stats(
 
     # compute keyword stats
     authz_user.assert_in_project(project_id)
-    keyword_stats = compute_keyword_statistics(
+    keyword_stats = StatisticsService().compute_keyword_statistics(
         db=db, project_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
@@ -96,7 +92,9 @@ def filter_tag_stats(
 
     # compute tag stats
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
-    tag_stats = compute_tag_statistics(db=db, sdoc_ids=set(sdoc_ids), top_k=top_k)
+    tag_stats = StatisticsService().compute_tag_statistics(
+        db=db, sdoc_ids=set(sdoc_ids), top_k=top_k
+    )
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats

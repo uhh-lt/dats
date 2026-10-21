@@ -14,7 +14,7 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardUpdate,
     WhiteboardUpdateIntern,
 )
-from modules.whiteboard.whiteboard_service import read_whiteboard_data
+from modules.whiteboard.whiteboard_service import WhiteboardService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -110,7 +110,7 @@ def get_data_by_id(
 ) -> WhiteboardData:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
-    return read_whiteboard_data(db=db, whiteboard_id=whiteboard_id)
+    return WhiteboardService().read_whiteboard_data(db=db, whiteboard_id=whiteboard_id)
 
 
 @router.get(
