@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,10 @@ from modules.doc_processing.doc_processing_dto import (
     SdocHealthSort,
     SdocProcessingJobInput,
     SdocStatusRow,
+)
+from modules.doc_processing.doc_processing_exceptions import (
+    NoFilesProcessedError,
+    UnsupportedMimeTypeError,
 )
 from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
@@ -48,16 +52,8 @@ class DocProcessingService(metaclass=SingletonMeta):
         for uploaded_file in uploaded_files:
             # 1. Check if mime type is ok
             mime_type = uploaded_file.content_type
-            if mime_type is None:
-                raise HTTPException(
-                    detail="Could not determine MIME type of uploaded file!",
-                    status_code=406,
-                )
-            if not mime_type_supported(mime_type=mime_type):
-                raise HTTPException(
-                    detail=f"Document with MIME type {mime_type} not supported!",
-                    status_code=406,
-                )
+            if mime_type is None or not mime_type_supported(mime_type=mime_type):
+                raise UnsupportedMimeTypeError(mime_type)
 
             # 2. store uploaded file
             file_path = self.fsr.store_uploaded_file_in_project_dir(
@@ -77,10 +73,7 @@ class DocProcessingService(metaclass=SingletonMeta):
 
             doc_type = get_doc_type(mime_type=mime_type)
             if doc_type is None:
-                raise HTTPException(
-                    detail=f"Document with MIME type {mime_type} not supported!",
-                    status_code=406,
-                )
+                raise UnsupportedMimeTypeError(mime_type)
             elif doc_type == DocType.text:
                 job = self.js.start_job(
                     JobType.DOC_CHUNKING,
@@ -103,10 +96,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                 jobs.append(job)
 
         if len(jobs) == 0:
-            raise HTTPException(
-                detail="No files were processed or no job was started.",
-                status_code=400,
-            )
+            raise NoFilesProcessedError()
 
         return jobs
 
