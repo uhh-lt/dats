@@ -270,19 +270,12 @@ def _create_system_users(db: Session) -> None:
 
 
 def _create_weaviate_collections() -> None:
-    from core.doc.document_collection import DocumentCollection
-    from core.doc.image_collection import ImageCollection
-    from core.doc.sentence_collection import SentenceCollection
-    from modules.perspectives.aspect_collection import AspectCollection
-    from modules.perspectives.cluster_collection import ClusterCollection
+    from repos.vector.collection_base import BaseCollection
     from repos.vector.weaviate_repo import WeaviateRepo
 
     client = WeaviateRepo().get_client()
-    DocumentCollection.create_collection(client)
-    SentenceCollection.create_collection(client)
-    ImageCollection.create_collection(client)
-    AspectCollection.create_collection(client)
-    ClusterCollection.create_collection(client)
+    for collection in BaseCollection.all_collections():
+        collection.create_collection(client)
 
 
 # ==============================================================================

@@ -41,10 +41,9 @@ def create_project(
     current_user: UserORM = Depends(get_current_user),
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
-    db_obj = ProjectService().create_project(
+    result = ProjectService().create_project(
         db=db, create_dto=proj, creating_user_id=current_user.id
     )
-    result = ProjectRead.model_validate(db_obj)
     ws.emit_to_user(DATSEvent.PROJECT_CREATED, result, user_id=current_user.id)
     return result
 
@@ -170,7 +169,6 @@ def delete_project(
     # Capture the member ids and payload BEFORE deletion: the delete cascades the
     # membership rows, so the post-commit background task cannot re-read them.
     member_ids = [user.id for user in crud_project.read(db=db, id=project_id).users]
-    db_obj = ProjectService().delete_project(db=db, project_id=project_id)
-    result = ProjectRead.model_validate(db_obj)
+    result = ProjectService().delete_project(db=db, project_id=project_id)
     ws.emit_to_users(DATSEvent.PROJECT_DELETED, result, user_ids=member_ids)
     return result

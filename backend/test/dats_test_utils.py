@@ -235,6 +235,7 @@ def create_test_user(db: Session) -> UserORM:
 
 def create_test_project(db: Session, test_user: UserORM) -> ProjectORM:
     """Create a project for the test user."""
+    from core.project.project_crud import crud_project
     from core.project.project_dto import ProjectCreate
     from core.project.project_service import ProjectService
 
@@ -244,13 +245,14 @@ def create_test_project(db: Session, test_user: UserORM) -> ProjectORM:
     )
 
     ps = ProjectService()
-    project = ps.create_project(
+    project_read = ps.create_project(
         db=db,
         create_dto=project_dto,
         creating_user_id=test_user.id,
     )
 
     db.commit()
+    project = crud_project.read(db=db, id=project_read.id)
     db.refresh(project)
 
     return project
