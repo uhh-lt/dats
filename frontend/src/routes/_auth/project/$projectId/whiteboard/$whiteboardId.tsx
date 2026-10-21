@@ -1,7 +1,7 @@
 import { Icon } from "@components/icons";
 import { whiteboardQueries, WhiteboardView } from "@features/whiteboard";
 import { CircularProgress } from "@mui/material";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({
   staticData: {
@@ -20,11 +20,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whit
     whiteboardsByProjectOptions: whiteboardQueries.byProject(params.projectId),
     whiteboardDataOptions: whiteboardQueries.data(params.projectId, params.whiteboardId),
   }),
-  loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData(context.whiteboardsByProjectOptions),
-      context.queryClient.ensureQueryData(context.whiteboardDataOptions),
-    ]);
+  loader: async ({ context, params }) => {
+    const whiteboards = await context.queryClient.ensureQueryData(context.whiteboardsByProjectOptions);
+    if (!whiteboards[params.whiteboardId]) throw notFound();
+    await context.queryClient.ensureQueryData(context.whiteboardDataOptions);
   },
   pendingComponent: () => <CircularProgress />,
   component: WhiteboardView,

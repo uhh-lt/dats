@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
+import { filterSearchParams, sortingModelSearchParam } from "@core/filter";
 import { SentAnnotationAnalysisView } from "@features/sent-annotation-analysis";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { createFileRoute } from "@tanstack/react-router";
@@ -7,22 +7,8 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
 const sentenceAnnotationAnalysisSearchSchema = z.object({
-  [FILTER_PARAM]: z
-    .custom<string | MyFilter<SentAnnoColumns>>()
-    .default("")
-    .transform((value) => deserializeFilterFromSearchParam<SentAnnoColumns>(value, "root")),
-  [FILTER_EXPERT_MODE_PARAM]: z
-    .union([z.boolean(), z.enum(["true", "false"])])
-    .transform((value) => value === true || value === "true")
-    .default(false),
-  sortingModel: z
-    .array(
-      z.object({
-        id: z.string(),
-        desc: z.boolean(),
-      }),
-    )
-    .default([]),
+  ...filterSearchParams<SentAnnoColumns>(),
+  sortingModel: sortingModelSearchParam(),
   fetchSize: z.coerce.number().default(20),
 });
 
