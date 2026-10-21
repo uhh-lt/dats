@@ -1,6 +1,6 @@
 from loguru import logger
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc

@@ -14,14 +14,12 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
 from modules.eximport.folder.import_folders import import_folders_to_proj
+from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_exceptions import (
     ImportJobPreparationError,
     UnsupportedImportJobTypeError,
 )
-from modules.eximport.import_job_dto import (
-    ImportJobInput,
-    ImportJobType,
-)
+from modules.eximport.import_job_dto import ImportJobInput
 from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project.import_project import import_project
 from modules.eximport.project_metadata.import_project_metadata import (

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.doc_processing_steps import PROCESSING_JOBS
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO

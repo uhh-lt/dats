@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.doc.folder_dto import FolderType
+from core.doc.folder_enum import FolderType
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:

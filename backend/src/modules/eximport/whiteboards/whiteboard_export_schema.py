@@ -10,8 +10,8 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardBackgroundColorData,
     WhiteboardContent,
     WhiteboardNode,
-    WhiteboardNodeType,
 )
+from modules.whiteboard.whiteboard_enum import WhiteboardNodeType
 
 
 class SdocNodeDataForExport(WhiteboardBackgroundColorData):

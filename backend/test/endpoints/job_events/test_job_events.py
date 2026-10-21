@@ -19,13 +19,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from common.dats_event import DATSEvent
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
-from modules.eximport.export_job_dto import ExportJobInput, ExportJobType
-from systems.job_system.job_dto import Job, JobRead, JobStatus
+from modules.eximport.export_enum import ExportJobType
+from modules.eximport.export_job_dto import ExportJobInput
+from systems.job_system.job_dto import Job, JobRead
 from systems.job_system.job_handler import rq_job_handler
 from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import JobStatus
 from systems.websocket_system.websocket_dto import WebSocketEnvelope
 
 # ===========================================================================
@@ -145,7 +147,7 @@ class TestJobUpdatedEmission:
         """Jobs registered without publish_updates never emit JOB_UPDATED."""
         from pathlib import Path
 
-        from common.doc_type import DocType
+        from common.doc_type_enum import DocType
         from common.languages_enum import Language
         from modules.doc_processing.doc_processing_dto import ProcessingSettings
         from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput

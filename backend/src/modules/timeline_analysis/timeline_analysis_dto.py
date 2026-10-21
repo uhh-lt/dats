@@ -1,14 +1,17 @@
 from datetime import datetime
-from enum import Enum
 from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from modules.analysis.analysis_dto import DateGroupBy
+from modules.analysis.analysis_enum import DateGroupBy
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
+from modules.timeline_analysis.timeline_analysis_enum import (
+    TAAnnotationAggregationType,
+    TimelineAnalysisType,
+)
 from repos.db.dto_base import UpdateDTOBase
 from systems.search_system.filtering import Filter
 
@@ -21,19 +24,6 @@ class TimelineAnalysisResult(BaseModel):
     date: str = Field(description="The date.")
     data_ids: list[int] = Field(description="The data IDs used for provenance.")
     count: int = Field(description="The count / value used for plotting.")
-
-
-class TimelineAnalysisType(str, Enum):
-    DOCUMENT = "document"
-    SENT_ANNO = "sentence_annotation"
-    SPAN_ANNO = "span_annotation"
-    BBOX_ANNO = "bbox_annotation"
-
-
-class TAAnnotationAggregationType(str, Enum):
-    UNIT = "unit"
-    ANNOTATION = "annotation"
-    DOCUMENT = "document"
 
 
 class SdocTimelineAnalysisFilter(BaseModel):

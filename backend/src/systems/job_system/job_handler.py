@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from loguru import logger
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from config import conf
 from modules.doc_processing.doc_processing_pipeline import (
     handle_job_error,
@@ -10,8 +10,9 @@ from modules.doc_processing.doc_processing_pipeline import (
     handle_job_started,
 )
 from systems.job_system.cuda_utils import ensure_cuda_available
-from systems.job_system.job_dto import Job, JobInputBase, JobStatus
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_events import publish_job_update
+from systems.job_system.job_system_enum import JobStatus
 from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
 

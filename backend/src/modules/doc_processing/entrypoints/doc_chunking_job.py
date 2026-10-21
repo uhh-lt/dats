@@ -4,10 +4,11 @@ from pathlib import Path
 import pymupdf
 from loguru import logger
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from config import conf
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from modules.doc_processing.entrypoints.html_chunking_utils import (
     split_html_into_chunks,

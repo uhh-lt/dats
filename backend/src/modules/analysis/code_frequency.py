@@ -1,7 +1,7 @@
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM

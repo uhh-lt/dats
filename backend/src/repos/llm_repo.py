@@ -1,5 +1,4 @@
 import time
-from enum import Enum
 from typing import Generic, Type, TypeVar
 from uuid import uuid4
 
@@ -11,6 +10,7 @@ from pydantic import BaseModel
 
 from common.singleton_meta import SingletonMeta
 from config import conf
+from repos.llm_enum import ProviderType
 from repos.repo_base import RepoBase
 
 T = TypeVar("T", bound=BaseModel)
@@ -42,11 +42,6 @@ class LLMBatchChatResponse(Generic[T]):
     @property
     def is_error(self) -> bool:
         return self.error is not None
-
-
-class ProviderType(str, Enum):
-    LLM = "llm"
-    EMB = "emb"
 
 
 class LLMRepo(RepoBase, metaclass=SingletonMeta):

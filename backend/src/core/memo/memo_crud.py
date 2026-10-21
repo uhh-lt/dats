@@ -1,12 +1,8 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from core.memo.memo_dto import (
-    AttachedObjectType,
-    MemoCreateIntern,
-    MemoUpdate,
-    MemoUpdateBulk,
-)
+from core.memo.memo_dto import MemoCreateIntern, MemoUpdate, MemoUpdateBulk
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM

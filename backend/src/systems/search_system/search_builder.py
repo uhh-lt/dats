@@ -10,7 +10,7 @@ from sqlalchemy.sql._typing import (
 from sqlalchemy.sql.base import ReadOnlyColumnCollection
 from sqlalchemy.sql.selectable import Subquery
 
-from common.meta_type import MetaType
+from common.meta_type_enum import MetaType
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.project_metadata_orm import ProjectMetadataORM

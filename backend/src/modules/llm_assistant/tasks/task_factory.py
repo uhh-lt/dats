@@ -1,4 +1,4 @@
-from modules.llm_assistant.llm_assistant_job_dto import TaskType
+from modules.llm_assistant.llm_assistant_enum import TaskType
 from modules.llm_assistant.tasks.annotation_task import AnnotationTask
 from modules.llm_assistant.tasks.llm_assistant_task import LLMAssistantTask
 from modules.llm_assistant.tasks.metadata_extraction_task import (

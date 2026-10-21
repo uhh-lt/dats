@@ -19,8 +19,8 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisConceptForExport,
     TimelineAnalysisCreateIntern,
     TimelineAnalysisSettingsForExport,
-    TimelineAnalysisType,
 )
+from modules.timeline_analysis.timeline_analysis_enum import TimelineAnalysisType
 
 
 def import_timeline_analysis_to_proj(

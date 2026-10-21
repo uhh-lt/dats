@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.auth.authz_user import AuthzUser
 from modules.analysis.analysis_dto import (
     CodeFrequency,

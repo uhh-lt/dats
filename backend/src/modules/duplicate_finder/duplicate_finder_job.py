@@ -5,18 +5,14 @@ import torch
 from loguru import logger
 from pydantic import Field
 
-from common.doc_type import DocType
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobOutputBase,
-)
+from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_system_enum import EndpointGeneration
 
 sqlr = SQLRepo()
 BATCH_SIZE = 1024

@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -8,16 +7,14 @@ from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
+from modules.llm_assistant.llm_assistant_enum import (
+    ApproachType,
+    StrategyType,
+    TaskType,
+)
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # --- START INPUT ---
-
-
-class TaskType(str, Enum):
-    TAGGING = "TAGGING"
-    METADATA_EXTRACTION = "METADATA_EXTRACTION"
-    ANNOTATION = "ANNOTATION"
-    SENTENCE_ANNOTATION = "SENTENCE_ANNOTATION"
 
 
 class SpecificTaskParameters(BaseModel):
@@ -94,11 +91,6 @@ class LLMAssistantJobParameters(JobInputBase):
 # --- START APPROACH PARAMETERS ---
 
 
-class ApproachType(str, Enum):
-    LLM_ZERO_SHOT = "LLM_ZERO_SHOT"
-    LLM_FEW_SHOT = "LLM_FEW_SHOT"
-
-
 # Prompt template
 class LLMAssistantPromptTemplates(BaseModel):
     language: str = Field(description="The language of the prompt template")
@@ -135,14 +127,6 @@ class FewShotParams(SpecificApproachParameters):
 # --- END APPROACH PARAMETERS ---
 
 # --- START STRATEGY PARAMETERS ---
-
-
-class StrategyType(str, Enum):
-    TAGGING_DEFAULT = "TAGGING_DEFAULT"
-    METADATA_DEFAULT = "METADATA_DEFAULT"
-    SENTENCE_ANNOTATION_DEFAULT = "SENTENCE_ANNOTATION_DEFAULT"
-    NER_INLINE_TAGS = "NER_INLINE_TAGS"
-    CONTEXT_ANCHORED_FUZZY_MATCHING = "CONTEXT_ANCHORED_FUZZY_MATCHING"
 
 
 class SpecificStrategyParameters(BaseModel):

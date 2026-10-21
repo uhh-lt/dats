@@ -1,6 +1,4 @@
-from common.doc_type import (
-    DocType,
-)
+from common.doc_type_enum import DocType
 
 # This has to match doc_processing_pipeline!
 # This has to match job_type!

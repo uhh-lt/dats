@@ -13,7 +13,7 @@ from alembic import op
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from repos.filesystem_repo import FilesystemRepo

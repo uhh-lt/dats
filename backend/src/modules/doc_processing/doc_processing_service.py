@@ -5,8 +5,9 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_processing_steps import PROCESSING_JOBS
-from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.doc_type_utils import get_doc_type, is_archive_file, mime_type_supported
+from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM

@@ -1,4 +1,4 @@
-from modules.classifier.classifier_dto import ClassifierModel, ClassifierTask
+from modules.classifier.classifier_enum import ClassifierModel, ClassifierTask
 
 
 class UnsupportedClassifierJobError(Exception):

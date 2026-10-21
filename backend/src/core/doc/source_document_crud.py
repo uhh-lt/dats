@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentUpdate,

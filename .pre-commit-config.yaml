@@ -65,6 +65,11 @@ repos:
         entry: uv run --project backend python backend/lint/check_exceptions.py
         language: system
         files: ^backend/(src/.*\.py|lint/check_exceptions\.py)$
+      - id: lint-backend-enums
+        name: "Lint: Backend enum locations"
+        entry: uv run --project backend python backend/lint/check_enums.py
+        language: system
+        files: ^backend/(src/.*\.py|lint/check_enums\.py)$
       - id: lint-backend-core
         name: "Lint: Backend core layering"
         entry: uv run --project backend python backend/lint/check_core.py

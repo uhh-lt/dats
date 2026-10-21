@@ -1,4 +1,4 @@
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job

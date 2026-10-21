@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List, Tuple
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 
 
 class SwitchCaseBranchOperator:

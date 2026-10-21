@@ -2,7 +2,7 @@ from typing import TypedDict
 
 import pytest
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM

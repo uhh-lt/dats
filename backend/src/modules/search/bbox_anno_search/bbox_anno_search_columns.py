@@ -7,10 +7,10 @@ from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderType
+from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.tag_crud import crud_tag

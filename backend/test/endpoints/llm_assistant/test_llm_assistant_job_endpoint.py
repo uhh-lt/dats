@@ -6,10 +6,14 @@ from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
 from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
+from modules.llm_assistant.llm_assistant_enum import (
+    ApproachType,
+    StrategyType,
+    TaskType,
+)
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
     AnnotationParams,
-    ApproachType,
     DefaultStrategyParams,
     FewShotParams,
     FuzzyGroundingStrategyParams,
@@ -21,13 +25,12 @@ from modules.llm_assistant.llm_assistant_job_dto import (
     NERInlineTagStrategyParams,
     SentenceAnnotationLLMAssistantJobResult,
     SentenceAnnotationParams,
-    StrategyType,
     TaggingLLMAssistantJobResult,
     TaggingParams,
-    TaskType,
     ZeroShotParams,
 )
-from systems.job_system.job_dto import JobRead, JobStatus
+from systems.job_system.job_dto import JobRead
+from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import LLMAssistantProject
 

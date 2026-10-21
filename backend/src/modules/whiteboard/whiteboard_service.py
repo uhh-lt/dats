@@ -23,9 +23,9 @@ from modules.whiteboard.whiteboard_dto import (
     SpanAnnotationNodeData,
     WhiteboardData,
     WhiteboardNode,
-    WhiteboardNodeType,
     WhiteboardRead,
 )
+from modules.whiteboard.whiteboard_enum import WhiteboardNodeType
 
 
 class WhiteboardService(metaclass=SingletonMeta):

@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import distinct, func
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta

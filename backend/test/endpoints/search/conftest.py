@@ -20,11 +20,13 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
+from core.memo.memo_dto import MemoCreateIntern
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
@@ -283,7 +285,7 @@ def search_project(
     sdoc_one = project_with_sdoc["source_document"]
 
     # --- second source document ---
-    from common.doc_type import DocType
+    from common.doc_type_enum import DocType
     from core.doc.source_document_crud import crud_sdoc
     from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate

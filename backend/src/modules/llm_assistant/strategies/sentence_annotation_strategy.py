@@ -9,13 +9,12 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
 from core.user.user_crud import SYSTEM_USER_IDS
+from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
 from modules.llm_assistant.llm_assistant_job_dto import (
     DefaultStrategyParams,
     LLMAssistantPromptTemplates,
     SentenceAnnotationParams,
-    StrategyType,
 )
-from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from repos.llm_repo import LLMMessage
 

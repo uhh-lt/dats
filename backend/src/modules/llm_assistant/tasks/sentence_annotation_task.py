@@ -13,18 +13,16 @@ from core.user.user_crud import (
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_IDS,
 )
+from modules.llm_assistant.llm_assistant_enum import ApproachType, DataTag, TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
-    ApproachType,
     FewShotParams,
     LLMAssistantJobOutput,
     SentenceAnnotationLLMAssistantJobResult,
     SentenceAnnotationParams,
     SentenceAnnotationResult,
     SpecificTaskParameters,
-    TaskType,
 )
-from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.sentence_annotation_strategy import (
     LLMSentenceAnnotationResults,
     SentenceAnnotationStrategy,

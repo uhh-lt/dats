@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
-from core.memo.memo_dto import AttachedObjectType, MemoRead
+from core.memo.memo_dto import MemoRead
+from core.memo.memo_enum import AttachedObjectType
 from modules.search.memo_search.memo_search_columns import (
     MemoColumns,
     build_memo_subquery,

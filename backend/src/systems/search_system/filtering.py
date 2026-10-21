@@ -147,7 +147,7 @@ class FilterExpression(BaseModel, Generic[T]):
             or self.operator == AttachedObjectOperator.NOT_EQUALS
         ):
             from common.crud_enum import attached_object_type_to_crud
-            from core.memo.memo_dto import AttachedObjectType
+            from core.memo.memo_enum import AttachedObjectType
 
             assert isinstance(self.value, list) and len(self.value) == 2, (
                 f"Expected [type, id], got {self.value}"
@@ -210,7 +210,7 @@ class FilterExpression(BaseModel, Generic[T]):
         ):
             # Local imports: see resolve_ids above (circular import guard).
             from common.crud_enum import attached_object_type_to_crud
-            from core.memo.memo_dto import AttachedObjectType
+            from core.memo.memo_enum import AttachedObjectType
 
             assert isinstance(self.value, list) and len(self.value) == 2, (
                 f"Expected [type, name], got {self.value}"

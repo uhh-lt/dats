@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import dats_test_utils
-from common.doc_type import DocType
-from common.meta_type import MetaType
+from common.doc_type_enum import DocType
+from common.meta_type_enum import MetaType
 from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate

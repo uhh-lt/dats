@@ -5,16 +5,15 @@ from loguru import logger
 from pydantic import BaseModel, Field, create_model
 from sqlalchemy.orm import Session
 
-from common.meta_type import MetaType
+from common.meta_type_enum import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
+from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
 from modules.llm_assistant.llm_assistant_job_dto import (
     DefaultStrategyParams,
     LLMAssistantPromptTemplates,
     MetadataExtractionParams,
-    StrategyType,
 )
-from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 # ENGLISH

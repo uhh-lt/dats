@@ -2,7 +2,7 @@ from typing import TypedDict
 
 import pytest
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -10,7 +10,8 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data

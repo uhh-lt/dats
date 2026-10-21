@@ -2,11 +2,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from modules.search_view.search_view_dto import (
-    SearchEntityType,
     SearchViewCreateUnion,
     SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
+from modules.search_view.search_view_enum import SearchEntityType
 from modules.search_view.search_view_exceptions import InvalidSearchViewOrderError
 from modules.search_view.search_view_orm import SearchViewORM
 from repos.db.crud_base import SQLCRUDBase

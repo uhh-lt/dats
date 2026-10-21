@@ -3,7 +3,8 @@ from typing import TypedDict
 import pytest
 
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.project.project_orm import ProjectORM
 

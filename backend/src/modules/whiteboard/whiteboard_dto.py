@@ -1,5 +1,4 @@
 from datetime import datetime
-from enum import Enum
 from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,15 +10,16 @@ from core.code.code_dto import CodeRead
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
 from core.tag.tag_dto import TagRead
+from modules.whiteboard.whiteboard_enum import (
+    BorderStyle,
+    HorizontalAlign,
+    VerticalAlign,
+    WhiteboardEdgeType,
+    WhiteboardNodeType,
+)
 from repos.db.dto_base import UpdateDTOBase
 
 # --- DATA START ---
-
-
-class BorderStyle(str, Enum):
-    SOLID = "solid"
-    DASHED = "dashed"
-    DOTTED = "dotted"
 
 
 class WhiteboardBorderData(BaseModel):
@@ -32,18 +32,6 @@ class WhiteboardBorderData(BaseModel):
 class WhiteboardBackgroundColorData(BaseModel):
     bgcolor: str = Field(description="Background color of the text")
     bgalpha: float | None = Field(description="Background color alpha of the text")
-
-
-class HorizontalAlign(str, Enum):
-    LEFT = "left"
-    CENTER = "center"
-    RIGHT = "right"
-
-
-class VerticalAlign(str, Enum):
-    TOP = "top"
-    CENTER = "center"
-    BOTTOM = "bottom"
 
 
 class WhiteboardTextData(BaseModel):
@@ -65,19 +53,6 @@ class WhiteboardTextData(BaseModel):
 
 
 # --- NODES START ---
-
-
-class WhiteboardNodeType(str, Enum):
-    TEXT = "text"
-    NOTE = "note"
-    BORDER = "border"
-    SDOC = "sdoc"
-    MEMO = "memo"
-    CODE = "code"
-    TAG = "tag"
-    SPAN_ANNOTATION = "spanAnnotation"
-    SENTENCE_ANNOTATION = "sentenceAnnotation"
-    BBOX_ANNOTATION = "bboxAnnotation"
 
 
 class TextNodeData(WhiteboardTextData):
@@ -213,13 +188,6 @@ class WhiteboardNode(BaseModel):
 
 class WhiteboardEdgeLabelData(WhiteboardBackgroundColorData, WhiteboardTextData):
     pass
-
-
-class WhiteboardEdgeType(str, Enum):
-    BEZIER = "bezier"
-    STRAIGHT = "straight"
-    SIMPLEBEZIER = "simplebezier"
-    SMOOTHSTEP = "smoothstep"
 
 
 class WhiteboardEdgeData(BaseModel):

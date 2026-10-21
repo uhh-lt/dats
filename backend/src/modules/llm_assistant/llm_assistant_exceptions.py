@@ -1,4 +1,4 @@
-from modules.llm_assistant.llm_assistant_job_dto import TaskType
+from modules.llm_assistant.llm_assistant_enum import TaskType
 
 
 class LLMAssistantJobPreparationError(Exception):

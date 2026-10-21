@@ -9,7 +9,6 @@ from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
-    AttachedObjectType,
     MemoCreate,
     MemoCreateIntern,
     MemoInDB,
@@ -17,6 +16,7 @@ from core.memo.memo_dto import (
     MemoUpdate,
     MemoUpdateBulk,
 )
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_generation_service import MemoGenerationService
 from core.memo.memo_orm import MemoORM
 from core.memo.memo_utils import get_memo_read_dto_from_orm, get_object_memos

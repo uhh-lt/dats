@@ -7,13 +7,12 @@ from sqlalchemy.orm import Session
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
+from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
 from modules.llm_assistant.llm_assistant_job_dto import (
     DocumentBasedTaskParams,
     LLMAssistantPromptTemplates,
     SpecificStrategyParameters,
-    StrategyType,
 )
-from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.prompts.system_prompt import system_prompt_templates
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 from repos.llm_repo import LLMMessage

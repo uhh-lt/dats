@@ -4,16 +4,11 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.auth.authz_user import AuthzUser
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import (
-    FolderCreate,
-    FolderRead,
-    FolderType,
-    FolderUpdate,
-    FolderUpdateBulk,
-)
+from core.doc.folder_dto import FolderCreate, FolderRead, FolderUpdate, FolderUpdateBulk
+from core.doc.folder_enum import FolderType
 from core.doc.folder_service import FolderService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 

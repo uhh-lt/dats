@@ -1,11 +1,13 @@
 from datetime import date as date_type
 from datetime import datetime
-from enum import Enum
 from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from modules.analysis.analysis_dto import DateGroupBy
+from modules.analysis.analysis_enum import DateGroupBy
+from modules.concept_over_time_analysis.cota_enum import (
+    DimensionalityReductionAlgorithm,
+)
 from repos.db.dto_base import UpdateDTOBase
 from systems.job_system.job_dto import JobInputBase, JobRead
 
@@ -54,12 +56,6 @@ class COTATimelineSettings(BaseModel):
     threshold: float = Field(
         description="Threshold of the ConceptOverTimeAnalysis", default=0.9
     )
-
-
-class DimensionalityReductionAlgorithm(str, Enum):
-    UMAP = "umap"
-    PCA = "pca"
-    TSNE = "tsne"
 
 
 class COTATrainingSettings(BaseModel):

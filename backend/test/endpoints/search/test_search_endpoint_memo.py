@@ -3,7 +3,8 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from core.memo.memo_dto import AttachedObjectType, MemoRead
+from core.memo.memo_dto import MemoRead
+from core.memo.memo_enum import AttachedObjectType
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.search_dto import Page, QueryRequest
 from systems.search_system.column_info import ColumnInfo

@@ -2,7 +2,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM

@@ -9,11 +9,8 @@ from sqlalchemy.orm import Session
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.api_key_crud import crud_api_key
-from core.auth.api_key_dto import (
-    ApiKeyCreatedResponse,
-    ApiKeyRead,
-    ExpiryDuration,
-)
+from core.auth.api_key_dto import ApiKeyCreatedResponse, ApiKeyRead
+from core.auth.auth_enum import ExpiryDuration
 from core.auth.security import generate_api_key, hash_api_key
 from core.user.user_orm import UserORM
 from systems.websocket_system.websocket_dependency import WebsocketEmitter

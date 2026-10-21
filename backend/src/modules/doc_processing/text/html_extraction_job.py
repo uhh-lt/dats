@@ -5,8 +5,8 @@ import mammoth
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
-from common.doc_type import DocType
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead

@@ -1,31 +1,19 @@
 from datetime import datetime
-from enum import Enum
 from typing import Any, ClassVar, Literal, Self
 
 from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from modules.classifier.classifier_enum import (
+    ClassifierAveraging,
+    ClassifierModel,
+    ClassifierSignalStrength,
+    ClassifierTask,
+)
 from repos.db.dto_base import UpdateDTOBase
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # ----- GENERIC DTOS -----
-
-
-class ClassifierModel(str, Enum):
-    DOCUMENT = "document"
-    SENTENCE = "sentence"
-    SPAN = "span"
-
-
-class ClassifierTask(str, Enum):
-    TRAINING = "training"
-    EVALUATION = "evaluation"
-    INFERENCE = "inference"
-
-
-class ClassifierAveraging(str, Enum):
-    MICRO = "micro"
-    MACRO = "macro"
 
 
 class ClassifierBaseModelOption(BaseModel):
@@ -144,12 +132,6 @@ class ClassifierDataset(ClassifierData):
 
 
 # ----- DATASET STATISTICS DTOS -----
-
-
-class ClassifierSignalStrength(str, Enum):
-    WEAK = "weak"
-    OK = "ok"
-    STRONG = "strong"
 
 
 class ClassifierDatasetSelectionParams(BaseModel):

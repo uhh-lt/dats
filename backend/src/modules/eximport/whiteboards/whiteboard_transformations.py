@@ -28,8 +28,8 @@ from modules.whiteboard.whiteboard_dto import (
     TagNodeData,
     WhiteboardContent,
     WhiteboardNode,
-    WhiteboardNodeType,
 )
+from modules.whiteboard.whiteboard_enum import WhiteboardNodeType
 
 
 def transform_content_for_export(

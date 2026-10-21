@@ -1,4 +1,4 @@
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data

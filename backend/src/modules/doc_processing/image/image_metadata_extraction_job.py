@@ -2,8 +2,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from common.doc_type import DocType
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta

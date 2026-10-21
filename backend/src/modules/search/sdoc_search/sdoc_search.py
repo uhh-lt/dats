@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
 from core.doc.folder_orm import FolderORM

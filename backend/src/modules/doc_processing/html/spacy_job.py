@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import yake
 
-from common.doc_type import DocType
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno

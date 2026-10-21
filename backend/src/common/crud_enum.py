@@ -12,7 +12,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta

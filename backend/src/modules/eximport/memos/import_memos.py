@@ -11,7 +11,8 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
+from core.memo.memo_dto import MemoCreateIntern
+from core.memo.memo_enum import AttachedObjectType
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from modules.eximport.import_exceptions import ImportMemosError

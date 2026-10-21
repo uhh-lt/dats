@@ -10,10 +10,10 @@ from modules.search_view.search_view_crud import crud_search_view
 from modules.search_view.search_view_dto import (
     BBoxSearchViewCreate,
     MemoSearchViewCreate,
-    SearchViewLayout,
     SentenceSearchViewCreate,
     SpanSearchViewCreate,
 )
+from modules.search_view.search_view_enum import SearchViewLayout
 from modules.search_view.search_view_orm import SearchViewORM
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering import Filter, FilterExpression, LogicalOperator

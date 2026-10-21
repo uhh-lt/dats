@@ -1,11 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from core.memo.memo_dto import (
-    AttachedObjectType,
-    MemoCreate,
-    MemoRead,
-)
+from core.memo.memo_dto import MemoCreate, MemoRead
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 
 from .conftest import MemoProjectState

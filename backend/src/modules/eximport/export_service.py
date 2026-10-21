@@ -11,12 +11,9 @@ from modules.eximport.bbox_annotations.export_bbox_annotations import (
 )
 from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.cota.export_cota import export_all_cota, export_selected_cota
+from modules.eximport.export_enum import ExportJobType
 from modules.eximport.export_exceptions import UnsupportedExportJobTypeError
-from modules.eximport.export_job_dto import (
-    ExportJobInput,
-    ExportJobOutput,
-    ExportJobType,
-)
+from modules.eximport.export_job_dto import ExportJobInput, ExportJobOutput
 from modules.eximport.folder.export_folders import export_all_folders
 from modules.eximport.memos.export_memos import export_all_memos, export_selected_memos
 from modules.eximport.project.export_project import export_project

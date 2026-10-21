@@ -2,7 +2,8 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from fastapi.testclient import TestClient
 
-from core.auth.api_key_dto import ApiKeyCreatedResponse, ApiKeyRead, ExpiryDuration
+from core.auth.api_key_dto import ApiKeyCreatedResponse, ApiKeyRead
+from core.auth.auth_enum import ExpiryDuration
 
 # ===========================================================================
 # CREATE API KEY (PUT /api-keys) TESTS

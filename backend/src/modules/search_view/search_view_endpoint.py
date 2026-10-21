@@ -6,13 +6,13 @@ from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.search_view.search_view_crud import crud_search_view
 from modules.search_view.search_view_dto import (
-    SearchEntityType,
     SearchViewCreateUnion,
     SearchViewReadUnion,
     SearchViewReorder,
     SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
+from modules.search_view.search_view_enum import SearchEntityType
 from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 

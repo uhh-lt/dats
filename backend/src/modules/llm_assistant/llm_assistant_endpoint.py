@@ -4,14 +4,16 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
+from modules.llm_assistant.llm_assistant_enum import (
+    ApproachType,
+    StrategyType,
+    TaskType,
+)
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
-    ApproachType,
     LLMAssistantJobParameters,
     LLMAssistantPromptTemplates,
     StrategyInfo,
-    StrategyType,
-    TaskType,
 )
 from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 

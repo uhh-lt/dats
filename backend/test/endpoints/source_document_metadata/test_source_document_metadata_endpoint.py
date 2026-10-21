@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from common.meta_type import MetaType
+from common.meta_type_enum import MetaType
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataRead,
