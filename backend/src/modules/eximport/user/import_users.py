@@ -6,12 +6,8 @@ from core.project.project_crud import crud_project
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from modules.eximport.import_exceptions import ImportUsersError
 from modules.eximport.user.user_export_schema import UserExportCollection
-
-
-class ImportUsersError(Exception):
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing users: {errors}")
 
 
 def import_users_to_proj(

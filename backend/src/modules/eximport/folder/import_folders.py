@@ -8,14 +8,7 @@ from modules.eximport.folder.folder_export_schema import (
     FolderExportCollection,
     FolderExportSchema,
 )
-
-
-class ImportFoldersError(Exception):
-    """Exception raised when folder import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing folders: {errors}")
-        self.errors = errors
+from modules.eximport.import_exceptions import ImportFoldersError
 
 
 class FolderImporter:

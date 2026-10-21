@@ -1,9 +1,7 @@
 import math
 from collections import namedtuple
 
-
-class InvalidPage(Exception):
-    pass
+from systems.search_system.search_system_exceptions import InvalidPage
 
 
 def apply_pagination(query, page_number=None, page_size=None):

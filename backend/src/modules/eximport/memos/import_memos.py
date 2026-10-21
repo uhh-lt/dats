@@ -14,15 +14,8 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
+from modules.eximport.import_exceptions import ImportMemosError
 from modules.eximport.memos.memo_export_schema import MemoExportCollection
-
-
-class ImportMemosError(Exception):
-    """Exception raised when memo import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing memos: {errors}")
-        self.errors = errors
 
 
 class MemoCreateData(TypedDict):

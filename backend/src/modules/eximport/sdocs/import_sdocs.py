@@ -28,6 +28,7 @@ from core.tag.tag_crud import crud_tag
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
+from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
@@ -37,11 +38,6 @@ from repos.vector.weaviate_repo import WeaviateRepo
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
-
-
-class ImportSourceDocumentsError(Exception):
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing source documents: {errors}")
 
 
 def import_sdocs_to_proj(

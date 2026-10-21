@@ -8,15 +8,11 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from modules.eximport.import_exceptions import ImportSpanAnnotationsError
 from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
     SpanAnnotationExportSchema,
 )
-
-
-class ImportSpanAnnotationsError(Exception):
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing span annotations: {errors}")
 
 
 def import_span_annotations_to_proj(

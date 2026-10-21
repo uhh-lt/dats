@@ -4,6 +4,7 @@ from common.languages_enum import Language
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.doc_processing_exceptions import LanguageNotSupportedError
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.ray.ray_repo import RayRepo
@@ -12,13 +13,6 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
-
-
-class LanguageNotSupportedError(Exception):
-    def __init__(self, detected_language: str) -> None:
-        super().__init__(
-            f"The detected language '{detected_language}' is not supported by DATS!"
-        )
 
 
 class TextLanguageDetectionJobInput(SdocProcessingJobInput):

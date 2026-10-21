@@ -8,17 +8,11 @@ from core.annotation.sentence_annotation_dto import SentenceAnnotationCreateInte
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from modules.eximport.import_exceptions import ImportSentenceAnnotationsError
 from modules.eximport.sent_annotations.sentence_annotations_export_schema import (
     SentenceAnnotationExportCollection,
     SentenceAnnotationExportSchema,
 )
-
-
-class ImportSentenceAnnotationsError(Exception):
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(
-            f"Errors occurred while importing sentence annotations: {errors}"
-        )
 
 
 def import_sentence_annotations_to_proj(

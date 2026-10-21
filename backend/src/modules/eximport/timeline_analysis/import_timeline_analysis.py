@@ -4,6 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from modules.eximport.import_exceptions import ImportTimelineAnalysisError
 from modules.eximport.timeline_analysis.timeline_analysis_export_schema import (
     TimelineAnalysisExportCollection,
 )
@@ -20,14 +21,6 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisSettingsForExport,
     TimelineAnalysisType,
 )
-
-
-class ImportTimelineAnalysisError(Exception):
-    """Exception raised when timeline analysis import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing timeline analyses: {errors}")
-        self.errors = errors
 
 
 def import_timeline_analysis_to_proj(

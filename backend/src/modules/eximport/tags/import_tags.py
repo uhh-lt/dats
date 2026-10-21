@@ -4,16 +4,9 @@ from sqlalchemy.orm import Session
 
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
+from modules.eximport.import_exceptions import ImportTagsError
 from modules.eximport.tags.tag_export_schema import TagExportCollection, TagExportSchema
 from utils.color_utils import get_next_color
-
-
-class ImportTagsError(Exception):
-    """Exception raised when tag import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing tags: {errors}")
-        self.errors = errors
 
 
 class TagImporter:

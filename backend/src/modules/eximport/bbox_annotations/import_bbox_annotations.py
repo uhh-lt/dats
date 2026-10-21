@@ -12,11 +12,7 @@ from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportCollection,
     BBoxAnnotationExportSchema,
 )
-
-
-class ImportBBoxAnnotationsError(Exception):
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing bbox annotations: {errors}")
+from modules.eximport.import_exceptions import ImportBBoxAnnotationsError
 
 
 def import_bbox_annotations_to_proj(
