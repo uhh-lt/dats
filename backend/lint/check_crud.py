@@ -13,7 +13,8 @@ Rules (the rule id is printed with every violation):
     crud-class       Exactly one top-level class whose name starts with 'CRUD'.
     crud-base        The CRUD class derives from the base class of its file kind (see above).
     singleton        A module-level singleton `crud_<name> = CRUD<...>(...)` follows the class.
-    method-verb      Public method names start with an allowed verb (ALLOWED_VERBS below);
+    method-verb      Public method names start with an allowed verb (ALLOWED_VERBS below;
+                     a new verb is added there and in backend-crud.instructions.md);
                      'get' and 'find' are forbidden (use 'read' / 'search'); embedding and
                      elastic CRUDs must not use 'add' / 'remove' (use 'create' / 'delete').
     method-order     Public methods are ordered create -> read -> update -> delete -> other.
@@ -105,6 +106,17 @@ def crud_kind(path: Path) -> CrudKind:
     if path.name.endswith("_elastic_crud.py"):
         return ELASTIC
     return SQL
+
+
+def unknown_verb_message(verb: str) -> str:
+    """How to fix a method whose verb is not in ALLOWED_VERBS."""
+    return (
+        f"Verb '{verb}' is not allowed. Rename the method so it starts with an "
+        f"existing verb: {', '.join(GROUPS[:4])} for the basic operations, or one of "
+        f"the OTHER verbs: {', '.join(OTHER_VERBS)}. Only if none of them fits, add "
+        f"the new verb with a comment to OTHER_VERBS in backend/lint/check_crud.py "
+        f"and to the Verbs rule in .github/instructions/backend-crud.instructions.md."
+    )
 
 
 def method_verb(name: str) -> str:
@@ -286,7 +298,7 @@ def check_source(path: Path, source: str) -> list[Violation]:
                     p,
                     m.lineno,
                     "method-verb",
-                    f"Verb '{v}' is not allowed (allowed: {', '.join(ALLOWED_VERBS)}).",
+                    unknown_verb_message(v),
                     c,
                     m.name,
                 )

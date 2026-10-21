@@ -269,6 +269,17 @@ def test_check_crud_violation_names_file_class_method_and_rule() -> None:
     assert "[method-verb] CRUDCode.get_by_name:" in str(violation)
 
 
+def test_check_crud_unknown_verb_explains_the_fix() -> None:
+    """An unknown verb points to the existing verbs and to where a new one is added."""
+    source = VALID_SQL.replace("def read_by_name(", "def fetch_by_name(")
+    (violation,) = [v for v in run(source) if v.rule == "method-verb"]
+    message = str(violation)
+    assert "Verb 'fetch' is not allowed" in message
+    assert "read" in message and "duplicate" in message
+    assert "OTHER_VERBS in backend/lint/check_crud.py" in message
+    assert "backend-crud.instructions.md" in message
+
+
 def test_check_crud_main_checks_only_crud_files(tmp_path: Path) -> None:
     """Files passed on the command line that are no CRUD files are ignored; CRUD files are checked."""
     other = tmp_path / "code_service.py"
