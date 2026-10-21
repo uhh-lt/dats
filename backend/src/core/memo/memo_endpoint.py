@@ -17,7 +17,7 @@ from core.memo.memo_dto import (
     MemoUpdate,
     MemoUpdateBulk,
 )
-from core.memo.memo_generation_service import generate_memo_llm
+from core.memo.memo_generation_service import MemoGenerationService
 from core.memo.memo_orm import MemoORM
 from core.memo.memo_utils import get_memo_read_dto_from_orm, get_object_memos
 from repos.db.sql_exceptions import NoSuchElementError
@@ -355,4 +355,6 @@ def generate_memo_suggestion(
 
     authz_user.assert_in_project(project_id=project_id)
 
-    return generate_memo_llm(attached_object, db, model=model)
+    return MemoGenerationService().generate_memo_suggestion(
+        db=db, obj=attached_object, model=model
+    )

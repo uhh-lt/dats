@@ -19,6 +19,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
 from core.memo.memo_orm import MemoORM
+from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
@@ -36,11 +37,12 @@ def _create_project(db_session, user: UserORM, title: str) -> ProjectORM:
     (create_test_project hardcodes the title, which collides with the fixture's
     project via the ix_project_title unique constraint.)
     """
-    return ProjectService().create_project(
+    project = ProjectService().create_project(
         db=db_session,
         create_dto=ProjectCreate(title=title, description="Project for memo tests"),
         creating_user_id=user.id,
     )
+    return crud_project.read(db=db_session, id=project.id)
 
 
 def _create_memo(

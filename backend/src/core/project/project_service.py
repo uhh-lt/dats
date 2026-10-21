@@ -2,14 +2,10 @@ from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.code.code_crud import crud_code
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
-from core.project.project_dto import ProjectCreate
-from core.project.project_orm import ProjectORM
+from core.project.project_dto import ProjectCreate, ProjectRead
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_TRAINED_ID,
@@ -17,11 +13,10 @@ from core.user.user_crud import (
     SYSTEM_USER_ID,
     crud_user,
 )
-from core.user.user_orm import UserORM
-from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
-from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
+from core.user.user_dto import UserRead
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_service import JobService
 
@@ -36,13 +31,13 @@ class ProjectService(metaclass=SingletonMeta):
         cls.js = JobService()
         return super(ProjectService, cls).__new__(cls)
 
-    def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserORM:
+    def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserRead:
         crud_project.associate_user(db=db, project_id=project_id, user_id=user_id)
-        return crud_user.read(db=db, id=user_id)
+        return UserRead.model_validate(crud_user.read(db=db, id=user_id))
 
     def create_project(
-        self, db: Session, create_dto: ProjectCreate, creating_user_id: int
-    ) -> ProjectORM:
+        self, *, db: Session, create_dto: ProjectCreate, creating_user_id: int
+    ) -> ProjectRead:
         # 1) create the project
         proj = crud_project.create(db=db, create_dto=create_dto)
         project_id = proj.id
@@ -78,28 +73,16 @@ class ProjectService(metaclass=SingletonMeta):
         crud_sdoc_elastic.index.create_index(client=client, project_id=project_id)
 
         # 8) create weaviate tenants for this project
-        from core.doc.document_collection import DocumentCollection
-        from core.doc.image_collection import ImageCollection
-        from core.doc.sentence_collection import SentenceCollection
-        from modules.perspectives.aspect_collection import AspectCollection
-        from modules.perspectives.cluster_collection import ClusterCollection
-
         client = self.weaviate.get_client()
-        DocumentCollection.create_tenant(client, project_id)
-        SentenceCollection.create_tenant(client, project_id)
-        ImageCollection.create_tenant(client, project_id)
-        AspectCollection.create_tenant(client, project_id)
-        ClusterCollection.create_tenant(client, project_id)
+        for collection in BaseCollection.all_collections():
+            collection.create_tenant(client, project_id)
 
-        # 8) re-load fresh instance to avoid detachment
-        fresh = db.get(ProjectORM, project_id)
-        if fresh is None:
-            raise ValueError("Failed to reload freshly created project from DB")
-        return fresh
+        # 9) re-load a fresh instance to avoid detachment
+        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
-    def delete_project(self, db: Session, *, project_id: int) -> ProjectORM:
+    def delete_project(self, *, db: Session, project_id: int) -> ProjectRead:
         # 1) delete the project and all connected data via cascading delete
-        proj_db_obj = crud_project.delete(db=db, id=project_id)
+        result = ProjectRead.model_validate(crud_project.delete(db=db, id=project_id))
 
         # 2) delete the files from filesystem
         self.fsr.purge_project_data(project_id=project_id)
@@ -108,16 +91,12 @@ class ProjectService(metaclass=SingletonMeta):
         client = self.es_repo.get_client()
         crud_sdoc_elastic.index.delete_index(client=client, project_id=project_id)
 
-        # 4) delete weaviate embeddings and related search indices for this project
+        # 4) delete weaviate embeddings (the tenants of this project)
         client = self.weaviate.get_client()
-        # remove all vector embeddings stored in Weaviate
-        crud_document_embedding.delete_by_project(client=client, project_id=project_id)
-        crud_image_embedding.delete_by_project(client=client, project_id=project_id)
-        crud_sentence_embedding.delete_by_project(client=client, project_id=project_id)
-        crud_aspect_embedding.delete_by_project(client=client, project_id=project_id)
-        crud_cluster_embedding.delete_by_project(client=client, project_id=project_id)
+        for collection in BaseCollection.all_collections():
+            collection.delete_tenant(client, project_id)
 
         # 5) delete redis entries for this project
         self.js.remove_jobs_by_project(project_id=project_id)
 
-        return proj_db_obj
+        return result

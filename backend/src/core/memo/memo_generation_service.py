@@ -1,8 +1,11 @@
+from collections.abc import Callable
+
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from common.doc_type import DocType
+from common.singleton_meta import SingletonMeta
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -13,165 +16,136 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from modules.llm_assistant.prompts.image_captioning_prompt import (
-    IMG_CAPTION_USER_PROMPT,
-)
 from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
 from utils.image_utils import image_to_base64, load_image
+
+MEMO_GEN_PROMPT = "Don't use imperative form. Generate a concise, 1-2 sentence helpful memo about the following object:\n\n{obj_summary}"
+MEMO_IMAGE_PROMPT = "Create a brief one sentence image description. If you recognize any person or other named entities, use their names. Return the description in a single line without any new lines or special characters. Do not include any additional text or explanations. The description should be concise and to the point, focusing on the main subject of the image. Avoid using overly complex language or jargon."
+
+MemoObject = (
+    SourceDocumentORM
+    | TagORM
+    | CodeORM
+    | ProjectORM
+    | BBoxAnnotationORM
+    | SentenceAnnotationORM
+    | SpanAnnotationORM
+    | SpanGroupORM
+)
 
 
 class LLMMemoResult(BaseModel):
     memo: str
 
 
-def summarize_sdoc(
-    obj: SourceDocumentORM,
-    db: Session,
-) -> tuple[bool, str]:
-    sdoc_data = crud_sdoc_data.read(db=db, id=obj.id)
-    if sdoc_data is None:
-        raise ValueError("SourceDocumentData not found")
-    if obj.doctype == DocType.text:
-        return False, "".join(sdoc_data.sentences)
-    elif obj.doctype == DocType.image:
-        path = FilesystemRepo().get_path_to_sdoc_file(
-            sdoc=SourceDocumentRead.model_validate(obj),
-            webp=False,
-            thumbnail=False,
-        )
-        image = load_image(path)
-        base64_image = image_to_base64(image)
-        return True, base64_image
-    else:
-        raise NotImplementedError(f"Can't summarize this DocType: {obj.doctype}")
+class MemoGenerationService(metaclass=SingletonMeta):
+    def __new__(cls, *args, **kwargs):
+        cls.fsr: FilesystemRepo = FilesystemRepo()
+        cls.llm: LLMRepo = LLMRepo()
+        # Each summary function returns (is_image, summary): the text summary or
+        # the base64 encoded image of the object.
+        cls.summary_function_for_type: dict[type, Callable[..., tuple[bool, str]]] = {
+            SourceDocumentORM: cls._summarize_sdoc,
+            TagORM: cls._summarize_tag,
+            CodeORM: cls._summarize_code,
+            ProjectORM: cls._summarize_project,
+            BBoxAnnotationORM: cls._summarize_bbox_anno,
+            SentenceAnnotationORM: cls._summarize_sent_anno,
+            SpanAnnotationORM: cls._summarize_span_anno,
+        }
+        return super(MemoGenerationService, cls).__new__(cls)
 
+    def generate_memo_suggestion(
+        self, *, db: Session, obj: MemoObject, model: str
+    ) -> str:
+        logger.info("Started Memo Generation (LLM)")
+        # 1) build the summary of the object
+        summary_fn = self.summary_function_for_type.get(type(obj))
+        if summary_fn is None:
+            raise NotImplementedError(
+                f"AttachedObjectType is not supported: {type(obj)}"
+            )
+        is_image, obj_summary = summary_fn(self, db=db, obj=obj)
 
-def summarize_tag(
-    obj: TagORM,
-    db=None,
-) -> tuple[bool, str]:
-    return (
-        False,
-        f'Document Tag with name "{obj.name}" and description "{obj.description}"',
-    )
+        # 2) send it to the LLM
+        if is_image:
+            caption, _ = self.llm.vlm_chat(
+                model=model, user_prompt=MEMO_IMAGE_PROMPT, b64_images=[obj_summary]
+            )
+            return caption.strip()
 
-
-def summarize_code(
-    obj: CodeORM,
-    db: Session,
-) -> tuple[bool, str]:
-    return (
-        False,
-        f'Code used for classification with name "{obj.name}" and description "{obj.description}"',
-    )
-
-
-def summarize_project(
-    obj: ProjectORM,
-    db=None,
-) -> tuple[bool, str]:
-    return (
-        False,
-        f'Project with title "{obj.title}" and description "{obj.description}"',
-    )
-
-
-def summarize_bbox_anno(
-    obj: BBoxAnnotationORM,
-    db: Session,
-) -> tuple[bool, str]:
-    path = FilesystemRepo().get_path_to_sdoc_file(
-        sdoc=SourceDocumentRead.model_validate(obj.annotation_document.source_document),
-        webp=False,
-        thumbnail=False,
-    )
-    image = load_image(path)
-    cropped_image = image.crop((obj.x_min, obj.y_min, obj.x_max, obj.y_max))
-    cropped_image_b64 = image_to_base64(cropped_image)
-    return True, cropped_image_b64
-
-
-def summarize_sent_anno(
-    obj: SentenceAnnotationORM,
-    db: Session,
-) -> tuple[bool, str]:
-    sdoc_data = crud_sdoc_data.read(
-        db=db, id=obj.annotation_document.source_document_id
-    )
-    return (
-        False,
-        f'Annotation with code title "{obj.code.name}", code description "{obj.code.description}" and the following content: {sdoc_data.sentences[obj.sentence_id_start : obj.sentence_id_end + 1]}',
-    )
-
-
-def summarize_span_anno(
-    obj: SpanAnnotationORM,
-    db=None,
-) -> tuple[bool, str]:
-    return (
-        False,
-        f'Annotation with code title "{obj.code.name}", code description "{obj.code.description}" and the following content: {obj.span_text.text}',
-    )
-
-
-def summarize_span_group(
-    obj: SpanGroupORM,
-    db=None,
-) -> tuple[bool, str]:
-    raise NotImplementedError(f"AttachedObjectType is not supported: {type(obj)}")
-
-
-SUMMARY_FUNCTIONS = {
-    SourceDocumentORM: summarize_sdoc,
-    TagORM: summarize_tag,
-    CodeORM: summarize_code,
-    ProjectORM: summarize_project,
-    BBoxAnnotationORM: summarize_bbox_anno,
-    SentenceAnnotationORM: summarize_sent_anno,
-    SpanAnnotationORM: summarize_span_anno,
-    SpanGroupORM: summarize_span_group,
-}
-MEMO_GEN_PROMPT = "Don't use imperative form. Generate a concise, 1-2 sentence helpful memo about the following object:\n\n{obj_summary}"
-
-
-def generate_memo_llm(
-    obj: (
-        SourceDocumentORM
-        | TagORM
-        | CodeORM
-        | ProjectORM
-        | BBoxAnnotationORM
-        | SentenceAnnotationORM
-        | SpanAnnotationORM
-        | SpanGroupORM
-    ),
-    db: Session,
-    model: str,
-) -> str:
-    # 1. Update job description
-    msg = "Started Memo Generation (LLM)"
-    logger.info(msg)
-    # 2. Build the prompt for the memo suggestion
-    summary_fn = SUMMARY_FUNCTIONS.get(type(obj))
-    if summary_fn is not None:
-        isImage, obj_summary = summary_fn(obj, db)
-    else:
-        raise NotImplementedError(f"AttachedObjectType is not supported: {type(obj)}")
-
-    # 3. Send to LLM for processing
-    if isImage:
-        caption, _ = LLMRepo().vlm_chat(
-            model=model, user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[obj_summary]
-        )
-        return caption.strip()
-    else:
-        response = LLMRepo().llm_chat(
+        response = self.llm.llm_chat(
             model=model,
             system_prompt="You are a helpful assistant generating memos.",
             user_prompt=MEMO_GEN_PROMPT.format(obj_summary=obj_summary),
             response_model=LLMMemoResult,
         )
         logger.info(f"Got chat response for object ID {obj.id}! Response={response}")
-
         return response.memo.strip()
+
+    def _summarize_sdoc(
+        self, *, db: Session, obj: SourceDocumentORM
+    ) -> tuple[bool, str]:
+        if obj.doctype == DocType.text:
+            sdoc_data = crud_sdoc_data.read(db=db, id=obj.id)
+            return False, "".join(sdoc_data.sentences)
+        if obj.doctype == DocType.image:
+            path = self.fsr.get_path_to_sdoc_file(
+                sdoc=SourceDocumentRead.model_validate(obj),
+                webp=False,
+                thumbnail=False,
+            )
+            return True, image_to_base64(load_image(path))
+        raise NotImplementedError(f"Can't summarize this DocType: {obj.doctype}")
+
+    def _summarize_tag(self, *, db: Session, obj: TagORM) -> tuple[bool, str]:
+        return (
+            False,
+            f'Document Tag with name "{obj.name}" and description "{obj.description}"',
+        )
+
+    def _summarize_code(self, *, db: Session, obj: CodeORM) -> tuple[bool, str]:
+        return (
+            False,
+            f'Code used for classification with name "{obj.name}" and description "{obj.description}"',
+        )
+
+    def _summarize_project(self, *, db: Session, obj: ProjectORM) -> tuple[bool, str]:
+        return (
+            False,
+            f'Project with title "{obj.title}" and description "{obj.description}"',
+        )
+
+    def _summarize_bbox_anno(
+        self, *, db: Session, obj: BBoxAnnotationORM
+    ) -> tuple[bool, str]:
+        path = self.fsr.get_path_to_sdoc_file(
+            sdoc=SourceDocumentRead.model_validate(
+                obj.annotation_document.source_document
+            ),
+            webp=False,
+            thumbnail=False,
+        )
+        image = load_image(path)
+        cropped_image = image.crop((obj.x_min, obj.y_min, obj.x_max, obj.y_max))
+        return True, image_to_base64(cropped_image)
+
+    def _summarize_sent_anno(
+        self, *, db: Session, obj: SentenceAnnotationORM
+    ) -> tuple[bool, str]:
+        sdoc_data = crud_sdoc_data.read(
+            db=db, id=obj.annotation_document.source_document_id
+        )
+        return (
+            False,
+            f'Annotation with code title "{obj.code.name}", code description "{obj.code.description}" and the following content: {sdoc_data.sentences[obj.sentence_id_start : obj.sentence_id_end + 1]}',
+        )
+
+    def _summarize_span_anno(
+        self, *, db: Session, obj: SpanAnnotationORM
+    ) -> tuple[bool, str]:
+        return (
+            False,
+            f'Annotation with code title "{obj.code.name}", code description "{obj.code.description}" and the following content: {obj.span_text.text}',
+        )
