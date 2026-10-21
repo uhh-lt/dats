@@ -20,3 +20,18 @@ class InvalidError(Exception):
     def __init__(self, note=None):
         note_description = f": {note}" if note is not None else ""
         super().__init__(f"Invalid Request{note_description}")
+
+
+class OIDCNotEnabledError(Exception):
+    def __init__(self) -> None:
+        super().__init__("OIDC authentication is not enabled")
+
+
+class OIDCProviderNotFoundError(Exception):
+    def __init__(self, provider: str) -> None:
+        super().__init__(f"OIDC provider '{provider}' does not exist")
+
+
+class OIDCAuthenticationError(Exception):
+    def __init__(self) -> None:
+        super().__init__("Authentication failed")

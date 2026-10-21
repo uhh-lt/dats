@@ -8,6 +8,7 @@ import jwt
 from loguru import logger
 
 from config import conf
+from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
 
 __algo = conf.auth.jwt.algo
@@ -71,7 +72,7 @@ def generate_password_hash(password: str, iterations: int = 600000) -> str:
 # =====================================================================
 
 
-def generate_jwt(user: UserORM) -> tuple[str, datetime]:
+def generate_jwt(user: UserORM | UserRead) -> tuple[str, datetime]:
     expire = datetime.now(UTC) + timedelta(seconds=__access_ttl)
 
     payload = {

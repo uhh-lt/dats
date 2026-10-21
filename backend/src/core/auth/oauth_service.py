@@ -10,9 +10,13 @@ from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from config import conf
+from core.auth.auth_exceptions import (
+    OIDCAuthenticationError,
+    OIDCNotEnabledError,
+    OIDCProviderNotFoundError,
+)
 from core.user.user_crud import crud_user
-from core.user.user_dto import UserCreate
-from core.user.user_orm import UserORM
+from core.user.user_dto import UserCreate, UserRead
 from repos.mail_repo import MailRepo
 
 
@@ -54,7 +58,7 @@ class OAuthService(metaclass=SingletonMeta):
 
     async def authenticate_oidc(
         self, db: Session, request: Request, provider: str
-    ) -> UserORM:
+    ) -> UserRead:
         try:
             client = self.__get_provider_client(provider)
             token = await client.authorize_access_token(request)
@@ -72,7 +76,7 @@ class OAuthService(metaclass=SingletonMeta):
                 user = await run_in_threadpool(
                     crud_user.read_by_email, db=db, email=userinfo["email"]
                 )
-                return user
+                return UserRead.model_validate(user)
             except Exception as e:
                 logger.info(f"User not found, creating new user: {e}")
 
@@ -96,16 +100,16 @@ class OAuthService(metaclass=SingletonMeta):
                     first_name=user.first_name,
                     last_name=user.last_name,
                 )
-                return user
+                return UserRead.model_validate(user)
 
         except Exception as e:
             logger.error(f"Error processing OIDC authentication: {e}")
-            raise Exception("Authentication failed")
+            raise OIDCAuthenticationError() from e
 
     def __get_provider_client(self, provider: str):
         if not self.__is_enabled:
-            raise Exception("OIDC authentication is not enabled")
+            raise OIDCNotEnabledError()
         client = self.__clients.get(provider)
         if client is None:
-            raise Exception(f"OIDC provider '{provider} does not exist")
+            raise OIDCProviderNotFoundError(provider)
         return client
