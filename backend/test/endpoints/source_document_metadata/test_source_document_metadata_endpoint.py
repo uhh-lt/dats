@@ -221,6 +221,7 @@ def test_update_bulk_metadata_parametrized(
     assert resp.status_code == 200, resp.text
     updated = SourceDocumentMetadataRead.model_validate(resp.json()[0])
     assert updated.id == sm.id
+    assert updated.project_id == sdoc.project_id
     assert updated.source_document_id == sdoc.id
     assert updated.project_metadata_id == pm.id
     assert updated.str_value == payload.get("str_value")

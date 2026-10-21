@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from core.doc.folder_dto import FolderCreate, FolderUpdate, FolderUpdateBulk
+from core.doc.folder_dto import FolderCreate, FolderUpdate
 from core.doc.folder_enum import FolderType
 from core.doc.folder_exceptions import (
     FolderMoveAcrossProjectsError,
@@ -125,33 +125,14 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(self, db: Session, *, id: int, update_dto: FolderUpdate) -> FolderORM:
-        folder = self.read(db=db, id=id)
-        self._assert_valid_move(db=db, folder=folder, update_dto=update_dto)
-        return super().update(db=db, id=id, update_dto=update_dto)
-
-    def update_bulk(
-        self, db: Session, *, update_dtos: list[FolderUpdateBulk]
+    def update_multi(
+        self, db: Session, *, ids: list[int], update_dtos: list[FolderUpdate]
     ) -> list[FolderORM]:
-        """Update multiple folders, each identified by its folder_id."""
-        folders = {
-            f.id: f
-            for f in self.read_by_ids(db=db, ids=[u.folder_id for u in update_dtos])
-        }
-        for update_dto in update_dtos:
-            self._assert_valid_move(
-                db=db, folder=folders[update_dto.folder_id], update_dto=update_dto
-            )
-        # Delegate to the base bulk update: one read_by_ids + one flush. Strip the
-        # bulk wrapper down to a plain FolderUpdate (drops the folder_id helper field).
-        return self.update_multi(
-            db,
-            ids=[u.folder_id for u in update_dtos],
-            update_dtos=[
-                FolderUpdate.model_validate(u.model_dump(exclude_unset=True))
-                for u in update_dtos
-            ],
-        )
+        # Guard every move before writing anything
+        folders = self.read_by_ids(db=db, ids=ids)
+        for folder, update_dto in zip(folders, update_dtos):
+            self._assert_valid_move(db=db, folder=folder, update_dto=update_dto)
+        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
     ### OTHER OPERATIONS ###
 

@@ -138,7 +138,16 @@ def update_folders_bulk(
     for folder_update in folder_updates:
         authz_user.assert_in_same_project_as(Crud.FOLDER, folder_update.folder_id)
 
-    db_objs = crud_folder.update_bulk(db=db, update_dtos=folder_updates)
+    db_objs = crud_folder.update_multi(
+        db=db,
+        ids=[u.folder_id for u in folder_updates],
+        update_dtos=[
+            FolderUpdate.model_validate(
+                u.model_dump(exclude_unset=True, exclude={"folder_id"})
+            )
+            for u in folder_updates
+        ],
+    )
     results = [FolderRead.model_validate(folder) for folder in db_objs]
     if results:
         ws.emit_to_projects_grouped(

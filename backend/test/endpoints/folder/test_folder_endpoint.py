@@ -247,3 +247,46 @@ def test_move_folder_to_valid_parent_succeeds(
 
     assert response.status_code == 200, response.text
     assert FolderRead.model_validate(response.json()).parent_id == parent.id
+
+
+# --- bulk update ----------------------------------------------------------------
+def test_update_folders_bulk_keeps_input_order(
+    client: TestClient, project_with_multiple_folders
+):
+    """The response lists the folders in the order of the request."""
+    folders = project_with_multiple_folders["folders"]
+    order = [folders[2], folders[0], folders[1]]
+
+    response = client.patch(
+        "/folder/bulk/update",
+        json=[
+            {"folder_id": folder.id, "name": f"Renamed {folder.id}"} for folder in order
+        ],
+    )
+
+    assert response.status_code == 200, response.text
+    results = [FolderRead.model_validate(item) for item in response.json()]
+    assert [r.id for r in results] == [folder.id for folder in order]
+    assert [r.name for r in results] == [f"Renamed {folder.id}" for folder in order]
+
+
+def test_update_folders_bulk_rejects_cycle(
+    client: TestClient, project_with_nested_folders
+):
+    """The bulk path guards moves like the single update and changes nothing."""
+    parent = project_with_nested_folders["parent"]
+    child = project_with_nested_folders["child"]
+    grandchild = project_with_nested_folders["grandchild"]
+
+    response = client.patch(
+        "/folder/bulk/update",
+        json=[
+            {"folder_id": child.id, "name": "Renamed Child"},
+            {"folder_id": parent.id, "parent_id": grandchild.id},
+        ],
+    )
+
+    assert response.status_code == 400, response.text
+    assert FolderRead.model_validate(client.get(f"/folder/{child.id}").json()).name == (
+        "Child"
+    )

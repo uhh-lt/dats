@@ -171,6 +171,7 @@ class SourceDocumentMetadataBulkUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOB
 class SourceDocumentMetadataRead(SourceDocumentMetadataBaseDTO):
     id: int = Field(description="ID of the SourceDocumentMetadata")
     project_metadata_id: int = Field(description="ID of the ProjectMetadata")
+    project_id: int = Field(description="Project the SourceDocumentMetadata belongs to")
     source_document_id: int = Field(
         description="SourceDocument the SourceDocumentMetadata belongs to"
     )

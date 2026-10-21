@@ -425,6 +425,22 @@ def test_delete_memos_bulk(client: TestClient, memo_project: MemoProjectState):
         assert client.get(f"/memo/{memo_id}").status_code == 403
 
 
+def test_delete_memos_bulk_keeps_input_order(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """The response lists the deleted memos in the order of the request."""
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+
+    response = client.request(
+        "DELETE", "/memo/bulk/delete", json=[memo_b.id, memo_a.id]
+    )
+
+    assert response.status_code == 200, response.text
+    returned_ids = [MemoRead.model_validate(item).id for item in response.json()]
+    assert returned_ids == [memo_b.id, memo_a.id]
+
+
 def test_delete_memos_bulk_includes_other_members_memo(
     client: TestClient, memo_project: MemoProjectState
 ):
@@ -513,6 +529,28 @@ def test_update_memos_bulk_shared_fields(
     assert by_id[memo_a.id].content == memo_a.content
     assert by_id[memo_b.id].title == "Code Memo B"
     assert by_id[memo_b.id].icon == "🔥"
+
+
+def test_update_memos_bulk_keeps_input_order(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Favorite-only and shared-field entries come back in the order of the request."""
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+
+    response = client.patch(
+        "/memo/bulk/update",
+        json=[
+            {"memo_id": memo_b.id, "is_favorite": True},
+            {"memo_id": memo_a.id, "title": "Renamed A"},
+        ],
+    )
+
+    assert response.status_code == 200, response.text
+    memos = [MemoRead.model_validate(i) for i in response.json()]
+    assert [m.id for m in memos] == [memo_b.id, memo_a.id]
+    assert memos[0].is_favorite is True
+    assert memos[1].title == "Renamed A"
 
 
 def test_update_memos_bulk_shared_fields_and_favorite(

@@ -1,0 +1,59 @@
+from loguru import logger
+from sqlalchemy.orm import Session
+
+from common.singleton_meta import SingletonMeta
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from core.metadata.source_document_metadata_dto import (
+    SourceDocumentMetadataBulkUpdate,
+    SourceDocumentMetadataRead,
+    SourceDocumentMetadataUpdate,
+)
+
+
+class SourceDocumentMetadataService(metaclass=SingletonMeta):
+    def __new__(cls, *args, **kwargs):
+        return super(SourceDocumentMetadataService, cls).__new__(cls)
+
+    def update_metadata(
+        self, db: Session, *, update_dtos: list[SourceDocumentMetadataBulkUpdate]
+    ) -> list[SourceDocumentMetadataRead]:
+        """
+        Update user-editable source document metadata, each identified by its id.
+        Read-only metadata is left unchanged (and logged).
+
+        Args:
+            update_dtos: The new values. Must not repeat an id.
+
+        Returns:
+            All given metadata (read-only ones unchanged), in the order of
+            `update_dtos`.
+
+        Raises:
+            ValueError: If a value has the wrong type for its metadata key.
+        """
+        # 1) skip read-only metadata: only the system may change it
+        metadatas = crud_sdoc_meta.read_by_ids(db=db, ids=[u.id for u in update_dtos])
+        writable: list[SourceDocumentMetadataBulkUpdate] = []
+        for metadata, update_dto in zip(metadatas, update_dtos):
+            if metadata.project_metadata.read_only:
+                logger.warning(
+                    f"Cannot update read-only SourceDocumentMetadata {metadata.project_metadata.key} from"
+                    f" SourceDocument {metadata.source_document_id}!"
+                )
+                continue
+            writable.append(update_dto)
+
+        # 2) update the writable ones
+        crud_sdoc_meta.update_multi(
+            db=db,
+            ids=[u.id for u in writable],
+            update_dtos=[
+                SourceDocumentMetadataUpdate(**u.model_dump(exclude={"id"}))
+                for u in writable
+            ],
+        )
+
+        return [
+            SourceDocumentMetadataRead.model_validate(metadata)
+            for metadata in metadatas
+        ]

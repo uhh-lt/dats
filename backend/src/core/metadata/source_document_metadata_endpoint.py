@@ -12,6 +12,9 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
 )
+from core.metadata.source_document_metadata_service import (
+    SourceDocumentMetadataService,
+)
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -99,12 +102,16 @@ def update_by_id(
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
 
-    db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
-    result = SourceDocumentMetadataRead.model_validate(db_obj)
+    result = SourceDocumentMetadataService().update_metadata(
+        db=db,
+        update_dtos=[
+            SourceDocumentMetadataBulkUpdate(id=metadata_id, **metadata.model_dump())
+        ],
+    )[0]
     ws.emit_to_project(
         DATSEvent.SDOC_METADATA_UPDATED,
         result,
-        project_id=db_obj.get_project_id(),
+        project_id=result.project_id,
     )
     return result
 
@@ -124,14 +131,11 @@ def update_bulk(
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
     )
-    db_objs = crud_sdoc_meta.update_bulk(db=db, update_dtos=metadatas)
-    results = [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
+    results = SourceDocumentMetadataService().update_metadata(
+        db=db, update_dtos=metadatas
+    )
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SDOC_METADATA_UPDATED_BATCH,
-            db_objs,
-            to_dto=SourceDocumentMetadataRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SDOC_METADATA_UPDATED_BATCH, results)
     return results
 
 
