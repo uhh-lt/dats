@@ -386,12 +386,8 @@ export default defineConfig(
   // REDUX SLICE CONVENTIONS (see .github/instructions/frontend-slice.instructions.md)
   {
     files: ["src/**/*Slice.ts"],
-    // TODO: owned by the filter / dialog groups, remove once they follow the slice conventions
-    ignores: [
-      "src/core/source-document/table/sdocTableFilterSlice.ts",
-      "src/core/memo/dialog/memoDialogSlice.ts",
-      "src/store/global/dialogBusSlice.ts",
-    ],
+    // TODO: owned by the filter group, remove once it follows the slice conventions
+    ignores: ["src/core/source-document/table/sdocTableFilterSlice.ts"],
     plugins: { local: datsRulesPlugin },
     rules: { "local/slice-conventions": "error" },
   },
