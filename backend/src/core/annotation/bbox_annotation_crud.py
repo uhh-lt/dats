@@ -30,8 +30,8 @@ class CRUDBBoxAnnotation(
             db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
         )
 
-        # create the BboxAnnotation
-        db_obj = super().create(
+        # create the BboxAnnotation (create_multi updates the adoc's timestamp)
+        return super().create(
             db=db,
             create_dto=BBoxAnnotationCreateIntern(
                 project_id=adoc.source_document.project_id,
@@ -45,31 +45,21 @@ class CRUDBBoxAnnotation(
             ),
         )
 
-        # update the annotation document's timestamp
-        crud_adoc.update_timestamp(db=db, id=adoc.id)
-
-        return db_obj
-
     def create_multi(
         self,
         db: Session,
         *,
         create_dtos: list[BBoxAnnotationCreateIntern],
     ) -> list[BBoxAnnotationORM]:
+        db_objs = super().create_multi(db=db, create_dtos=create_dtos)
+
         # update all affected annotation documents' timestamp
         adoc_ids = list(
-            set([create_dto.annotation_document_id for create_dto in create_dtos])
+            {create_dto.annotation_document_id for create_dto in create_dtos}
         )
-        for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(
-                db=db,
-                id=adoc_id,
-            )
+        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
-        return super().create_multi(
-            db=db,
-            create_dtos=create_dtos,
-        )
+        return db_objs
 
     def create_bulk(
         self, db: Session, *, user_id: int, create_dtos: list[BBoxAnnotationCreate]
