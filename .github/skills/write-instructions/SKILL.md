@@ -14,7 +14,7 @@ Write a code-quality instruction file for one group of source modules in the DAT
 
 ## Definitions
 
-- **Module group**: A set of source files that share the same role and conventions, e.g. all ORM models (`*_orm.py`), all DTOs (`*_dto.py`), all endpoints (`*_endpoint.py`), all entity renderers (`*Renderer.tsx`).
+- **Module group**: A set of source files that share the same role and conventions, e.g. all ORM models (`*_orm.py`), all DTOs (`*_dto.py`), all endpoints (`*_endpoint.py`), all entity renderers (`core/*/renderer/*Renderer.tsx`).
 - **Instruction file**: A markdown file in `.github/instructions/` whose frontmatter targets exactly the module group, once as `applyTo` (GitHub Copilot) and once as `paths` (Claude Code).
 
 ## Naming
@@ -28,7 +28,7 @@ The `applyTo` and `paths` globs must be identical and match the module group exa
 
 - `backend/src/**/*_orm.py` for ORMs
 - `backend/src/**/*_dto.py` for DTOs
-- `frontend/src/**/*Renderer.tsx` for entity renderers
+- `frontend/src/core/*/renderer/*Renderer.tsx` for entity renderers
 
 ## Workflow
 
