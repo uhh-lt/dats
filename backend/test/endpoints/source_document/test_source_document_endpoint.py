@@ -3,6 +3,8 @@ from typing import TypedDict
 import pytest
 from fastapi.testclient import TestClient
 
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
+from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_dto import (
     SourceDocumentDataRead,
 )
@@ -12,6 +14,8 @@ from core.doc.source_document_dto import (
 )
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
+from repos.elastic.elastic_repo import ElasticSearchRepo
+from repos.filesystem_repo import FilesystemRepo
 
 
 class ProjectWithSourceDocumentForTest(TypedDict):
@@ -67,21 +71,38 @@ def test_get_by_id_with_data_if_not_exsisit(
     assert resp.status_code == 403, resp.text
 
 
-# TODO: sdocs are not stored in elasticsearch, so this test will fail!
-# def test_delete_source_document_by_id(
-#     client: TestClient,
-#     project_with_sdoc,
-# ):
-#     sdoc = project_with_sdoc["source_document"]
+def test_delete_source_document_by_id(
+    client: TestClient,
+    project_with_sdoc,
+):
+    """Deleting a document removes its row, its file and its Elasticsearch document."""
+    sdoc = project_with_sdoc["source_document"]
+    es_client = ElasticSearchRepo().get_client()
+    crud_sdoc_elastic.create(
+        client=es_client,
+        project_id=sdoc.project_id,
+        create_dto=ElasticSearchDocumentCreate(
+            filename=sdoc.filename,
+            content="This is a test document.",
+            sdoc_id=sdoc.id,
+            project_id=sdoc.project_id,
+        ),
+    )
+    file_path = FilesystemRepo().get_path_to_sdoc_file(
+        sdoc=SourceDocumentRead.model_validate(sdoc)
+    )
+    assert file_path.exists()
 
-#     response = client.delete(f"/sdoc/{sdoc.id}")
+    response = client.delete(f"/sdoc/{sdoc.id}")
 
-#     assert response.status_code == 200, response.text
-#     deleted = SourceDocumentRead.model_validate(response.json())
-#     assert deleted.id == sdoc.id
-#     assert deleted.project_id == sdoc.project_id
-
-#     # TODO: test more, repo etc.!
+    assert response.status_code == 200, response.text
+    deleted = SourceDocumentRead.model_validate(response.json())
+    assert deleted.id == sdoc.id
+    assert deleted.project_id == sdoc.project_id
+    assert client.get(f"/sdoc/{sdoc.id}").status_code == 403
+    assert not file_path.exists()
+    index_name = crud_sdoc_elastic.index.get_index_name(project_id=sdoc.project_id)
+    assert not es_client.exists(index=index_name, id=str(sdoc.id))
 
 
 def test_delete_source_document_by_id_short_if_not_exists(
@@ -93,9 +114,19 @@ def test_delete_source_document_by_id_short_if_not_exists(
     assert response.status_code == 403, response.text
 
 
-# NOTE: No happy-path bulk delete test — deleting an sdoc touches the filesystem
-# and Elasticsearch, which the test environment does not support (same reason the
-# single-delete test above is commented out). Only the authz paths are tested.
+def test_delete_sdocs_bulk(client: TestClient, project_with_sdocs_in_same_folder):
+    """Bulk delete removes all documents; documents without a file or an
+    Elasticsearch document are deleted as well."""
+    sdocs = project_with_sdocs_in_same_folder["source_documents"]
+    sdoc_ids = [sdoc.id for sdoc in sdocs]
+
+    response = client.request("DELETE", "/sdoc/bulk/delete", json=sdoc_ids)
+
+    assert response.status_code == 200, response.text
+    deleted = [SourceDocumentRead.model_validate(r) for r in response.json()]
+    assert sorted(d.id for d in deleted) == sorted(sdoc_ids)
+    for sdoc_id in sdoc_ids:
+        assert client.get(f"/sdoc/{sdoc_id}").status_code == 403
 
 
 def test_delete_sdocs_bulk_if_not_exists(

@@ -1,12 +1,15 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from common.doc_type import DocType
 from core.doc.folder_dto import (
     FolderCreate,
     FolderRead,
     FolderType,
     FolderUpdate,
 )
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentCreate
 
 
 def test_create_folder(client: TestClient, test_project):
@@ -123,6 +126,38 @@ def test_delete_folder(client: TestClient, project_with_folder):
     deleted = FolderRead.model_validate(response.json())
     assert deleted.id == folder.id
     assert deleted.name == folder.name
+
+
+def test_delete_folder_deletes_sdocs_of_all_subfolders(
+    client: TestClient, db_session, project_with_nested_folders
+):
+    """Deleting a folder deletes the documents of the folder and all subfolders
+    through the SourceDocumentService (files, Elasticsearch, Weaviate)."""
+    project = project_with_nested_folders["project"]
+    sdoc_ids = []
+    for folder_key in ("parent", "grandchild"):
+        sdoc = crud_sdoc.create(
+            db=db_session,
+            create_dto=SourceDocumentCreate(
+                filename=f"{folder_key}.txt",
+                name=folder_key,
+                doctype=DocType.text,
+                project_id=project.id,
+                folder_id=project_with_nested_folders[folder_key].id,
+            ),
+        )
+        sdoc_ids.append(sdoc.id)
+    db_session.commit()
+
+    parent_id = project_with_nested_folders["parent"].id
+    grandchild_id = project_with_nested_folders["grandchild"].id
+
+    response = client.delete(f"/folder/{parent_id}")
+
+    assert response.status_code == 200, response.text
+    for sdoc_id in sdoc_ids:
+        assert client.get(f"/sdoc/{sdoc_id}").status_code == 403
+    assert client.get(f"/folder/{grandchild_id}").status_code == 403
 
 
 def test_delete_folder_if_not_exists(client: TestClient):

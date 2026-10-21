@@ -269,6 +269,45 @@ def test_check_crud_violation_names_file_class_method_and_rule() -> None:
     assert "[method-verb] CRUDCode.get_by_name:" in str(violation)
 
 
+@pytest.mark.parametrize(
+    "import_line",
+    [
+        pytest.param("from repos.filesystem_repo import FilesystemRepo", id="repo"),
+        pytest.param("from weaviate import WeaviateClient", id="weaviate"),
+        pytest.param("import elasticsearch", id="elasticsearch"),
+        pytest.param(
+            "from core.doc.sdoc_elastic_crud import crud_sdoc_elastic",
+            id="elastic-crud",
+        ),
+        pytest.param(
+            "from core.doc.sentence_embedding_crud import crud_sentence_embedding",
+            id="embedding-crud",
+        ),
+        pytest.param(
+            "from core.project.project_service import ProjectService", id="service"
+        ),
+    ],
+)
+def test_check_crud_sql_crud_imports_no_other_store(import_line: str) -> None:
+    """SQL CRUDs only touch the SQL database; other stores belong in a service."""
+    assert rules(f"{import_line}\n{VALID_SQL}") == {"sql-only"}
+
+
+def test_check_crud_sql_crud_may_import_sql_helpers() -> None:
+    """repos.db.* (base class, BATCH_SIZE, sql utils, exceptions) stays allowed."""
+    source = (
+        "from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase\n"
+        "from repos.db.sql_exceptions import NoSuchElementError\n" + VALID_SQL
+    )
+    assert rules(source) == set()
+
+
+def test_check_crud_embedding_crud_may_import_weaviate() -> None:
+    """The sql-only rule applies to SQL CRUDs only."""
+    source = "from weaviate import WeaviateClient\n" + VALID_EMBEDDING
+    assert rules(source, "sentence_embedding_crud.py") == set()
+
+
 def test_check_crud_unknown_verb_explains_the_fix() -> None:
     """An unknown verb points to the existing verbs and to where a new one is added."""
     source = VALID_SQL.replace("def read_by_name(", "def fetch_by_name(")

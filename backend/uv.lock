@@ -717,7 +717,6 @@ source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
     { name = "beautifulsoup4" },
-    { name = "blinker" },
     { name = "datasets" },
     { name = "elasticsearch" },
     { name = "email-validator" },
@@ -782,7 +781,6 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.18.5" },
     { name = "beautifulsoup4", specifier = ">=4.15.0" },
-    { name = "blinker", specifier = ">=1.9.0" },
     { name = "datasets", specifier = ">=5.0.0" },
     { name = "elasticsearch", specifier = "==7.17" },
     { name = "email-validator", specifier = ">=2.3.0" },

@@ -8,7 +8,6 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
-    SourceDocumentRead,
     SourceDocumentUpdate,
 )
 from core.doc.source_document_exceptions import (
@@ -18,8 +17,6 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
-from repos.filesystem_repo import FilesystemRepo
-from systems.event_system.events import source_document_deleted
 
 
 class CRUDSourceDocument(
@@ -241,25 +238,21 @@ class CRUDSourceDocument(
 
         return results
 
+    def read_ids_by_folder_ids(
+        self, db: Session, *, folder_ids: list[int]
+    ) -> list[int]:
+        """IDs of all SourceDocuments directly inside the given folders."""
+        if not folder_ids:
+            return []
+        return [
+            row[0]
+            for row in db.query(self.model.id)
+            .filter(self.model.folder_id.in_(folder_ids))
+            .all()
+        ]
+
     ### DELETE OPERATIONS ###
-
-    def delete(self, db: Session, *, id: int) -> SourceDocumentORM:
-        sdoc_db_obj = super().delete(db=db, id=id)
-
-        # remove file from filesystem
-        FilesystemRepo().remove_sdoc_file(
-            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
-        )
-
-        # emit event
-        source_document_deleted.send(
-            self, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-        )
-
-        return sdoc_db_obj
-
-    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[SourceDocumentORM]:
-        return [self.delete(db=db, id=id) for id in ids]
+    # Inherited from SQLCRUDBase
 
     ### OTHER OPERATIONS ###
 

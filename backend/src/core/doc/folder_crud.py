@@ -28,6 +28,21 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             .all()
         )
 
+    def read_with_children(self, db: Session, *, folder_id: int) -> list[FolderORM]:
+        """The folder and all of its descendant folders."""
+        topq = (
+            db.query(self.model.id)
+            .filter(self.model.id == folder_id)
+            .cte("cte", recursive=True)
+        )
+        bottomq = db.query(self.model.id).join(topq, self.model.parent_id == topq.c.id)
+        recursive_q = topq.union(bottomq)  # type: ignore
+        return (
+            db.query(self.model)
+            .filter(self.model.id.in_(db.query(recursive_q.c.id)))
+            .all()
+        )
+
     def read_by_project(self, db: Session, *, project_id: int) -> list[FolderORM]:
         return (
             db.query(self.model)

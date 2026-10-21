@@ -116,6 +116,34 @@ class ElasticCRUDBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOT
         index_name = self.index.get_index_name(project_id=project_id)
         client.delete(index=index_name, id=str(id))
 
+    def delete_multi(
+        self, client: Elasticsearch, *, project_id: int, ids: list[int]
+    ) -> int:
+        """
+        Delete documents by their IDs; IDs without a document are skipped
+        Args:
+            client: Elasticsearch client
+            project_id: ID of the project whose index is used
+            ids: IDs of the documents
+        Returns:
+            The number of deleted documents
+        """
+        if not ids:
+            return 0
+        index_name = self.index.get_index_name(project_id=project_id)
+        # bulk deletes by id are realtime (no index refresh needed); missing
+        # documents come back as errors, which are skipped
+        deleted, _ = helpers.bulk(
+            client,
+            (
+                {"_op_type": "delete", "_index": index_name, "_id": str(id)}
+                for id in ids
+            ),
+            raise_on_error=False,
+            refresh=True,
+        )
+        return deleted
+
     ### OTHER OPERATIONS ###
 
     def search(
