@@ -44,16 +44,18 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 
 ### Layer Rules
 
-| Rule                                                                              | Script                    |
-| --------------------------------------------------------------------------------- | ------------------------- |
-| CRUD conventions (see the three CRUD instruction files)                           | `lint/check_crud.py`      |
-| `core` never imports from `modules`                                               | `lint/check_core.py`      |
-| `*_dto.py` never imports `*_service`, `*_repo`, `*_orm` or `*_endpoint`           | `lint/check_dtos.py`      |
-| `*_endpoint.py` imports `*_dto` modules from its own folder only                  | `lint/check_endpoints.py` |
-| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only | `lint/check_repos.py`     |
-| `*_service.py` never imports `*_endpoint`                                         | `lint/check_services.py`  |
+| Rule                                                                               | Script                     |
+| ---------------------------------------------------------------------------------- | -------------------------- |
+| CRUD conventions (see the three CRUD instruction files)                            | `lint/check_crud.py`       |
+| DTO conventions (see backend-dto), incl. no ORM/CRUD/service/repo/endpoint imports | `lint/check_dtos.py`       |
+| ORM conventions (see backend-orm)                                                  | `lint/check_orm.py`        |
+| Service conventions (see backend-service)                                          | `lint/check_services.py`   |
+| Exception classes only in `*_exceptions.py`                                        | `lint/check_exceptions.py` |
+| `core` never imports from `modules`                                                | `lint/check_core.py`       |
+| `*_endpoint.py` imports `*_dto` modules from its own folder only                   | `lint/check_endpoints.py`  |
+| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only  | `lint/check_repos.py`      |
 
-Only `check_crud.py` runs automatically (`just lint backend` and pre-commit). Run the others by hand from `backend/` (`uv run python lint/check_core.py`); they still report some existing violations, so make sure you add no new ones.
+All checks except `check_endpoints.py` and `check_repos.py` run automatically (`just lint backend` and pre-commit). Run those two by hand from `backend/` (`uv run python lint/check_endpoints.py`); they still report some existing violations, so make sure you add no new ones.
 
 ## File Naming
 
@@ -82,13 +84,15 @@ Ruff formats and lints (`backend/ruff.toml`; `just format backend`, `just lint b
 
 ## Error Handling
 
+Every exception class lives in an exceptions module: `<module>_exceptions.py` in `core/` and `modules/` (`core/auth/auth_exceptions.py`, `modules/eximport/import_exceptions.py`), and `<component>_exceptions.py` next to its repo or system (`repos/db/sql_exceptions.py`, `repos/filesystem_exceptions.py`, `repos/vector/weaviate_exceptions.py`). Only `common/exception_handler.py` (the handler infrastructure with `NotFoundError`) defines exceptions elsewhere. Never define exception classes in services, CRUDs, jobs, repos or utilities, and raise a domain exception instead of a bare `Exception`. `backend/lint/check_exceptions.py` enforces this.
+
 `common/exception_handler.py` maps exceptions to HTTP responses. Decorating an exception class with `@exception_handler(status.HTTP_...)` registers it; `bootstrap.create_app` installs all handlers, which log the error and return its message as plain text with that status. Undecorated exceptions become HTTP 500.
 
-- **Not found (404)**: subclass `NotFoundError` from `common/exception_handler.py`. Subclasses inherit the 404 mapping and need no decorator. Existing ones: `NoSuchElementError` (SQL, `repos/db/crud_base.py`), `NoSuchObjectInElasticSearchError`, the `WeaviateObject*NotFoundException`s (`repos/vector/weaviate_exceptions.py`).
-- **Forbidden (403)**: `ForbiddenError` (`core/auth/authz_user.py`), raised by the `AuthzUser` assertions.
-- **Bad request (400)**: `InvalidError` (`core/auth/validation.py`) and the module-specific errors in `*_exceptions.py` files (folder, search system, export/import).
+- **Not found (404)**: subclass `NotFoundError` from `common/exception_handler.py`. Subclasses inherit the 404 mapping and need no decorator. Existing ones: `NoSuchElementError` (SQL, `repos/db/sql_exceptions.py`), `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), the `WeaviateObject*NotFoundException`s (`repos/vector/weaviate_exceptions.py`).
+- **Forbidden (403)**: `ForbiddenError` (`core/auth/auth_exceptions.py`), raised by the `AuthzUser` assertions.
+- **Bad request (400)**: `InvalidError` (`core/auth/auth_exceptions.py`) and the module-specific errors in `*_exceptions.py` files (folder, search system, export/import).
 - **Duplicates (409)**: unique violations need no own exception: `bootstrap.py` maps an `IntegrityError` caused by a `UniqueViolation` to 409.
-- **Domain errors**: declare them in `<module>_exceptions.py` (or the CRUD file that raises them), decorated with `@exception_handler` when the client must see a specific status.
+- **Domain errors**: declare them in `<module>_exceptions.py`, decorated with `@exception_handler` when the client must see a specific status.
 - **Messages**: the message is sent to the client, so never put secrets, tokens or credentials in it.
 
 ```python
