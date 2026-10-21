@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { memo } from "react";
-import { ProfileSection } from "../ProfileSection";
+import { ProfileSection } from "../_types/ProfileSection";
 
 interface ProfileSidebarProps {
   user: UserRead;

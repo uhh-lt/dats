@@ -6,7 +6,7 @@ import { ApiKeysSection } from "./_components/ApiKeysSection";
 import { ProfileHome } from "./_components/ProfileHome";
 import { ProfileSidebar } from "./_components/ProfileSidebar";
 import { Support } from "./_components/Support";
-import { ProfileSection } from "./ProfileSection";
+import { ProfileSection } from "./_types/ProfileSection";
 
 export function ProfileView() {
   // global server state (react query)
