@@ -1,6 +1,6 @@
 from typing import Any
 
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, RequestError
 
 from config import conf
 
@@ -26,10 +26,17 @@ class IndexBase:
         index_name = cls.get_index_name(project_id=project_id)
         if replace_if_exists and client.indices.exists(index=index_name):
             client.indices.delete(index=index_name)
-        if not client.indices.exists(index=index_name):
+        if client.indices.exists(index=index_name):
+            return
+        try:
             client.indices.create(
                 index=index_name, mappings=cls.mappings, settings=cls.settings
             )
+        except RequestError as e:
+            # The client retries a create that timed out (`retry_on_timeout`),
+            # and the retry finds the index that the first attempt created
+            if e.error != "resource_already_exists_exception":
+                raise
 
     @classmethod
     def delete_index(cls, client: Elasticsearch, *, project_id: int) -> None:
