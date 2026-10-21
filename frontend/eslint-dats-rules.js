@@ -737,6 +737,81 @@ const queriesFileMatchesRootKeyRule = {
   },
 };
 
+/** @type {Rule.RuleModule} */
+const entityRendererLocationRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A component that renders an entity with ExpandableRenderer is an entity renderer and lives in core/<domain>/renderer/<Name>Renderer.tsx.",
+    },
+    messages: {
+      wrongLocation:
+        "Entity renderers (components using ExpandableRenderer) must live in src/core/<domain>/renderer/<Name>Renderer.tsx.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = (context.filename || context.getFilename()).split(path.sep).join("/");
+    if (/\/src\/core\/[^/]+\/renderer\/[A-Za-z0-9]+Renderer\.tsx$/.test(filename)) return {};
+    return {
+      "ImportDeclaration[source.value='@components/ExpandableRenderer'] > ImportSpecifier[imported.name='ExpandableRenderer']"(
+        node,
+      ) {
+        context.report({ node, messageId: "wrongLocation" });
+      },
+    };
+  },
+};
+
+const RENDERER_COMPONENT_NAME = /Renderer(WithData|WithoutData)?$/;
+
+/** @type {Rule.RuleModule} */
+const entityRendererConventionsRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "Entity renderer components are wrapped in memo, and their visibility flags use the render* prefix (renderName, renderIcon, ...).",
+    },
+    messages: {
+      useMemo: "'{{name}}' must be declared as 'const {{name}} = memo(...)'.",
+      renderPrefix: "Visibility flag '{{name}}' must use the render* prefix ('{{expected}}').",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      "Program > FunctionDeclaration, Program > ExportNamedDeclaration > FunctionDeclaration"(node) {
+        if (!node.id || !RENDERER_COMPONENT_NAME.test(node.id.name)) return;
+        context.report({ node: node.id, messageId: "useMemo", data: { name: node.id.name } });
+      },
+      "Program > VariableDeclaration > VariableDeclarator, Program > ExportNamedDeclaration > VariableDeclaration > VariableDeclarator"(
+        node,
+      ) {
+        if (node.id.type !== "Identifier" || !RENDERER_COMPONENT_NAME.test(node.id.name)) return;
+        const init = node.init;
+        if (
+          init &&
+          init.type === "CallExpression" &&
+          init.callee.type === "Identifier" &&
+          init.callee.name === "memo"
+        ) {
+          return;
+        }
+        context.report({ node: node.id, messageId: "useMemo", data: { name: node.id.name } });
+      },
+      TSPropertySignature(node) {
+        if (node.key.type !== "Identifier" || !/^show[A-Z]/.test(node.key.name)) return;
+        const expected = `render${node.key.name.slice("show".length)}`;
+        context.report({ node: node.key, messageId: "renderPrefix", data: { name: node.key.name, expected } });
+      },
+    };
+  },
+};
+
 /** @type {ESLint.Plugin} */
 export const datsRulesPlugin = {
   rules: {
@@ -747,6 +822,8 @@ export const datsRulesPlugin = {
     "no-cross-slice-access": noCrossSliceAccessRule,
     "no-scope-violations": noScopeViolationsRule,
     "queries-file-matches-root-key": queriesFileMatchesRootKeyRule,
+    "entity-renderer-location": entityRendererLocationRule,
+    "entity-renderer-conventions": entityRendererConventionsRule,
   },
 };
 
