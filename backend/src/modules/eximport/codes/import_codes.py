@@ -8,15 +8,8 @@ from modules.eximport.codes.code_export_schema import (
     CodeExportCollection,
     CodeExportSchema,
 )
+from modules.eximport.import_exceptions import ImportCodesError
 from utils.color_utils import get_next_color
-
-
-class ImportCodesError(Exception):
-    """Exception raised when code import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing codes: {errors}")
-        self.errors = errors
 
 
 class CodeImporter:

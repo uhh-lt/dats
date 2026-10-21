@@ -14,11 +14,11 @@ from modules.doc_processing.entrypoints.html_chunking_utils import (
 )
 from modules.doc_processing.entrypoints.txt_chunking_utils import split_text_into_chunks
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import (
+from repos.filesystem_exceptions import (
     FileAlreadyExistsInFilesystemError,
     FileDeletionNotAllowedError,
-    FilesystemRepo,
 )
+from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job

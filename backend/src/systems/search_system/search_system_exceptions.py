@@ -83,3 +83,7 @@ class FilterValueNotFoundError(Exception):
 
     def __init__(self, value: object, column: object) -> None:
         super().__init__(f"'{value}' not found for column {column}!")
+
+
+class InvalidPage(Exception):
+    pass

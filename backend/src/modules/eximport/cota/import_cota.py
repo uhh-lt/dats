@@ -19,16 +19,7 @@ from modules.eximport.cota.cota_transformations import (
     transform_timeline_settings_for_import,
     transform_training_settings_for_import,
 )
-
-
-class ImportCOTAError(Exception):
-    """Exception raised when COTA import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(
-            f"Errors occurred while importing concept over time analyses: {errors}"
-        )
-        self.errors = errors
+from modules.eximport.import_exceptions import ImportCOTAError
 
 
 def import_cota_to_proj(

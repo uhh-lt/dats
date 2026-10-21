@@ -2,6 +2,7 @@ import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from modules.eximport.import_exceptions import ImportWhiteboardsError
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardContentForExport,
     WhiteboardExportCollection,
@@ -11,14 +12,6 @@ from modules.eximport.whiteboards.whiteboard_transformations import (
 )
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.whiteboard.whiteboard_dto import WhiteboardCreateIntern
-
-
-class ImportWhiteboardsError(Exception):
-    """Exception raised when whiteboard import fails."""
-
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing whiteboards: {errors}")
-        self.errors = errors
 
 
 def import_whiteboards_to_proj(

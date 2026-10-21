@@ -6,14 +6,10 @@ from common.doc_type import DocType
 from common.meta_type import MetaType
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
+from modules.eximport.import_exceptions import ImportProjectMetadataError
 from modules.eximport.project_metadata.project_metadata_export_schema import (
     ProjectMetadataExportCollection,
 )
-
-
-class ImportProjectMetadataError(Exception):
-    def __init__(self, errors: list[str]) -> None:
-        super().__init__(f"Errors occurred while importing project metadata: {errors}")
 
 
 def import_project_metadata_to_proj(
