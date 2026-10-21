@@ -425,4 +425,15 @@ export default defineConfig(
     plugins: { local: datsRulesPlugin },
     rules: { "local/route-options": "error" },
   },
+  // FEATURE FOLDER RULES (see .github/instructions/frontend-feature.instructions.md)
+  {
+    files: ["src/features/**/*.{ts,tsx}"],
+    plugins: { local: datsRulesPlugin },
+    rules: {
+      "local/feature-folder-layout": "error",
+      "local/feature-index-exports": "error",
+      "local/feature-route-api-location": "error",
+      "local/feature-suspense-query-from-route": "error",
+    },
+  },
 );

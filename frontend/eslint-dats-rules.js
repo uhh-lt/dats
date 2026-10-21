@@ -1546,3 +1546,203 @@ const routeOptionsRule = {
 };
 
 datsRulesPlugin.rules["route-options"] = routeOptionsRule;
+
+// ---------------------------------------------------------------------------
+// feature folder rules (see .github/instructions/frontend-feature.instructions.md)
+// ---------------------------------------------------------------------------
+
+const FEATURE_ROOT_FOLDERS = ["api", "store", "views", "_components", "_hooks", "_types", "_utils", "_styles"];
+
+/** Returns the path parts after src/features/<feature>/, or null if the file is not in a feature. */
+function featurePathParts(filename) {
+  const parts = filename.split(path.sep);
+  const featuresIndex = parts.lastIndexOf("features");
+  if (featuresIndex < 1 || parts[featuresIndex - 1] !== "src" || parts.length < featuresIndex + 3) return null;
+  return parts.slice(featuresIndex + 2);
+}
+
+/** @type {Rule.RuleModule} */
+const featureFolderLayoutRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A feature folder contains only index.ts, api/, store/, views/<name>/ and the private _components/, _hooks/, _types/, _utils/, _styles/ folders.",
+    },
+    messages: {
+      rootEntry:
+        "'{{entry}}' is not allowed at the root of a feature. Allowed: index.ts, " +
+        FEATURE_ROOT_FOLDERS.join("/, ") +
+        "/.",
+      viewsFile: "Files may not live directly in views/. Put each view in its own folder: views/<name>/{{file}}.",
+      viewsIndex: "A views/<name>/ folder has no index.ts. The feature's index.ts exports the view file directly.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const rest = featurePathParts(context.filename || context.getFilename());
+    if (!rest) return {};
+    return {
+      Program(node) {
+        const [first, second, third] = rest;
+        if (rest.length === 1 && first !== "index.ts") {
+          context.report({ node, messageId: "rootEntry", data: { entry: first } });
+          return;
+        }
+        if (rest.length > 1 && !FEATURE_ROOT_FOLDERS.includes(first)) {
+          context.report({ node, messageId: "rootEntry", data: { entry: `${first}/` } });
+          return;
+        }
+        if (first !== "views") return;
+        if (rest.length === 2) {
+          context.report({ node, messageId: "viewsFile", data: { file: second } });
+          return;
+        }
+        if (rest.length === 3 && third === "index.ts") {
+          context.report({ node, messageId: "viewsIndex" });
+        }
+      },
+    };
+  },
+};
+
+/** @type {Rule.RuleModule} */
+const featureIndexExportsRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A feature's index.ts re-exports only its query factory, its reducers and its view files: export * from './api/xQueries' | './views/<name>/X', export { xReducer } from './store/xSlice'.",
+    },
+    messages: {
+      source:
+        "A feature's index.ts may only export from './api/<x>Queries', './store/<x>Slice' or './views/<name>/<File>', not '{{source}}'.",
+      reducer: "Export only the reducer from a slice: export { xReducer } from '{{source}}'. Actions stay private.",
+      noLocal: "A feature's index.ts only re-exports; it declares nothing itself.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const rest = featurePathParts(context.filename || context.getFilename());
+    if (!rest || rest.length !== 1 || rest[0] !== "index.ts") return {};
+    const checkSource = (node) => {
+      const source = node.source?.value;
+      if (typeof source !== "string") {
+        context.report({ node, messageId: "noLocal" });
+        return;
+      }
+      if (/^\.\/store\/[A-Za-z0-9]+Slice$/.test(source)) {
+        const onlyReducers =
+          node.type === "ExportNamedDeclaration" &&
+          node.specifiers.length > 0 &&
+          node.specifiers.every((s) => s.exported.type === "Identifier" && s.exported.name.endsWith("Reducer"));
+        if (!onlyReducers) context.report({ node, messageId: "reducer", data: { source } });
+        return;
+      }
+      if (/^\.\/api\/[A-Za-z0-9]+Queries$/.test(source)) return;
+      if (/^\.\/views\/[a-z0-9-]+\/[A-Za-z0-9]+$/.test(source)) return;
+      context.report({ node: node.source, messageId: "source", data: { source } });
+    };
+    return {
+      ExportAllDeclaration: checkSource,
+      ExportNamedDeclaration: checkSource,
+      ExportDefaultDeclaration(node) {
+        context.report({ node, messageId: "noLocal" });
+      },
+    };
+  },
+};
+
+/** @type {Rule.RuleModule} */
+const featureRouteApiLocationRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "In a feature, getRouteApi is called only in a page view (const routeApi = getRouteApi(...) in views/<name>/XView.tsx) or in its shared views/<name>/_hooks/<x>RouteAPI.ts (export const XRouteAPI = getRouteApi(...)).",
+    },
+    messages: {
+      location:
+        "Call getRouteApi only in a page view (views/<name>/XView.tsx) or in views/<name>/_hooks/<x>RouteAPI.ts. Import the shared XRouteAPI from there instead.",
+      viewName: "Name the route API of a page view 'routeApi': const routeApi = getRouteApi(...).",
+      hookName: "Name the shared route API after its file: export const {{expected}} = getRouteApi(...).",
+    },
+    schema: [],
+  },
+  create(context) {
+    const rest = featurePathParts(context.filename || context.getFilename());
+    if (!rest) return {};
+    const fileName = rest[rest.length - 1];
+    const isView = rest.length === 3 && rest[0] === "views" && /^[A-Za-z0-9]+View\.tsx$/.test(fileName);
+    const isHook =
+      rest.length === 4 &&
+      rest[0] === "views" &&
+      rest[2] === "_hooks" &&
+      /^[a-z][A-Za-z0-9]*RouteAPI\.ts$/.test(fileName);
+    return {
+      "CallExpression[callee.name='getRouteApi']"(node) {
+        if (!isView && !isHook) {
+          context.report({ node, messageId: "location" });
+          return;
+        }
+        const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
+        const name = declarator?.id.type === "Identifier" ? declarator.id.name : null;
+        if (isView && name !== "routeApi") {
+          context.report({ node, messageId: "viewName" });
+          return;
+        }
+        if (!isHook) return;
+        const base = fileName.slice(0, -".ts".length);
+        const expected = base.charAt(0).toUpperCase() + base.slice(1);
+        if (!name || name.toLowerCase() !== expected.toLowerCase()) {
+          context.report({ node, messageId: "hookName", data: { expected } });
+        }
+      },
+    };
+  },
+};
+
+/** @type {Rule.RuleModule} */
+const featureSuspenseQueryFromRouteRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "In a feature, useSuspenseQuery / useSuspenseInfiniteQuery get the query options from the route context, never from a factory call.",
+    },
+    messages: {
+      factory:
+        "Do not build query options for a suspense query in a view. Read them from the route context (const { xOptions } = routeApi.useRouteContext()) and call {{hook}}({ ...xOptions, select }).",
+    },
+    schema: [],
+  },
+  create(context) {
+    const report = (node, hook) => context.report({ node, messageId: "factory", data: { hook } });
+    return {
+      "CallExpression[callee.name=/^useSuspense(Infinite)?Query$/]"(node) {
+        let arg = node.arguments[0];
+        while (arg && (arg.type === "TSAsExpression" || arg.type === "TSSatisfiesExpression")) arg = arg.expression;
+        if (!arg) return;
+        if (arg.type === "CallExpression") {
+          report(arg, node.callee.name);
+          return;
+        }
+        if (arg.type !== "ObjectExpression") return;
+        for (const property of arg.properties) {
+          if (property.type === "SpreadElement" && property.argument.type === "CallExpression") {
+            report(property, node.callee.name);
+          }
+        }
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["feature-folder-layout"] = featureFolderLayoutRule;
+datsRulesPlugin.rules["feature-index-exports"] = featureIndexExportsRule;
+datsRulesPlugin.rules["feature-route-api-location"] = featureRouteApiLocationRule;
+datsRulesPlugin.rules["feature-suspense-query-from-route"] = featureSuspenseQueryFromRouteRule;
