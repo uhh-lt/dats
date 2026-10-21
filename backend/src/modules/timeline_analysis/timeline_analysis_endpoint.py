@@ -14,10 +14,7 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
 )
-from modules.timeline_analysis.timeline_analysis_service import (
-    recompute_timeline_analysis,
-    update_timeline_analysis,
-)
+from modules.timeline_analysis.timeline_analysis_service import TimelineAnalysisService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -141,14 +138,11 @@ def update_by_id(
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
-    db_obj = update_timeline_analysis(
+    result = TimelineAnalysisService().update_timeline_analysis(
         db=db, id=timeline_analysis_id, update_dto=timeline_analysis
     )
-    result = TimelineAnalysisRead.model_validate(db_obj)
     ws.emit_to_project(
-        DATSEvent.TIMELINE_ANALYSIS_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
+        DATSEvent.TIMELINE_ANALYSIS_UPDATED, result, project_id=result.project_id
     )
     return result
 
@@ -167,12 +161,11 @@ def recompute_by_id(
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
-    db_obj = recompute_timeline_analysis(db=db, id=timeline_analysis_id)
-    result = TimelineAnalysisRead.model_validate(db_obj)
+    result = TimelineAnalysisService().recompute_timeline_analysis(
+        db=db, id=timeline_analysis_id
+    )
     ws.emit_to_project(
-        DATSEvent.TIMELINE_ANALYSIS_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
+        DATSEvent.TIMELINE_ANALYSIS_UPDATED, result, project_id=result.project_id
     )
     return result
 

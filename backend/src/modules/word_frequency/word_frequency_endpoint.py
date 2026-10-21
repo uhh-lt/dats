@@ -9,11 +9,7 @@ from modules.word_frequency.word_frequency_dto import (
     WordFrequencyRead,
     WordFrequencyResult,
 )
-from modules.word_frequency.word_frequency_service import (
-    word_frequency,
-    word_frequency_export,
-    word_frequency_info,
-)
+from modules.word_frequency.word_frequency_service import WordFrequencyService
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
@@ -41,7 +37,7 @@ def word_frequency_analysis_info(
 ) -> list[ColumnInfo[WordFrequencyColumns]]:
     authz_user.assert_in_project(project_id)
 
-    return word_frequency_info(
+    return WordFrequencyService().word_frequency_info(
         db=db,
         project_id=project_id,
     )
@@ -84,7 +80,7 @@ def word_frequency_analysis(
 ) -> WordFrequencyResult:
     authz_user.assert_in_project(project_id)
 
-    return word_frequency(
+    return WordFrequencyService().word_frequency(
         db=db,
         project_id=project_id,
         filter=filter,
@@ -109,7 +105,7 @@ def word_frequency_analysis_export(
 ) -> str:
     authz_user.assert_in_project(project_id)
 
-    return word_frequency_export(
+    return WordFrequencyService().word_frequency_export(
         db=db,
         project_id=project_id,
         filter=filter,
