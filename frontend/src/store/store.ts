@@ -4,12 +4,12 @@
 
 import { bboxFilterReducer } from "@core/bbox-annotation";
 import { memoDialogReducer, memoFilterReducer } from "@core/memo";
-import { tabReducer } from "@core/navigation";
+import { tabsReducer } from "@core/navigation";
 import { confirmationReducer, snackbarReducer } from "@core/notification";
 import { seatFilterReducer } from "@core/sentence-annotation";
 import { documentTableFilterReducer } from "@core/source-document";
 import { satFilterReducer } from "@core/span-annotation";
-import { annoReducer, codeShortcutReducer } from "@features/annotation";
+import { annotationsReducer, codeShortcutsReducer } from "@features/annotation";
 import { bboxAnnotationAnalysisReducer } from "@features/bbox-annotation-analysis";
 import { classifierReducer } from "@features/classifier";
 import { cotaReducer } from "@features/concept-over-time-analysis";
@@ -19,7 +19,7 @@ import { healthReducer } from "@features/health";
 import { llmAssistantReducer } from "@features/llm-assistant";
 import { memoWorkspaceReducer } from "@features/memo-workspace";
 import { perspectivesReducer } from "@features/perspectives";
-import { imageSearchReducer, searchReducer, sentenceSearchReducer } from "@features/search";
+import { imageSearchReducer, documentSearchReducer, sentenceSearchReducer } from "@features/search";
 import { sentAnnotationAnalysisReducer } from "@features/sent-annotation-analysis";
 import { spanAnnotationAnalysisReducer } from "@features/span-annotation-analysis";
 import { timelineAnalysisReducer } from "@features/timeline-analysis";
@@ -33,16 +33,14 @@ import { websocketReducer } from "./global/websocketSlice";
 
 export const store = configureStore({
   reducer: {
-    // persisted reducers
-    ...annoReducer,
-    ...codeShortcutReducer,
-    ...searchReducer,
+    ...annotationsReducer,
+    ...codeShortcutsReducer,
+    ...documentSearchReducer,
     ...imageSearchReducer,
     ...sentenceSearchReducer,
     ...layoutReducer,
     ...projectReducer,
-    ...tabReducer,
-    // non-persisted reducers
+    ...tabsReducer,
     ...memoDialogReducer,
     ...snackbarReducer,
     ...confirmationReducer,
@@ -64,9 +62,7 @@ export const store = configureStore({
     ...perspectivesReducer,
     ...duplicateFinderReducer,
     ...healthReducer,
-    // dialog bus
     ...dialogBusReducer,
-    // websocket connection status
     ...websocketReducer,
   },
   middleware: (getDefaultMiddleware) =>

@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-const storage = createWebStorage("local");
+import { persistStorage } from "../persistStorage";
 
 export interface ProjectState {
   // app state:
@@ -29,7 +28,7 @@ export const projectReducer = {
   [projectSlice.name]: persistReducer(
     {
       key: projectSlice.name,
-      storage,
+      storage: persistStorage,
     },
     projectSlice.reducer,
   ),

@@ -41,7 +41,7 @@ interface ChatMessage {
   speaker: "user" | "agent";
 }
 
-export interface PerspectivesState {
+export interface PerspectivesState extends FilterState {
   lastMapId: number | undefined;
   selectedSdocIds: number[];
   selectedSdocIdsIndex: number;
@@ -82,7 +82,7 @@ const defaultFilterExpression: MyFilterExpression = {
   value: "",
 };
 
-const initialState: PerspectivesState & FilterState = {
+const initialState: PerspectivesState = {
   ...createInitialFilterState(defaultFilterExpression),
   lastMapId: undefined,
   selectedSdocIds: [],

@@ -15,7 +15,7 @@ import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { toPendingBboxAnnotation } from "../_hooks/pendingBboxAnnotation";
 import { useBboxAnnotationResize } from "../_hooks/useBboxAnnotationResize";
 import { Annotation } from "../_types/Annotation";
-import { AnnoActions } from "../store/annoSlice";
+import { AnnotationsActions } from "../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { SVGBBox } from "./SVGBBox";
 import { SVGBBoxText } from "./SVGBBoxCodeIndicator";
@@ -308,7 +308,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
         y_min: annotationToDuplicate.y_min,
         y_max: annotationToDuplicate.y_max,
       },
-      () => dispatch(AnnoActions.moveCodeToTop(codeId)),
+      () => dispatch(AnnotationsActions.moveCodeToTop(codeId)),
     );
   };
 

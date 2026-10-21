@@ -3,7 +3,7 @@ import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, TableInfoHooks } from "@core/fi
 import { BBoxColumns } from "@models/BBoxColumns";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
+import { BBoxAnnotationAnalysisActions } from "../../../store/bboxAnnotationAnalysisSlice";
 import { BBoxAnnotationAnalysisRouteAPI } from "../_hooks/bboxAnnotationAnalysisRouteAPI";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
 import { BBoxAnnotationAnalysisTableToolbarRight } from "./toolbar/BBoxAnnotationAnalysisTableToolbarRight";
@@ -19,11 +19,11 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
   // redux state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.bboxAnnotationAnalysis.rowSelectionModel,
-    BBoxAnnotationsActions.onRowSelectionChange,
+    BBoxAnnotationAnalysisActions.onRowSelectionChange,
   );
   const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.bboxAnnotationAnalysis.columnVisibilityModel,
-    BBoxAnnotationsActions.onColumnVisibilityChange,
+    BBoxAnnotationAnalysisActions.onColumnVisibilityChange,
   );
 
   const columnVisibilityModel = TableInfoHooks.useColumnVisibility(

@@ -7,7 +7,7 @@ import { StringOperator } from "@models/StringOperator";
 import { Box, Checkbox, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useMemo, useState } from "react";
-import { SearchActions } from "../../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";
 import { ImageSearchRouteAPI } from "../_hooks/imageSearchRouteAPI";
 import { ImageSimilaritySearchOptionsMenu } from "./ImageSimilaritySearchOptionsMenu";
@@ -63,7 +63,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
           />
           <DeleteSdocsButton
             sdocIds={selectedDocumentIds}
-            onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
+            onDeleted={(ids) => dispatch(DocumentSearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
           />
         </>
       )}

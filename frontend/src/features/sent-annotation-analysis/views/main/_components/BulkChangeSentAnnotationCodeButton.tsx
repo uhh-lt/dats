@@ -4,7 +4,7 @@ import { IconButton, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
-import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
+import { SentAnnotationAnalysisActions } from "../../../store/sentAnnotationAnalysisSlice";
 
 interface BulkChangeSentAnnotationCodeButtonProps {
   selectedData: SentenceAnnotationRow[];
@@ -17,7 +17,7 @@ export function BulkChangeSentAnnotationCodeButton({ selectedData }: BulkChangeS
 
   // actions
   const handleEditSuccess = useCallback(() => {
-    dispatch(SentAnnotationsActions.onClearRowSelection());
+    dispatch(SentAnnotationAnalysisActions.onClearRowSelection());
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {

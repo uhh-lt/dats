@@ -2,15 +2,14 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-const storage = createWebStorage("local");
+import { persistStorage } from "@store/persistStorage";
 
-interface SentenceSearchState {
+interface SentenceSearchState extends TableState {
   // project state:
   selectedDocumentId: number | undefined;
 }
 
-const initialState: TableState & SentenceSearchState = {
+const initialState: SentenceSearchState = {
   ...initialTableState,
   // project state:
   selectedDocumentId: undefined,
@@ -52,7 +51,7 @@ export const sentenceSearchReducer = {
   [sentenceSearchSlice.name]: persistReducer(
     {
       key: sentenceSearchSlice.name,
-      storage,
+      storage: persistStorage,
     },
     sentenceSearchSlice.reducer,
   ),

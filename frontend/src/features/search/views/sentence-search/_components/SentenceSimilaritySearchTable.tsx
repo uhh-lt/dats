@@ -30,7 +30,7 @@ import {
 } from "material-react-table";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { SearchActions } from "../../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
 import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
 import { SearchBar } from "./SearchBar";
@@ -268,7 +268,7 @@ export function SentenceSimilaritySearchTable({
             />
             <DeleteSdocsButton
               sdocIds={selectedDocumentIds}
-              onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
+              onDeleted={(ids) => dispatch(DocumentSearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
             />
           </>
         )}

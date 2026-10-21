@@ -1,24 +1,24 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 
-const SentAnnotationsSlice = createSlice({
+const initialState: TableState = initialTableState;
+
+const sentAnnotationAnalysisSlice = createSlice({
   name: "sentAnnotationAnalysis",
-  initialState: {
-    ...initialTableState,
-  },
+  initialState,
   reducers: {
     ...tableReducer,
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(ProjectActions.changeProject, (state) => {
-        console.log("Project changed! Resetting 'sentAnnotationAnalysis' state.");
-        resetProjectTableState(state);
-      })
-      .addDefaultCase(() => {});
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'sentAnnotationAnalysis' state.");
+      resetProjectTableState(state);
+    });
   },
 });
 
-export const SentAnnotationsActions = SentAnnotationsSlice.actions;
-export const sentAnnotationAnalysisReducer = { [SentAnnotationsSlice.name]: SentAnnotationsSlice.reducer };
+export const SentAnnotationAnalysisActions = sentAnnotationAnalysisSlice.actions;
+export const sentAnnotationAnalysisReducer = {
+  [sentAnnotationAnalysisSlice.name]: sentAnnotationAnalysisSlice.reducer,
+};

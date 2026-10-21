@@ -13,7 +13,7 @@ import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { TagStyle } from "../../_types/TagStyle";
-import { AnnoActions } from "../../store/annoSlice";
+import { AnnotationsActions } from "../../store/annotationsSlice";
 import { AnnotatorSelector } from "./_components/AnnotatorSelector";
 import { CompareWithSelector } from "./_components/CompareWithSelector";
 import { TagStyleAboveIcon } from "./_components/TagStyleAboveIcon";
@@ -81,7 +81,7 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
             <ToggleButtonGroup
               value={annotationMode}
               exclusive
-              onChange={(_, value) => dispatch(AnnoActions.onChangeAnnotationMode(value))}
+              onChange={(_, value) => dispatch(AnnotationsActions.onChangeAnnotationMode(value))}
               size="small"
               color="primary"
             >
@@ -110,7 +110,7 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
               <ToggleButtonGroup
                 value={tagStyle}
                 exclusive
-                onChange={(_, value) => dispatch(AnnoActions.onSetAnnotatorTagStyle(value))}
+                onChange={(_, value) => dispatch(AnnotationsActions.onSetAnnotatorTagStyle(value))}
                 size="small"
                 color="primary"
               >

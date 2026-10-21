@@ -2,13 +2,11 @@ import { AuthActions } from "@core/auth";
 import { Draft, PayloadAction, createSelector, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
+import { persistStorage } from "@store/persistStorage";
 import { ProjectTabState, TabData } from "./_types/TabData";
 import { normalizeTabRoute } from "./_utils/TabRouteTargetUtils";
 
-const storage = createWebStorage("local");
-
-export interface TabState {
+export interface TabsState {
   userId?: number;
   tabsByProject: Record<number, ProjectTabState>;
 }
@@ -18,7 +16,7 @@ const createProjectTabState = (): ProjectTabState => ({
   tabOrder: [],
 });
 
-const getOrCreateProjectTabState = (state: Draft<TabState>, projectId: number): ProjectTabState => {
+const getOrCreateProjectTabState = (state: Draft<TabsState>, projectId: number): ProjectTabState => {
   if (!state.tabsByProject[projectId]) {
     state.tabsByProject[projectId] = createProjectTabState();
   }
@@ -32,7 +30,7 @@ const moveItem = <T>(arr: T[], from: number, to: number): T[] => {
   return copy;
 };
 
-const initialState: TabState = {
+const initialState: TabsState = {
   userId: undefined,
   tabsByProject: {},
 };
@@ -51,7 +49,7 @@ const normalizeTabData = (tabInput: TabData): TabData => {
   };
 };
 
-const tabSlice = createSlice({
+const tabsSlice = createSlice({
   name: "tabs",
   initialState,
   reducers: {
@@ -124,24 +122,21 @@ const tabSlice = createSlice({
   },
 });
 
-export const selectProjectTabState =
-  (projectId: number) =>
-  (state: RootState): ProjectTabState => {
-    return state.tabs.tabsByProject[projectId] ?? EMPTY_PROJECT_TAB_STATE;
-  };
+export const TabsActions = tabsSlice.actions;
 
-export const selectProjectTabs = (projectId: number) =>
-  createSelector([selectProjectTabState(projectId)], (projectState): TabData[] => {
-    return projectState.tabOrder.map((id) => projectState.tabsById[id]).filter((tab): tab is TabData => Boolean(tab));
-  });
+export const selectProjectTabState = (state: RootState, projectId: number): ProjectTabState =>
+  state.tabs.tabsByProject[projectId] ?? EMPTY_PROJECT_TAB_STATE;
 
-export const TabActions = tabSlice.actions;
-export const tabReducer = {
-  [tabSlice.name]: persistReducer(
+export const selectProjectTabs = createSelector([selectProjectTabState], (projectState): TabData[] =>
+  projectState.tabOrder.map((id) => projectState.tabsById[id]).filter((tab): tab is TabData => Boolean(tab)),
+);
+
+export const tabsReducer = {
+  [tabsSlice.name]: persistReducer(
     {
-      key: tabSlice.name,
-      storage,
+      key: tabsSlice.name,
+      storage: persistStorage,
     },
-    tabSlice.reducer,
+    tabsSlice.reducer,
   ),
 };

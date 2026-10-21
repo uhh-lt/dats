@@ -5,13 +5,13 @@ import { QuickCommandMenu, ShortcutManager } from "@core/navigation";
 import { TagCreateDialog, TagEditDialog } from "@core/tag";
 import { CodeShortcutManagerDialog, CodeShortcutSynchronizer } from "@features/annotation";
 // eslint-disable-next-line local/no-internal-modules-public-entry
-import { AnnoActions } from "@features/annotation/store/annoSlice";
+import { AnnotationsActions } from "@features/annotation/store/annotationsSlice";
 import { ClassifierDialog } from "@features/classifier";
 import { DocumentUploadDialog } from "@features/document-upload";
 import { LLMAssistantDialog } from "@features/llm-assistant";
 import { ProjectSettingsDialog } from "@features/project-settings";
 // eslint-disable-next-line local/no-internal-modules-public-entry
-import { SearchActions } from "@features/search/store/documentSearchSlice";
+import { DocumentSearchActions } from "@features/search/store/documentSearchSlice";
 // eslint-disable-next-line boundaries/element-types
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
@@ -34,34 +34,34 @@ function ProjectRouteLayout() {
 
   const handleFoldersCreated = useCallback(
     (folderIdsToExpand: number[]) =>
-      dispatch(SearchActions.expandFolders(folderIdsToExpand.map((id) => id.toString()))),
+      dispatch(DocumentSearchActions.expandFolders(folderIdsToExpand.map((id) => id.toString()))),
     [dispatch],
   );
 
   const handleTagsCreated = useCallback(
-    (tagIdsToExpand: number[]) => dispatch(SearchActions.expandTags(tagIdsToExpand.map((id) => id.toString()))),
+    (tagIdsToExpand: number[]) => dispatch(DocumentSearchActions.expandTags(tagIdsToExpand.map((id) => id.toString()))),
     [dispatch],
   );
 
   const handleCodesCreated = useCallback(
-    (idsToExpand: number[]) => dispatch(AnnoActions.expandCodes(idsToExpand.map((id) => id.toString()))),
+    (idsToExpand: number[]) => dispatch(AnnotationsActions.expandCodes(idsToExpand.map((id) => id.toString()))),
     [dispatch],
   );
 
   const handleCodeUpdated = useCallback(
-    (idsToExpand: number[]) => dispatch(AnnoActions.expandCodes(idsToExpand.map((id) => id.toString()))),
+    (idsToExpand: number[]) => dispatch(AnnotationsActions.expandCodes(idsToExpand.map((id) => id.toString()))),
     [dispatch],
   );
 
   const handleCodeDeleted = useCallback(
     (codeId: number) => {
-      dispatch(AnnoActions.onDeleteCode(codeId));
+      dispatch(AnnotationsActions.onDeleteCode(codeId));
     },
     [dispatch],
   );
 
   const handleToggleCodeVisibility = useCallback(
-    (codeIds: number[]) => dispatch(AnnoActions.toggleCodeVisibility(codeIds)),
+    (codeIds: number[]) => dispatch(AnnotationsActions.toggleCodeVisibility(codeIds)),
     [dispatch],
   );
 

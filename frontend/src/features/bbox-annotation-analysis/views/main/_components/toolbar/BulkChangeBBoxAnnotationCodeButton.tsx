@@ -4,7 +4,7 @@ import { IconButton, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
-import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
+import { BBoxAnnotationAnalysisActions } from "../../../../store/bboxAnnotationAnalysisSlice";
 
 interface BulkChangeBBoxAnnotationCodeButtonProps {
   selectedData: BBoxAnnotationRow[];
@@ -17,7 +17,7 @@ export function BulkChangeBBoxAnnotationCodeButton({ selectedData }: BulkChangeB
 
   // actions
   const handleEditSuccess = useCallback(() => {
-    dispatch(BBoxAnnotationsActions.onClearRowSelection());
+    dispatch(BBoxAnnotationAnalysisActions.onClearRowSelection());
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {

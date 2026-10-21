@@ -31,12 +31,11 @@ const healthSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder
-      .addCase(ProjectActions.changeProject, (state) => {
-        resetProjectTableState(state);
-        state.processingSettings = initialState.processingSettings;
-      })
-      .addDefaultCase(() => {});
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'health' state.");
+      resetProjectTableState(state);
+      state.processingSettings = initialState.processingSettings;
+    });
   },
 });
 

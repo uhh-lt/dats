@@ -4,7 +4,7 @@ import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
+import { SpanAnnotationAnalysisActions } from "../../../store/spanAnnotationAnalysisSlice";
 
 interface BulkDeleteSpanAnnotationsButtonProps {
   selectedData: SpanAnnotationRow[];
@@ -24,7 +24,7 @@ export function BulkDeleteSpanAnnotationsButton({ selectedData }: BulkDeleteSpan
           { requestBody: selectedData.map((row) => row.id) },
           {
             onSuccess: () => {
-              dispatch(SpanAnnotationsActions.onClearRowSelection());
+              dispatch(SpanAnnotationAnalysisActions.onClearRowSelection());
             },
           },
         );

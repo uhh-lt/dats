@@ -4,7 +4,7 @@ import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { TabData } from "../_types/TabData";
-import { TabActions } from "../tabSlice";
+import { TabsActions } from "../tabsSlice";
 
 export const OpenInTabsButton = memo(({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) => {
   const dispatch = useAppDispatch();
@@ -20,7 +20,7 @@ export const OpenInTabsButton = memo(({ sdocIds, projectId }: { sdocIds: number[
       };
     });
 
-    dispatch(TabActions.addOrUpdateTabs({ tabs, projectId }));
+    dispatch(TabsActions.addOrUpdateTabs({ tabs, projectId }));
   }, [dispatch, projectId, sdocIds]);
 
   return (
