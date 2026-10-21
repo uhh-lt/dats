@@ -360,9 +360,27 @@ export default defineConfig(
         {
           selector: "CallExpression[callee.name='useMutation']:not(:has(Property[key.name='mutationKey']))",
           message:
-            "Every mutation needs a mutationKey that starts with its domain root, e.g. mutationKey: [...tagQueries.all(), 'create'].",
+            "Every mutation needs a mutationKey that starts with its domain root, e.g. mutationKey: [...tagQueries.all(), 'createTag'].",
         },
       ],
+    },
+  },
+  // QUERY FACTORIES (see .github/instructions/frontend-api.instructions.md)
+  {
+    files: ["src/**/api/*Queries.ts"],
+    // tableInfoQueries only builds the keys of the tableInfo leaves of the other factories
+    ignores: ["src/core/filter/api/tableInfoQueries.ts"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/query-factory-shape": "error" },
+  },
+  // HOOKS OBJECTS (see .github/instructions/frontend-api.instructions.md)
+  {
+    files: ["src/**/api/*Hooks.ts"],
+    plugins: { local: datsRulesPlugin },
+    rules: {
+      "local/hooks-object-matches-file": "error",
+      "local/mutation-key-matches-hook": "error",
+      "local/no-forwarding-query-hook": "error",
     },
   },
 );

@@ -749,3 +749,241 @@ export const datsRulesPlugin = {
     "queries-file-matches-root-key": queriesFileMatchesRootKeyRule,
   },
 };
+
+// QUERY FACTORIES AND HOOKS OBJECTS (see .github/instructions/frontend-api.instructions.md)
+
+const QUERY_OPTIONS_BUILDERS = new Set(["queryOptions", "infiniteQueryOptions"]);
+
+/** The expression an arrow function returns (expression body or a single top-level return), or null. */
+const getReturnedExpression = (fn) => {
+  if (fn.body.type !== "BlockStatement") return fn.body;
+  const ret = fn.body.body.find((statement) => statement.type === "ReturnStatement");
+  return ret?.argument ?? null;
+};
+
+const unwrapTsExpression = (node) =>
+  node && (node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression") ? node.expression : node;
+
+/** `xQueries.name(...)` -> "name" (only member calls on the factory itself). */
+const getFactoryCallName = (node, factoryName) => {
+  if (node?.type !== "CallExpression" || node.callee.type !== "MemberExpression") return null;
+  const { object, property } = node.callee;
+  if (object.type !== "Identifier" || object.name !== factoryName || property.type !== "Identifier") return null;
+  return property.name;
+};
+
+/** @type {Rule.RuleModule} */
+const queryFactoryShapeRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A query factory consists of all(), key prefixes named *Scope and queryOptions leaves whose keys start with their own scope.",
+    },
+    messages: {
+      prefixName: "A key prefix of a query factory is named '<leaf>Scope' or '<leaf>Of<Param>Scope', not '{{name}}'.",
+      leafScope:
+        "The queryKey of the leaf '{{name}}' must start with ...{{factory}}.{{name}}Scope() (or {{name}}Of<Param>Scope(...)).",
+      leafRoot: "The queryKey of the leaf '{{name}}' (no params) must start with ...{{factory}}.all().",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[init.type='ObjectExpression']"(declarator) {
+        if (declarator.id.type !== "Identifier" || !declarator.id.name.endsWith("Queries")) return;
+        const factory = declarator.id.name;
+        for (const property of declarator.init.properties) {
+          if (property.type !== "Property" || property.key.type !== "Identifier") continue;
+          const name = property.key.name;
+          if (name === "all" || property.value.type !== "ArrowFunctionExpression") continue;
+          const returned = unwrapTsExpression(getReturnedExpression(property.value));
+          if (!returned) continue;
+
+          // key prefix: () => [...xQueries.all(), "segment"] as const
+          if (returned.type === "ArrayExpression") {
+            if (!name.endsWith("Scope"))
+              context.report({ node: property.key, messageId: "prefixName", data: { name } });
+            continue;
+          }
+
+          // leaf: (...) => queryOptions({ queryKey: [...], ... })
+          if (
+            returned.type !== "CallExpression" ||
+            returned.callee.type !== "Identifier" ||
+            !QUERY_OPTIONS_BUILDERS.has(returned.callee.name)
+          ) {
+            continue;
+          }
+          const options = returned.arguments[0];
+          if (options?.type !== "ObjectExpression") continue;
+          const keyProperty = options.properties.find(
+            (option) =>
+              option.type === "Property" && option.key.type === "Identifier" && option.key.name === "queryKey",
+          );
+          const key = unwrapTsExpression(keyProperty?.value);
+          // keys built elsewhere (e.g. tableInfoQueries.byDomain) are not checked
+          if (key?.type !== "ArrayExpression") continue;
+          const first = key.elements[0];
+          const prefix = first?.type === "SpreadElement" ? getFactoryCallName(first.argument, factory) : null;
+
+          if (property.value.params.length === 0) {
+            if (prefix !== "all") context.report({ node: key, messageId: "leafRoot", data: { name, factory } });
+            continue;
+          }
+          const ownScope =
+            prefix === `${name}Scope` ||
+            (prefix !== null && prefix.startsWith(`${name}Of`) && prefix.endsWith("Scope"));
+          if (!ownScope) context.report({ node: key, messageId: "leafScope", data: { name, factory } });
+        }
+      },
+    };
+  },
+};
+
+const toPascalCase = (name) => name.charAt(0).toUpperCase() + name.slice(1);
+
+/** @type {Rule.RuleModule} */
+const hooksObjectMatchesFileRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: { description: "A *Hooks.ts file exports the hooks object named after the file: tagHooks.ts -> TagHooks." },
+    messages: {
+      mismatch: "The hooks object of '{{file}}' must be named '{{expected}}', not '{{actual}}'.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const file = path.basename(context.filename || context.getFilename());
+    if (!file.endsWith("Hooks.ts")) return {};
+    const expected = toPascalCase(file.slice(0, -".ts".length));
+    return {
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator"(declarator) {
+        // hooks objects are PascalCase; a hook factory (createSearchViewHooks) is not checked
+        if (declarator.id.type !== "Identifier" || !/^[A-Z]\w*Hooks$/.test(declarator.id.name)) return;
+        if (declarator.id.name === expected) return;
+        context.report({
+          node: declarator.id,
+          messageId: "mismatch",
+          data: { file, expected, actual: declarator.id.name },
+        });
+      },
+    };
+  },
+};
+
+/** The hook (`const useX = ...`) a node is defined in, or null. */
+const getEnclosingHookName = (node) => {
+  for (let current = node.parent; current; current = current.parent) {
+    if (
+      current.type === "VariableDeclarator" &&
+      current.id.type === "Identifier" &&
+      /^use[A-Z]/.test(current.id.name) &&
+      current.init?.type === "ArrowFunctionExpression"
+    ) {
+      return current.id.name;
+    }
+  }
+  return null;
+};
+
+/** @type {Rule.RuleModule} */
+const mutationKeyMatchesHookRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "The mutationKey of a hook starts with a root (xQueries.all(), a scope or a root key constant) and ends with the hook name without 'use': useCreateTag -> 'createTag'.",
+    },
+    messages: {
+      root: "A mutationKey starts with its domain root: mutationKey: [...xQueries.all(), '{{expected}}'].",
+      name: "The mutationKey of '{{hook}}' must end with '{{expected}}' (job start mutations: [...xQueries.job.all(), 'start']).",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      "CallExpression[callee.name='useMutation'] > ObjectExpression > Property[key.name='mutationKey'] > ArrayExpression"(
+        key,
+      ) {
+        const hook = getEnclosingHookName(key);
+        if (!hook) return;
+        const expected = hook.charAt(3).toLowerCase() + hook.slice(4);
+        const first = key.elements[0];
+        if (first?.type !== "SpreadElement") {
+          context.report({ node: key, messageId: "root", data: { expected } });
+          return;
+        }
+        const last = key.elements[key.elements.length - 1];
+        const lastValue = last?.type === "Literal" ? last.value : null;
+        const isJobStart =
+          lastValue === "start" &&
+          first.argument.type === "CallExpression" &&
+          first.argument.callee.type === "MemberExpression" &&
+          first.argument.callee.object.type === "MemberExpression" &&
+          first.argument.callee.object.property.type === "Identifier" &&
+          first.argument.callee.object.property.name === "job";
+        if (lastValue === expected || isJobStart) return;
+        context.report({ node: last ?? key, messageId: "name", data: { hook, expected } });
+      },
+    };
+  },
+};
+
+/** @type {Rule.RuleModule} */
+const noForwardingQueryHookRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A query hook must add something (select, enabled, Redux state, polling, ...); a hook that only forwards its arguments to a factory leaf is forbidden.",
+    },
+    messages: {
+      forwarding:
+        "'{{hook}}' only forwards its arguments to a query factory leaf. Remove it and call useQuery(xQueries.leaf(...)) at the call site.",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      "VariableDeclarator > ArrowFunctionExpression"(fn) {
+        const declarator = fn.parent;
+        if (declarator.id.type !== "Identifier" || !/^use[A-Z]/.test(declarator.id.name)) return;
+        const returned = getReturnedExpression(fn);
+        if (fn.body.type === "BlockStatement" && fn.body.body.length !== 1) return;
+        if (returned?.type !== "CallExpression" || returned.callee.type !== "Identifier") return;
+        if (!["useQuery", "useInfiniteQuery", "useSuspenseQuery"].includes(returned.callee.name)) return;
+        const options = returned.arguments[0];
+        const paramNames = new Set();
+        for (const param of fn.params) {
+          if (param.type === "Identifier") paramNames.add(param.name);
+          const pattern = param.type === "AssignmentPattern" ? param.left : param;
+          if (pattern.type === "ObjectPattern") {
+            for (const prop of pattern.properties) {
+              if (prop.type === "Property" && prop.value.type === "Identifier") paramNames.add(prop.value.name);
+            }
+          }
+        }
+        const isForwarding =
+          options?.type === "CallExpression" ||
+          (options?.type === "ObjectExpression" &&
+            options.properties.every(
+              (prop) =>
+                prop.type === "SpreadElement" ||
+                (prop.type === "Property" && prop.value.type === "Identifier" && paramNames.has(prop.value.name)),
+            ));
+        if (!isForwarding) return;
+        context.report({ node: declarator.id, messageId: "forwarding", data: { hook: declarator.id.name } });
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["query-factory-shape"] = queryFactoryShapeRule;
+datsRulesPlugin.rules["hooks-object-matches-file"] = hooksObjectMatchesFileRule;
+datsRulesPlugin.rules["mutation-key-matches-hook"] = mutationKeyMatchesHookRule;
+datsRulesPlugin.rules["no-forwarding-query-hook"] = noForwardingQueryHookRule;
