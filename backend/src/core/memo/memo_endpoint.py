@@ -18,7 +18,7 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_generation_service import MemoGenerationService
-from core.memo.memo_orm import MemoORM
+from core.memo.memo_service import MemoService
 from core.memo.memo_utils import get_memo_read_dto_from_orm, get_object_memos
 from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -173,22 +173,16 @@ def update_by_id(
     ws: WebsocketEmitter = Depends(),
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
-    existing_memo = crud_memo.read(db=db, id=memo_id)
 
-    db_obj = crud_memo.update(
+    result = MemoService().update_memo(
         db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
-    )
-    result = get_memo_read_dto_from_orm(
-        db=db, db_obj=db_obj, user_id=authz_user.user.id
     )
 
     # shared field changes are visible project-wide (which already reaches the
     # requesting user); only send a user-scoped event when there are exclusively
     # favorite changes, so we never emit twice.
     if memo.shared_fields_set():
-        ws.emit_to_project(
-            DATSEvent.MEMO_UPDATED, result, project_id=existing_memo.project_id
-        )
+        ws.emit_to_project(DATSEvent.MEMO_UPDATED, result, project_id=result.project_id)
     elif memo.is_favorite is not None:
         ws.emit_to_user(DATSEvent.MEMO_UPDATED, result, user_id=authz_user.user.id)
     return result
@@ -209,13 +203,9 @@ def update_memos_bulk(
     for memo in memos:
         authz_user.assert_in_same_project_as(Crud.MEMO, memo.memo_id)
 
-    db_objs = crud_memo.update_bulk(
+    results = MemoService().update_memos(
         db=db, user_id=authz_user.user.id, update_dtos=memos
     )
-    results = [
-        get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=authz_user.user.id)
-        for db_obj in db_objs
-    ]
     if not results:
         return results
 
@@ -224,17 +214,7 @@ def update_memos_bulk(
     # favorite changes, so we never emit twice.
     has_shared_changes = any(m.shared_fields_set() for m in memos)
     if has_shared_changes:
-
-        def to_dto(db_obj: MemoORM) -> MemoRead:
-            return get_memo_read_dto_from_orm(
-                db=db, db_obj=db_obj, user_id=authz_user.user.id
-            )
-
-        ws.emit_to_projects_grouped(
-            DATSEvent.MEMO_UPDATED_BATCH,
-            db_objs,
-            to_dto=to_dto,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.MEMO_UPDATED_BATCH, results)
     elif any(m.is_favorite is not None for m in memos):
         ws.emit_to_user(
             DATSEvent.MEMO_UPDATED_BATCH, results, user_id=authz_user.user.id
@@ -298,30 +278,11 @@ def delete_memos_bulk(
 ) -> list[MemoRead]:
     authz_user.assert_in_same_project_as_many(Crud.MEMO, memo_ids)
 
-    memos = crud_memo.read_by_ids(db, ids=memo_ids)
-
-    # Build the DTOs grouped by project BEFORE deleting: the attached object must
-    # still exist. A bulk delete may span multiple projects, so emit one event per
-    # project, each carrying only that project's memos.
-    groups: dict[int, list] = {}
-    for memo in memos:
-        groups.setdefault(memo.project_id, []).append(memo)
-    results_by_project = {
-        project_id: [
-            get_memo_read_dto_from_orm(db=db, db_obj=memo, user_id=authz_user.user.id)
-            for memo in group
-        ]
-        for project_id, group in groups.items()
-    }
-
-    crud_memo.delete_bulk(db=db, ids=memo_ids)
-
-    for project_id, group_results in results_by_project.items():
-        ws.emit_to_project(
-            DATSEvent.MEMO_DELETED_BATCH, group_results, project_id=project_id
-        )
-
-    results = [dto for group in results_by_project.values() for dto in group]
+    results = MemoService().delete_memos(
+        db=db, user_id=authz_user.user.id, ids=memo_ids
+    )
+    if results:
+        ws.emit_dtos_to_projects(DATSEvent.MEMO_DELETED_BATCH, results)
     return results
 
 

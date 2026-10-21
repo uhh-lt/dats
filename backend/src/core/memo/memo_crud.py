@@ -1,12 +1,12 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from core.memo.memo_dto import MemoCreateIntern, MemoUpdate, MemoUpdateBulk
+from core.memo.memo_dto import MemoCreateIntern, MemoUpdate
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
 class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
@@ -120,40 +120,6 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, user_id: int, id: int, update_dto: MemoUpdate
-    ) -> MemoORM:
-        """Update a memo's shared fields and/or the requesting user's per-user favorite flag."""
-        # is_favorite is per-user state (a link-table row), not an ORM column,
-        # so handle it separately from the shared fields.
-        if update_dto.is_favorite is not None:
-            if update_dto.is_favorite:
-                self.favorite(db=db, memo_id=id, user_id=user_id)
-            else:
-                self.unfavorite(db=db, memo_id=id, user_id=user_id)
-
-        # Only the shared (project-visible) fields go through the ORM update.
-        # A favorite-only update has no shared fields, so there is nothing to
-        # update — return the memo as-is. We must not re-validate an empty
-        # MemoUpdate (its validator requires at least one field).
-        shared_fields = update_dto.shared_fields_set()
-        if shared_fields:
-            shared_data = update_dto.model_dump(include=shared_fields)
-            shared_update = MemoUpdate.model_validate(shared_data)
-            return super().update(db=db, id=id, update_dto=shared_update)
-        return self.read(db=db, id=id)
-
-    def update_bulk(
-        self, db: Session, *, user_id: int, update_dtos: list[MemoUpdateBulk]
-    ) -> list[MemoORM]:
-        """Update multiple memos, each identified by its memo_id."""
-        return [
-            self.update(
-                db=db, user_id=user_id, id=update_dto.memo_id, update_dto=update_dto
-            )
-            for update_dto in update_dtos
-        ]
-
     def update_recent(self, db: Session, *, memo_id: int, user_id: int) -> None:
         """Upsert a (user, memo) recents row, bumping last_opened to now."""
         from sqlalchemy.dialects.postgresql import insert
@@ -167,30 +133,57 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db.flush()
 
     ### DELETE OPERATIONS ###
-
-    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[MemoORM]:
-        """Delete multiple memos by ID, returning the deleted ORM objects."""
-        return [self.delete(db=db, id=memo_id) for memo_id in ids]
+    # Inherited from SQLCRUDBase
 
     ### OTHER OPERATIONS ###
 
     def favorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
-        self.exists(db=db, id=memo_id, raise_error=True)
+        self.favorite_multi(db=db, memo_ids=[memo_id], user_id=user_id)
+
+    def favorite_multi(self, db: Session, *, memo_ids: list[int], user_id: int) -> None:
+        """
+        Favorite memos for a user; already favorited memos are skipped.
+
+        Raises:
+            NoSuchElementError: If any memo does not exist.
+        """
+        if not memo_ids:
+            return
+        self.read_by_ids(db=db, ids=memo_ids)
 
         from sqlalchemy.dialects.postgresql import insert
 
+        unique_ids = list(dict.fromkeys(memo_ids))
         insert_stmt = insert(MemoFavoriteLinkTable).on_conflict_do_nothing()
-        db.execute(insert_stmt, [{"memo_id": memo_id, "user_id": user_id}])
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            db.execute(
+                insert_stmt,
+                [{"memo_id": memo_id, "user_id": user_id} for memo_id in batch_ids],
+            )
         db.flush()
 
     def unfavorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
+        self.unfavorite_multi(db=db, memo_ids=[memo_id], user_id=user_id)
+
+    def unfavorite_multi(
+        self, db: Session, *, memo_ids: list[int], user_id: int
+    ) -> None:
+        """Remove the favorite of a user from memos; memos without one are skipped."""
+        if not memo_ids:
+            return
+
         from sqlalchemy import delete
 
-        stmt = delete(MemoFavoriteLinkTable).where(
-            MemoFavoriteLinkTable.memo_id == memo_id,
-            MemoFavoriteLinkTable.user_id == user_id,
-        )
-        db.execute(stmt)
+        unique_ids = list(dict.fromkeys(memo_ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            db.execute(
+                delete(MemoFavoriteLinkTable).where(
+                    MemoFavoriteLinkTable.memo_id.in_(batch_ids),
+                    MemoFavoriteLinkTable.user_id == user_id,
+                )
+            )
         db.flush()
 
     def exists_favorite(self, db: Session, *, memo_id: int, user_id: int) -> bool:
