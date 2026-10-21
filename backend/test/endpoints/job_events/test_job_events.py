@@ -12,8 +12,13 @@ Covered behavior:
 - The emitted envelope has kind="users", targets the project's member ids, and
   carries the full per-type JobRead payload.
 - An emission failure does NOT fail the job (never-raise contract).
+
+The started jobs really run in the background worker, so every test waits
+until the worker ended its job: a job still running when the next test cleans
+the data stores deadlocks with the cleanup or writes into the next test's data.
 """
 
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -43,6 +48,29 @@ def _start_export_job(project: ProjectORM) -> Job:
         specific_export_job_parameters=None,
     )
     return JobService().start_job(job_type=JobType.EXPORT, payload=payload)
+
+
+_ENDED_JOB_STATUS = [
+    JobStatus.FINISHED,
+    JobStatus.FAILED,
+    JobStatus.STOPPED,
+    JobStatus.CANCELED,
+]
+
+
+def _wait_until_ended(job: Job, timeout: float = 60.0) -> None:
+    """Wait until the background worker ended the job."""
+    deadline = time.monotonic() + timeout
+    while True:
+        status = JobService().get_job(job.get_id()).get_status()
+        if status in _ENDED_JOB_STATUS:
+            return
+        if time.monotonic() > deadline:
+            pytest.fail(
+                f"Job {job.get_id()} did not end within {timeout}s "
+                f"(last status: {status})"
+            )
+        time.sleep(0.1)
 
 
 def _captured_envelopes(mock_publish: MagicMock) -> list[WebSocketEnvelope]:
@@ -78,6 +106,7 @@ class TestJobUpdatedEmission:
             "systems.job_system.job_events._publish_envelope_sync"
         ) as mock_publish:
             job = _start_export_job(test_project)
+        _wait_until_ended(job)
 
         assert mock_publish.called, "start_job should publish a JOB_UPDATED event"
         envelope = _captured_envelopes(mock_publish)[-1]
@@ -101,6 +130,7 @@ class TestJobUpdatedEmission:
             "systems.job_system.job_events._publish_envelope_sync"
         ) as mock_publish:
             job.update(status_message="Halfway there", current_step=1)
+        _wait_until_ended(job)
 
         assert mock_publish.called, "Job.update() should publish a JOB_UPDATED event"
         envelope = _captured_envelopes(mock_publish)[-1]
@@ -121,6 +151,8 @@ class TestJobUpdatedEmission:
             "systems.job_system.job_events._publish_envelope_sync"
         ) as mock_publish:
             JobService().stop_job(job.get_id())
+        # The job is CANCELED now, but the worker may still run it: the cleanup
+        # of the next test waits for the worker (see `dats_test_utils`)
 
         assert mock_publish.called, "stop_job should publish a JOB_UPDATED event"
         envelope = _captured_envelopes(mock_publish)[-1]
@@ -138,6 +170,7 @@ class TestJobUpdatedEmission:
             # Must not raise despite the publish failure.
             job = _start_export_job(test_project)
             job.update(status_message="still alive")
+        _wait_until_ended(job)
 
         assert job.get_id() is not None
 
@@ -172,6 +205,7 @@ class TestJobUpdatedEmission:
         ) as mock_publish:
             job = JobService().start_job(job_type=JobType.SDOC_INIT, payload=payload)
             job.update(status_message="working on it")
+        _wait_until_ended(job)
 
         assert not mock_publish.called, (
             "Internal pipeline jobs (publish_updates=False) must not publish events"
@@ -187,6 +221,8 @@ class TestJobUpdatedEmission:
         """
         with patch("systems.job_system.job_events._publish_envelope_sync"):
             job = _start_export_job(test_project)
+        # Let the worker end its run of the job before it runs here again
+        _wait_until_ended(job)
 
         with (
             patch("systems.job_system.job_handler.Job", return_value=job),
@@ -215,6 +251,8 @@ class TestJobUpdatedEmission:
         """
         with patch("systems.job_system.job_events._publish_envelope_sync"):
             job = _start_export_job(test_project)
+        # Let the worker end its run of the job before it runs here again
+        _wait_until_ended(job)
 
         def failing_handler(payload, job):
             raise RuntimeError("export exploded")
@@ -246,6 +284,8 @@ class TestJobUpdatedEmission:
         """
         with patch("systems.job_system.job_events._publish_envelope_sync"):
             job = _start_export_job(test_project)
+        # Let the worker end its run of the job before it runs here again
+        _wait_until_ended(job)
 
         with (
             patch("systems.job_system.job_handler.Job", return_value=job),
@@ -276,6 +316,8 @@ class TestJobUpdatedEmission:
         """If the error hook raises as well, the FAILED JOB_UPDATED is still published."""
         with patch("systems.job_system.job_events._publish_envelope_sync"):
             job = _start_export_job(test_project)
+        # Let the worker end its run of the job before it runs here again
+        _wait_until_ended(job)
 
         def failing_handler(payload, job):
             raise RuntimeError("export exploded")
