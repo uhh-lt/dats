@@ -6,7 +6,7 @@ import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { BBoxColumns } from "@models/BBoxColumns";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
-import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
+import { Button, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -17,53 +17,50 @@ import { createBBoxAnnotationNodes } from "../../_utils/whiteboardUtils";
 
 const filterName = "bboxAnnotationDialogWhiteboard";
 
-export interface AddBBoxAnnotationNodeDialogProps extends AddNodeDialogProps {
+interface AddBBoxAnnotationNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
-  buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-export const AddBBoxAnnotationNodeDialog = memo(
-  ({ projectId, buttonProps, ...props }: AddBBoxAnnotationNodeDialogProps) => {
-    // dialog state
-    const dialog = useDialog();
-    const { isMaximized, toggleMaximize } = useDialogMaximize();
+export function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBBoxAnnotationNodeDialogProps) {
+  // dialog state
+  const { isOpen, open: handleOpen, close: handleClose } = useDialog();
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
-    // global server state
-    const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
+  // global server state
+  const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
-    return (
-      <>
-        <Tooltip title="Add bbox annotations" placement="right" arrow>
-          <Button onClick={dialog.open} {...buttonProps}>
-            {getIconComponent(Icon.BBOX_ANNOTATION)}
-          </Button>
-        </Tooltip>
-        <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
-          {metadata.isSuccess ? (
-            <>
-              <DATSDialogHeader
-                title="Select bbox annotations to add to Whiteboard"
-                onClose={dialog.close}
-                isMaximized={isMaximized}
-                onToggleMaximize={toggleMaximize}
-              />
-              <AddBBoxAnnotationNodeDialogContent
-                onClose={dialog.close}
-                projectId={projectId}
-                metadata={metadata.data}
-                {...props}
-              />
-            </>
-          ) : metadata.isLoading ? (
-            <CircularProgress />
-          ) : (
-            <div>An error occurred</div>
-          )}
-        </Dialog>
-      </>
-    );
-  },
-);
+  return (
+    <>
+      <Tooltip title="Add bbox annotations" placement="right" arrow>
+        <Button onClick={handleOpen} {...buttonProps}>
+          {getIconComponent(Icon.BBOX_ANNOTATION)}
+        </Button>
+      </Tooltip>
+      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+        {metadata.isSuccess ? (
+          <>
+            <DATSDialogHeader
+              title="Select bbox annotations to add to Whiteboard"
+              onClose={handleClose}
+              isMaximized={isMaximized}
+              onToggleMaximize={toggleMaximize}
+            />
+            <AddBBoxAnnotationNodeDialogContent
+              onClose={handleClose}
+              projectId={projectId}
+              metadata={metadata.data}
+              {...props}
+            />
+          </>
+        ) : metadata.isLoading ? (
+          <CircularProgress />
+        ) : (
+          <div>An error occurred</div>
+        )}
+      </Dialog>
+    </>
+  );
+}
 
 const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDialogContent({
   metadata,

@@ -3,7 +3,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TaskType } from "@models/TaskType";
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { LLMAssistantActions } from "../../store/llmAssistantSlice";
 import { AnnotationResultStep } from "./_components/AnnotationResultStep";
 import { CodeSelectionStep } from "./_components/CodeSelectionStep";
@@ -84,7 +84,7 @@ const contentDict: Record<number, Record<TaskType, React.ReactNode>> = {
   },
 };
 
-export const LLMAssistantDialog = memo(() => {
+export function LLMAssistantDialog() {
   // global client state (redux)
   const method = useAppSelector((state) => state.llmAssistant.method);
   const step = useAppSelector((state) => state.llmAssistant.step);
@@ -126,4 +126,4 @@ export const LLMAssistantDialog = memo(() => {
       {contentDict[step][method || TaskType.TAGGING]}
     </Dialog>
   );
-});
+}

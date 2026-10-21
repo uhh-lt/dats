@@ -7,7 +7,7 @@ import { FolderCreate } from "@models/FolderCreate";
 import { FolderType } from "@models/FolderType";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderHooks } from "./api/folderHooks";
@@ -19,7 +19,7 @@ interface FolderCreateDialogProps {
 }
 
 export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreateDialogProps) {
-  const { isOpen: isFolderCreateDialogOpen, data, close: handleClose } = useDialog("folderCreate");
+  const { isOpen, data: dialogData, close: handleClose } = useDialogBus("folderCreate");
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();
@@ -38,15 +38,15 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isFolderCreateDialogOpen) {
+    if (isOpen) {
       reset({
-        name: data?.folderName || "",
+        name: dialogData?.folderName || "",
         folder_type: FolderType.NORMAL,
-        parent_id: data?.parentFolderId ?? -1,
+        parent_id: dialogData?.parentFolderId ?? -1,
         project_id: projectId,
       });
     }
-  }, [isFolderCreateDialogOpen, data, reset, projectId]);
+  }, [isOpen, dialogData, reset, projectId]);
 
   // form actions
   const { mutate: createFolderMutation, isPending } = FolderHooks.useCreateFolder();
@@ -84,7 +84,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
 
   return (
     <Dialog
-      open={isFolderCreateDialogOpen}
+      open={isOpen}
       onClose={handleClose}
       maxWidth="md"
       fullWidth

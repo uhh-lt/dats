@@ -6,7 +6,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TagCreate } from "@models/TagCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -19,7 +19,7 @@ interface TagCreateDialogProps {
 }
 
 export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogProps) {
-  const { isOpen: isTagCreateDialogOpen, data: dialogData, close: handleClose } = useDialog("tagCreate");
+  const { isOpen, data: dialogData, close: handleClose } = useDialogBus("tagCreate");
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();
@@ -38,7 +38,7 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isTagCreateDialogOpen) {
+    if (isOpen) {
       reset({
         parent_id: -1,
         name: dialogData?.tagName || "",
@@ -47,7 +47,7 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
         project_id: projectId,
       });
     }
-  }, [dialogData, isTagCreateDialogOpen, reset, projectId]);
+  }, [dialogData, isOpen, reset, projectId]);
 
   // form actions
   const { mutate: createTagMutation, isPending } = TagHooks.useCreateTag();
@@ -86,7 +86,7 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
 
   return (
     <Dialog
-      open={isTagCreateDialogOpen}
+      open={isOpen}
       onClose={handleClose}
       maxWidth="md"
       fullWidth

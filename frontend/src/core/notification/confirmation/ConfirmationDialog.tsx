@@ -1,10 +1,11 @@
+/* eslint-disable local/dialog-conventions -- a confirmation is a small alert dialog: DialogTitle, no maximize */
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { memo, useCallback } from "react";
+import { useCallback } from "react";
 import { ConfirmationActions } from "./confirmationSlice";
 
-export const ConfirmationDialog = memo(() => {
+export function ConfirmationDialog() {
   const isConfirmationDialogOpen = useAppSelector((state) => state.confirmation.isConfirmationDialogOpen);
   const confirmationEventData = useAppSelector((state) => state.confirmation.confirmationData);
   const dispatch = useAppDispatch();
@@ -48,4 +49,4 @@ export const ConfirmationDialog = memo(() => {
       )}
     </Dialog>
   );
-});
+}

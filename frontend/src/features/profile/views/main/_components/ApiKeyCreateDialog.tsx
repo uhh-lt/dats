@@ -2,20 +2,17 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText } from "@components/form-inputs";
 import { useOpenSnackbar } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ApiKeyCreatedResponse } from "@models/ApiKeyCreatedResponse";
 import { ExpiryDuration } from "@models/ExpiryDuration";
+import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SaveIcon from "@mui/icons-material/Save";
 import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, TextField } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { ApiKeyHooks } from "../../../api/apiKeyHooks";
-
-interface ApiKeyCreateDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
 
 interface ApiKeyCreateFormValues {
   name: string;
@@ -31,9 +28,12 @@ const expiryDurationLabels: Record<ExpiryDuration, string> = {
   [ExpiryDuration.NEVER]: "Never",
 };
 
-export function ApiKeyCreateDialog({ open, onClose }: ApiKeyCreateDialogProps) {
+export function ApiKeyCreateDialog() {
   // local client state: the newly created key (plaintext is only available once, right after creation)
   const [createdKey, setCreatedKey] = useState<ApiKeyCreatedResponse | null>(null);
+
+  // dialog state
+  const { isOpen, open: handleOpen, close: handleClose } = useDialog({ onClose: () => setCreatedKey(null) });
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -47,12 +47,14 @@ export function ApiKeyCreateDialog({ open, onClose }: ApiKeyCreateDialogProps) {
     formState: { errors },
     control,
     reset,
-  } = useForm<ApiKeyCreateFormValues>({
-    defaultValues: {
-      name: "",
-      expiresIn: ExpiryDuration._1_YEAR,
-    },
-  });
+  } = useForm<ApiKeyCreateFormValues>();
+
+  // reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      reset({ name: "", expiresIn: ExpiryDuration._1_YEAR });
+    }
+  }, [isOpen, reset]);
 
   // form actions
   const { mutate: createApiKeyMutation, isPending } = ApiKeyHooks.useCreateApiKey();
@@ -79,126 +81,125 @@ export function ApiKeyCreateDialog({ open, onClose }: ApiKeyCreateDialogProps) {
       .catch(() => openSnackbar({ text: "Failed to copy API key to clipboard", severity: "error" }));
   }, [createdKey, openSnackbar]);
 
-  const handleClose = useCallback(() => {
-    reset({ name: "", expiresIn: ExpiryDuration._1_YEAR });
-    setCreatedKey(null);
-    onClose();
-  }, [reset, onClose]);
-
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      fullScreen={isMaximized}
-      component="form"
-      onSubmit={handleSubmit(handleApiKeyCreation, handleError)}
-    >
-      <DATSDialogHeader
-        title="Create a new API key"
+    <>
+      <Button variant="contained" color="success" startIcon={<AddIcon />} onClick={handleOpen}>
+        Add API Key
+      </Button>
+      <Dialog
+        open={isOpen}
         onClose={handleClose}
-        isMaximized={isMaximized}
-        onToggleMaximize={toggleMaximize}
-      />
-      {createdKey ? (
-        <>
-          <DialogContent>
-            <Stack spacing={3}>
-              <Alert severity="warning">
-                Make sure to copy your API key now. You will not be able to see it again!
-              </Alert>
-              <TextField
-                label={`API key for "${createdKey.name}"`}
-                value={createdKey.api_key}
+        maxWidth="sm"
+        fullWidth
+        fullScreen={isMaximized}
+        component="form"
+        onSubmit={handleSubmit(handleApiKeyCreation, handleError)}
+      >
+        <DATSDialogHeader
+          title="Create a new API key"
+          onClose={handleClose}
+          isMaximized={isMaximized}
+          onToggleMaximize={toggleMaximize}
+        />
+        {createdKey ? (
+          <>
+            <DialogContent>
+              <Stack spacing={3}>
+                <Alert severity="warning">
+                  Make sure to copy your API key now. You will not be able to see it again!
+                </Alert>
+                <TextField
+                  label={`API key for "${createdKey.name}"`}
+                  value={createdKey.api_key}
+                  fullWidth
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                      sx: { fontFamily: "monospace" },
+                    },
+                    inputLabel: { shrink: true },
+                  }}
+                />
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button variant="outlined" onClick={handleClose} fullWidth>
+                Close
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleCopyKey}
+                startIcon={<ContentCopyIcon />}
                 fullWidth
-                slotProps={{
-                  input: {
-                    readOnly: true,
-                    sx: { fontFamily: "monospace" },
-                  },
-                  inputLabel: { shrink: true },
-                }}
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={handleClose} fullWidth>
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleCopyKey}
-              startIcon={<ContentCopyIcon />}
-              fullWidth
-            >
-              Copy API Key
-            </Button>
-          </DialogActions>
-        </>
-      ) : (
-        <>
-          <DialogContent>
-            <Stack spacing={3}>
-              <FormText
-                name="name"
-                rules={{
-                  required: "Name is required",
-                }}
-                control={control}
-                textFieldProps={{
-                  label: "Name",
-                  variant: "standard",
-                  fullWidth: true,
-                  error: Boolean(errors.name),
-                  helperText: <ErrorMessage errors={errors} name="name" />,
-                  slotProps: {
-                    inputLabel: { shrink: true },
-                  },
-                  autoFocus: true,
-                }}
-              />
-              <FormMenu
-                name="expiresIn"
-                rules={{
-                  required: "Expiration is required",
-                }}
-                control={control}
-                textFieldProps={{
-                  label: "Expires in",
-                  variant: "standard",
-                  fullWidth: true,
-                  error: Boolean(errors.expiresIn),
-                  helperText: <ErrorMessage errors={errors} name="expiresIn" />,
-                  slotProps: {
-                    inputLabel: { shrink: true },
-                  },
-                }}
               >
-                {Object.values(ExpiryDuration).map((expiryDuration) => (
-                  <MenuItem key={expiryDuration} value={expiryDuration}>
-                    {expiryDurationLabels[expiryDuration]}
-                  </MenuItem>
-                ))}
-              </FormMenu>
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              variant="contained"
-              color="success"
-              type="submit"
-              startIcon={<SaveIcon />}
-              fullWidth
-              loading={isPending}
-              loadingPosition="start"
-            >
-              Create API Key
-            </Button>
-          </DialogActions>
-        </>
-      )}
-    </Dialog>
+                Copy API Key
+              </Button>
+            </DialogActions>
+          </>
+        ) : (
+          <>
+            <DialogContent>
+              <Stack spacing={3}>
+                <FormText
+                  name="name"
+                  rules={{
+                    required: "Name is required",
+                  }}
+                  control={control}
+                  textFieldProps={{
+                    label: "Name",
+                    variant: "standard",
+                    fullWidth: true,
+                    error: Boolean(errors.name),
+                    helperText: <ErrorMessage errors={errors} name="name" />,
+                    slotProps: {
+                      inputLabel: { shrink: true },
+                    },
+                    autoFocus: true,
+                  }}
+                />
+                <FormMenu
+                  name="expiresIn"
+                  rules={{
+                    required: "Expiration is required",
+                  }}
+                  control={control}
+                  textFieldProps={{
+                    label: "Expires in",
+                    variant: "standard",
+                    fullWidth: true,
+                    error: Boolean(errors.expiresIn),
+                    helperText: <ErrorMessage errors={errors} name="expiresIn" />,
+                    slotProps: {
+                      inputLabel: { shrink: true },
+                    },
+                  }}
+                >
+                  {Object.values(ExpiryDuration).map((expiryDuration) => (
+                    <MenuItem key={expiryDuration} value={expiryDuration}>
+                      {expiryDurationLabels[expiryDuration]}
+                    </MenuItem>
+                  ))}
+                </FormMenu>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                variant="contained"
+                color="success"
+                type="submit"
+                startIcon={<SaveIcon />}
+                fullWidth
+                loading={isPending}
+                loadingPosition="start"
+              >
+                Create API Key
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+    </>
   );
 }

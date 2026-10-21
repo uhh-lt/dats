@@ -3,25 +3,25 @@ import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
-import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { Button, Dialog, DialogActions, Stack, Typography } from "@mui/material";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
-import { memo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { SpanAnnotationHooks } from "./api/spanAnnotationHooks";
 import { SpanAnnotationRenderer } from "./SpanAnnotationRenderer";
 
-export interface SpanAnnotationEditDialogProps extends ButtonProps {
+interface SpanAnnotationEditDialogProps {
   projectId: number;
 }
 
-export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditDialogProps) => {
+export function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const selectedCodeId =
     Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
-  // global client state (redux)
-  const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("spanAnnotationEdit");
+  // dialog state
+  const { isOpen, data: dialogData, close: closeDialog, onSuccess } = useDialogBus("spanAnnotationEdit");
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = SpanAnnotationHooks.useUpdateBulkSpan();
@@ -55,11 +55,11 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
       {dialogData && (
         <>
           <DATSDialogHeader
-            title={`Changing the code of ${dialogData.annotationIds.length} annotation${dialogData.annotationIds.length > 1 && "s"}`}
+            title={`Changing the code of ${dialogData.annotationIds.length} annotation${dialogData.annotationIds.length > 1 ? "s" : ""}`}
             onClose={handleClose}
             isMaximized={isMaximized}
             onToggleMaximize={toggleMaximize}
@@ -71,24 +71,21 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
             enableMultiRowSelection={false}
           />
           {dialogData.annotationIds.length > 0 && (
-            <>
-              <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
-                <Typography variant="h6">Preview</Typography>
-                <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showCode showText />
-                <ArrowRight />
-                {selectedCodeId ? (
-                  <Stack direction="row" alignItems="center">
-                    <CodeRenderer code={selectedCodeId} />
-                    {": "}
-                    <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showText />
-                  </Stack>
-                ) : (
-                  <span>Select a code to preview the change.</span>
-                )}
-              </Stack>
-            </>
+            <Stack direction="row" spacing={1} alignItems="center" p={2}>
+              <Typography variant="h6">Preview</Typography>
+              <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showCode showText />
+              <ArrowRight />
+              {selectedCodeId ? (
+                <Stack direction="row" alignItems="center">
+                  <CodeRenderer code={selectedCodeId} />
+                  {": "}
+                  <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showText />
+                </Stack>
+              ) : (
+                <span>Select a code to preview the change.</span>
+              )}
+            </Stack>
           )}
-
           <DialogActions>
             <Button
               variant="contained"
@@ -100,11 +97,11 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
               loadingPosition="start"
               fullWidth
             >
-              Update Annotation{dialogData.annotationIds.length > 1 && "s"}
+              Update Annotation{dialogData.annotationIds.length > 1 ? "s" : ""}
             </Button>
           </DialogActions>
         </>
       )}
     </Dialog>
   );
-});
+}

@@ -1,9 +1,9 @@
 import { CardContainer } from "@components/CardContainer";
 import { getIconComponent, Icon } from "@components/icons";
 import { Box, Card, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useAppSelector } from "@store/storeHooks";
 import { PerspectivesHooks } from "../../../api/perspectivesHooks";
-import { PerspectivesActions } from "../../../store/perspectivesSlice";
 
 interface ClusterListProps {
   aspectId: number;
@@ -16,9 +16,9 @@ export function ClusterList({ aspectId, height }: ClusterListProps) {
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // open cluster dialog
-  const dispatch = useAppDispatch();
+  const openClusterDetailDialog = useOpenDialog("clusterDetail");
   const handleClick = (clusterId: number) => () => {
-    dispatch(PerspectivesActions.onOpenClusterDialog(clusterId));
+    openClusterDetailDialog({ clusterId });
   };
 
   return (

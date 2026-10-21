@@ -1,13 +1,14 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ClusterCreate } from "@models/ClusterCreate";
 import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useState } from "react";
+import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
 
@@ -19,53 +20,57 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // dialog state
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const { isOpen, open: handleOpen, close: handleClose } = useDialog();
 
-  // project creation
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
+
+  // form
   const {
     handleSubmit,
     formState: { errors },
     control,
-  } = useForm<ClusterCreate>({
-    defaultValues: {
-      name: "",
-      description: "",
-    },
-  });
-  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
-  const handleClusterCreation: SubmitHandler<ClusterCreate> = (data) => {
-    if (!projectId) {
-      console.error("Project ID is not set");
-      return;
-    }
+    reset,
+  } = useForm<ClusterCreate>();
 
-    startPerspectivesJobMutation(
-      {
-        aspectId: aspectId,
-        requestBody: {
-          perspectives_job_type: PerspectivesJobType.CREATE_CLUSTER_WITH_NAME,
-          create_dto: {
-            aspect_id: aspectId,
-            name: data.name,
-            description: data.description,
-            parent_cluster_id: null, // no parent cluster for new clusters
-            level: 0, // default level for new clusters
+  // reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      reset({ name: "", description: "" });
+    }
+  }, [isOpen, reset]);
+
+  // form actions
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const handleClusterCreation = useCallback<SubmitHandler<ClusterCreate>>(
+    (data) => {
+      if (!projectId) {
+        console.error("Project ID is not set");
+        return;
+      }
+
+      startPerspectivesJobMutation(
+        {
+          aspectId: aspectId,
+          requestBody: {
+            perspectives_job_type: PerspectivesJobType.CREATE_CLUSTER_WITH_NAME,
+            create_dto: {
+              aspect_id: aspectId,
+              name: data.name,
+              description: data.description,
+              parent_cluster_id: null, // no parent cluster for new clusters
+              level: 0, // default level for new clusters
+            },
           },
         },
-      },
-      {
-        onSuccess: () => handleClose(),
-      },
-    );
-  };
-  const handleError: SubmitErrorHandler<ClusterCreate> = (error) => {
-    console.error(error);
-  };
-
-  // maximize
-  const { isMaximized, toggleMaximize } = useDialogMaximize();
+        {
+          onSuccess: () => handleClose(),
+        },
+      );
+    },
+    [aspectId, handleClose, projectId, startPerspectivesJobMutation],
+  );
+  const handleError: SubmitErrorHandler<ClusterCreate> = (data) => console.error(data);
 
   return (
     <>
@@ -87,7 +92,7 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
         </span>
       </Tooltip>
       <Dialog
-        open={open}
+        open={isOpen}
         onClose={handleClose}
         maxWidth="md"
         fullWidth
@@ -119,6 +124,7 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
                 variant: "outlined",
                 fullWidth: true,
                 error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
               }}
             />
             <FormTextMultiline

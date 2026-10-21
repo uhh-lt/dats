@@ -3,37 +3,29 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { Box, CircularProgress, Dialog, DialogContent, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { useCallback } from "react";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { MemoAttachedObject, MemoEditor, useMemoEditorData, useMemoPersistence } from "../editor";
-import { MemoDialogEvent } from "./_types/MemoDialogEvent";
-import { MemoDialogActions } from "./memoDialogSlice";
 
 /**
- * Global memo dialog container: redux-driven open state + dialog chrome
+ * Global memo dialog container: dialog bus open state + dialog chrome
  * (header, maximize, actions). The editing experience lives in MemoEditor,
  * data in useMemoEditorData, persistence in useMemoPersistence.
  */
 export function MemoDialog() {
-  const isMemoDialogOpen = useAppSelector((state) => state.memoDialog.isMemoDialogOpen);
-  const memoEventData = useAppSelector((state) => state.memoDialog.memoEventData);
-  const dispatch = useAppDispatch();
-
-  const handleClose = useCallback(() => {
-    dispatch(MemoDialogActions.closeMemoDialog());
-  }, [dispatch]);
+  const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("memo");
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // data
-  const { memo, attachedObject, attachedObjectType, isLoading, error } = useMemoEditorData(memoEventData);
+  const { memo, attachedObject, attachedObjectType, isLoading, error } = useMemoEditorData(dialogData);
   const isReady = !isLoading && !error && !!attachedObject && !!attachedObjectType;
 
   return (
     <Dialog
-      open={isMemoDialogOpen && memoEventData !== undefined}
+      open={isOpen && dialogData !== undefined}
       onClose={handleClose}
       maxWidth="md"
       fullWidth
@@ -46,13 +38,13 @@ export function MemoDialog() {
         },
       }}
     >
-      {isReady && memoEventData ? (
+      {isReady ? (
         <MemoDialogEditor
           key={memo?.id ?? "new"}
           memo={memo}
           attachedObject={attachedObject}
           attachedObjectType={attachedObjectType}
-          memoEventData={memoEventData}
+          onMemoCreateSuccess={onSuccess}
           onClose={handleClose}
           isMaximized={isMaximized}
           onToggleMaximize={toggleMaximize}
@@ -85,7 +77,7 @@ interface MemoDialogEditorProps {
   memo: MemoRead | undefined;
   attachedObject: MemoAttachedObject;
   attachedObjectType: AttachedObjectType;
-  memoEventData: MemoDialogEvent;
+  onMemoCreateSuccess: (memo: MemoRead) => void;
   onClose: () => void;
   isMaximized: boolean;
   onToggleMaximize: () => void;
@@ -99,7 +91,7 @@ function MemoDialogEditor({
   memo,
   attachedObject,
   attachedObjectType,
-  memoEventData,
+  onMemoCreateSuccess,
   onClose,
   isMaximized,
   onToggleMaximize,
@@ -109,7 +101,7 @@ function MemoDialogEditor({
       memo,
       attachedObject,
       attachedObjectType,
-      onMemoCreateSuccess: memoEventData.onCreateSuccess,
+      onMemoCreateSuccess,
     });
 
   const handleDelete = useCallback(() => {

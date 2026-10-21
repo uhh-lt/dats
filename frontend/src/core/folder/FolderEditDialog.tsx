@@ -9,14 +9,14 @@ import { FolderUpdate } from "@models/FolderUpdate";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderHooks } from "./api/folderHooks";
 import { FolderRenderer } from "./FolderRenderer";
 
 export function FolderEditDialog() {
-  const { isOpen, data: dialogData, close: handleClose } = useDialog("folderEdit");
+  const { isOpen, data: dialogData, close: handleClose } = useDialogBus("folderEdit");
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();

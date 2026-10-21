@@ -4,7 +4,7 @@ import { TagTable } from "@core/tag";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TagRead } from "@models/TagRead";
-import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
+import { Box, Button, Dialog, Stack, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -13,15 +13,18 @@ import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { PendingAddNodeAction } from "../../_types/PendingAddNodeAction";
 import { createTagNodes } from "../../_utils/whiteboardUtils";
 
-export interface AddTagNodeDialogProps extends AddNodeDialogProps {
+interface AddTagNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
-  buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
 export function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogProps) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-  const dialog = useDialog({
+  const {
+    isOpen,
+    open: handleOpen,
+    close: handleClose,
+  } = useDialog({
     onClose: () => setRowSelectionModel({}),
   });
 
@@ -33,9 +36,9 @@ export function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNode
       const addTagNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
         reactFlowService.addNodes(createTagNodes({ tags, position: position }));
       onClick(addTagNode);
-      dialog.close();
+      handleClose();
     },
-    [onClick, dialog],
+    [onClick, handleClose],
   );
 
   // rendering
@@ -54,14 +57,14 @@ export function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNode
   return (
     <>
       <Tooltip title="Add tags" placement="right" arrow>
-        <Button onClick={dialog.open} {...buttonProps}>
+        <Button onClick={handleOpen} {...buttonProps}>
           {getIconComponent(Icon.TAG)}
         </Button>
       </Tooltip>
-      <Dialog open={dialog.isOpen} onClose={dialog.close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select tags to add to Whiteboard"
-          onClose={dialog.close}
+          onClose={handleClose}
           isMaximized={isMaximized}
           onToggleMaximize={toggleMaximize}
         />

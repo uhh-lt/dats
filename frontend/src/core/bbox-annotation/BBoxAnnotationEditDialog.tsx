@@ -1,26 +1,27 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { Button, Dialog, DialogActions, Stack, Typography } from "@mui/material";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
-import { memo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
 import { BBoxAnnotationRenderer } from "./BBoxAnnotationRenderer";
 
-export interface BBoxAnnotationEditDialogProps {
+interface BBoxAnnotationEditDialogProps {
   projectId: number;
 }
 
-export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditDialogProps) => {
+export function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const selectedCodeId =
     Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
-  // global client state (redux)
-  const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("bboxAnnotationEdit");
+  // dialog state
+  const { isOpen, data: dialogData, close: closeDialog, onSuccess } = useDialogBus("bboxAnnotationEdit");
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = BboxAnnotationHooks.useUpdateBulkBBoxAnnotation();
@@ -31,7 +32,7 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
     setRowSelectionModel({});
   }, [closeDialog]);
 
-  const handleUpdateAnnotation = useCallback(() => {
+  const handleUpdateAnnotations = useCallback(() => {
     if (!selectedCodeId || !dialogData || dialogData.annotationIds.length === 0) return;
 
     updateAnnotationBulkMutation(
@@ -50,15 +51,15 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
     );
   }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, handleClose, onSuccess]);
 
-  // maximize dialog
+  // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
       {dialogData && (
         <>
           <DATSDialogHeader
-            title={`Changing the code of ${dialogData.annotationIds.length} annotation${dialogData.annotationIds.length > 1 && "s"}`}
+            title={`Changing the code of ${dialogData.annotationIds.length} annotation${dialogData.annotationIds.length > 1 ? "s" : ""}`}
             onClose={handleClose}
             isMaximized={isMaximized}
             onToggleMaximize={toggleMaximize}
@@ -67,47 +68,40 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
             projectId={projectId}
             rowSelectionModel={rowSelectionModel}
             onRowSelectionChange={setRowSelectionModel}
+            enableMultiRowSelection={false}
           />
           {dialogData.annotationIds.length > 0 && (
-            <>
-              <Divider />
-              <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
-              <Box px={3} mb={2}>
-                Before:
-                <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showCode showText />
-                After:
-                {selectedCodeId ? (
-                  <Stack direction="row" alignItems="center">
-                    <CodeRenderer code={selectedCodeId} />
-                    {": "}
-                    <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showText />
-                  </Stack>
-                ) : (
-                  <>
-                    <br />
-                    Select a code to preview the change.
-                  </>
-                )}
-              </Box>
-            </>
+            <Stack direction="row" spacing={1} alignItems="center" p={2}>
+              <Typography variant="h6">Preview</Typography>
+              <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showCode showText />
+              <ArrowRight />
+              {selectedCodeId ? (
+                <Stack direction="row" alignItems="center">
+                  <CodeRenderer code={selectedCodeId} />
+                  {": "}
+                  <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showText />
+                </Stack>
+              ) : (
+                <span>Select a code to preview the change.</span>
+              )}
+            </Stack>
           )}
           <DialogActions>
-            <Button onClick={handleClose}>Close</Button>
             <Button
               variant="contained"
               color="success"
               startIcon={<SaveIcon />}
-              fullWidth
-              onClick={handleUpdateAnnotation}
+              onClick={handleUpdateAnnotations}
               disabled={!selectedCodeId}
               loading={isPending}
               loadingPosition="start"
+              fullWidth
             >
-              Update Annotation{dialogData.annotationIds.length > 1 && "s"}
+              Update Annotation{dialogData.annotationIds.length > 1 ? "s" : ""}
             </Button>
           </DialogActions>
         </>
       )}
     </Dialog>
   );
-});
+}

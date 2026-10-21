@@ -1,10 +1,12 @@
 import { generalQueries } from "@api/general/generalQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { getIconComponent, Icon } from "@components/icons";
 import { useTabNavigate } from "@core/navigation";
 import { DocTypeSelector } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { AspectCreate } from "@models/AspectCreate";
 import { DocType } from "@models/DocType";
@@ -30,7 +32,7 @@ import {
 } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
@@ -89,12 +91,10 @@ const templates: AspectTemplate[] = [
   },
 ];
 
-interface PerspectiveCreationDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
+export function PerspectiveCreationDialog() {
+  // dialog state
+  const { isOpen, open: handleOpen, close: handleClose } = useDialog();
 
-export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogProps) {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // available LLMs for the model selection
@@ -114,57 +114,66 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
     control,
     setValue,
     reset,
-  } = useForm<PerspectiveFormData>({
-    defaultValues: {
-      name: "",
-      doc_embedding_prompt: "",
-      doc_modification_prompt: "",
-      ...defaultAdvancedSettings,
-    },
-  });
+  } = useForm<PerspectiveFormData>();
 
-  const createAspectMutation = PerspectivesHooks.useCreateAspect();
-  const handleAspectCreation: SubmitHandler<PerspectiveFormData> = (data) => {
-    if (!projectId) {
-      console.error("Project ID is not set");
-      return;
+  // reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        name: "",
+        doc_embedding_prompt: "",
+        doc_modification_prompt: "",
+        ...defaultAdvancedSettings,
+      });
     }
+  }, [isOpen, reset]);
 
-    createAspectMutation.mutate(
-      {
-        requestBody: {
-          name: data.name,
-          doc_embedding_prompt: data.doc_embedding_prompt,
-          doc_modification_prompt: data.doc_modification_prompt || null,
-          is_hierarchical: false,
-          project_id: projectId,
-          modality: selectedDocType,
-          tag_id: tagId,
-          pipeline_settings: {
-            ...defaultAdvancedSettings,
-            rewriting_model: data.rewriting_model,
-            umap_min_dist: data.umap_min_dist,
-            umap_metric: data.umap_metric,
-            umap_n_neighbors: data.umap_n_neighbors,
-            hdbscan_metric: data.hdbscan_metric,
-            hdbscan_min_cluster_size: data.hdbscan_min_cluster_size,
-            num_keywords: data.num_keywords,
-            num_top_documents: data.num_top_documents,
+  // form actions
+  const { mutate: createAspectMutation, isPending } = PerspectivesHooks.useCreateAspect();
+  const handleAspectCreation = useCallback<SubmitHandler<PerspectiveFormData>>(
+    (data) => {
+      if (!projectId) {
+        console.error("Project ID is not set");
+        return;
+      }
+
+      createAspectMutation(
+        {
+          requestBody: {
+            name: data.name,
+            doc_embedding_prompt: data.doc_embedding_prompt,
+            doc_modification_prompt: data.doc_modification_prompt || null,
+            is_hierarchical: false,
+            project_id: projectId,
+            modality: selectedDocType,
+            tag_id: tagId,
+            pipeline_settings: {
+              ...defaultAdvancedSettings,
+              rewriting_model: data.rewriting_model,
+              umap_min_dist: data.umap_min_dist,
+              umap_metric: data.umap_metric,
+              umap_n_neighbors: data.umap_n_neighbors,
+              hdbscan_metric: data.hdbscan_metric,
+              hdbscan_min_cluster_size: data.hdbscan_min_cluster_size,
+              num_keywords: data.num_keywords,
+              num_top_documents: data.num_top_documents,
+            },
           },
         },
-      },
-      {
-        onSuccess: (aspect) =>
-          tabNavigate({
-            to: "/project/$projectId/perspectives/$aspectId",
-            params: { projectId: aspect.project_id, aspectId: aspect.id },
-          }),
-      },
-    );
-  };
-  const handleError: SubmitErrorHandler<PerspectiveFormData> = (error) => {
-    console.error(error);
-  };
+        {
+          onSuccess: (aspect) => {
+            handleClose();
+            tabNavigate({
+              to: "/project/$projectId/perspectives/$aspectId",
+              params: { projectId: aspect.project_id, aspectId: aspect.id },
+            });
+          },
+        },
+      );
+    },
+    [createAspectMutation, handleClose, projectId, selectedDocType, tabNavigate, tagId],
+  );
+  const handleError: SubmitErrorHandler<PerspectiveFormData> = (data) => console.error(data);
 
   // handle click on card
   const handleClick = (template: AspectTemplate) => () => {
@@ -177,374 +186,381 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      fullScreen={isMaximized}
-      component="form"
-      onSubmit={handleSubmit(handleAspectCreation, handleError)}
-    >
-      <DATSDialogHeader
-        title="Create Perspective"
-        onClose={onClose}
-        isMaximized={isMaximized}
-        onToggleMaximize={toggleMaximize}
-      />
-      <DialogContent>
-        <Stack spacing={2}>
-          <FormText
-            name="name"
-            control={control}
-            rules={{
-              required: "Perspective name is required",
-            }}
-            textFieldProps={{
-              label: "Perspective name",
-              variant: "outlined",
-              fullWidth: true,
-              error: Boolean(errors.name),
-              helperText: <ErrorMessage errors={errors} name="name" />,
-            }}
-          />
-          <Typography variant="button">Documents</Typography>
-          <DocTypeSelector docTypes={selectedDocType} onDocTypeChange={setSelectedDocType} title="Modality" fullWidth />
-          <TagSelector tagIds={tagId} onTagIdChange={setTagId} title="Select Tag" fullWidth />
-          <Typography variant="button">Parameters</Typography>
-          <Stack direction="row" spacing={2} sx={{ overflowX: "auto", paddingBottom: 2, mt: 0.5 }}>
-            {templates.map((template, index) => (
-              <Card key={index} elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "primary.dark" }}>
-                <CardActionArea onClick={handleClick(template)}>
-                  <CardContent style={{ textAlign: "center" }} sx={{ color: "primary.contrastText", p: 2 }}>
-                    <h3 style={{ marginTop: 0 }}>{template.name}</h3>
-                    {template.description}
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            ))}
-          </Stack>
-          <FormMenu
-            name="rewriting_model"
-            control={control}
-            rules={{
-              required: "Model selection is required",
-            }}
-            textFieldProps={{
-              label: "Model",
-              placeholder: "Select the model for document processing",
-              variant: "outlined",
-              fullWidth: true,
-              error: Boolean(errors.rewriting_model),
-              helperText: <ErrorMessage errors={errors} name="rewriting_model" />,
-            }}
-          >
-            {availableLLMs.isError ? (
-              <MenuItem value="default" disabled>
-                Error loading models (using default)
-              </MenuItem>
-            ) : availableLLMs.isLoading ? (
-              <MenuItem value="default" disabled>
-                Loading models...
-              </MenuItem>
-            ) : availableLLMs.isSuccess ? (
-              availableLLMs.data.map((model, idx) => (
-                <MenuItem key={model} value={idx === 0 ? "default" : model}>
-                  {model} {idx === 0 ? "(default)" : ""}
+    <>
+      <Button onClick={handleOpen} variant="contained" color="primary" endIcon={getIconComponent(Icon.CREATE)}>
+        Create Perspective
+      </Button>
+      <Dialog
+        open={isOpen}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        fullScreen={isMaximized}
+        component="form"
+        onSubmit={handleSubmit(handleAspectCreation, handleError)}
+      >
+        <DATSDialogHeader
+          title="Create Perspective"
+          onClose={handleClose}
+          isMaximized={isMaximized}
+          onToggleMaximize={toggleMaximize}
+        />
+        <DialogContent>
+          <Stack spacing={2}>
+            <FormText
+              name="name"
+              control={control}
+              rules={{
+                required: "Perspective name is required",
+              }}
+              textFieldProps={{
+                label: "Perspective name",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.name),
+                helperText: <ErrorMessage errors={errors} name="name" />,
+              }}
+            />
+            <Typography variant="button">Documents</Typography>
+            <DocTypeSelector
+              docTypes={selectedDocType}
+              onDocTypeChange={setSelectedDocType}
+              title="Modality"
+              fullWidth
+            />
+            <TagSelector tagIds={tagId} onTagIdChange={setTagId} title="Select Tag" fullWidth />
+            <Typography variant="button">Parameters</Typography>
+            <Stack direction="row" spacing={2} sx={{ overflowX: "auto", paddingBottom: 2, mt: 0.5 }}>
+              {templates.map((template, index) => (
+                <Card key={index} elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "primary.dark" }}>
+                  <CardActionArea onClick={handleClick(template)}>
+                    <CardContent style={{ textAlign: "center" }} sx={{ color: "primary.contrastText", p: 2 }}>
+                      <h3 style={{ marginTop: 0 }}>{template.name}</h3>
+                      {template.description}
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              ))}
+            </Stack>
+            <FormMenu
+              name="rewriting_model"
+              control={control}
+              rules={{
+                required: "Model selection is required",
+              }}
+              textFieldProps={{
+                label: "Model",
+                placeholder: "Select the model for document processing",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.rewriting_model),
+                helperText: <ErrorMessage errors={errors} name="rewriting_model" />,
+              }}
+            >
+              {availableLLMs.isError ? (
+                <MenuItem value="default" disabled>
+                  Error loading models (using default)
                 </MenuItem>
-              ))
-            ) : (
-              <MenuItem value="default">Default</MenuItem>
-            )}
-          </FormMenu>
-          <FormText
-            name="doc_embedding_prompt"
-            control={control}
-            rules={{
-              required: "Document embedding prompt is required",
-            }}
-            textFieldProps={{
-              label: "Document embedding instruction",
-              placeholder: "Describe on which aspect you want the model to focus.",
-              variant: "outlined",
-              fullWidth: true,
-              error: Boolean(errors.doc_embedding_prompt),
-              helperText: <ErrorMessage errors={errors} name="doc_embedding_prompt" />,
-            }}
-          />
-          <FormTextMultiline
-            name="doc_modification_prompt"
-            disabled={selectedDocType !== DocType.TEXT}
-            control={control}
-            textFieldProps={{
-              label: "Document modification prompt",
-              placeholder: "Optional! Describe how you want to modify the document.",
-              variant: "outlined",
-              fullWidth: true,
-              error: Boolean(errors.doc_modification_prompt),
-              helperText: <ErrorMessage errors={errors} name="doc_modification_prompt" />,
-            }}
-          />
+              ) : availableLLMs.isLoading ? (
+                <MenuItem value="default" disabled>
+                  Loading models...
+                </MenuItem>
+              ) : availableLLMs.isSuccess ? (
+                availableLLMs.data.map((model, idx) => (
+                  <MenuItem key={model} value={idx === 0 ? "default" : model}>
+                    {model} {idx === 0 ? "(default)" : ""}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="default">Default</MenuItem>
+              )}
+            </FormMenu>
+            <FormText
+              name="doc_embedding_prompt"
+              control={control}
+              rules={{
+                required: "Document embedding prompt is required",
+              }}
+              textFieldProps={{
+                label: "Document embedding instruction",
+                placeholder: "Describe on which aspect you want the model to focus.",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.doc_embedding_prompt),
+                helperText: <ErrorMessage errors={errors} name="doc_embedding_prompt" />,
+              }}
+            />
+            <FormTextMultiline
+              name="doc_modification_prompt"
+              disabled={selectedDocType !== DocType.TEXT}
+              control={control}
+              textFieldProps={{
+                label: "Document modification prompt",
+                placeholder: "Optional! Describe how you want to modify the document.",
+                variant: "outlined",
+                fullWidth: true,
+                error: Boolean(errors.doc_modification_prompt),
+                helperText: <ErrorMessage errors={errors} name="doc_modification_prompt" />,
+              }}
+            />
 
-          <Accordion
-            expanded={expertMode}
-            onChange={(_, expanded) => setExpertMode(expanded)}
-            variant="outlined"
-            sx={{ mt: 2 }}
-            disableGutters
+            <Accordion
+              expanded={expertMode}
+              onChange={(_, expanded) => setExpertMode(expanded)}
+              variant="outlined"
+              sx={{ mt: 2 }}
+              disableGutters
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <TuneIcon fontSize="small" />
+                  <Typography variant="button">Advanced Pipeline Settings</Typography>
+                </Stack>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={3}>
+                  {/* UMAP Settings */}
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Dimensionality Reduction (UMAP)
+                  </Typography>
+                  <Stack direction="row" spacing={2}>
+                    <Controller
+                      name="umap_n_neighbors"
+                      control={control}
+                      rules={{
+                        required: "N Neighbors is required",
+                        min: { value: 2, message: "Minimum value is 2" },
+                        max: { value: 100, message: "Maximum value is 100" },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="N Neighbors"
+                          type="number"
+                          size="small"
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_neighbors)
+                          }
+                          inputProps={{ min: 2, max: 100 }}
+                          error={Boolean(errors.umap_n_neighbors)}
+                          helperText={
+                            errors.umap_n_neighbors?.message ||
+                            `Number of neighbors for local structure (default: ${defaultAdvancedSettings.umap_n_neighbors})`
+                          }
+                          fullWidth
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="umap_n_components"
+                      control={control}
+                      rules={{
+                        required: "N Components is required",
+                        min: { value: 2, message: "Minimum value is 2" },
+                        max: { value: 100, message: "Maximum value is 100" },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="N Components"
+                          type="number"
+                          size="small"
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_components)
+                          }
+                          inputProps={{ min: 2, max: 100 }}
+                          error={Boolean(errors.umap_n_components)}
+                          helperText={
+                            errors.umap_n_components?.message ||
+                            `Number of components for dimensionality reduction (default: ${defaultAdvancedSettings.umap_n_components})`
+                          }
+                          fullWidth
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="umap_min_dist"
+                      control={control}
+                      rules={{
+                        required: "Min Distance is required",
+                        min: { value: 0, message: "Minimum value is 0" },
+                        max: { value: 1, message: "Maximum value is 1" },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Min Distance"
+                          type="number"
+                          size="small"
+                          onChange={(e) =>
+                            field.onChange(parseFloat(e.target.value) || defaultAdvancedSettings.umap_min_dist)
+                          }
+                          inputProps={{ min: 0, max: 1, step: 0.05 }}
+                          error={Boolean(errors.umap_min_dist)}
+                          helperText={
+                            errors.umap_min_dist?.message ||
+                            `Minimum distance between points (default: ${defaultAdvancedSettings.umap_min_dist})`
+                          }
+                          fullWidth
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="umap_metric"
+                      control={control}
+                      rules={{ required: "Distance metric is required" }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Distance Metric"
+                          select
+                          size="small"
+                          error={Boolean(errors.umap_metric)}
+                          helperText={errors.umap_metric?.message || "Metric for measuring distances"}
+                          fullWidth
+                        >
+                          <MenuItem value="cosine">Cosine</MenuItem>
+                          <MenuItem value="euclidean">Euclidean</MenuItem>
+                        </TextField>
+                      )}
+                    />
+                  </Stack>
+
+                  {/* HDBSCAN Settings */}
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Density-based Clustering (HDBSCAN)
+                  </Typography>
+                  <Stack direction="row" spacing={2}>
+                    <Controller
+                      name="hdbscan_min_cluster_size"
+                      control={control}
+                      rules={{
+                        required: "Min Cluster Size is required",
+                        min: { value: 1, message: "Minimum value is 1" },
+                        max: { value: 200, message: "Maximum value is 200" },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Min Cluster Size"
+                          type="number"
+                          size="small"
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.hdbscan_min_cluster_size)
+                          }
+                          inputProps={{ min: 1, max: 200 }}
+                          error={Boolean(errors.hdbscan_min_cluster_size)}
+                          helperText={
+                            errors.hdbscan_min_cluster_size?.message ||
+                            `Minimum cluster size (default: ${defaultAdvancedSettings.hdbscan_min_cluster_size})`
+                          }
+                          fullWidth
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="hdbscan_metric"
+                      control={control}
+                      rules={{ required: "Distance metric is required" }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Distance Metric"
+                          select
+                          size="small"
+                          error={Boolean(errors.hdbscan_metric)}
+                          helperText={errors.hdbscan_metric?.message || "Metric for measuring distances"}
+                          fullWidth
+                        >
+                          <MenuItem value="euclidean">Euclidean</MenuItem>
+                          <MenuItem value="cosine">Cosine</MenuItem>
+                        </TextField>
+                      )}
+                    />
+                  </Stack>
+
+                  {/* Keyword Extraction Settings */}
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Cluster Representation
+                  </Typography>
+                  <Stack direction="row" spacing={2}>
+                    <Controller
+                      name="num_keywords"
+                      control={control}
+                      rules={{
+                        required: "Number of keywords is required",
+                        min: { value: 5, message: "Minimum value is 5" },
+                        max: { value: 200, message: "Maximum value is 200" },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Number of Keywords"
+                          type="number"
+                          size="small"
+                          fullWidth
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_keywords)
+                          }
+                          inputProps={{ min: 5, max: 200 }}
+                          error={Boolean(errors.num_keywords)}
+                          helperText={
+                            errors.num_keywords?.message ||
+                            `Number of keywords to extract per cluster (default: ${defaultAdvancedSettings.num_keywords})`
+                          }
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="num_top_documents"
+                      control={control}
+                      rules={{
+                        required: "Number of top documents is required",
+                        min: { value: 1, message: "Minimum value is 1" },
+                        max: { value: 200, message: "Maximum value is 200" },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Number of Top Documents"
+                          type="number"
+                          size="small"
+                          fullWidth
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_top_documents)
+                          }
+                          inputProps={{ min: 1, max: 200 }}
+                          error={Boolean(errors.num_top_documents)}
+                          helperText={
+                            errors.num_top_documents?.message ||
+                            `Number of top documents to extract per cluster (default: ${defaultAdvancedSettings.num_top_documents})`
+                          }
+                        />
+                      )}
+                    />
+                  </Stack>
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3 }}>
+          <Button onClick={() => reset()} sx={{ flexShrink: 0 }}>
+            Reset Parameters
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<SaveIcon />}
+            fullWidth
+            type="submit"
+            loading={isPending}
+            loadingPosition="start"
           >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <TuneIcon fontSize="small" />
-                <Typography variant="button">Advanced Pipeline Settings</Typography>
-              </Stack>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Stack spacing={3}>
-                {/* UMAP Settings */}
-                <Typography variant="subtitle2" color="text.secondary">
-                  Dimensionality Reduction (UMAP)
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Controller
-                    name="umap_n_neighbors"
-                    control={control}
-                    rules={{
-                      required: "N Neighbors is required",
-                      min: { value: 2, message: "Minimum value is 2" },
-                      max: { value: 100, message: "Maximum value is 100" },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="N Neighbors"
-                        type="number"
-                        size="small"
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_neighbors)
-                        }
-                        inputProps={{ min: 2, max: 100 }}
-                        error={Boolean(errors.umap_n_neighbors)}
-                        helperText={
-                          errors.umap_n_neighbors?.message ||
-                          `Number of neighbors for local structure (default: ${defaultAdvancedSettings.umap_n_neighbors})`
-                        }
-                        fullWidth
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="umap_n_components"
-                    control={control}
-                    rules={{
-                      required: "N Components is required",
-                      min: { value: 2, message: "Minimum value is 2" },
-                      max: { value: 100, message: "Maximum value is 100" },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="N Components"
-                        type="number"
-                        size="small"
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_components)
-                        }
-                        inputProps={{ min: 2, max: 100 }}
-                        error={Boolean(errors.umap_n_components)}
-                        helperText={
-                          errors.umap_n_components?.message ||
-                          `Number of components for dimensionality reduction (default: ${defaultAdvancedSettings.umap_n_components})`
-                        }
-                        fullWidth
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="umap_min_dist"
-                    control={control}
-                    rules={{
-                      required: "Min Distance is required",
-                      min: { value: 0, message: "Minimum value is 0" },
-                      max: { value: 1, message: "Maximum value is 1" },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Min Distance"
-                        type="number"
-                        size="small"
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || defaultAdvancedSettings.umap_min_dist)
-                        }
-                        inputProps={{ min: 0, max: 1, step: 0.05 }}
-                        error={Boolean(errors.umap_min_dist)}
-                        helperText={
-                          errors.umap_min_dist?.message ||
-                          `Minimum distance between points (default: ${defaultAdvancedSettings.umap_min_dist})`
-                        }
-                        fullWidth
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="umap_metric"
-                    control={control}
-                    rules={{ required: "Distance metric is required" }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Distance Metric"
-                        select
-                        size="small"
-                        error={Boolean(errors.umap_metric)}
-                        helperText={errors.umap_metric?.message || "Metric for measuring distances"}
-                        fullWidth
-                      >
-                        <MenuItem value="cosine">Cosine</MenuItem>
-                        <MenuItem value="euclidean">Euclidean</MenuItem>
-                      </TextField>
-                    )}
-                  />
-                </Stack>
-
-                {/* HDBSCAN Settings */}
-                <Typography variant="subtitle2" color="text.secondary">
-                  Density-based Clustering (HDBSCAN)
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Controller
-                    name="hdbscan_min_cluster_size"
-                    control={control}
-                    rules={{
-                      required: "Min Cluster Size is required",
-                      min: { value: 1, message: "Minimum value is 1" },
-                      max: { value: 200, message: "Maximum value is 200" },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Min Cluster Size"
-                        type="number"
-                        size="small"
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.hdbscan_min_cluster_size)
-                        }
-                        inputProps={{ min: 1, max: 200 }}
-                        error={Boolean(errors.hdbscan_min_cluster_size)}
-                        helperText={
-                          errors.hdbscan_min_cluster_size?.message ||
-                          `Minimum cluster size (default: ${defaultAdvancedSettings.hdbscan_min_cluster_size})`
-                        }
-                        fullWidth
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="hdbscan_metric"
-                    control={control}
-                    rules={{ required: "Distance metric is required" }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Distance Metric"
-                        select
-                        size="small"
-                        error={Boolean(errors.hdbscan_metric)}
-                        helperText={errors.hdbscan_metric?.message || "Metric for measuring distances"}
-                        fullWidth
-                      >
-                        <MenuItem value="euclidean">Euclidean</MenuItem>
-                        <MenuItem value="cosine">Cosine</MenuItem>
-                      </TextField>
-                    )}
-                  />
-                </Stack>
-
-                {/* Keyword Extraction Settings */}
-                <Typography variant="subtitle2" color="text.secondary">
-                  Cluster Representation
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Controller
-                    name="num_keywords"
-                    control={control}
-                    rules={{
-                      required: "Number of keywords is required",
-                      min: { value: 5, message: "Minimum value is 5" },
-                      max: { value: 200, message: "Maximum value is 200" },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Number of Keywords"
-                        type="number"
-                        size="small"
-                        fullWidth
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_keywords)
-                        }
-                        inputProps={{ min: 5, max: 200 }}
-                        error={Boolean(errors.num_keywords)}
-                        helperText={
-                          errors.num_keywords?.message ||
-                          `Number of keywords to extract per cluster (default: ${defaultAdvancedSettings.num_keywords})`
-                        }
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="num_top_documents"
-                    control={control}
-                    rules={{
-                      required: "Number of top documents is required",
-                      min: { value: 1, message: "Minimum value is 1" },
-                      max: { value: 200, message: "Maximum value is 200" },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Number of Top Documents"
-                        type="number"
-                        size="small"
-                        fullWidth
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_top_documents)
-                        }
-                        inputProps={{ min: 1, max: 200 }}
-                        error={Boolean(errors.num_top_documents)}
-                        helperText={
-                          errors.num_top_documents?.message ||
-                          `Number of top documents to extract per cluster (default: ${defaultAdvancedSettings.num_top_documents})`
-                        }
-                      />
-                    )}
-                  />
-                </Stack>
-              </Stack>
-            </AccordionDetails>
-          </Accordion>
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3 }}>
-        <Button
-          onClick={() => {
-            reset();
-          }}
-        >
-          Reset Parameters
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<SaveIcon />}
-          type="submit"
-          loading={createAspectMutation.isPending}
-          loadingPosition="start"
-        >
-          Create Map
-        </Button>
-      </DialogActions>
-    </Dialog>
+            Create Map
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

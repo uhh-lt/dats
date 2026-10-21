@@ -4,7 +4,7 @@ import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTask } from "@models/ClassifierTask";
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ClassifierActions } from "../../store/classifierSlice";
 import { ClassSelectionStep } from "./_components/ClassSelectionStep";
 import { EvalDataSelectionStep } from "./_components/EvalDataSelectionStep";
@@ -62,7 +62,7 @@ const content: Record<ClassifierTask, React.ReactNode[]> = {
   [ClassifierTask.INFERENCE]: [<InferDataSelectionStep />, <InferenceSettingsStep />, <StatusStep />, <ResultStep />],
 };
 
-export const ClassifierDialog = memo(() => {
+export function ClassifierDialog() {
   // dialog state
   const model = useAppSelector((state) => state.classifier.context.model);
   const task = useAppSelector((state) => state.classifier.context.task);
@@ -103,4 +103,4 @@ export const ClassifierDialog = memo(() => {
       {content[task || ClassifierTask.TRAINING][step]}
     </Dialog>
   );
-});
+}
