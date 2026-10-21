@@ -1,7 +1,7 @@
 import { RouteErrorPanel } from "@components/error";
 import { LinkButton } from "@core/navigation";
 import { Box, Button, Container, Stack } from "@mui/material";
-import { Outlet, createFileRoute, type ErrorComponentProps } from "@tanstack/react-router";
+import { createFileRoute, type ErrorComponentProps, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_public")({
   component: PublicRouteLayout,
