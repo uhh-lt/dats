@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Generator, TypedDict
@@ -136,18 +137,79 @@ def start_dats() -> None:
     init the services, and create the test database from scratch with the
     migrations."""
     from repos.db.sql_repo import SQLRepo
+    from repos.redis_repo import RedisRepo
 
     bootstrap.connect_repos()
     bootstrap.init_services()
     SQLRepo().drop_database()
     bootstrap.migrate_database()
+    # Workers killed by an earlier test session leave their running job in Redis,
+    # which `_drain_workers` would wait for
+    RedisRepo().remove_data()
 
 
 def clean_data_stores() -> None:
     """Empty all data stores and create the system data again, so a test starts
     from a fresh DATS instance."""
+    _drain_workers()
     bootstrap.delete_all_data()
     bootstrap.ensure_system_data()
+
+
+def _drain_workers(timeout: float = 300.0) -> None:
+    """Discard the queued jobs and wait until the workers ended their running jobs.
+
+    The background worker (see `conftest.start_workers`) keeps running the jobs
+    of a test after the test ended. Cleaning the data stores under a running job
+    deadlocks its transaction with the TRUNCATE, or lets the job write into the
+    next test's data. A job that ends may enqueue the next pipeline step, so this
+    repeats until no job is queued, scheduled or running.
+
+    The running jobs are read from the workers' `rq:worker:<name>` hashes, not
+    from the started job registries or `Worker.all()`: a canceled job leaves the
+    registries but keeps running in a `SimpleWorker`, and the Redis flush of the
+    cleanup removes the worker registrations. RQ sets `current_job` in the hash
+    whenever a worker starts a job and removes it when the job ended.
+    """
+    from rq.worker import Worker
+
+    from systems.job_system.job_service import JobService
+
+    js = JobService()
+    redis_conn = js.redis_conn
+    assert redis_conn is not None, "JobService is not initialized"
+
+    deadline = time.monotonic() + timeout
+    # A worker dequeues a job shortly before it sets `current_job`, so the
+    # workers only count as idle when they are idle in two checks in a row
+    idle_checks = 0
+    while True:
+        for queue in js.queues.values():
+            queue.empty()
+            scheduled = queue.scheduled_job_registry
+            for job_id in scheduled.get_job_ids():
+                scheduled.remove(job_id, delete_job=True)
+
+        running_job_ids = [
+            job_id
+            for key in redis_conn.scan_iter(
+                match=f"{Worker.redis_worker_namespace_prefix}*"
+            )
+            if redis_conn.type(key) == b"hash"
+            and (job_id := redis_conn.hget(key, "current_job")) is not None
+        ]
+        if len(running_job_ids) == 0:
+            idle_checks += 1
+            if idle_checks == 2:
+                return
+        else:
+            idle_checks = 0
+            if time.monotonic() > deadline:
+                raise RuntimeError(
+                    f"The workers did not end the jobs {running_job_ids} "
+                    f"within {timeout}s"
+                )
+        time.sleep(0.05)
 
 
 def create_test_app() -> FastAPI:
