@@ -53,14 +53,14 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
                 )
             case MLJobType.TAG_RECOMMENDATION:
                 from modules.ml.tag_recommendation.tag_recommendation_service import (
-                    DocumentClassificationService,
+                    TagRecommendationService,
                 )
 
                 assert isinstance(
                     payload.specific_ml_job_parameters,
                     DocTagRecommendationParams,
                 ), "DocTagRecommendationParams expected"
-                DocumentClassificationService().classify_untagged_documents(
+                TagRecommendationService().classify_untagged_documents(
                     db=db,
                     ml_job_id=job.get_id(),
                     project_id=payload.project_id,

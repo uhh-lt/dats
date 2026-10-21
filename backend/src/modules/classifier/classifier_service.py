@@ -31,6 +31,7 @@ from systems.job_system.job_dto import Job
 
 class ClassifierService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
+        cls.fsr: FilesystemRepo = FilesystemRepo()
         return super(ClassifierService, cls).__new__(cls)
 
     def get_model_service(
@@ -58,7 +59,7 @@ class ClassifierService(metaclass=SingletonMeta):
         c_read = ClassifierRead.model_validate(db_obj)
 
         # delete classifier from filesystem
-        FilesystemRepo().remove_dir(Path(db_obj.path).parent)
+        self.fsr.remove_dir(Path(db_obj.path).parent)
 
         # delete classifier from db
         crud_classifier.delete(db=db, id=classifier_id)

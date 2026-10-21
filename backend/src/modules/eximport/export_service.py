@@ -42,14 +42,12 @@ from modules.eximport.whiteboards.export_whiteboards import (
     export_all_whiteboards,
     export_selected_whiteboards,
 )
-from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 
 
 class ExportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.sqlr: SQLRepo = SQLRepo()
 
         # map from job_type to function
         cls.export_method_for_job_type: dict[ExportJobType, Callable[..., Path]] = {

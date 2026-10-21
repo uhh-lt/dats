@@ -41,7 +41,7 @@ from repos.filesystem_repo import FilesystemRepo
 
 
 class ImportService(metaclass=SingletonMeta):
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.import_method_for_job_type: dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
@@ -76,7 +76,7 @@ class ImportService(metaclass=SingletonMeta):
         # Check if the file exists
         if not self.fsr._temp_file_exists(filename=payload.file_name):
             raise ImportJobPreparationError(
-                cause=Exception(f"The file {payload.file_name} does not exist!")
+                cause=FileNotFoundError(f"The file {payload.file_name} does not exist!")
             )
 
         # get the import method based on the jobtype

@@ -16,12 +16,7 @@ from modules.ml.tag_recommendation.tag_recommendation_dto import (
 from modules.ml.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
-from modules.ml.tag_recommendation.tag_recommendation_service import (
-    DocumentClassificationService,
-)
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
-
-dcs: DocumentClassificationService = DocumentClassificationService()
 
 router = APIRouter(
     prefix="/tagrecommendation",

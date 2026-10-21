@@ -28,7 +28,7 @@ SimSearchHit = TypeVar("SimSearchHit")
 # TODO: This should probably not use SimSearchSentenceHit! Instead, define own DTO
 
 
-class DocumentClassificationService(metaclass=SingletonMeta):
+class TagRecommendationService(metaclass=SingletonMeta):
     """
     Singleton class for managing document classification jobs.
     This service is responsible for preparing and executing
@@ -38,14 +38,14 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def __new__(cls, *args, **kwargs):
         """
-        Create a new instance of DocumentClassificationService. If the
+        Create a new instance of TagRecommendationService. If the
         instance already exists, return the existing instance.
 
         Returns:
-            DocumentClassificationService: An instance of the class.
+            TagRecommendationService: An instance of the class.
         """
         cls.weaviate: WeaviateRepo = WeaviateRepo()
-        return super(DocumentClassificationService, cls).__new__(cls)
+        return super(TagRecommendationService, cls).__new__(cls)
 
     def classify_untagged_documents(
         self,
