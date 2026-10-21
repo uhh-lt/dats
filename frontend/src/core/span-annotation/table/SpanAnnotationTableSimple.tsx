@@ -8,7 +8,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { SpanAnnotationRenderer } from "../SpanAnnotationRenderer";
+import { SpanAnnotationRenderer } from "../renderer";
 
 interface SpanAnnotationTableRow {
   spanAnnoId: number;
@@ -25,12 +25,12 @@ const columns: MRT_ColumnDef<SpanAnnotationTableRow>[] = [
   {
     id: "Text",
     header: "Text",
-    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showText />,
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} renderText />,
   },
   {
     id: "Code",
     header: "Code",
-    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showCode />,
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} renderCode />,
   },
   {
     id: "Name",
@@ -38,7 +38,7 @@ const columns: MRT_ColumnDef<SpanAnnotationTableRow>[] = [
     Cell: ({ row }) => (
       <SpanAnnotationRenderer
         spanAnnotation={row.original.spanAnnoId}
-        showSdoc
+        renderSdoc
         sdocRendererProps={{ renderName: true, link: true }}
       />
     ),
@@ -46,7 +46,7 @@ const columns: MRT_ColumnDef<SpanAnnotationTableRow>[] = [
   {
     id: "Tags",
     header: "Tags",
-    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showSdocTags />,
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} renderSdocTags />,
   },
   {
     id: "Memo",

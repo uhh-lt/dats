@@ -9,7 +9,7 @@ import { CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { bboxAnnotationQueries } from "./api/bboxAnnotationQueries";
+import { bboxAnnotationQueries } from "../api/bboxAnnotationQueries";
 
 export type BBoxAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 

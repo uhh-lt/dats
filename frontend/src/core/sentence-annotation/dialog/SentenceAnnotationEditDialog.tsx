@@ -8,7 +8,7 @@ import { useDialogBus } from "@store/global/dialogBusHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { SentenceAnnotationHooks } from "../api/sentenceAnnotationHooks";
-import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
+import { SentenceAnnotationRenderer } from "../renderer";
 
 interface SentenceAnnotationEditDialogProps {
   projectId: number;
@@ -73,13 +73,13 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
           {dialogData.annotationIds.length > 0 && (
             <Stack direction="row" spacing={1} alignItems="center" p={2}>
               <Typography variant="h6">Preview</Typography>
-              <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showCode showText />
+              <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} renderCode renderText />
               <ArrowRight />
               {selectedCodeId ? (
                 <Stack direction="row" alignItems="center">
                   <CodeRenderer code={selectedCodeId} />
                   {": "}
-                  <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showText />
+                  <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} renderText />
                 </Stack>
               ) : (
                 <span>Select a code to preview the change.</span>

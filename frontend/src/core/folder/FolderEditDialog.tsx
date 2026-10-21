@@ -13,7 +13,7 @@ import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderHooks } from "./api/folderHooks";
-import { FolderRenderer } from "./FolderRenderer";
+import { FolderRenderer } from "./renderer";
 
 export function FolderEditDialog() {
   const { isOpen, data: dialogData, close: handleClose } = useDialogBus("folderEdit");

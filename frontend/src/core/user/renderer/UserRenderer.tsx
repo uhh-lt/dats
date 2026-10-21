@@ -3,8 +3,8 @@ import { PublicUserRead } from "@models/PublicUserRead";
 import { UserRead } from "@models/UserRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { UserHooks } from "./api/userHooks";
-import { UserAvatar } from "./UserAvatar";
+import { UserHooks } from "../api/userHooks";
+import { UserAvatar } from "../UserAvatar";
 
 export interface UserRendererSharedProps extends ExpandableRendererProps {
   renderAvatar?: boolean;

@@ -8,7 +8,7 @@ import { useDialogBus } from "@store/global/dialogBusHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
-import { BBoxAnnotationRenderer } from "./BBoxAnnotationRenderer";
+import { BBoxAnnotationRenderer } from "./renderer";
 
 interface BBoxAnnotationEditDialogProps {
   projectId: number;
@@ -73,13 +73,13 @@ export function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialog
           {dialogData.annotationIds.length > 0 && (
             <Stack direction="row" spacing={1} alignItems="center" p={2}>
               <Typography variant="h6">Preview</Typography>
-              <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showCode showText />
+              <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} renderCode renderText />
               <ArrowRight />
               {selectedCodeId ? (
                 <Stack direction="row" alignItems="center">
                   <CodeRenderer code={selectedCodeId} />
                   {": "}
-                  <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showText />
+                  <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} renderText />
                 </Stack>
               ) : (
                 <span>Select a code to preview the change.</span>

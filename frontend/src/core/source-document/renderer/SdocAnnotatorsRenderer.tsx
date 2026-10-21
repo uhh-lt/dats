@@ -2,7 +2,7 @@ import { UserRenderer } from "@core/user";
 import { UserRead } from "@models/UserRead";
 import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 import { sdocQueries } from "../api/sdocQueries";
 
 interface SdocAnnotatorsRendererProps {
@@ -10,34 +10,29 @@ interface SdocAnnotatorsRendererProps {
   annotators?: number[] | UserRead[];
 }
 
-export function SdocAnnotatorsRenderer({ sdocId, annotators, ...props }: SdocAnnotatorsRendererProps) {
-  if (sdocId === undefined && annotators === undefined) {
+export const SdocAnnotatorsRenderer = memo(({ sdocId, annotators }: SdocAnnotatorsRendererProps) => {
+  if (annotators) {
+    return <SdocAnnotatorsRendererWithData annotators={annotators} />;
+  } else if (sdocId !== undefined) {
+    return <SdocAnnotatorsRendererWithoutData sdocId={sdocId} />;
+  } else {
     return <>Nothing to show :(</>;
   }
+});
 
-  if (annotators) {
-    return <SdocAnnotatorsRendererWithData annotators={annotators} {...props} />;
-  }
-
-  if (sdocId) {
-    return <SdocAnnotatorsRendererWithoutData sdocId={sdocId} {...props} />;
-  }
-  return null;
-}
-
-function SdocAnnotatorsRendererWithoutData({ sdocId, ...props }: { sdocId: number }) {
+const SdocAnnotatorsRendererWithoutData = memo(({ sdocId }: { sdocId: number }) => {
   const annotators = useQuery(sdocQueries.annotators(sdocId));
 
   if (annotators.isSuccess) {
-    return <SdocAnnotatorsRendererWithData annotators={annotators.data} {...props} />;
+    return <SdocAnnotatorsRendererWithData annotators={annotators.data} />;
   } else if (annotators.isError) {
     return <div>{annotators.error.message}</div>;
   } else {
     return <div>Loading...</div>;
   }
-}
+});
 
-function SdocAnnotatorsRendererWithData({ annotators }: { annotators: number[] | UserRead[] }) {
+const SdocAnnotatorsRendererWithData = memo(({ annotators }: { annotators: number[] | UserRead[] }) => {
   return (
     <Stack direction="row" alignItems="center" flexWrap="wrap">
       {annotators.map((annotator, index) => (
@@ -48,4 +43,4 @@ function SdocAnnotatorsRendererWithData({ annotators }: { annotators: number[] |
       ))}
     </Stack>
   );
-}
+});

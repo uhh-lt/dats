@@ -14,7 +14,7 @@ import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { CodeHooks } from "../api/codeHooks";
-import { CodeRenderer } from "../CodeRenderer";
+import { CodeRenderer } from "../renderer";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;

@@ -8,7 +8,7 @@ import { useDialogBus } from "@store/global/dialogBusHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { SpanAnnotationHooks } from "./api/spanAnnotationHooks";
-import { SpanAnnotationRenderer } from "./SpanAnnotationRenderer";
+import { SpanAnnotationRenderer } from "./renderer";
 
 interface SpanAnnotationEditDialogProps {
   projectId: number;
@@ -73,13 +73,13 @@ export function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialog
           {dialogData.annotationIds.length > 0 && (
             <Stack direction="row" spacing={1} alignItems="center" p={2}>
               <Typography variant="h6">Preview</Typography>
-              <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showCode showText />
+              <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} renderCode renderText />
               <ArrowRight />
               {selectedCodeId ? (
                 <Stack direction="row" alignItems="center">
                   <CodeRenderer code={selectedCodeId} />
                   {": "}
-                  <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showText />
+                  <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} renderText />
                 </Stack>
               ) : (
                 <span>Select a code to preview the change.</span>

@@ -1,7 +1,7 @@
 import { Box, Stack } from "@mui/material";
 import { memo } from "react";
 import { TagHooks } from "./api/tagHooks";
-import { TagRenderer } from "./TagRenderer";
+import { TagRenderer } from "./renderer";
 import { TagUnlinkButton } from "./TagUnlinkButton";
 
 interface TagRow {

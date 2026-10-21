@@ -13,12 +13,12 @@ import { memoQueries } from "../api/memoQueries";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
 export interface MemoRendererSharedProps extends ExpandableRendererProps {
-  showIcon?: boolean;
-  showTitle?: boolean;
-  showContent?: boolean;
-  showUser?: boolean;
-  showStar?: boolean;
-  showAttachedObject?: boolean;
+  renderIcon?: boolean;
+  renderTitle?: boolean;
+  renderContent?: boolean;
+  renderUser?: boolean;
+  renderStar?: boolean;
+  renderAttachedObject?: boolean;
   attachedObjectLink?: boolean;
 }
 
@@ -46,35 +46,35 @@ const MemoRendererWithoutData = memo(({ memoId, ...props }: { memoId: number } &
   }
 });
 
-export const MemoRendererWithData = memo(
+const MemoRendererWithData = memo(
   ({
     memo,
-    showIcon,
-    showTitle,
-    showContent,
-    showUser,
-    showStar,
-    showAttachedObject,
+    renderIcon,
+    renderTitle,
+    renderContent,
+    renderUser,
+    renderStar,
+    renderAttachedObject,
     attachedObjectLink,
     ...expandProps
   }: { memo: MemoRead } & MemoRendererSharedProps) => {
     return (
       <ExpandableRenderer {...expandProps} expandedContent={<MemoContext memo={memo} />}>
         <Stack direction="row" alignItems="center" spacing={1} minWidth={0} maxWidth="100%" overflow="hidden">
-          {showIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
-          {showTitle && (
+          {renderIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
+          {renderTitle && (
             <Typography component="span" noWrap minWidth={0}>
               {memo.title}
             </Typography>
           )}
-          {showContent && (
+          {renderContent && (
             <Box className="markdown-content" minWidth={0}>
               <Markdown remarkPlugins={[remarkGfm]}>{memo.content}</Markdown>
             </Box>
           )}
-          {showUser && <UserRenderer user={memo.user_id} />}
-          {showStar && (memo.is_favorite ? <StarIcon /> : <StarOutlineIcon />)}
-          {showAttachedObject && (
+          {renderUser && <UserRenderer user={memo.user_id} />}
+          {renderStar && (memo.is_favorite ? <StarIcon /> : <StarOutlineIcon />)}
+          {renderAttachedObject && (
             <AttachedObjectRenderer
               attachedObject={memo.attached_object_id}
               attachedObjectType={memo.attached_object_type}

@@ -8,7 +8,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
-import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
+import { SentenceAnnotationRenderer } from "../renderer";
 
 interface SentenceAnnotationTableRow {
   sentAnnoId: number;
@@ -25,12 +25,12 @@ const columns: MRT_ColumnDef<SentenceAnnotationTableRow>[] = [
   {
     id: "Text",
     header: "Text",
-    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showText />,
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} renderText />,
   },
   {
     id: "Code",
     header: "Code",
-    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showCode />,
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} renderCode />,
   },
   {
     id: "Name",
@@ -38,7 +38,7 @@ const columns: MRT_ColumnDef<SentenceAnnotationTableRow>[] = [
     Cell: ({ row }) => (
       <SentenceAnnotationRenderer
         sentenceAnnotation={row.original.sentAnnoId}
-        showSdoc
+        renderSdoc
         sdocRendererProps={{ renderName: true, link: true }}
       />
     ),
@@ -46,7 +46,7 @@ const columns: MRT_ColumnDef<SentenceAnnotationTableRow>[] = [
   {
     id: "Tags",
     header: "Tags",
-    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showSdocTags />,
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} renderSdocTags />,
   },
   {
     id: "Memo",

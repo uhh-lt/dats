@@ -9,11 +9,11 @@ import { Box, Stack, Typography } from "@mui/material";
 import { ReactNode } from "react";
 
 export interface AnnotationRendererSharedProps extends ExpandableRendererProps {
-  showCode?: boolean;
-  showText?: boolean;
-  showSdoc?: boolean;
-  showSdocTags?: boolean;
-  showSdocProjectMetadataId?: number;
+  renderCode?: boolean;
+  renderText?: boolean;
+  renderSdoc?: boolean;
+  renderSdocTags?: boolean;
+  renderSdocProjectMetadataId?: number;
   sdocRendererProps?: SdocRendererSharedProps;
   link?: boolean;
   renderMemoIndicator?: boolean;
@@ -42,11 +42,11 @@ export function AnnotationSummaryRow({
   annotationId,
   annotationType,
   memoIds,
-  showCode,
-  showText,
-  showSdoc,
-  showSdocTags,
-  showSdocProjectMetadataId,
+  renderCode,
+  renderText,
+  renderSdoc,
+  renderSdocTags,
+  renderSdocProjectMetadataId,
   sdocRendererProps,
   link,
   renderMemoIndicator,
@@ -63,23 +63,23 @@ export function AnnotationSummaryRow({
       sx={{ display: "block", minWidth: 0, maxWidth: "100%", overflow: "hidden" }}
     >
       <Stack direction="row" alignItems="center" minWidth={0} maxWidth="100%" overflow="hidden">
-        {showSdoc && <SdocRenderer sdoc={sdocId} {...sdocRendererProps} />}
-        {showSdocTags && <SdocTagsRenderer sdocId={sdocId} />}
-        {showSdocProjectMetadataId && (
-          <SdocMetadataRenderer sdocId={sdocId} projectMetadataId={showSdocProjectMetadataId} />
+        {renderSdoc && <SdocRenderer sdoc={sdocId} {...sdocRendererProps} />}
+        {renderSdocTags && <SdocTagsRenderer sdocId={sdocId} />}
+        {renderSdocProjectMetadataId && (
+          <SdocMetadataRenderer sdocId={sdocId} projectMetadataId={renderSdocProjectMetadataId} />
         )}
         {/* the code is the most important part: it keeps its width, only the text is truncated */}
-        {showCode && (
+        {renderCode && (
           <Box flexShrink={0} maxWidth="100%" minWidth={0}>
             <CodeRenderer code={codeId} />
           </Box>
         )}
-        {showCode && showText ? (
+        {renderCode && renderText ? (
           <Typography component="span" flexShrink={0} mr={0.5}>
             :
           </Typography>
         ) : null}
-        {showText ? (
+        {renderText ? (
           <Typography component="span" noWrap minWidth={0}>
             {text}
           </Typography>

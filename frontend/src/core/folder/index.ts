@@ -7,6 +7,5 @@ export * from "./FolderCreateDialog";
 export * from "./FolderEditDialog";
 export * from "./FolderEditMenuItem";
 export * from "./FolderExportMenuItem";
-export * from "./FolderRenderer";
-export * from "./FolderRootRenderer";
 export * from "./info-panel";
+export * from "./renderer";

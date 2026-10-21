@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { Fragment, memo } from "react";
 import { TagHooks } from "./api/tagHooks";
-import { TagRenderer } from "./TagRenderer";
+import { TagRenderer } from "./renderer";
 
 interface TagSelectorMultipleProps {
   multiple: true;

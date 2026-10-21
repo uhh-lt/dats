@@ -6,7 +6,7 @@ import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { spanAnnotationQueries } from "./api/spanAnnotationQueries";
+import { spanAnnotationQueries } from "../api/spanAnnotationQueries";
 
 export type SpanAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 

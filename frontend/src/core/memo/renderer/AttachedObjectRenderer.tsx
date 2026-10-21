@@ -38,8 +38,8 @@ export const AttachedObjectRenderer = memo(
           <BBoxAnnotationRenderer
             bboxAnnotation={attachedObject as BBoxAnnotationRead | number}
             link={link}
-            showCode
-            showText
+            renderCode
+            renderText
             {...expandProps}
           />
         );
@@ -48,8 +48,8 @@ export const AttachedObjectRenderer = memo(
           <SpanAnnotationRenderer
             spanAnnotation={attachedObject as SpanAnnotationRead | number}
             link={link}
-            showCode
-            showText
+            renderCode
+            renderText
             {...expandProps}
           />
         );
@@ -58,8 +58,8 @@ export const AttachedObjectRenderer = memo(
           <SentenceAnnotationRenderer
             sentenceAnnotation={attachedObject as SentenceAnnotationRead | number}
             link={link}
-            showCode
-            showText
+            renderCode
+            renderText
             {...expandProps}
           />
         );

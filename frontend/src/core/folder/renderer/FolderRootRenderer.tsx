@@ -11,15 +11,19 @@ export interface FolderRootRendererSharedProps extends ExpandableRendererProps {
 }
 
 interface FolderRootRendererProps extends FolderRootRendererSharedProps {
-  projectId?: number;
+  project: number | ProjectRead;
 }
 
-export const FolderRootRenderer = memo(({ projectId, ...props }: FolderRootRendererProps) => {
-  return <FolderRootRendererWithoutData projectId={projectId} {...props} />;
+export const FolderRootRenderer = memo(({ project, ...props }: FolderRootRendererProps) => {
+  if (typeof project === "number") {
+    return <FolderRootRendererWithoutData projectId={project} {...props} />;
+  } else {
+    return <FolderRootRendererWithData project={project} {...props} />;
+  }
 });
 
 const FolderRootRendererWithoutData = memo(
-  ({ projectId, ...props }: { projectId?: number } & FolderRootRendererSharedProps) => {
+  ({ projectId, ...props }: { projectId: number } & FolderRootRendererSharedProps) => {
     const project = ProjectHooks.useGetProject(projectId);
 
     if (project.isSuccess) {

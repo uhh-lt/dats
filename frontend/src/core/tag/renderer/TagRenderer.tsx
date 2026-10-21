@@ -5,7 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { TagRead } from "@models/TagRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { TagHooks } from "./api/tagHooks";
+import { TagHooks } from "../api/tagHooks";
 
 export interface TagRendererSharedProps extends ExpandableRendererProps {
   renderMemoIndicator?: boolean;

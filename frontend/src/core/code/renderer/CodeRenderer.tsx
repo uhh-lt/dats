@@ -5,7 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { CodeHooks } from "./api/codeHooks";
+import { CodeHooks } from "../api/codeHooks";
 
 export interface CodeRendererSharedProps extends ExpandableRendererProps {
   renderMemoIndicator?: boolean;
