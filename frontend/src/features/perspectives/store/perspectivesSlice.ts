@@ -63,9 +63,6 @@ export interface PerspectivesState extends FilterState {
   searchQuery: string; // This can be used to store the search query if needed
   // statistics
   pinnedStatistics: string[]; // "keywords", "tags", "<codeId>", etc.
-  // dialog
-  isClusterDialogOpen: boolean;
-  clusterDialogClusterId: number | undefined;
   // chat
   chatModelId: string;
   chatSessionId?: string;
@@ -105,9 +102,6 @@ const initialState: PerspectivesState = {
   searchQuery: "",
   // statistics
   pinnedStatistics: ["keywords", "tags"],
-  // dialog
-  isClusterDialogOpen: false,
-  clusterDialogClusterId: undefined,
   // chat
   chatModelId: "default",
   chatSessionId: undefined,
@@ -298,15 +292,6 @@ const perspectivesSlice = createSlice({
     },
     onUnpinStatistics: (state, action: PayloadAction<string>) => {
       state.pinnedStatistics = state.pinnedStatistics.filter((stat) => stat !== action.payload);
-    },
-    // dialog
-    onOpenClusterDialog: (state, action: PayloadAction<number | undefined>) => {
-      state.isClusterDialogOpen = true;
-      state.clusterDialogClusterId = action.payload;
-    },
-    onCloseClusterDialog: (state) => {
-      state.isClusterDialogOpen = false;
-      state.clusterDialogClusterId = undefined;
     },
     // chat
     onChatReset: (state) => {

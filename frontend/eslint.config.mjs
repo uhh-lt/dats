@@ -395,4 +395,11 @@ export default defineConfig(
     plugins: { local: datsRulesPlugin },
     rules: { "local/slice-conventions": "error" },
   },
+  // DIALOG CONVENTIONS (see .github/instructions/frontend-dialog.instructions.md)
+  {
+    files: ["src/**/*Dialog.tsx"],
+    ignores: ["src/core/filter/filter-dialogs/**"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/dialog-conventions": "error" },
+  },
 );

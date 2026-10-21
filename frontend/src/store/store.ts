@@ -3,7 +3,7 @@
 // Hence, it is expected to have imports from many different parts of the codebase, which is why the boundaries rule is disabled here.
 
 import { bboxFilterReducer } from "@core/bbox-annotation";
-import { memoDialogReducer, memoFilterReducer } from "@core/memo";
+import { memoFilterReducer } from "@core/memo";
 import { tabsReducer } from "@core/navigation";
 import { confirmationReducer, snackbarReducer } from "@core/notification";
 import { seatFilterReducer } from "@core/sentence-annotation";
@@ -41,7 +41,6 @@ export const store = configureStore({
     ...layoutReducer,
     ...projectReducer,
     ...tabsReducer,
-    ...memoDialogReducer,
     ...snackbarReducer,
     ...confirmationReducer,
     ...classifierReducer,

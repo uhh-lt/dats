@@ -8,7 +8,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { SpanColumns } from "@models/SpanColumns";
-import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
+import { Button, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -21,12 +21,11 @@ const filterName = "spanAnnotationDialogWhiteboard";
 
 interface AddSpanAnnotationNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
-  buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
 export function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddSpanAnnotationNodeDialogProps) {
   // dialog state
-  const dialog = useDialog();
+  const { isOpen, open: handleOpen, close: handleClose } = useDialog();
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
@@ -35,21 +34,21 @@ export function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }
   return (
     <>
       <Tooltip title="Add span annotations" placement="right" arrow>
-        <Button onClick={dialog.open} {...buttonProps}>
+        <Button onClick={handleOpen} {...buttonProps}>
           {getIconComponent(Icon.SPAN_ANNOTATION)}
         </Button>
       </Tooltip>
-      <Dialog open={dialog.isOpen} onClose={dialog.close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select span annotations to add to Whiteboard"
-              onClose={dialog.close}
+              onClose={handleClose}
               isMaximized={isMaximized}
               onToggleMaximize={toggleMaximize}
             />
             <AddSpanAnnotationNodeDialogContent
-              onClose={dialog.close}
+              onClose={handleClose}
               projectId={projectId}
               metadata={metadata.data}
               {...props}
@@ -58,7 +57,7 @@ export function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }
         ) : metadata.isLoading ? (
           <CircularProgress />
         ) : (
-          <div>An error occured</div>
+          <div>An error occurred</div>
         )}
       </Dialog>
     </>

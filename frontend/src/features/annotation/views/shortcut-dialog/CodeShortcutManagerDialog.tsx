@@ -21,7 +21,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -36,7 +36,7 @@ interface CodeShortcutManagerDialogProps {
 }
 
 export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDialogProps) {
-  const { isOpen, close } = useDialog("codeShortcutManager");
+  const { isOpen, close: handleClose } = useDialogBus("codeShortcutManager");
   const { isMaximized, toggleMaximize } = useDialogMaximize();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const dispatch = useAppDispatch();
@@ -120,10 +120,10 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
   );
 
   return (
-    <Dialog open={isOpen} onClose={close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Code shortcuts"
-        onClose={close}
+        onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
       />
@@ -210,7 +210,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
         <Button color="error" onClick={handleClearAll} disabled={CODE_SHORTCUT_KEYS.every((key) => !bindings[key])}>
           Clear all shortcuts
         </Button>
-        <Button onClick={close}>Close</Button>
+        <Button onClick={handleClose}>Close</Button>
       </DialogActions>
     </Dialog>
   );

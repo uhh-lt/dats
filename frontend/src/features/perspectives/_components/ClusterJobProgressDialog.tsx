@@ -1,16 +1,16 @@
+/* eslint-disable local/dialog-conventions -- a blocking progress overlay without header, it closes itself when the job finishes */
 import { useLiveJob } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { Dialog } from "@mui/material";
-import { memo } from "react";
 import { PerspectivesHooks } from "../api/perspectivesHooks";
 import { perspectivesQueries } from "../api/perspectivesQueries";
 import { ClusterJobProgressCard } from "./ClusterJobProgressCard";
 
-interface ClusterJobProgressDialog {
+interface ClusterJobProgressDialogProps {
   aspectId: number;
 }
 
-export const ClusterJobProgressDialog = memo(({ aspectId }: ClusterJobProgressDialog) => {
+export function ClusterJobProgressDialog({ aspectId }: ClusterJobProgressDialogProps) {
   const aspect = PerspectivesHooks.useGetAspect(aspectId);
   const job = useLiveJob(perspectivesQueries.job.byId(aspect.data?.most_recent_job_id));
 
@@ -40,4 +40,4 @@ export const ClusterJobProgressDialog = memo(({ aspectId }: ClusterJobProgressDi
       <ClusterJobProgressCard perspectivesJob={job.data} />
     </Dialog>
   );
-});
+}

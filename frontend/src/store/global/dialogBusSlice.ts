@@ -1,10 +1,12 @@
 /* eslint-disable boundaries/element-types */
 // This file needs access to all dialog payload types and the registry, so it's simpler to keep everything in one place rather than splitting into multiple files.
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
 import { FolderRead } from "@models/FolderRead";
+import { MemoRead } from "@models/MemoRead";
 import { TagRead } from "@models/TagRead";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useAppDispatch, useAppSelector, useAppStore } from "@store/storeHooks";
 import { castDraft } from "immer";
 import { useCallback } from "react";
 
@@ -50,6 +52,15 @@ export interface BBoxAnnotationEditDialogData {
   annotationIds: number[];
 }
 
+/** Either an existing memo (by id) or a (potentially new) memo attached to an object. */
+export type MemoDialogData =
+  | { memoId: number; attachedObjectType?: AttachedObjectType; attachedObjectId?: number }
+  | { memoId?: undefined; attachedObjectType: AttachedObjectType; attachedObjectId: number };
+
+export interface ClusterDetailDialogData {
+  clusterId: number;
+}
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
 /**
@@ -68,6 +79,8 @@ export interface DialogPayloadMap {
   spanAnnotationEdit: SpanAnnotationEditDialogData;
   sentenceAnnotationEdit: SentenceAnnotationEditDialogData;
   bboxAnnotationEdit: BBoxAnnotationEditDialogData;
+  memo: MemoDialogData;
+  clusterDetail: ClusterDetailDialogData;
   documentUpload: undefined;
   projectSettings: undefined;
   quickCommandMenu: undefined;
@@ -82,6 +95,7 @@ export interface DialogCallbackMap {
   spanAnnotationEdit: () => void;
   sentenceAnnotationEdit: () => void;
   bboxAnnotationEdit: () => void;
+  memo: (memo: MemoRead) => void;
 }
 
 // Utility type to extract the callback for a given key, or undefined
@@ -103,6 +117,7 @@ const keysWithCallbacks: ReadonlySet<keyof DialogCallbackMap> = new Set([
   "spanAnnotationEdit",
   "sentenceAnnotationEdit",
   "bboxAnnotationEdit",
+  "memo",
 ]);
 
 function hasDialogSuccessCallback(key: keyof DialogPayloadMap): key is keyof DialogCallbackMap {
@@ -131,6 +146,8 @@ const initialState: DialogBusState = {
   spanAnnotationEdit: closed,
   sentenceAnnotationEdit: closed,
   bboxAnnotationEdit: closed,
+  memo: closed,
+  clusterDetail: closed,
   documentUpload: closed,
   projectSettings: closed,
   quickCommandMenu: closed,
@@ -159,10 +176,10 @@ const dialogBusSlice = createSlice({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (state[key] as any).callbackId = callbackId;
     },
+    // keeps data and callbackId, so the content stays rendered during the exit transition
+    // and can still report success when it unmounts (e.g. the memo editor flushing pending changes)
     close: (state, action: PayloadAction<keyof DialogPayloadMap>) => {
       state[action.payload].isOpen = false;
-      state[action.payload].data = undefined;
-      state[action.payload].callbackId = undefined;
     },
     toggle: (state, action: PayloadAction<keyof DialogPayloadMap>) => {
       state[action.payload].isOpen = !state[action.payload].isOpen;
@@ -192,10 +209,15 @@ type OpenDialogFn<K extends keyof DialogPayloadMap> = DialogPayloadMap[K] extend
  */
 export function useOpenDialog<K extends keyof DialogPayloadMap>(key: K): OpenDialogFn<K> {
   const dispatch = useAppDispatch();
+  const store = useAppStore();
 
   return useCallback(
     (data?: DialogPayloadMap[K], onSuccess?: DialogCallback<K>) => {
       let callbackId: string | undefined;
+
+      // the callback of the previous opening is no longer needed
+      const previousCallbackId = store.getState().dialogBus[key].callbackId;
+      if (previousCallbackId) dialogCallbacks.delete(previousCallbackId);
 
       if (onSuccess) {
         callbackId = `${String(key)}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -205,7 +227,7 @@ export function useOpenDialog<K extends keyof DialogPayloadMap>(key: K): OpenDia
       dispatch(dialogBusSlice.actions.open({ key, data, callbackId } as OpenPayload));
     },
 
-    [dispatch, key],
+    [dispatch, key, store],
   ) as OpenDialogFn<K>;
 }
 
@@ -228,20 +250,20 @@ export function useToggleDialog(key: keyof DialogPayloadMap): () => void {
  * Use this inside dialog components to get everything a dialog needs:
  * - `isOpen`: whether the dialog is currently open
  * - `data`: typed payload for the dialog key
- * - `close()`: closes the dialog and clears payload/callback reference
+ * - `close()`: closes the dialog (data stays until the next opening, so the content can render the exit transition)
  * - `onSuccess(...)`: invokes the caller callback (if one was provided via `useOpenDialog`) and cleans it up
  *
  * For dialogs without a success callback, `onSuccess` is typed as `undefined`.
  *
  * ```ts
- * const { isOpen, data, close, onSuccess } = useDialog("codeCreate");
+ * const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("codeCreate");
  *
  * // later in mutation success
- * onSuccess?.(createdCode, true);
- * close();
+ * onSuccess(createdCode, true);
+ * handleClose();
  * ```
  */
-export function useDialog<K extends keyof DialogPayloadMap>(
+export function useDialogBus<K extends keyof DialogPayloadMap>(
   key: K,
 ): {
   isOpen: boolean;

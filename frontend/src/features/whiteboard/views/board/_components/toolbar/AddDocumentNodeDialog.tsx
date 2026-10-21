@@ -7,7 +7,7 @@ import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
-import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
+import { Button, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -17,14 +17,13 @@ import { createSdocNodes } from "../../_utils/whiteboardUtils";
 
 const filterName = "documentDialogWhiteboard";
 
-export interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
+interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
-  buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
 export function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddDocumentNodeDialogProps) {
   // local state
-  const dialog = useDialog();
+  const { isOpen, open: handleOpen, close: handleClose } = useDialog();
 
   // global server state
   const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
@@ -35,21 +34,21 @@ export function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddD
   return (
     <>
       <Tooltip title="Add document" placement="right" arrow>
-        <Button onClick={dialog.open} {...buttonProps}>
+        <Button onClick={handleOpen} {...buttonProps}>
           {getIconComponent(Icon.DOCUMENT)}
         </Button>
       </Tooltip>
-      <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select documents to add to Whiteboard"
-              onClose={dialog.close}
+              onClose={handleClose}
               isMaximized={isMaximized}
               onToggleMaximize={toggleMaximize}
             />
             <AddDocumentNodeDialogContent
-              onClose={dialog.close}
+              onClose={handleClose}
               projectId={projectId}
               metadata={metadata.data}
               {...props}
@@ -58,7 +57,7 @@ export function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddD
         ) : metadata.isLoading ? (
           <CircularProgress />
         ) : (
-          <div>An error occured</div>
+          <div>An error occurred</div>
         )}
       </Dialog>
     </>

@@ -1104,3 +1104,75 @@ const sliceConventionsRule = {
 };
 
 datsRulesPlugin.rules["slice-conventions"] = sliceConventionsRule;
+
+/** @type {Rule.RuleModule} */
+const dialogConventionsRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "*Dialog.tsx files follow .github/instructions/frontend-dialog.instructions.md: plain function component, DATSDialogHeader + useDialogMaximize, open state from useDialogBus / useDialog, destructured mutate",
+    },
+    messages: {
+      memo: "Dialogs are plain function components: write `export function {{name}}(...)` instead of wrapping it in memo().",
+      header:
+        "A dialog renders DATSDialogHeader (from @components/DATSDialogHeader) with useDialogMaximize instead of DialogTitle.",
+      fullScreen: "Pass `fullScreen={isMaximized}` (from useDialogMaximize) to <Dialog>.",
+      openState:
+        "Do not keep the open state of a dialog in useState. Use useDialogBus(key) (global) or useDialog() from @hooks/useDialog (local).",
+      mutate: "Destructure the mutation: `const { mutate: xMutation, isPending } = XHooks.useX();`",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = path.basename(context.filename || context.getFilename());
+    if (!filename.endsWith("Dialog.tsx")) return {};
+    let importsHeader = false;
+    /** @type {import("estree").Node[]} */
+    const dialogElements = [];
+    return {
+      "ImportDeclaration[source.value='@components/DATSDialogHeader']"() {
+        importsHeader = true;
+      },
+      "ImportDeclaration[source.value='@mui/material'] > ImportSpecifier[imported.name='DialogTitle']"(node) {
+        context.report({ node, messageId: "header" });
+      },
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator[id.name=/Dialog$/] > CallExpression[callee.name='memo']"(
+        node,
+      ) {
+        const declarator = /** @type {import("estree").VariableDeclarator} */ (
+          /** @type {import("eslint").Rule.Node} */ (node).parent
+        );
+        const name = declarator.id.type === "Identifier" ? declarator.id.name : "Dialog";
+        context.report({ node, messageId: "memo", data: { name } });
+      },
+      "JSXOpeningElement[name.name='Dialog']"(node) {
+        dialogElements.push(node);
+        const hasFullScreen = node.attributes.some(
+          (attribute) => attribute.type === "JSXAttribute" && attribute.name.name === "fullScreen",
+        );
+        if (!hasFullScreen) context.report({ node, messageId: "fullScreen" });
+      },
+      "VariableDeclarator[id.type='ArrayPattern'] > CallExpression[callee.name='useState']"(node) {
+        const declarator = /** @type {import("estree").VariableDeclarator} */ (
+          /** @type {import("eslint").Rule.Node} */ (node).parent
+        );
+        if (declarator.id.type !== "ArrayPattern") return;
+        const first = declarator.id.elements[0];
+        if (first?.type === "Identifier" && /^(is)?[oO]pen$/.test(first.name)) {
+          context.report({ node, messageId: "openState" });
+        }
+      },
+      "CallExpression > MemberExpression.callee[property.name='mutate']"(node) {
+        context.report({ node, messageId: "mutate" });
+      },
+      "Program:exit"() {
+        if (importsHeader || dialogElements.length === 0) return;
+        context.report({ node: dialogElements[0], messageId: "header" });
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["dialog-conventions"] = dialogConventionsRule;

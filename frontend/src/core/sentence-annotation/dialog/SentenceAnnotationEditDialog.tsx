@@ -3,14 +3,14 @@ import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
-import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { Button, Dialog, DialogActions, Stack, Typography } from "@mui/material";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { SentenceAnnotationHooks } from "../api/sentenceAnnotationHooks";
 import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
-export interface SentenceAnnotationEditDialogProps extends ButtonProps {
+interface SentenceAnnotationEditDialogProps {
   projectId: number;
 }
 
@@ -20,8 +20,8 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
   const selectedCodeId =
     Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
-  // global client state (redux)
-  const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("sentenceAnnotationEdit");
+  // dialog state
+  const { isOpen, data: dialogData, close: closeDialog, onSuccess } = useDialogBus("sentenceAnnotationEdit");
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
@@ -55,11 +55,11 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
       {dialogData && (
         <>
           <DATSDialogHeader
-            title={`Changing the code of ${dialogData.annotationIds.length} sentence annotation${dialogData.annotationIds.length > 1 && "s"}`}
+            title={`Changing the code of ${dialogData.annotationIds.length} sentence annotation${dialogData.annotationIds.length > 1 ? "s" : ""}`}
             onClose={handleClose}
             isMaximized={isMaximized}
             onToggleMaximize={toggleMaximize}
@@ -71,24 +71,21 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
             enableMultiRowSelection={false}
           />
           {dialogData.annotationIds.length > 0 && (
-            <>
-              <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
-                <Typography variant="h6">Preview</Typography>
-                <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showCode showText />
-                <ArrowRight />
-                {selectedCodeId ? (
-                  <Stack direction="row" alignItems="center">
-                    <CodeRenderer code={selectedCodeId} />
-                    {": "}
-                    <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showText />
-                  </Stack>
-                ) : (
-                  <span>Select a code to preview the change.</span>
-                )}
-              </Stack>
-            </>
+            <Stack direction="row" spacing={1} alignItems="center" p={2}>
+              <Typography variant="h6">Preview</Typography>
+              <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showCode showText />
+              <ArrowRight />
+              {selectedCodeId ? (
+                <Stack direction="row" alignItems="center">
+                  <CodeRenderer code={selectedCodeId} />
+                  {": "}
+                  <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showText />
+                </Stack>
+              ) : (
+                <span>Select a code to preview the change.</span>
+              )}
+            </Stack>
           )}
-
           <DialogActions>
             <Button
               variant="contained"
@@ -100,7 +97,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
               loadingPosition="start"
               fullWidth
             >
-              Update Annotation{dialogData.annotationIds.length > 1 && "s"}
+              Update Annotation{dialogData.annotationIds.length > 1 ? "s" : ""}
             </Button>
           </DialogActions>
         </>

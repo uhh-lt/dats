@@ -1,20 +1,24 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Dialog, Stack } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { DocumentUploadJobsView } from "./_components/DocumentUploadJobsView";
 import { FileUploadSection } from "./_components/FileUploadSection";
 import { UrlCrawlerSection } from "./_components/UrlCrawlerSection";
 
-export function DocumentUploadDialog({ projectId }: { projectId: number }) {
-  // open/close dialog
-  const { isOpen: open, close: handleClose } = useDialog("documentUpload");
+interface DocumentUploadDialogProps {
+  projectId: number;
+}
+
+export function DocumentUploadDialog({ projectId }: DocumentUploadDialogProps) {
+  // dialog state
+  const { isOpen, close: handleClose } = useDialogBus("documentUpload");
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Upload Documents"
         onClose={handleClose}

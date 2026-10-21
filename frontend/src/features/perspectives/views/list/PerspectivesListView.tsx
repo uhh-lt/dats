@@ -1,8 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
-import { getIconComponent, Icon } from "@components/icons";
 import { useDebounce } from "@hooks/useDebounce";
-import { useDialog } from "@hooks/useDialog";
-import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Box, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { ChangeEvent, useState } from "react";
@@ -36,12 +34,8 @@ export function PerspectivesListView() {
     return data.name.includes(debouncedFilterQuery);
   });
 
-  // creation dialog
-  const creationDialog = useDialog();
-
   return (
     <>
-      <PerspectiveCreationDialog open={creationDialog.isOpen} onClose={creationDialog.close} />
       <ContentContainerLayout>
         <Stack spacing={2} pb={2}>
           <Stack spacing={2} direction={"row"} alignItems="center" justifyContent="space-between">
@@ -53,14 +47,7 @@ export function PerspectivesListView() {
                 Create your custom document visualization!
               </Typography>
             </Box>
-            <Button
-              onClick={creationDialog.open}
-              variant="contained"
-              color="primary"
-              endIcon={getIconComponent(Icon.CREATE)}
-            >
-              Create Perspective
-            </Button>
+            <PerspectiveCreationDialog />
           </Stack>
           <Stack direction={"row"} spacing={2} alignItems="center">
             <TextField

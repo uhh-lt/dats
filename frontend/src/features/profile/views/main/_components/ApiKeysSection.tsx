@@ -1,8 +1,7 @@
 import { useOpenSnackbar } from "@core/notification";
-import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { ApiKeyCreateDialog } from "./ApiKeyCreateDialog";
 import { ApiKeyTable } from "./ApiKeyTable";
 
@@ -16,16 +15,10 @@ function buildMcpConfig(): Record<string, unknown> {
 }
 
 export function ApiKeysSection() {
-  // local client state
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
   // actions
-  const handleOpenCreateDialog = useCallback(() => setIsCreateDialogOpen(true), []);
-  const handleCloseCreateDialog = useCallback(() => setIsCreateDialogOpen(false), []);
-
   const handleCopyMcpConfig = useCallback(() => {
     navigator.clipboard
       .writeText(JSON.stringify(buildMcpConfig(), null, 2))
@@ -48,16 +41,13 @@ export function ApiKeysSection() {
             <Button variant="outlined" startIcon={<ContentCopyIcon />} onClick={handleCopyMcpConfig}>
               Copy MCP Config
             </Button>
-            <Button variant="contained" color="success" startIcon={<AddIcon />} onClick={handleOpenCreateDialog}>
-              Add API Key
-            </Button>
+            <ApiKeyCreateDialog />
           </Stack>
         </Stack>
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <ApiKeyTable />
         </Box>
       </Box>
-      <ApiKeyCreateDialog open={isCreateDialogOpen} onClose={handleCloseCreateDialog} />
     </Box>
   );
 }

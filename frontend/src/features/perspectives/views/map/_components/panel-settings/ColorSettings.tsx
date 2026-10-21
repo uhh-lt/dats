@@ -25,6 +25,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import * as d3 from "d3";
 import { useState } from "react";
@@ -237,8 +238,9 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
   const selectType = mergeMode ? "multi" : deleteMode || splitMode ? "single" : "none";
 
   // info click
+  const openClusterDetailDialog = useOpenDialog("clusterDetail");
   const handleInfoClick = (clusterId: number) => () => {
-    dispatch(PerspectivesActions.onOpenClusterDialog(clusterId));
+    openClusterDetailDialog({ clusterId });
   };
 
   return (

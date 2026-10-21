@@ -43,6 +43,8 @@ function storeDismissedVersion(): void {
 }
 
 export function WhatsNewDialog() {
+  // opens itself on start, so its initial open state comes from localStorage
+  // eslint-disable-next-line local/dialog-conventions
   const [isOpen, setIsOpen] = useState(() => readDismissedVersion() !== currentVersion);
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 

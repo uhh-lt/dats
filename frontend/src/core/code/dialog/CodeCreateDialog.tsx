@@ -5,7 +5,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useDialog } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -25,14 +25,8 @@ interface CodeCreateDialogProps {
 }
 
 export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialogProps) {
-  const {
-    isOpen: isCodeCreateDialogOpen,
-    data: dialogData,
-    close: handleCloseCodeCreateDialog,
-    onSuccess: onSuccessHandler,
-  } = useDialog("codeCreate");
+  const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("codeCreate");
 
-  // maximize
   // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
@@ -51,7 +45,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isCodeCreateDialogOpen) {
+    if (isOpen) {
       reset({
         parentCodeId: dialogData?.parentCodeId ?? -1,
         name: dialogData?.codeName || "",
@@ -59,11 +53,11 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
         description: "",
       });
     }
-  }, [dialogData, isCodeCreateDialogOpen, reset]);
+  }, [dialogData, isOpen, reset]);
 
   // form actions
   const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
-  const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
+  const handleCodeCreation = useCallback<SubmitHandler<CodeCreateValues>>(
     (createData) => {
       let pcid: number | undefined = undefined;
       if (typeof createData.parentCodeId === "string") {
@@ -94,29 +88,29 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
               parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
             }
             onCodesCreated?.(codesToExpand);
-            onSuccessHandler(data, true);
-            handleCloseCodeCreateDialog();
+            onSuccess(data, true);
+            handleClose();
           },
         },
       );
     },
-    [createCodeMutation, handleCloseCodeCreateDialog, onCodesCreated, onSuccessHandler, parentCodes, projectId],
+    [createCodeMutation, handleClose, onCodesCreated, onSuccess, parentCodes, projectId],
   );
-  const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
+  const handleError: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
   return (
     <Dialog
-      open={isCodeCreateDialogOpen}
-      onClose={handleCloseCodeCreateDialog}
+      open={isOpen}
+      onClose={handleClose}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}
       component="form"
-      onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}
+      onSubmit={handleSubmit(handleCodeCreation, handleError)}
     >
       <DATSDialogHeader
         title="Create a new code"
-        onClose={handleCloseCodeCreateDialog}
+        onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
       />
