@@ -60,10 +60,11 @@ class ExampleService(metaclass=SingletonMeta):
 
 ### Shape and Access
 
-- **Singleton class (default)**: A service is `class <Name>Service(metaclass=SingletonMeta)` in `<name>_service.py`. Callers get it with `<Name>Service()` at the call site or as a module-level variable in the endpoint (`cotas = COTAService()`). Never pass a service instance around or store one per request.
+- **Singleton class**: A service is exactly one `class <Name>Service(metaclass=SingletonMeta)` in `<name>_service.py`, named after its file (`word_frequency_service.py` → `WordFrequencyService`). Callers get it with `<Name>Service()` at the call site or as a module-level variable in the endpoint (`cotas = COTAService()`). Never pass a service instance around or store one per request.
 - **Dependencies in `__new__`**: Define `def __new__(cls, *args, **kwargs)`, assign dependencies as class attributes (`cls.fsr = FilesystemRepo()`, `cls.js = JobService()`, `cls.llm = LLMRepo()`, `cls.ray = RayRepo()`, `cls.weaviate = WeaviateRepo()`, `cls.es_repo = ElasticSearchRepo()`, other services such as `cls.sims = SimSearchService()`), then `return super(<Name>Service, cls).__new__(cls)`. Use these short attribute names.
 - **No per-request state**: Singleton attributes hold only dependencies and static dispatch tables (`cls.export_method_for_job_type: dict[ExportJobType, Callable[..., Path]] = {...}`). Everything else is passed as a method argument.
-- **Module functions (stateless alternative)**: Pure computation or query modules with no dependencies to hold may expose plain module-level functions instead of a class (`statistics_service.py`, `timeline_analysis_service.py`, `word_frequency_service.py`). Do not mix both styles in one file.
+- **No module functions**: Even stateless services are classes (`StatisticsService`); helpers become private methods. Module-level code is limited to constants, private helper types (`TypedDict` / `NamedTuple`) and `_private` functions.
+- **No service for plain CRUD**: Endpoints that only call CRUD methods use the `crud_*` singletons directly; create a service only for logic beyond one CRUD call.
 - **CRUDs are imported, not wrapped**: Use the `crud_*` module singletons directly (`crud_cota.read(db=db, id=...)`). Do not put them on the service.
 
 ### Database Session and Transactions
@@ -78,8 +79,9 @@ class ExampleService(metaclass=SingletonMeta):
 
 - **Existence checks via CRUD**: Check existence by calling `crud_x.read(db=db, id=...)` (raises `NoSuchElementError`) or `crud_x.exists(db=db, id=..., raise_error=True)`. Do not write `if obj is None` checks after `read`.
 - **Invalid input**: Raise `ValueError` with a message naming the offending ids/values.
-- **Domain errors**: Module-specific failures (unsupported job type, empty dataset, ...) use exception classes from `<module>_exceptions.py`; a dispatch `match`/dict lookup with no handler raises `Unsupported<X>Error`.
-- **No HTTP in services**: Do not raise `HTTPException` or reference status codes; HTTP mapping belongs in exception classes (`@exception_handler`) or the endpoint.
+- **Domain errors**: Module-specific failures (unsupported job type, empty dataset, unsupported MIME type, ...) raise exception classes from `<module>_exceptions.py`; a dispatch `match`/dict lookup with no handler raises `Unsupported<X>Error`. Never `raise Exception(...)`.
+- **No exception classes in services**: Define them in `<module>_exceptions.py`, never in the service (this holds for every backend file).
+- **No HTTP in services**: Do not raise `HTTPException` or reference status codes; the HTTP status belongs on the exception class (`@exception_handler(status.HTTP_406_NOT_ACCEPTABLE)`).
 
 ### Jobs and Events
 
@@ -89,13 +91,21 @@ class ExampleService(metaclass=SingletonMeta):
 
 ### Return Types
 
-- Return either the ORM object (when the endpoint converts it, e.g. `ProjectService.create_project`) or the module's `<X>Read` DTO via `XRead.model_validate(db_obj)`. Return one or the other consistently within a service.
+- **Read DTOs for endpoints**: Public methods called by endpoints return the module's `<X>Read` DTO (`XRead.model_validate(db_obj)`) or another response DTO (`ChatSessionResponse`, `list[AnnoscalingResult]`), never ORM objects or tuples. The endpoint only calls the service, emits and returns the result (`result = ProjectService().create_project(...)`).
+- **ORMs only internally**: Helpers that only other services or jobs call may return ORMs; make them private (`_name`) or say so in their docstring.
+- **Jobs**: Methods that start jobs return the `Job` (or `list[Job]`); job handlers return the `<X>JobOutput`.
 
 ## Variations
+
+`backend/lint/check_services.py` knows these variations and skips the shape rules for them (the content rules still apply):
 
 - **Systems singletons** (`JobService`, `WebsocketService`): hold per-process mutable state, so they set it in `__init__` and have explicit lifecycle methods (`initialize()`, `startup()`). Only use this for infrastructure in `systems/`.
 - **Per-job service** (`PerspectivesService(job)`): a plain class created by the job handler for one job run when state (the `Job`, a device) is bound to a single execution.
 - **Strategy hierarchy** (`classifier/models/*_class_model_service.py`): an `ABC` base (`TextClassificationModelService`) with `@abstractmethod` `train`/`eval`/`infer`; a singleton facade (`ClassifierService.get_model_service`) selects the implementation.
+
+## Lint
+
+`just lint backend` runs [check_services.py](backend/lint/check_services.py) (`--help` lists the rules: service class, `__new__` signature, no module functions, no HTTP, no bare `Exception`, no commits, no events, no exception classes) and [check_exceptions.py](backend/lint/check_exceptions.py) (exception classes only in `*_exceptions.py`).
 
 ## Examples
 
@@ -103,4 +113,4 @@ See:
 
 - [cota_service.py](backend/src/modules/concept_over_time_analysis/cota_service.py) — singleton with repo + JobService dependencies, existence checks via CRUD, returns Read DTOs, job handler.
 - [project_service.py](backend/src/core/project/project_service.py) — numbered orchestration across SQL CRUDs, filesystem, Elasticsearch, Weaviate and Redis jobs.
-- [statistics_service.py](backend/src/modules/statistics/statistics_service.py) — module-function variant with read-only aggregate queries.
+- [statistics_service.py](backend/src/modules/statistics/statistics_service.py) — stateless service with read-only aggregate queries.
