@@ -72,7 +72,7 @@ router = APIRouter(
 - **Emit after mutating**: Call `ws.emit_to_project(DATSEvent.<ENTITY>_<CREATED|UPDATED|DELETED>, result, project_id=...)` after the crud/service call. Use `ws.emit_to_user(...)` instead for user-scoped entities (e.g. search views, API keys).
 - **Return the mutated object**: Every mutation (and every sync event) returns the mutated object as its read DTO — the emitted payload _is_ the returned value. Convert ORM objects with `XRead.model_validate(db_obj)`.
 - **Deletes return the pre-delete DTO**: Snapshot `XRead.model_validate(db_obj)` and `project_id` _before_ calling delete, then emit and return the snapshot.
-- **Bulk mutations**: Emit a single `DATSEvent.<ENTITY>_..._BATCH` event with the list of results, guarded by `if results:`.
+- **Bulk mutations**: Emit a single `DATSEvent.<ENTITY>_..._BATCH` event with the list of results, guarded by `if results:`. Service results are read DTOs: emit them with `ws.emit_dtos_to_projects(event, results)`, which groups by their `project_id`. Return the results in the order of the request.
 
 ### Function Naming
 
@@ -96,6 +96,7 @@ router = APIRouter(
 
 See:
 
-- [backend/src/core/code/code_endpoint.py](backend/src/core/code/code_endpoint.py) — canonical CRUD with sync (create/get/update/delete + bulk).
+- [backend/src/core/code/code_endpoint.py](backend/src/core/code/code_endpoint.py) — canonical CRUD with sync (create/get/update/delete).
+- [backend/src/core/annotation/span_annotation_endpoint.py](backend/src/core/annotation/span_annotation_endpoint.py) — bulk create/update/delete through a service with `emit_dtos_to_projects`.
 - [backend/src/modules/concept_over_time_analysis/cota_endpoint.py](backend/src/modules/concept_over_time_analysis/cota_endpoint.py) — canonical section blocks including job operations.
 - [backend/src/modules/word_frequency/word_frequency_endpoint.py](backend/src/modules/word_frequency/word_frequency_endpoint.py) — POST computations without sync.

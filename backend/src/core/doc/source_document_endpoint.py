@@ -195,17 +195,8 @@ def delete_sdocs_bulk(
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
 
     result = SourceDocumentService().delete_multi(db=db, sdoc_ids=sdoc_ids)
-    # one batch event per project
-    for project_id in {sdoc.project_id for sdoc in result.sdocs}:
-        ws.emit_to_project(
-            DATSEvent.SDOC_DELETED_BATCH,
-            [sdoc for sdoc in result.sdocs if sdoc.project_id == project_id],
-            project_id=project_id,
-        )
-    for project_id in {folder.project_id for folder in result.folders}:
-        ws.emit_to_project(
-            DATSEvent.FOLDER_DELETED_BATCH,
-            [folder for folder in result.folders if folder.project_id == project_id],
-            project_id=project_id,
-        )
+    if result.sdocs:
+        ws.emit_dtos_to_projects(DATSEvent.SDOC_DELETED_BATCH, result.sdocs)
+    if result.folders:
+        ws.emit_dtos_to_projects(DATSEvent.FOLDER_DELETED_BATCH, result.folders)
     return result.sdocs

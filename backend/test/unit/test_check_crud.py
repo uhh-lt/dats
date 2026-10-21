@@ -219,6 +219,34 @@ def test_check_crud_accepts_valid_crud_of_each_kind(source: str, filename: str) 
             '-> list["CodeRead"]:',
             id="read-dto-string",
         ),
+        # a *_bulk method
+        pytest.param(
+            "no-bulk",
+            "def update_color(",
+            "def update_color_bulk(",
+            id="no-bulk",
+        ),
+        # create_multi with a DTO that is not the generic Create DTO
+        pytest.param(
+            "generic-dto",
+            "def create_system_codes(self, db: Session, *, project_id: int) -> list[CodeORM]:",
+            "def create_multi(self, db: Session, *, create_dtos: list[CodeCreateIntern]) -> list[CodeORM]:",
+            id="generic-dto-type",
+        ),
+        # update_multi with an extra parameter
+        pytest.param(
+            "generic-dto",
+            "def update_color(self, db: Session, *, code_id: int, color: str) -> CodeORM:",
+            "def update_multi(self, db: Session, *, ids: list[int], update_dtos: list[CodeUpdate], user_id: int) -> list[CodeORM]:",
+            id="generic-dto-extra-param",
+        ),
+        # single-item override instead of the _multi method
+        pytest.param(
+            "override-multi",
+            "def create_system_codes(self, db: Session, *, project_id: int) -> list[CodeORM]:",
+            "def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:",
+            id="override-multi",
+        ),
     ],
 )
 def test_check_crud_reports_exactly_the_violated_rule(
@@ -231,6 +259,33 @@ def test_check_crud_reports_exactly_the_violated_rule(
 
 
 # --- C. CRUD kinds, output and CLI --------------------------------------------
+
+
+def test_check_crud_accepts_generic_multi_overrides() -> None:
+    """_multi overrides with exactly the generic DTOs are valid."""
+    source = VALID_SQL.replace(
+        "def create_system_codes(self, db: Session, *, project_id: int) -> list[CodeORM]:",
+        "def create_multi(self, db: Session, *, create_dtos: list[CodeCreate]) -> list[CodeORM]:",
+    ).replace(
+        "def update_color(self, db: Session, *, code_id: int, color: str) -> CodeORM:",
+        "def update_multi(self, db: Session, *, ids: list[int], update_dtos: list[CodeUpdate]) -> list[CodeORM]:",
+    )
+    assert rules(source) == set()
+
+
+def test_check_crud_allow_comment_exempts_override_multi() -> None:
+    """A `# check_crud: allow override-multi` comment directly above exempts the override."""
+    override = "def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:"
+    source = VALID_SQL.replace(
+        "def create_system_codes(self, db: Session, *, project_id: int) -> list[CodeORM]:",
+        override,
+    )
+    assert rules(source) == {"override-multi"}
+    allowed = source.replace(
+        f"    {override}",
+        f"    # check_crud: allow override-multi (savepoint per row)\n    {override}",
+    )
+    assert rules(allowed) == set()
 
 
 def test_check_crud_embedding_crud_requires_client_and_its_base() -> None:

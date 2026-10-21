@@ -95,6 +95,7 @@ class CRUDDocumentCluster(
 
     ### UPDATE OPERATIONS ###
 
+    # check_crud: allow override-multi (composite primary key; the base update is typed for int ids)
     def update(
         self,
         db: Session,
