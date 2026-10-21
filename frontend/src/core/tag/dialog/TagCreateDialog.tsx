@@ -11,7 +11,7 @@ import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagHooks } from "../api/tagHooks";
-import { TagRenderer } from "../TagRenderer";
+import { TagRenderer } from "../renderer";
 
 interface TagCreateDialogProps {
   projectId: number;

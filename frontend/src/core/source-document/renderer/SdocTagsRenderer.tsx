@@ -1,28 +1,24 @@
 import { tagQueries, TagRenderer } from "@core/tag";
 import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { memo } from "react";
 
 interface SdocTagsRendererProps {
   sdocId?: number;
   tagIds?: number[];
 }
 
-export function SdocTagsRenderer({ sdocId, tagIds }: SdocTagsRendererProps) {
-  if (sdocId === undefined && tagIds === undefined) {
-    return <>Nothing to show :(</>;
-  }
-
+export const SdocTagsRenderer = memo(({ sdocId, tagIds }: SdocTagsRendererProps) => {
   if (tagIds) {
     return <SdocTagsRendererWithData tagIds={tagIds} />;
-  }
-
-  if (sdocId) {
+  } else if (sdocId !== undefined) {
     return <SdocTagsRendererWithoutData sdocId={sdocId} />;
+  } else {
+    return <>Nothing to show :(</>;
   }
-  return null;
-}
+});
 
-function SdocTagsRendererWithoutData({ sdocId }: { sdocId: number }) {
+const SdocTagsRendererWithoutData = memo(({ sdocId }: { sdocId: number }) => {
   const tags = useQuery(tagQueries.idsBySdoc(sdocId));
 
   if (tags.isSuccess) {
@@ -32,9 +28,9 @@ function SdocTagsRendererWithoutData({ sdocId }: { sdocId: number }) {
   } else {
     return <div>Loading...</div>;
   }
-}
+});
 
-function SdocTagsRendererWithData({ tagIds }: { tagIds: number[] }) {
+const SdocTagsRendererWithData = memo(({ tagIds }: { tagIds: number[] }) => {
   return (
     <Stack direction="row" alignItems="center" spacing={0.5}>
       {tagIds.map((tagId) => (
@@ -42,4 +38,4 @@ function SdocTagsRendererWithData({ tagIds }: { tagIds: number[] }) {
       ))}
     </Stack>
   );
-}
+});

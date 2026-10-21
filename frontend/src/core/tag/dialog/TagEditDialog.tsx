@@ -13,7 +13,7 @@ import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagHooks } from "../api/tagHooks";
-import { TagRenderer } from "../TagRenderer";
+import { TagRenderer } from "../renderer";
 
 export function TagEditDialog() {
   const { isOpen, data: dialogData, close: handleClose } = useDialogBus("tagEdit");

@@ -7,7 +7,7 @@ import { CircularProgress, Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { sentenceAnnotationQueries } from "./api/sentenceAnnotationQueries";
+import { sentenceAnnotationQueries } from "../api/sentenceAnnotationQueries";
 
 export type SentenceAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 

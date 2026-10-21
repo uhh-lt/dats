@@ -74,29 +74,29 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
           return {
             ...colDef,
             size: 100,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} renderTitle />,
           };
         case MemoColumns.M_CONTENT:
           return {
             ...colDef,
             size: 360,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} renderContent />,
           };
         case MemoColumns.M_FAVORITE:
           return {
             ...colDef,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} renderStar />,
           };
         case MemoColumns.M_USER_ID:
           return {
             ...colDef,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} renderUser />,
           };
         case MemoColumns.M_ATTACHED_OBJECT_ID:
           return {
             ...colDef,
             enableSorting: false,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} renderAttachedObject attachedObjectLink />,
           };
         default:
           return {

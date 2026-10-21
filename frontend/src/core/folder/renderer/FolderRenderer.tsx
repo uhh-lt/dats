@@ -4,7 +4,7 @@ import { FolderRead } from "@models/FolderRead";
 import { FolderType } from "@models/FolderType";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
-import { FolderHooks } from "./api/folderHooks";
+import { FolderHooks } from "../api/folderHooks";
 
 export interface FolderRendererSharedProps extends ExpandableRendererProps {
   renderName?: boolean;

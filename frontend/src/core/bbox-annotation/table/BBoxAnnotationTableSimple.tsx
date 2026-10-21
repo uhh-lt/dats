@@ -8,7 +8,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
-import { BBoxAnnotationRenderer } from "../BBoxAnnotationRenderer";
+import { BBoxAnnotationRenderer } from "../renderer";
 
 interface BBoxAnnotationTableRow {
   bboxAnnoId: number;
@@ -18,12 +18,12 @@ const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = [
   {
     id: "Text",
     header: "Text",
-    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showText />,
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} renderText />,
   },
   {
     id: "Code",
     header: "Code",
-    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showCode />,
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} renderCode />,
   },
   {
     id: "Name",
@@ -31,7 +31,7 @@ const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = [
     Cell: ({ row }) => (
       <BBoxAnnotationRenderer
         bboxAnnotation={row.original.bboxAnnoId}
-        showSdoc
+        renderSdoc
         sdocRendererProps={{ renderName: true, link: true }}
       />
     ),
@@ -39,7 +39,7 @@ const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = [
   {
     id: "Tags",
     header: "Tags",
-    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showSdocTags />,
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} renderSdocTags />,
   },
   {
     id: "Memo",
