@@ -3,8 +3,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-const storage = createWebStorage("local");
+import { persistStorage } from "@store/persistStorage";
 
 export enum FolderSelection {
   FOLDER = "FOLDER",
@@ -12,7 +11,7 @@ export enum FolderSelection {
   UNKNOWN = "UNKNOWN",
 }
 
-interface SearchState {
+interface DocumentSearchState extends TableState {
   // project state:
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
   selectedSdocFolderId: number | undefined; // the id of the selected sdoc folder document. Used to highlight the selected folder in the table, and to show the folder information (tags, metadata etc.).
@@ -24,7 +23,7 @@ interface SearchState {
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
 }
 
-const initialState: TableState & SearchState = {
+const initialState: DocumentSearchState = {
   ...initialTableState,
   // project state:
   selectedDocumentId: undefined,
@@ -38,8 +37,8 @@ const initialState: TableState & SearchState = {
   sortStatsByGlobal: false,
 };
 
-const searchSlice = createSlice({
-  name: "search",
+const documentSearchSlice = createSlice({
+  name: "documentSearch",
   initialState,
   reducers: {
     ...tableReducer,
@@ -123,7 +122,7 @@ const searchSlice = createSlice({
   },
   extraReducers(builder) {
     builder.addCase(ProjectActions.changeProject, (state) => {
-      console.log("Project changed! Resetting 'search' state.");
+      console.log("Project changed! Resetting 'documentSearch' state.");
       state.selectedDocumentId = initialState.selectedDocumentId;
       state.expandedTagIds = initialState.expandedTagIds;
       state.scrollPosition = initialState.scrollPosition;
@@ -135,14 +134,14 @@ const searchSlice = createSlice({
 });
 
 // actions
-export const SearchActions = searchSlice.actions;
+export const DocumentSearchActions = documentSearchSlice.actions;
 
-export const searchReducer = {
-  [searchSlice.name]: persistReducer(
+export const documentSearchReducer = {
+  [documentSearchSlice.name]: persistReducer(
     {
-      key: searchSlice.name,
-      storage,
+      key: documentSearchSlice.name,
+      storage: persistStorage,
     },
-    searchSlice.reducer,
+    documentSearchSlice.reducer,
   ),
 };

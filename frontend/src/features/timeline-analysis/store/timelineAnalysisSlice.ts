@@ -17,7 +17,7 @@ import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 
-export interface TimelineAnalysisState {
+export interface TimelineAnalysisState extends FilterState {
   // project state:
   lastOpenedTimelineAnalysisId: number | undefined;
   metadataCheckerOpen: boolean;
@@ -56,7 +56,7 @@ const defaultFilterExpressions: Record<TimelineAnalysisType, MyFilterExpression>
   },
 };
 
-const initialState: FilterState & TimelineAnalysisState = {
+const initialState: TimelineAnalysisState = {
   ...createInitialFilterState(defaultFilterExpressions[defaultAnalysisType]),
   // project state:
   lastOpenedTimelineAnalysisId: undefined,
@@ -86,7 +86,7 @@ const initialState: FilterState & TimelineAnalysisState = {
 };
 
 const resetTimelineAnalysisState = (
-  state: Draft<FilterState & TimelineAnalysisState>,
+  state: Draft<TimelineAnalysisState>,
   timelineAnalysisType: TimelineAnalysisType,
 ) => {
   resetProjectFilterState({

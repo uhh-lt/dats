@@ -8,7 +8,7 @@ import { TabContext } from "@mui/lab";
 import { Box, BoxProps, IconButton, Stack, Tab, Tabs, TextField, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ChangeEvent, SyntheticEvent, useCallback, useState } from "react";
-import { SearchActions } from "../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../store/documentSearchSlice";
 import { CodeStats } from "./_components/CodeStats";
 import { DocumentTagStats } from "./_components/DocumentTagStats";
 import { KeywordStats } from "./_components/KeywordStats";
@@ -52,9 +52,9 @@ export function SearchStatistics({
 
   // toggle sort by global
   const dispatch = useAppDispatch();
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+  const sortStatsByGlobal = useAppSelector((state) => state.documentSearch.sortStatsByGlobal);
   const toggleSortStatsByGlobal = () => {
-    dispatch(SearchActions.onToggleSortStatsByGlobal());
+    dispatch(DocumentSearchActions.onToggleSortStatsByGlobal());
   };
 
   // The scrollable element for the lists

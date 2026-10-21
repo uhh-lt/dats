@@ -1,5 +1,6 @@
 import { TagRead } from "@models/TagRead";
-import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
 import { RootState } from "@store/store";
 import { ChartDataPoint } from "../_types/ChartDataPoint";
 
@@ -25,6 +26,22 @@ const initialState: DocumentSamplerState = {
   isDataBarPlot: true,
   isSampleBarPlot: true,
   oldValues: "",
+};
+
+const computeValueRepresentation = (state: DocumentSamplerState) => {
+  return JSON.stringify({
+    aggregationGroups: state.aggregationGroups,
+    fixedSamplingValue: state.fixedSamplingValue,
+    relativeSamplingValue: state.relativeSamplingValue,
+  });
+};
+
+const resetDocumentSamplerState = (state: Draft<DocumentSamplerState>) => {
+  state.aggregationGroups = initialState.aggregationGroups;
+  state.chartData = initialState.chartData;
+  state.fixedSamplingValue = initialState.fixedSamplingValue;
+  state.relativeSamplingValue = initialState.relativeSamplingValue;
+  state.maxFixedSamplingValue = initialState.maxFixedSamplingValue;
 };
 
 const documentSamplerSlice = createSlice({
@@ -62,11 +79,7 @@ const documentSamplerSlice = createSlice({
       state.aggregationGroups = newState;
     },
     onReset: (state) => {
-      state.aggregationGroups = initialState.aggregationGroups;
-      state.chartData = initialState.chartData;
-      state.fixedSamplingValue = initialState.fixedSamplingValue;
-      state.relativeSamplingValue = initialState.relativeSamplingValue;
-      state.maxFixedSamplingValue = initialState.maxFixedSamplingValue;
+      resetDocumentSamplerState(state);
     },
     onUpdateChartData: (state, action: PayloadAction<ChartDataPoint[]>) => {
       state.chartData = action.payload;
@@ -80,17 +93,16 @@ const documentSamplerSlice = createSlice({
       state.isDataBarPlot = !state.isDataBarPlot;
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(ProjectActions.changeProject, (state) => {
+      console.log("Project changed! Resetting 'documentSampler' state.");
+      resetDocumentSamplerState(state);
+      state.oldValues = initialState.oldValues;
+    });
+  },
 });
 
 export const DocumentSamplerActions = documentSamplerSlice.actions;
-
-const computeValueRepresentation = (state: DocumentSamplerState) => {
-  return JSON.stringify({
-    aggregationGroups: state.aggregationGroups,
-    fixedSamplingValue: state.fixedSamplingValue,
-    relativeSamplingValue: state.relativeSamplingValue,
-  });
-};
 
 const selectDocumentSamplerState = (state: RootState) => state.documentSampler;
 

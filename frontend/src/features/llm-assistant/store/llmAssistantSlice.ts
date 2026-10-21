@@ -11,7 +11,7 @@ import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { StrategyType } from "@models/StrategyType";
 import { TagRead } from "@models/TagRead";
 import { TaskType } from "@models/TaskType";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { LLMAssistantEvent } from "../_types/LLMAssistantEvent";
 
 export type LLMAssistantStrategyParams =

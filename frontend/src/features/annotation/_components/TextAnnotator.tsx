@@ -12,7 +12,7 @@ import { useComputeTokenData, useTokenData } from "../_hooks/useComputeTokenData
 import { useSpanAnnotationResize } from "../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../_types/Annotation";
 import { TagStyle } from "../_types/TagStyle";
-import { AnnoActions } from "../store/annoSlice";
+import { AnnotationsActions } from "../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { DocumentRenderer } from "./DocumentRenderer";
 
@@ -250,7 +250,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     startCreate(draftAnnotation, codeId, () => {
       if (!isNewCode) {
         // if we use an existing code to annotate, we move it to the top
-        dispatch(AnnoActions.moveCodeToTop(codeId));
+        dispatch(AnnotationsActions.moveCodeToTop(codeId));
       }
     });
   };
@@ -266,7 +266,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         code_id: codeId,
       };
       const pending = toPendingSpanAnnotation(requestBody, user?.id);
-      startCreate(pending, codeId, () => dispatch(AnnoActions.moveCodeToTop(codeId)));
+      startCreate(pending, codeId, () => dispatch(AnnotationsActions.moveCodeToTop(codeId)));
     }
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
@@ -276,7 +276,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       if (reason === "backdropClick") {
         // add the annotation as is
         startCreate(draftAnnotation, draftAnnotation.code_id, () =>
-          dispatch(AnnoActions.moveCodeToTop(draftAnnotation.code_id)),
+          dispatch(AnnotationsActions.moveCodeToTop(draftAnnotation.code_id)),
         );
       }
     }

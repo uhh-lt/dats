@@ -1,15 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { workspaceReducer, WorkspaceState } from "@store/generic/workspaceSlice";
+import {
+  initialWorkspaceState,
+  WorkspacePreference,
+  workspaceReducer,
+  WorkspaceState,
+} from "@store/generic/workspaceSlice";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-
-const storage = createWebStorage("local");
+import { persistStorage } from "@store/persistStorage";
 
 /** Memo workspace preferences add the currently-opened memo to the generic workspace preference. */
-export interface MemoWorkspacePreference {
-  lastViewId?: number;
-  /** Expanded group keys per view id. Missing entry = never touched (defaults apply). */
-  expandedGroups?: Record<number, string[]>;
+export interface MemoWorkspacePreference extends WorkspacePreference {
   /** Column widths (column id -> px) per view id. Missing entry = never resized (defaults apply). */
   columnSizing?: Record<number, Record<string, number>>;
   /** The memo currently opened in the workspace's detail editor (not routed). */
@@ -25,7 +25,7 @@ const getWorkspace = (state: MemoWorkspaceState, scope: string): MemoWorkspacePr
   return state.workspaces[scope];
 };
 
-const initialState: MemoWorkspaceState = { workspaces: {} };
+const initialState: MemoWorkspaceState = initialWorkspaceState;
 
 const memoWorkspaceSlice = createSlice({
   name: "memoWorkspace",
@@ -51,5 +51,8 @@ const memoWorkspaceSlice = createSlice({
 
 export const MemoWorkspaceActions = memoWorkspaceSlice.actions;
 export const memoWorkspaceReducer = {
-  [memoWorkspaceSlice.name]: persistReducer({ key: memoWorkspaceSlice.name, storage }, memoWorkspaceSlice.reducer),
+  [memoWorkspaceSlice.name]: persistReducer(
+    { key: memoWorkspaceSlice.name, storage: persistStorage },
+    memoWorkspaceSlice.reducer,
+  ),
 };

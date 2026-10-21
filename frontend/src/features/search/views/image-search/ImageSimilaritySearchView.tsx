@@ -18,7 +18,7 @@ import {
   addSpanAnnotationFilter,
   toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
-import { SearchActions } from "../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../store/imageSearchSlice";
 import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearchToolbar";
 import { ImageSimilarityView } from "./_components/ImageSimilarityView";
@@ -33,7 +33,7 @@ export function ImageSimilaritySearchView() {
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
-  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
+  const expandedTagIds = useAppSelector((state) => state.documentSearch.expandedTagIds);
   const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
   const dispatch = useAppDispatch();
 
@@ -81,7 +81,7 @@ export function ImageSimilaritySearchView() {
 
   // tag explorer handlers
   const handleExpandedTagIdsChange = useCallback(
-    (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
+    (ids: string[]) => dispatch(DocumentSearchActions.setExpandedTagIds(ids)),
     [dispatch],
   );
 

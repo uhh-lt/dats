@@ -3,7 +3,7 @@ import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTask } from "@models/ClassifierTask";
 import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
 import { ClassifierTrainingSettings as ClassifierTrainingSettingsDto } from "@models/ClassifierTrainingSettings";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 export type ClassifierTrainingSettings = ClassifierTrainingSettingsDto &
   Pick<ClassifierTrainingParams, "classifier_name" | "base_name">;

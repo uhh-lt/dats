@@ -1,7 +1,6 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
-import createWebStorage from "redux-persist/es/storage/createWebStorage";
-const storage = createWebStorage("local");
+import { persistStorage } from "../persistStorage";
 
 interface LayoutState {
   // Stores percentage values (0-100) for resizable components
@@ -19,7 +18,7 @@ const layoutSlice = createSlice({
   name: "layout",
   initialState,
   reducers: {
-    setPercentage: (state, action: { payload: { componentName: string; percentage: number } }) => {
+    setPercentage: (state, action: PayloadAction<{ componentName: string; percentage: number }>) => {
       // round the percentage to prevent floating point errors
       const roundedPercentage = Math.round(action.payload.percentage);
 
@@ -28,7 +27,7 @@ const layoutSlice = createSlice({
         state.verticalPercentages[action.payload.componentName] = roundedPercentage;
       }
     },
-    setSize: (state, action: { payload: { componentName: string; size: number } }) => {
+    setSize: (state, action: PayloadAction<{ componentName: string; size: number }>) => {
       // round the size to prevent floating point errors
       const roundedSize = Math.round(action.payload.size);
 
@@ -45,7 +44,7 @@ export const layoutReducer = {
   [layoutSlice.name]: persistReducer(
     {
       key: layoutSlice.name,
-      storage,
+      storage: persistStorage,
     },
     layoutSlice.reducer,
   ),

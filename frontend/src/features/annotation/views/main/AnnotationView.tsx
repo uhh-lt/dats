@@ -21,7 +21,7 @@ import { TextViewer } from "../../_components/text-viewer";
 import { AnnotationToolbar } from "../../_components/toolbar";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
-import { AnnoActions } from "../../store/annoSlice";
+import { AnnotationsActions } from "../../store/annotationsSlice";
 
 const annotatorComponent = (
   sdocData: SourceDocumentDataRead,
@@ -162,19 +162,19 @@ export function AnnotationView() {
 
   // code explorer handlers
   const handleSelectedCodeIdChange = useCallback(
-    (codeId: number | undefined) => dispatch(AnnoActions.setSelectedCodeId(codeId)),
+    (codeId: number | undefined) => dispatch(AnnotationsActions.setSelectedCodeId(codeId)),
     [dispatch],
   );
   const handleExpandedCodeIdsChange = useCallback(
-    (ids: string[]) => dispatch(AnnoActions.setExpandedCodeIds(ids)),
+    (ids: string[]) => dispatch(AnnotationsActions.setExpandedCodeIds(ids)),
     [dispatch],
   );
   const handleHoverCodeIdChange = useCallback(
-    (codeId: number | undefined) => dispatch(AnnoActions.setHoveredCodeId(codeId)),
+    (codeId: number | undefined) => dispatch(AnnotationsActions.setHoveredCodeId(codeId)),
     [dispatch],
   );
   const handleToggleCodeVisibility = useCallback(
-    (codeIds: number[]) => dispatch(AnnoActions.toggleCodeVisibility(codeIds)),
+    (codeIds: number[]) => dispatch(AnnotationsActions.toggleCodeVisibility(codeIds)),
     [dispatch],
   );
 

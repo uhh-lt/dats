@@ -4,7 +4,7 @@ import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
+import { SentAnnotationAnalysisActions } from "../../../store/sentAnnotationAnalysisSlice";
 
 interface BulkDeleteSentAnnotationsButtonProps {
   selectedData: SentenceAnnotationRow[];
@@ -24,7 +24,7 @@ export function BulkDeleteSentAnnotationsButton({ selectedData }: BulkDeleteSent
           { requestBody: selectedData.map((row) => row.id) },
           {
             onSuccess: () => {
-              dispatch(SentAnnotationsActions.onClearRowSelection());
+              dispatch(SentAnnotationAnalysisActions.onClearRowSelection());
             },
           },
         );

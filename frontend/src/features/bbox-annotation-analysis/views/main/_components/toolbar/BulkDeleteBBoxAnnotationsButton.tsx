@@ -4,7 +4,7 @@ import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
+import { BBoxAnnotationAnalysisActions } from "../../../../store/bboxAnnotationAnalysisSlice";
 
 interface BulkDeleteBBoxAnnotationsButtonProps {
   selectedData: BBoxAnnotationRow[];
@@ -24,7 +24,7 @@ export function BulkDeleteBBoxAnnotationsButton({ selectedData }: BulkDeleteBBox
           { requestBody: selectedData.map((row) => row.id) },
           {
             onSuccess: () => {
-              dispatch(BBoxAnnotationsActions.onClearRowSelection());
+              dispatch(BBoxAnnotationAnalysisActions.onClearRowSelection());
             },
           },
         );

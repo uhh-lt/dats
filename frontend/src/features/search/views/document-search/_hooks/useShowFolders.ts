@@ -1,6 +1,6 @@
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
-import { SearchActions } from "../../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../../store/documentSearchSlice";
 import { DocumentSearchRouteAPI } from "./documentSearchRouteAPI";
 
 /**
@@ -15,7 +15,7 @@ export function useShowFolders() {
   const toggleShowFolders = useCallback(() => {
     navigate({ search: (prev) => ({ ...prev, showFolders: !showFolders }), replace: true });
     if (showFolders) {
-      dispatch(SearchActions.onFoldersHidden());
+      dispatch(DocumentSearchActions.onFoldersHidden());
     }
   }, [dispatch, navigate, showFolders]);
 

@@ -53,7 +53,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FolderSelection, SearchActions } from "../../../store/documentSearchSlice";
+import { FolderSelection, DocumentSearchActions } from "../../../store/documentSearchSlice";
 import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
 import { useShowFolders } from "../_hooks/useShowFolders";
 import { FolderToggleVisibilityButton } from "./FolderToggleVisibilityButton";
@@ -116,8 +116,8 @@ export function SearchDocumentTable({
   const dispatch = useAppDispatch();
 
   // custom row selection state (it distinguishes between folders and source documents)
-  const folderSelectionType = useAppSelector((state) => state.search.folderSelectionType);
-  const rowSelectionModel = useAppSelector((state) => state.search.rowSelectionModel);
+  const folderSelectionType = useAppSelector((state) => state.documentSearch.folderSelectionType);
+  const rowSelectionModel = useAppSelector((state) => state.documentSearch.rowSelectionModel);
   const setRowSelectionModel = useCallback(
     (updater: MRT_Updater<MRT_RowSelectionState>) => {
       const newState = updater instanceof Function ? updater(rowSelectionModel) : updater;
@@ -125,7 +125,7 @@ export function SearchDocumentTable({
       // if it contains any numbers, it's SDOC, otherwise it's FOLDER
       if (Object.keys(rowSelectionModel).length === 0) {
         if (Object.keys(newState).some((key) => !isNaN(Number(key)))) {
-          dispatch(SearchActions.onFolderSelectionChange(FolderSelection.SDOC));
+          dispatch(DocumentSearchActions.onFolderSelectionChange(FolderSelection.SDOC));
           // remove all keys that are not numbers
           Object.keys(newState).forEach((key) => {
             if (isNaN(Number(key))) {
@@ -133,40 +133,40 @@ export function SearchDocumentTable({
             }
           });
         } else {
-          dispatch(SearchActions.onFolderSelectionChange(FolderSelection.FOLDER));
+          dispatch(DocumentSearchActions.onFolderSelectionChange(FolderSelection.FOLDER));
         }
       }
       // if new state is empty, reset the folder selection type
       if (Object.keys(newState).length === 0) {
-        dispatch(SearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
+        dispatch(DocumentSearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
       }
-      dispatch(SearchActions.onRowSelectionChange(newState));
+      dispatch(DocumentSearchActions.onRowSelectionChange(newState));
     },
     [dispatch, rowSelectionModel],
   );
 
   // global client state (redux) connected to table state
   const [storedColumnVisibility, setColumnVisibilityModel] = useReduxConnector(
-    (state) => state.search.columnVisibilityModel,
-    SearchActions.onColumnVisibilityChange,
+    (state) => state.documentSearch.columnVisibilityModel,
+    DocumentSearchActions.onColumnVisibilityChange,
   );
   const [expandedModel, setExpandedModel] = useReduxConnector(
-    (state) => state.search.expandedModel,
-    SearchActions.onExpandedChange,
+    (state) => state.documentSearch.expandedModel,
+    DocumentSearchActions.onExpandedChange,
   );
   const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
-    (state) => state.search.columnSizingModel,
-    SearchActions.onColumnSizingChange,
+    (state) => state.documentSearch.columnSizingModel,
+    DocumentSearchActions.onColumnSizingChange,
   );
   const [gridDensity, setGridDensityModel] = useReduxConnector(
-    (state) => state.search.gridDensityModel,
-    SearchActions.onGridDensityChange,
+    (state) => state.documentSearch.gridDensityModel,
+    DocumentSearchActions.onGridDensityChange,
   );
-  const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
-  const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
+  const selectedDocumentId = useAppSelector((state) => state.documentSearch.selectedDocumentId);
+  const selectedSdocFolderId = useAppSelector((state) => state.documentSearch.selectedSdocFolderId);
   const [showFolders] = useShowFolders();
-  const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
-  const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
+  const selectedRows = useAppSelector((state) => selectSelectedRows(state.documentSearch));
+  const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.documentSearch));
 
   // virtualization
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
@@ -341,7 +341,7 @@ export function SearchDocumentTable({
                   navigate({ to: `/project/$projectId/annotation/$sdocId`, params: { projectId, sdocId: doc.id } });
                 }
               } else {
-                dispatch(SearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));
+                dispatch(DocumentSearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));
               }
             },
             sx: {
@@ -356,7 +356,7 @@ export function SearchDocumentTable({
                   params: { projectId, sdocId: row.original.id },
                 });
               } else {
-                dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));
+                dispatch(DocumentSearchActions.onToggleSelectedDocumentIdChange(row.original.id));
               }
             },
             sx: {
@@ -393,7 +393,7 @@ export function SearchDocumentTable({
   }, [projectId, searchQuery, searchFilter, sortingModel]);
 
   // Track & restore scroll position
-  const savedScrollPosition = useAppSelector((state) => state.search.scrollPosition);
+  const savedScrollPosition = useAppSelector((state) => state.documentSearch.scrollPosition);
   useEffect(() => {
     if (
       table.refs.tableContainerRef.current &&
@@ -420,7 +420,7 @@ export function SearchDocumentTable({
           />
           <DeleteSdocsButton
             sdocIds={selectedSdocIds}
-            onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
+            onDeleted={(ids) => dispatch(DocumentSearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
           />
           <LLMAssistantButton sdocIds={selectedSdocIds} projectId={projectId} />
           <ClassifierInferenceButton sdocIds={selectedSdocIds} projectId={projectId} />
@@ -433,7 +433,7 @@ export function SearchDocumentTable({
         <FolderActionMenuButton
           selectedFolderIds={selectedFolderIds}
           popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
-          onMoveFolder={() => dispatch(SearchActions.onMoveFolders())}
+          onMoveFolder={() => dispatch(DocumentSearchActions.onMoveFolders())}
         />
       );
     }
@@ -471,7 +471,7 @@ export function SearchDocumentTable({
           onScroll={(event) => {
             // Save the scroll position when the user scrolls
             const target = event.target as HTMLDivElement;
-            dispatch(SearchActions.onSaveScrollPosition(target.scrollTop));
+            dispatch(DocumentSearchActions.onSaveScrollPosition(target.scrollTop));
             // Continue with the default fetch more behavior
             fetchMoreOnScroll(target);
           }}

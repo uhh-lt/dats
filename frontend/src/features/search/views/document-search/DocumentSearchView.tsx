@@ -24,7 +24,7 @@ import {
   addSpanAnnotationFilter,
   toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
-import { SearchActions } from "../../store/documentSearchSlice";
+import { DocumentSearchActions } from "../../store/documentSearchSlice";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
 import { useShowFolders } from "./_hooks/useShowFolders";
@@ -40,11 +40,11 @@ export function DocumentSearchView() {
   const { documentSearchOptions, projectMetadataOptions } = DocumentSearchRouteAPI.useRouteContext();
 
   // redux (global client state)
-  const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
-  const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
-  const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
-  const expandedFolderIds = useAppSelector((state) => state.search.expandedFolderIds);
-  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
+  const selectedDocumentId = useAppSelector((state) => state.documentSearch.selectedDocumentId);
+  const selectedSdocFolderId = useAppSelector((state) => state.documentSearch.selectedSdocFolderId);
+  const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.documentSearch));
+  const expandedFolderIds = useAppSelector((state) => state.documentSearch.expandedFolderIds);
+  const expandedTagIds = useAppSelector((state) => state.documentSearch.expandedTagIds);
   const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
   const dispatch = useAppDispatch();
 
@@ -111,7 +111,7 @@ export function DocumentSearchView() {
 
   // resetting search-parameter-dependant state
   const resetState = useCallback(() => {
-    dispatch(SearchActions.onSearchParamsChange());
+    dispatch(DocumentSearchActions.onSearchParamsChange());
   }, [dispatch]);
   useResetStateOnSearch([projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel], resetState);
 
@@ -150,7 +150,7 @@ export function DocumentSearchView() {
 
   // folder explorer handlers
   const handleExpandedFolderIdsChange = useCallback(
-    (ids: string[]) => dispatch(SearchActions.setExpandedFolderIds(ids)),
+    (ids: string[]) => dispatch(DocumentSearchActions.setExpandedFolderIds(ids)),
     [dispatch],
   );
   const handleSelectedFolderIdChange = useCallback(
@@ -165,7 +165,7 @@ export function DocumentSearchView() {
 
   // tag explorer handlers
   const handleExpandedTagIdsChange = useCallback(
-    (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
+    (ids: string[]) => dispatch(DocumentSearchActions.setExpandedTagIds(ids)),
     [dispatch],
   );
 
@@ -182,7 +182,7 @@ export function DocumentSearchView() {
         },
         {
           onSuccess: () => {
-            dispatch(SearchActions.onMoveFolders());
+            dispatch(DocumentSearchActions.onMoveFolders());
           },
         },
       );

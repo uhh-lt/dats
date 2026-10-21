@@ -2,7 +2,7 @@ import { useAuth } from "@core/auth";
 import { CodeHooks } from "@core/code";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect } from "react";
-import { CodeShortcutActions } from "../../store/codeShortcutSlice";
+import { CodeShortcutsActions } from "../../store/codeShortcutsSlice";
 
 interface CodeShortcutSynchronizerProps {
   projectId: number;
@@ -20,7 +20,7 @@ export function CodeShortcutSynchronizer({ projectId }: CodeShortcutSynchronizer
     }
 
     dispatch(
-      CodeShortcutActions.reconcile({
+      CodeShortcutsActions.reconcile({
         userId: user.id,
         projectId,
         validCodeIds: codes.data.map((code) => code.id),

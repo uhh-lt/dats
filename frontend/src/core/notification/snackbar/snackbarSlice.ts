@@ -1,4 +1,4 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { SnackbarEvent } from "./_types/SnackbarEvent";
 
 interface SnackbarState {

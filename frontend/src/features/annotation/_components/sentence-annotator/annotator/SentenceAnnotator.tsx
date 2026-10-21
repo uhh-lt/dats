@@ -16,7 +16,7 @@ import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAn
 import { useSentenceAnnotationHighlight } from "../../../_hooks/useSentenceAnnotationHighlight";
 import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
-import { AnnoActions } from "../../../store/annoSlice";
+import { AnnotationsActions } from "../../../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
 import { useGetSentenceAnnotator } from "../_hooks/useGetSentenceAnnotator";
 import { DocumentSentence } from "./_components/DocumentSentence";
@@ -140,7 +140,7 @@ export const SentenceAnnotator = memo(
         () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(codeId));
+            dispatch(AnnotationsActions.moveCodeToTop(codeId));
           }
         },
       );
@@ -157,7 +157,7 @@ export const SentenceAnnotator = memo(
           sentence_id_end: annotation.sentence_id_end,
         },
         () => {
-          dispatch(AnnoActions.moveCodeToTop(codeId));
+          dispatch(AnnotationsActions.moveCodeToTop(codeId));
         },
       );
     };
