@@ -21,17 +21,16 @@ export interface URLFilterDialogProps<
   TFilter extends string = string,
 > {
   routeApi: RouteApiWithFilterSearchParams<TId, TRouter>;
-  filterColumnsEnum?: Record<string, TFilter>;
   defaultFilterExpression: MyFilterExpression<TFilter>;
   // the query of the column infos of the table, e.g. memoQueries.tableInfo(projectId)
   tableInfoOptions: TableInfoOptions;
 }
 
-const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter, TFilter extends string = string>({
+const URLFilterDialogInner = <TId extends string, TRouter extends AnyRouter, TFilter extends string = string>({
   routeApi,
   defaultFilterExpression,
   tableInfoOptions,
-  //
+  // ----
   anchorEl,
   buttonProps,
   anchorOrigin,
@@ -60,4 +59,4 @@ const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter,
   );
 };
 
-export const URLFilterDialog = memo(URLFilterDialogComponent) as typeof URLFilterDialogComponent;
+export const URLFilterDialog = memo(URLFilterDialogInner) as typeof URLFilterDialogInner;

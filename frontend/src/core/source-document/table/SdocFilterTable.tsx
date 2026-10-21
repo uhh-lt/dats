@@ -1,18 +1,18 @@
 import {
+  createEmptyFilter,
   FILTER_PARAM,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
-  FilterTableToolbarRight,
+  LocalFilterTableProps,
+  LocalFilterTableToolbarLeft,
   MyFilter,
-  ReduxFilterDialogProps,
+  ReduxFilterTableProps,
   ReduxFilterTableToolbarLeft,
-  ReduxFilterTableToolbarProps,
-  URLFilterDialogProps,
-  URLFilterTableToolbarLeft,
-  URLFilterTableToolbarProps,
-  createEmptyFilter,
+  TableInfoHooks,
   toSorts,
+  URLFilterTableProps,
+  URLFilterTableToolbarLeft,
 } from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
@@ -29,18 +29,17 @@ import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
 import { sdocQueries } from "../api/sdocQueries";
 import { SdocAnnotatorsRenderer, SdocFolderRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
-import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
+import { defaultSdocFilterExpression, SdocFilterActions } from "./sdocFilterSlice";
 
 const flatMapData = (page: PaginatedSDocHits) => page.hits;
 
+// columns that the table does not show
+const HIDDEN_COLUMNS: string[] = [SdocColumns.SD_CODE_ID_LIST_RECURSIVE, SdocColumns.SD_SPAN_ANNOTATIONS];
+
 /**
- * Component for rendering a filter table for source documents.
- * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component.
- * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
- *
- * @param filter the filter state, which is either obtained from Redux or from URL search params, depending on the parent component
- * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
- * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
+ * Filter table for source documents: defines the columns and fetches the data.
+ * Where the filter lives (Redux, URL or the caller) is decided by the variants below, which pass the filter and the
+ * matching top left toolbar.
  */
 const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<HierarchicalElasticSearchHit>>({
   projectId,
@@ -55,78 +54,74 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
   onFetchSizeChange,
   onSearchParameterChange,
   positionToolbarAlertBanner = "top",
-  renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar,
+  renderTopRightToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
 }: FilterTableContainerProps<HierarchicalElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
+  // table columns
   const { data: tableInfo } = useQuery(sdocQueries.tableInfo(projectId));
   const columns = useMemo(() => {
     if (!tableInfo) return [];
 
-    const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<HierarchicalElasticSearchHit> = {
-        id: column.column,
-        header: column.label,
-        enableSorting: column.sortable,
-      };
-      switch (column.column) {
-        case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
-          return {
-            ...colDef,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
-          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
-          return {
-            ...colDef,
-            flex: 2,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
-          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_TAG_ID_LIST_RECURSIVE:
-          return {
-            ...colDef,
-            flex: 2,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_USER_ID_LIST:
-          return {
-            ...colDef,
-            flex: 2,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_CODE_ID_LIST_RECURSIVE:
-          return null;
-        case SdocColumns.SD_SPAN_ANNOTATIONS:
-          return null;
-        case SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE:
-          return {
-            ...colDef,
-            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.id} renderName renderIcon />,
-          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        default:
-          if (!isNaN(parseInt(column.column))) {
+    return tableInfo
+      .filter((column) => !HIDDEN_COLUMNS.includes(column.column))
+      .map((column): MRT_ColumnDef<HierarchicalElasticSearchHit> => {
+        const colDef: MRT_ColumnDef<HierarchicalElasticSearchHit> = {
+          id: column.column,
+          accessorFn: () => null,
+          header: column.label,
+          enableSorting: column.sortable,
+        };
+
+        switch (column.column) {
+          case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
             return {
               ...colDef,
-              flex: 2,
-              Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
-              ),
-            } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-          }
-          return {
-            ...colDef,
-            Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-      }
-    });
-
-    return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
+              Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
+            };
+          case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
+            return {
+              ...colDef,
+              Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
+            };
+          case SdocColumns.SD_TAG_ID_LIST_RECURSIVE:
+            return {
+              ...colDef,
+              Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
+            };
+          case SdocColumns.SD_USER_ID_LIST:
+            return {
+              ...colDef,
+              Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
+            };
+          case SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE:
+            return {
+              ...colDef,
+              Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.id} renderName renderIcon />,
+            };
+          default:
+            if (!isNaN(parseInt(column.column))) {
+              return {
+                ...colDef,
+                Cell: ({ row }) => (
+                  <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
+                ),
+              };
+            }
+            return {
+              ...colDef,
+              Cell: () => <i>Cannot render column {column.column}</i>,
+            };
+        }
+      });
   }, [tableInfo]);
 
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...sdocQueries.search({
+  // table data
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
+    sdocQueries.search({
       projectId,
       searchQuery: searchQuery || "",
       filter,
@@ -135,16 +130,17 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
       expertMode: false,
       showFolders: false,
     }),
-  });
+  );
 
   // resetting search-parameter-dependant state
   const resetState = useCallback(() => {
     onRowSelectionChange?.({});
-    onFetchSizeChange?.(20);
+    onFetchSizeChange(20);
     onSearchParameterChange?.();
   }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
-  useResetStateOnSearch([filter, sortingModel], resetState);
+  useResetStateOnSearch([searchQuery, filter, sortingModel], resetState);
 
+  // search highlights
   const renderDetailPanel = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length === 0) return undefined;
 
@@ -171,16 +167,16 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
       isLoading={isLoading || columns.length === 0}
       isError={isError}
       isFetching={isFetching}
+      onFetchSizeChange={onFetchSizeChange}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={onRowSelectionChange}
       sortingModel={sortingModel}
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      onFetchSizeChange={onFetchSizeChange}
       positionToolbarAlertBanner={positionToolbarAlertBanner}
-      renderTopRightToolbar={renderTopRightToolbar}
       renderTopLeftToolbar={renderTopLeftToolbar}
+      renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
       state={{ globalFilter: searchQuery }}
@@ -192,28 +188,21 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
 };
 
 // configs for redux filter table
-const filterStateSelector = (state: RootState) => state.documentTableFilter;
-const filterActions = SdocTableFilterActions;
+const filterStateSelector = (state: RootState) => state.sdocFilter;
+const filterActions = SdocFilterActions;
 
 /**
  * Redux-based filter table for source documents.
- * The filter state is stored under state.documentTableFilter.filter[filterName].
+ * The filter state is stored under state.sdocFilter.filter[filterName].
  *
- * @param filterName used to identify the filter state in the redux store, so that multiple tables can be used without conflicts.
+ * @param filterName identifies the filter in the redux store, so that multiple tables can be used without conflicts.
  */
 export const SdocReduxFilterTable = memo(
   ({
     filterName,
+    renderTopLeftToolbar = ReduxFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<
-      HierarchicalElasticSearchHit,
-      ReduxFilterTableToolbarProps<HierarchicalElasticSearchHit>,
-      MyFilter<SdocColumns>
-    >,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
-  > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
+  }: ReduxFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
@@ -223,7 +212,7 @@ export const SdocReduxFilterTable = memo(
       <SdocFilterTable
         {...tableProps}
         filter={filter as MyFilter<SdocColumns>}
-        renderTopLeftToolbar={ReduxFilterTableToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName,
           filterStateSelector,
@@ -235,28 +224,21 @@ export const SdocReduxFilterTable = memo(
   },
 );
 
-// configs for URL filter table
+// configs for URL and local filter table
 const defaultFilterExpression = defaultSdocFilterExpression;
 
 /**
  * URL-based filter table for source documents.
  * The filter state is synced with the URL, so it can be shared via URL and is preserved on page reload.
  *
- * @param routeApi used to read and write the URL search params, it can be obtained via useRouteApi().
+ * @param routeApi reads and writes the URL search params, it can be obtained via useRouteApi().
  */
 export const SdocURLFilterTable = memo(
   ({
     routeApi,
+    renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<
-      HierarchicalElasticSearchHit,
-      URLFilterTableToolbarProps<HierarchicalElasticSearchHit>,
-      MyFilter<SdocColumns>
-    >,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
-  > &
-    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
+  }: URLFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
@@ -265,11 +247,46 @@ export const SdocURLFilterTable = memo(
       <SdocFilterTable
         {...tableProps}
         filter={filter}
-        renderTopLeftToolbar={URLFilterTableToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
           tableInfoOptions,
+        }}
+      />
+    );
+  },
+);
+
+/**
+ * Local filter table for source documents.
+ * The filter state is owned by the caller and passed via props, so it can be stored anywhere.
+ */
+export const SdocLocalFilterTable = memo(
+  ({
+    filterName,
+    filter,
+    onFilterChange,
+    expertMode,
+    onExpertModeChange,
+    renderTopLeftToolbar = LocalFilterTableToolbarLeft,
+    ...tableProps
+  }: LocalFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
+    const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(tableProps.projectId));
+
+    return (
+      <SdocFilterTable
+        {...tableProps}
+        filter={filter}
+        renderTopLeftToolbar={renderTopLeftToolbar}
+        toolbarExtraProps={{
+          filterName,
+          defaultFilterExpression,
+          column2Info,
+          filter,
+          onFilterChange,
+          expertMode,
+          onExpertModeChange,
         }}
       />
     );

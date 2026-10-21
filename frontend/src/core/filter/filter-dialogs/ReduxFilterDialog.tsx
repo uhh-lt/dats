@@ -1,12 +1,11 @@
+import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
-import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
-
-import { RootState } from "@store/store";
-import { createEmptyFilter, MyFilter } from "../filterUtils";
 import { TableInfoHooks } from "../api/tableInfoHooks";
 import type { TableInfoOptions } from "../api/tableInfoQueries";
+import { createEmptyFilter, MyFilter } from "../filterUtils";
 import { FilterActions, FilterState } from "../store";
+import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
 
 export interface ReduxFilterDialogProps {
   filterName: string;

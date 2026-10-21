@@ -3,21 +3,18 @@ import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,
   FILTER_PARAM,
-  FilterDialogProps,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  LocalFilterTableProps,
   LocalFilterTableToolbarLeft,
-  LocalFilterTableToolbarProps,
   MyFilter,
-  ReduxFilterDialogProps,
+  ReduxFilterTableProps,
   ReduxFilterTableToolbarLeft,
-  ReduxFilterTableToolbarProps,
-  URLFilterDialogProps,
-  URLFilterTableToolbarLeft,
-  URLFilterTableToolbarProps,
-  toSorts,
   TableInfoHooks,
+  toSorts,
+  URLFilterTableProps,
+  URLFilterTableToolbarLeft,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -34,18 +31,14 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 import { bboxAnnotationQueries } from "../api/bboxAnnotationQueries";
-import { BBoxFilterActions, defaultBBoxFilterExpression } from "./bboxFilterSlice";
+import { defaultBBoxFilterExpression, BBoxFilterActions } from "./bboxFilterSlice";
 
 const flatMapData = (page: Page_BBoxAnnotationRow_) => page.items;
 
 /**
- * Component for rendering a filter table for BBox annotations.
- * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component (BBoxAnnotationReduxFilterTable or BBoxAnnotationURLFilterTable).
- * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
- *
- * @param filter the filter state, which is either obtained from Redux or from URL search params, depending on the parent component
- * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
- * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
+ * Filter table for bbox annotations: defines the columns and fetches the data.
+ * Where the filter lives (Redux, URL or the caller) is decided by the variants below, which pass the filter and the
+ * matching top left toolbar.
  */
 const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps<BBoxAnnotationRow>>({
   projectId,
@@ -60,74 +53,18 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   onFetchSizeChange,
   onSearchParameterChange,
   positionToolbarAlertBanner = "top",
-  renderTopRightToolbar,
   renderTopLeftToolbar,
+  renderTopRightToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
 }: FilterTableContainerProps<BBoxAnnotationRow, TToolbarProps, MyFilter<BBoxColumns>>) => {
   // table columns
   const { data: tableInfo } = useQuery(bboxAnnotationQueries.tableInfo(projectId));
-  const columns: MRT_ColumnDef<BBoxAnnotationRow>[] = useMemo(() => {
+  const columns = useMemo(() => {
     if (!tableInfo) return [];
 
-    const result = tableInfo.map((column) => {
-      const colDef = {
-        id: column.column,
-        header: column.label,
-        enableSorting: column.sortable,
-      };
-
-      switch (column.column) {
-        case BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME:
-          return {
-            ...colDef,
-            accessorFn: (row) => row.sdoc.name,
-          } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_TAG_ID_LIST_RECURSIVE:
-          return {
-            ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,
-          } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_CODE_ID_LIST_RECURSIVE:
-          return {
-            ...colDef,
-            Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
-          } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_MEMO_CONTENT:
-          return {
-            ...colDef,
-            Cell: ({ row }) => (
-              <MemoIndicator
-                memoIds={row.original.memo_ids}
-                attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
-                attachedObjectId={row.original.id}
-              />
-            ),
-          } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_FOLDER_ID_LIST_RECURSIVE:
-          return {
-            ...colDef,
-            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc.id} renderName renderIcon />,
-          } as MRT_ColumnDef<BBoxAnnotationRow>;
-        default:
-          if (!isNaN(parseInt(column.column))) {
-            return {
-              ...colDef,
-              Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
-              ),
-            } as MRT_ColumnDef<BBoxAnnotationRow>;
-          } else {
-            return {
-              ...colDef,
-              Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<BBoxAnnotationRow>;
-          }
-      }
-    });
-
     // custom columns
-    const previewCell = {
+    const previewColumn: MRT_ColumnDef<BBoxAnnotationRow> = {
       id: "bbox",
       header: "Preview",
       enableSorting: false,
@@ -146,25 +83,81 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           }}
         />
       ),
-    } as MRT_ColumnDef<BBoxAnnotationRow>;
+    };
 
-    return [previewCell, ...result];
+    const result = tableInfo.map((column): MRT_ColumnDef<BBoxAnnotationRow> => {
+      const colDef: MRT_ColumnDef<BBoxAnnotationRow> = {
+        id: column.column,
+        accessorFn: () => null,
+        header: column.label,
+        enableSorting: column.sortable,
+      };
+
+      switch (column.column) {
+        case BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME:
+          return {
+            ...colDef,
+            accessorFn: (row) => row.sdoc.name,
+          };
+        case BBoxColumns.BB_TAG_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,
+          };
+        case BBoxColumns.BB_CODE_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
+          };
+        case BBoxColumns.BB_MEMO_CONTENT:
+          return {
+            ...colDef,
+            Cell: ({ row }) => (
+              <MemoIndicator
+                memoIds={row.original.memo_ids}
+                attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
+                attachedObjectId={row.original.id}
+              />
+            ),
+          };
+        case BBoxColumns.BB_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc.id} renderName renderIcon />,
+          };
+        default:
+          if (!isNaN(parseInt(column.column))) {
+            return {
+              ...colDef,
+              Cell: ({ row }) => (
+                <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
+              ),
+            };
+          }
+          return {
+            ...colDef,
+            Cell: () => <i>Cannot render column {column.column}</i>,
+          };
+      }
+    });
+
+    return [previewColumn, ...result];
   }, [tableInfo]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...bboxAnnotationQueries.search({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
+    bboxAnnotationQueries.search({
       project_id: projectId,
       filter,
       sorts: toSorts<BBoxColumns>(sortingModel),
       page_size: fetchSize,
     }),
-  });
+  );
 
   // resetting search-parameter-dependant state
   const resetState = useCallback(() => {
     onRowSelectionChange?.({});
-    onFetchSizeChange?.(20);
+    onFetchSizeChange(20);
     onSearchParameterChange?.();
   }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
   useResetStateOnSearch([filter, sortingModel], resetState);
@@ -180,16 +173,16 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
       isLoading={isLoading || columns.length === 0}
       isError={isError}
       isFetching={isFetching}
+      onFetchSizeChange={onFetchSizeChange}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={onRowSelectionChange}
       sortingModel={sortingModel}
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      onFetchSizeChange={onFetchSizeChange}
       positionToolbarAlertBanner={positionToolbarAlertBanner}
-      renderTopRightToolbar={renderTopRightToolbar}
       renderTopLeftToolbar={renderTopLeftToolbar}
+      renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
     />
@@ -204,21 +197,14 @@ const filterActions = BBoxFilterActions;
  * Redux-based filter table for bbox annotations.
  * The filter state is stored under state.bboxFilter.filter[filterName].
  *
- * @param filterName used to identify the filter state in the redux store, so that multiple tables can be used without conflicts.
+ * @param filterName identifies the filter in the redux store, so that multiple tables can be used without conflicts.
  */
 export const BBoxAnnotationReduxFilterTable = memo(
   ({
     filterName,
+    renderTopLeftToolbar = ReduxFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<
-      BBoxAnnotationRow,
-      ReduxFilterTableToolbarProps<BBoxAnnotationRow>,
-      MyFilter<BBoxColumns>
-    >,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
-  > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
+  }: ReduxFilterTableProps<BBoxAnnotationRow, BBoxColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
@@ -231,7 +217,7 @@ export const BBoxAnnotationReduxFilterTable = memo(
       <BBoxAnnotationFilterTable
         {...tableProps}
         filter={filter as MyFilter<BBoxColumns>}
-        renderTopLeftToolbar={ReduxFilterTableToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName,
           filterStateSelector,
@@ -243,25 +229,21 @@ export const BBoxAnnotationReduxFilterTable = memo(
   },
 );
 
-// configs for URL filter table
+// configs for URL and local filter table
 const defaultFilterExpression = defaultBBoxFilterExpression;
 
 /**
  * URL-based filter table for bbox annotations.
  * The filter state is synced with the URL, so it can be shared via URL and is preserved on page reload.
  *
- * @param routeApi used to read and write the URL search params, it can be obtained via useRouteApi().
+ * @param routeApi reads and writes the URL search params, it can be obtained via useRouteApi().
  */
 export const BBoxAnnotationURLFilterTable = memo(
   ({
     routeApi,
     renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<BBoxAnnotationRow, URLFilterTableToolbarProps<BBoxAnnotationRow>, MyFilter<BBoxColumns>>,
-    "filter" | "toolbarExtraProps"
-  > &
-    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
+  }: URLFilterTableProps<BBoxAnnotationRow, BBoxColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
     const tableInfoOptions = useMemo(
@@ -286,7 +268,7 @@ export const BBoxAnnotationURLFilterTable = memo(
 
 /**
  * Local filter table for bbox annotations.
- * The filter state is managed by the parent component and passed via props, so it is fully flexible and can be used in any context.
+ * The filter state is owned by the caller and passed via props, so it can be stored anywhere.
  */
 export const BBoxAnnotationLocalFilterTable = memo(
   ({
@@ -297,15 +279,7 @@ export const BBoxAnnotationLocalFilterTable = memo(
     onExpertModeChange,
     renderTopLeftToolbar = LocalFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<
-      BBoxAnnotationRow,
-      LocalFilterTableToolbarProps<BBoxAnnotationRow, BBoxColumns>,
-      MyFilter<BBoxColumns>
-    >,
-    "filter" | "toolbarExtraProps"
-  > &
-    Omit<FilterDialogProps<BBoxColumns>, "column2Info" | "defaultFilterExpression">) => {
+  }: LocalFilterTableProps<BBoxAnnotationRow, BBoxColumns>) => {
     const column2Info = TableInfoHooks.useColumnInfoMap(bboxAnnotationQueries.tableInfo(tableProps.projectId));
 
     return (
@@ -315,7 +289,7 @@ export const BBoxAnnotationLocalFilterTable = memo(
         renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName,
-          defaultFilterExpression: defaultFilterExpression,
+          defaultFilterExpression,
           column2Info,
           filter,
           onFilterChange,

@@ -1,23 +1,19 @@
-import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
+  createEmptyFilter,
   FILTER_PARAM,
-  FilterDialogProps,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  LocalFilterTableProps,
   LocalFilterTableToolbarLeft,
-  LocalFilterTableToolbarProps,
   MyFilter,
-  ReduxFilterDialogProps,
+  ReduxFilterTableProps,
   ReduxFilterTableToolbarLeft,
-  ReduxFilterTableToolbarProps,
-  URLFilterDialogProps,
-  URLFilterTableToolbarLeft,
-  URLFilterTableToolbarProps,
-  createEmptyFilter,
-  toSorts,
   TableInfoHooks,
+  toSorts,
+  URLFilterTableProps,
+  URLFilterTableToolbarLeft,
 } from "@core/filter";
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -36,18 +32,14 @@ import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
 import { spanAnnotationQueries } from "../api/spanAnnotationQueries";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
-import { SATFilterActions, defaultSATFilterExpression } from "./satFilterSlice";
+import { defaultSATFilterExpression, SATFilterActions } from "./satFilterSlice";
 
 const flatMapData = (page: Page_SpanAnnotationRow_) => page.items;
 
 /**
- * Component for rendering a filter table for span annotations.
- * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component (SpanAnnotationReduxFilterTable or SpanAnnotationURLFilterTable).
- * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
- *
- * @param filter the filter state, which is either obtained from Redux or from URL search params, depending on the parent component
- * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
- * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
+ * Filter table for span annotations: defines the columns and fetches the data.
+ * Where the filter lives (Redux, URL or the caller) is decided by the variants below, which pass the filter and the
+ * matching top left toolbar.
  */
 const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps<SpanAnnotationRow>>({
   projectId,
@@ -62,22 +54,20 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   onFetchSizeChange,
   onSearchParameterChange,
   positionToolbarAlertBanner = "top",
-  renderTopRightToolbar,
   renderTopLeftToolbar,
+  renderTopRightToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
 }: FilterTableContainerProps<SpanAnnotationRow, TToolbarProps, MyFilter<SpanColumns>>) => {
-  const { user } = useAuth();
-  const userId = user?.id;
-
   // table columns
   const { data: tableInfo } = useQuery(spanAnnotationQueries.tableInfo(projectId));
-  const columns: MRT_ColumnDef<SpanAnnotationRow>[] = useMemo(() => {
-    if (!tableInfo || !user) return [];
+  const columns = useMemo(() => {
+    if (!tableInfo) return [];
 
-    const result = tableInfo.map((column) => {
-      const colDef = {
+    return tableInfo.map((column): MRT_ColumnDef<SpanAnnotationRow> => {
+      const colDef: MRT_ColumnDef<SpanAnnotationRow> = {
         id: column.column,
+        accessorFn: () => null,
         header: column.label,
         enableSorting: column.sortable,
       };
@@ -88,25 +78,25 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
             ...colDef,
             accessorFn: (row) => row.sdoc.name,
             Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         case SpanColumns.SP_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             accessorFn: (row) => row.tag_ids,
             Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         case SpanColumns.SP_CODE_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             accessorFn: (row) => row.code,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         case SpanColumns.SP_USER_ID:
           return {
             ...colDef,
             accessorFn: (row) => row.user_id,
             Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         case SpanColumns.SP_MEMO_CONTENT:
           return {
             ...colDef,
@@ -117,53 +107,48 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
                 attachedObjectId={row.original.id}
               />
             ),
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         case SpanColumns.SP_SPAN_TEXT:
           return {
             ...colDef,
             accessorFn: (row) => row.span_text,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         case SpanColumns.SP_FOLDER_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc.id} renderName renderIcon />,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
         default:
           if (!isNaN(parseInt(column.column))) {
             return {
               ...colDef,
-              accessorFn: () => null,
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
               ),
-            } as MRT_ColumnDef<SpanAnnotationRow>;
+            };
           }
           return {
             ...colDef,
-            accessorFn: () => null,
             Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<SpanAnnotationRow>;
+          };
       }
     });
-
-    return result;
-  }, [tableInfo, user]);
+  }, [tableInfo]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery({
-    ...spanAnnotationQueries.search({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
+    spanAnnotationQueries.search({
       project_id: projectId,
       filter,
       sorts: toSorts<SpanColumns>(sortingModel),
       page_size: fetchSize,
     }),
-    enabled: !!userId,
-  });
+  );
 
   // resetting search-parameter-dependant state
   const resetState = useCallback(() => {
     onRowSelectionChange?.({});
-    onFetchSizeChange?.(20);
+    onFetchSizeChange(20);
     onSearchParameterChange?.();
   }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
   useResetStateOnSearch([filter, sortingModel], resetState);
@@ -179,16 +164,16 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
       isLoading={isLoading || columns.length === 0}
       isError={isError}
       isFetching={isFetching}
+      onFetchSizeChange={onFetchSizeChange}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={onRowSelectionChange}
       sortingModel={sortingModel}
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      onFetchSizeChange={onFetchSizeChange}
       positionToolbarAlertBanner={positionToolbarAlertBanner}
-      renderTopRightToolbar={renderTopRightToolbar}
       renderTopLeftToolbar={renderTopLeftToolbar}
+      renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
     />
@@ -203,21 +188,14 @@ const filterActions = SATFilterActions;
  * Redux-based filter table for span annotations.
  * The filter state is stored under state.satFilter.filter[filterName].
  *
- * @param filterName used to identify the filter state in the redux store, so that multiple tables can be used without conflicts.
+ * @param filterName identifies the filter in the redux store, so that multiple tables can be used without conflicts.
  */
 export const SpanAnnotationReduxFilterTable = memo(
   ({
     filterName,
+    renderTopLeftToolbar = ReduxFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<
-      SpanAnnotationRow,
-      ReduxFilterTableToolbarProps<SpanAnnotationRow>,
-      MyFilter<SpanColumns>
-    >,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
-  > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
+  }: ReduxFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
@@ -230,7 +208,7 @@ export const SpanAnnotationReduxFilterTable = memo(
       <SpanAnnotationFilterTable
         {...tableProps}
         filter={filter as MyFilter<SpanColumns>}
-        renderTopLeftToolbar={ReduxFilterTableToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName,
           filterStateSelector,
@@ -242,25 +220,21 @@ export const SpanAnnotationReduxFilterTable = memo(
   },
 );
 
-// configs for URL filter table
+// configs for URL and local filter table
 const defaultFilterExpression = defaultSATFilterExpression;
 
 /**
  * URL-based filter table for span annotations.
  * The filter state is synced with the URL, so it can be shared via URL and is preserved on page reload.
  *
- * @param routeApi used to read and write the URL search params, it can be obtained via useRouteApi().
+ * @param routeApi reads and writes the URL search params, it can be obtained via useRouteApi().
  */
 export const SpanAnnotationURLFilterTable = memo(
   ({
     routeApi,
     renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<SpanAnnotationRow, URLFilterTableToolbarProps<SpanAnnotationRow>, MyFilter<SpanColumns>>,
-    "filter" | "toolbarExtraProps"
-  > &
-    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
+  }: URLFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
     const tableInfoOptions = useMemo(
@@ -285,7 +259,7 @@ export const SpanAnnotationURLFilterTable = memo(
 
 /**
  * Local filter table for span annotations.
- * The filter state is managed by the parent component and passed via props, so it is fully flexible and can be used in any context.
+ * The filter state is owned by the caller and passed via props, so it can be stored anywhere.
  */
 export const SpanAnnotationLocalFilterTable = memo(
   ({
@@ -296,15 +270,7 @@ export const SpanAnnotationLocalFilterTable = memo(
     onExpertModeChange,
     renderTopLeftToolbar = LocalFilterTableToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<
-      SpanAnnotationRow,
-      LocalFilterTableToolbarProps<SpanAnnotationRow, SpanColumns>,
-      MyFilter<SpanColumns>
-    >,
-    "filter" | "toolbarExtraProps"
-  > &
-    Omit<FilterDialogProps<SpanColumns>, "column2Info" | "defaultFilterExpression">) => {
+  }: LocalFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const column2Info = TableInfoHooks.useColumnInfoMap(spanAnnotationQueries.tableInfo(tableProps.projectId));
 
     return (
