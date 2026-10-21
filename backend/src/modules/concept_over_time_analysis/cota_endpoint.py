@@ -140,10 +140,7 @@ def update_by_id(
         cota_id=cota_id,
         cota_update=cota_upate,
     )
-    db_obj = crud_cota.read(db=db, id=cota_id)
-    ws.emit_to_project(
-        DATSEvent.COTA_UPDATED, result, project_id=db_obj.get_project_id()
-    )
+    ws.emit_to_project(DATSEvent.COTA_UPDATED, result, project_id=result.project_id)
     return result
 
 
@@ -262,8 +259,7 @@ def refine_cota(
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, payload.cota_id)
-    cota_orm = cotas.start_refinement_job(db=db, payload=payload)
-    return COTARead.model_validate(cota_orm)
+    return cotas.start_refinement_job(db=db, payload=payload)
 
 
 @router.get(

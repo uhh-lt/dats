@@ -30,7 +30,7 @@ def rag_session(
 ) -> ChatSessionResponse:
     authz_user.assert_in_project(project_id)
 
-    response, session_id = RAGService().retrieval_augmented_generation_with_session(
+    return RAGService().retrieval_augmented_generation_with_session(
         project_id=project_id,
         query=query,
         top_k=top_k,
@@ -39,10 +39,6 @@ def rag_session(
         sdoc_ids=sdoc_ids,
         db=db,
         session_id=session_id,
-    )
-    return ChatSessionResponse(
-        session_id=session_id,
-        response=response.strip(),
     )
 
 
@@ -58,15 +54,8 @@ def chat_session(
     session_id: str | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> ChatSessionResponse:
-    response, session_id = LLMRepo().llm_chat_with_session(
-        model=model,
-        system_prompt="You are having a chat session with a user. Respond to their queries.",
-        user_prompt=prompt,
-        session_id=session_id,
-    )
-    return ChatSessionResponse(
-        session_id=session_id,
-        response=response.strip(),
+    return RAGService().chat_with_session(
+        model=model, prompt=prompt, session_id=session_id
     )
 
 

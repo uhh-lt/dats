@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_data_crud import crud_sdoc_data
+from modules.rag.rag_dto import ChatSessionResponse
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.llm_repo import LLMRepo
 
@@ -25,7 +26,7 @@ class RAGService(metaclass=SingletonMeta):
         db: Session,
         session_id: str | None = None,
         sdoc_ids: list[int] | None = None,
-    ) -> tuple[str, str]:
+    ) -> ChatSessionResponse:
         # Retrieve top-k similar sentences using vector search
         similar_sentences = self.sims.find_similar_sentences(
             db=db,
@@ -68,4 +69,15 @@ class RAGService(metaclass=SingletonMeta):
             user_prompt=RAG_PROMPT,
             session_id=session_id,
         )
-        return response, session_id
+        return ChatSessionResponse(session_id=session_id, response=response.strip())
+
+    def chat_with_session(
+        self, *, model: str, prompt: str, session_id: str | None = None
+    ) -> ChatSessionResponse:
+        response, session_id = self.llm.llm_chat_with_session(
+            model=model,
+            system_prompt="You are having a chat session with a user. Respond to their queries.",
+            user_prompt=prompt,
+            session_id=session_id,
+        )
+        return ChatSessionResponse(session_id=session_id, response=response.strip())
