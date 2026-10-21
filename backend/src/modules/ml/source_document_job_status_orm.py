@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from modules.ml.ml_enum import JobStatus, JobType
+from modules.ml.ml_enum import MLJobStatus, MLJobTypeID
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -21,10 +21,10 @@ class SourceDocumentJobStatusORM(ORMBase):
         index=True,
     )
     source_document: Mapped["SourceDocumentORM"] = relationship("SourceDocumentORM")
-    type: Mapped[JobType] = mapped_column(
+    type: Mapped[MLJobTypeID] = mapped_column(
         Integer, nullable=False, index=False, primary_key=True
     )
-    status: Mapped[JobStatus] = mapped_column(Integer, nullable=False, index=False)
+    status: Mapped[MLJobStatus] = mapped_column(Integer, nullable=False, index=False)
     timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     def get_project_id(self) -> int:
