@@ -33,7 +33,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 - `backend/lint/`: custom architecture lint scripts (see below)
 - `backend/test/`: tests
 - `backend/src/`: application code, every top-level folder is an import root (`from core.code.code_crud import crud_code`)
-  - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud`, `DATSEvent`, `SingletonMeta`, `exception_handler`, FastAPI dependencies)
+  - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud`, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
   - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...)
   - `modules/`: features built on `core` and `systems` (analysis, search, export/import, doc processing, ...)
   - `systems/`: reusable infrastructure (`job_system`, `event_system`, `search_system`, `websocket_system`, `mcp_system`)
@@ -84,11 +84,11 @@ Ruff formats and lints (`backend/ruff.toml`; `just format backend`, `just lint b
 
 ## Error Handling
 
-Every exception class lives in an exceptions module: `<module>_exceptions.py` in `core/` and `modules/` (`core/auth/auth_exceptions.py`, `modules/eximport/import_exceptions.py`), and `<component>_exceptions.py` next to its repo or system (`repos/db/sql_exceptions.py`, `repos/filesystem_exceptions.py`, `repos/vector/weaviate_exceptions.py`). Only `common/exception_handler.py` (the handler infrastructure with `NotFoundError`) defines exceptions elsewhere. Never define exception classes in services, CRUDs, jobs, repos or utilities, and raise a domain exception instead of a bare `Exception`. `backend/lint/check_exceptions.py` enforces this.
+Every exception class lives in an exceptions module: `<module>_exceptions.py` in `core/` and `modules/` (`core/auth/auth_exceptions.py`, `modules/eximport/import_exceptions.py`), `<component>_exceptions.py` next to its repo or system (`repos/db/sql_exceptions.py`, `repos/filesystem_exceptions.py`, `repos/vector/weaviate_exceptions.py`), and `common/common_exceptions.py` for shared ones (`NotFoundError`). There are no exceptions to this rule. Never define exception classes in services, CRUDs, jobs, repos or utilities, and raise a domain exception instead of a bare `Exception`. `backend/lint/check_exceptions.py` enforces this.
 
-`common/exception_handler.py` maps exceptions to HTTP responses. Decorating an exception class with `@exception_handler(status.HTTP_...)` registers it; `bootstrap.create_app` installs all handlers, which log the error and return its message as plain text with that status. Undecorated exceptions become HTTP 500.
+`common/exception_handler.py` maps exceptions to HTTP responses (it defines no exception classes itself). Decorating an exception class with `@exception_handler(status.HTTP_...)` registers it; `bootstrap.create_app` installs all handlers, which log the error and return its message as plain text with that status. Undecorated exceptions become HTTP 500.
 
-- **Not found (404)**: subclass `NotFoundError` from `common/exception_handler.py`. Subclasses inherit the 404 mapping and need no decorator. Existing ones: `NoSuchElementError` (SQL, `repos/db/sql_exceptions.py`), `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), the `WeaviateObject*NotFoundException`s (`repos/vector/weaviate_exceptions.py`).
+- **Not found (404)**: subclass `NotFoundError` from `common/common_exceptions.py`. Subclasses inherit the 404 mapping and need no decorator. Existing ones: `NoSuchElementError` (SQL, `repos/db/sql_exceptions.py`), `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), the `WeaviateObject*NotFoundException`s (`repos/vector/weaviate_exceptions.py`).
 - **Forbidden (403)**: `ForbiddenError` (`core/auth/auth_exceptions.py`), raised by the `AuthzUser` assertions.
 - **Bad request (400)**: `InvalidError` (`core/auth/auth_exceptions.py`) and the module-specific errors in `*_exceptions.py` files (folder, search system, export/import).
 - **Duplicates (409)**: unique violations need no own exception: `bootstrap.py` maps an `IntegrityError` caused by a `UniqueViolation` to 409.

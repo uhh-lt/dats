@@ -1,4 +1,4 @@
-from common.exception_handler import NotFoundError
+from common.common_exceptions import NotFoundError
 from repos.db.orm_base import ORMBase
 
 

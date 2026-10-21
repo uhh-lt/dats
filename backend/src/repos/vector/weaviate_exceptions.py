@@ -1,7 +1,7 @@
 from weaviate.collections import Collection
 from weaviate.types import UUID
 
-from common.exception_handler import NotFoundError
+from common.common_exceptions import NotFoundError
 from repos.vector.weaviate_models import ObjectIdentifier
 
 
