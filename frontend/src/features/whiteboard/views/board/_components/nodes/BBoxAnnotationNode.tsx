@@ -8,7 +8,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationNodeData } from "@models/BBoxAnnotationNodeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useQuery } from "@tanstack/react-query";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { memo, useCallback, useEffect, useRef } from "react";

@@ -24,7 +24,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { LinkListItemButton, LinkMenuItem } from "./links";

@@ -1,7 +1,7 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { TagRead } from "@models/TagRead";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { memo, MouseEventHandler, useCallback } from "react";
 
 export const TagEditButton = memo(({ tag, ...props }: IconButtonProps & { tag: TagRead }) => {

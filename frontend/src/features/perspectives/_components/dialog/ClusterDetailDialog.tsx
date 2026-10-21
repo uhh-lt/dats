@@ -4,7 +4,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ClusterUpdate } from "@models/ClusterUpdate";
 import { Close, Edit, Save } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useEffect, useMemo, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";

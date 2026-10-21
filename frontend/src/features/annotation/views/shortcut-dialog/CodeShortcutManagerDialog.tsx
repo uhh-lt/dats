@@ -21,7 +21,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo, useState } from "react";
 import {

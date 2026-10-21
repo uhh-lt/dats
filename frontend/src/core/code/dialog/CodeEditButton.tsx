@@ -1,7 +1,7 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { CodeRead } from "@models/CodeRead";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { MouseEventHandler, memo, useCallback } from "react";
 
 export const CodeEditButton = memo(({ code, ...props }: IconButtonProps & { code: CodeRead }) => {

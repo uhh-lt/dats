@@ -1,7 +1,7 @@
 import { CardContainer } from "@components/CardContainer";
 import { getIconComponent, Icon } from "@components/icons";
 import { Box, Card, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 

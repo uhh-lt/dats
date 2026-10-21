@@ -6,7 +6,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TagCreate } from "@models/TagCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";

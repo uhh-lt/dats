@@ -9,7 +9,7 @@ import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import { Box, IconButton, Theme, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
-import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { TagStyle } from "../../_types/TagStyle";

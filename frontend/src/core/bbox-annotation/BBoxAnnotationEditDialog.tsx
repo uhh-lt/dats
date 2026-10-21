@@ -4,7 +4,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, Stack, Typography } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusSlice";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { BboxAnnotationHooks } from "./api/bboxAnnotationHooks";
