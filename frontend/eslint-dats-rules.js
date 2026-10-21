@@ -987,3 +987,120 @@ datsRulesPlugin.rules["query-factory-shape"] = queryFactoryShapeRule;
 datsRulesPlugin.rules["hooks-object-matches-file"] = hooksObjectMatchesFileRule;
 datsRulesPlugin.rules["mutation-key-matches-hook"] = mutationKeyMatchesHookRule;
 datsRulesPlugin.rules["no-forwarding-query-hook"] = noForwardingQueryHookRule;
+
+// ---------------------------------------------------------------------------
+// slice-conventions rule (see .github/instructions/frontend-slice.instructions.md)
+// ---------------------------------------------------------------------------
+
+const isMember = (node, objectName, propertyName) =>
+  node?.type === "MemberExpression" &&
+  node.object.type === "Identifier" &&
+  node.object.name === objectName &&
+  node.property.type === "Identifier" &&
+  node.property.name === propertyName;
+
+/** `xSlice.reducer` or `persistReducer({ key: xSlice.name, storage: persistStorage, ... }, xSlice.reducer)` */
+const isSliceReducerValue = (node, sliceVar) => {
+  if (isMember(node, sliceVar, "reducer")) return true;
+  if (node?.type !== "CallExpression" || node.callee.type !== "Identifier" || node.callee.name !== "persistReducer") {
+    return false;
+  }
+  const [config, reducer] = node.arguments;
+  if (!isMember(reducer, sliceVar, "reducer") || config?.type !== "ObjectExpression") return false;
+  const property = (name) =>
+    config.properties.find((p) => p.type === "Property" && p.key.type === "Identifier" && p.key.name === name);
+  const storage = property("storage");
+  return (
+    isMember(property("key")?.value, sliceVar, "name") &&
+    storage?.value.type === "Identifier" &&
+    storage.value.name === "persistStorage"
+  );
+};
+
+/** @type {Rule.RuleModule} */
+const sliceConventionsRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "A *Slice.ts file with createSlice names file, slice variable, slice name, XActions and xReducer after one x, " +
+        "exports the reducer last as { [xSlice.name]: reducer } and imports Redux Toolkit from '@reduxjs/toolkit'.",
+    },
+    messages: {
+      sliceVariable:
+        "The createSlice result must be assigned to a camelCase const ending in 'Slice' (e.g. 'annotationsSlice').",
+      sliceName: "The slice '{{sliceVar}}' must have name: \"{{expected}}\".",
+      fileName: "The slice '{{sliceVar}}' must live in '{{expected}}'.",
+      missingActions: "Export the actions of '{{sliceVar}}' as 'export const {{expected}} = {{sliceVar}}.actions'.",
+      missingReducer:
+        "Export the reducer of '{{sliceVar}}' as 'export const {{expected}} = { [{{sliceVar}}.name]: {{sliceVar}}.reducer }' " +
+        "(or persistReducer({ key: {{sliceVar}}.name, storage: persistStorage }, {{sliceVar}}.reducer)) as the last statement.",
+      reactImport: "Import Redux Toolkit from '@reduxjs/toolkit', not '@reduxjs/toolkit/react'.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = context.filename || context.getFilename();
+    if (!filename.endsWith("Slice.ts")) return {};
+    const slices = [];
+    return {
+      ImportDeclaration(node) {
+        if (node.source.value === "@reduxjs/toolkit/react") context.report({ node, messageId: "reactImport" });
+      },
+      "VariableDeclarator[init.type='CallExpression'][init.callee.name='createSlice']"(node) {
+        if (node.id.type !== "Identifier" || !/^[a-z][A-Za-z0-9]*Slice$/.test(node.id.name)) {
+          context.report({ node: node.id, messageId: "sliceVariable" });
+          return;
+        }
+        const sliceVar = node.id.name;
+        const base = sliceVar.slice(0, -"Slice".length);
+        slices.push({ node, sliceVar, base });
+        const options = node.init.arguments[0];
+        const nameProperty =
+          options?.type === "ObjectExpression" &&
+          options.properties.find((p) => p.type === "Property" && p.key.type === "Identifier" && p.key.name === "name");
+        if (!nameProperty || nameProperty.value.type !== "Literal" || nameProperty.value.value !== base) {
+          context.report({ node: nameProperty || node, messageId: "sliceName", data: { sliceVar, expected: base } });
+        }
+        if (path.basename(filename) !== `${sliceVar}.ts`) {
+          context.report({ node: node.id, messageId: "fileName", data: { sliceVar, expected: `${sliceVar}.ts` } });
+        }
+      },
+      "Program:exit"(program) {
+        const exported = program.body
+          .filter((s) => s.type === "ExportNamedDeclaration" && s.declaration?.type === "VariableDeclaration")
+          .flatMap((s) => s.declaration.declarations.map((d) => ({ statement: s, declarator: d })));
+        const last = program.body[program.body.length - 1];
+        for (const { node, sliceVar, base } of slices) {
+          const hasActions = exported.some(
+            ({ declarator }) =>
+              declarator.id.type === "Identifier" &&
+              declarator.id.name.toLowerCase() === `${base}actions`.toLowerCase() &&
+              isMember(declarator.init, sliceVar, "actions"),
+          );
+          if (!hasActions) {
+            const expected = `${base.charAt(0).toUpperCase()}${base.slice(1)}Actions`;
+            context.report({ node, messageId: "missingActions", data: { sliceVar, expected } });
+          }
+          const reducer = exported.find(
+            ({ declarator }) => declarator.id.type === "Identifier" && declarator.id.name === `${base}Reducer`,
+          );
+          const value = reducer?.declarator.init;
+          const property = value?.type === "ObjectExpression" && value.properties.length === 1 && value.properties[0];
+          const isValid =
+            reducer?.statement === last &&
+            property?.type === "Property" &&
+            property.computed &&
+            isMember(property.key, sliceVar, "name") &&
+            isSliceReducerValue(property.value, sliceVar);
+          if (!isValid) {
+            context.report({ node, messageId: "missingReducer", data: { sliceVar, expected: `${base}Reducer` } });
+          }
+        }
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["slice-conventions"] = sliceConventionsRule;
