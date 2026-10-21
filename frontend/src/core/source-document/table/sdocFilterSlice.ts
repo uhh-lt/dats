@@ -1,5 +1,4 @@
-import type { MyFilterExpression } from "@core/filter";
-import { createInitialFilterState, filterReducer, resetProjectFilterState } from "@core/filter";
+import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
 import { SdocColumns } from "@models/SdocColumns";
 import { StringOperator } from "@models/StringOperator";
 import { createSlice } from "@reduxjs/toolkit";
@@ -14,13 +13,13 @@ export const defaultSdocFilterExpression: MyFilterExpression = {
 
 const initialState = createInitialFilterState(defaultSdocFilterExpression);
 
-const documentTableFilterSlice = createSlice({
-  name: "documentTableFilter",
+const sdocFilterSlice = createSlice({
+  name: "sdocFilter",
   initialState,
   reducers: filterReducer,
   extraReducers(builder) {
     builder.addCase(ProjectActions.changeProject, (state) => {
-      console.log("Project changed! Resetting 'documentTableFilter' state.");
+      console.log("Project changed! Resetting 'sdocFilter' state.");
       resetProjectFilterState({
         state,
         defaultFilterExpression: defaultSdocFilterExpression,
@@ -29,5 +28,5 @@ const documentTableFilterSlice = createSlice({
   },
 });
 
-export const SdocTableFilterActions = documentTableFilterSlice.actions;
-export const sdocTableFilterReducer = { [documentTableFilterSlice.name]: documentTableFilterSlice.reducer };
+export const SdocFilterActions = sdocFilterSlice.actions;
+export const sdocFilterReducer = { [sdocFilterSlice.name]: sdocFilterSlice.reducer };

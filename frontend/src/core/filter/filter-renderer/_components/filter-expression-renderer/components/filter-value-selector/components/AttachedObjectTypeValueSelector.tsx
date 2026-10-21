@@ -6,7 +6,7 @@ import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelect
 
 export const AttachedObjectTypeValueSelector = memo(
   ({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
-    const handleChange = useCallback(
+    const handleValueChange = useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => onChangeValue(filterExpression.id, event.target.value),
       [filterExpression.id, onChangeValue],
     );
@@ -18,7 +18,7 @@ export const AttachedObjectTypeValueSelector = memo(
         fullWidth
         label="Object type"
         value={filterExpression.value}
-        onChange={handleChange}
+        onChange={handleValueChange}
       >
         {Object.values(AttachedObjectType).map((type) => (
           <MenuItem key={type} value={type}>

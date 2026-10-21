@@ -1,22 +1,21 @@
 import {
+  createEmptyFilter,
   FILTER_PARAM,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  LocalFilterTableProps,
   MyFilter,
-  ReduxFilterDialogProps,
-  ReduxFilterTableToolbarProps,
-  URLFilterDialogProps,
-  URLFilterTableToolbarProps,
-  createEmptyFilter,
+  ReduxFilterTableProps,
+  TableInfoHooks,
   toSorts,
+  URLFilterTableProps,
 } from "@core/filter";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { MemoColumns } from "@models/MemoColumns";
 import { MemoRead } from "@models/MemoRead";
 import { Page_MemoRead_ } from "@models/Page_MemoRead_";
-import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -24,22 +23,18 @@ import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
 import { memoQueries } from "../api/memoQueries";
 import { MemoRenderer } from "../renderer";
+import { MemoLocalToolbarLeft } from "./_components/MemoLocalToolbarLeft";
 import { MemoReduxToolbarLeft } from "./_components/MemoReduxToolbarLeft";
-import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
 import { MemoToolbarRight } from "./_components/MemoToolbarRight";
 import { MemoURLToolbarLeft } from "./_components/MemoURLToolbarLeft";
-import { MemoFilterActions, defaultMemoFilterExpression } from "./memoFilterSlice";
+import { defaultMemoFilterExpression, MemoFilterActions } from "./memoFilterSlice";
 
 const flatMapData = (page: Page_MemoRead_) => page.items;
 
 /**
- * Component for rendering a filter table for memos.
- * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component.
- * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
- *
- * @param filter the filter state, which is either obtained from Redux or from URL search params, depending on the parent component
- * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
- * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
+ * Filter table for memos: defines the columns and fetches the data.
+ * Where the filter lives (Redux, URL or the caller) is decided by the variants below, which pass the filter and the
+ * matching top left toolbar.
  */
 const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>>({
   projectId,
@@ -54,19 +49,19 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
   onFetchSizeChange,
   onSearchParameterChange,
   positionToolbarAlertBanner = "head-overlay",
-  renderTopRightToolbar,
   renderTopLeftToolbar,
+  renderTopRightToolbar = MemoToolbarRight,
   renderBottomToolbar,
   toolbarExtraProps,
 }: FilterTableContainerProps<MemoRead, TToolbarProps, MyFilter<MemoColumns>>) => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
+  // table columns
   const { data: tableInfo } = useQuery(memoQueries.tableInfo(projectId));
   const columns = useMemo(() => {
     if (!tableInfo) return [];
 
-    const result = tableInfo.map((column) => {
+    return tableInfo.map((column): MRT_ColumnDef<MemoRead> => {
       const colDef: MRT_ColumnDef<MemoRead> = {
         id: column.column,
         accessorFn: () => null,
@@ -80,40 +75,39 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
             ...colDef,
             size: 100,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
-          } as MRT_ColumnDef<MemoRead>;
+          };
         case MemoColumns.M_CONTENT:
           return {
             ...colDef,
             size: 360,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
-          } as MRT_ColumnDef<MemoRead>;
+          };
         case MemoColumns.M_FAVORITE:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
-          } as MRT_ColumnDef<MemoRead>;
+          };
         case MemoColumns.M_USER_ID:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
-          } as MRT_ColumnDef<MemoRead>;
+          };
         case MemoColumns.M_ATTACHED_OBJECT_ID:
           return {
             ...colDef,
             enableSorting: false,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
-          } as MRT_ColumnDef<MemoRead>;
+          };
         default:
           return {
             ...colDef,
             Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<MemoRead>;
+          };
       }
     });
-
-    return result;
   }, [tableInfo]);
 
+  // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
     memoQueries.search({
       project_id: projectId,
@@ -127,20 +121,10 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
   // resetting search-parameter-dependant state
   const resetState = useCallback(() => {
     onRowSelectionChange?.({});
-    onFetchSizeChange?.(20);
+    onFetchSizeChange(20);
     onSearchParameterChange?.();
   }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
-  useResetStateOnSearch([searchQuery, filter, sortingModel, isSearchContent], resetState);
-
-  const renderMemoTopRightToolbar = (props: TToolbarProps) => (
-    <Stack direction="row" spacing={1} alignItems="center">
-      <MemoTableOptionsMenu
-        isSearchContent={isSearchContent}
-        onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
-      />
-      {renderTopRightToolbar ? renderTopRightToolbar(props) : <MemoToolbarRight {...props} />}
-    </Stack>
-  );
+  useResetStateOnSearch([searchQuery, filter, sortingModel], resetState);
 
   return (
     <FilterTable
@@ -153,16 +137,16 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
       isLoading={isLoading || columns.length === 0}
       isError={isError}
       isFetching={isFetching}
+      onFetchSizeChange={onFetchSizeChange}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={onRowSelectionChange}
       sortingModel={sortingModel}
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      onFetchSizeChange={onFetchSizeChange}
       positionToolbarAlertBanner={positionToolbarAlertBanner}
-      renderTopRightToolbar={renderMemoTopRightToolbar}
       renderTopLeftToolbar={renderTopLeftToolbar}
+      renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
       state={{
@@ -186,17 +170,14 @@ const filterActions = MemoFilterActions;
  * Redux-based filter table for memos.
  * The filter state is stored under state.memoFilter.filter[filterName].
  *
- * @param filterName used to identify the filter state in the redux store, so that multiple tables can be used without conflicts.
+ * @param filterName identifies the filter in the redux store, so that multiple tables can be used without conflicts.
  */
 export const MemoReduxFilterTable = memo(
   ({
     filterName,
+    renderTopLeftToolbar = MemoReduxToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<MemoRead, ReduxFilterTableToolbarProps<MemoRead>, MyFilter<MemoColumns>>,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
-  > &
-    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector" | "tableInfoOptions">) => {
+  }: ReduxFilterTableProps<MemoRead, MemoColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
     // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
@@ -206,7 +187,7 @@ export const MemoReduxFilterTable = memo(
       <MemoFilterTable
         {...tableProps}
         filter={filter as MyFilter<MemoColumns>}
-        renderTopLeftToolbar={MemoReduxToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName,
           filterStateSelector,
@@ -218,36 +199,69 @@ export const MemoReduxFilterTable = memo(
   },
 );
 
-// configs for URL filter table
+// configs for URL and local filter table
 const defaultFilterExpression = defaultMemoFilterExpression;
 
 /**
  * URL-based filter table for memos.
  * The filter state is synced with the URL, so it can be shared via URL and is preserved on page reload.
  *
- * @param routeApi used to read and write the URL search params, it can be obtained via useRouteApi().
+ * @param routeApi reads and writes the URL search params, it can be obtained via useRouteApi().
  */
 export const MemoURLFilterTable = memo(
   ({
     routeApi,
+    renderTopLeftToolbar = MemoURLToolbarLeft,
     ...tableProps
-  }: Omit<
-    FilterTableContainerProps<MemoRead, URLFilterTableToolbarProps<MemoRead>, MyFilter<MemoColumns>>,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
-  > &
-    Omit<URLFilterDialogProps, "tableInfoOptions" | "defaultFilterExpression" | "filterName">) => {
+  }: URLFilterTableProps<MemoRead, MemoColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
+    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
       <MemoFilterTable
         {...tableProps}
         filter={filter}
-        renderTopLeftToolbar={MemoURLToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           routeApi,
           defaultFilterExpression,
           tableInfoOptions,
+        }}
+      />
+    );
+  },
+);
+
+/**
+ * Local filter table for memos.
+ * The filter state is owned by the caller and passed via props, so it can be stored anywhere.
+ */
+export const MemoLocalFilterTable = memo(
+  ({
+    filterName,
+    filter,
+    onFilterChange,
+    expertMode,
+    onExpertModeChange,
+    renderTopLeftToolbar = MemoLocalToolbarLeft,
+    ...tableProps
+  }: LocalFilterTableProps<MemoRead, MemoColumns>) => {
+    const column2Info = TableInfoHooks.useColumnInfoMap(memoQueries.tableInfo(tableProps.projectId));
+
+    return (
+      <MemoFilterTable
+        {...tableProps}
+        filter={filter}
+        renderTopLeftToolbar={renderTopLeftToolbar}
+        toolbarExtraProps={{
+          filterName,
+          defaultFilterExpression,
+          column2Info,
+          filter,
+          onFilterChange,
+          expertMode,
+          onExpertModeChange,
         }}
       />
     );

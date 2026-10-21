@@ -1,6 +1,8 @@
 import { FilterValueType } from "@models/FilterValueType";
 import { memo, useMemo } from "react";
 import { ColumnInfo } from "../../../../../filterUtils";
+import { AttachedObjectTypeValueSelector } from "./components/AttachedObjectTypeValueSelector";
+import { AttachedObjectValueSelector } from "./components/AttachedObjectValueSelector";
 import { CodeIdValueSelector } from "./components/CodeIdValueSelector";
 import { DefaultValueSelector } from "./components/DefaultValueSelector";
 import { DocTypeValueSelector } from "./components/DocTypeValueSelector";
@@ -8,8 +10,6 @@ import { FolderIdValueSelector } from "./components/FolderIdValueSelector";
 import { SpanAnnotationValueSelector } from "./components/SpanAnnotationValueSelector";
 import { TagIdValueSelector } from "./components/TagIdValueSelector";
 import { UserIdValueSelector } from "./components/UserIdValueSelector";
-import { AttachedObjectTypeValueSelector } from "./components/AttachedObjectTypeValueSelector";
-import { AttachedObjectValueSelector } from "./components/AttachedObjectValueSelector";
 import { SharedFilterValueSelectorProps } from "./types/SharedFilterValueSelectorProps";
 
 interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {

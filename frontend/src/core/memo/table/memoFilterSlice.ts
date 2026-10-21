@@ -29,5 +29,4 @@ const memoFilterSlice = createSlice({
 });
 
 export const MemoFilterActions = memoFilterSlice.actions;
-
 export const memoFilterReducer = { [memoFilterSlice.name]: memoFilterSlice.reducer };
