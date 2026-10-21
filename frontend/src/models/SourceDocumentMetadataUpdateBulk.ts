@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SourceDocumentMetadataBulkUpdate = {
+export type SourceDocumentMetadataUpdateBulk = {
   /**
    * Int Value of the SourceDocumentMetadata
    */
@@ -26,5 +26,5 @@ export type SourceDocumentMetadataBulkUpdate = {
   /**
    * ID of the SourceDocumentMetadata
    */
-  id: number;
+  sdoc_metadata_id: number;
 };

@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SourceDocumentMetadataBulkUpdate } from "@models/SourceDocumentMetadataBulkUpdate";
 import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
+import type { SourceDocumentMetadataUpdateBulk } from "@models/SourceDocumentMetadataUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -117,7 +117,7 @@ export class SdocMetadataService {
   public static updateBulk({
     requestBody,
   }: {
-    requestBody: Array<SourceDocumentMetadataBulkUpdate>;
+    requestBody: Array<SourceDocumentMetadataUpdateBulk>;
   }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "PATCH",

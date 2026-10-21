@@ -85,7 +85,7 @@ class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
 
 
 class SentenceAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
-    sent_annotation_id: int = Field(description="ID of the SentenceAnnotation")
+    sentence_annotation_id: int = Field(description="ID of the SentenceAnnotation")
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
 
 

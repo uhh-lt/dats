@@ -17,6 +17,7 @@ let nextPendingId = -1;
 export function toPendingSentenceAnnotation(
   requestBody: SentenceAnnotationCreate,
   userId: number | undefined,
+  projectId: number,
 ): SentenceAnnotationRead {
   return {
     ...requestBody,
@@ -24,6 +25,7 @@ export function toPendingSentenceAnnotation(
     created: "",
     updated: "",
     user_id: userId || SYSTEM_USER_ID,
+    project_id: projectId,
     memo_ids: [],
   };
 }
