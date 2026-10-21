@@ -40,26 +40,27 @@ class CRUDSourceDocumentMetadata(
 ):
     ### CREATE OPERATIONS ###
 
-    def create(
-        self, db: Session, *, create_dto: SourceDocumentMetadataCreate
-    ) -> SourceDocumentMetadataORM:
+    def create_multi(
+        self, db: Session, *, create_dtos: list[SourceDocumentMetadataCreate]
+    ) -> list[SourceDocumentMetadataORM]:
         from core.metadata.project_metadata_crud import crud_project_meta
 
-        # check if ProjectMetadata exists
-        project_metadata = ProjectMetadataRead.model_validate(
-            crud_project_meta.read(db=db, id=create_dto.project_metadata_id)
-        )
-
-        # check if value has the correct type
-        if not is_correct_type(project_metadata.metatype, create_dto):
-            raise ValueError(
-                f"provided value has the wrong type (need {project_metadata.metatype})"
+        # check that every ProjectMetadata exists and every value has its type
+        project_metadatas = {
+            pm.id: ProjectMetadataRead.model_validate(pm)
+            for pm in crud_project_meta.read_by_ids(
+                db=db,
+                ids=list(
+                    {create_dto.project_metadata_id for create_dto in create_dtos}
+                ),
             )
+        }
+        for create_dto in create_dtos:
+            metatype = project_metadatas[create_dto.project_metadata_id].metatype
+            if not is_correct_type(metatype, create_dto):
+                raise ValueError(f"provided value has the wrong type (need {metatype})")
 
-        # create metadata
-        metadata_orm = super().create(db=db, create_dto=create_dto)
-
-        return metadata_orm
+        return super().create_multi(db=db, create_dtos=create_dtos)
 
     def create_initial_metadata(
         self,

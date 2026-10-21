@@ -2,7 +2,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from modules.search_view.search_view_dto import (
-    SearchViewCreateUnion,
+    SearchViewCreateIntern,
     SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
@@ -13,52 +13,37 @@ from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSearchView(
-    SQLCRUDBase[SearchViewORM, SearchViewCreateUnion, SearchViewUpdateUnion]
+    SQLCRUDBase[SearchViewORM, SearchViewCreateIntern, SearchViewUpdateUnion]
 ):
     ### CREATE OPERATIONS ###
 
-    def create(
+    # Inherited from SQLCRUDBase
+
+    ### READ OPERATIONS ###
+
+    def read_last_position(
         self,
         db: Session,
         *,
-        create_dto: SearchViewCreateUnion,
+        project_id: int,
         user_id: int,
-    ) -> SearchViewORM:
-        last_position = (
-            db.query(func.max(SearchViewORM.position))
+        entity_type: SearchEntityType,
+    ) -> int | None:
+        """
+        Read the highest position among a user's views of an entity type.
+
+        Returns:
+            The highest position, or None if the user has no such view.
+        """
+        return (
+            db.query(func.max(self.model.position))
             .filter(
-                SearchViewORM.project_id == create_dto.project_id,
-                SearchViewORM.user_id == user_id,
-                SearchViewORM.entity_type == create_dto.entity_type.value,
+                self.model.project_id == project_id,
+                self.model.user_id == user_id,
+                self.model.entity_type == entity_type.value,
             )
             .scalar()
         )
-        view = SearchViewORM(
-            name=create_dto.name.strip(),
-            entity_type=create_dto.entity_type.value,
-            layout=create_dto.layout.value,
-            filters=create_dto.filters.model_dump(mode="json"),
-            group_by=(
-                create_dto.group_by.model_dump(mode="json")
-                if create_dto.group_by is not None
-                else None
-            ),
-            sorts=[s.model_dump(mode="json") for s in create_dto.sorts],
-            selected_properties=(
-                [p.value for p in create_dto.selected_properties]
-                if create_dto.selected_properties is not None
-                else None
-            ),
-            project_id=create_dto.project_id,
-            user_id=user_id,
-            position=(last_position + 1 if last_position is not None else 0),
-        )
-        db.add(view)
-        db.flush()
-        db.refresh(view)
-        return view
-
-    ### READ OPERATIONS ###
 
     def read_by_user_project_and_entity(
         self,
@@ -81,45 +66,25 @@ class CRUDSearchView(
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, id: int, update_dto: SearchViewUpdateUnion
-    ) -> SearchViewORM:
-        view = self.read(db=db, id=id)
+    def update_multi(
+        self,
+        db: Session,
+        *,
+        ids: list[int],
+        update_dtos: list[SearchViewUpdateUnion],
+    ) -> list[SearchViewORM]:
+        if len(ids) != len(update_dtos):
+            raise ValueError(
+                f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
+            )
+        if len(set(ids)) != len(ids):
+            raise ValueError("The IDs to update must not contain duplicates!")
 
-        # Validate the stored ORM row into its fully-typed (entity-specific) state.
-        current = search_view_read_from_orm(view)
-
-        # Merge the patch onto the current state. For every update field: omitted ->
-        # keep `current`; explicitly provided -> use the provided value (so
-        # `group_by=null` clears grouping, `sorts=[]` clears sorting). Field names come
-        # from the update model itself, so renaming a field renames the merge behavior.
-        merged_data = current.model_dump()
-        for field_name in type(update_dto).model_fields:
-            if field_name in update_dto.model_fields_set:
-                merged_data[field_name] = getattr(update_dto, field_name)
-
-        # Re-validate through the stored view's entity-specific class. This re-runs the
-        # group/board validators and normalizes an explicit `sorts=null` to [].
-        merged = type(current).model_validate(merged_data)
-
-        view.name = merged.name
-        view.layout = merged.layout.value
-        view.filters = merged.filters.model_dump(mode="json")
-        view.group_by = (
-            merged.group_by.model_dump(mode="json")
-            if merged.group_by is not None
-            else None
-        )
-        view.sorts = [s.model_dump(mode="json") for s in merged.sorts]
-        view.selected_properties = (
-            [p.value for p in merged.selected_properties]
-            if merged.selected_properties is not None
-            else None
-        )
-        db.add(view)
+        views = self.read_by_ids(db=db, ids=ids)
+        for view, update_dto in zip(views, update_dtos):
+            self._merge(view=view, update_dto=update_dto)
         db.flush()
-        db.refresh(view)
-        return view
+        return views
 
     ### OTHER OPERATIONS ###
 
@@ -158,6 +123,39 @@ class CRUDSearchView(
         db.add_all(ordered_views)
         db.flush()
         return ordered_views
+
+    def _merge(self, *, view: SearchViewORM, update_dto: SearchViewUpdateUnion) -> None:
+        """Merge a patch onto a stored view, re-validating the merged state."""
+        # Validate the stored ORM row into its fully-typed (entity-specific) state.
+        current = search_view_read_from_orm(view)
+
+        # Merge the patch onto the current state. For every update field: omitted ->
+        # keep `current`; explicitly provided -> use the provided value (so
+        # `group_by=null` clears grouping, `sorts=[]` clears sorting). Field names come
+        # from the update model itself, so renaming a field renames the merge behavior.
+        merged_data = current.model_dump()
+        for field_name in type(update_dto).model_fields:
+            if field_name in update_dto.model_fields_set:
+                merged_data[field_name] = getattr(update_dto, field_name)
+
+        # Re-validate through the stored view's entity-specific class. This re-runs the
+        # group/board validators and normalizes an explicit `sorts=null` to [].
+        merged = type(current).model_validate(merged_data)
+
+        view.name = merged.name
+        view.layout = merged.layout.value
+        view.filters = merged.filters.model_dump(mode="json")
+        view.group_by = (
+            merged.group_by.model_dump(mode="json")
+            if merged.group_by is not None
+            else None
+        )
+        view.sorts = [s.model_dump(mode="json") for s in merged.sorts]
+        view.selected_properties = (
+            [p.value for p in merged.selected_properties]
+            if merged.selected_properties is not None
+            else None
+        )
 
 
 crud_search_view = CRUDSearchView(SearchViewORM)

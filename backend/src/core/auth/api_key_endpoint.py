@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -9,7 +11,7 @@ from sqlalchemy.orm import Session
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.api_key_crud import crud_api_key
-from core.auth.api_key_dto import ApiKeyCreatedResponse, ApiKeyRead
+from core.auth.api_key_dto import ApiKeyCreate, ApiKeyCreatedResponse, ApiKeyRead
 from core.auth.auth_enum import ExpiryDuration
 from core.auth.security import generate_api_key, hash_api_key
 from core.user.user_orm import UserORM
@@ -39,11 +41,14 @@ def create_api_key(
 
     db_key = crud_api_key.create(
         db=db,
-        user_id=current_user.id,
-        name=name,
-        hashed_key=hashed_key,
-        prefix=f"{raw_api_key[:10]}...",
-        expires_at=expires_in.to_datetime(),
+        create_dto=ApiKeyCreate(
+            name=name,
+            prefix=f"{raw_api_key[:10]}...",
+            hashed_key=hashed_key,
+            expires_at=expires_in.to_datetime(),
+            created_at=datetime.now(UTC),
+            user_id=current_user.id,
+        ),
     )
 
     ws.emit_to_user(

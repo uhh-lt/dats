@@ -938,8 +938,9 @@ class SpanClassificationModelService(TextClassificationModelService):
                 ],
                 train_params=parameters.get_training_settings(),
             ),
-            codes=codes,
-            tags=[],
+        )
+        crud_classifier.link_codes(
+            db=db, id=classifier.id, code_ids=[code.id for code in codes]
         )
 
         # 6.2 store the evaluation in the db

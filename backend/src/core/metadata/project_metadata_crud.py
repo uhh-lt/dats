@@ -23,17 +23,18 @@ class CRUDProjectMetadata(
 ):
     ### CREATE OPERATIONS ###
 
-    def create(
-        self, db: Session, *, create_dto: ProjectMetadataCreate
-    ) -> ProjectMetadataORM:
-        db_obj = super().create(db=db, create_dto=create_dto)
+    def create_multi(
+        self, db: Session, *, create_dtos: list[ProjectMetadataCreate]
+    ) -> list[ProjectMetadataORM]:
+        db_objs = super().create_multi(db=db, create_dtos=create_dtos)
 
         # we have to create sdoc metadata for all existing sdocs
-        self._create_all_sdoc_metadata(
-            db=db, project_metadata=db_obj, metatype=create_dto.metatype
-        )
+        for db_obj, create_dto in zip(db_objs, create_dtos):
+            self._create_all_sdoc_metadata(
+                db=db, project_metadata=db_obj, metatype=create_dto.metatype
+            )
 
-        return db_obj
+        return db_objs
 
     def _create_all_sdoc_metadata(
         self,
@@ -138,19 +139,22 @@ class CRUDProjectMetadata(
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, id: int, update_dto: ProjectMetadataUpdate
-    ) -> ProjectMetadataORM:
-        db_obj = self.read(db=db, id=id)
-        if db_obj.read_only:
-            logger.warning(
-                (
-                    f"Cannot update read-only ProjectMetadata {db_obj.key} from"
-                    f" Project {db_obj.project_id}!"
+    def update_multi(
+        self, db: Session, *, ids: list[int], update_dtos: list[ProjectMetadataUpdate]
+    ) -> list[ProjectMetadataORM]:
+        db_objs = self.read_by_ids(db=db, ids=ids)
+        writable_ids: list[int] = []
+        writable_dtos: list[ProjectMetadataUpdate] = []
+        for db_obj, update_dto in zip(db_objs, update_dtos):
+            if db_obj.read_only:
+                logger.warning(
+                    (
+                        f"Cannot update read-only ProjectMetadata {db_obj.key} from"
+                        f" Project {db_obj.project_id}!"
+                    )
                 )
-            )
-            return db_obj
-        else:
+                continue
+
             # If the user wants to change the type of a metadata,
             # there's no way to reasonably convert the
             # values of existing sdoc metadatas,
@@ -160,7 +164,9 @@ class CRUDProjectMetadata(
                 update_dto.metatype is not None
                 and db_obj.metatype != update_dto.metatype
             ):
-                crud_sdoc_meta.delete_by_project_metadata(db=db, project_metadata_id=id)
+                crud_sdoc_meta.delete_by_project_metadata(
+                    db=db, project_metadata_id=db_obj.id
+                )
 
                 # we have to create sdoc metadata for all existing sdocs (as we deleted them before)
                 self._create_all_sdoc_metadata(
@@ -169,10 +175,13 @@ class CRUDProjectMetadata(
                     metatype=update_dto.metatype,
                 )
 
-            # update metadata
-            metadata_orm = super().update(db=db, id=id, update_dto=update_dto)
+            writable_ids.append(db_obj.id)
+            writable_dtos.append(update_dto)
 
-            return metadata_orm
+        # update metadata
+        super().update_multi(db=db, ids=writable_ids, update_dtos=writable_dtos)
+
+        return db_objs
 
     ### OTHER OPERATIONS ###
 

@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import (
@@ -22,13 +23,14 @@ from common.dependencies import (
     get_db_session,
     reusable_oauth2_scheme,
 )
+from config import conf
 from core.auth.auth_exceptions import credentials_exception
 from core.auth.auth_service import AuthService
 from core.auth.authz_user import AuthzUser
 from core.auth.oauth_service import OAuthService
 from core.auth.refresh_token_crud import crud_refresh_token
-from core.auth.refresh_token_dto import RefreshAccessTokenData
-from core.auth.security import decode_jwt, generate_jwt
+from core.auth.refresh_token_dto import RefreshAccessTokenData, RefreshTokenCreate
+from core.auth.security import decode_jwt, generate_jwt, generate_refresh_token
 from core.user.user_crud import crud_user
 from core.user.user_dto import (
     UserAuthorizationHeaderData,
@@ -103,7 +105,9 @@ def login(
         raise credentials_exception
 
     (access_token, access_token_expires) = generate_jwt(user)
-    refresh_token = crud_refresh_token.create(db, user_id=user.id)
+    refresh_token = crud_refresh_token.create(
+        db, create_dto=_new_refresh_token(user_id=user.id)
+    )
 
     response.set_cookie(
         AUTHORIZATION,
@@ -154,7 +158,9 @@ def refresh_access_token(
     crud_refresh_token.delete_old_refresh_tokens(db, user_id=token.user_id)
 
     (access_token, access_token_expires) = generate_jwt(token.user)
-    new_token = crud_refresh_token.create(db, user_id=token.user.id)
+    new_token = crud_refresh_token.create(
+        db, create_dto=_new_refresh_token(user_id=token.user.id)
+    )
 
     response.set_cookie(
         AUTHORIZATION,
@@ -219,7 +225,7 @@ async def oidc_callback(
     (access_token, access_token_expires) = generate_jwt(user)
 
     refresh_token = await run_in_threadpool(
-        crud_refresh_token.create, db, user_id=user.id
+        crud_refresh_token.create, db, create_dto=_new_refresh_token(user_id=user.id)
     )
 
     auth_data = UserAuthorizationHeaderData(
@@ -272,4 +278,13 @@ def sync_session(
         secure=True,
         httponly=True,
         samesite="strict",
+    )
+
+
+def _new_refresh_token(*, user_id: int) -> RefreshTokenCreate:
+    """A new random refresh token of the user, valid for the configured TTL."""
+    return RefreshTokenCreate(
+        token=generate_refresh_token(),
+        expires_at=datetime.now(UTC) + timedelta(seconds=conf.auth.jwt.refresh_ttl),
+        user_id=user_id,
     )
