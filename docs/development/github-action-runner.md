@@ -26,20 +26,20 @@ The last **two digits** of the runner name drive everything:
 
 | Runner name      | Port prefix | Compose project                | Example API port |
 | ---------------- | ----------- | ------------------------------ | ---------------- |
-| `dats-runner-01` | `501`       | `action-runner-dats-runner-01` | `50120`          |
-| `dats-runner-02` | `502`       | `action-runner-dats-runner-02` | `50220`          |
-| `dats-runner-99` | `599`       | `action-runner-dats-runner-99` | `59920`          |
+| `dats-runner-01` | `321`       | `action-runner-dats-runner-01` | `32120`          |
+| `dats-runner-02` | `322`       | `action-runner-dats-runner-02` | `32220`          |
+| `dats-runner-06` | `326`       | `action-runner-dats-runner-06` | `32620`          |
 
-The CI's `prepare-env` step extracts the two digits, builds the port prefix as `5<digits>`, and passes it to `bin/setup/setup-envs.sh`, which rewrites every port in the generated `.env` files. It also suffixes the Compose project name with the runner name, which isolates:
+The CI's `prepare-env` step extracts the two digits, builds the port prefix as `320 + <digits>`, and passes it to `bin/setup/setup-envs.sh`, which rewrites every port in the generated `.env` files. It also suffixes the Compose project name with the runner name, which isolates:
 
-- **Ports** — each runner binds a distinct `5xx xx` range (e.g. API on `50120` vs `50220`).
+- **Ports** — each runner binds a distinct `32x xx` range (e.g. API on `32120` vs `32220`). The ports stay below Linux's ephemeral port range (`32768`-`60999`, see `/proc/sys/net/ipv4/ip_local_port_range`): the kernel hands those ports out to outgoing connections, and a port taken that way makes `docker compose up` fail with "address already in use".
 - **Containers & networks** — named `<project>-<service>` and `<project>_dats_network`, so no cross-runner adoption.
 - **Named volumes** — `<project>_postgres_data` etc., so one runner's `down -v` never deletes another's data.
 
 Docker image tags are already unique per _run_ (suffixed with the GitHub `run_id`), so concurrent builds never overwrite each other's images.
 
 !!! warning
-Runner names **must end in exactly two digits**. Each runner is an explicit service in `compose.yml` with a hardcoded hostname (`dats-runner-01`, `dats-runner-02`, …). To add more runners, copy a service block and increment the suffix. The `prepare-env` step fails with a clear error if it can't extract exactly two digits from the runner name.
+Runner names **must end in exactly two digits, from `01` to `06`** (higher numbers would give ports in the ephemeral port range). Each runner is an explicit service in `compose.yml` with a hardcoded hostname (`dats-runner-01`, `dats-runner-02`, …). To add more runners, copy a service block and increment the suffix. The `prepare-env` step fails with a clear error if it can't extract exactly two digits from the runner name.
 
 ## Setting up the runner fleet
 
@@ -119,7 +119,7 @@ A few resources are deliberately shared across all runners on the machine:
 The runner name doesn't match the convention. Check that each service in `compose.yml` has a `hostname` ending in exactly two digits (e.g. `dats-runner-05`).
 
 **"Port is already allocated"**
-Two runners are using the same port prefix. Ensure each runner has a unique two-digit suffix (check `docker compose ps` and the runner names in GitHub).
+Two runners are using the same port prefix. Ensure each runner has a unique two-digit suffix (check `docker compose ps` and the runner names in GitHub). If the port belongs to no container, an outgoing connection holds it: check that the port prefixes stay below the ephemeral port range.
 
 **One run's tests fail when another run starts**
 This should not happen with per-runner Compose projects. Confirm the runners have distinct names and that `COMPOSE_PROJECT_NAME` differs between their generated `docker/.env` files.
