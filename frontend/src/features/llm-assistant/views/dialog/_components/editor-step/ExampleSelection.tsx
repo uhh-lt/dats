@@ -1,12 +1,12 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
+import { CodeHooks } from "@core/code";
 import { FilterTableToolbarProps } from "@core/filter";
 import { ProjectMetadataHooks } from "@core/project-metadata";
 import { SEATFilterActions, SentenceAnnotationReduxFilterTable } from "@core/sentence-annotation";
 import { SATFilterActions, SpanAnnotationReduxFilterTable } from "@core/span-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
-import { CodeRead } from "@models/CodeRead";
 import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -26,12 +26,17 @@ const filterNameSpanAnno = "selectExampleSpanAnnotationDialog";
 
 interface ExampleSelectionProps {
   projectId: number;
-  codes: CodeRead[];
+  codeIds: number[];
   onConfirmSelection: (codeId: number, annotationIds: number[]) => void;
   method: TaskType;
 }
 
-export function ExampleSelection({ projectId, codes, onConfirmSelection, method }: ExampleSelectionProps) {
+export function ExampleSelection({ projectId, codeIds, onConfirmSelection, method }: ExampleSelectionProps) {
+  // global server state
+  const codes = CodeHooks.useGetAllCodesMap({
+    select: (codeMap) => codeIds.filter((codeId) => codeId in codeMap).map((codeId) => codeMap[codeId]),
+  });
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -123,7 +128,7 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
         open={open}
         onClose={handleClose}
       >
-        {codes.map((code) => (
+        {codes.data?.map((code) => (
           <MenuItem key={code.id} onClick={() => handleOpenDialog(code.id)}>
             <ListItemIcon>{getIconComponent(Icon.CODE, { style: { color: code.color } })}</ListItemIcon>
             <ListItemText>{code.name}</ListItemText>

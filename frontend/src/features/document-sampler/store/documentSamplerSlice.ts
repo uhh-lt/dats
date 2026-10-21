@@ -1,11 +1,10 @@
-import { TagRead } from "@models/TagRead";
 import { createSelector, createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { RootState } from "@store/store";
 import { ChartDataPoint } from "../_types/ChartDataPoint";
 
 export interface DocumentSamplerState {
-  aggregationGroups: Record<string, TagRead[]>;
+  aggregationGroups: Record<string, number[]>;
   isFixedSamplingStrategy: boolean;
   fixedSamplingValue: number;
   maxFixedSamplingValue: number;
@@ -59,15 +58,15 @@ const documentSamplerSlice = createSlice({
     },
     onGroupNameChange: (state, action: PayloadAction<{ oldName: string; newName: string }>) => {
       const { oldName, newName } = action.payload;
-      const currentGroupTags = state.aggregationGroups[oldName];
+      const currentGroupTagIds = state.aggregationGroups[oldName];
       const newState = { ...state.aggregationGroups };
       delete newState[oldName];
-      newState[newName] = currentGroupTags;
+      newState[newName] = currentGroupTagIds;
       state.aggregationGroups = newState;
     },
-    onUpdateGroupTags: (state, action: PayloadAction<{ groupName: string; tags: TagRead[] }>) => {
-      const { groupName, tags } = action.payload;
-      state.aggregationGroups[groupName] = tags;
+    onUpdateGroupTags: (state, action: PayloadAction<{ groupName: string; tagIds: number[] }>) => {
+      const { groupName, tagIds } = action.payload;
+      state.aggregationGroups[groupName] = tagIds;
     },
     onAddNewGroup: (state) => {
       state.aggregationGroups[`Group ${crypto.randomUUID().substring(0, 4)}`] = [];

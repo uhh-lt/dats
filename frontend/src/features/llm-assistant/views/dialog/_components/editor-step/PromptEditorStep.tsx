@@ -24,9 +24,9 @@ export function PromptEditorStep() {
   const model = useAppSelector((state) => state.llmAssistant.modelId);
   const method = useAppSelector((state) => state.llmAssistant.method);
   const approach = useAppSelector((state) => state.llmAssistant.approach);
-  const tags = useAppSelector((state) => state.llmAssistant.tags);
-  const metadata = useAppSelector((state) => state.llmAssistant.metadata);
-  const codes = useAppSelector((state) => state.llmAssistant.codes);
+  const tagIds = useAppSelector((state) => state.llmAssistant.tagIds);
+  const projectMetadataIds = useAppSelector((state) => state.llmAssistant.projectMetadataIds);
+  const codeIds = useAppSelector((state) => state.llmAssistant.codeIds);
   const sdocIds = useAppSelector((state) => state.llmAssistant.documentIds);
   const recommendedPrompts = useAppSelector((state) => state.llmAssistant.prompts);
   const deleteExistingAnnotations = useAppSelector((state) => state.llmAssistant.deleteExistingAnnotations);
@@ -69,9 +69,9 @@ export function PromptEditorStep() {
               project_id: projectId,
               specific_task_parameters: {
                 task_type: method,
-                tag_ids: tags.map((tag) => tag.id),
-                project_metadata_ids: metadata.map((m) => m.id),
-                code_ids: codes.map((code) => code.id),
+                tag_ids: tagIds,
+                project_metadata_ids: projectMetadataIds,
+                code_ids: codeIds,
                 sdoc_ids: sdocIds,
               },
             },
@@ -93,9 +93,9 @@ export function PromptEditorStep() {
       createPromptTemplatesMutation,
       approach,
       projectId,
-      tags,
-      metadata,
-      codes,
+      tagIds,
+      projectMetadataIds,
+      codeIds,
       sdocIds,
     ],
   );
@@ -149,9 +149,9 @@ export function PromptEditorStep() {
           specific_task_parameters: {
             task_type: method,
             sdoc_ids: sdocIds,
-            tag_ids: tags.map((tag) => tag.id),
-            project_metadata_ids: metadata.map((m) => m.id),
-            code_ids: codes.map((code) => code.id),
+            tag_ids: tagIds,
+            project_metadata_ids: projectMetadataIds,
+            code_ids: codeIds,
             delete_existing_annotations: deleteExistingAnnotations,
           },
         },
@@ -176,9 +176,9 @@ export function PromptEditorStep() {
     approach,
     prompts,
     sdocIds,
-    tags,
-    metadata,
-    codes,
+    tagIds,
+    projectMetadataIds,
+    codeIds,
     deleteExistingAnnotations,
     startLLMAssistantJobMutation,
     dispatch,
@@ -236,7 +236,7 @@ export function PromptEditorStep() {
           <>
             <ExampleSelection
               projectId={projectId}
-              codes={codes}
+              codeIds={codeIds}
               onConfirmSelection={handleSelectExamples}
               method={method}
             />

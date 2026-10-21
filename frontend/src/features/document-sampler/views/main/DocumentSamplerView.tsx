@@ -1,11 +1,9 @@
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { TagHooks } from "@core/tag";
 import { SampledSdocsResults } from "@models/SampledSdocsResults";
-import { TagRead } from "@models/TagRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { DocumentSamplerHooks } from "../../api/documentSamplerHooks";
 import { DocumentSamplerActions } from "../../store/documentSamplerSlice";
 import { DocumentsBarChart } from "./_components/DocumentsBarChart";
@@ -25,27 +23,12 @@ export function DocumentSamplerView() {
   const relativeSamplingValue = useAppSelector((state) => state.documentSampler.relativeSamplingValue);
   const dispatch = useAppDispatch();
 
-  // global server state
-  const tags = TagHooks.useGetAllTags();
-  const tagsMap = useMemo(() => {
-    if (!tags.data) {
-      return {};
-    }
-    return tags.data.reduce(
-      (acc, tag) => {
-        acc[tag.id] = tag;
-        return acc;
-      },
-      {} as Record<number, TagRead>,
-    );
-  }, [tags.data]);
-
   // mutations
   const transformAndStore = useCallback(
     (data: SampledSdocsResults[]) => {
       const result = data.map((x) => {
         return {
-          tags: x.tags.map((tagId) => tagsMap[tagId]),
+          tagIds: x.tags,
           count: x.sdocs.length,
           sdocIds: x.sdocs,
           fixedSampleSdocIds: x.sample_fixed,
@@ -56,7 +39,7 @@ export function DocumentSamplerView() {
       });
       dispatch(DocumentSamplerActions.onUpdateChartData(result));
     },
-    [dispatch, tagsMap],
+    [dispatch],
   );
   const { mutate: aggregateSdocsByTags } = DocumentSamplerHooks.useSampleSdocsByTags({ onSuccess: transformAndStore });
 
@@ -66,7 +49,7 @@ export function DocumentSamplerView() {
       projectId,
       n: fixedSamplingValue,
       frac: relativeSamplingValue,
-      requestBody: Object.values(aggregationGroups).map((tags) => tags.map((tag) => tag.id)),
+      requestBody: Object.values(aggregationGroups),
     });
   }, [aggregateSdocsByTags, aggregationGroups, fixedSamplingValue, projectId, relativeSamplingValue]);
 
@@ -80,13 +63,7 @@ export function DocumentSamplerView() {
     <SidebarContentLayout
       sidebar={
         <PercentageResizablePanel
-          firstContent={
-            <TagGroupCreator
-              tags={tags.data || []}
-              aggregationGroups={aggregationGroups}
-              cardProps={{ className: "h100" }}
-            />
-          }
+          firstContent={<TagGroupCreator aggregationGroups={aggregationGroups} cardProps={{ className: "h100" }} />}
           secondContent={<SamplingStrategySelector cardProps={{ className: "h100" }} />}
           contentPercentage={sidebarPercentage}
           onResize={handleSidebarResize}
