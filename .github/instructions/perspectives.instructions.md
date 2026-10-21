@@ -1,7 +1,7 @@
 ---
-applyTo: "frontend/src/views/perspectives/**, backend/src/modules/perspectives/**"
+applyTo: "frontend/src/features/perspectives/**, backend/src/modules/perspectives/**"
 paths:
-  - "frontend/src/views/perspectives/**"
+  - "frontend/src/features/perspectives/**"
   - "backend/src/modules/perspectives/**"
 ---
 
