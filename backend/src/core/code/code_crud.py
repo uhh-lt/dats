@@ -12,16 +12,6 @@ from utils.color_utils import get_next_color
 class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
 
-    def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
-        dto_obj_data = jsonable_encoder(create_dto)
-        # first create the code
-        # noinspection PyArgumentList
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.flush()
-
-        return db_obj
-
     def create_system_codes_for_project(
         self, db: Session, *, project_id: int
     ) -> list[CodeORM]:

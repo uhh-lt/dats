@@ -71,6 +71,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 - **CRUDs vs. handlers**: CRUDs use `read_*`, while endpoint handlers use `get_*` (see `backend-endpoint.instructions.md`).
 - **Private helpers** (`_name`) are exempt from the verb, order and section rules, but still need a return annotation.
 - **Base methods**: `create`, `create_multi`, `read`, `read_by_ids`, `read_multi`, `exists`, `update`, `update_multi`, `delete`, `delete_multi`. Override them instead of adding near-duplicates. (This is SQL-specific: Embedding and Elastic CRUDs must not override their bases.)
+- **Single delegates to multi**: the base `create`, `update` and `delete` call `create_multi`, `update_multi` and `delete_multi` with one item. Put extra handling (e.g. adoc timestamps) into an override of the `_multi` method that calls `super()`; the single-item path then gets it for free. Do not handle it in both.
 - **Lint**: `backend/lint/check_crud.py` enforces these conventions. It runs in `just lint backend` and in the `Lint: Backend CRUD conventions` pre-commit hook (so also in CI).
 
 ### Signatures
@@ -85,7 +86,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 - **Flush only**: write methods end with `db.flush()` (plus `db.refresh(obj)` when DB-generated values are needed). Never call `db.commit()` or `db.rollback()`.
 - Query with `db.query(...)` and use `self.model` for the own entity; other ORMs/link tables are referenced directly. `select()` with `db.execute` / `db.scalars` is an accepted variation, mainly for batched and aggregate queries.
-- Reuse the base: call `super().create/update/delete(...)` or `self.read(...)` inside overrides instead of re-implementing them.
+- Reuse the base: call `super().create_multi/update_multi/delete_multi(...)` or `self.read_by_ids(...)` inside overrides instead of re-implementing them.
 - For idempotent inserts, use `sqlalchemy.dialects.postgresql.insert(...).on_conflict_do_nothing()` / `on_conflict_do_update(...)`, or `db.begin_nested()` + catching `IntegrityError` (see `object_handle_crud.create`).
 
 ### Batching
@@ -96,7 +97,9 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
   - filters that cannot be split into separate queries, such as `notin_(...)` and `.any(... .in_(...))` (see `crud_sdoc.read_all_without_tags`, `crud_sdoc.read_by_tags`).
 - Return early on empty input (`if not ids: return []` / `return 0` / `return {}`).
 - Bulk deletes use `delete(Model).where(...)` via `db.execute`, `assert isinstance(result, CursorResult)` and sum `result.rowcount` (see `SQLCRUDBase.delete_multi`).
-- `read_by_ids`-style methods return results in input order and raise `NoSuchElementError` for missing ids.
+- **Input order**: every batch method returns its results in the order of its input (`create_dtos`, `ids`). Queries with `IN`, `RETURNING` or `ON CONFLICT` return rows in any order, so map them back to the input explicitly (see `SQLCRUDBase.read_by_ids`).
+- `read_by_ids`-style methods raise `NoSuchElementError` for missing ids and repeat duplicate ids in the result. `update_multi` rejects duplicate ids with `ValueError`; `delete_multi` ignores duplicate and missing ids and returns the number of deleted rows.
+- `delete_multi` returns a count, not the deleted objects. Callers that need them (e.g. for websocket events) read them with `read_by_ids` before deleting.
 
 ### Errors
 
