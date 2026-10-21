@@ -94,6 +94,9 @@ lint target *files:
           uv run python lint/check_crud.py
           uv run python lint/check_dtos.py
           uv run python lint/check_orm.py
+          uv run python lint/check_services.py
+          uv run python lint/check_exceptions.py
+          uv run python lint/check_core.py
         else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
         cd frontend

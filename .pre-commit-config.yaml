@@ -55,6 +55,23 @@ repos:
         entry: uv run --project backend python backend/lint/check_orm.py
         language: system
         files: ^backend/(src/.*_orm\.py|lint/check_orm\.py)$
+      - id: lint-backend-service
+        name: "Lint: Backend service conventions"
+        entry: uv run --project backend python backend/lint/check_services.py
+        language: system
+        files: ^backend/(src/.*_service\.py|lint/check_services\.py)$
+      - id: lint-backend-exceptions
+        name: "Lint: Backend exception locations"
+        entry: uv run --project backend python backend/lint/check_exceptions.py
+        language: system
+        files: ^backend/(src/.*\.py|lint/check_exceptions\.py)$
+      - id: lint-backend-core
+        name: "Lint: Backend core layering"
+        entry: uv run --project backend python backend/lint/check_core.py
+        language: system
+        # always checks the whole core folder
+        pass_filenames: false
+        files: ^backend/(src/core/.*\.py|lint/check_core\.py)$
       - id: lint-ray
         name: "Lint: Ray"
         entry: just lint ray
