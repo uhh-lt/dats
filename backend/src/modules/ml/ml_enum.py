@@ -9,14 +9,18 @@ class MLJobType(StrEnum):
     SENTENCE_EMBEDDING = "SENTENCE_EMBEDDING"
 
 
-class JobType(IntEnum):
+class MLJobTypeID(IntEnum):
+    """Integer ID of an MLJobType in SourceDocumentJobStatusORM.type."""
+
     QUOTATION_ATTRIBUTION = 100
     COREFERENCE_RESOLUTION = 101
     DOCUMENT_EMBEDDING = 102
     SENTENCE_EMBEDDING = 103
 
 
-class JobStatus(IntEnum):
+class MLJobStatus(IntEnum):
+    """Status of an ML job for one document (SourceDocumentJobStatusORM.status)."""
+
     UNQUEUED = 0  # (not queued/planned)
     WAITING = 1  # (not started yet)
     RUNNING = 2  # (currently in progress)

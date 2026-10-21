@@ -13,13 +13,10 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_dto import SourceDocumentRead
+from modules.ml.ml_enum import MLJobStatus, MLJobTypeID
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.source_document_job_status_dto import SourceDocumentJobStatusCreate
-from modules.ml.source_document_job_status_orm import (
-    JobStatus,
-    JobType,
-    SourceDocumentJobStatusORM,
-)
+from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
 from repos.ray.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
@@ -101,7 +98,7 @@ class EmbeddingService(metaclass=SingletonMeta):
                 SourceDocumentJobStatusORM,
                 and_(
                     SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
-                    SourceDocumentJobStatusORM.type == JobType.SENTENCE_EMBEDDING,
+                    SourceDocumentJobStatusORM.type == MLJobTypeID.SENTENCE_EMBEDDING,
                 ),
                 full=True,
             )
@@ -140,8 +137,8 @@ class EmbeddingService(metaclass=SingletonMeta):
             create_dtos=[
                 SourceDocumentJobStatusCreate(
                     id=id,
-                    type=JobType.SENTENCE_EMBEDDING,
-                    status=JobStatus.FINISHED,
+                    type=MLJobTypeID.SENTENCE_EMBEDDING,
+                    status=MLJobStatus.FINISHED,
                     timestamp=datetime.now(UTC),
                 )
                 for id in sdoc_ids
@@ -191,7 +188,7 @@ class EmbeddingService(metaclass=SingletonMeta):
                 SourceDocumentJobStatusORM,
                 and_(
                     SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
-                    SourceDocumentJobStatusORM.type == JobType.DOCUMENT_EMBEDDING,
+                    SourceDocumentJobStatusORM.type == MLJobTypeID.DOCUMENT_EMBEDDING,
                 ),
                 full=True,
             )
@@ -221,8 +218,8 @@ class EmbeddingService(metaclass=SingletonMeta):
             create_dtos=[
                 SourceDocumentJobStatusCreate(
                     id=id,
-                    type=JobType.DOCUMENT_EMBEDDING,
-                    status=JobStatus.FINISHED,
+                    type=MLJobTypeID.DOCUMENT_EMBEDDING,
+                    status=MLJobStatus.FINISHED,
                     timestamp=datetime.now(UTC),
                 )
                 for id in sdoc_ids

@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import and_, or_
 
 from common.job_type_enum import JobType
-from modules.ml.ml_enum import MLJobType
+from modules.ml.ml_enum import MLJobStatus, MLJobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
@@ -12,10 +12,7 @@ from modules.ml.ml_job_dto import (
     QuotationAttributionParams,
     SentenceEmbeddingParams,
 )
-from modules.ml.source_document_job_status_orm import (
-    JobStatus,
-    SourceDocumentJobStatusORM,
-)
+from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -118,11 +115,11 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 
 def _build_filter_criterion(start_time, recompute: bool):
     inactive_status = SourceDocumentJobStatusORM.status.notin_(
-        (JobStatus.WAITING, JobStatus.RUNNING)
+        (MLJobStatus.WAITING, MLJobStatus.RUNNING)
     )
     timestamp_column = SourceDocumentJobStatusORM.timestamp
     unfinished_status = SourceDocumentJobStatusORM.status.in_(
-        (JobStatus.ERROR, JobStatus.ABORTED, JobStatus.UNQUEUED, None)
+        (MLJobStatus.ERROR, MLJobStatus.ABORTED, MLJobStatus.UNQUEUED, None)
     )
     filter_criterion = (
         and_(

@@ -19,13 +19,10 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.user.user_crud import SYSTEM_USER_ID
+from modules.ml.ml_enum import MLJobStatus, MLJobTypeID
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.source_document_job_status_dto import SourceDocumentJobStatusCreate
-from modules.ml.source_document_job_status_orm import (
-    JobStatus,
-    JobType,
-    SourceDocumentJobStatusORM,
-)
+from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.ray.dto.coref import CorefInputDoc, CorefJobInput
 from repos.ray.ray_repo import RayRepo
 
@@ -89,7 +86,8 @@ class CorefService(metaclass=SingletonMeta):
                 SourceDocumentJobStatusORM,
                 and_(
                     SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
-                    SourceDocumentJobStatusORM.type == JobType.COREFERENCE_RESOLUTION,
+                    SourceDocumentJobStatusORM.type
+                    == MLJobTypeID.COREFERENCE_RESOLUTION,
                 ),
                 full=True,
             )
@@ -184,8 +182,8 @@ class CorefService(metaclass=SingletonMeta):
             create_dtos=[
                 SourceDocumentJobStatusCreate(
                     id=doc.id,
-                    type=JobType.COREFERENCE_RESOLUTION,
-                    status=JobStatus.FINISHED,
+                    type=MLJobTypeID.COREFERENCE_RESOLUTION,
+                    status=MLJobStatus.FINISHED,
                     timestamp=datetime.now(UTC),
                 )
                 for doc in coref_output.documents
