@@ -1,18 +1,13 @@
-from uuid import uuid4
-
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_dto import (
-    SentenceAnnotationCreate,
     SentenceAnnotationCreateIntern,
     SentenceAnnotationUpdate,
-    SentenceAnnotationUpdateBulk,
 )
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
@@ -23,11 +18,6 @@ class CRUDSentenceAnnotation(
     ]
 ):
     ### CREATE OPERATIONS ###
-
-    def create(
-        self, db: Session, *, user_id: int, create_dto: SentenceAnnotationCreate
-    ) -> SentenceAnnotationORM:
-        return self.create_bulk(db=db, user_id=user_id, create_dtos=[create_dto])[0]
 
     def create_multi(
         self,
@@ -44,41 +34,6 @@ class CRUDSentenceAnnotation(
         crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
         return db_objs
-
-    def create_bulk(
-        self, db: Session, *, user_id: int, create_dtos: list[SentenceAnnotationCreate]
-    ) -> list[SentenceAnnotationORM]:
-        # find affected sdocs
-        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
-
-        # find project id for each sdoc_id
-        sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
-        project_id_by_sdoc_id: dict[int, int] = {}
-        for sdoc in sdocs:
-            project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
-
-        # find or create annotation documents for each sdoc_id
-        adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
-            db=db,
-            user_id=user_id,
-            sdoc_ids=list(sdoc_ids),
-        )
-
-        # create the annotations
-        return self.create_multi(
-            db=db,
-            create_dtos=[
-                SentenceAnnotationCreateIntern(
-                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
-                    uuid=str(uuid4()),
-                    sentence_id_end=create_dto.sentence_id_end,
-                    sentence_id_start=create_dto.sentence_id_start,
-                    code_id=create_dto.code_id,
-                    annotation_document_id=adoc_by_sdoc_id[create_dto.sdoc_id].id,
-                )
-                for create_dto in create_dtos
-            ],
-        )
 
     ### READ OPERATIONS ###
 
@@ -229,18 +184,6 @@ class CRUDSentenceAnnotation(
 
         return annos
 
-    def update_bulk(
-        self, db: Session, *, update_dtos: list[SentenceAnnotationUpdateBulk]
-    ) -> list[SentenceAnnotationORM]:
-        return self.update_multi(
-            db=db,
-            ids=[update_dto.sent_annotation_id for update_dto in update_dtos],
-            update_dtos=[
-                SentenceAnnotationUpdate(code_id=update_dto.code_id)
-                for update_dto in update_dtos
-            ],
-        )
-
     ### DELETE OPERATIONS ###
 
     def delete_multi(self, db: Session, *, ids: list[int]) -> int:
@@ -251,13 +194,6 @@ class CRUDSentenceAnnotation(
         crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
         return num_deletions
-
-    def delete_bulk(
-        self, db: Session, *, ids: list[int]
-    ) -> list[SentenceAnnotationORM]:
-        annos = self.read_by_ids(db=db, ids=ids)
-        self.delete_multi(db=db, ids=ids)
-        return annos
 
     def delete_by_sdoc(
         self,

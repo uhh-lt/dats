@@ -11,6 +11,7 @@ from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationUpdate,
     BBoxAnnotationUpdateBulk,
 )
+from core.annotation.bbox_annotation_service import BBoxAnnotationService
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -40,12 +41,13 @@ def create_bbox_annotation(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
 
-    db_obj = crud_bbox_anno.create(db=db, user_id=authz_user.user.id, create_dto=bbox)
-    result = BBoxAnnotationRead.model_validate(db_obj)
+    result = BBoxAnnotationService().create_annotations(
+        db=db, user_id=authz_user.user.id, create_dtos=[bbox]
+    )[0]
     ws.emit_to_project(
         DATSEvent.BBOX_ANNOTATION_CREATED,
         result,
-        project_id=db_obj.get_project_id(),
+        project_id=result.project_id,
     )
     return result
 
@@ -168,14 +170,9 @@ def update_bbox_annotations_bulk(
             ]
         )
 
-    db_objs = crud_bbox_anno.update_bulk(db=db, update_dtos=bbox_annos)
-    results = [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = BBoxAnnotationService().update_annotations(db=db, update_dtos=bbox_annos)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH,
-            db_objs,
-            to_dto=BBoxAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH, results)
     return results
 
 
@@ -223,12 +220,7 @@ def delete_bbox_annotations_bulk(
 ) -> list[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as_many(Crud.BBOX_ANNOTATION, bbox_anno_ids)
 
-    db_objs = crud_bbox_anno.delete_bulk(db=db, ids=bbox_anno_ids)
-    results = [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = BBoxAnnotationService().delete_annotations(db=db, ids=bbox_anno_ids)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.BBOX_ANNOTATION_DELETED_BATCH,
-            db_objs,
-            to_dto=BBoxAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.BBOX_ANNOTATION_DELETED_BATCH, results)
     return results

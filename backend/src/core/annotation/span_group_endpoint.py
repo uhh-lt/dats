@@ -12,7 +12,9 @@ from core.annotation.span_group_dto import (
     SpanGroupUpdate,
     SpanGroupWithAnnotationsRead,
 )
+from core.annotation.span_group_service import SpanGroupService
 from core.auth.authz_user import AuthzUser
+from core.doc.source_document_crud import crud_sdoc
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -39,14 +41,13 @@ def create_span_group(
 ) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span_group.sdoc_id)
 
-    db_obj = crud_span_group.create(
+    result = SpanGroupService().create_span_group(
         db=db, user_id=authz_user.user.id, create_dto=span_group
     )
-    result = SpanGroupRead.model_validate(db_obj)
     ws.emit_to_project(
         DATSEvent.SPAN_GROUP_CREATED,
         result,
-        project_id=db_obj.get_project_id(),
+        project_id=crud_sdoc.read(db=db, id=span_group.sdoc_id).project_id,
     )
     return result
 

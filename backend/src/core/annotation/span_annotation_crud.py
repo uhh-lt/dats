@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -7,17 +5,14 @@ from sqlalchemy.orm import Session
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_dto import (
-    SpanAnnotationCreate,
     SpanAnnotationCreateIntern,
     SpanAnnotationUpdate,
-    SpanAnnotationUpdateBulk,
 )
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
-from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
@@ -26,11 +21,6 @@ class CRUDSpanAnnotation(
     SQLCRUDBase[SpanAnnotationORM, SpanAnnotationCreateIntern, SpanAnnotationUpdate]
 ):
     ### CREATE OPERATIONS ###
-
-    def create(
-        self, db: Session, *, user_id: int, create_dto: SpanAnnotationCreate
-    ) -> SpanAnnotationORM:
-        return self.create_bulk(db=db, user_id=user_id, create_dtos=[create_dto])[0]
 
     def create_multi(
         self,
@@ -68,44 +58,6 @@ class CRUDSpanAnnotation(
         crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
         return db_objs
-
-    def create_bulk(
-        self, db: Session, *, user_id: int, create_dtos: list[SpanAnnotationCreate]
-    ) -> list[SpanAnnotationORM]:
-        # find affected sdocs
-        sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
-
-        # find project id for each sdoc_id
-        sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
-        project_id_by_sdoc_id: dict[int, int] = {}
-        for sdoc in sdocs:
-            project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
-
-        # find or create annotation documents for each sdoc_id
-        adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
-            db=db,
-            user_id=user_id,
-            sdoc_ids=list(sdoc_ids),
-        )
-
-        # create the annotations
-        return self.create_multi(
-            db=db,
-            create_dtos=[
-                SpanAnnotationCreateIntern(
-                    project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
-                    uuid=str(uuid4()),
-                    begin=create_dto.begin,
-                    end=create_dto.end,
-                    span_text=create_dto.span_text,
-                    begin_token=create_dto.begin_token,
-                    end_token=create_dto.end_token,
-                    code_id=create_dto.code_id,
-                    annotation_document_id=adoc_by_sdoc_id[create_dto.sdoc_id].id,
-                )
-                for create_dto in create_dtos
-            ],
-        )
 
     ### READ OPERATIONS ###
 
@@ -283,18 +235,6 @@ class CRUDSpanAnnotation(
 
         return span_annos
 
-    def update_bulk(
-        self, db: Session, *, update_dtos: list[SpanAnnotationUpdateBulk]
-    ) -> list[SpanAnnotationORM]:
-        return self.update_multi(
-            db=db,
-            ids=[update_dto.span_annotation_id for update_dto in update_dtos],
-            update_dtos=[
-                SpanAnnotationUpdate(code_id=update_dto.code_id)
-                for update_dto in update_dtos
-            ],
-        )
-
     ### DELETE OPERATIONS ###
 
     def delete_multi(self, db: Session, *, ids: list[int]) -> int:
@@ -328,11 +268,6 @@ class CRUDSpanAnnotation(
         )
 
         return num_deletions
-
-    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[SpanAnnotationORM]:
-        span_annos = self.read_by_ids(db=db, ids=ids)
-        self.delete_multi(db=db, ids=ids)
-        return span_annos
 
     def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
         # find all span annotations to be removed

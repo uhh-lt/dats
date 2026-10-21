@@ -103,6 +103,7 @@ class BBoxAnnotationRead(BBoxAnnotationBaseDTO):
     code_id: int = Field(description="Code the BBoxAnnotation refers to")
     user_id: int = Field(description="User that created the BBoxAnnotation")
     sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
+    project_id: int = Field(description="Project the BBoxAnnotation belongs to")
     created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
     updated: datetime = Field(description="Updated timestamp of the BBoxAnnotation")
     memo_ids: list[int] = Field(description="Memo IDs attached to the BBoxAnnotation")

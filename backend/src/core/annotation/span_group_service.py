@@ -1,0 +1,53 @@
+from sqlalchemy.orm import Session
+
+from common.singleton_meta import SingletonMeta
+from core.annotation.annotation_document_crud import crud_adoc
+from core.annotation.span_group_crud import crud_span_group
+from core.annotation.span_group_dto import (
+    SpanGroupCreate,
+    SpanGroupCreateIntern,
+    SpanGroupRead,
+)
+from core.annotation.span_group_orm import SpanGroupORM
+
+
+class SpanGroupService(metaclass=SingletonMeta):
+    def __new__(cls, *args, **kwargs):
+        return super(SpanGroupService, cls).__new__(cls)
+
+    def create_span_group(
+        self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
+    ) -> SpanGroupRead:
+        """
+        Create a span group of a user, creating a missing annotation document.
+
+        Args:
+            user_id: The user the span group belongs to.
+            create_dto: The span group to create.
+
+        Returns:
+            The created span group.
+        """
+        return SpanGroupRead.model_validate(
+            self.create_span_group_orm(db=db, user_id=user_id, create_dto=create_dto)
+        )
+
+    def create_span_group_orm(
+        self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
+    ) -> SpanGroupORM:
+        """
+        Like `create_span_group`, but returns the ORM object. For other services,
+        jobs and test fixtures that need the ORM object.
+        """
+        # 1) find or create the user's annotation document
+        adoc = crud_adoc.exists_or_create(
+            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
+        )
+
+        # 2) create the span group
+        return crud_span_group.create(
+            db=db,
+            create_dto=SpanGroupCreateIntern(
+                name=create_dto.name, annotation_document_id=adoc.id
+            ),
+        )

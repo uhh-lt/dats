@@ -1,5 +1,5 @@
 from collections.abc import Callable, Sequence
-from typing import TypeVar
+from typing import Protocol, TypeVar
 
 from fastapi import BackgroundTasks, Depends
 from loguru import logger
@@ -11,6 +11,12 @@ from repos.db.orm_base import ORMBase
 from systems.websocket_system.websocket_service import WebsocketService
 
 ORMT = TypeVar("ORMT", bound=ORMBase)
+
+
+class ProjectScopedDTO(Protocol):
+    """A read DTO that names the project it belongs to."""
+
+    project_id: int
 
 
 class WebsocketEmitter:
@@ -111,6 +117,24 @@ class WebsocketEmitter:
             self.emit_to_project(
                 event_type, [to_dto(db_obj) for db_obj in group], project_id=project_id
             )
+
+    def emit_dtos_to_projects(
+        self, event_type: DATSEvent, dtos: Sequence[ProjectScopedDTO]
+    ) -> None:
+        """Group read DTOs by their `project_id` and emit one batch event per project.
+
+        Use it for service results, which are read DTOs instead of ORM objects. Each
+        emitted event carries only the DTOs of that project, in their input order.
+
+        Args:
+            event_type: The batch event type.
+            dtos: The mutation results.
+        """
+        groups: dict[int, list[ProjectScopedDTO]] = {}
+        for dto in dtos:
+            groups.setdefault(dto.project_id, []).append(dto)
+        for project_id, group in groups.items():
+            self.emit_to_project(event_type, group, project_id=project_id)
 
     def emit_to_user(self, event_type: DATSEvent, payload, *, user_id: int) -> None:
         """Emit an event to a single user after commit.

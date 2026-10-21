@@ -7,15 +7,15 @@ from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 import dats_test_utils
-from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
+from core.annotation.bbox_annotation_service import BBoxAnnotationService
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_crud import crud_span_anno
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -395,84 +395,96 @@ def search_project(
 
     # --- span annotations (2: one per code, both by test_user on sdoc_one) ---
     span_annotations = [
-        crud_span_anno.create(
+        SpanAnnotationService().create_annotation_orms(
             db=seed_db_session,
             user_id=test_user.id,
-            create_dto=SpanAnnotationCreate(
-                begin=0,
-                end=4,
-                begin_token=0,
-                end_token=1,
-                span_text="This",
-                code_id=code_alpha.id,
-                sdoc_id=sdoc_one.id,
-            ),
-        ),
-        crud_span_anno.create(
+            create_dtos=[
+                SpanAnnotationCreate(
+                    begin=0,
+                    end=4,
+                    begin_token=0,
+                    end_token=1,
+                    span_text="This",
+                    code_id=code_alpha.id,
+                    sdoc_id=sdoc_one.id,
+                )
+            ],
+        )[0],
+        SpanAnnotationService().create_annotation_orms(
             db=seed_db_session,
             user_id=other_user.id,
-            create_dto=SpanAnnotationCreate(
-                begin=5,
-                end=7,
-                begin_token=1,
-                end_token=2,
-                span_text="is",
-                code_id=code_beta.id,
-                sdoc_id=sdoc_one.id,
-            ),
-        ),
+            create_dtos=[
+                SpanAnnotationCreate(
+                    begin=5,
+                    end=7,
+                    begin_token=1,
+                    end_token=2,
+                    span_text="is",
+                    code_id=code_beta.id,
+                    sdoc_id=sdoc_one.id,
+                )
+            ],
+        )[0],
     ]
 
     # --- sentence annotations (2: one per code/user) ---
     sentence_annotations = [
-        crud_sentence_anno.create(
+        SentenceAnnotationService().create_annotation_orms(
             db=seed_db_session,
             user_id=test_user.id,
-            create_dto=SentenceAnnotationCreate(
-                sentence_id_start=0,
-                sentence_id_end=0,
-                code_id=code_alpha.id,
-                sdoc_id=sdoc_one.id,
-            ),
-        ),
-        crud_sentence_anno.create(
+            create_dtos=[
+                SentenceAnnotationCreate(
+                    sentence_id_start=0,
+                    sentence_id_end=0,
+                    code_id=code_alpha.id,
+                    sdoc_id=sdoc_one.id,
+                )
+            ],
+        )[0],
+        SentenceAnnotationService().create_annotation_orms(
             db=seed_db_session,
             user_id=other_user.id,
-            create_dto=SentenceAnnotationCreate(
-                sentence_id_start=0,
-                sentence_id_end=0,
-                code_id=code_beta.id,
-                sdoc_id=sdoc_two.id,
-            ),
-        ),
+            create_dtos=[
+                SentenceAnnotationCreate(
+                    sentence_id_start=0,
+                    sentence_id_end=0,
+                    code_id=code_beta.id,
+                    sdoc_id=sdoc_two.id,
+                )
+            ],
+        )[0],
     ]
 
     # --- bbox annotations (2: one per code, both by test_user) ---
     bbox_annotations = [
-        crud_bbox_anno.create(
+        BBoxAnnotationService().create_annotation_orms(
             db=seed_db_session,
             user_id=test_user.id,
-            create_dto=BBoxAnnotationCreate(
-                x_min=0,
-                y_min=0,
-                x_max=10,
-                y_max=10,
-                code_id=code_alpha.id,
-                sdoc_id=sdoc_one.id,
-            ),
-        ),
-        crud_bbox_anno.create(
+            create_dtos=[
+                BBoxAnnotationCreate(
+                    x_min=0,
+                    y_min=0,
+                    x_max=10,
+                    y_max=10,
+                    code_id=code_alpha.id,
+                    sdoc_id=sdoc_one.id,
+                )
+            ],
+        )[0],
+        BBoxAnnotationService().create_annotation_orms(
             db=seed_db_session,
             user_id=test_user.id,
-            create_dto=BBoxAnnotationCreate(
-                x_min=20,
-                y_min=20,
-                x_max=40,
-                y_max=40,
-                code_id=code_beta.id,
-                sdoc_id=sdoc_two.id,
-            ),
-        ),
+            create_dtos=[
+                BBoxAnnotationCreate(
+                    x_min=20,
+                    y_min=20,
+                    x_max=40,
+                    y_max=40,
+                    code_id=code_beta.id,
+                    sdoc_id=sdoc_two.id,
+                )
+            ],
+        )[0],
     ]
 
     # --- memos: one per (non-deprecated) attached-object type ---

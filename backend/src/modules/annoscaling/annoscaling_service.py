@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate, SpanAnnotationRead
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -78,8 +78,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
             )
             to_create.append(span_anno)
 
-        db_objs = crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
-        return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+        return SpanAnnotationService().create_annotations(
+            db=db, user_id=user_id, create_dtos=to_create
+        )
 
     def __suggest_similar_sentences(
         self,
