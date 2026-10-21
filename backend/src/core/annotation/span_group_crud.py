@@ -1,9 +1,7 @@
 from sqlalchemy.orm import Session
 
-from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_group_dto import (
-    SpanGroupCreate,
     SpanGroupCreateIntern,
     SpanGroupUpdate,
 )
@@ -16,22 +14,7 @@ from repos.db.crud_base import SQLCRUDBase
 
 class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):
     ### CREATE OPERATIONS ###
-
-    def create(
-        self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
-    ) -> SpanGroupORM:
-        # get or create the annotation document
-        adoc = crud_adoc.exists_or_create(
-            db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
-        )
-
-        return super().create(
-            db=db,
-            create_dto=SpanGroupCreateIntern(
-                name=create_dto.name,
-                annotation_document_id=adoc.id,
-            ),
-        )
+    # Inherited from SQLCRUDBase
 
     ### READ OPERATIONS ###
 

@@ -3,15 +3,15 @@ from uuid import uuid4
 
 import pytest
 
-from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
+from core.annotation.bbox_annotation_service import BBoxAnnotationService
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_crud import crud_span_anno
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -201,41 +201,47 @@ def memo_project(
     )
 
     # Annotations on the sdoc (span, sentence, bbox), all coded with `code`.
-    span_annotation = crud_span_anno.create(
+    span_annotation = SpanAnnotationService().create_annotation_orms(
         db=db_session,
         user_id=test_user.id,
-        create_dto=SpanAnnotationCreate(
-            begin=0,
-            end=4,
-            begin_token=0,
-            end_token=1,
-            span_text="This",
-            code_id=code.id,
-            sdoc_id=sdoc.id,
-        ),
-    )
-    sentence_annotation = crud_sentence_anno.create(
+        create_dtos=[
+            SpanAnnotationCreate(
+                begin=0,
+                end=4,
+                begin_token=0,
+                end_token=1,
+                span_text="This",
+                code_id=code.id,
+                sdoc_id=sdoc.id,
+            )
+        ],
+    )[0]
+    sentence_annotation = SentenceAnnotationService().create_annotation_orms(
         db=db_session,
         user_id=test_user.id,
-        create_dto=SentenceAnnotationCreate(
-            sentence_id_start=0,
-            sentence_id_end=1,
-            code_id=code.id,
-            sdoc_id=sdoc.id,
-        ),
-    )
-    bbox_annotation = crud_bbox_anno.create(
+        create_dtos=[
+            SentenceAnnotationCreate(
+                sentence_id_start=0,
+                sentence_id_end=1,
+                code_id=code.id,
+                sdoc_id=sdoc.id,
+            )
+        ],
+    )[0]
+    bbox_annotation = BBoxAnnotationService().create_annotation_orms(
         db=db_session,
         user_id=test_user.id,
-        create_dto=BBoxAnnotationCreate(
-            x_min=0,
-            y_min=0,
-            x_max=10,
-            y_max=10,
-            code_id=code.id,
-            sdoc_id=sdoc.id,
-        ),
-    )
+        create_dtos=[
+            BBoxAnnotationCreate(
+                x_min=0,
+                y_min=0,
+                x_max=10,
+                y_max=10,
+                code_id=code.id,
+                sdoc_id=sdoc.id,
+            )
+        ],
+    )[0]
 
     def create_memo(
         user: UserORM, title: str, obj_id: int, obj_type: AttachedObjectType

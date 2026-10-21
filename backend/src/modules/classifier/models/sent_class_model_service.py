@@ -32,6 +32,7 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -1282,7 +1283,7 @@ class SentClassificationModelService(TextClassificationModelService):
             affected_sdoc_ids.add(annotation["sdoc_id"])
 
         # Write to db
-        crud_sentence_anno.create_bulk(
+        SentenceAnnotationService().create_annotation_orms(
             db=db, user_id=ASSISTANT_TRAINED_ID, create_dtos=create_dtos
         )
 

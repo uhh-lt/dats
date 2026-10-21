@@ -6,10 +6,10 @@ import pytest
 from datasets import load_dataset
 
 from common.doc_type_enum import DocType
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
-from core.annotation.span_annotation_crud import crud_span_anno
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -381,10 +381,8 @@ def span_statistics_dataset(db_session, test_project, test_user) -> SpanDataset:
         _create_span_dto(sdoc, tokens, 0, i + 1, codes[entity_type])
         for i, (sdoc, entity_type) in enumerate(zip(sdocs, CONLL_ENTITY_TYPES))
     ]
-    crud_span_anno.create_bulk(
-        db=db_session,
-        user_id=test_user.id,
-        create_dtos=span_dtos,
+    SpanAnnotationService().create_annotation_orms(
+        db=db_session, user_id=test_user.id, create_dtos=span_dtos
     )
     subset_tags = _create_subset_tags(db_session, test_project)
     subsets = _link_subset_tags(
@@ -475,7 +473,7 @@ def conll_span_dataset(db_session, test_project, test_user) -> SpanDataset:
                 start = None
                 current_type = None
 
-    crud_span_anno.create_bulk(
+    SpanAnnotationService().create_annotation_orms(
         db=db_session, user_id=test_user.id, create_dtos=span_dtos
     )
 
@@ -739,10 +737,8 @@ def sentence_statistics_dataset(db_session, test_project, test_user) -> SentData
         for sdoc, label in zip(sdocs, CSABSTRUCT_LABELS)
         for sentence_id in range(len(sentences))
     ]
-    crud_sentence_anno.create_bulk(
-        db=db_session,
-        user_id=test_user.id,
-        create_dtos=sent_dtos,
+    SentenceAnnotationService().create_annotation_orms(
+        db=db_session, user_id=test_user.id, create_dtos=sent_dtos
     )
     subset_tags = _create_subset_tags(db_session, test_project)
     subsets = _link_subset_tags(
@@ -821,7 +817,7 @@ def csabstruct_sent_dataset(db_session, test_project, test_user) -> SentDataset:
                     )
                 )
 
-    crud_sentence_anno.create_bulk(
+    SentenceAnnotationService().create_annotation_orms(
         db=db_session, user_id=test_user.id, create_dtos=sent_dtos
     )
 

@@ -10,12 +10,12 @@ import dats_test_utils
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
 from config import conf
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_crud import crud_span_anno
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -213,19 +213,21 @@ def _span_for_text(
         )
         + 1
     )
-    return crud_span_anno.create(
+    return SpanAnnotationService().create_annotation_orms(
         db=db,
         user_id=user_id,
-        create_dto=SpanAnnotationCreate(
-            sdoc_id=sdoc.id,
-            begin=begin,
-            end=end,
-            begin_token=begin_token,
-            end_token=end_token,
-            span_text=text,
-            code_id=code_id,
-        ),
-    )
+        create_dtos=[
+            SpanAnnotationCreate(
+                sdoc_id=sdoc.id,
+                begin=begin,
+                end=end,
+                begin_token=begin_token,
+                end_token=end_token,
+                span_text=text,
+                code_id=code_id,
+            )
+        ],
+    )[0]
 
 
 def _create_metadata_field(
@@ -397,7 +399,7 @@ def llm_assistant_project(
         )
         for name in example_names
     ]
-    human_sentence_annotations = crud_sentence_anno.create_bulk(
+    human_sentence_annotations = SentenceAnnotationService().create_annotation_orms(
         db=db_session,
         user_id=test_user.id,
         create_dtos=[
@@ -425,26 +427,30 @@ def llm_assistant_project(
         code_id=person_code.id,
         user_id=ASSISTANT_FEWSHOT_ID,
     )
-    zero_sentence_annotation = crud_sentence_anno.create(
+    zero_sentence_annotation = SentenceAnnotationService().create_annotation_orms(
         db=db_session,
         user_id=ASSISTANT_ZEROSHOT_ID,
-        create_dto=SentenceAnnotationCreate(
-            sdoc_id=target_sdoc.id,
-            sentence_id_start=0,
-            sentence_id_end=0,
-            code_id=fact_code.id,
-        ),
-    )
-    few_sentence_annotation = crud_sentence_anno.create(
+        create_dtos=[
+            SentenceAnnotationCreate(
+                sdoc_id=target_sdoc.id,
+                sentence_id_start=0,
+                sentence_id_end=0,
+                code_id=fact_code.id,
+            )
+        ],
+    )[0]
+    few_sentence_annotation = SentenceAnnotationService().create_annotation_orms(
         db=db_session,
         user_id=ASSISTANT_FEWSHOT_ID,
-        create_dto=SentenceAnnotationCreate(
-            sdoc_id=target_sdoc.id,
-            sentence_id_start=1,
-            sentence_id_end=1,
-            code_id=fact_code.id,
-        ),
-    )
+        create_dtos=[
+            SentenceAnnotationCreate(
+                sdoc_id=target_sdoc.id,
+                sentence_id_start=1,
+                sentence_id_end=1,
+                code_id=fact_code.id,
+            )
+        ],
+    )[0]
 
     foreign_project = crud_project.create(
         db=db_session,

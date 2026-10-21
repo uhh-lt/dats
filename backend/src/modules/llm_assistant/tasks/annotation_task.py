@@ -6,8 +6,8 @@ from config import conf
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
-    SpanAnnotationRead,
 )
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
@@ -197,17 +197,13 @@ class AnnotationTask(
             return
 
         is_fewshot = isinstance(context.approach_parameters, FewShotParams)
-        previous_annotations = crud_span_anno.read_by_user_sdocs_codes(
+        deleted_ids = crud_span_anno.delete_by_user_sdocs_codes(
             db=context.db,
             user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
             sdoc_ids=context.task_parameters.sdoc_ids,
             code_ids=context.task_parameters.code_ids,
         )
-
-        logger.info("Deleting {} previous span annotations.", len(previous_annotations))
-        crud_span_anno.delete_bulk(
-            db=context.db, ids=[annotation.id for annotation in previous_annotations]
-        )
+        logger.info("Deleted {} previous span annotations.", len(deleted_ids))
 
     def _get_response_model(self, strategy: AnnotationStrategy) -> type[BaseModel]:
         return strategy.get_response_model()
@@ -305,15 +301,11 @@ class AnnotationTask(
             deduplicated_annotation_count,
             len(errors),
         )
-        created_annos = crud_span_anno.create_bulk(
+        created_annos_for_sdoc = SpanAnnotationService().create_annotations(
             db=context.db,
             user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
             create_dtos=suggested_annotations,
         )
-        created_annos_for_sdoc = [
-            SpanAnnotationRead.model_validate(annotation)
-            for annotation in created_annos
-        ]
         logger.info(
             "Created {} span annotation(s) for document {}.",
             len(created_annos_for_sdoc),
