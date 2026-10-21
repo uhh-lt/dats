@@ -14,9 +14,6 @@ Rules (the rule id is printed with every violation):
     no-class-config      No nested `class Config` (use `model_config = ConfigDict(...)`).
     modern-typing        No `typing.List/Dict/Set/FrozenSet/Tuple/Type/Optional/Union`
                          (use `list[T]`, `dict[K, V]`, `T | None`, `A | B`, ...).
-    str-enum             Enums are `(str, Enum)` or `StrEnum`. Int-valued enums
-                         (`IntEnum`, `(int, Enum)`) are allowed because their wire values are
-                         ints; a plain `Enum` without a value type is not.
     update-base          Classes named `*Update`, `*UpdateBulk` or `*UpdateIntern` inherit
                          `UpdateDTOBase` (directly or through a base class), so empty updates
                          are rejected. Other classes do not inherit it directly.
@@ -66,8 +63,6 @@ LEGACY_TYPING = {
     "Union": "A | B",
 }
 ENUM_BASES = {"Enum", "StrEnum", "IntEnum", "Flag", "IntFlag"}
-INT_ENUM_BASES = {"IntEnum", "IntFlag", "int"}
-STR_ENUM_BASES = {"StrEnum", "str"}
 EXCEPTION_BASES = {"Exception", "BaseException"}
 # Bases that do not make a class a Pydantic model on their own.
 NON_MODEL_BASES = {"object", "Generic", "ABC", "Protocol", "TypedDict", "NamedTuple"}
@@ -342,18 +337,8 @@ def check_source(
             )
             continue
 
-        # str-enum
+        # enums are checked by check_enums.py (they live in *_enum.py files)
         if all_bases & ENUM_BASES:
-            if not all_bases & (STR_ENUM_BASES | INT_ENUM_BASES):
-                violations.append(
-                    Violation(
-                        p,
-                        cls.lineno,
-                        "str-enum",
-                        "Enum without value type (use '(str, Enum)' or 'StrEnum').",
-                        c,
-                    )
-                )
             continue
 
         if not direct - NON_MODEL_BASES:

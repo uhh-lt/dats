@@ -16,7 +16,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM

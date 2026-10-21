@@ -3,9 +3,9 @@ import shutil
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
-from common.job_type import JobType
-from common.meta_type import MetaType
+from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
+from common.meta_type_enum import MetaType
 from common.singleton_meta import SingletonMeta
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead

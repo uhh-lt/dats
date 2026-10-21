@@ -3,7 +3,8 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from modules.eximport.folder.folder_export_schema import (
     FolderExportCollection,
     FolderExportSchema,

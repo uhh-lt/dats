@@ -3,9 +3,10 @@ from typing import TypedDict
 from fastapi import APIRouter, Depends, UploadFile
 
 from common.dependencies import get_current_user
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.auth.authz_user import AuthzUser
-from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead, ImportJobType
+from modules.eximport.import_enum import ImportJobType
+from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService

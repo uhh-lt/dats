@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 from setfit import SetFitModel, Trainer, TrainingArguments, sample_dataset
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from config import conf
 from repos.filesystem_repo import FilesystemRepo
 

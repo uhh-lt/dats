@@ -17,7 +17,7 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from modules.analysis.analysis_dto import DateGroupBy
+from modules.analysis.analysis_enum import DateGroupBy
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
@@ -27,13 +27,15 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     SdocTimelineAnalysisFilter,
     SentAnnoTimelineAnalysisFilter,
     SpanAnnoTimelineAnalysisFilter,
-    TAAnnotationAggregationType,
     TimelineAnalysisConcept,
     TimelineAnalysisRead,
     TimelineAnalysisResult,
-    TimelineAnalysisType,
     TimelineAnalysisUpdate,
     TimelineAnalysisUpdateIntern,
+)
+from modules.timeline_analysis.timeline_analysis_enum import (
+    TAAnnotationAggregationType,
+    TimelineAnalysisType,
 )
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.filtering import Filter

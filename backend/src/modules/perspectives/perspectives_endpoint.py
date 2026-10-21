@@ -6,7 +6,7 @@ from weaviate import WeaviateClient
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, get_weaviate_client
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from modules.perspectives.aspect_crud import crud_aspect
@@ -27,12 +27,12 @@ from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
+from modules.perspectives.perspectives_enum import PerspectivesJobType
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
     PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
-    PerspectivesJobType,
 )
 from modules.perspectives.perspectives_vis_dto import (
     PerspectivesClusterSimilarities,
@@ -41,8 +41,9 @@ from modules.perspectives.perspectives_vis_dto import (
 )
 from modules.search.sdoc_search.sdoc_search import find_sdoc_ids
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from systems.job_system.job_dto import RUNNING_JOB_STATUS, JobStatus
+from systems.job_system.job_dto import RUNNING_JOB_STATUS
 from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
 from systems.websocket_system.websocket_dependency import WebsocketEmitter

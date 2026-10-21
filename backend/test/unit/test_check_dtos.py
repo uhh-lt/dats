@@ -181,10 +181,6 @@ def test_check_dtos_accepts_valid_dto_module() -> None:
             "    created: datetime =",
             id="typing-attribute",
         ),
-        # enum without value type
-        pytest.param(
-            "str-enum", "class CodeType(str, Enum):", "class CodeType(Enum):", id="enum"
-        ),
         # Update DTO without UpdateDTOBase (CodeUpdateBulk inherits the violation)
         pytest.param(
             "update-base",
@@ -288,7 +284,10 @@ def test_check_dtos_main_checks_only_dto_files(tmp_path: Path) -> None:
 
     bad = tmp_path / "code_dto.py"
     bad.write_text(
-        textwrap.dedent(VALID_DTO).replace("(str, Enum)", "(Enum)", 1),
+        textwrap.dedent(VALID_DTO).replace(
+            "class CodeUpdate(BaseModel, UpdateDTOBase):",
+            "class CodeUpdate(BaseModel):",
+        ),
     )
     assert check_dtos.main([str(bad)]) == 1
 
@@ -302,7 +301,6 @@ def test_check_dtos_help_lists_every_rule(capsys: pytest.CaptureFixture[str]) ->
         "field-description",
         "no-class-config",
         "modern-typing",
-        "str-enum",
         "update-base",
         "read-from-attributes",
         "discriminator-tag",

@@ -1,4 +1,4 @@
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from modules.crawler.crawler_job import CrawlerJobInput, CrawlerJobOutput
 from modules.doc_processing.audio.audio_metadata_extraction_job import (
     AudioMetadataExtractionJobInput,

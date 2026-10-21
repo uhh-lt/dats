@@ -1,6 +1,6 @@
 from loguru import logger
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput

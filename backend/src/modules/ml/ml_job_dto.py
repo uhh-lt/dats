@@ -1,20 +1,12 @@
-from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from modules.ml.tag_recommendation.tag_recommendation_dto import (
+from modules.ml.ml_enum import MLJobType
+from modules.ml.tag_recommendation.tag_recommendation_enum import (
     TagRecommendationMethod,
 )
 from systems.job_system.job_dto import JobInputBase
-
-
-class MLJobType(StrEnum):
-    QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
-    TAG_RECOMMENDATION = "TAG_RECOMMENDATION"
-    COREFERENCE_RESOLUTION = "COREFERENCE_RESOLUTION"
-    DOCUMENT_EMBEDDING = "DOCUMENT_EMBEDDING"
-    SENTENCE_EMBEDDING = "SENTENCE_EMBEDDING"
 
 
 class QuotationAttributionParams(BaseModel):

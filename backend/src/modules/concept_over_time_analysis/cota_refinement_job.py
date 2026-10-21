@@ -1,6 +1,6 @@
 from fastapi.encoders import jsonable_encoder
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
@@ -15,8 +15,9 @@ from modules.concept_over_time_analysis.refinement_steps.init_search_space impor
     init_search_space,
 )
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import Job, JobTiming
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_system_enum import JobTiming
 
 sqlr = SQLRepo()
 

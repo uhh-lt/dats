@@ -35,7 +35,6 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import SourceDocumentTagLinkTable
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
-    ClassifierAveraging,
     ClassifierClassMetrics,
     ClassifierClassStatistics,
     ClassifierCreate,
@@ -50,13 +49,16 @@ from modules.classifier.classifier_dto import (
     ClassifierJobInput,
     ClassifierJobOutput,
     ClassifierLoss,
-    ClassifierModel,
     ClassifierRead,
-    ClassifierSignalStrength,
-    ClassifierTask,
     ClassifierTrainingOutput,
     ClassifierTrainingParams,
     ProblematicSdoc,
+)
+from modules.classifier.classifier_enum import (
+    ClassifierAveraging,
+    ClassifierModel,
+    ClassifierSignalStrength,
+    ClassifierTask,
 )
 from modules.classifier.classifier_exceptions import (
     BaseModelDoesNotExistError,

@@ -30,7 +30,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from common.meta_type import MetaType
+from common.meta_type_enum import MetaType
 
 Base = declarative_base()
 

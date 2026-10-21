@@ -13,8 +13,8 @@ from pydantic import (
     model_validator,
 )
 
-from common.doc_type import DocType
-from common.meta_type import MetaType
+from common.doc_type_enum import DocType
+from common.meta_type_enum import MetaType
 
 
 def _normalize_project_metadata(project_metadata: Any) -> Any:

@@ -14,16 +14,15 @@ from core.user.user_crud import (
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_IDS,
 )
+from modules.llm_assistant.llm_assistant_enum import ApproachType, TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
     AnnotationParams,
     AnnotationResult,
     ApproachRecommendation,
-    ApproachType,
     FewShotParams,
     LLMAssistantJobOutput,
     SpecificTaskParameters,
-    TaskType,
 )
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,

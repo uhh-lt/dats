@@ -6,15 +6,14 @@ from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
+from modules.llm_assistant.llm_assistant_enum import ApproachType, TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
-    ApproachType,
     LLMAssistantJobOutput,
     MetadataExtractionLLMAssistantJobResult,
     MetadataExtractionParams,
     MetadataExtractionResult,
     SpecificTaskParameters,
-    TaskType,
 )
 from modules.llm_assistant.strategies.metadata_strategy import MetadataStrategy
 from modules.llm_assistant.tasks.llm_assistant_document_processor import (

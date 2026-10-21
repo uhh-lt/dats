@@ -1,10 +1,7 @@
 from sqlalchemy.orm import Session
 
-from modules.llm_assistant.llm_assistant_job_dto import (
-    LLMAssistantPromptTemplates,
-    StrategyType,
-    TaskType,
-)
+from modules.llm_assistant.llm_assistant_enum import StrategyType, TaskType
+from modules.llm_assistant.llm_assistant_job_dto import LLMAssistantPromptTemplates
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
 )

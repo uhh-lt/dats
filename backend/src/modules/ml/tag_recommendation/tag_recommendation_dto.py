@@ -1,5 +1,3 @@
-from enum import StrEnum
-
 from pydantic import BaseModel, ConfigDict, Field
 
 from repos.db.dto_base import UpdateDTOBase
@@ -40,9 +38,3 @@ class TagRecommendationResult(BaseModel):
         description="List of suggested tag IDs for the source document"
     )
     scores: list[float] = Field(description="List of the scores of the suggested tags")
-
-
-class TagRecommendationMethod(StrEnum):
-    SIMPLE = "SIMPLE"
-    KNN = "KNN"
-    EXCLUSIVE = "EXCLUSIVE"

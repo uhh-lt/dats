@@ -1,11 +1,7 @@
 from sqlalchemy.orm import Session
 
-from core.doc.folder_dto import (
-    FolderCreate,
-    FolderType,
-    FolderUpdate,
-    FolderUpdateBulk,
-)
+from core.doc.folder_dto import FolderCreate, FolderUpdate, FolderUpdateBulk
+from core.doc.folder_enum import FolderType
 from core.doc.folder_exceptions import (
     FolderMoveAcrossProjectsError,
     FolderMoveCycleError,

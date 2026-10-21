@@ -4,7 +4,7 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM

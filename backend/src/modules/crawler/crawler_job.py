@@ -5,14 +5,15 @@ from pathlib import Path
 from loguru import logger
 from pydantic import Field
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.project.project_crud import crud_project
 from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import EndpointGeneration, Job, JobOutputBase, JobTiming
+from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
 fsr: FilesystemRepo = FilesystemRepo()

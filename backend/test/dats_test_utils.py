@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import bootstrap
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM

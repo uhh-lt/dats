@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.dto_base import UpdateDTOBase
 

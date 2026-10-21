@@ -7,7 +7,8 @@ from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType, MemoInDB, MemoRead
+from core.memo.memo_dto import MemoInDB, MemoRead
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM

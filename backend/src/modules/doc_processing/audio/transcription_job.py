@@ -4,8 +4,8 @@ from pathlib import Path
 import ffmpeg
 from loguru import logger
 
-from common.doc_type import DocType
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data

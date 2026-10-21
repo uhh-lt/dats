@@ -1,9 +1,9 @@
 from datetime import datetime
-from enum import Enum
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.memo.memo_enum import AttachedObjectType
 from repos.db.dto_base import UpdateDTOBase
 
 """
@@ -14,17 +14,6 @@ from repos.db.dto_base import UpdateDTOBase
  Further, because we're not storing the content in the SQL DB but only in the ES instance we handle this differently
   than in other DTOs.
 """
-
-
-class AttachedObjectType(str, Enum):
-    source_document = "source_document"
-    code = "code"
-    sentence_annotation = "sentence_annotation"
-    span_annotation = "span_annotation"
-    span_group = "span_group"
-    bbox_annotation = "bbox_annotation"
-    project = "project"
-    tag = "tag"
 
 
 # Properties shared across all DTOs

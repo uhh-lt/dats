@@ -113,7 +113,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 ### Imports
 
 - **Related ORMs go under `TYPE_CHECKING`**: this avoids circular imports. Never import another ORM at runtime.
-- **Allowed runtime imports**: `sqlalchemy`, `ORMBase`, enums, constants and value types from `common/` or from the module's own `*_dto.py` (e.g. `FolderType`, `ClassifierModel`, `PROCESSING_JOBS`). Never import CRUDs, services, endpoints or repos (other than `orm_base`). Core ORMs never import from `modules/` ([check_core.py](backend/lint/check_core.py)), so constants they need live in `common/`.
+- **Allowed runtime imports**: `sqlalchemy`, `ORMBase`, enums from `*_enum.py` files (e.g. `FolderType` from `folder_enum.py`, `ClassifierModel` from `classifier_enum.py`), constants and value types from `common/` or from the module's own `*_dto.py` (e.g. `PROCESSING_JOBS`, `WordLevelTranscription`). Never import CRUDs, services, endpoints or repos (other than `orm_base`). Core ORMs never import from `modules/` ([check_core.py](backend/lint/check_core.py)), so constants they need live in `common/`.
 
 ### Table Arguments
 

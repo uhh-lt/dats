@@ -3,7 +3,6 @@ import random
 from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass
-from enum import Enum
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -13,13 +12,16 @@ from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
+from modules.llm_assistant.llm_assistant_enum import (
+    DataTag,
+    GroundingMethod,
+    StrategyType,
+)
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
     FuzzyGroundingStrategyParams,
     LLMAssistantPromptTemplates,
-    StrategyType,
 )
-from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 from repos.llm_repo import LLMMessage
@@ -42,12 +44,6 @@ class LLMExtractionResult(BaseModel):
     passages: list[LLMExtractedPassage] = Field(
         default_factory=list, description="The extracted relevant text passages"
     )
-
-
-class GroundingMethod(str, Enum):
-    ANCHORED_EXACT = "anchored exact"
-    QUOTE_EXACT = "quote exact"
-    FUZZY = "fuzzy"
 
 
 @dataclass(frozen=True)

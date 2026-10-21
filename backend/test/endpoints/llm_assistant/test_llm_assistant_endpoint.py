@@ -4,18 +4,20 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
+from modules.llm_assistant.llm_assistant_enum import (
+    ApproachType,
+    StrategyType,
+    TaskType,
+)
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
     ApproachRecommendation,
-    ApproachType,
     LLMAssistantJobParameters,
     LLMAssistantPromptTemplates,
     MetadataExtractionParams,
     SentenceAnnotationParams,
     StrategyInfo,
-    StrategyType,
     TaggingParams,
-    TaskType,
 )
 
 from .conftest import LLMAssistantProject

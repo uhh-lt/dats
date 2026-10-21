@@ -2,14 +2,11 @@ from typing import Callable, Literal, TypeVar
 
 from fastapi import APIRouter
 
-from common.job_type import JobType
-from systems.job_system.job_dto import (
+from common.job_type_enum import JobType
+from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
+from systems.job_system.job_system_enum import (
     EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobOutputBase,
     JobPriority,
-    JobRead,
     JobTiming,
 )
 

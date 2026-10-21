@@ -7,14 +7,16 @@ from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,
 )
+from modules.llm_assistant.llm_assistant_enum import (
+    ApproachType,
+    StrategyType,
+    TaskType,
+)
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
-    ApproachType,
     LLMAssistantJobParameters,
     LLMAssistantPromptTemplates,
     StrategyInfo,
-    StrategyType,
-    TaskType,
 )
 from modules.llm_assistant.strategies.strategy_factory import (
     STRATEGIES_FOR_TASK_TYPE,

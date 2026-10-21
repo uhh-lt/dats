@@ -1,7 +1,7 @@
 from fastapi import status
 
 from common.exception_handler import exception_handler
-from modules.eximport.export_job_dto import ExportJobType
+from modules.eximport.export_enum import ExportJobType
 
 
 @exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)

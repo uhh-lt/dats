@@ -13,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from modules.classifier.classifier_dto import ClassifierModel
+from modules.classifier.classifier_enum import ClassifierModel
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:

@@ -11,7 +11,6 @@ from pydantic import Field
 
 from config import conf
 from modules.classifier.classifier_dto import (
-    ClassifierAveraging,
     ClassifierEvaluationOutput,
     ClassifierEvaluationParams,
     ClassifierEvaluationRead,
@@ -19,14 +18,18 @@ from modules.classifier.classifier_dto import (
     ClassifierInferenceParams,
     ClassifierJobInput,
     ClassifierJobOutput,
-    ClassifierModel,
     ClassifierRead,
-    ClassifierTask,
     ClassifierTrainingOutput,
     ClassifierTrainingParams,
     ClassifierTrainingSettings,
 )
-from systems.job_system.job_dto import JobRead, JobStatus
+from modules.classifier.classifier_enum import (
+    ClassifierAveraging,
+    ClassifierModel,
+    ClassifierTask,
+)
+from systems.job_system.job_dto import JobRead
+from systems.job_system.job_system_enum import JobStatus
 
 # Smallest configured base models keep training fast on the GPU runner.
 TRANSFORMER_BASE = conf.classifier.transformer_models[0].value

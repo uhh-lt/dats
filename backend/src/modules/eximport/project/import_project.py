@@ -1,6 +1,5 @@
 import re
 import zipfile
-from enum import Enum
 from os import listdir
 from os.path import isfile
 from pathlib import Path
@@ -15,6 +14,7 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
 from modules.eximport.folder.import_folders import import_folders_to_proj
+from modules.eximport.import_enum import ExportEntity
 from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
@@ -34,83 +34,6 @@ from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.filesystem_repo import FilesystemRepo
 
-
-class ExportEntity(Enum):
-    BBOX_ANNOTATION = "bbox_annotation"
-    CODE = "code"
-    COTA = "cota"
-    FOLDER = "folder"
-    MEMO = "memo"
-    PROJECT_METADATA = "project_metadata"
-    SDOC = "sdoc"
-    SENT_ANNOTATION = "sent_annotation"
-    SPAN_ANNOTATION = "span_annotation"
-    TAG = "tag"
-    TIMELINE_ANALYSIS = "timeline_analysis"
-    USER = "user"
-    WHITEBOARD = "whiteboard"
-
-    def get_regex(self) -> str:
-        match self:
-            case ExportEntity.BBOX_ANNOTATION:
-                return r"project_\d+_all_bbox_annotations.csv"
-            case ExportEntity.CODE:
-                return r"project_\d+_all_codes.csv"
-            case ExportEntity.COTA:
-                return r"project_\d+_all_cota.csv"
-            case ExportEntity.FOLDER:
-                return r"project_\d+_all_folders.csv"
-            case ExportEntity.MEMO:
-                return r"project_\d+_all_memos.csv"
-            case ExportEntity.PROJECT_METADATA:
-                return r"project_\d+_all_project_metadatas.csv"
-            case ExportEntity.SDOC:
-                return r"project_\d+_all_docs.zip"
-            case ExportEntity.SENT_ANNOTATION:
-                return r"project_\d+_all_sentence_annotations.csv"
-            case ExportEntity.SPAN_ANNOTATION:
-                return r"project_\d+_all_span_annotations.csv"
-            case ExportEntity.TAG:
-                return r"project_\d+_all_tags.csv"
-            case ExportEntity.TIMELINE_ANALYSIS:
-                return r"project_\d+_all_timeline_analyses.csv"
-            case ExportEntity.USER:
-                return r"project_\d+_all_users.csv"
-            case ExportEntity.WHITEBOARD:
-                return r"project_\d+_all_whiteboards.csv"
-
-    def import_entity(self, db: Session, data, project_id: int) -> None:
-        match self:
-            case ExportEntity.BBOX_ANNOTATION:
-                import_bbox_annotations_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.CODE:
-                import_codes_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.COTA:
-                import_cota_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.FOLDER:
-                import_folders_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.MEMO:
-                import_memos_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.PROJECT_METADATA:
-                import_project_metadata_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.SDOC:
-                import_sdocs_to_proj(db=db, path_to_dir=data, project_id=project_id)
-            case ExportEntity.SENT_ANNOTATION:
-                import_sentence_annotations_to_proj(
-                    db=db, df=data, project_id=project_id
-                )
-            case ExportEntity.SPAN_ANNOTATION:
-                import_span_annotations_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.TAG:
-                import_tags_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.TIMELINE_ANALYSIS:
-                import_timeline_analysis_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.USER:
-                import_users_to_proj(db=db, df=data, project_id=project_id)
-            case ExportEntity.WHITEBOARD:
-                import_whiteboards_to_proj(db=db, df=data, project_id=project_id)
-
-
 IMPORT_ORDER = [
     ExportEntity.PROJECT_METADATA,
     ExportEntity.USER,
@@ -126,6 +49,36 @@ IMPORT_ORDER = [
     ExportEntity.TIMELINE_ANALYSIS,
     ExportEntity.WHITEBOARD,
 ]
+
+
+def _import_entity(entity: ExportEntity, db: Session, data, project_id: int) -> None:
+    match entity:
+        case ExportEntity.BBOX_ANNOTATION:
+            import_bbox_annotations_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.CODE:
+            import_codes_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.COTA:
+            import_cota_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.FOLDER:
+            import_folders_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.MEMO:
+            import_memos_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.PROJECT_METADATA:
+            import_project_metadata_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.SDOC:
+            import_sdocs_to_proj(db=db, path_to_dir=data, project_id=project_id)
+        case ExportEntity.SENT_ANNOTATION:
+            import_sentence_annotations_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.SPAN_ANNOTATION:
+            import_span_annotations_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.TAG:
+            import_tags_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.TIMELINE_ANALYSIS:
+            import_timeline_analysis_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.USER:
+            import_users_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.WHITEBOARD:
+            import_whiteboards_to_proj(db=db, df=data, project_id=project_id)
 
 
 def __organize_import_files(import_dir: Path) -> dict[ExportEntity, Path]:
@@ -189,4 +142,4 @@ def import_project(
             continue
 
         data = organized_data[entity]
-        entity.import_entity(db=db, data=data, project_id=project_id)
+        _import_entity(entity=entity, db=db, data=data, project_id=project_id)

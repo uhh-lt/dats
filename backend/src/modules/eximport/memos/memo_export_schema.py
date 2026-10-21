@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_enum import AttachedObjectType
 
 
 class MemoExportSchema(BaseModel):

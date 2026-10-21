@@ -14,7 +14,8 @@ import pandas as pd
 from fastapi import HTTPException, UploadFile
 from loguru import logger
 
-from common.doc_type import DocType, get_doc_type
+from common.doc_type_enum import DocType
+from common.doc_type_utils import get_doc_type
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.doc.source_document_dto import (

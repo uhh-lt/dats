@@ -1,8 +1,8 @@
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.doc_type import DocType
-from common.meta_type import MetaType
+from common.doc_type_enum import DocType
+from common.meta_type_enum import MetaType
 from config import conf
 from core.metadata.project_metadata_dto import (
     ProjectMetadataCreate,

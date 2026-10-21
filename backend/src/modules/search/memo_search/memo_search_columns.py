@@ -5,7 +5,7 @@ from common.crud_enum import Crud
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM

@@ -3,8 +3,9 @@ from pathlib import Path
 import magic
 from loguru import logger
 
-from common.doc_type import DocType, get_doc_type
-from common.job_type import JobType
+from common.doc_type_enum import DocType
+from common.doc_type_utils import get_doc_type
+from common.job_type_enum import JobType
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase

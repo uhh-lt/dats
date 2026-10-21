@@ -84,7 +84,7 @@ def rules(source: str, filename: str) -> set[str]:
 def test_check_exceptions_allows_exception_classes_only_in_exception_modules(
     source: str, filename: str, expected: set[str]
 ) -> None:
-    """Exception classes are allowed in *_exceptions.py and common/exception_handler.py only."""
+    """Exception classes are allowed in *_exceptions.py files only."""
     assert rules(source, filename) == expected
 
 

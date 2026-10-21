@@ -15,7 +15,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from common.doc_processing_steps import PROCESSING_JOBS
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
 

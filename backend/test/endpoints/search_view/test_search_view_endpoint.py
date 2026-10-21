@@ -19,13 +19,12 @@ from modules.search_view.search_view_dto import (
     BBoxSearchViewRead,
     MemoSearchViewCreate,
     MemoSearchViewRead,
-    SearchEntityType,
-    SearchViewLayout,
     SentenceSearchViewCreate,
     SentenceSearchViewRead,
     SpanSearchViewCreate,
     SpanSearchViewRead,
 )
+from modules.search_view.search_view_enum import SearchEntityType, SearchViewLayout
 from systems.search_system.grouping import DateGranularity
 
 from .conftest import SearchViewProjectState

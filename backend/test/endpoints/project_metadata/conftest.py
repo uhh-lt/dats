@@ -2,8 +2,8 @@ from typing import TypedDict
 
 import pytest
 
-from common.doc_type import DocType
-from common.meta_type import MetaType
+from common.doc_type_enum import DocType
+from common.meta_type_enum import MetaType
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM

@@ -1,7 +1,7 @@
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 
 

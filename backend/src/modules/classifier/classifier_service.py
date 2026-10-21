@@ -8,10 +8,9 @@ from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierJobInput,
     ClassifierJobOutput,
-    ClassifierModel,
     ClassifierRead,
-    ClassifierTask,
 )
+from modules.classifier.classifier_enum import ClassifierModel, ClassifierTask
 from modules.classifier.classifier_exceptions import UnsupportedClassifierJobError
 from modules.classifier.models.doc_class_model_service import (
     DocClassificationModelService,

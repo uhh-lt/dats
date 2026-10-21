@@ -2,7 +2,7 @@ from typing import TypedDict
 
 import pytest
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM

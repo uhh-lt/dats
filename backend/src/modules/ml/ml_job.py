@@ -2,13 +2,13 @@ from datetime import UTC, datetime
 
 from sqlalchemy import and_, or_
 
-from common.job_type import JobType
+from common.job_type_enum import JobType
+from modules.ml.ml_enum import MLJobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
     DocumentEmbeddingParams,
     MLJobInput,
-    MLJobType,
     QuotationAttributionParams,
     SentenceEmbeddingParams,
 )
@@ -17,8 +17,9 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import EndpointGeneration, Job, JobTiming
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
 

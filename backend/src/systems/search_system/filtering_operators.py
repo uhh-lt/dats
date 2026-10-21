@@ -4,7 +4,7 @@ from typing import cast
 from sqlalchemy import and_, not_
 from sqlalchemy.orm import QueryableAttribute
 
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_enum import AttachedObjectType
 from systems.search_system.search_system_exceptions import (
     InvalidFilterValueError,
     InvalidFilterValueFormatError,

@@ -17,7 +17,8 @@ from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
+from core.memo.memo_dto import MemoCreateIntern
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate

@@ -11,21 +11,16 @@ DTO modules (`*_dto.py`) hold the Pydantic models that cross a boundary: API req
 ## File Structure
 
 ```python
-# 1. Imports: stdlib, pydantic, then local DTO modules / repos.db.dto_base / systems.job_system.job_dto
+# 1. Imports: stdlib, pydantic, then the module's *_enum, local DTO modules / repos.db.dto_base / systems.job_system.job_dto
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.foo.foo_enum import FooType
 from repos.db.dto_base import UpdateDTOBase
 
 
-# 2. Enums used by the DTOs below (str-valued)
-class FooType(str, Enum):
-    BAR = "bar"
-
-
-# 3. CRUD-entity DTOs, in this order (each preceded by its "# Properties ..." comment)
+# 2. CRUD-entity DTOs, in this order (each preceded by its "# Properties ..." comment)
 # Properties shared across all DTOs
 class FooBaseDTO(BaseModel):
     name: str = Field(description="Name of the Foo")
@@ -50,7 +45,7 @@ class FooRead(FooBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-# 4. Other request/response DTOs (links, stats, results, query parameters)
+# 3. Other request/response DTOs (links, stats, results, query parameters)
 ```
 
 ## Rules
@@ -61,7 +56,7 @@ class FooRead(FooBaseDTO):
 - **Field with description**: declare every field as `name: T = Field(description="...")`; put `default=`/`default_factory=` and constraints (`ge`, `min_length`, `max_length`) inside `Field`. Only `ClassVar`s, private attributes and `model_config` are exempt.
 - **Modern typing**: `T | None`, `A | B`, `list[T]`, `dict[K, V]`; not `Optional`/`Union`/`List`/`Dict`.
 - **Pydantic v2 API**: `model_config = ConfigDict(...)`, `@model_validator(mode="after")`, `@field_validator(..., mode="before")` + `@classmethod`. Never `class Config` or `orm_mode`.
-- **Enums**: subclass `(str, Enum)` (or `StrEnum`) with values matching the wire format; define them in the DTO module that owns the concept. `IntEnum` only where the wire values are ints (`source_document_job_status_dto.py`).
+- **No enums**: enum classes live in the module's `<module>_enum.py` (see `backend.instructions.md`, checked by `check_enums.py`), never in a DTO module. DTOs import them from there.
 - **No exceptions**: exception classes live in `<module>_exceptions.py`, never in a DTO module.
 - **Hide secrets**: fields that must not reach the client use `Field(..., exclude=True)` (see `UserRead.password`) or live in a separate public DTO (`PublicUserRead`).
 
@@ -98,12 +93,12 @@ class FooRead(FooBaseDTO):
 
 ### Lint
 
-- `backend/lint/check_dtos.py` enforces these rules (forbidden imports, `Field` descriptions, no `class Config`, modern typing, str enums, `UpdateDTOBase` on Update DTOs, `from_attributes` on `<Entity>Read` DTOs of an existing `<Entity>ORM`, required discriminator tags, no exceptions). It runs in `just lint backend` and in the `Lint: Backend DTO conventions` pre-commit hook. `check_dtos.py --help` lists the rules.
+- `backend/lint/check_dtos.py` enforces these rules (forbidden imports, `Field` descriptions, no `class Config`, modern typing, `UpdateDTOBase` on Update DTOs, `from_attributes` on `<Entity>Read` DTOs of an existing `<Entity>ORM`, required discriminator tags, no exceptions). It runs in `just lint backend` and in the `Lint: Backend DTO conventions` pre-commit hook. `check_dtos.py --help` lists the rules.
 
 ## Examples
 
 See:
 
 - [code_dto.py](backend/src/core/code/code_dto.py): a complete CRUD-entity DTO set (BaseDTO/Create/Update/Read).
-- [folder_dto.py](backend/src/core/doc/folder_dto.py): enum, field constraints, and `UpdateBulk`.
+- [folder_dto.py](backend/src/core/doc/folder_dto.py): enum field (from `folder_enum.py`), field constraints, and `UpdateBulk`.
 - [export_job_dto.py](backend/src/modules/eximport/export_job_dto.py): job input with discriminated `Params` and a job output.

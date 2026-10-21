@@ -16,6 +16,8 @@ from modules.ml.tag_recommendation.tag_recommendation_crud import (
 )
 from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkCreate,
+)
+from modules.ml.tag_recommendation.tag_recommendation_enum import (
     TagRecommendationMethod,
 )
 from modules.simsearch.simsearch_dto import SimSearchDocumentHit

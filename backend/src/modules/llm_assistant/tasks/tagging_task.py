@@ -2,15 +2,14 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.doc.source_document_crud import crud_sdoc
+from modules.llm_assistant.llm_assistant_enum import ApproachType, TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
-    ApproachType,
     LLMAssistantJobOutput,
     SpecificTaskParameters,
     TaggingLLMAssistantJobResult,
     TaggingParams,
     TaggingResult,
-    TaskType,
 )
 from modules.llm_assistant.strategies.tagging_strategy import (
     LLMTaggingResult,

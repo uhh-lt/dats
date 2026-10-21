@@ -9,13 +9,12 @@ from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
+from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
     LLMAssistantPromptTemplates,
     NERInlineTagStrategyParams,
-    StrategyType,
 )
-from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 

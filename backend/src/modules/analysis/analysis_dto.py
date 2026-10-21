@@ -1,9 +1,4 @@
-from datetime import date, datetime
-from enum import Enum
-
 from pydantic import BaseModel, Field
-from sqlalchemy import func
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from core.code.code_dto import CodeRead
 from core.doc.source_document_dto import SourceDocumentRead
@@ -42,22 +37,3 @@ class SampledSdocsResults(BaseModel):
     sample_relative: list[int] = Field(
         description="The relative sample of SourceDocument IDs."
     )
-
-
-class DateGroupBy(str, Enum):
-    YEAR = "YEAR"
-    MONTH = "MONTH"
-    DAY = "DAY"
-
-    def apply(self, column: InstrumentedAttribute[datetime | date]) -> list:
-        match self:
-            case DateGroupBy.YEAR:
-                return [func.extract("year", column)]
-            case DateGroupBy.MONTH:
-                return [func.extract("year", column), func.extract("month", column)]
-            case DateGroupBy.DAY:
-                return [
-                    func.extract("year", column),
-                    func.extract("month", column),
-                    func.extract("day", column),
-                ]

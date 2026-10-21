@@ -33,7 +33,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 - `backend/lint/`: custom architecture lint scripts (see below)
 - `backend/test/`: tests
 - `backend/src/`: application code, every top-level folder is an import root (`from core.code.code_crud import crud_code`)
-  - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud`, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
+  - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud` in `*_enum.py` files, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
   - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...)
   - `modules/`: features built on `core` and `systems` (analysis, search, export/import, doc processing, ...)
   - `systems/`: reusable infrastructure (`job_system`, `search_system`, `websocket_system`, `mcp_system`)
@@ -51,6 +51,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 | ORM conventions (see backend-orm)                                                  | `lint/check_orm.py`        |
 | Service conventions (see backend-service)                                          | `lint/check_services.py`   |
 | Exception classes only in `*_exceptions.py`                                        | `lint/check_exceptions.py` |
+| Enum classes only in `*_enum.py`, with a str or int value type                     | `lint/check_enums.py`      |
 | `core` never imports from `modules`                                                | `lint/check_core.py`       |
 | `*_endpoint.py` imports `*_dto` modules from its own folder only                   | `lint/check_endpoints.py`  |
 | `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only  | `lint/check_repos.py`      |
@@ -70,6 +71,7 @@ The suffix states the role of a file. Several suffixes are auto-imported by `imp
 - `*_endpoint.py`: one FastAPI router (auto-mounted by `bootstrap.create_app`)
 - `*_job.py`: background job handlers registered with `@register_job`
 - `*_exceptions.py`: module-specific exceptions
+- `*_enum.py`: the module's enums
 - `*_repo.py`: external service connection (only in `repos/`)
 - `*_utils.py`: helpers
 
@@ -114,7 +116,10 @@ class FolderMoveCycleError(Exception):
 
 ## Enums and Constants
 
-- Enums that cross the API subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value. Shared enums live in `common/` (`DocType`, `JobType`, `MetaType`, `Crud`); module enums live in the module's `*_dto.py`.
+- Every enum class lives in an enum module, one per module, named like the module's exceptions file: `<module>_enum.py` in `core/` and `modules/` (`core/doc/folder_enum.py`, `modules/whiteboard/whiteboard_enum.py`, `modules/eximport/import_enum.py`), `<component>_enum.py` next to its repo or system (`repos/llm_enum.py`, `systems/job_system/job_system_enum.py`), and `common/<name>_enum.py` for shared ones (`doc_type_enum.py`, `job_type_enum.py`, `meta_type_enum.py`, `crud_enum.py`). DTOs, ORMs, CRUDs and services import them from there, so an ORM never imports a DTO module for an enum.
+- Exempt, because they are no plain value sets: `DATSEvent` (`common/dats_event.py`), the enums of `systems/search_system/` (operators, sorting, grouping) and the search columns (`*_columns.py`).
+- Enums subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value; `IntEnum` only where the values are ints (`modules/ml/ml_enum.py`). Keep enum methods small and free of business logic (`DateGroupBy`, `MetaType` map members to columns or expressions).
+- `backend/lint/check_enums.py` enforces this (`enum-location`, `value-type`).
 - Constants are module-level `UPPER_SNAKE_CASE` in the module that owns them (`SYSTEM_USER_ID`, `ASSISTANT_ZEROSHOT_ID`, ... in `core/user/user_crud.py`).
 - Tunables (batch sizes, limits, timeouts) come from the config, not literals: `BATCH_SIZE = conf.postgres.batch_size`.
 
@@ -135,9 +140,10 @@ Use Loguru: `from loguru import logger`, never the stdlib `logging` module. Mess
 Jobs are functions in `*_job.py` files, registered with the decorator from `systems/job_system`. The job opens its own transaction and delegates to a service:
 
 ```python
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import EndpointGeneration, Job, JobTiming
+from systems.job_system.job_dto import Job
+from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -158,6 +164,6 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
                 QuoteService().perform_quotation_detection(db=db, project_id=payload.project_id, ...)
 ```
 
-- Add the job type to `JobType` (`common/job_type.py`) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
+- Add the job type to `JobType` (`common/job_type_enum.py`) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
 - `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(JobType.X, <X>JobInput(...))`.
 - See [ml_job.py](backend/src/modules/ml/ml_job.py) and `systems/job_system/README.md`.

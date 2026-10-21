@@ -4,7 +4,7 @@ import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from core.doc.folder_dto import FolderType
+from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.project.project_crud import crud_project
 from modules.eximport.export_exceptions import NoDataToExportError

@@ -1,26 +1,9 @@
-from enum import Enum
 from typing import Literal
 
 from pydantic import Field
 
+from modules.eximport.import_enum import ImportJobType
 from systems.job_system.job_dto import JobInputBase, JobRead
-
-
-class ImportJobType(str, Enum):
-    PROJECT = "PROJECT"
-    CODES = "CODES"
-    TAGS = "TAGS"
-    FOLDERS = "FOLDERS"
-    BBOX_ANNOTATIONS = "BBOX_ANNOTATIONS"
-    SPAN_ANNOTATIONS = "SPAN_ANNOTATIONS"
-    SENTENCE_ANNOTATIONS = "SENTENCE_ANNOTATIONS"
-    USERS = "USERS"
-    PROJECT_METADATA = "PROJECT_METADATA"
-    WHITEBOARDS = "WHITEBOARDS"
-    TIMELINE_ANALYSES = "TIMELINE_ANALYSES"
-    COTA = "COTA"
-    MEMOS = "MEMOS"
-    DOCUMENTS = "DOCUMENTS"
 
 
 class ImportJobInput(JobInputBase):

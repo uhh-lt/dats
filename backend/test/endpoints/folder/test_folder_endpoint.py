@@ -1,13 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from common.doc_type import DocType
-from core.doc.folder_dto import (
-    FolderCreate,
-    FolderRead,
-    FolderType,
-    FolderUpdate,
-)
+from common.doc_type_enum import DocType
+from core.doc.folder_dto import FolderCreate, FolderRead, FolderUpdate
+from core.doc.folder_enum import FolderType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 

@@ -19,7 +19,8 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 
 from common.dats_event import DATSEvent, DATSEventBase
-from systems.job_system.job_dto import Job, JobOutputBase, JobStatus
+from systems.job_system.job_dto import Job, JobOutputBase
+from systems.job_system.job_system_enum import JobStatus
 
 if TYPE_CHECKING:
     import redis

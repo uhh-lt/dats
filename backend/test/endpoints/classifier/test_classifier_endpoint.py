@@ -4,17 +4,19 @@ from pydantic import TypeAdapter, ValidationError
 
 from config import conf
 from modules.classifier.classifier_dto import (
-    ClassifierAveraging,
     ClassifierDatasetStatistics,
     ClassifierDatasetStatisticsRequest,
     ClassifierInfo,
     ClassifierJobInput,
-    ClassifierModel,
     ClassifierRead,
-    ClassifierSignalStrength,
-    ClassifierTask,
     ClassifierTrainingParams,
     ClassifierUpdate,
+)
+from modules.classifier.classifier_enum import (
+    ClassifierAveraging,
+    ClassifierModel,
+    ClassifierSignalStrength,
+    ClassifierTask,
 )
 
 CLASSIFIER_LIST_ADAPTER = TypeAdapter(list[ClassifierRead])

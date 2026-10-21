@@ -5,7 +5,7 @@ from sqlalchemy import ColumnElement, and_
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier

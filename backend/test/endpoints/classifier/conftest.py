@@ -5,7 +5,7 @@ from typing import TypedDict, cast
 import pytest
 from datasets import load_dataset
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -14,7 +14,8 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
@@ -25,7 +26,8 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from modules.classifier.classifier_crud import crud_classifier
-from modules.classifier.classifier_dto import ClassifierCreate, ClassifierModel
+from modules.classifier.classifier_dto import ClassifierCreate
+from modules.classifier.classifier_enum import ClassifierModel
 from repos.filesystem_repo import FilesystemRepo
 
 # ---------------------------------------------------------------------------

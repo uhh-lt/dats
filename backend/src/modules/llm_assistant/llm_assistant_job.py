@@ -1,4 +1,4 @@
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from modules.llm_assistant.llm_assistant_endpoint import router
 from modules.llm_assistant.llm_assistant_job_dto import (
     FewShotParams,
@@ -9,8 +9,9 @@ from modules.llm_assistant.strategies.strategy_factory import build_strategy
 from modules.llm_assistant.tasks.task_factory import build_task
 from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
-from systems.job_system.job_dto import EndpointGeneration, Job, JobTiming
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
 

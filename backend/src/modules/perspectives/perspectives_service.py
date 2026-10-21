@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from umap import UMAP
 from weaviate import WeaviateClient
 
-from common.doc_type import DocType
+from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.perspectives.aspect_crud import crud_aspect
@@ -41,6 +41,7 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.perspectives_enum import PerspectivesJobType
 from modules.perspectives.perspectives_job_dto import (
     AddMissingDocsToAspectParams,
     ChangeClusterParams,
@@ -50,7 +51,6 @@ from modules.perspectives.perspectives_job_dto import (
     MergeClustersParams,
     PerspectivesJobInput,
     PerspectivesJobParams,
-    PerspectivesJobType,
     RecomputeClusterTitleAndDescriptionParams,
     RefineModelParams,
     RemoveClusterParams,

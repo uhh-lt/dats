@@ -1,17 +1,10 @@
 from datetime import datetime
-from enum import Enum
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from core.doc.folder_enum import FolderType
 from repos.db.dto_base import UpdateDTOBase
-
-
-class FolderType(str, Enum):
-    NORMAL = "normal"
-    # PROJECT = "project"
-    SDOC_FOLDER = "sdoc_folder"
-
 
 FOLDER_NAME_MAX_LENGTH = 231
 

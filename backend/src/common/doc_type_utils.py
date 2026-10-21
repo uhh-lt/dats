@@ -1,16 +1,9 @@
-from enum import Enum
 from pathlib import Path
 from typing import Final
 
 import magic
 
-
-class DocType(str, Enum):
-    text = "text"
-    image = "image"
-    video = "video"
-    audio = "audio"
-
+from common.doc_type_enum import DocType
 
 __doc_type_to_mime_type_map: Final[dict[DocType, list[str]]] = {
     DocType.text: [

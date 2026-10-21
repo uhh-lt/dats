@@ -3,15 +3,11 @@ from typing import Type
 from fastapi import APIRouter, Depends
 
 from common.dependencies import get_current_user
-from common.job_type import JobType
+from common.job_type_enum import JobType
 from core.auth.authz_user import AuthzUser
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    JobInputBase,
-    JobOutputBase,
-    JobRead,
-)
+from systems.job_system.job_dto import JobInputBase, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import EndpointGeneration
 
 router = APIRouter(
     prefix="/job", dependencies=[Depends(get_current_user)], tags=["job"]
