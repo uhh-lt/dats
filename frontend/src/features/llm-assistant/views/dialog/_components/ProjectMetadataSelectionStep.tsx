@@ -15,12 +15,12 @@ export const ProjectMetadataSelectionStep = memo(() => {
   // global state
   const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const selectedDocuments = useAppSelector((state) => state.llmAssistant.documentIds);
-  const savedMetadata = useAppSelector((state) => state.llmAssistant.metadata);
+  const savedProjectMetadataIds = useAppSelector((state) => state.llmAssistant.projectMetadataIds);
   const dispatch = useAppDispatch();
 
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(() =>
-    Object.fromEntries(savedMetadata.map((metadata) => [metadata.id, true])),
+    Object.fromEntries(savedProjectMetadataIds.map((metadataId) => [metadataId, true])),
   );
 
   // global server state
@@ -35,6 +35,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
 
   const handleNext = useCallback(
     (projectMetadata: ProjectMetadataRead[]) => {
+      const projectMetadataIds = projectMetadata.map((metadata) => metadata.id);
       determineApproachMutation(
         {
           requestBody: {
@@ -42,7 +43,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
             project_id: projectId,
             specific_task_parameters: {
               task_type: TaskType.METADATA_EXTRACTION,
-              project_metadata_ids: projectMetadata.map((metadata) => metadata.id),
+              project_metadata_ids: projectMetadataIds,
               sdoc_ids: selectedDocuments,
             },
           },
@@ -52,9 +53,9 @@ export const ProjectMetadataSelectionStep = memo(() => {
             dispatch(
               LLMAssistantActions.goToSettings({
                 approach: data,
-                tags: [],
-                metadata: projectMetadata,
-                codes: [],
+                tagIds: [],
+                projectMetadataIds,
+                codeIds: [],
               }),
             );
           },

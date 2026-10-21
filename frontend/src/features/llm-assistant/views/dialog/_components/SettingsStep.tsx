@@ -79,9 +79,9 @@ export const SettingsStep = memo(() => {
   const recommendation = useAppSelector((state) => state.llmAssistant.approachRecommendation);
   const savedModelId = useAppSelector((state) => state.llmAssistant.modelId);
   const method = useAppSelector((state) => state.llmAssistant.method);
-  const metadata = useAppSelector((state) => state.llmAssistant.metadata);
-  const codes = useAppSelector((state) => state.llmAssistant.codes);
-  const tags = useAppSelector((state) => state.llmAssistant.tags);
+  const projectMetadataIds = useAppSelector((state) => state.llmAssistant.projectMetadataIds);
+  const codeIds = useAppSelector((state) => state.llmAssistant.codeIds);
+  const tagIds = useAppSelector((state) => state.llmAssistant.tagIds);
   const sdocIds = useAppSelector((state) => state.llmAssistant.documentIds);
   const savedStrategy = useAppSelector((state) => state.llmAssistant.strategy);
   const savedStrategyParams = useAppSelector((state) => state.llmAssistant.strategyParams);
@@ -117,7 +117,6 @@ export const SettingsStep = memo(() => {
     () => strategies.data?.find((strategy) => strategy.strategy_type === strategyType),
     [strategies.data, strategyType],
   );
-  const codeIds = useMemo(() => codes.map((code) => code.id), [codes]);
   const isAnnotationTask = method === TaskType.ANNOTATION || method === TaskType.SENTENCE_ANNOTATION;
   const existingAnnotations = LlmAssistantHooks.useGetExistingAnnotationCount({
     taskType: method,
@@ -215,8 +214,8 @@ export const SettingsStep = memo(() => {
             project_id: projectId,
             specific_task_parameters: {
               task_type: method,
-              tag_ids: tags.map((tag) => tag.id),
-              project_metadata_ids: metadata.map((item) => item.id),
+              tag_ids: tagIds,
+              project_metadata_ids: projectMetadataIds,
               code_ids: codeIds,
               sdoc_ids: sdocIds,
             },
@@ -248,13 +247,13 @@ export const SettingsStep = memo(() => {
     fuzzySettings,
     hasExistingAnnotations,
     method,
-    metadata,
     modelId,
     projectId,
+    projectMetadataIds,
     sdocIds,
     selectedStrategy,
     strategyType,
-    tags,
+    tagIds,
   ]);
 
   const annotationCheckPending = isAnnotationTask && !existingAnnotations.isSuccess;

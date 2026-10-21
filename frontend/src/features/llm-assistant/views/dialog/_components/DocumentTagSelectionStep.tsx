@@ -14,12 +14,12 @@ export const DocumentTagSelectionStep = memo(() => {
   // global state
   const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const selectedDocuments = useAppSelector((state) => state.llmAssistant.documentIds);
-  const savedTags = useAppSelector((state) => state.llmAssistant.tags);
+  const savedTagIds = useAppSelector((state) => state.llmAssistant.tagIds);
   const dispatch = useAppDispatch();
 
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(() =>
-    Object.fromEntries(savedTags.map((tag) => [tag.id, true])),
+    Object.fromEntries(savedTagIds.map((tagId) => [tagId, true])),
   );
 
   // initiate next step (get the generated prompts)
@@ -27,6 +27,7 @@ export const DocumentTagSelectionStep = memo(() => {
 
   const handleNext = useCallback(
     (tags: TagRead[]) => () => {
+      const tagIds = tags.map((tag) => tag.id);
       determineApproachMutation(
         {
           requestBody: {
@@ -34,7 +35,7 @@ export const DocumentTagSelectionStep = memo(() => {
             project_id: projectId,
             specific_task_parameters: {
               task_type: TaskType.TAGGING,
-              tag_ids: tags.map((tag) => tag.id),
+              tag_ids: tagIds,
               sdoc_ids: selectedDocuments,
             },
           },
@@ -44,9 +45,9 @@ export const DocumentTagSelectionStep = memo(() => {
             dispatch(
               LLMAssistantActions.goToSettings({
                 approach: data,
-                tags: tags,
-                metadata: [],
-                codes: [],
+                tagIds,
+                projectMetadataIds: [],
+                codeIds: [],
               }),
             );
           },

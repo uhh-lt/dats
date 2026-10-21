@@ -1,7 +1,5 @@
-import { TagRead } from "@models/TagRead";
-
 export interface ChartDataPoint {
-  tags: TagRead[];
+  tagIds: number[];
   sdocIds: number[];
   count: number;
   fixedSampleSdocIds: number[];

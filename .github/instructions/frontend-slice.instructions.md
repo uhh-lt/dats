@@ -120,7 +120,6 @@ export const sentenceSearchReducer = {
 
 ## Known deviations
 
-- `llmAssistantSlice` (`tags`, `metadata`, `codes`) and `documentSamplerSlice` (`aggregationGroups`) store entity copies instead of ids (issue uhh-lt/dats#777).
 - `sdocTableFilterSlice.ts` (slice `documentTableFilter`, `SdocTableFilterActions`), `memoDialogSlice.ts` and `dialogBusSlice.ts` (`@reduxjs/toolkit/react`, no `DialogBusActions`, React hooks in the slice file) are excluded from `local/slice-conventions` in `eslint.config.mjs` until fixed.
 
 ## Examples
