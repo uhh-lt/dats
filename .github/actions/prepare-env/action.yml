@@ -36,14 +36,22 @@ runs:
 
         # Derive a per-runner identity so multiple runners can share this machine:
         # runner names end in two digits (e.g. dats-runner-01), which become the
-        # port prefix (501) and suffix the compose project name. This isolates
+        # port prefix (321) and suffix the compose project name. This isolates
         # ports, containers, networks, and named volumes between runners.
         RUNNER_INDEX="$(echo "${RUNNER_NAME}" | grep -oE '[0-9]{2}$' || true)"
         if [ -z "${RUNNER_INDEX}" ]; then
           echo "Runner name '${RUNNER_NAME}' must end in two digits (e.g. dats-runner-01)." >&2
           exit 1
         fi
-        PORT_PREFIX="5${RUNNER_INDEX}"
+        # The ports must stay below Linux's ephemeral port range (from 32768): the
+        # kernel hands those out to outgoing connections, which then block a port
+        # that docker wants to bind. Prefixes 321-326 give the ports 32100-32699.
+        RUNNER_NUMBER=$((10#${RUNNER_INDEX}))
+        if [ "${RUNNER_NUMBER}" -lt 1 ] || [ "${RUNNER_NUMBER}" -gt 6 ]; then
+          echo "Runner name '${RUNNER_NAME}' must end in 01-06, higher numbers give ports in the ephemeral port range." >&2
+          exit 1
+        fi
+        PORT_PREFIX="$((320 + RUNNER_NUMBER))"
         # Compose project names must match [a-z0-9_-]; sanitize the runner name.
         SAFE_RUNNER_NAME="$(printf '%s' "${RUNNER_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
         ./bin/setup/setup-envs.sh --project_name "action-runner-${SAFE_RUNNER_NAME}" --port_prefix "${PORT_PREFIX}"
