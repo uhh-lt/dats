@@ -171,8 +171,13 @@ def delete_by_id(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     result = SourceDocumentService().delete(db=db, sdoc_id=sdoc_id)
-    ws.emit_to_project(DATSEvent.SDOC_DELETED, result, project_id=result.project_id)
-    return result
+    sdoc = result.sdocs[0]
+    ws.emit_to_project(DATSEvent.SDOC_DELETED, sdoc, project_id=sdoc.project_id)
+    for folder in result.folders:
+        ws.emit_to_project(
+            DATSEvent.FOLDER_DELETED, folder, project_id=folder.project_id
+        )
+    return sdoc
 
 
 @router.delete(
@@ -189,12 +194,18 @@ def delete_sdocs_bulk(
 ) -> list[SourceDocumentRead]:
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
 
-    results = SourceDocumentService().delete_multi(db=db, sdoc_ids=sdoc_ids)
+    result = SourceDocumentService().delete_multi(db=db, sdoc_ids=sdoc_ids)
     # one batch event per project
-    for project_id in {result.project_id for result in results}:
+    for project_id in {sdoc.project_id for sdoc in result.sdocs}:
         ws.emit_to_project(
             DATSEvent.SDOC_DELETED_BATCH,
-            [result for result in results if result.project_id == project_id],
+            [sdoc for sdoc in result.sdocs if sdoc.project_id == project_id],
             project_id=project_id,
         )
-    return results
+    for project_id in {folder.project_id for folder in result.folders}:
+        ws.emit_to_project(
+            DATSEvent.FOLDER_DELETED_BATCH,
+            [folder for folder in result.folders if folder.project_id == project_id],
+            project_id=project_id,
+        )
+    return result.sdocs

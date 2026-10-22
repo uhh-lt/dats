@@ -156,6 +156,30 @@ def test_delete_folder_deletes_sdocs_of_all_subfolders(
     assert client.get(f"/folder/{grandchild_id}").status_code == 403
 
 
+def test_delete_sdoc_folder(client: TestClient, db_session, test_project):
+    """Deleting an SDOC_FOLDER deletes its document and the folder itself."""
+    sdoc = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="sdoc_folder_document.txt",
+            name="SDOC Folder Document",
+            doctype=DocType.text,
+            project_id=test_project.id,
+        ),
+    )
+    db_session.commit()
+    folder_id = sdoc.folder_id
+
+    response = client.delete(f"/folder/{folder_id}")
+
+    assert response.status_code == 200, response.text
+    deleted = FolderRead.model_validate(response.json())
+    assert deleted.id == folder_id
+    assert deleted.folder_type == FolderType.SDOC_FOLDER
+    assert client.get(f"/sdoc/{sdoc.id}").status_code == 403
+    assert client.get(f"/folder/{folder_id}").status_code == 403
+
+
 def test_delete_folder_if_not_exists(client: TestClient):
     non_existing_folder_id = 999999
     resp = client.delete(f"/folder/{non_existing_folder_id}")

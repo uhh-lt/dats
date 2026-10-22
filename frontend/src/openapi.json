@@ -7577,6 +7577,18 @@
         }
       }
     },
+    "FOLDER_DELETED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_folder_deleted_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderDeletedBatchEvent" } } }
+          }
+        }
+      }
+    },
     "PROJECT_METADATA_CREATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -12191,6 +12203,20 @@
         "type": "object",
         "required": ["payload"],
         "title": "FolderCreatedEvent"
+      },
+      "FolderDeletedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "FOLDER_DELETED_BATCH",
+            "title": "Type",
+            "default": "FOLDER_DELETED_BATCH"
+          },
+          "payload": { "items": { "$ref": "#/components/schemas/FolderRead" }, "type": "array", "title": "Payload" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "FolderDeletedBatchEvent"
       },
       "FolderDeletedEvent": {
         "properties": {
