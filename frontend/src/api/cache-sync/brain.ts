@@ -203,6 +203,11 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         event.payload.id,
       );
       break;
+    case "FOLDER_DELETED_BATCH":
+      event.payload.forEach((folder) =>
+        removeMapItem(folderQueries.byProject(folder.project_id, folder.folder_type).queryKey, folder.id),
+      );
+      break;
 
     // ── Project metadata ────────────────────────────────────────────────────
     case "PROJECT_METADATA_CREATED":

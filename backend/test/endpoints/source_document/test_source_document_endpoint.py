@@ -3,12 +3,18 @@ from typing import TypedDict
 import pytest
 from fastapi.testclient import TestClient
 
+from common.doc_type_enum import DocType
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderCreate
+from core.doc.folder_enum import FolderType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_dto import (
     SourceDocumentDataRead,
 )
 from core.doc.source_document_dto import (
+    SourceDocumentCreate,
     SourceDocumentRead,
     SourceDocumentUpdate,
 )
@@ -75,8 +81,10 @@ def test_delete_source_document_by_id(
     client: TestClient,
     project_with_sdoc,
 ):
-    """Deleting a document removes its row, its file and its Elasticsearch document."""
+    """Deleting a document removes its row, its file, its Elasticsearch document
+    and its SDOC_FOLDER, which is empty afterwards."""
     sdoc = project_with_sdoc["source_document"]
+    folder_id = sdoc.folder_id
     es_client = ElasticSearchRepo().get_client()
     crud_sdoc_elastic.create(
         client=es_client,
@@ -103,6 +111,7 @@ def test_delete_source_document_by_id(
     assert not file_path.exists()
     index_name = crud_sdoc_elastic.index.get_index_name(project_id=sdoc.project_id)
     assert not es_client.exists(index=index_name, id=str(sdoc.id))
+    assert client.get(f"/folder/{folder_id}").status_code == 403
 
 
 def test_delete_source_document_by_id_short_if_not_exists(
@@ -127,6 +136,55 @@ def test_delete_sdocs_bulk(client: TestClient, project_with_sdocs_in_same_folder
     assert sorted(d.id for d in deleted) == sorted(sdoc_ids)
     for sdoc_id in sdoc_ids:
         assert client.get(f"/sdoc/{sdoc_id}").status_code == 403
+    # the SDOC_FOLDER of both documents is empty now and deleted as well
+    folder = project_with_sdocs_in_same_folder["folder"]
+    assert client.get(f"/folder/{folder.id}").status_code == 403
+
+
+def test_delete_sdoc_keeps_sdoc_folder_with_other_sdocs(
+    client: TestClient, project_with_sdocs_in_same_folder
+):
+    """An SDOC_FOLDER that still holds another document is kept."""
+    sdoc, other_sdoc = project_with_sdocs_in_same_folder["source_documents"]
+    folder = project_with_sdocs_in_same_folder["folder"]
+
+    response = client.delete(f"/sdoc/{sdoc.id}")
+
+    assert response.status_code == 200, response.text
+    assert client.get(f"/folder/{folder.id}").status_code == 200
+    assert client.get(f"/sdoc/{other_sdoc.id}").status_code == 200
+
+
+def test_delete_sdoc_keeps_empty_normal_folder(
+    client: TestClient, db_session, test_project
+):
+    """A NORMAL folder is never deleted with its documents, even when empty."""
+    folder = crud_folder.create(
+        db=db_session,
+        create_dto=FolderCreate(
+            name="Normal Folder",
+            folder_type=FolderType.NORMAL,
+            parent_id=None,
+            project_id=test_project.id,
+        ),
+    )
+    sdoc = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="normal_folder_document.txt",
+            name="Normal Folder Document",
+            doctype=DocType.text,
+            project_id=test_project.id,
+            folder_id=folder.id,
+        ),
+    )
+    db_session.commit()
+
+    response = client.request("DELETE", "/sdoc/bulk/delete", json=[sdoc.id])
+
+    assert response.status_code == 200, response.text
+    assert client.get(f"/sdoc/{sdoc.id}").status_code == 403
+    assert client.get(f"/folder/{folder.id}").status_code == 200
 
 
 def test_delete_sdocs_bulk_if_not_exists(

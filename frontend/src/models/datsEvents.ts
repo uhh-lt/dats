@@ -23,6 +23,7 @@ import type { CotaDeletedEvent } from "./CotaDeletedEvent";
 import type { CotaUpdatedEvent } from "./CotaUpdatedEvent";
 import type { FolderCreatedEvent } from "./FolderCreatedEvent";
 import type { FolderDeletedEvent } from "./FolderDeletedEvent";
+import type { FolderDeletedBatchEvent } from "./FolderDeletedBatchEvent";
 import type { FolderUpdatedEvent } from "./FolderUpdatedEvent";
 import type { FolderUpdatedBatchEvent } from "./FolderUpdatedBatchEvent";
 import type { JobUpdatedEvent } from "./JobUpdatedEvent";
@@ -100,6 +101,7 @@ export interface DATSEventMap {
   COTA_UPDATED: CotaUpdatedEvent["payload"];
   FOLDER_CREATED: FolderCreatedEvent["payload"];
   FOLDER_DELETED: FolderDeletedEvent["payload"];
+  FOLDER_DELETED_BATCH: FolderDeletedBatchEvent["payload"];
   FOLDER_UPDATED: FolderUpdatedEvent["payload"];
   FOLDER_UPDATED_BATCH: FolderUpdatedBatchEvent["payload"];
   JOB_UPDATED: JobUpdatedEvent["payload"];
@@ -178,6 +180,7 @@ export type DATSEvent =
   | (Omit<CotaUpdatedEvent, "type"> & { type: "COTA_UPDATED" })
   | (Omit<FolderCreatedEvent, "type"> & { type: "FOLDER_CREATED" })
   | (Omit<FolderDeletedEvent, "type"> & { type: "FOLDER_DELETED" })
+  | (Omit<FolderDeletedBatchEvent, "type"> & { type: "FOLDER_DELETED_BATCH" })
   | (Omit<FolderUpdatedEvent, "type"> & { type: "FOLDER_UPDATED" })
   | (Omit<FolderUpdatedBatchEvent, "type"> & { type: "FOLDER_UPDATED_BATCH" })
   | (Omit<JobUpdatedEvent, "type"> & { type: "JOB_UPDATED" })

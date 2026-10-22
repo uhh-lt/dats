@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
+from core.doc.folder_dto import FolderRead
 from repos.db.dto_base import UpdateDTOBase
 
 SDOC_FILENAME_MAX_LENGTH = 200
@@ -139,6 +140,15 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SourceDocumentDeleteResult(BaseModel):
+    sdocs: list[SourceDocumentRead] = Field(
+        description="The deleted SourceDocuments, in the order of the requested IDs"
+    )
+    folders: list[FolderRead] = Field(
+        description="The SDOC_FOLDERs that were deleted because they became empty"
+    )
 
 
 class SourceDocumentCreate(SourceDocumentBaseDTO):

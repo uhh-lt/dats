@@ -91,6 +91,38 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             db_objs.extend(query.all())
         return db_objs
 
+    def read_empty_sdoc_folders(
+        self, db: Session, *, folder_ids: list[int]
+    ) -> list[FolderORM]:
+        """
+        Reads the SDOC_FOLDERs among the given folders that contain neither
+        SourceDocuments nor subfolders. NORMAL folders are never returned.
+
+        Args:
+            db: The database session.
+            folder_ids: The candidate folder IDs; missing IDs are skipped.
+
+        Returns:
+            The empty SDOC_FOLDERs.
+        """
+        if not folder_ids:
+            return []
+
+        db_objs: list[FolderORM] = []
+        for i in range(0, len(folder_ids), BATCH_SIZE):
+            batch_ids = folder_ids[i : i + BATCH_SIZE]
+            db_objs.extend(
+                db.query(self.model)
+                .filter(
+                    self.model.id.in_(batch_ids),
+                    self.model.folder_type == FolderType.SDOC_FOLDER,
+                    ~self.model.source_documents.any(),
+                    ~self.model.children.any(),
+                )
+                .all()
+            )
+        return db_objs
+
     ### UPDATE OPERATIONS ###
 
     def update(self, db: Session, *, id: int, update_dto: FolderUpdate) -> FolderORM:
