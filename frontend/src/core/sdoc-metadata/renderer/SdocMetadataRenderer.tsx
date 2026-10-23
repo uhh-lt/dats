@@ -6,29 +6,39 @@ import { formatDateOnly } from "@utils/DateUtils";
 import { memo } from "react";
 import { SdocMetadataHooks } from "../api/sdocMetadataHooks";
 
-interface SdocMetadataRendererProps {
-  sdocId: number;
-  projectMetadataId: number;
-}
+// a metadata value is identified by its document and its project metadata, so the renderer takes both ids or both DTOs
+type SdocMetadataRendererProps =
+  | { sdocId: number; projectMetadataId: number }
+  | { sdocMetadata: SourceDocumentMetadataRead; projectMetadata: ProjectMetadataRead };
 
-export const SdocMetadataRenderer = memo(({ sdocId, projectMetadataId }: SdocMetadataRendererProps) => {
-  const sdocMetadata = SdocMetadataHooks.useGetSdocMetadataByProjectMetadataId(sdocId, projectMetadataId);
-  const projectMetadata = ProjectMetadataHooks.useGetProjectMetadata(projectMetadataId);
-
-  if (projectMetadata.isSuccess && sdocMetadata.isSuccess && sdocMetadata.data !== undefined) {
-    return <SdocMetadataRendererWithData sdocMetadata={sdocMetadata.data} projectMetadata={projectMetadata.data} />;
-  } else if (sdocMetadata.isSuccess && sdocMetadata.data === undefined) {
-    return <i>empty</i>;
-  } else if (sdocMetadata.isError) {
-    return <div>{sdocMetadata.error.message}</div>;
-  } else if (projectMetadata.isError) {
-    return <div>{projectMetadata.error.message}</div>;
+export const SdocMetadataRenderer = memo((props: SdocMetadataRendererProps) => {
+  if ("sdocId" in props) {
+    return <SdocMetadataRendererWithoutData sdocId={props.sdocId} projectMetadataId={props.projectMetadataId} />;
   } else {
-    return <div>Loading...</div>;
+    return <SdocMetadataRendererWithData sdocMetadata={props.sdocMetadata} projectMetadata={props.projectMetadata} />;
   }
 });
 
-export const SdocMetadataRendererWithData = memo(
+const SdocMetadataRendererWithoutData = memo(
+  ({ sdocId, projectMetadataId }: { sdocId: number; projectMetadataId: number }) => {
+    const sdocMetadata = SdocMetadataHooks.useGetSdocMetadataByProjectMetadataId(sdocId, projectMetadataId);
+    const projectMetadata = ProjectMetadataHooks.useGetProjectMetadata(projectMetadataId);
+
+    if (projectMetadata.isSuccess && sdocMetadata.isSuccess && sdocMetadata.data !== undefined) {
+      return <SdocMetadataRendererWithData sdocMetadata={sdocMetadata.data} projectMetadata={projectMetadata.data} />;
+    } else if (sdocMetadata.isSuccess && sdocMetadata.data === undefined) {
+      return <i>empty</i>;
+    } else if (sdocMetadata.isError) {
+      return <div>{sdocMetadata.error.message}</div>;
+    } else if (projectMetadata.isError) {
+      return <div>{projectMetadata.error.message}</div>;
+    } else {
+      return <div>Loading...</div>;
+    }
+  },
+);
+
+const SdocMetadataRendererWithData = memo(
   ({
     sdocMetadata,
     projectMetadata,

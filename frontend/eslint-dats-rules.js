@@ -774,16 +774,38 @@ const entityRendererConventionsRule = {
     fixable: false,
     docs: {
       description:
-        "Entity renderer components are wrapped in memo, and their visibility flags use the render* prefix (renderName, renderIcon, ...).",
+        "Entity renderer components are wrapped in memo, a renderer file exports only its dispatcher component (and types), and their visibility flags use the render* prefix (renderName, renderIcon, ...).",
     },
     messages: {
       useMemo: "'{{name}}' must be declared as 'const {{name}} = memo(...)'.",
+      exportOnlyDispatcher:
+        "A renderer file exports only its dispatcher '{{expected}}' (and types). Keep '{{name}}' private; callers with the data pass it to '{{expected}}'.",
       renderPrefix: "Visibility flag '{{name}}' must use the render* prefix ('{{expected}}').",
     },
     schema: [],
   },
   create(context) {
+    const fileName = path.basename(context.filename || context.getFilename(), ".tsx");
+    const dispatcherName = fileName.endsWith("Renderer") ? fileName : undefined;
+    const reportExport = (node, name) => {
+      if (!dispatcherName || name === dispatcherName) return;
+      context.report({ node, messageId: "exportOnlyDispatcher", data: { name, expected: dispatcherName } });
+    };
+
     return {
+      "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator"(node) {
+        if (node.id.type === "Identifier") reportExport(node.id, node.id.name);
+      },
+      "ExportNamedDeclaration > FunctionDeclaration, ExportNamedDeclaration > ClassDeclaration"(node) {
+        if (node.id) reportExport(node.id, node.id.name);
+      },
+      "ExportNamedDeclaration > ExportSpecifier"(node) {
+        if (node.parent.exportKind === "type" || node.exportKind === "type") return;
+        reportExport(node.exported, node.exported.type === "Identifier" ? node.exported.name : node.exported.value);
+      },
+      ExportDefaultDeclaration(node) {
+        reportExport(node, "default");
+      },
       "Program > FunctionDeclaration, Program > ExportNamedDeclaration > FunctionDeclaration"(node) {
         if (!node.id || !RENDERER_COMPONENT_NAME.test(node.id.name)) return;
         context.report({ node: node.id, messageId: "useMemo", data: { name: node.id.name } });

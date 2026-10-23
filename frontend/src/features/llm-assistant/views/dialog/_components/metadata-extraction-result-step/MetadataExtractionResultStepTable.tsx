@@ -1,4 +1,4 @@
-import { SdocMetadataHooks, SdocMetadataRendererWithData } from "@core/sdoc-metadata";
+import { SdocMetadataHooks, SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer } from "@core/source-document";
 import { MetadataExtractionResult } from "@models/MetadataExtractionResult";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -221,7 +221,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
         Cell: ({ row }) => {
           const metadata = row.original.metadataDict[projectMetadata.id];
           return (
-            <SdocMetadataRendererWithData
+            <SdocMetadataRenderer
               sdocMetadata={{
                 ...metadata.currentValue,
                 project_metadata_id: metadata.currentValue.project_metadata.id,
@@ -252,7 +252,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
         Cell: ({ row }) => {
           const metadata = row.original.metadataDict[projectMetadata.id];
           return metadata.suggestedValue ? (
-            <SdocMetadataRendererWithData
+            <SdocMetadataRenderer
               sdocMetadata={{
                 ...metadata.suggestedValue,
                 project_metadata_id: metadata.suggestedValue.project_metadata.id,
