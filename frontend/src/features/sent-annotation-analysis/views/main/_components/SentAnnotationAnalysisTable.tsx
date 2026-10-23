@@ -54,7 +54,6 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
       fetchSize={fetchSize}
       onFetchSizeChange={setFetchSize}
       filterName={filterName}
-      positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
       onFilterChange={setFilter}

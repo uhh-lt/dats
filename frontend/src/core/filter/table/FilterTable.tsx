@@ -36,7 +36,6 @@ export interface FilterTableContainerProps<
   // optional parent callback for additional resets tied to search-parameter changes
   onSearchParameterChange?: () => void;
   // components
-  positionToolbarAlertBanner?: MRT_TableOptions<T>["positionToolbarAlertBanner"];
   renderTopLeftToolbar: (props: TToolbarProps) => React.ReactNode;
   renderTopRightToolbar?: (props: TToolbarProps) => React.ReactNode;
   renderBottomToolbar?: (props: TToolbarProps) => React.ReactNode;
@@ -98,8 +97,7 @@ export interface FilterTableProps<
   onSortingChange: MRT_TableOptions<T>["onSortingChange"];
   columnVisibilityModel: MRT_VisibilityState;
   onColumnVisibilityChange: MRT_TableOptions<T>["onColumnVisibilityChange"];
-  // components (alert banner, toolbars, error message)
-  positionToolbarAlertBanner?: MRT_TableOptions<T>["positionToolbarAlertBanner"];
+  // components (toolbars, error message)
   renderTopLeftToolbar: (props: TToolbarProps) => React.ReactNode;
   renderTopRightToolbar?: (props: TToolbarProps) => React.ReactNode;
   renderBottomToolbar?: (props: TToolbarProps) => React.ReactNode;
@@ -127,7 +125,6 @@ export interface FilterTableProps<
  * @param onSortingChange the function to call when the sorting changes
  * @param columnVisibilityModel the current column visibility state
  * @param onColumnVisibilityChange the function to call when the column visibility changes
- * @param positionToolbarAlertBanner the position of the alert banner, which can be used to adjust the layout of the table (e.g. if the alert banner is at the top, the table can have a smaller height to avoid overflow)
  * @param renderTopLeftToolbar the function to render the top left toolbar, which receives the necessary props for managing the filter state and other table actions
  * @param renderTopRightToolbar the function to render the top right toolbar, which receives the necessary props for managing the filter state and other table actions
  * @param renderBottomToolbar the function to render the bottom toolbar, which receives the necessary props for managing the filter state and other table actions
@@ -160,8 +157,7 @@ export function FilterTable<
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  // components (toolbars, alert banner, error message)
-  positionToolbarAlertBanner,
+  // components (toolbars, error message)
   renderTopLeftToolbar,
   renderTopRightToolbar = FilterTableToolbarRight,
   renderBottomToolbar,
@@ -252,7 +248,8 @@ export function FilterTable<
           children: errorMessage,
         }
       : undefined,
-    positionToolbarAlertBanner,
+    // every table shows the selection banner at the top
+    positionToolbarAlertBanner: "top",
     renderTopToolbarCustomActions: renderTopLeftToolbarContent,
     renderToolbarInternalActions: renderTopRightToolbarContent,
     renderBottomToolbarCustomActions: renderBottomToolbarContent,

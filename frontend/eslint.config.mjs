@@ -436,4 +436,10 @@ export default defineConfig(
       "local/feature-suspense-query-from-route": "error",
     },
   },
+  // TABLE SELECTION BANNER (see .github/instructions/frontend.instructions.md)
+  {
+    files: ["src/**/*.tsx"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/table-banner-top": "error" },
+  },
 );

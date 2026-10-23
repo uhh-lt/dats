@@ -1746,3 +1746,33 @@ datsRulesPlugin.rules["feature-folder-layout"] = featureFolderLayoutRule;
 datsRulesPlugin.rules["feature-index-exports"] = featureIndexExportsRule;
 datsRulesPlugin.rules["feature-route-api-location"] = featureRouteApiLocationRule;
 datsRulesPlugin.rules["feature-suspense-query-from-route"] = featureSuspenseQueryFromRouteRule;
+
+// TABLE SELECTION BANNER (see .github/instructions/frontend.instructions.md, "Components")
+
+/** @type {Rule.RuleModule} */
+const tableBannerTopRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: { description: 'Every table shows its row selection banner at the top (positionToolbarAlertBanner: "top").' },
+    messages: {
+      notTop:
+        'Tables show the selection banner at the top: use positionToolbarAlertBanner: "top" (FilterTable sets it already).',
+    },
+    schema: [],
+  },
+  create(context) {
+    const isTop = (node) => node?.type === "Literal" && node.value === "top";
+    return {
+      "Property[key.name='positionToolbarAlertBanner']"(node) {
+        if (!isTop(node.value)) context.report({ node, messageId: "notTop" });
+      },
+      "JSXAttribute[name.name='positionToolbarAlertBanner']"(node) {
+        const value = node.value?.type === "JSXExpressionContainer" ? node.value.expression : node.value;
+        if (!isTop(value)) context.report({ node, messageId: "notTop" });
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["table-banner-top"] = tableBannerTopRule;

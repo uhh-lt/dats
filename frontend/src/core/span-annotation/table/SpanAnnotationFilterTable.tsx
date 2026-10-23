@@ -53,7 +53,6 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   fetchSize,
   onFetchSizeChange,
   onSearchParameterChange,
-  positionToolbarAlertBanner = "top",
   renderTopLeftToolbar,
   renderTopRightToolbar,
   renderBottomToolbar,
@@ -171,7 +170,6 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      positionToolbarAlertBanner={positionToolbarAlertBanner}
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}
