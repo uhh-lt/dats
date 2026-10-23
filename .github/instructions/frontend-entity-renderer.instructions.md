@@ -79,7 +79,7 @@ function TagContext({ tag }: { tag: TagRead }) {
 
 ### Props
 
-- **Entity input**: the main prop is named after the entity and typed `number | XRead` (`tag`, `sdoc`, `spanAnnotation`, `project`). Never a separate `xId` prop next to an `x` prop. Extra identifying props sit next to it (`folderType`, `sentenceId`).
+- **Entity input**: the main prop is named after the entity and typed `number | XRead` (`tag`, `sdoc`, `spanAnnotation`, `project`). Never a separate `xId` prop next to an `x` prop. Extra identifying props sit next to it (`folderType`, `sentenceId`). An entity identified by two ids takes a union of both ids or both DTOs (`SdocMetadataRenderer`: `{ sdocId, projectMetadataId } | { sdocMetadata, projectMetadata }`) and dispatches with `"sdocId" in props`.
 - **Shared props**: `export type XRendererSharedProps = ExpandableRendererProps;` when nothing is added, otherwise `export interface XRendererSharedProps extends ExpandableRendererProps { ... }`. `WithoutData` and `WithData` take `{ xId: number } & XRendererSharedProps` / `{ x: XRead } & XRendererSharedProps` inline.
 - **Visibility flags** are optional booleans with the `render` prefix: `renderName`, `renderIcon`, `renderDoctypeIcon`, `renderMemoIndicator`, `renderCode`, `renderText`. Never `show*`. Navigation is `link?: boolean` (wraps the summary in `LinkWrapper`).
 - **No styling props**: no `stackProps`, `sx`, `truncate`. Style from the parent.
@@ -88,7 +88,7 @@ function TagContext({ tag }: { tag: TagRead }) {
 
 - **memo everywhere**: the dispatcher, `WithoutData` and `WithData` are `const X = memo(...)`; `Context` is a plain `function`.
 - **Naming and order**: `XRenderer` → `XRendererWithoutData` → `XRendererWithData` → `XContext`.
-- **Exports**: only the dispatcher and `XRendererSharedProps`. Export `XRendererWithData` only when a caller has the data but not the id (`SdocMetadataRendererWithData`).
+- **Exports**: only the dispatcher and `XRendererSharedProps` (lint). `WithoutData`, `WithData` and `Context` stay private; a caller that already has the data passes the Read DTO to the dispatcher.
 - **Data**: `WithoutData` loads with the domain hook (`TagHooks.useGetTag(id)`) or, if there is none, `useQuery(xQueries.byId(id))`.
 - **States**: `WithoutData` uses exactly the `isSuccess` / `isError` → `<div>{error.message}</div>` / `<div>Loading...</div>` chain from the skeleton.
 
@@ -114,7 +114,7 @@ function TagContext({ tag }: { tag: TagRead }) {
 ### Enforced by ESLint
 
 - `local/entity-renderer-location`: a file that uses `ExpandableRenderer` must be `src/core/<domain>/renderer/<Name>Renderer.tsx`.
-- `local/entity-renderer-conventions`: `*Renderer`, `*RendererWithData`, `*RendererWithoutData` are `memo(...)`; prop names starting with `show` are errors.
+- `local/entity-renderer-conventions`: `*Renderer`, `*RendererWithData`, `*RendererWithoutData` are `memo(...)`; a renderer file exports no component but its dispatcher; prop names starting with `show` are errors.
 
 ## Examples
 
