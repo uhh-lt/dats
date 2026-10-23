@@ -11,7 +11,7 @@ from core.code.code_dto import CodeRead
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_utils import get_memo_read_dto_from_orm
+from core.memo.memo_utils import get_memo_read_dtos_from_orms
 from core.project.project_crud import crud_project
 from core.tag.tag_dto import TagRead
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
@@ -95,10 +95,9 @@ class WhiteboardService(metaclass=SingletonMeta):
                     memo_ids = [
                         MemoNodeData.model_validate(node.data).memoId for node in nodes
                     ]
-                    result.memos = [
-                        get_memo_read_dto_from_orm(db=db, db_obj=m)
-                        for m in crud_memo.read_by_ids(db=db, ids=memo_ids)
-                    ]
+                    result.memos = get_memo_read_dtos_from_orms(
+                        db=db, db_objs=crud_memo.read_by_ids(db=db, ids=memo_ids)
+                    )
                 case WhiteboardNodeType.SDOC:
                     sdoc_ids = [
                         SdocNodeData.model_validate(node.data).sdocId for node in nodes

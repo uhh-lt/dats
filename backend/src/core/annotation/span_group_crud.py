@@ -1,4 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.sql.base import ExecutableOption
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_group_dto import (
@@ -9,7 +11,7 @@ from core.annotation.span_group_orm import (
     SpanAnnotationSpanGroupLinkTable,
     SpanGroupORM,
 )
-from repos.db.crud_base import SQLCRUDBase
+from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
 class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):
@@ -29,6 +31,7 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
     ) -> list[SpanGroupORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(self.model.annotation_document)
             .where(
                 AnnotationDocumentORM.user_id == user_id,
@@ -41,7 +44,41 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
         return query.all()
 
     def read_by_name(self, db: Session, *, name: str) -> SpanGroupORM | None:
-        return db.query(self.model).filter(self.model.name == name).first()
+        return (
+            db.query(self.model)
+            .options(*self._load_options())
+            .filter(self.model.name == name)
+            .first()
+        )
+
+    def read_span_annotation_ids(
+        self, db: Session, *, ids: list[int]
+    ) -> dict[int, list[int]]:
+        """
+        Read the span annotation ids of span groups.
+
+        Args:
+            ids: The span groups.
+
+        Returns:
+            A mapping of every given span group id to the ids of its span
+            annotations, in ascending order.
+        """
+        results: dict[int, list[int]] = {id: [] for id in ids}
+        unique_ids = list(dict.fromkeys(ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            rows = db.execute(
+                select(
+                    SpanAnnotationSpanGroupLinkTable.span_group_id,
+                    SpanAnnotationSpanGroupLinkTable.span_annotation_id,
+                )
+                .where(SpanAnnotationSpanGroupLinkTable.span_group_id.in_(batch_ids))
+                .order_by(SpanAnnotationSpanGroupLinkTable.span_annotation_id)
+            ).all()
+            for group_id, span_id in rows:
+                results[group_id].append(span_id)
+        return results
 
     ### OTHER OPERATIONS ###
 
@@ -74,6 +111,12 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
         db.flush()
 
         return len(new_rows)
+
+    ### LOADING ###
+
+    def _load_options(self) -> list[ExecutableOption]:
+        # everything the Read DTO reads through ORM properties
+        return [selectinload(self.model.annotation_document)]  # sdoc_id, user_id
 
 
 crud_span_group = CRUDSpanGroup(SpanGroupORM)

@@ -19,7 +19,11 @@ from core.memo.memo_dto import (
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_generation_service import MemoGenerationService
 from core.memo.memo_service import MemoService
-from core.memo.memo_utils import get_memo_read_dto_from_orm, get_object_memos
+from core.memo.memo_utils import (
+    get_memo_read_dto_from_orm,
+    get_memo_read_dtos_from_orms,
+    get_object_memos,
+)
 from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -102,10 +106,9 @@ def get_recent_memos(
     db_objs = crud_memo.read_recents(
         db=db, user_id=authz_user.user.id, project_id=project_id, limit=limit
     )
-    return [
-        get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=authz_user.user.id)
-        for db_obj in db_objs
-    ]
+    return get_memo_read_dtos_from_orms(
+        db=db, db_objs=db_objs, user_id=authz_user.user.id
+    )
 
 
 @router.get(
