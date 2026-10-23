@@ -3,7 +3,7 @@ import { FolderCreateDialog, FolderEditDialog } from "@core/folder";
 import { MemoDialog } from "@core/memo";
 import { parseIdParam, QuickCommandMenu, ShortcutManager } from "@core/navigation";
 import { TagCreateDialog, TagEditDialog } from "@core/tag";
-import { CodeShortcutManagerDialog, CodeShortcutSynchronizer } from "@features/annotation";
+import { CodeShortcutManagerDialog } from "@features/annotation";
 // eslint-disable-next-line local/no-internal-modules-public-entry
 import { AnnotationsActions } from "@features/annotation/store/annotationsSlice";
 import { ClassifierDialog } from "@features/classifier";
@@ -77,7 +77,6 @@ function ProjectRouteLayout() {
       <CodeCreateDialog projectId={projectId} onCodesCreated={handleCodesCreated} />
       <CodeEditDialog onCodeUpdated={handleCodeUpdated} onCodeDeleted={handleCodeDeleted} />
       <CodeShortcutManagerDialog projectId={projectId} />
-      <CodeShortcutSynchronizer projectId={projectId} />
       <ProjectSettingsDialog
         projectId={projectId}
         hiddenCodeIds={hiddenCodeIds}

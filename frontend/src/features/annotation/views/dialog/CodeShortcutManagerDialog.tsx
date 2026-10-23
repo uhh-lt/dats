@@ -22,14 +22,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useDialogBus } from "@store/global/dialogBusHooks";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback, useMemo, useState } from "react";
-import {
-  CODE_SHORTCUT_KEYS,
-  CodeShortcutsActions,
-  CodeShortcutKey,
-  selectCodeShortcuts,
-} from "../../store/codeShortcutsSlice";
+import { useCodeShortcuts } from "../../_hooks/useCodeShortcuts";
+import { CODE_SHORTCUT_KEYS, CodeShortcutsActions, CodeShortcutKey } from "../../store/codeShortcutsSlice";
 
 interface CodeShortcutManagerDialogProps {
   projectId: number;
@@ -42,7 +38,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
   const dispatch = useAppDispatch();
   const { user } = useAuth();
   const { codeTree, allCodes } = useComputeCodeTree();
-  const bindings = useAppSelector((state) => selectCodeShortcuts(state, user?.id, projectId));
+  const shortcuts = useCodeShortcuts(projectId);
 
   const [selectedCodeId, setSelectedCodeId] = useState<number>();
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
@@ -172,8 +168,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
             </Paper>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1 }}>
               {CODE_SHORTCUT_KEYS.map((key) => {
-                const codeId = bindings[key];
-                const code = codeId === undefined ? undefined : codesById.get(codeId);
+                const code = shortcuts[key];
                 return (
                   <Paper key={key} variant="outlined" sx={{ display: "flex", alignItems: "center", p: 0.5 }}>
                     <Button
@@ -189,12 +184,12 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
                         />
                       ) : null}
                       <Typography noWrap variant="body2">
-                        {code?.name ?? (codeId === undefined ? "Unassigned" : "Unavailable code")}
+                        {code?.name ?? "Unassigned"}
                       </Typography>
                     </Button>
                     <Tooltip title={`Clear shortcut ${key}`}>
                       <span>
-                        <IconButton size="small" disabled={codeId === undefined} onClick={() => handleClear(key)}>
+                        <IconButton size="small" disabled={!code} onClick={() => handleClear(key)}>
                           <BackspaceIcon fontSize="small" />
                         </IconButton>
                       </span>
@@ -207,7 +202,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button color="error" onClick={handleClearAll} disabled={CODE_SHORTCUT_KEYS.every((key) => !bindings[key])}>
+        <Button color="error" onClick={handleClearAll} disabled={CODE_SHORTCUT_KEYS.every((key) => !shortcuts[key])}>
           Clear all shortcuts
         </Button>
         <Button onClick={handleClose}>Close</Button>

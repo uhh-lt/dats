@@ -27,10 +27,6 @@ interface ClearCodeShortcutPayload extends CodeShortcutScope {
   key: CodeShortcutKey;
 }
 
-interface ReconcileCodeShortcutsPayload extends CodeShortcutScope {
-  validCodeIds: number[];
-}
-
 const initialState: CodeShortcutsState = {
   bindingsByUserAndProject: {},
 };
@@ -69,20 +65,6 @@ const codeShortcutsSlice = createSlice({
       }
 
       delete userBindings[projectId];
-    },
-    reconcile: (state, action: PayloadAction<ReconcileCodeShortcutsPayload>) => {
-      const { userId, projectId, validCodeIds } = action.payload;
-      const projectBindings = state.bindingsByUserAndProject[userId]?.[projectId];
-      if (!projectBindings) {
-        return;
-      }
-
-      for (const shortcutKey of CODE_SHORTCUT_KEYS) {
-        const codeId = projectBindings[shortcutKey];
-        if (codeId !== undefined && !validCodeIds.includes(codeId)) {
-          delete projectBindings[shortcutKey];
-        }
-      }
     },
   },
 });

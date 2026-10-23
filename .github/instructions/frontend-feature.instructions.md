@@ -44,7 +44,7 @@ export * from "./views/main/ClassifierView";
 - **Allowed root entries**: `index.ts`, `api/`, `store/`, `views/`, `_components/`, `_hooks/`, `_types/`, `_utils/`, `_styles/`. No other files or folders at the feature root (lint: `local/feature-folder-layout`).
 - **`api/`** exists if the feature owns server data that no other domain uses. Its files follow `frontend-api.instructions.md`. Data used by several features lives in `core/<domain>/api/` instead.
 - **`store/`** exists if the feature has client state that outlives a component (filters, selections, dialog state). Slices follow `frontend-slice.instructions.md` and are registered in `store/store.ts`.
-- **`views/<name>/`** holds one public view file plus its private folders; everything else goes into `_components/`, `_hooks/`, `_types/`, `_utils/`. The only exception is a headless companion the route renders next to the view (`views/dialog/CodeShortcutSynchronizer.tsx`). No files directly in `views/`, no `index.ts` inside a view folder (lint: `local/feature-folder-layout`).
+- **`views/<name>/`** holds one public view file plus its private folders; everything else goes into `_components/`, `_hooks/`, `_types/`, `_utils/`. No files directly in `views/`, no `index.ts` inside a view folder (lint: `local/feature-folder-layout`).
 - **View folder names** are kebab-case roles. Use the standard name when it fits:
   - `main` — the feature's only page (`views/main/HealthView.tsx`)
   - `dashboard` — the page that lists the feature's entities (`views/dashboard/CotaDashboardView.tsx`)
