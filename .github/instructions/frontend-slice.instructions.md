@@ -95,7 +95,6 @@ export const sentenceSearchReducer = {
 - A slice is persisted by wrapping its reducer in the reducer map: `persistReducer({ key: xSlice.name, storage: persistStorage }, xSlice.reducer)` with `persistStorage` from [persistStorage.ts](../../frontend/src/store/persistStorage.ts). `store.ts` does not mark or group persisted slices.
 - Persist only what a user expects to find again after a reload: preferences, open tabs, shortcuts, expanded trees, table models, selections of the search views. Never persist dialog or notification state, job ids/results or server data.
 - Transient fields of a persisted slice go in `blacklist` with a comment (`blacklist: ["hoveredCodeId"]` in `annotationsSlice`).
-- Renaming a persisted slice's `name` drops every user's stored state for it; rename the file instead when only the file name is off.
 
 ### Reducers
 
