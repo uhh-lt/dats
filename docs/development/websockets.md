@@ -46,7 +46,7 @@ Backend (`backend/src/common/dats_event.py`):
 
 1. Add the event type to the `DATSEvent` enum.
 2. Add one line to the `_DATS_EVENT_PAYLOADS` registry mapping the event type to its payload DTO (a read model, `list[...]`, or `Union[...]`). The concrete event class is generated from this table — no separate class to write.
-3. Emit the event from an endpoint via the `WebsocketEmitter` dependency (`ws: WebsocketEmitter = Depends()`), choosing the audience: `emit_to_project`, `emit_to_projects_grouped` (batch, grouped by project), `emit_to_user`, `emit_to_users`, or `emit_to_all`. The emitter queues the send as a FastAPI `BackgroundTasks` task so it fires after the DB commit, and automatically excludes the acting user.
+3. Emit the event from an endpoint via the `WebsocketEmitter` dependency (`ws: WebsocketEmitter = Depends()`), choosing the audience: `emit_to_project`, `emit_to_projects_grouped` (batch of ORM objects, grouped by project), `emit_dtos_to_projects` (batch of read DTOs carrying `project_id`, e.g. service results, grouped by project), `emit_to_user`, `emit_to_users`, or `emit_to_all`. The emitter queues the send as a FastAPI `BackgroundTasks` task so it fires after the DB commit, and automatically excludes the acting user.
 
    ```python
    ws.emit_to_project(DATSEvent.CODE_CREATED, result, project_id=code.project_id)
