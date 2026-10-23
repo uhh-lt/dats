@@ -44,6 +44,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import RecommendIcon from "@mui/icons-material/Recommend";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import ScaleIcon from "@mui/icons-material/Scale";
@@ -138,6 +139,7 @@ export enum Icon {
   SENTENCE_ANNOTATION_TABLE = "sentence_annotation_table",
   SPAN_ANNOTATION_TABLE = "span_annotation_table",
   BBOX_ANNOTATION_TABLE = "bbox_annotation_table",
+  TAG_RECOMMENDATION = "tag_recommendation",
 
   // TOOLS
   TOOLS = "tools",
@@ -276,6 +278,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SENTENCE_ANNOTATION_TABLE]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.SPAN_ANNOTATION_TABLE]: (iconProps) => <ShortTextIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION_TABLE]: (iconProps) => <FilterIcon {...iconProps} />,
+  [Icon.TAG_RECOMMENDATION]: (iconProps) => <RecommendIcon {...iconProps} />,
 
   // TOOLS
   [Icon.TOOLS]: (iconProps) => <TuneIcon {...iconProps} />,

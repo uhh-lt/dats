@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/tag-recommendations")({
   staticData: {
     tab: true,
-    icon: Icon.ANALYSIS,
+    icon: Icon.TAG_RECOMMENDATION,
     getTitle: () => "Tag Recommendations",
   },
   component: TagRecommendationsView,
