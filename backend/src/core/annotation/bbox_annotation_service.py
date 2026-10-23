@@ -39,12 +39,10 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         Returns:
             The created annotations, in the order of `create_dtos`.
         """
-        return [
-            BBoxAnnotationRead.model_validate(db_obj)
-            for db_obj in self.create_annotation_orms(
-                db=db, user_id=user_id, create_dtos=create_dtos
-            )
-        ]
+        db_objs = self.create_annotation_orms(
+            db=db, user_id=user_id, create_dtos=create_dtos
+        )
+        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
 
     def create_annotation_orms(
         self, db: Session, *, user_id: int, create_dtos: list[BBoxAnnotationCreate]
@@ -106,7 +104,7 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
                 for update_dto in update_dtos
             ],
         )
-        return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
 
     def delete_multi(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationRead]:
         """
@@ -129,3 +127,10 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         crud_bbox_anno.delete_multi(db=db, ids=ids)
 
         return deleted
+
+    def _to_read_dtos(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationRead]:
+        """Read DTOs of the given annotations, re-read with eager loading."""
+        return [
+            BBoxAnnotationRead.model_validate(db_obj)
+            for db_obj in crud_bbox_anno.read_by_ids(db=db, ids=ids)
+        ]

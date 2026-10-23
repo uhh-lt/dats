@@ -93,6 +93,7 @@ class ExampleService(metaclass=SingletonMeta):
 
 - **Read DTOs for endpoints**: Public methods called by endpoints return the module's `<X>Read` DTO (`XRead.model_validate(db_obj)`) or another response DTO (`ChatSessionResponse`, `list[AnnoscalingResult]`), never ORM objects or tuples. The endpoint only calls the service, emits and returns the result (`result = ProjectService().create_project(...)`).
 - **ORMs only internally**: Helpers that only other services or jobs call may return ORMs; make them private (`_name`) or say so in their docstring (e.g. `SpanAnnotationService.create_annotation_orms`, used by classifier services and test fixtures).
+- **Build DTOs from eager reads**: build Read DTOs from objects returned by a CRUD read method (which applies the CRUD's `_load_options()`). After `create_multi` / `update_multi`, re-read the objects with `read_by_ids` before converting them (`SpanAnnotationService._to_read_dtos`).
 - **Batch methods keep input order**: a method that takes a list returns its results in the order of that list, and a delete returns the DTOs snapshotted (via `read_by_ids`) before it deletes (`SourceDocumentService.delete_multi`, `MemoService.delete_multi`).
 - **Jobs**: Methods that start jobs return the `Job` (or `list[Job]`); job handlers return the `<X>JobOutput`.
 
