@@ -100,7 +100,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 - Return early on empty input (`if not ids: return []` / `return 0` / `return {}`).
 - Bulk deletes use `delete(Model).where(...)` via `db.execute`, `assert isinstance(result, CursorResult)` and sum `result.rowcount` (see `SQLCRUDBase.delete_multi`).
 - **Input order**: every batch method returns its results in the order of its input (`create_dtos`, `ids`). Queries with `IN`, `RETURNING` or `ON CONFLICT` return rows in any order, so map them back to the input explicitly (see `SQLCRUDBase.read_by_ids`).
-- `read_by_ids`-style methods raise `NoSuchElementError` for missing ids and repeat duplicate ids in the result. `update_multi` rejects duplicate ids with `ValueError`; `delete_multi` ignores duplicate and missing ids and returns the number of deleted rows.
+- `read_by_ids`-style methods raise `NoSuchElementError` for missing ids and repeat duplicate ids in the result. `update_multi` rejects duplicate ids with `DuplicateIdsError` (`common/common_exceptions.py`, HTTP 400); `delete_multi` ignores duplicate and missing ids and returns the number of deleted rows.
 - `delete_multi` returns a count, not the deleted objects. Callers that need them (e.g. for websocket events) read them with `read_by_ids` before deleting.
 - **Bulk updates**: `update_multi` takes two parallel lists, `ids` and `update_dtos` (the plain `<Entity>Update`). API bulk endpoints take one list of `<Entity>UpdateBulk` items that carry their `<entity>_id`; the service (or the endpoint, when the module has no service) splits them into the two lists.
 

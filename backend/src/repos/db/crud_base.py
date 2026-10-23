@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import CursorResult, delete, inspect
 from sqlalchemy.orm import Session
 
+from common.common_exceptions import DuplicateIdsError
 from config import conf
 from repos.db.orm_base import ORMBase
 from repos.db.sql_exceptions import NoSuchElementError
@@ -18,6 +19,17 @@ BATCH_SIZE = conf.postgres.batch_size
 
 class UpdateNotAllowed(BaseModel):
     pass
+
+
+def _duplicates(ids: list) -> list:
+    """The ids that occur more than once, each listed once, in input order."""
+    seen: set = set()
+    duplicates: dict = {}
+    for id in ids:
+        if id in seen:
+            duplicates[id] = None
+        seen.add(id)
+    return list(duplicates)
 
 
 class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
@@ -164,15 +176,17 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             The updated objects, in the order of `ids`.
 
         Raises:
-            ValueError: If the lengths differ or `ids` contains duplicates.
+            ValueError: If the lengths differ.
+            DuplicateIdsError: If `ids` contains duplicates.
             NoSuchElementError: If any id does not exist.
         """
         if len(ids) != len(update_dtos):
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
-        if len(set(ids)) != len(ids):
-            raise ValueError("The IDs to update must not contain duplicates!")
+        duplicate_ids = _duplicates(ids)
+        if duplicate_ids:
+            raise DuplicateIdsError(duplicate_ids)
         if not ids:
             return []
 

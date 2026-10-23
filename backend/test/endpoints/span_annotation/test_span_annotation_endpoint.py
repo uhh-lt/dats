@@ -410,6 +410,23 @@ def test_update_span_annotations_bulk_keeps_input_order(
     ]
 
 
+def test_update_span_annotations_bulk_rejects_duplicate_ids(
+    client: TestClient,
+    project_with_span_annotations_for_bulk_test,
+) -> None:
+    code2 = project_with_span_annotations_for_bulk_test["code2"]
+    span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
+
+    payload = [
+        {"span_annotation_id": span_annotation.id, "code_id": code2.id},
+        {"span_annotation_id": span_annotation.id, "code_id": code2.id},
+    ]
+    resp = client.patch("/span/bulk/update", json=payload)
+
+    assert resp.status_code == 400, resp.text
+    assert str(span_annotation.id) in resp.text
+
+
 def test_update_span_annotations_bulk_not_exists(
     client: TestClient,
 ) -> None:
