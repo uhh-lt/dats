@@ -16,7 +16,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
   params: {
     parse: ({ analysisId }) => ({ analysisId: parseIdParam(analysisId) }),
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ timelineAnalysesByProjectOptions: timelineAnalysisQueries.byProject(params.projectId) }),
   loader: async ({ context, params }) => {
     const timelineAnalyses = await context.queryClient.ensureQueryData(context.timelineAnalysesByProjectOptions);

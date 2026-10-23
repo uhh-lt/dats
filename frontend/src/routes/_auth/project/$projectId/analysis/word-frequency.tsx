@@ -21,7 +21,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
   },
   validateSearch: zodValidator(wordFrequencySearchSchema),
   loaderDeps: ({ search }) => search,
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
     wordFrequencySearchOptions: wordFrequencyQueries.search({
       projectId: params.projectId,

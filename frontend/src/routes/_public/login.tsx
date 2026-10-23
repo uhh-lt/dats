@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_public/login")({
       throw redirect({ to: search.redirect });
     }
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: () => ({ instanceInfoOptions: generalQueries.instanceInfo() }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(context.instanceInfoOptions);

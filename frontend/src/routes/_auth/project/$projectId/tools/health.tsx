@@ -21,7 +21,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   },
   validateSearch: zodValidator(healthSearchSchema),
   loaderDeps: ({ search }) => search,
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
     healthColumnsOptions: healthQueries.columns(deps.doctype),
     healthSearchOptions: healthQueries.search({

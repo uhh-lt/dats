@@ -23,7 +23,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
   },
   validateSearch: zodValidator(sentenceSearchSchema),
   loaderDeps: ({ search }) => search,
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
     sentenceSimilaritySearchOptions: similaritySearchQueries.sentence({
       projectId: params.projectId,

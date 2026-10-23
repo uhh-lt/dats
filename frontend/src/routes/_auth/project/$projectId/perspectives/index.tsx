@@ -9,7 +9,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/")(
     icon: Icon.PERSPECTIVES,
     getTitle: () => "Perspectives",
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ aspectsByProjectOptions: perspectivesQueries.aspectsByProject(params.projectId) }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(context.aspectsByProjectOptions);

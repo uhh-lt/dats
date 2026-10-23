@@ -28,7 +28,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
   },
   validateSearch: zodValidator(documentSearchSchema),
   loaderDeps: ({ search }) => search,
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
     documentSearchOptions: sdocQueries.search({
       projectId: params.projectId,

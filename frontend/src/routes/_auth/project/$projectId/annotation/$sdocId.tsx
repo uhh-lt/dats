@@ -27,7 +27,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
     parse: ({ sdocId }) => ({ sdocId: parseIdParam(sdocId) }),
   },
   validateSearch: zodValidator(annotationSearchSchema),
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
     sdocDetailOptions: sdocQueries.byId(params.sdocId),
     sdocDataOptions: sdocQueries.data(params.sdocId),
