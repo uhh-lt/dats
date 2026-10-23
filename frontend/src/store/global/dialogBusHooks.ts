@@ -26,6 +26,7 @@ const keysWithCallbacks: ReadonlySet<keyof DialogCallbackMap> = new Set([
   "sentenceAnnotationEdit",
   "bboxAnnotationEdit",
   "memo",
+  "confirmation",
 ]);
 
 function hasDialogSuccessCallback(key: keyof DialogPayloadMap): key is keyof DialogCallbackMap {

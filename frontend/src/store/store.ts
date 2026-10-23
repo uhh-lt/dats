@@ -5,7 +5,7 @@
 import { bboxFilterReducer } from "@core/bbox-annotation";
 import { memoFilterReducer } from "@core/memo";
 import { tabsReducer } from "@core/navigation";
-import { confirmationReducer, snackbarReducer } from "@core/notification";
+import { snackbarReducer } from "@core/notification";
 import { seatFilterReducer } from "@core/sentence-annotation";
 import { sdocFilterReducer } from "@core/source-document";
 import { satFilterReducer } from "@core/span-annotation";
@@ -42,7 +42,6 @@ export const store = configureStore({
     ...projectReducer,
     ...tabsReducer,
     ...snackbarReducer,
-    ...confirmationReducer,
     ...classifierReducer,
     ...llmAssistantReducer,
     ...memoWorkspaceReducer,

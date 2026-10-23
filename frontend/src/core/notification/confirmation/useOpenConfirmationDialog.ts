@@ -1,17 +1,14 @@
-import { useAppDispatch } from "@store/storeHooks";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useCallback } from "react";
 import { ConfirmationEvent } from "./_types/ConfirmationEvent";
-import { ConfirmationActions } from "./confirmationSlice";
 
+/** Opens the confirmation dialog (dialog bus key "confirmation"); onAccept / onReject run when the user picks a button. */
 export const useOpenConfirmationDialog = () => {
-  const dispatch = useAppDispatch();
+  const openDialog = useOpenDialog("confirmation");
 
-  const openConfirmationDialog = useCallback(
-    (data: ConfirmationEvent) => {
-      dispatch(ConfirmationActions.openConfirmationDialog(data));
-    },
-    [dispatch],
+  return useCallback(
+    ({ text, type, onAccept, onReject }: ConfirmationEvent) =>
+      openDialog({ text, type }, (accepted) => (accepted ? onAccept() : onReject?.())),
+    [openDialog],
   );
-
-  return openConfirmationDialog;
 };
