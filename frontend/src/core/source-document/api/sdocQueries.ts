@@ -3,26 +3,14 @@ import { ProjectService } from "@api/services/ProjectService";
 import { SearchService } from "@api/services/SearchService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
-import { tableInfoQueries, toColumnInfos, type MyFilter } from "@core/filter";
+import { tableInfoQueries, toColumnInfos } from "@core/filter";
 import { folderQueries } from "@core/folder";
 import { tagQueries } from "@core/tag";
 import { FolderType } from "@models/FolderType";
-import { SdocColumns } from "@models/SdocColumns";
-import type { Sort_SdocColumns_ } from "@models/Sort_SdocColumns_";
 import { infiniteQueryOptions, queryOptions, skipToken } from "@tanstack/react-query";
 
-/** The arguments of the document search, as the backend takes them (the page is added by the query). */
-interface SdocSearchRequest {
-  projectId: number;
-  searchQuery: string;
-  filter: MyFilter<SdocColumns>;
-  sorts: Sort_SdocColumns_[];
-  pageSize: number;
-  folderId?: number | null;
-  expertMode: boolean;
-  showFolders?: boolean;
-  showChildFolders?: boolean;
-}
+/** The arguments of the document search, as the backend takes them (the page and the highlighting are added by the query). */
+type SdocSearchRequest = Omit<Parameters<typeof SearchService.searchSdocs>[0], "pageNumber" | "highlight">;
 
 /**
  * Query factory for source documents (sdocs).
@@ -124,16 +112,8 @@ export const sdocQueries = {
     infiniteQueryOptions({
       queryKey: [...sdocQueries.searchOfProjectScope(request.projectId), request] as const,
       queryFn: async ({ pageParam }) => {
-        const { projectId, searchQuery, filter, sorts, pageSize, ...options } = request;
-        const data = await SearchService.searchSdocs({
-          projectId,
-          searchQuery,
-          highlight: true,
-          ...options,
-          requestBody: { filter, sorts },
-          pageNumber: pageParam,
-          pageSize,
-        });
+        const { projectId } = request;
+        const data = await SearchService.searchSdocs({ ...request, highlight: true, pageNumber: pageParam });
 
         Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
           queryClient.setQueryData(sdocQueries.byId(parseInt(sdocId)).queryKey, sdoc);
