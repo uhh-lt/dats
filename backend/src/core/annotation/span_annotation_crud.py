@@ -1,6 +1,7 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.sql.base import ExecutableOption
 
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -14,6 +15,7 @@ from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.object_handle_orm import ObjectHandleORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
@@ -69,6 +71,7 @@ class CRUDSpanAnnotation(
     ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(
                 AnnotationDocumentORM,
                 AnnotationDocumentORM.id == self.model.annotation_document_id,
@@ -91,9 +94,13 @@ class CRUDSpanAnnotation(
         project_id: int,
         uuid: str,
     ) -> SpanAnnotationORM | None:
-        query = db.query(self.model).where(
-            self.model.project_id == project_id,
-            self.model.uuid == uuid,
+        query = (
+            db.query(self.model)
+            .options(*self._load_options())
+            .where(
+                self.model.project_id == project_id,
+                self.model.uuid == uuid,
+            )
         )
         return query.first()
 
@@ -107,6 +114,7 @@ class CRUDSpanAnnotation(
     ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(self.model.annotation_document)
             .where(
                 AnnotationDocumentORM.user_id == user_id,
@@ -133,6 +141,7 @@ class CRUDSpanAnnotation(
             batch_user_ids = user_ids[i : i + BATCH_SIZE]
             query = (
                 db.query(self.model)
+                .options(*self._load_options())
                 .join(self.model.annotation_document)
                 .where(
                     AnnotationDocumentORM.user_id.in_(batch_user_ids),
@@ -154,6 +163,7 @@ class CRUDSpanAnnotation(
     ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(self.model.annotation_document)
             .filter(
                 self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
@@ -176,7 +186,11 @@ class CRUDSpanAnnotation(
         db_objs: list[SpanAnnotationORM] = []
         for i in range(0, len(code_ids), BATCH_SIZE):
             batch_code_ids = code_ids[i : i + BATCH_SIZE]
-            query = db.query(self.model).filter(self.model.code_id.in_(batch_code_ids))
+            query = (
+                db.query(self.model)
+                .options(*self._load_options())
+                .filter(self.model.code_id.in_(batch_code_ids))
+            )
             db_objs.extend(query.all())
         return db_objs
 
@@ -191,6 +205,7 @@ class CRUDSpanAnnotation(
             batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
             query = (
                 db.query(self.model)
+                .options(*self._load_options())
                 .join(self.model.annotation_document)
                 .filter(
                     AnnotationDocumentORM.user_id == user_id,
@@ -370,6 +385,17 @@ class CRUDSpanAnnotation(
             for code_id, count in query.all():
                 results[code_id] = results.get(code_id, 0) + count
         return results
+
+    def _load_options(self) -> list[ExecutableOption]:
+        # everything the Read DTO reads through ORM properties
+        return [
+            selectinload(self.model.annotation_document),  # sdoc_id, user_id
+            selectinload(self.model.span_text),  # text
+            selectinload(self.model.span_groups),  # group_ids
+            selectinload(self.model.object_handle).selectinload(
+                ObjectHandleORM.attached_memos
+            ),  # memo_ids
+        ]
 
     def _read_adoc_ids(self, db: Session, *, ids: list[int]) -> list[int]:
         """Read the distinct annotation document ids of the given annotations."""

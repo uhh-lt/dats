@@ -4,6 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import ColumnElement, CursorResult, delete, inspect, tuple_
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.base import ExecutableOption
 from typing_extensions import TypeVar as TypeVarWithDefault
 
 from common.common_exceptions import DuplicateIdsError
@@ -86,7 +87,12 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
     ### READ OPERATIONS ###
 
     def read(self, db: Session, *, id: IDType) -> ORMModelType:
-        db_obj = db.query(self.model).filter(self._pk_in([id])).first()
+        db_obj = (
+            db.query(self.model)
+            .options(*self._load_options())
+            .filter(self._pk_in([id]))
+            .first()
+        )
         if db_obj is None:
             raise NoSuchElementError(self.model, **self._pk_kwargs(id))
         return db_obj
@@ -113,7 +119,12 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
         unique_ids = list(dict.fromkeys(ids))
         for i in range(0, len(unique_ids), BATCH_SIZE):
             batch_ids = unique_ids[i : i + BATCH_SIZE]
-            db_objects.extend(db.query(self.model).filter(self._pk_in(batch_ids)).all())
+            db_objects.extend(
+                db.query(self.model)
+                .options(*self._load_options())
+                .filter(self._pk_in(batch_ids))
+                .all()
+            )
 
         # Maintain the order of the input IDs
         id_map = {self._pk_of(obj): obj for obj in db_objects}
@@ -252,6 +263,19 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
         if not exists and raise_error:
             raise NoSuchElementError(self.model, **self._pk_kwargs(id))
         return exists
+
+    ### LOADING ###
+
+    def _load_options(self) -> list[ExecutableOption]:
+        """
+        Loader options for every read that returns this CRUD's objects (`read`,
+        `read_by_ids` and the CRUD's own read methods). A CRUD whose Read DTO reads
+        relationships (through ORM properties such as `sdoc_id` or `memo_ids`)
+        returns `selectinload(...)` options for them here, so building DTOs for N
+        objects costs a constant number of queries instead of one per object and
+        relationship.
+        """
+        return []
 
     ### PRIMARY KEY HELPERS ###
 

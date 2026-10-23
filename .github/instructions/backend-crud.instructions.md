@@ -87,6 +87,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 ### Session Handling
 
 - **Flush only**: write methods end with `db.flush()` (plus `db.refresh(obj)` when DB-generated values are needed). Never call `db.commit()` or `db.rollback()`.
+- **Eager loading for Read DTOs**: when the entity's Read DTO reads relationships (through ORM properties such as `sdoc_id`, `text`, `memo_ids`), override `_load_options()` with `selectinload(...)` options for exactly those relationships, and apply `.options(*self._load_options())` in every read method that returns the entity (`read` and `read_by_ids` do it already). Without it, building N DTOs lazy-loads each relationship once per object (see `span_annotation_crud`; `test/crud/test_annotation_read_dto_loading.py` pins the query count).
 - Query with `db.query(...)` and use `self.model` for the own entity; other ORMs/link tables are referenced directly. `select()` with `db.execute` / `db.scalars` is an accepted variation, mainly for batched and aggregate queries.
 - Reuse the base: call `super().create_multi/update_multi/delete_multi(...)` or `self.read_by_ids(...)` inside overrides instead of re-implementing them.
 - For idempotent inserts, use `sqlalchemy.dialects.postgresql.insert(...).on_conflict_do_nothing()` / `on_conflict_do_update(...)`, or `db.begin_nested()` + catching `IntegrityError` (see `object_handle_crud.create`).

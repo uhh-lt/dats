@@ -1,5 +1,6 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.sql.base import ExecutableOption
 
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -10,6 +11,7 @@ from core.annotation.bbox_annotation_dto import (
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.object_handle_orm import ObjectHandleORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
@@ -44,6 +46,7 @@ class CRUDBBoxAnnotation(
     ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(
                 AnnotationDocumentORM,
                 AnnotationDocumentORM.id == self.model.annotation_document_id,
@@ -66,9 +69,13 @@ class CRUDBBoxAnnotation(
         project_id: int,
         uuid: str,
     ) -> BBoxAnnotationORM | None:
-        query = db.query(self.model).where(
-            self.model.project_id == project_id,
-            self.model.uuid == uuid,
+        query = (
+            db.query(self.model)
+            .options(*self._load_options())
+            .where(
+                self.model.project_id == project_id,
+                self.model.uuid == uuid,
+            )
         )
         return query.first()
 
@@ -82,6 +89,7 @@ class CRUDBBoxAnnotation(
     ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(self.model.annotation_document)
             .where(
                 AnnotationDocumentORM.user_id == user_id,
@@ -109,6 +117,7 @@ class CRUDBBoxAnnotation(
             batch_user_ids = user_ids[i : i + BATCH_SIZE]
             query = (
                 db.query(self.model)
+                .options(*self._load_options())
                 .join(self.model.annotation_document)
                 .where(
                     AnnotationDocumentORM.user_id.in_(batch_user_ids),
@@ -130,6 +139,7 @@ class CRUDBBoxAnnotation(
     ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
+            .options(*self._load_options())
             .join(self.model.annotation_document)
             .filter(
                 self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
@@ -206,6 +216,15 @@ class CRUDBBoxAnnotation(
         self.delete_multi(db=db, ids=ids)
 
         return ids
+
+    def _load_options(self) -> list[ExecutableOption]:
+        # everything the Read DTO reads through ORM properties
+        return [
+            selectinload(self.model.annotation_document),  # sdoc_id, user_id
+            selectinload(self.model.object_handle).selectinload(
+                ObjectHandleORM.attached_memos
+            ),  # memo_ids
+        ]
 
     def _read_adoc_ids(self, db: Session, *, ids: list[int]) -> list[int]:
         """Read the distinct annotation document ids of the given annotations."""
