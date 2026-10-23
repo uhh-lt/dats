@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from common.common_exceptions import DuplicateIdsError
 from modules.search_view.search_view_dto import (
     SearchViewCreateIntern,
     SearchViewUpdateUnion,
@@ -78,7 +79,9 @@ class CRUDSearchView(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
             )
         if len(set(ids)) != len(ids):
-            raise ValueError("The IDs to update must not contain duplicates!")
+            raise DuplicateIdsError(
+                [id for id in dict.fromkeys(ids) if ids.count(id) > 1]
+            )
 
         views = self.read_by_ids(db=db, ids=ids)
         for view, update_dto in zip(views, update_dtos):

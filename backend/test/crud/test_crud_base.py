@@ -3,6 +3,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
+from common.common_exceptions import DuplicateIdsError
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import TagORM
@@ -139,7 +140,7 @@ def test_update_multi_rejects_duplicate_ids(
 ) -> None:
     tag_id = project_with_tags["tags"][0].id
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DuplicateIdsError):
         crud_tag.update_multi(
             db=db_session,
             ids=[tag_id, tag_id],
