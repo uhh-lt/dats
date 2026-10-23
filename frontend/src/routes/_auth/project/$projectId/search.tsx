@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { booleanSearchParam, FILTER_PARAM, filterSearchParams, sortingModelSearchParam, toSorts } from "@core/filter";
+import { FILTER_PARAM, searchParamFilterValidators, toSorts } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { sdocQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
@@ -8,16 +8,17 @@ import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { searchParamBooleanValidator, searchParamSortingModelValidator } from "@utils/searchParamValidators";
 
 const documentSearchSchema = z.object({
   searchQuery: z.string().default(""),
-  ...filterSearchParams<SdocColumns>(),
-  searchExpertMode: booleanSearchParam(false),
+  ...searchParamFilterValidators<SdocColumns>(),
+  searchExpertMode: searchParamBooleanValidator({ default: false }),
   selectedFolderId: z.coerce.number().default(-1),
-  sortingModel: sortingModelSearchParam(),
+  sortingModel: searchParamSortingModelValidator(),
   fetchSize: z.coerce.number().default(20),
-  showFolders: booleanSearchParam(true),
-  showChildFolders: booleanSearchParam(false),
+  showFolders: searchParamBooleanValidator({ default: true }),
+  showChildFolders: searchParamBooleanValidator({ default: false }),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/search")({

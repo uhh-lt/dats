@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { FILTER_PARAM, filterSearchParams } from "@core/filter";
+import { FILTER_PARAM, searchParamFilterValidators } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { similaritySearchQueries, SentenceSimilaritySearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
@@ -10,7 +10,7 @@ import { z } from "zod";
 
 const sentenceSearchSchema = z.object({
   searchQuery: z.string().default(""),
-  ...filterSearchParams<SdocColumns>(),
+  ...searchParamFilterValidators<SdocColumns>(),
   topK: z.coerce.number().default(10),
   threshold: z.coerce.number().default(0),
 });

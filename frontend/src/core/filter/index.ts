@@ -2,6 +2,7 @@
 // import their filter slices, which import this barrel again. Exporting the leaves first initializes them before that
 // cycle re-enters the barrel (otherwise e.g. createInitialFilterState is still in its TDZ when a slice is created).
 export * from "./filterUtils";
+export * from "./searchParamFilterValidators";
 export * from "./store";
 export * from "./api/tableInfoHooks";
 export * from "./api/tableInfoQueries";

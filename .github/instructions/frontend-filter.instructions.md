@@ -154,12 +154,12 @@ export const <Entity>LocalFilterTable = memo(
 
 - The caller owns `rowSelectionModel`, `sortingModel`, `columnVisibilityModel` and `fetchSize` (local `useState`, or its feature slice / route search params) and passes `projectId`. Column visibility defaults come from `TableInfoHooks.useColumnVisibility(<domain>Queries.tableInfo(projectId), storedModel, HIDDEN_BY_DEFAULT)`.
 - Pick the variant by where the filter must live: a dialog or panel → Redux with a unique `filterName` constant; a page whose filter belongs in the URL → URL; a feature that keeps the filter in its own state → Local. Domain actions on the selection go in a custom `renderTopLeftToolbar` / `renderBottomToolbar` that receives `selectedData`.
-- URL-backed filters (the URL variant, `URLFilterDialog`, or a Local variant fed from `useURLConnector`) get their search params from the helpers in `store/filterSearchParams.ts`, used in the route's `validateSearch` schema (see [frontend-route.instructions.md](frontend-route.instructions.md)): `filterSearchParams<Columns>()` adds `FILTER_PARAM` (deserialized to a `MyFilter`) and `FILTER_EXPERT_MODE_PARAM`, `sortingModelSearchParam(default?)` the sorting state, `booleanSearchParam(default)` any other flag. Never write these schemas by hand.
+- URL-backed filters (the URL variant, `URLFilterDialog`, or a Local variant fed from `useURLConnector`) get their search params from the validators used in the route's `validateSearch` schema (see [frontend-route.instructions.md](frontend-route.instructions.md)): `searchParamFilterValidators<Columns>()` (`searchParamFilterValidators.ts`) adds `FILTER_PARAM` (deserialized to a `MyFilter`) and `FILTER_EXPERT_MODE_PARAM`; `searchParamSortingModelValidator({ default? })` and `searchParamBooleanValidator({ default })` from `@utils/searchParamValidators` add the sorting state and any other flag. Never write these schemas by hand.
 
   ```ts
   const wordFrequencySearchSchema = z.object({
-    ...filterSearchParams<WordFrequencyColumns>(),
-    sortingModel: sortingModelSearchParam([{ id: "WF_WORD_FREQUENCY", desc: true }]),
+    ...searchParamFilterValidators<WordFrequencyColumns>(),
+    sortingModel: searchParamSortingModelValidator({ default: [{ id: "WF_WORD_FREQUENCY", desc: true }] }),
     fetchSize: z.coerce.number().default(50),
   });
   // createFileRoute(...)({ validateSearch: zodValidator(wordFrequencySearchSchema), ... })

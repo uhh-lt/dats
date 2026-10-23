@@ -186,7 +186,7 @@ export default defineConfig(
             // Routes are the entry point of the application. They compose generic components, core components, and features to create pages.
             {
               from: ["routes"],
-              allow: ["components", "core", "features", "models"],
+              allow: ["components", "core", "features", "models", "utils"],
             },
           ],
         },
