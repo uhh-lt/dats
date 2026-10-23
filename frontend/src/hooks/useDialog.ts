@@ -1,12 +1,14 @@
 import { useCallback, useState } from "react";
 
 interface UseDialogProps {
+  /** for a dialog that opens itself on start (default: closed) */
+  initialOpen?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
 }
 
-export const useDialog = ({ onOpen, onClose }: UseDialogProps = {}) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const useDialog = ({ initialOpen = false, onOpen, onClose }: UseDialogProps = {}) => {
+  const [isOpen, setIsOpen] = useState(initialOpen);
 
   const open = useCallback(() => {
     setIsOpen(true);
