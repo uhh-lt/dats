@@ -53,7 +53,6 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
   fetchSize,
   onFetchSizeChange,
   onSearchParameterChange,
-  positionToolbarAlertBanner = "top",
   renderTopLeftToolbar,
   renderTopRightToolbar,
   renderBottomToolbar,
@@ -176,7 +175,6 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      positionToolbarAlertBanner={positionToolbarAlertBanner}
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}

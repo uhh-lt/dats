@@ -137,7 +137,6 @@ export const WordFrequencyTable = memo(
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityChange={setColumnVisibilityModel}
             onFetchSizeChange={onFetchSizeChange}
-            positionToolbarAlertBanner="head-overlay"
             renderTopLeftToolbar={WordFrequencyTableToolbarLeft}
             renderTopRightToolbar={WordFrequencyTableToolbarRight}
             renderBottomToolbar={WordFrequencyTableToolbarBottom}

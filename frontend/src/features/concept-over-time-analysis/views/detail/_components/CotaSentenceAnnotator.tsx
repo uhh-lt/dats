@@ -273,7 +273,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     // disable footer
     enableBottomToolbar: false,
     // toolbar
-    positionToolbarAlertBanner: "head-overlay",
+    positionToolbarAlertBanner: "top",
     renderTopToolbarCustomActions: () => (
       <SimilarSentencesToolbar
         concepts={cota.concepts}

@@ -48,7 +48,6 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
   fetchSize,
   onFetchSizeChange,
   onSearchParameterChange,
-  positionToolbarAlertBanner = "head-overlay",
   renderTopLeftToolbar,
   renderTopRightToolbar = MemoToolbarRight,
   renderBottomToolbar,
@@ -144,7 +143,6 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      positionToolbarAlertBanner={positionToolbarAlertBanner}
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}

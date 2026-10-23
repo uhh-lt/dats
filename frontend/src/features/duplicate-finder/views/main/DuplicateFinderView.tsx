@@ -173,7 +173,7 @@ export function DuplicateFinderView() {
       sx: { flexGrow: 1 },
     },
     // toolbar(s)
-    positionToolbarAlertBanner: "bottom",
+    positionToolbarAlertBanner: "top",
     renderTopToolbarCustomActions: ({ table }) => (
       <Box sx={{ display: "flex", gap: "1rem", p: "4px" }}>
         <Button

@@ -68,7 +68,7 @@ const flatMapData = (page: Page_<Entity>Row_) => page.items;
 const <Entity>FilterTable = <TToolbarProps extends FilterTableToolbarProps<Row>>({
   projectId, filter, rowSelectionModel, onRowSelectionChange, sortingModel, onSortingChange,
   columnVisibilityModel, onColumnVisibilityChange, fetchSize, onFetchSizeChange, onSearchParameterChange,
-  positionToolbarAlertBanner = "top", renderTopLeftToolbar, renderTopRightToolbar, renderBottomToolbar, toolbarExtraProps,
+  renderTopLeftToolbar, renderTopRightToolbar, renderBottomToolbar, toolbarExtraProps,
 }: FilterTableContainerProps<Row, TToolbarProps, MyFilter<Columns>>) => {
   // table columns
   const { data: tableInfo } = useQuery(<domain>Queries.tableInfo(projectId));
@@ -147,7 +147,7 @@ export const <Entity>LocalFilterTable = memo(
 - **Columns**: built in one `useMemo` from `tableInfo`, `[]` while loading. Type the map callback (`(column): MRT_ColumnDef<Row> =>`) and the base `colDef`; never cast with `as MRT_ColumnDef`. The base `colDef` has `accessorFn: () => null`, because MRT only sorts columns with an accessor. Metadata columns (numeric `column`) render `SdocMetadataRenderer`; unknown columns render `<i>Cannot render column …</i>`. Extra columns that are not in `tableInfo` are typed constants prepended to the result (`textColumn`, `previewColumn`); columns to skip go in a `HIDDEN_COLUMNS: string[]` constant filtered before the map.
 - **Data**: `useInfiniteQuery(<domain>Queries.search({...}))` with `toSorts<Columns>(sortingModel)` and `fetchSize` as page size; pass the factory leaf directly (no spread, no `enabled`).
 - **Reset**: `useResetStateOnSearch([...searchParams], resetState)` clears the selection, sets the fetch size back to 20 and calls `onSearchParameterChange`. The params are every input of the search: `[filter, sortingModel]`, plus `searchQuery` if the table has a global search.
-- **`FilterTable` props** in this order: `name`, `columns`, `getRowId`, `data`, `fetchNextPage`, `flatMapData`, `isLoading={isLoading || columns.length === 0}`, `isError`, `isFetching`, `onFetchSizeChange`, the three state pairs, `positionToolbarAlertBanner`, the four toolbar props, then any extra MRT options (global search, detail panel, resizing).
+- **`FilterTable` props** in this order: `name`, `columns`, `getRowId`, `data`, `fetchNextPage`, `flatMapData`, `isLoading={isLoading || columns.length === 0}`, `isError`, `isFetching`, `onFetchSizeChange`, the three state pairs, the four toolbar props, then any extra MRT options (global search, detail panel, resizing).
 - **Global search** (sdoc, memo): `const [searchQuery, setSearchQuery] = useState<string | undefined>("")`, passed as `state={{ globalFilter: searchQuery }}`, `enableGlobalFilter`, `onGlobalFilterChange={setSearchQuery}`.
 
 ### Callers

@@ -333,7 +333,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
     },
     // selection
     enableRowSelection: true,
-    positionToolbarAlertBanner: "bottom",
+    positionToolbarAlertBanner: "top",
     onRowSelectionChange: setRowSelectionModel,
     // style
     muiTablePaperProps: {

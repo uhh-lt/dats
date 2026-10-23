@@ -371,6 +371,7 @@ export function SearchDocumentTable({
         }
       : { style: { width: "100%", padding: 0 }, className: "fixAlertBanner" },
     // toolbar
+    // eslint-disable-next-line local/table-banner-top -- selected rows show their actions in the toolbar; the banner slot only shows the loading error
     positionToolbarAlertBanner: "none",
   });
 

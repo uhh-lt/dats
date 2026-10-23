@@ -53,7 +53,6 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
   fetchSize,
   onFetchSizeChange,
   onSearchParameterChange,
-  positionToolbarAlertBanner = "top",
   renderTopLeftToolbar,
   renderTopRightToolbar,
   renderBottomToolbar,
@@ -173,7 +172,6 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
       onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={onColumnVisibilityChange}
-      positionToolbarAlertBanner={positionToolbarAlertBanner}
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderTopRightToolbar={renderTopRightToolbar}
       renderBottomToolbar={renderBottomToolbar}

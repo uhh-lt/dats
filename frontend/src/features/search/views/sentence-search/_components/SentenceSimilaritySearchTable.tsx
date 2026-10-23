@@ -245,7 +245,7 @@ export function SentenceSimilaritySearchTable({
         }
       : { style: { width: "100%" }, className: "fixAlertBanner" },
     // toolbar
-    positionToolbarAlertBanner: "head-overlay",
+    positionToolbarAlertBanner: "top",
   });
 
   return (

@@ -52,7 +52,6 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
       fetchSize={fetchSize}
       onFetchSizeChange={setFetchSize}
       filterName={"root"}
-      positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
       onFilterChange={setFilter}

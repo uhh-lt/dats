@@ -54,7 +54,6 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
       fetchSize={fetchSize}
       onFetchSizeChange={setFetchSize}
       filterName={filterName}
-      positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
       onFilterChange={setFilter}

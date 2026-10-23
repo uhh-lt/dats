@@ -126,7 +126,7 @@ export function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
       onClick: (event) => getMRT_RowSelectionHandler({ row, staticRowIndex, table })(event),
       sx: { cursor: "pointer" },
     }),
-    positionToolbarAlertBanner: "bottom",
+    positionToolbarAlertBanner: "top",
     onRowSelectionChange: setRowSelectionModel,
     // expansion
     enableExpandAll: false, //disable expand all button

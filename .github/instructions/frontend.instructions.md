@@ -64,7 +64,8 @@ ESLint (`check-file`) enforces the casing.
 - Prefix event handlers with `handle` (`handleClick` for `onClick`); do not import React unless it is used directly.
 - Split large components into focused sub-components in a private `_components` folder. A component that needs data and is also rendered from data comes as `XWithData` / `XWithoutData` (see the renderer instructions).
 - Use `memo()` for components that receive complex props or render in long lists, and `useMemo`/`useCallback` for values and callbacks passed to memoized children or used in effect dependencies. The React Compiler is not enabled; `eslint-plugin-react-hooks` checks dependency arrays.
-- Icons come from `getIconComponent(Icon.X)` (`@components/icons`), so every entity uses the same icon everywhere.
+- Icons come from `getIconComponent(Icon.X)` (`@components/icons`), so every entity uses the same icon everywhere. A page or feature gets its own `Icon` entry (`Icon.TAG_RECOMMENDATION`) instead of borrowing another one.
+- Tables (Material React Table) show the row selection banner at the top: `positionToolbarAlertBanner: "top"`. `FilterTable` sets it, so filter tables have no such prop (ESLint `local/table-banner-top`).
 
 ## State
 
