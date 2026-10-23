@@ -1,6 +1,6 @@
 import { generalQueries } from "@api/general/generalQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { FormMenu, FormNumber, FormText, FormTextMultiline } from "@components/form-inputs";
 import { getIconComponent, Icon } from "@components/icons";
 import { useTabNavigate } from "@core/navigation";
 import { DocTypeSelector } from "@core/source-document";
@@ -27,13 +27,12 @@ import {
   DialogContent,
   MenuItem,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { PerspectivesHooks } from "../../../api/perspectivesHooks";
 
 interface AspectTemplate {
@@ -150,9 +149,10 @@ export function PerspectiveCreationDialog() {
             pipeline_settings: {
               ...defaultAdvancedSettings,
               rewriting_model: data.rewriting_model,
+              umap_n_neighbors: data.umap_n_neighbors,
+              umap_n_components: data.umap_n_components,
               umap_min_dist: data.umap_min_dist,
               umap_metric: data.umap_metric,
-              umap_n_neighbors: data.umap_n_neighbors,
               hdbscan_metric: data.hdbscan_metric,
               hdbscan_min_cluster_size: data.hdbscan_min_cluster_size,
               num_keywords: data.num_keywords,
@@ -324,7 +324,7 @@ export function PerspectiveCreationDialog() {
                     Dimensionality Reduction (UMAP)
                   </Typography>
                   <Stack direction="row" spacing={2}>
-                    <Controller
+                    <FormNumber
                       name="umap_n_neighbors"
                       control={control}
                       rules={{
@@ -332,26 +332,18 @@ export function PerspectiveCreationDialog() {
                         min: { value: 2, message: "Minimum value is 2" },
                         max: { value: 100, message: "Maximum value is 100" },
                       }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="N Neighbors"
-                          type="number"
-                          size="small"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_neighbors)
-                          }
-                          inputProps={{ min: 2, max: 100 }}
-                          error={Boolean(errors.umap_n_neighbors)}
-                          helperText={
-                            errors.umap_n_neighbors?.message ||
-                            `Number of neighbors for local structure (default: ${defaultAdvancedSettings.umap_n_neighbors})`
-                          }
-                          fullWidth
-                        />
-                      )}
+                      textFieldProps={{
+                        label: "N Neighbors",
+                        size: "small",
+                        fullWidth: true,
+                        inputProps: { min: 2, max: 100 },
+                        error: Boolean(errors.umap_n_neighbors),
+                        helperText:
+                          errors.umap_n_neighbors?.message ||
+                          `Number of neighbors for local structure (default: ${defaultAdvancedSettings.umap_n_neighbors})`,
+                      }}
                     />
-                    <Controller
+                    <FormNumber
                       name="umap_n_components"
                       control={control}
                       rules={{
@@ -359,26 +351,18 @@ export function PerspectiveCreationDialog() {
                         min: { value: 2, message: "Minimum value is 2" },
                         max: { value: 100, message: "Maximum value is 100" },
                       }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="N Components"
-                          type="number"
-                          size="small"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_components)
-                          }
-                          inputProps={{ min: 2, max: 100 }}
-                          error={Boolean(errors.umap_n_components)}
-                          helperText={
-                            errors.umap_n_components?.message ||
-                            `Number of components for dimensionality reduction (default: ${defaultAdvancedSettings.umap_n_components})`
-                          }
-                          fullWidth
-                        />
-                      )}
+                      textFieldProps={{
+                        label: "N Components",
+                        size: "small",
+                        fullWidth: true,
+                        inputProps: { min: 2, max: 100 },
+                        error: Boolean(errors.umap_n_components),
+                        helperText:
+                          errors.umap_n_components?.message ||
+                          `Number of components for dimensionality reduction (default: ${defaultAdvancedSettings.umap_n_components})`,
+                      }}
                     />
-                    <Controller
+                    <FormNumber
                       name="umap_min_dist"
                       control={control}
                       rules={{
@@ -386,44 +370,32 @@ export function PerspectiveCreationDialog() {
                         min: { value: 0, message: "Minimum value is 0" },
                         max: { value: 1, message: "Maximum value is 1" },
                       }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Min Distance"
-                          type="number"
-                          size="small"
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value) || defaultAdvancedSettings.umap_min_dist)
-                          }
-                          inputProps={{ min: 0, max: 1, step: 0.05 }}
-                          error={Boolean(errors.umap_min_dist)}
-                          helperText={
-                            errors.umap_min_dist?.message ||
-                            `Minimum distance between points (default: ${defaultAdvancedSettings.umap_min_dist})`
-                          }
-                          fullWidth
-                        />
-                      )}
+                      textFieldProps={{
+                        label: "Min Distance",
+                        size: "small",
+                        fullWidth: true,
+                        inputProps: { min: 0, max: 1, step: 0.05 },
+                        error: Boolean(errors.umap_min_dist),
+                        helperText:
+                          errors.umap_min_dist?.message ||
+                          `Minimum distance between points (default: ${defaultAdvancedSettings.umap_min_dist})`,
+                      }}
                     />
-                    <Controller
+                    <FormMenu
                       name="umap_metric"
                       control={control}
                       rules={{ required: "Distance metric is required" }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Distance Metric"
-                          select
-                          size="small"
-                          error={Boolean(errors.umap_metric)}
-                          helperText={errors.umap_metric?.message || "Metric for measuring distances"}
-                          fullWidth
-                        >
-                          <MenuItem value="cosine">Cosine</MenuItem>
-                          <MenuItem value="euclidean">Euclidean</MenuItem>
-                        </TextField>
-                      )}
-                    />
+                      textFieldProps={{
+                        label: "Distance Metric",
+                        size: "small",
+                        fullWidth: true,
+                        error: Boolean(errors.umap_metric),
+                        helperText: errors.umap_metric?.message || "Metric for measuring distances",
+                      }}
+                    >
+                      <MenuItem value="cosine">Cosine</MenuItem>
+                      <MenuItem value="euclidean">Euclidean</MenuItem>
+                    </FormMenu>
                   </Stack>
 
                   {/* HDBSCAN Settings */}
@@ -431,7 +403,7 @@ export function PerspectiveCreationDialog() {
                     Density-based Clustering (HDBSCAN)
                   </Typography>
                   <Stack direction="row" spacing={2}>
-                    <Controller
+                    <FormNumber
                       name="hdbscan_min_cluster_size"
                       control={control}
                       rules={{
@@ -439,44 +411,32 @@ export function PerspectiveCreationDialog() {
                         min: { value: 1, message: "Minimum value is 1" },
                         max: { value: 200, message: "Maximum value is 200" },
                       }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Min Cluster Size"
-                          type="number"
-                          size="small"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.hdbscan_min_cluster_size)
-                          }
-                          inputProps={{ min: 1, max: 200 }}
-                          error={Boolean(errors.hdbscan_min_cluster_size)}
-                          helperText={
-                            errors.hdbscan_min_cluster_size?.message ||
-                            `Minimum cluster size (default: ${defaultAdvancedSettings.hdbscan_min_cluster_size})`
-                          }
-                          fullWidth
-                        />
-                      )}
+                      textFieldProps={{
+                        label: "Min Cluster Size",
+                        size: "small",
+                        fullWidth: true,
+                        inputProps: { min: 1, max: 200 },
+                        error: Boolean(errors.hdbscan_min_cluster_size),
+                        helperText:
+                          errors.hdbscan_min_cluster_size?.message ||
+                          `Minimum cluster size (default: ${defaultAdvancedSettings.hdbscan_min_cluster_size})`,
+                      }}
                     />
-                    <Controller
+                    <FormMenu
                       name="hdbscan_metric"
                       control={control}
                       rules={{ required: "Distance metric is required" }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Distance Metric"
-                          select
-                          size="small"
-                          error={Boolean(errors.hdbscan_metric)}
-                          helperText={errors.hdbscan_metric?.message || "Metric for measuring distances"}
-                          fullWidth
-                        >
-                          <MenuItem value="euclidean">Euclidean</MenuItem>
-                          <MenuItem value="cosine">Cosine</MenuItem>
-                        </TextField>
-                      )}
-                    />
+                      textFieldProps={{
+                        label: "Distance Metric",
+                        size: "small",
+                        fullWidth: true,
+                        error: Boolean(errors.hdbscan_metric),
+                        helperText: errors.hdbscan_metric?.message || "Metric for measuring distances",
+                      }}
+                    >
+                      <MenuItem value="euclidean">Euclidean</MenuItem>
+                      <MenuItem value="cosine">Cosine</MenuItem>
+                    </FormMenu>
                   </Stack>
 
                   {/* Keyword Extraction Settings */}
@@ -484,7 +444,7 @@ export function PerspectiveCreationDialog() {
                     Cluster Representation
                   </Typography>
                   <Stack direction="row" spacing={2}>
-                    <Controller
+                    <FormNumber
                       name="num_keywords"
                       control={control}
                       rules={{
@@ -492,26 +452,18 @@ export function PerspectiveCreationDialog() {
                         min: { value: 5, message: "Minimum value is 5" },
                         max: { value: 200, message: "Maximum value is 200" },
                       }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Number of Keywords"
-                          type="number"
-                          size="small"
-                          fullWidth
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_keywords)
-                          }
-                          inputProps={{ min: 5, max: 200 }}
-                          error={Boolean(errors.num_keywords)}
-                          helperText={
-                            errors.num_keywords?.message ||
-                            `Number of keywords to extract per cluster (default: ${defaultAdvancedSettings.num_keywords})`
-                          }
-                        />
-                      )}
+                      textFieldProps={{
+                        label: "Number of Keywords",
+                        size: "small",
+                        fullWidth: true,
+                        inputProps: { min: 5, max: 200 },
+                        error: Boolean(errors.num_keywords),
+                        helperText:
+                          errors.num_keywords?.message ||
+                          `Number of keywords to extract per cluster (default: ${defaultAdvancedSettings.num_keywords})`,
+                      }}
                     />
-                    <Controller
+                    <FormNumber
                       name="num_top_documents"
                       control={control}
                       rules={{
@@ -519,24 +471,16 @@ export function PerspectiveCreationDialog() {
                         min: { value: 1, message: "Minimum value is 1" },
                         max: { value: 200, message: "Maximum value is 200" },
                       }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Number of Top Documents"
-                          type="number"
-                          size="small"
-                          fullWidth
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_top_documents)
-                          }
-                          inputProps={{ min: 1, max: 200 }}
-                          error={Boolean(errors.num_top_documents)}
-                          helperText={
-                            errors.num_top_documents?.message ||
-                            `Number of top documents to extract per cluster (default: ${defaultAdvancedSettings.num_top_documents})`
-                          }
-                        />
-                      )}
+                      textFieldProps={{
+                        label: "Number of Top Documents",
+                        size: "small",
+                        fullWidth: true,
+                        inputProps: { min: 1, max: 200 },
+                        error: Boolean(errors.num_top_documents),
+                        helperText:
+                          errors.num_top_documents?.message ||
+                          `Number of top documents to extract per cluster (default: ${defaultAdvancedSettings.num_top_documents})`,
+                      }}
                     />
                   </Stack>
                 </Stack>

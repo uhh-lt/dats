@@ -90,7 +90,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 ### Forms
 
 - `useForm<Values>()` without `defaultValues`; reset the values with `reset({...})` in a `useEffect` when `isOpen` becomes true, from `dialogData` for edit dialogs.
-- Inputs are the `Form*` components from `@components/form-inputs` with `rules`, `error: Boolean(errors.x)` and `helperText: <ErrorMessage errors={errors} name="x" />`. A raw `Controller` + `TextField` only where no `Form*` component fits (numeric inputs that parse their value in `PerspectiveCreationDialog`).
+- Inputs are the `Form*` components from `@components/form-inputs` with `rules`, `error: Boolean(errors.x)` and `helperText: <ErrorMessage errors={errors} name="x" />` (a field with a hint: `helperText: errors.x?.message || "hint"`). Numbers use `FormNumber`, which stores a `number` (`null` while empty), never the input string. A raw `Controller` + `TextField` only where no `Form*` component fits.
 - `Dialog` gets `component="form"` and `onSubmit={handleSubmit(handle<Entity><Action>, handleError)}`; the submit button is `type="submit"`.
 - Submit handler: `handle<Entity><Action>` (`handleTagCreation`, `handleCodeUpdate`), wrapped in `useCallback<SubmitHandler<Values>>`. Error handler: `const handleError: SubmitErrorHandler<Values> = (data) => console.error(data);`.
 - Mutations are destructured: `const { mutate: createTagMutation, isPending } = TagHooks.useCreateTag();` (lint, no `x.mutate(...)`). In the `mutate` call's `onSuccess`, close the dialog and call the bus `onSuccess` / navigate.
