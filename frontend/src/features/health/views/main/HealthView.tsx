@@ -16,8 +16,8 @@ export function HealthView() {
   const projectId = HealthRouteAPI.useParams({ select: (params) => params.projectId });
   const { sortingModel } = HealthRouteAPI.useSearch();
   const [tab, setTab] = useURLConnector(HealthRouteAPI, "doctype");
-  const { healthTableOptions, healthTableColumnsOptions } = HealthRouteAPI.useRouteContext();
-  const healthTableQuery = useSuspenseInfiniteQuery(healthTableOptions);
+  const { healthSearchOptions, healthColumnsOptions } = HealthRouteAPI.useRouteContext();
+  const healthSearchQuery = useSuspenseInfiniteQuery(healthSearchOptions);
 
   // resetting search-parameter-dependant state
   const dispatch = useAppDispatch();
@@ -26,7 +26,7 @@ export function HealthView() {
   }, [dispatch]);
   useResetStateOnSearch([projectId, tab, sortingModel], resetState);
 
-  const { data: tableColumnInfo } = useSuspenseQuery(healthTableColumnsOptions);
+  const { data: tableColumnInfo } = useSuspenseQuery(healthColumnsOptions);
   const handleTabChange = useCallback(
     (_event: SyntheticEvent, newValue: DocType): void => {
       setTab(newValue);
@@ -52,15 +52,15 @@ export function HealthView() {
                 doctype={tab}
                 projectId={projectId}
                 tableColumnInfo={tableColumnInfo}
-                searchData={healthTableQuery.data}
-                isError={healthTableQuery.isError}
-                isFetching={healthTableQuery.isFetching}
-                isLoading={healthTableQuery.isLoading}
+                searchData={healthSearchQuery.data}
+                isError={healthSearchQuery.isError}
+                isFetching={healthSearchQuery.isFetching}
+                isLoading={healthSearchQuery.isLoading}
                 onFetchNextPage={() => {
-                  void healthTableQuery.fetchNextPage();
+                  void healthSearchQuery.fetchNextPage();
                 }}
                 onRefetch={() => {
-                  void healthTableQuery.refetch();
+                  void healthSearchQuery.refetch();
                 }}
               />
             </TabPanel>

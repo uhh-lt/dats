@@ -23,8 +23,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   loaderDeps: ({ search }) => search,
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({
-    healthTableColumnsOptions: healthQueries.columns(deps.doctype),
-    healthTableOptions: healthQueries.search({
+    healthColumnsOptions: healthQueries.columns(deps.doctype),
+    healthSearchOptions: healthQueries.search({
       projectId: params.projectId,
       doctype: deps.doctype,
       requestBody: toSorts(deps.sortingModel),
@@ -33,8 +33,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   }),
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.ensureQueryData(context.healthTableColumnsOptions),
-      context.queryClient.ensureInfiniteQueryData(context.healthTableOptions),
+      context.queryClient.ensureQueryData(context.healthColumnsOptions),
+      context.queryClient.ensureInfiniteQueryData(context.healthSearchOptions),
     ]);
   },
   pendingComponent: () => <CircularProgress />,
