@@ -47,7 +47,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
   },
   // 4. Route queries
   loaderDeps: ({ search }) => search,
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params, deps }) => ({ xxxsByProjectOptions: xxxQueries.byProject(params.projectId) }),
   loader: async ({ context, params }) => {
     const xxxs = await context.queryClient.ensureQueryData(context.xxxsByProjectOptions);
@@ -63,7 +62,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 
 ### Thin routes
 
-- **One view**: `component` is a view imported from a feature's (or core domain's) public `index.ts` (`@features/classifier`). A page route defines no components, hooks or helpers; an overview page gets its own feature (`@features/analysis-overview`).
+- **One view**: `component` is a view imported from a feature's (or core domain's) public `index.ts` (`@features/classifier`). A page route defines no components, hooks or helpers. The one exception is a navigation page that only links to other pages (`analysis/index.tsx`, a grid of `LinkCard`s): it renders its component inline.
 - **Allowed imports**: `@components` (icons), `@core`, `@features`, `@models`, MUI, TanStack Router/Query, `zod`, `@tanstack/zod-adapter` (boundaries are enforced by ESLint).
 - **Layout routes are the exception**: `__root.tsx`, `_auth.tsx`, `_public.tsx` and `$projectId/route.tsx` render the app frame and the global dialogs inline. Name their components `<Name>RouteLayout`, `<Name>RouteErrorBoundary`, `<Name>RouteNotFound` (`<Name>RouteFrame` for a shared wrapper); none of them is exported. Every boundary break there carries an `eslint-disable-next-line` with a reason.
 - A route whose segment has several children and only parses a param is a bare `route.tsx` with `params` only (`perspectives/$aspectId/route.tsx`).
@@ -72,7 +71,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 
 - **Route or component?** A query goes in the route if the page is useless without it, the URL (params and search params) fully determines it, and the first render needs it. Everything else (per-row data, dialogs, panels, anything depending on selection or Redux) is started in the component with the domain's hook.
 - **`loaderDeps`**: `({ search }) => search`, only when the queries use search params.
-- **`context`** is the only place that builds query options, with the factory leaf (never a hook): `({ params, deps }) => ({ ... })`, preceded by the comment `// the query options are built once here; the loader and the view use the same ones`. Name each option after the data it loads plus `Options` (`whiteboardsByProjectOptions`, `sdocDetailOptions`), never after the domain only (`cotaOptions`).
+- **`context`** is the only place that builds query options, with the factory leaf (never a hook): `({ params, deps }) => ({ ... })`. Name each option after the data it loads plus `Options` (`whiteboardsByProjectOptions`, `sdocDetailOptions`), never after the domain only (`cotaOptions`).
 - **`loader`** awaits `context.queryClient.ensureQueryData(context.xxxOptions)` (`ensureInfiniteQueryData` for infinite queries), several with `Promise.all`, and returns nothing. It never builds options itself.
 - **Missing entities**: a `$xxxId` route that loads the project's entity map checks the id and `throw notFound()` (rendered by `_auth`'s `notFoundComponent`). Load the dependent queries after the check.
 - **`pendingComponent: () => <CircularProgress />`** on every route with a `loader`.

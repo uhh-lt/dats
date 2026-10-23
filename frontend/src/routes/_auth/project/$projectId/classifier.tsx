@@ -9,7 +9,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/classifier")({
     icon: Icon.CLASSIFIER,
     getTitle: () => "Classifier",
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
     classifiersByProjectOptions: classifierQueries.byProject(params.projectId),
     classifierJobsByProjectOptions: classifierQueries.job.byProject(params.projectId),

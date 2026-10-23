@@ -16,7 +16,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
   params: {
     parse: ({ cotaId }) => ({ cotaId: parseIdParam(cotaId) }),
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ cotasByProjectOptions: cotaQueries.byProject(params.projectId) }),
   loader: async ({ context, params }) => {
     const cotas = await context.queryClient.ensureQueryData(context.cotasByProjectOptions);

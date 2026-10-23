@@ -9,7 +9,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/ml-automat
     icon: Icon.ML_AUTOMATION,
     getTitle: () => "ML Automation",
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ mlJobsByProjectOptions: mlAutomationQueries.job.byProject(params.projectId) }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(context.mlJobsByProjectOptions);

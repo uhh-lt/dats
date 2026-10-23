@@ -9,7 +9,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/")({
     icon: Icon.WHITEBOARD,
     getTitle: () => "Whiteboard",
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ whiteboardsByProjectOptions: whiteboardQueries.byProject(params.projectId) }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(context.whiteboardsByProjectOptions);

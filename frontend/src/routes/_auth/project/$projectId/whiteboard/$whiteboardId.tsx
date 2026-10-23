@@ -16,7 +16,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whit
   params: {
     parse: ({ whiteboardId }) => ({ whiteboardId: parseIdParam(whiteboardId) }),
   },
-  // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({
     whiteboardsByProjectOptions: whiteboardQueries.byProject(params.projectId),
     whiteboardDataOptions: whiteboardQueries.data(params.projectId, params.whiteboardId),
