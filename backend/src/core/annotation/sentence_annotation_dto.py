@@ -85,7 +85,7 @@ class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
 
 
 class SentenceAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
-    sent_annotation_id: int = Field(description="ID of the SentenceAnnotation")
+    sentence_annotation_id: int = Field(description="ID of the SentenceAnnotation")
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
 
 
@@ -95,6 +95,7 @@ class SentenceAnnotationRead(SentenceAnnotationBaseDTO):
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
     user_id: int = Field(description="User that created the SentenceAnnotation")
     sdoc_id: int = Field(description="SourceDocument the SentenceAnnotation refers to")
+    project_id: int = Field(description="Project the SentenceAnnotation belongs to")
     created: datetime = Field(description="Created timestamp of the SentenceAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SentenceAnnotation")
     memo_ids: list[int] = Field(

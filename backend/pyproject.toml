@@ -60,6 +60,7 @@ dependencies = [
     "torch>=2.12.1",
     "transformers<5.0.0",
     "tqdm>=4.68.3",
+    "typing-extensions>=4.16.0",
     "umap-learn>=0.5.12",
     "uvicorn>=0.50.0",
     "weaviate-client>=4.22.0",

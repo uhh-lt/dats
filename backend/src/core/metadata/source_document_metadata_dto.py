@@ -163,14 +163,16 @@ class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase)
         )
 
 
-class SourceDocumentMetadataBulkUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase):
-    id: int = Field(description="ID of the SourceDocumentMetadata")
+# Properties to update in bulk
+class SourceDocumentMetadataUpdateBulk(SourceDocumentMetadataUpdate):
+    sdoc_metadata_id: int = Field(description="ID of the SourceDocumentMetadata")
 
 
 # Properties for reading (as in ORM)
 class SourceDocumentMetadataRead(SourceDocumentMetadataBaseDTO):
     id: int = Field(description="ID of the SourceDocumentMetadata")
     project_metadata_id: int = Field(description="ID of the ProjectMetadata")
+    project_id: int = Field(description="Project the SourceDocumentMetadata belongs to")
     source_document_id: int = Field(
         description="SourceDocument the SourceDocumentMetadata belongs to"
     )

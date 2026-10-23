@@ -2,7 +2,7 @@ import { SdocMetadataHooks, SdocMetadataRendererWithData } from "@core/sdoc-meta
 import { SdocRenderer } from "@core/source-document";
 import { MetadataExtractionResult } from "@models/MetadataExtractionResult";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
-import { SourceDocumentMetadataBulkUpdate } from "@models/SourceDocumentMetadataBulkUpdate";
+import { SourceDocumentMetadataUpdateBulk } from "@models/SourceDocumentMetadataUpdateBulk";
 import { SourceDocumentMetadataReadResolved } from "@models/SourceDocumentMetadataReadResolved";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
@@ -164,11 +164,11 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
     SdocMetadataHooks.useUpdateBulkSdocMetadata();
 
   const handleUpdateBulkMetadata = useCallback(() => {
-    const metadataToUpdate: SourceDocumentMetadataBulkUpdate[] = theRows.reduce((acc, row) => {
+    const metadataToUpdate: SourceDocumentMetadataUpdateBulk[] = theRows.reduce((acc, row) => {
       for (const metadata of Object.values(row.metadataDict)) {
         if (metadata.useSuggested && metadata.suggestedValue) {
           acc.push({
-            id: metadata.suggestedValue.id,
+            sdoc_metadata_id: metadata.suggestedValue.id,
             boolean_value: metadata.suggestedValue.boolean_value,
             date_value: metadata.suggestedValue.date_value,
             int_value: metadata.suggestedValue.int_value,
@@ -178,7 +178,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
         }
       }
       return acc;
-    }, [] as SourceDocumentMetadataBulkUpdate[]);
+    }, [] as SourceDocumentMetadataUpdateBulk[]);
 
     updateBulkMetadataMutation(
       { requestBody: metadataToUpdate },
@@ -225,6 +225,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
               sdocMetadata={{
                 ...metadata.currentValue,
                 project_metadata_id: metadata.currentValue.project_metadata.id,
+                project_id: metadata.currentValue.project_metadata.project_id,
               }}
               projectMetadata={projectMetadata}
             />
@@ -256,6 +257,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
               sdocMetadata={{
                 ...metadata.suggestedValue,
                 project_metadata_id: metadata.suggestedValue.project_metadata.id,
+                project_id: metadata.suggestedValue.project_metadata.project_id,
               }}
               projectMetadata={projectMetadata}
             />

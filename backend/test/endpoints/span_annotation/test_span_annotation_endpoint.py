@@ -77,6 +77,11 @@ def test_add_span_annotations_bulk(
     items = [SpanAnnotationRead.model_validate(x) for x in resp.json()]
     assert len(items) == 2
     assert all(i.code_id == code.id and i.sdoc_id == sdoc.id for i in items)
+    # results follow the input order and name their project
+    assert [i.text for i in items] == ["Span 3", "Span 4"]
+    assert all(
+        i.project_id == project_with_span_annotation["project"].id for i in items
+    )
 
 
 def test_add_span_annotations_bulk_if_not_exists(
@@ -381,6 +386,47 @@ def test_update_span_annotations_bulk(
     }
 
 
+def test_update_span_annotations_bulk_keeps_input_order(
+    client: TestClient,
+    project_with_span_annotations_for_bulk_test,
+) -> None:
+    code = project_with_span_annotations_for_bulk_test["code"]
+    code2 = project_with_span_annotations_for_bulk_test["code2"]
+    span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
+    span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
+
+    # the second annotation (higher id) first, each with its own code
+    payload = [
+        {"span_annotation_id": span_annotation2.id, "code_id": code2.id},
+        {"span_annotation_id": span_annotation.id, "code_id": code.id},
+    ]
+    resp = client.patch("/span/bulk/update", json=payload)
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert [(item["id"], item["code_id"]) for item in body] == [
+        (span_annotation2.id, code2.id),
+        (span_annotation.id, code.id),
+    ]
+
+
+def test_update_span_annotations_bulk_rejects_duplicate_ids(
+    client: TestClient,
+    project_with_span_annotations_for_bulk_test,
+) -> None:
+    code2 = project_with_span_annotations_for_bulk_test["code2"]
+    span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
+
+    payload = [
+        {"span_annotation_id": span_annotation.id, "code_id": code2.id},
+        {"span_annotation_id": span_annotation.id, "code_id": code2.id},
+    ]
+    resp = client.patch("/span/bulk/update", json=payload)
+
+    assert resp.status_code == 400, resp.text
+    assert str(span_annotation.id) in resp.text
+
+
 def test_update_span_annotations_bulk_not_exists(
     client: TestClient,
 ) -> None:
@@ -434,6 +480,23 @@ def test_delete_span_annotations_bulk(
     body = resp.json()
     returned_ids = {item["id"] for item in body}
     assert returned_ids == {span_annotation.id, span_annotation2.id}
+
+
+def test_delete_span_annotations_bulk_keeps_input_order(
+    client: TestClient,
+    project_with_span_annotations_for_bulk_test,
+) -> None:
+    span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
+    span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
+
+    resp = client.request(
+        "DELETE", "/span/bulk/delete", json=[span_annotation2.id, span_annotation.id]
+    )
+
+    assert resp.status_code == 200, resp.text
+    deleted = [SpanAnnotationDeleted.model_validate(x) for x in resp.json()]
+    assert [d.id for d in deleted] == [span_annotation2.id, span_annotation.id]
+    assert [d.begin for d in deleted] == [span_annotation2.begin, span_annotation.begin]
 
 
 def test_delete_span_annotations_bulk_not_exists(client: TestClient) -> None:

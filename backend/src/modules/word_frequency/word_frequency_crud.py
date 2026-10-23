@@ -13,6 +13,7 @@ class CRUDWordFrequency(
         WordFrequencyORM,
         WordFrequencyCreate,
         UpdateNotAllowed,
+        tuple[int, str],  # (sdoc_id, word)
     ]
 ):
     ### READ OPERATIONS ###
@@ -47,9 +48,13 @@ class CRUDWordFrequency(
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, id: int, update_dto: UpdateNotAllowed
-    ) -> WordFrequencyORM:
+    def update_multi(
+        self,
+        db: Session,
+        *,
+        ids: list[tuple[int, str]],
+        update_dtos: list[UpdateNotAllowed],
+    ) -> list[WordFrequencyORM]:
         raise NotImplementedError()
 
     ### DELETE OPERATIONS ###

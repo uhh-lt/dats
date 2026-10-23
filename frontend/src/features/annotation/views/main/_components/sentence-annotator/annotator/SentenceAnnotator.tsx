@@ -113,7 +113,7 @@ export const SentenceAnnotator = memo(
       });
     };
     const startCreate = (requestBody: SentenceAnnotationCreate, onSuccess?: () => void) => {
-      const pending = toPendingSentenceAnnotation(requestBody, user?.id);
+      const pending = toPendingSentenceAnnotation(requestBody, user?.id, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
         { requestBody },
@@ -288,7 +288,7 @@ export const SentenceAnnotator = memo(
         sentence_id_start: selectedSentences[0],
         sentence_id_end: selectedSentences[selectedSentences.length - 1],
       };
-      const draft = toPendingSentenceAnnotation(requestBody, user?.id);
+      const draft = toPendingSentenceAnnotation(requestBody, user?.id, sdocData.project_id);
       setDraftAnnotation(draft);
 
       // open annotation menu in add mode (code selector visible immediately)

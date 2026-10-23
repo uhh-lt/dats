@@ -3,9 +3,9 @@ from fastapi.testclient import TestClient
 
 from common.meta_type_enum import MetaType
 from core.metadata.source_document_metadata_dto import (
-    SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
+    SourceDocumentMetadataUpdateBulk,
 )
 
 
@@ -215,12 +215,13 @@ def test_update_bulk_metadata_parametrized(
         "date_value": None,
         "list_value": None,
     }
-    payload = {**base, "id": sm.id, payload_1["field"]: payload_1["new"]}
+    payload = {**base, "sdoc_metadata_id": sm.id, payload_1["field"]: payload_1["new"]}
     resp = client.patch("/sdocmeta/bulk/update", json=[payload])
 
     assert resp.status_code == 200, resp.text
     updated = SourceDocumentMetadataRead.model_validate(resp.json()[0])
     assert updated.id == sm.id
+    assert updated.project_id == sdoc.project_id
     assert updated.source_document_id == sdoc.id
     assert updated.project_metadata_id == pm.id
     assert updated.str_value == payload.get("str_value")
@@ -234,8 +235,8 @@ def test_update_bulk_if_id_not_exists(
     client: TestClient,
 ):
     non_existing_id = 3000
-    payload = SourceDocumentMetadataBulkUpdate(
-        id=non_existing_id,
+    payload = SourceDocumentMetadataUpdateBulk(
+        sdoc_metadata_id=non_existing_id,
         str_value="Sports",
         int_value=None,
         date_value=None,

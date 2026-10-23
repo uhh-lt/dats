@@ -1,5 +1,4 @@
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import CursorResult, select, tuple_, update
+from sqlalchemy import CursorResult, update
 from sqlalchemy.orm import Session
 
 from modules.perspectives.cluster_orm import ClusterORM
@@ -9,67 +8,17 @@ from modules.perspectives.document_cluster_dto import (
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
-from repos.db.sql_exceptions import NoSuchElementError
 
 
 class CRUDDocumentCluster(
-    SQLCRUDBase[DocumentClusterORM, DocumentClusterCreate, DocumentClusterUpdate]
+    SQLCRUDBase[
+        DocumentClusterORM,
+        DocumentClusterCreate,
+        DocumentClusterUpdate,
+        tuple[int, int],  # (sdoc_id, cluster_id)
+    ]
 ):
     ### READ OPERATIONS ###
-
-    def read(self, db: Session, *, id: tuple[int, int]) -> DocumentClusterORM:
-        """
-        Read a DocumentClusterORM by a tuple of (sdoc_id, cluster_id).
-        """
-
-        db_obj = (
-            db.query(self.model)
-            .filter(
-                self.model.sdoc_id == id[0],
-                self.model.cluster_id == id[1],
-            )
-            .first()
-        )
-        if db_obj is None:
-            raise NoSuchElementError(self.model, sdoc_id=id[0], cluster_id=id[1])
-        return db_obj
-
-    def read_by_ids(
-        self, db: Session, *, ids: list[tuple[int, int]]
-    ) -> list[DocumentClusterORM]:
-        """
-        Read DocumentClusterORMs by a list of (sdoc_id, cluster_id) tuples.
-        """
-        if not ids:
-            return []
-
-        db_objects: list[DocumentClusterORM] = []
-
-        # 1. Process the composite key list in batches
-        for i in range(0, len(ids), BATCH_SIZE):
-            batch_ids = ids[i : i + BATCH_SIZE]
-
-            # 2. Build the SELECT statement
-            stmt = select(self.model).filter(
-                tuple_(self.model.sdoc_id, self.model.cluster_id).in_(batch_ids)
-            )
-
-            # 3. Execute the statement and fetch the results
-            batch_objects = db.scalars(stmt).all()
-            db_objects.extend(batch_objects)
-
-        # 4. Sort the results to match the input order
-        id_map: dict[tuple[int, int], DocumentClusterORM] = {
-            (obj.sdoc_id, obj.cluster_id): obj for obj in db_objects
-        }
-        result: list[DocumentClusterORM] = []
-        for key in ids:
-            if key in id_map:
-                result.append(id_map[key])
-            else:
-                raise NoSuchElementError(self.model, sdoc_id=key[0], cluster_id=key[1])
-
-        return result
 
     def read_by_aspect_id(
         self, db: Session, *, aspect_id: int
@@ -94,55 +43,7 @@ class CRUDDocumentCluster(
         )
 
     ### UPDATE OPERATIONS ###
-
-    def update(
-        self,
-        db: Session,
-        *,
-        id: tuple[int, int],
-        update_dto: DocumentClusterUpdate,
-    ) -> DocumentClusterORM:
-        """
-        Update a DocumentClusterORM by a tuple of (sdoc_id, cluster_id) and an update DTO.
-        """
-        db_obj = self.read(db=db, id=id)
-
-        obj_data = jsonable_encoder(db_obj.as_dict())
-        update_data = update_dto.model_dump(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
-        db.flush()
-        db.refresh(db_obj)
-
-        return db_obj
-
-    def update_multi(
-        self,
-        db: Session,
-        *,
-        ids: list[tuple[int, int]],
-        update_dtos: list[DocumentClusterUpdate],
-    ) -> list[DocumentClusterORM]:
-        """
-        Update multiple DocumentClusterORMs by a list of (sdoc_id, cluster_id) tuples and corresponding update DTOs.
-        """
-        if len(ids) != len(update_dtos):
-            raise ValueError(
-                f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
-            )
-        db_objects = self.read_by_ids(db=db, ids=ids)
-
-        for db_obj, update_dto in zip(db_objects, update_dtos):
-            obj_data = jsonable_encoder(db_obj.as_dict())
-            update_data = update_dto.model_dump(exclude_unset=True)
-            for field in obj_data:
-                if field in update_data:
-                    setattr(db_obj, field, update_data[field])
-        db.add_all(db_objects)
-        db.flush()
-        return db_objects
+    # Inherited from SQLCRUDBase
 
     ### OTHER OPERATIONS ###
 

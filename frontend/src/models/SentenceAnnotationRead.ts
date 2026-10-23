@@ -28,6 +28,10 @@ export type SentenceAnnotationRead = {
    */
   sdoc_id: number;
   /**
+   * Project the SentenceAnnotation belongs to
+   */
+  project_id: number;
+  /**
    * Created timestamp of the SentenceAnnotation
    */
   created: string;

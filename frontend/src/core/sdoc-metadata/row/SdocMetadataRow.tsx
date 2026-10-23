@@ -15,7 +15,7 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { SdocMetadataGoToButton } from "./_components/SdocMetadataGoToButton";
 
 interface SdocMetadataRowProps {
-  metadata: Omit<SourceDocumentMetadataRead, "id" | "source_document_id">;
+  metadata: Omit<SourceDocumentMetadataRead, "id" | "source_document_id" | "project_id">;
   onUpdateMetadata: (data: SourceDocumentMetadataUpdate) => void;
   onAddFilterClick?: (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => void;
 }

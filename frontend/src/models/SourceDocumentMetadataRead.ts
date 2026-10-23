@@ -32,6 +32,10 @@ export type SourceDocumentMetadataRead = {
    */
   project_metadata_id: number;
   /**
+   * Project the SourceDocumentMetadata belongs to
+   */
+  project_id: number;
+  /**
    * SourceDocument the SourceDocumentMetadata belongs to
    */
   source_document_id: number;

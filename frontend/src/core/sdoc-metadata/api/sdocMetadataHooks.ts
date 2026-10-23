@@ -17,7 +17,10 @@ const useGetSdocMetadataByProjectMetadataId = (sdocId: number | null | undefined
     select: (data) => data[projectMetadataId],
   });
 
-export type SourceDocumentMetadataReadCombined = Omit<SourceDocumentMetadataRead, "id" | "source_document_id"> & {
+export type SourceDocumentMetadataReadCombined = Omit<
+  SourceDocumentMetadataRead,
+  "id" | "source_document_id" | "project_id"
+> & {
   ids: number[];
 };
 

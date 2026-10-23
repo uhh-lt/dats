@@ -36,6 +36,10 @@ export type BBoxAnnotationRead = {
    */
   sdoc_id: number;
   /**
+   * Project the BBoxAnnotation belongs to
+   */
+  project_id: number;
+  /**
    * Created timestamp of the BBoxAnnotation
    */
   created: string;

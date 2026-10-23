@@ -17,6 +17,7 @@ let nextPendingId = -1;
 export function toPendingSpanAnnotation(
   requestBody: SpanAnnotationCreate,
   userId: number | undefined,
+  projectId: number,
 ): SpanAnnotationRead {
   return {
     ...requestBody,
@@ -25,6 +26,7 @@ export function toPendingSpanAnnotation(
     created: "",
     updated: "",
     user_id: userId || SYSTEM_USER_ID,
+    project_id: projectId,
     group_ids: [],
     memo_ids: [],
   };

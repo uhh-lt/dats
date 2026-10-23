@@ -5118,7 +5118,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/SourceDocumentMetadataBulkUpdate" },
+                "items": { "$ref": "#/components/schemas/SourceDocumentMetadataUpdateBulk" },
                 "type": "array",
                 "title": "Metadatas"
               }
@@ -8552,6 +8552,11 @@
             "title": "Sdoc Id",
             "description": "SourceDocument the BBoxAnnotation refers to"
           },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the BBoxAnnotation belongs to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -8581,6 +8586,7 @@
           "code_id",
           "user_id",
           "sdoc_id",
+          "project_id",
           "created",
           "updated",
           "memo_ids"
@@ -15246,6 +15252,11 @@
             "title": "Sdoc Id",
             "description": "SourceDocument the SentenceAnnotation refers to"
           },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SentenceAnnotation belongs to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -15273,6 +15284,7 @@
           "code_id",
           "user_id",
           "sdoc_id",
+          "project_id",
           "created",
           "updated",
           "memo_ids"
@@ -15359,15 +15371,15 @@
       },
       "SentenceAnnotationUpdateBulk": {
         "properties": {
-          "sent_annotation_id": {
+          "sentence_annotation_id": {
             "type": "integer",
-            "title": "Sent Annotation Id",
+            "title": "Sentence Annotation Id",
             "description": "ID of the SentenceAnnotation"
           },
           "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
         },
         "type": "object",
-        "required": ["sent_annotation_id", "code_id"],
+        "required": ["sentence_annotation_id", "code_id"],
         "title": "SentenceAnnotationUpdateBulk"
       },
       "SentenceAnnotationUpdatedBatchEvent": {
@@ -15773,39 +15785,6 @@
         ],
         "title": "SourceDocumentDataRead"
       },
-      "SourceDocumentMetadataBulkUpdate": {
-        "properties": {
-          "int_value": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Int Value",
-            "description": "Int Value of the SourceDocumentMetadata"
-          },
-          "str_value": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Str Value",
-            "description": "String Value of the SourceDocumentMetadata"
-          },
-          "boolean_value": {
-            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
-            "title": "Boolean Value",
-            "description": "Boolean Value of the SourceDocumentMetadata"
-          },
-          "date_value": {
-            "anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
-            "title": "Date Value",
-            "description": "Date Value of the SourceDocumentMetadata"
-          },
-          "list_value": {
-            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
-            "title": "List Value",
-            "description": "List Value of the SourceDocumentMetadata"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocumentMetadata" }
-        },
-        "type": "object",
-        "required": ["int_value", "str_value", "boolean_value", "date_value", "list_value", "id"],
-        "title": "SourceDocumentMetadataBulkUpdate"
-      },
       "SourceDocumentMetadataRead": {
         "properties": {
           "int_value": {
@@ -15839,6 +15818,11 @@
             "title": "Project Metadata Id",
             "description": "ID of the ProjectMetadata"
           },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SourceDocumentMetadata belongs to"
+          },
           "source_document_id": {
             "type": "integer",
             "title": "Source Document Id",
@@ -15854,6 +15838,7 @@
           "list_value",
           "id",
           "project_metadata_id",
+          "project_id",
           "source_document_id"
         ],
         "title": "SourceDocumentMetadataRead"
@@ -15940,6 +15925,43 @@
         "type": "object",
         "required": ["int_value", "str_value", "boolean_value", "date_value", "list_value"],
         "title": "SourceDocumentMetadataUpdate"
+      },
+      "SourceDocumentMetadataUpdateBulk": {
+        "properties": {
+          "int_value": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Int Value",
+            "description": "Int Value of the SourceDocumentMetadata"
+          },
+          "str_value": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Str Value",
+            "description": "String Value of the SourceDocumentMetadata"
+          },
+          "boolean_value": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Boolean Value",
+            "description": "Boolean Value of the SourceDocumentMetadata"
+          },
+          "date_value": {
+            "anyOf": [{ "type": "string", "format": "date" }, { "type": "null" }],
+            "title": "Date Value",
+            "description": "Date Value of the SourceDocumentMetadata"
+          },
+          "list_value": {
+            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
+            "title": "List Value",
+            "description": "List Value of the SourceDocumentMetadata"
+          },
+          "sdoc_metadata_id": {
+            "type": "integer",
+            "title": "Sdoc Metadata Id",
+            "description": "ID of the SourceDocumentMetadata"
+          }
+        },
+        "type": "object",
+        "required": ["int_value", "str_value", "boolean_value", "date_value", "list_value", "sdoc_metadata_id"],
+        "title": "SourceDocumentMetadataUpdateBulk"
       },
       "SourceDocumentRead": {
         "properties": {
@@ -16262,6 +16284,11 @@
             "title": "Sdoc Id",
             "description": "SourceDocument the SpanAnnotation refers to"
           },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SpanAnnotation belongs to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -16285,6 +16312,7 @@
           "code_id",
           "user_id",
           "sdoc_id",
+          "project_id",
           "created",
           "updated"
         ],
@@ -16392,6 +16420,11 @@
             "title": "Sdoc Id",
             "description": "SourceDocument the SpanAnnotation refers to"
           },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SpanAnnotation belongs to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -16428,6 +16461,7 @@
           "code_id",
           "user_id",
           "sdoc_id",
+          "project_id",
           "created",
           "updated",
           "group_ids",

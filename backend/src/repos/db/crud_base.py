@@ -1,10 +1,13 @@
-from typing import Generic, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from sqlalchemy import CursorResult, delete
+from sqlalchemy import ColumnElement, CursorResult, delete, inspect, tuple_
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.base import ExecutableOption
+from typing_extensions import TypeVar as TypeVarWithDefault
 
+from common.common_exceptions import DuplicateIdsError
 from config import conf
 from repos.db.orm_base import ORMBase
 from repos.db.sql_exceptions import NoSuchElementError
@@ -12,6 +15,9 @@ from repos.db.sql_exceptions import NoSuchElementError
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)
 UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
+# The primary key type: int for an `id` column, a tuple for a composite primary key
+# (e.g. tuple[int, int] for (sdoc_id, aspect_id)), in the column order of the key.
+IDType = TypeVarWithDefault("IDType", default=int)
 
 BATCH_SIZE = conf.postgres.batch_size
 
@@ -20,16 +26,30 @@ class UpdateNotAllowed(BaseModel):
     pass
 
 
-class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
+class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
     def __init__(self, model: Type[ORMModelType]):
         """
         Generic CRUD access with default methods to Create, Read, Update, Delete ORM models.
+
+        The single-item write methods (`create`, `update`, `delete`) delegate to their
+        `_multi` counterparts. A CRUD that needs extra handling overrides only the
+        `_multi` method and calls `super()`, so the single-item path gets it for free.
+
+        Every `_multi` method returns its results in the order of its input.
+
+        Ids are primary key values: an int for a model with an `id` column, a tuple in
+        key column order for a composite primary key (the fourth generic parameter).
 
         **Parameters**
 
         * `model`: A SQLAlchemy model class
         """
         self.model = model
+        mapper = inspect(model)
+        self._pk_columns = list(mapper.primary_key)
+        self._pk_names = [
+            mapper.get_property_by_column(column).key for column in self._pk_columns
+        ]
 
     ### CREATE OPERATIONS ###
 
@@ -39,12 +59,7 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         *,
         create_dto: CreateDTOType,
     ) -> ORMModelType:
-        dto_obj_data = jsonable_encoder(create_dto)
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.flush()
-        db.refresh(db_obj)
-        return db_obj
+        return self.create_multi(db=db, create_dtos=[create_dto])[0]
 
     def create_multi(
         self,
@@ -52,6 +67,18 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         *,
         create_dtos: list[CreateDTOType],
     ) -> list[ORMModelType]:
+        """
+        Create one row per DTO with a single flush.
+
+        Args:
+            create_dtos: The rows to create.
+
+        Returns:
+            The created objects, in the order of `create_dtos`.
+        """
+        if not create_dtos:
+            return []
+
         db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
         db.add_all(db_objs)
         db.flush()
@@ -59,45 +86,53 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     ### READ OPERATIONS ###
 
-    def read(self, db: Session, *, id: int) -> ORMModelType:
-        db_obj = db.query(self.model).filter(self.model.id == id).first()
+    def read(self, db: Session, *, id: IDType) -> ORMModelType:
+        db_obj = (
+            db.query(self.model)
+            .options(*self._load_options())
+            .filter(self._pk_in([id]))
+            .first()
+        )
         if db_obj is None:
-            raise NoSuchElementError(self.model, id=id)
+            raise NoSuchElementError(self.model, **self._pk_kwargs(id))
         return db_obj
 
-    def read_by_ids(
-        self, db: Session, *, ids: list[int], id_field: str = "id"
-    ) -> list[ORMModelType]:
+    def read_by_ids(self, db: Session, *, ids: list[IDType]) -> list[ORMModelType]:
+        """
+        Read the rows with the given ids, in batches of `BATCH_SIZE`.
+
+        Args:
+            ids: The ids to read. Duplicates are allowed and repeated in the result.
+
+        Returns:
+            The objects, in the order of `ids`.
+
+        Raises:
+            NoSuchElementError: If any id does not exist.
+        """
         if not ids:
             return []
 
         db_objects: list[ORMModelType] = []
 
-        # 1. Get the SQLA column object dynamically (e.g., self.model.id or self.model.code_id)
-        try:
-            model_column = getattr(self.model, id_field)
-        except AttributeError:
-            # Handle case where the specified key_field doesn't exist on the model
-            raise ValueError(
-                f"Model {self.model.__name__} does not have a field named '{id_field}'"
-            )
-
         # Process in batches to avoid overwhelming the database with too many IDs at once
-        for i in range(0, len(ids), BATCH_SIZE):
-            batch_ids = ids[i : i + BATCH_SIZE]
-            batch_objects = (
-                db.query(self.model).filter(model_column.in_(batch_ids)).all()
+        unique_ids = list(dict.fromkeys(ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            db_objects.extend(
+                db.query(self.model)
+                .options(*self._load_options())
+                .filter(self._pk_in(batch_ids))
+                .all()
             )
-            db_objects.extend(batch_objects)
 
         # Maintain the order of the input IDs
-        id_map = {getattr(obj, id_field): obj for obj in db_objects}
+        id_map = {self._pk_of(obj): obj for obj in db_objects}
         result: list[ORMModelType] = []
         for id in ids:
-            if id in id_map:
-                result.append(id_map[id])
-            else:
-                raise NoSuchElementError(self.model, **{id_field: id})
+            if id not in id_map:
+                raise NoSuchElementError(self.model, **self._pk_kwargs(id))
+            result.append(id_map[id])
 
         return result
 
@@ -112,43 +147,56 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         self,
         db: Session,
         *,
-        id: int,
+        id: IDType,
         update_dto: UpdateDTOType,
     ) -> ORMModelType:
-        db_obj = self.read(db=db, id=id)
-
-        obj_data = jsonable_encoder(db_obj.as_dict())
-        update_data = update_dto.model_dump(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
-        db.flush()
-        db.refresh(db_obj)
-
-        return db_obj
+        return self.update_multi(db=db, ids=[id], update_dtos=[update_dto])[0]
 
     def update_multi(
         self,
         db: Session,
         *,
-        ids: list[int],
+        ids: list[IDType],
         update_dtos: list[UpdateDTOType],
     ) -> list[ORMModelType]:
-        if len(ids) != len(update_dtos):
-            raise ValueError(
-                f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
-            )
+        """
+        Apply `update_dtos[i]` to the row `ids[i]`, with one read and a single flush.
+
+        Only the fields set in an update DTO are written.
+
+        Args:
+            ids: The ids of the rows to update. Must not contain duplicates.
+            update_dtos: One update DTO per id.
+
+        Returns:
+            The updated objects, in the order of `ids`.
+
+        Raises:
+            ValueError: If the lengths differ.
+            DuplicateIdsError: If `ids` contains duplicates.
+            NoSuchElementError: If any id does not exist.
+        """
+        self._check_update_input(ids=ids, update_dtos=update_dtos)
+        if not ids:
+            return []
+
         db_objects = self.read_by_ids(db=db, ids=ids)
 
+        column_keys = {c.key for c in inspect(self.model).column_attrs}
         for db_obj, update_dto in zip(db_objects, update_dtos):
-            obj_data = jsonable_encoder(db_obj.as_dict())
             update_data = update_dto.model_dump(exclude_unset=True)
-            for field in obj_data:
-                if field in update_data:
-                    setattr(db_obj, field, update_data[field])
-        db.add_all(db_objects)
+            for field, value in update_data.items():
+                if field in column_keys:
+                    setattr(db_obj, field, value)
         db.flush()
+
+        # Changed foreign keys do not update already loaded relationships, so expire
+        # them: they are lazily reloaded on the next access.
+        relationship_keys = list(inspect(self.model).relationships.keys())
+        if relationship_keys:
+            for db_obj in db_objects:
+                db.expire(db_obj, relationship_keys)
+
         return db_objects
 
     ### DELETE OPERATIONS ###
@@ -157,22 +205,30 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         self,
         db: Session,
         *,
-        id: int,
+        id: IDType,
     ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
-        db.delete(db_obj)
-        db.flush()
+        self.delete_multi(db=db, ids=[id])
         return db_obj
 
     def delete_multi(
         self,
         db: Session,
         *,
-        ids: list[int],
+        ids: list[IDType],
     ) -> int:
         """
-        Deletes objects by ID, processing in batches.
-        Returns the total count of rows deleted.
+        Delete the rows with the given ids, in batches of `BATCH_SIZE`.
+
+        Child rows are removed by the foreign keys' ON DELETE rules. Callers that need
+        the deleted objects (e.g. for websocket events) read them with `read_by_ids`
+        before deleting.
+
+        Args:
+            ids: The ids to delete. Duplicates and missing ids are ignored.
+
+        Returns:
+            The number of deleted rows.
         """
         if not ids:
             return 0
@@ -180,11 +236,12 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         total_deleted_count = 0
 
         # 1. Process ids in Batches
-        for i in range(0, len(ids), BATCH_SIZE):
-            batch_ids = ids[i : i + BATCH_SIZE]
+        unique_ids = list(dict.fromkeys(ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
 
             # 2. Build the DELETE Statement
-            stmt = delete(self.model).where(self.model.id.in_(batch_ids))
+            stmt = delete(self.model).where(self._pk_in(batch_ids))
 
             # 3. Execute the statement
             result = db.execute(stmt)
@@ -199,8 +256,63 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     ### OTHER OPERATIONS ###
 
-    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> bool:
-        exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
+    def exists(self, db: Session, *, id: IDType, raise_error: bool = False) -> bool:
+        exists = (
+            db.query(*self._pk_columns).filter(self._pk_in([id])).first() is not None
+        )
         if not exists and raise_error:
-            raise NoSuchElementError(self.model, id=id)
+            raise NoSuchElementError(self.model, **self._pk_kwargs(id))
         return exists
+
+    ### LOADING ###
+
+    def _load_options(self) -> list[ExecutableOption]:
+        """
+        Loader options for every read that returns this CRUD's objects (`read`,
+        `read_by_ids` and the CRUD's own read methods). A CRUD whose Read DTO reads
+        relationships (through ORM properties such as `sdoc_id` or `memo_ids`)
+        returns `selectinload(...)` options for them here, so building DTOs for N
+        objects costs a constant number of queries instead of one per object and
+        relationship.
+        """
+        return []
+
+    ### PRIMARY KEY HELPERS ###
+
+    def _pk_in(self, ids: list[IDType]) -> ColumnElement[bool]:
+        """`<pk> IN ids`, as a tuple comparison for a composite primary key."""
+        if len(self._pk_columns) == 1:
+            return self._pk_columns[0].in_(ids)
+        return tuple_(*self._pk_columns).in_(ids)
+
+    def _pk_of(self, db_obj: ORMModelType) -> Any:
+        """The id of a loaded object, as `read_by_ids` expects it."""
+        identity = inspect(db_obj).identity
+        assert identity is not None, "Expected a persistent object!"
+        return identity[0] if len(identity) == 1 else tuple(identity)
+
+    def _pk_kwargs(self, id: IDType) -> dict[str, object]:
+        """The id as {key column name: value}, e.g. for NoSuchElementError."""
+        values = id if isinstance(id, tuple) else (id,)
+        return dict(zip(self._pk_names, values))
+
+    def _check_update_input(
+        self, *, ids: list[IDType], update_dtos: list[UpdateDTOType]
+    ) -> None:
+        """
+        Raises:
+            ValueError: If `ids` and `update_dtos` differ in length.
+            DuplicateIdsError: If `ids` contains duplicates.
+        """
+        if len(ids) != len(update_dtos):
+            raise ValueError(
+                f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
+            )
+        seen: set[IDType] = set()
+        duplicates: dict[IDType, None] = {}
+        for id in ids:
+            if id in seen:
+                duplicates[id] = None
+            seen.add(id)
+        if duplicates:
+            raise DuplicateIdsError(list(duplicates))

@@ -1,13 +1,12 @@
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_, false, or_
 from sqlalchemy.orm import Session
 
+from modules.ml.ml_enum import MLJobTypeID
 from modules.ml.source_document_job_status_dto import (
     SourceDocumentJobStatusCreate,
     SourceDocumentJobStatusUpdate,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
-from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
+from repos.db.crud_base import SQLCRUDBase
 
 
 class CRUDSourceDocumentJobStatus(
@@ -15,6 +14,7 @@ class CRUDSourceDocumentJobStatus(
         SourceDocumentJobStatusORM,
         SourceDocumentJobStatusCreate,
         SourceDocumentJobStatusUpdate,
+        tuple[int, MLJobTypeID],  # (sdoc id, job type)
     ]
 ):
     ### CREATE OPERATIONS ###
@@ -22,28 +22,9 @@ class CRUDSourceDocumentJobStatus(
     def create_multi(
         self, db: Session, *, create_dtos: list[SourceDocumentJobStatusCreate]
     ) -> list[SourceDocumentJobStatusORM]:
-        if not create_dtos:
-            return []
-
         # replace existing status rows of the same (id, type)
-        for i in range(0, len(create_dtos), BATCH_SIZE):
-            batch_dtos = create_dtos[i : i + BATCH_SIZE]
-            db.query(self.model).where(
-                or_(
-                    false(),
-                    *[
-                        and_(
-                            SourceDocumentJobStatusORM.id == x.id,
-                            SourceDocumentJobStatusORM.type == x.type,
-                        )
-                        for x in batch_dtos
-                    ],
-                )
-            ).delete()
-        db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
-        db.add_all(db_objs)
-        db.flush()
-        return db_objs
+        self.delete_multi(db=db, ids=[(x.id, x.type) for x in create_dtos])
+        return super().create_multi(db=db, create_dtos=create_dtos)
 
 
 crud_sdoc_job_status = CRUDSourceDocumentJobStatus(SourceDocumentJobStatusORM)

@@ -77,7 +77,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
       updateMetadataMutation({
         requestBody: [
           {
-            id: metadataId,
+            sdoc_metadata_id: metadataId,
             str_value: data.str_value,
             int_value: data.int_value,
             date_value: data.date_value,

@@ -6,7 +6,7 @@ export type SentenceAnnotationUpdateBulk = {
   /**
    * ID of the SentenceAnnotation
    */
-  sent_annotation_id: number;
+  sentence_annotation_id: number;
   /**
    * Code the SentenceAnnotation refers to
    */

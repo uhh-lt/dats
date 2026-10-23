@@ -142,12 +142,15 @@ class CRUDTag(SQLCRUDBase[TagORM, TagCreate, TagUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(self, db: Session, *, id: int, update_dto: TagUpdate) -> TagORM:
-        # check that the parent tag is not being set to itself
-        if update_dto.parent_id == id:
-            raise ValueError("A tag cannot be its own parent")
+    def update_multi(
+        self, db: Session, *, ids: list[int], update_dtos: list[TagUpdate]
+    ) -> list[TagORM]:
+        # check that no parent tag is being set to the tag itself
+        for id, update_dto in zip(ids, update_dtos):
+            if update_dto.parent_id == id:
+                raise ValueError("A tag cannot be its own parent")
 
-        return super().update(db, id=id, update_dto=update_dto)
+        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
     ### OTHER OPERATIONS ###
 

@@ -8,9 +8,12 @@ from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
-    SourceDocumentMetadataBulkUpdate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
+    SourceDocumentMetadataUpdateBulk,
+)
+from core.metadata.source_document_metadata_service import (
+    SourceDocumentMetadataService,
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -99,12 +102,13 @@ def update_by_id(
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
 
-    db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
-    result = SourceDocumentMetadataRead.model_validate(db_obj)
+    result = SourceDocumentMetadataService().update(
+        db=db, id=metadata_id, update_dto=metadata
+    )
     ws.emit_to_project(
         DATSEvent.SDOC_METADATA_UPDATED,
         result,
-        project_id=db_obj.get_project_id(),
+        project_id=result.project_id,
     )
     return result
 
@@ -117,21 +121,16 @@ def update_by_id(
 def update_bulk(
     *,
     db: Session = Depends(get_db_session),
-    metadatas: list[SourceDocumentMetadataBulkUpdate],
+    metadatas: list[SourceDocumentMetadataUpdateBulk],
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[SourceDocumentMetadataRead]:
     authz_user.assert_in_same_project_as_many(
-        Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
+        Crud.SOURCE_DOCUMENT_METADATA, [m.sdoc_metadata_id for m in metadatas]
     )
-    db_objs = crud_sdoc_meta.update_bulk(db=db, update_dtos=metadatas)
-    results = [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
+    results = SourceDocumentMetadataService().update_multi(db=db, update_dtos=metadatas)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SDOC_METADATA_UPDATED_BATCH,
-            db_objs,
-            to_dto=SourceDocumentMetadataRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SDOC_METADATA_UPDATED_BATCH, results)
     return results
 
 
@@ -151,9 +150,8 @@ def delete_by_id(
     ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
-    metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
-    project_id = metadata.get_project_id()
-    db_obj = crud_sdoc_meta.delete(db=db, id=metadata_id)
-    result = SourceDocumentMetadataRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SDOC_METADATA_DELETED, result, project_id=project_id)
+    result = SourceDocumentMetadataService().delete(db=db, id=metadata_id)
+    ws.emit_to_project(
+        DATSEvent.SDOC_METADATA_DELETED, result, project_id=result.project_id
+    )
     return result

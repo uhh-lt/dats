@@ -8,13 +8,6 @@ from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
 class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
     ### CREATE OPERATIONS ###
 
-    def create(self, db: Session, *, create_dto: SpanTextCreate) -> SpanTextORM:
-        # Only create when not already present
-        db_obj = self.read_by_text(db=db, text=create_dto.text)
-        if db_obj is None:
-            return super().create(db=db, create_dto=create_dto)
-        return db_obj
-
     # @tenacity.retry(
     #     wait=tenacity.wait_random(),
     #     stop=tenacity.stop_after_attempt(5),
@@ -82,9 +75,9 @@ class CRUDSpanText(SQLCRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(
-        self, db: Session, *, id: int, update_dto: UpdateNotAllowed
-    ) -> SpanTextORM:
+    def update_multi(
+        self, db: Session, *, ids: list[int], update_dtos: list[UpdateNotAllowed]
+    ) -> list[SpanTextORM]:
         # Flo: We no not want to update SpanText
         raise NotImplementedError()
 

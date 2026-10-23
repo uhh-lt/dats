@@ -5,9 +5,11 @@ import pytest
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import SpanGroupCreate
 from core.annotation.span_group_orm import SpanGroupORM
+from core.annotation.span_group_service import SpanGroupService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -46,18 +48,23 @@ def project_with_span_annotation(
     )
 
     # Create a span annotation
-    span_annotation = crud_span_anno.create(
+    span_annotation = crud_span_anno.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dto=SpanAnnotationCreate(
-            span_text="This is a test",
-            begin=0,
-            end=14,
-            begin_token=0,
-            end_token=3,
-            code_id=code.id,
-            sdoc_id=sdoc.id,
-        ),
+        id=SpanAnnotationService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SpanAnnotationCreate(
+                span_text="This is a test",
+                begin=0,
+                end=14,
+                begin_token=0,
+                end_token=3,
+                code_id=code.id,
+                sdoc_id=sdoc.id,
+            ),
+        )
+        .id,
     )
 
     # Commit the changes to the database and refresh the objects
@@ -106,18 +113,23 @@ def project_with_span_annotations_for_bulk_test(
     )
 
     # Create a second span annotation
-    span_annotation2 = crud_span_anno.create(
+    span_annotation2 = crud_span_anno.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dto=SpanAnnotationCreate(
-            span_text="two sentences",
-            begin=32,
-            end=45,
-            begin_token=8,
-            end_token=9,
-            code_id=code.id,
-            sdoc_id=sdoc.id,
-        ),
+        id=SpanAnnotationService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SpanAnnotationCreate(
+                span_text="two sentences",
+                begin=32,
+                end=45,
+                begin_token=8,
+                end_token=9,
+                code_id=code.id,
+                sdoc_id=sdoc.id,
+            ),
+        )
+        .id,
     )
 
     # Commit the changes to the database and refresh the objects
@@ -151,18 +163,23 @@ def project_with_span_annotations_for_count_test(
     span_annotation = project_with_span_annotation["span_annotation"]
 
     # Create a second span annotation
-    span_annotation2 = crud_span_anno.create(
+    span_annotation2 = crud_span_anno.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dto=SpanAnnotationCreate(
-            span_text="two sentences",
-            begin=32,
-            end=45,
-            begin_token=8,
-            end_token=9,
-            code_id=code.id,
-            sdoc_id=sdoc.id,
-        ),
+        id=SpanAnnotationService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SpanAnnotationCreate(
+                span_text="two sentences",
+                begin=32,
+                end=45,
+                begin_token=8,
+                end_token=9,
+                code_id=code.id,
+                sdoc_id=sdoc.id,
+            ),
+        )
+        .id,
     )
 
     # Commit the changes to the database and refresh the objects
@@ -194,10 +211,15 @@ def project_with_span_annotations_and_group(
     span_annotation = project_with_span_annotation["span_annotation"]
 
     # Create a span group
-    span_group = crud_span_group.create(
+    span_group = crud_span_group.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
+        id=SpanGroupService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
+        )
+        .id,
     )
 
     # Commit the changes to the database and refresh the objects
@@ -225,10 +247,15 @@ def project_with_span_annotations_and_linked_group(
     span_annotation = project_with_span_annotation["span_annotation"]
 
     # Create a span group
-    span_group = crud_span_group.create(
+    span_group = crud_span_group.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
+        id=SpanGroupService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SpanGroupCreate(name="g1", sdoc_id=sdoc.id),
+        )
+        .id,
     )
 
     # Link the span annotation to the group

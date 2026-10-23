@@ -13,9 +13,11 @@ from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -213,18 +215,23 @@ def _span_for_text(
         )
         + 1
     )
-    return crud_span_anno.create(
+    return crud_span_anno.read(
         db=db,
-        user_id=user_id,
-        create_dto=SpanAnnotationCreate(
-            sdoc_id=sdoc.id,
-            begin=begin,
-            end=end,
-            begin_token=begin_token,
-            end_token=end_token,
-            span_text=text,
-            code_id=code_id,
-        ),
+        id=SpanAnnotationService()
+        .create(
+            db=db,
+            user_id=user_id,
+            create_dto=SpanAnnotationCreate(
+                sdoc_id=sdoc.id,
+                begin=begin,
+                end=end,
+                begin_token=begin_token,
+                end_token=end_token,
+                span_text=text,
+                code_id=code_id,
+            ),
+        )
+        .id,
     )
 
 
@@ -397,17 +404,23 @@ def llm_assistant_project(
         )
         for name in example_names
     ]
-    human_sentence_annotations = crud_sentence_anno.create_bulk(
+    human_sentence_annotations = crud_sentence_anno.read_by_ids(
         db=db_session,
-        user_id=test_user.id,
-        create_dtos=[
-            SentenceAnnotationCreate(
-                sdoc_id=example_sdoc.id,
-                sentence_id_start=sentence_id,
-                sentence_id_end=sentence_id,
-                code_id=fact_code.id,
+        ids=[
+            dto.id
+            for dto in SentenceAnnotationService().create_multi(
+                db=db_session,
+                user_id=test_user.id,
+                create_dtos=[
+                    SentenceAnnotationCreate(
+                        sdoc_id=example_sdoc.id,
+                        sentence_id_start=sentence_id,
+                        sentence_id_end=sentence_id,
+                        code_id=fact_code.id,
+                    )
+                    for sentence_id in range(conf.llm_assistant.few_shot_threshold)
+                ],
             )
-            for sentence_id in range(conf.llm_assistant.few_shot_threshold)
         ],
     )
 
@@ -425,25 +438,35 @@ def llm_assistant_project(
         code_id=person_code.id,
         user_id=ASSISTANT_FEWSHOT_ID,
     )
-    zero_sentence_annotation = crud_sentence_anno.create(
+    zero_sentence_annotation = crud_sentence_anno.read(
         db=db_session,
-        user_id=ASSISTANT_ZEROSHOT_ID,
-        create_dto=SentenceAnnotationCreate(
-            sdoc_id=target_sdoc.id,
-            sentence_id_start=0,
-            sentence_id_end=0,
-            code_id=fact_code.id,
-        ),
+        id=SentenceAnnotationService()
+        .create(
+            db=db_session,
+            user_id=ASSISTANT_ZEROSHOT_ID,
+            create_dto=SentenceAnnotationCreate(
+                sdoc_id=target_sdoc.id,
+                sentence_id_start=0,
+                sentence_id_end=0,
+                code_id=fact_code.id,
+            ),
+        )
+        .id,
     )
-    few_sentence_annotation = crud_sentence_anno.create(
+    few_sentence_annotation = crud_sentence_anno.read(
         db=db_session,
-        user_id=ASSISTANT_FEWSHOT_ID,
-        create_dto=SentenceAnnotationCreate(
-            sdoc_id=target_sdoc.id,
-            sentence_id_start=1,
-            sentence_id_end=1,
-            code_id=fact_code.id,
-        ),
+        id=SentenceAnnotationService()
+        .create(
+            db=db_session,
+            user_id=ASSISTANT_FEWSHOT_ID,
+            create_dto=SentenceAnnotationCreate(
+                sdoc_id=target_sdoc.id,
+                sentence_id_start=1,
+                sentence_id_end=1,
+                code_id=fact_code.id,
+            ),
+        )
+        .id,
     )
 
     foreign_project = crud_project.create(

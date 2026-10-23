@@ -831,8 +831,9 @@ class DocClassificationModelService(TextClassificationModelService):
                 ],
                 train_params=parameters.get_training_settings(),
             ),
-            codes=[],
-            tags=tags,
+        )
+        crud_classifier.link_tags(
+            db=db, id=classifier.id, tag_ids=[tag.id for tag in tags]
         )
 
         # 6.2 store the evaluation in the db

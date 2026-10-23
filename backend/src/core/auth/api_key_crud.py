@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,26 +8,7 @@ from repos.db.crud_base import SQLCRUDBase, UpdateNotAllowed
 
 class CRUDApiKey(SQLCRUDBase[ApiKeyORM, ApiKeyCreate, UpdateNotAllowed]):
     ### CREATE OPERATIONS ###
-
-    def create(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        name: str,
-        hashed_key: str,
-        prefix: str,
-        expires_at: datetime | None = None,
-    ) -> ApiKeyORM:
-        dto = ApiKeyCreate(
-            name=name,
-            prefix=prefix,
-            hashed_key=hashed_key,
-            expires_at=expires_at,
-            created_at=datetime.now(UTC),
-            user_id=user_id,
-        )
-        return super().create(db, create_dto=dto)
+    # Inherited from SQLCRUDBase
 
     ### READ OPERATIONS ###
 

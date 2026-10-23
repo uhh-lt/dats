@@ -30,6 +30,16 @@ Rules (the rule id is printed with every violation):
                      (only repos.db.*), of weaviate / elasticsearch / redis / rq, or of
                      *_embedding_crud, *_elastic_crud, *_collection, *_elastic_index and
                      *_service modules. Side effects on other stores belong in a service.
+    no-bulk          SQL CRUDs have no '*_bulk' methods: batch methods are the base
+                     '_multi' methods, orchestration of API DTOs belongs in a service.
+    generic-dto      SQL overrides of create / create_multi / update / update_multi take
+                     exactly the generic DTO types of SQLCRUDBase[ORM, Create, Update]
+                     and no extra parameters (create_dto: Create, create_dtos:
+                     list[Create], id + update_dto: Update, ids + update_dtos: list[Update]).
+    override-multi   SQL CRUDs override create_multi / update_multi / delete_multi, not
+                     the single-item create / update / delete (the base delegates them to
+                     the _multi methods). Exempt a justified case with the comment
+                     `# check_crud: allow override-multi (<reason>)` directly above it.
 
 Usage:
     check_crud.py                 check every *_crud.py file below backend/src
@@ -97,6 +107,46 @@ FORBIDDEN_SQL_IMPORT_SUFFIXES = (
     "_elastic_index",
     "_service",
 )
+
+
+# generic-dto: parameters (besides db) of the overridable base write methods and the
+# type of their DTO parameter ({create} / {update} are the generic DTO types)
+BASE_WRITE_SIGNATURES = {
+    "create": ({"create_dto"}, "create_dto", "{create}"),
+    "create_multi": ({"create_dtos"}, "create_dtos", "list[{create}]"),
+    "update": ({"id", "update_dto"}, "update_dto", "{update}"),
+    "update_multi": ({"ids", "update_dtos"}, "update_dtos", "list[{update}]"),
+}
+
+# override-multi: single-item base methods and the _multi method to override instead
+SINGLE_TO_MULTI = {
+    "create": "create_multi",
+    "update": "update_multi",
+    "delete": "delete_multi",
+}
+ALLOW_RE = re.compile(r"#\s*check_crud:\s*allow\s+([\w-]+)")
+
+
+def generic_params(crud_class: ast.ClassDef) -> tuple[str, str] | None:
+    """The (Create, Update) DTO type names of `SQLCRUDBase[ORM, Create, Update(, ID)]`."""
+    for b in crud_class.bases:
+        if (
+            isinstance(b, ast.Subscript)
+            and base_name(b) == SQL.base
+            and isinstance(b.slice, ast.Tuple)
+            and len(b.slice.elts) in (3, 4)
+        ):
+            return ast.unparse(b.slice.elts[1]), ast.unparse(b.slice.elts[2])
+    return None
+
+
+def allowed_rules(
+    lines: list[str], func: ast.FunctionDef | ast.AsyncFunctionDef
+) -> set[str]:
+    """Rules exempted by a `# check_crud: allow <rule>` comment directly above `func`."""
+    def_line = func.decorator_list[0].lineno if func.decorator_list else func.lineno
+    above = lines[def_line - 2] if def_line >= 2 else ""
+    return set(ALLOW_RE.findall(above))
 
 
 def forbidden_sql_import(module: str) -> str | None:
@@ -412,6 +462,60 @@ def check_source(path: Path, source: str) -> list[Violation]:
                     m.name,
                 )
             )
+
+    # no-bulk / generic-dto / override-multi (SQL only)
+    if kind is SQL:
+        dto_types = generic_params(crud_class)
+        for m in methods:
+            if m.name.endswith("_bulk") and not m.name.startswith("_"):
+                violations.append(
+                    Violation(
+                        p,
+                        m.lineno,
+                        "no-bulk",
+                        "No '*_bulk' methods: use the base '_multi' methods and move "
+                        "orchestration of API DTOs into a service.",
+                        c,
+                        m.name,
+                    )
+                )
+            if m.name in BASE_WRITE_SIGNATURES and dto_types is not None:
+                names, dto_param, dto_type = BASE_WRITE_SIGNATURES[m.name]
+                expected_type = dto_type.format(
+                    create=dto_types[0], update=dto_types[1]
+                )
+                params = {a.arg: a for a in m.args.kwonlyargs}
+                annotation = (
+                    params[dto_param].annotation if dto_param in params else None
+                )
+                found_type = ast.unparse(annotation) if annotation is not None else None
+                if set(params) != names or found_type != expected_type:
+                    violations.append(
+                        Violation(
+                            p,
+                            m.lineno,
+                            "generic-dto",
+                            f"Must take exactly {', '.join(sorted(names))} with "
+                            f"{dto_param}: {expected_type} (found: "
+                            f"{', '.join(params) or 'none'}; {dto_param}: {found_type}).",
+                            c,
+                            m.name,
+                        )
+                    )
+            if m.name in SINGLE_TO_MULTI and "override-multi" not in allowed_rules(
+                lines, m
+            ):
+                violations.append(
+                    Violation(
+                        p,
+                        m.lineno,
+                        "override-multi",
+                        f"Override '{SINGLE_TO_MULTI[m.name]}' instead: the base "
+                        f"'{m.name}' delegates to it, so both paths get the handling.",
+                        c,
+                        m.name,
+                    )
+                )
 
     for m in methods:
         # return-annotation

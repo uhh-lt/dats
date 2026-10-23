@@ -12,6 +12,7 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationUpdate,
     SpanAnnotationUpdateBulk,
 )
+from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
@@ -49,12 +50,13 @@ def create_span_annotation(
         ]
     )
 
-    db_obj = crud_span_anno.create(db=db, user_id=authz_user.user.id, create_dto=span)
-    result = SpanAnnotationRead.model_validate(db_obj)
+    result = SpanAnnotationService().create(
+        db=db, user_id=authz_user.user.id, create_dto=span
+    )
     ws.emit_to_project(
         DATSEvent.SPAN_ANNOTATION_CREATED,
         result,
-        project_id=db_obj.get_project_id(),
+        project_id=result.project_id,
     )
     return result
 
@@ -82,16 +84,11 @@ def create_span_annotations_bulk(
             ]
         )
 
-    db_objs = crud_span_anno.create_bulk(
+    results = SpanAnnotationService().create_multi(
         db=db, user_id=authz_user.user.id, create_dtos=spans
     )
-    results = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SPAN_ANNOTATION_CREATED_BATCH,
-            db_objs,
-            to_dto=SpanAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_CREATED_BATCH, results)
     return results
 
 
@@ -233,14 +230,9 @@ def update_span_annotations_bulk(
             ]
         )
 
-    db_objs = crud_span_anno.update_bulk(db=db, update_dtos=spans)
-    results = [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = SpanAnnotationService().update_multi(db=db, update_dtos=spans)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH,
-            db_objs,
-            to_dto=SpanAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH, results)
     return results
 
 
@@ -316,14 +308,9 @@ def delete_span_annotations_bulk(
 ) -> list[SpanAnnotationDeleted]:
     authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
 
-    db_objs = crud_span_anno.delete_bulk(db=db, ids=span_anno_ids)
-    results = [SpanAnnotationDeleted.model_validate(db_obj) for db_obj in db_objs]
+    results = SpanAnnotationService().delete_multi(db=db, ids=span_anno_ids)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SPAN_ANNOTATION_DELETED_BATCH,
-            db_objs,
-            to_dto=SpanAnnotationDeleted.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_DELETED_BATCH, results)
     return results
 
 

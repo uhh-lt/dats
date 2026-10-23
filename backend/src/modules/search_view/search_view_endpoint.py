@@ -13,6 +13,7 @@ from modules.search_view.search_view_dto import (
     search_view_read_from_orm,
 )
 from modules.search_view.search_view_enum import SearchEntityType
+from modules.search_view.search_view_service import SearchViewService
 from repos.db.sql_exceptions import NoSuchElementError
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -39,10 +40,9 @@ def create(
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
     authz_user.assert_in_project(view.project_id)
-    db_view = crud_search_view.create(
-        db=db, create_dto=view, user_id=authz_user.user.id
+    result = SearchViewService().create(
+        db=db, user_id=authz_user.user.id, create_dto=view
     )
-    result = search_view_read_from_orm(db_view)
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_CREATED, result, user_id=result.user_id)
     return result
 

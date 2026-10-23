@@ -186,7 +186,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     };
 
     // store the draft annotation in local state; it is rendered via the pendingAnnotations override
-    setDraftAnnotation(toPendingSpanAnnotation(requestBody, user?.id));
+    setDraftAnnotation(toPendingSpanAnnotation(requestBody, user?.id, sdocData.project_id));
 
     // open code selector
     const target = selectionStartElement;
@@ -265,7 +265,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         sdoc_id: annotation.sdoc_id,
         code_id: codeId,
       };
-      const pending = toPendingSpanAnnotation(requestBody, user?.id);
+      const pending = toPendingSpanAnnotation(requestBody, user?.id, sdocData.project_id);
       startCreate(pending, codeId, () => dispatch(AnnotationsActions.moveCodeToTop(codeId)));
     }
   };

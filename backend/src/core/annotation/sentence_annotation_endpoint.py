@@ -13,6 +13,7 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationUpdateBulk,
     SentenceAnnotatorResult,
 )
+from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -45,14 +46,13 @@ def create_sentence_annotation(
     )
     authz_user.assert_in_same_project_as(Crud.CODE, sentence_annotation.code_id)
 
-    db_obj = crud_sentence_anno.create(
+    result = SentenceAnnotationService().create(
         db=db, user_id=authz_user.user.id, create_dto=sentence_annotation
     )
-    result = SentenceAnnotationRead.model_validate(db_obj)
     ws.emit_to_project(
         DATSEvent.SENTENCE_ANNOTATION_CREATED,
         result,
-        project_id=db_obj.get_project_id(),
+        project_id=result.project_id,
     )
     return result
 
@@ -80,16 +80,11 @@ def create_sentence_annotations_bulk(
             ]
         )
 
-    db_objs = crud_sentence_anno.create_bulk(
+    results = SentenceAnnotationService().create_multi(
         db=db, user_id=authz_user.user.id, create_dtos=sentence_annotations
     )
-    results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH,
-            db_objs,
-            to_dto=SentenceAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH, results)
     return results
 
 
@@ -234,23 +229,18 @@ def update_sentence_annotations_bulk(
     for sent_anno in sent_annos:
         authz_user.assert_in_same_project_as(Crud.CODE, sent_anno.code_id)
         authz_user.assert_in_same_project_as(
-            Crud.SENTENCE_ANNOTATION, sent_anno.sent_annotation_id
+            Crud.SENTENCE_ANNOTATION, sent_anno.sentence_annotation_id
         )
         validate.validate_objects_in_same_project(
             [
                 (Crud.CODE, sent_anno.code_id),
-                (Crud.SENTENCE_ANNOTATION, sent_anno.sent_annotation_id),
+                (Crud.SENTENCE_ANNOTATION, sent_anno.sentence_annotation_id),
             ]
         )
 
-    db_objs = crud_sentence_anno.update_bulk(db=db, update_dtos=sent_annos)
-    results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = SentenceAnnotationService().update_multi(db=db, update_dtos=sent_annos)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH,
-            db_objs,
-            to_dto=SentenceAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH, results)
     return results
 
 
@@ -300,14 +290,9 @@ def delete_sentence_annotations_bulk(
         Crud.SENTENCE_ANNOTATION, sentence_anno_ids
     )
 
-    db_objs = crud_sentence_anno.delete_bulk(db=db, ids=sentence_anno_ids)
-    results = [SentenceAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
+    results = SentenceAnnotationService().delete_multi(db=db, ids=sentence_anno_ids)
     if results:
-        ws.emit_to_projects_grouped(
-            DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH,
-            db_objs,
-            to_dto=SentenceAnnotationRead.model_validate,
-        )
+        ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH, results)
     return results
 
 
