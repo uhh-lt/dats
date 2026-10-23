@@ -102,14 +102,9 @@ def update_by_id(
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
 
-    result = SourceDocumentMetadataService().update_metadata(
-        db=db,
-        update_dtos=[
-            SourceDocumentMetadataUpdateBulk(
-                sdoc_metadata_id=metadata_id, **metadata.model_dump()
-            )
-        ],
-    )[0]
+    result = SourceDocumentMetadataService().update(
+        db=db, id=metadata_id, update_dto=metadata
+    )
     ws.emit_to_project(
         DATSEvent.SDOC_METADATA_UPDATED,
         result,
@@ -133,9 +128,7 @@ def update_bulk(
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT_METADATA, [m.sdoc_metadata_id for m in metadatas]
     )
-    results = SourceDocumentMetadataService().update_metadata(
-        db=db, update_dtos=metadatas
-    )
+    results = SourceDocumentMetadataService().update_multi(db=db, update_dtos=metadatas)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SDOC_METADATA_UPDATED_BATCH, results)
     return results

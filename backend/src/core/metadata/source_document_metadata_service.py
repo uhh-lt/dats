@@ -14,7 +14,20 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(SourceDocumentMetadataService, cls).__new__(cls)
 
-    def update_metadata(
+    def update(
+        self, db: Session, *, id: int, update_dto: SourceDocumentMetadataUpdate
+    ) -> SourceDocumentMetadataRead:
+        """Like `update_multi`, for one metadata value."""
+        return self.update_multi(
+            db=db,
+            update_dtos=[
+                SourceDocumentMetadataUpdateBulk(
+                    sdoc_metadata_id=id, **update_dto.model_dump()
+                )
+            ],
+        )[0]
+
+    def update_multi(
         self, db: Session, *, update_dtos: list[SourceDocumentMetadataUpdateBulk]
     ) -> list[SourceDocumentMetadataRead]:
         """

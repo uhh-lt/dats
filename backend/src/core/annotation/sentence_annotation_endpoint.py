@@ -46,9 +46,9 @@ def create_sentence_annotation(
     )
     authz_user.assert_in_same_project_as(Crud.CODE, sentence_annotation.code_id)
 
-    result = SentenceAnnotationService().create_annotations(
-        db=db, user_id=authz_user.user.id, create_dtos=[sentence_annotation]
-    )[0]
+    result = SentenceAnnotationService().create(
+        db=db, user_id=authz_user.user.id, create_dto=sentence_annotation
+    )
     ws.emit_to_project(
         DATSEvent.SENTENCE_ANNOTATION_CREATED,
         result,
@@ -80,7 +80,7 @@ def create_sentence_annotations_bulk(
             ]
         )
 
-    results = SentenceAnnotationService().create_annotations(
+    results = SentenceAnnotationService().create_multi(
         db=db, user_id=authz_user.user.id, create_dtos=sentence_annotations
     )
     if results:
@@ -238,9 +238,7 @@ def update_sentence_annotations_bulk(
             ]
         )
 
-    results = SentenceAnnotationService().update_annotations(
-        db=db, update_dtos=sent_annos
-    )
+    results = SentenceAnnotationService().update_multi(db=db, update_dtos=sent_annos)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_UPDATED_BATCH, results)
     return results
@@ -292,9 +290,7 @@ def delete_sentence_annotations_bulk(
         Crud.SENTENCE_ANNOTATION, sentence_anno_ids
     )
 
-    results = SentenceAnnotationService().delete_annotations(
-        db=db, ids=sentence_anno_ids
-    )
+    results = SentenceAnnotationService().delete_multi(db=db, ids=sentence_anno_ids)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_DELETED_BATCH, results)
     return results

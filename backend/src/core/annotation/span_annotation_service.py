@@ -21,7 +21,13 @@ class SpanAnnotationService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(SpanAnnotationService, cls).__new__(cls)
 
-    def create_annotations(
+    def create(
+        self, db: Session, *, user_id: int, create_dto: SpanAnnotationCreate
+    ) -> SpanAnnotationRead:
+        """Like `create_multi`, for one annotation."""
+        return self.create_multi(db=db, user_id=user_id, create_dtos=[create_dto])[0]
+
+    def create_multi(
         self, db: Session, *, user_id: int, create_dtos: list[SpanAnnotationCreate]
     ) -> list[SpanAnnotationRead]:
         """
@@ -45,7 +51,7 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         self, db: Session, *, user_id: int, create_dtos: list[SpanAnnotationCreate]
     ) -> list[SpanAnnotationORM]:
         """
-        Like `create_annotations`, but returns the ORM objects. For other services,
+        Like `create_multi`, but returns the ORM objects. For other services,
         jobs and test fixtures that need the ORM objects.
         """
         if not create_dtos:
@@ -82,7 +88,7 @@ class SpanAnnotationService(metaclass=SingletonMeta):
             ],
         )
 
-    def update_annotations(
+    def update_multi(
         self, db: Session, *, update_dtos: list[SpanAnnotationUpdateBulk]
     ) -> list[SpanAnnotationRead]:
         """
@@ -104,7 +110,7 @@ class SpanAnnotationService(metaclass=SingletonMeta):
         )
         return [SpanAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
-    def delete_annotations(
+    def delete_multi(
         self, db: Session, *, ids: list[int]
     ) -> list[SpanAnnotationDeleted]:
         """

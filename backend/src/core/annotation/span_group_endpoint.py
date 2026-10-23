@@ -41,7 +41,7 @@ def create_span_group(
 ) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span_group.sdoc_id)
 
-    result = SpanGroupService().create_span_group(
+    result = SpanGroupService().create(
         db=db, user_id=authz_user.user.id, create_dto=span_group
     )
     ws.emit_to_project(

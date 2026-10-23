@@ -78,7 +78,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             )
             to_create.append(span_anno)
 
-        return SpanAnnotationService().create_annotations(
+        return SpanAnnotationService().create_multi(
             db=db, user_id=user_id, create_dtos=to_create
         )
 

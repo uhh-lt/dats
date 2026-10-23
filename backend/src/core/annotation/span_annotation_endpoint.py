@@ -50,9 +50,9 @@ def create_span_annotation(
         ]
     )
 
-    result = SpanAnnotationService().create_annotations(
-        db=db, user_id=authz_user.user.id, create_dtos=[span]
-    )[0]
+    result = SpanAnnotationService().create(
+        db=db, user_id=authz_user.user.id, create_dto=span
+    )
     ws.emit_to_project(
         DATSEvent.SPAN_ANNOTATION_CREATED,
         result,
@@ -84,7 +84,7 @@ def create_span_annotations_bulk(
             ]
         )
 
-    results = SpanAnnotationService().create_annotations(
+    results = SpanAnnotationService().create_multi(
         db=db, user_id=authz_user.user.id, create_dtos=spans
     )
     if results:
@@ -230,7 +230,7 @@ def update_span_annotations_bulk(
             ]
         )
 
-    results = SpanAnnotationService().update_annotations(db=db, update_dtos=spans)
+    results = SpanAnnotationService().update_multi(db=db, update_dtos=spans)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_UPDATED_BATCH, results)
     return results
@@ -308,7 +308,7 @@ def delete_span_annotations_bulk(
 ) -> list[SpanAnnotationDeleted]:
     authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
 
-    results = SpanAnnotationService().delete_annotations(db=db, ids=span_anno_ids)
+    results = SpanAnnotationService().delete_multi(db=db, ids=span_anno_ids)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_DELETED_BATCH, results)
     return results

@@ -41,9 +41,9 @@ def create_bbox_annotation(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
 
-    result = BBoxAnnotationService().create_annotations(
-        db=db, user_id=authz_user.user.id, create_dtos=[bbox]
-    )[0]
+    result = BBoxAnnotationService().create(
+        db=db, user_id=authz_user.user.id, create_dto=bbox
+    )
     ws.emit_to_project(
         DATSEvent.BBOX_ANNOTATION_CREATED,
         result,
@@ -170,7 +170,7 @@ def update_bbox_annotations_bulk(
             ]
         )
 
-    results = BBoxAnnotationService().update_annotations(db=db, update_dtos=bbox_annos)
+    results = BBoxAnnotationService().update_multi(db=db, update_dtos=bbox_annos)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.BBOX_ANNOTATION_UPDATED_BATCH, results)
     return results
@@ -220,7 +220,7 @@ def delete_bbox_annotations_bulk(
 ) -> list[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as_many(Crud.BBOX_ANNOTATION, bbox_anno_ids)
 
-    results = BBoxAnnotationService().delete_annotations(db=db, ids=bbox_anno_ids)
+    results = BBoxAnnotationService().delete_multi(db=db, ids=bbox_anno_ids)
     if results:
         ws.emit_dtos_to_projects(DATSEvent.BBOX_ANNOTATION_DELETED_BATCH, results)
     return results

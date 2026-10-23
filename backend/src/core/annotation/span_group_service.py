@@ -15,7 +15,7 @@ class SpanGroupService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(SpanGroupService, cls).__new__(cls)
 
-    def create_span_group(
+    def create(
         self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
     ) -> SpanGroupRead:
         """
@@ -36,7 +36,7 @@ class SpanGroupService(metaclass=SingletonMeta):
         self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
     ) -> SpanGroupORM:
         """
-        Like `create_span_group`, but returns the ORM object. For other services,
+        Like `create`, but returns the ORM object. For other services,
         jobs and test fixtures that need the ORM object.
         """
         # 1) find or create the user's annotation document
