@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "@store/store";
 import { persistReducer } from "redux-persist";
 import { persistStorage } from "@store/persistStorage";
 
@@ -70,16 +69,6 @@ const codeShortcutsSlice = createSlice({
 });
 
 export const CodeShortcutsActions = codeShortcutsSlice.actions;
-
-const EMPTY_BINDINGS: CodeShortcutBindings = {};
-
-export const selectCodeShortcuts = (state: RootState, userId: number | undefined, projectId: number | undefined) => {
-  if (userId === undefined || projectId === undefined) {
-    return EMPTY_BINDINGS;
-  }
-
-  return state.codeShortcuts.bindingsByUserAndProject[userId]?.[projectId] ?? EMPTY_BINDINGS;
-};
 
 export const codeShortcutsReducer = {
   [codeShortcutsSlice.name]: persistReducer(

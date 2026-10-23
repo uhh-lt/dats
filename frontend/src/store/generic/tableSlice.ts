@@ -85,9 +85,9 @@ export const resetProjectTableState = (state: Draft<TableState>) => {
 };
 
 // selectors
-export const selectRowSelectionModel = (state: TableState) => state.rowSelectionModel;
+const selectRowSelectionModel = (state: TableState) => state.rowSelectionModel;
 
-export const selectSelectedRows = createSelector([selectRowSelectionModel], (rowSelectionModel) => {
+export const selectSelectedRowIds = createSelector([selectRowSelectionModel], (rowSelectionModel) => {
   return Object.keys(rowSelectionModel).filter((key) => rowSelectionModel[key]);
 });
 

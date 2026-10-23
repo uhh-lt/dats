@@ -1,4 +1,4 @@
-import { createSelector, createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { RootState } from "@store/store";
 import { ChartDataPoint } from "../_types/ChartDataPoint";
@@ -103,10 +103,8 @@ const documentSamplerSlice = createSlice({
 
 export const DocumentSamplerActions = documentSamplerSlice.actions;
 
-const selectDocumentSamplerState = (state: RootState) => state.documentSampler;
-
-export const selectIsValuesOutdated = createSelector([selectDocumentSamplerState], (documentSamplerState) => {
-  return documentSamplerState.oldValues !== computeValueRepresentation(documentSamplerState);
-});
+// a boolean needs no memoization, so this is a plain function
+export const selectIsValuesOutdated = (state: RootState) =>
+  state.documentSampler.oldValues !== computeValueRepresentation(state.documentSampler);
 
 export const documentSamplerReducer = { [documentSamplerSlice.name]: documentSamplerSlice.reducer };

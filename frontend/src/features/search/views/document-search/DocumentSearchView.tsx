@@ -13,7 +13,7 @@ import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import { Stack } from "@mui/material";
-import { selectSelectedRows } from "@store/generic/tableSlice";
+import { selectSelectedRowIds } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
@@ -42,7 +42,7 @@ export function DocumentSearchView() {
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.documentSearch.selectedDocumentId);
   const selectedSdocFolderId = useAppSelector((state) => state.documentSearch.selectedSdocFolderId);
-  const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.documentSearch));
+  const rowSelectionModel = useAppSelector((state) => selectSelectedRowIds(state.documentSearch));
   const expandedFolderIds = useAppSelector((state) => state.documentSearch.expandedFolderIds);
   const expandedTagIds = useAppSelector((state) => state.documentSearch.expandedTagIds);
   const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));

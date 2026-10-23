@@ -3,7 +3,9 @@ import { CodeHooks } from "@core/code";
 import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../store/codeShortcutsSlice";
+import { CODE_SHORTCUT_KEYS, CodeShortcutBindings, CodeShortcutKey } from "../store/codeShortcutsSlice";
+
+const EMPTY_BINDINGS: CodeShortcutBindings = {};
 
 /**
  * The code shortcuts of the current user in a project, as shortcut key -> code. A binding whose code was deleted or
@@ -11,7 +13,11 @@ import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../sto
  */
 export const useCodeShortcuts = (projectId: number | undefined) => {
   const { user } = useAuth();
-  const bindings = useAppSelector((state) => selectCodeShortcuts(state, user?.id, projectId));
+  const bindings = useAppSelector((state) =>
+    user === undefined || projectId === undefined
+      ? EMPTY_BINDINGS
+      : (state.codeShortcuts.bindingsByUserAndProject[user.id]?.[projectId] ?? EMPTY_BINDINGS),
+  );
   const enabledCodes = CodeHooks.useGetEnabledCodes();
 
   return useMemo(() => {
