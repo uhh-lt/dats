@@ -15,7 +15,7 @@ class SearchViewService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(SearchViewService, cls).__new__(cls)
 
-    def create_view(
+    def create(
         self, db: Session, *, user_id: int, create_dto: SearchViewCreateUnion
     ) -> SearchViewReadUnion:
         """
@@ -37,7 +37,7 @@ class SearchViewService(metaclass=SingletonMeta):
         self, db: Session, *, user_id: int, create_dto: SearchViewCreateUnion
     ) -> SearchViewORM:
         """
-        Like `create_view`, but returns the ORM object. For other services, jobs and
+        Like `create`, but returns the ORM object. For other services, jobs and
         test fixtures that need the ORM object.
         """
         # 1) append the view after the user's other views of the entity type

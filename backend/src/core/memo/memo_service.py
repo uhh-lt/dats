@@ -10,7 +10,7 @@ class MemoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(MemoService, cls).__new__(cls)
 
-    def update_memo(
+    def update(
         self, db: Session, *, user_id: int, id: int, update_dto: MemoUpdate
     ) -> MemoRead:
         """
@@ -27,11 +27,11 @@ class MemoService(metaclass=SingletonMeta):
         update_bulk_dto = MemoUpdateBulk.model_validate(
             {**update_dto.model_dump(exclude_unset=True), "memo_id": id}
         )
-        return self.update_memos(db=db, user_id=user_id, update_dtos=[update_bulk_dto])[
+        return self.update_multi(db=db, user_id=user_id, update_dtos=[update_bulk_dto])[
             0
         ]
 
-    def update_memos(
+    def update_multi(
         self, db: Session, *, user_id: int, update_dtos: list[MemoUpdateBulk]
     ) -> list[MemoRead]:
         """
@@ -82,7 +82,7 @@ class MemoService(metaclass=SingletonMeta):
             )
         ]
 
-    def delete_memos(
+    def delete_multi(
         self, db: Session, *, user_id: int, ids: list[int]
     ) -> list[MemoRead]:
         """

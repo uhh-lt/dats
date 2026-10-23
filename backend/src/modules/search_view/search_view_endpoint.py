@@ -40,7 +40,7 @@ def create(
     ws: WebsocketEmitter = Depends(),
 ) -> SearchViewReadUnion:
     authz_user.assert_in_project(view.project_id)
-    result = SearchViewService().create_view(
+    result = SearchViewService().create(
         db=db, user_id=authz_user.user.id, create_dto=view
     )
     ws.emit_to_user(DATSEvent.SEARCH_VIEW_CREATED, result, user_id=result.user_id)

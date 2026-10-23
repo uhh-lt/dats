@@ -301,7 +301,7 @@ class AnnotationTask(
             deduplicated_annotation_count,
             len(errors),
         )
-        created_annos_for_sdoc = SpanAnnotationService().create_annotations(
+        created_annos_for_sdoc = SpanAnnotationService().create_multi(
             db=context.db,
             user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
             create_dtos=suggested_annotations,

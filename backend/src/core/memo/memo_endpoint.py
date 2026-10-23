@@ -174,7 +174,7 @@ def update_by_id(
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
 
-    result = MemoService().update_memo(
+    result = MemoService().update(
         db=db, user_id=authz_user.user.id, id=memo_id, update_dto=memo
     )
 
@@ -203,7 +203,7 @@ def update_memos_bulk(
     for memo in memos:
         authz_user.assert_in_same_project_as(Crud.MEMO, memo.memo_id)
 
-    results = MemoService().update_memos(
+    results = MemoService().update_multi(
         db=db, user_id=authz_user.user.id, update_dtos=memos
     )
     if not results:
@@ -278,7 +278,7 @@ def delete_memos_bulk(
 ) -> list[MemoRead]:
     authz_user.assert_in_same_project_as_many(Crud.MEMO, memo_ids)
 
-    results = MemoService().delete_memos(
+    results = MemoService().delete_multi(
         db=db, user_id=authz_user.user.id, ids=memo_ids
     )
     if results:
