@@ -1,5 +1,7 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.sql.base import ExecutableOption
 
 from core.memo.memo_dto import MemoCreateIntern, MemoUpdate
 from core.memo.memo_enum import AttachedObjectType
@@ -87,8 +89,12 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         *,
         project_id: int,
     ) -> list[MemoORM]:
-        query = db.query(self.model).where(
-            self.model.project_id == project_id,
+        query = (
+            db.query(self.model)
+            .options(*self._load_options())
+            .where(
+                self.model.project_id == project_id,
+            )
         )
         return query.all()
 
@@ -99,9 +105,13 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         project_id: int,
         uuid: str,
     ) -> MemoORM | None:
-        query = db.query(self.model).where(
-            self.model.project_id == project_id,
-            self.model.uuid == uuid,
+        query = (
+            db.query(self.model)
+            .options(*self._load_options())
+            .where(
+                self.model.project_id == project_id,
+                self.model.uuid == uuid,
+            )
         )
         return query.first()
 
@@ -111,6 +121,7 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         """Return the user's most recently opened memos in a project, newest first."""
         return (
             db.query(MemoORM)
+            .options(*self._load_options())
             .join(MemoRecentORM, MemoRecentORM.memo_id == MemoORM.id)
             .filter(
                 MemoRecentORM.user_id == user_id,
@@ -120,6 +131,24 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             .limit(limit)
             .all()
         )
+
+    def read_favorite_ids(
+        self, db: Session, *, memo_ids: list[int], user_id: int
+    ) -> set[int]:
+        """Return the ids of the given memos that the user favorited."""
+        favorite_ids: set[int] = set()
+        unique_ids = list(dict.fromkeys(memo_ids))
+        for i in range(0, len(unique_ids), BATCH_SIZE):
+            batch_ids = unique_ids[i : i + BATCH_SIZE]
+            favorite_ids.update(
+                db.scalars(
+                    select(MemoFavoriteLinkTable.memo_id).where(
+                        MemoFavoriteLinkTable.memo_id.in_(batch_ids),
+                        MemoFavoriteLinkTable.user_id == user_id,
+                    )
+                )
+            )
+        return favorite_ids
 
     ### UPDATE OPERATIONS ###
 
@@ -189,16 +218,11 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             )
         db.flush()
 
-    def exists_favorite(self, db: Session, *, memo_id: int, user_id: int) -> bool:
-        return (
-            db.query(MemoFavoriteLinkTable.memo_id)
-            .filter(
-                MemoFavoriteLinkTable.memo_id == memo_id,
-                MemoFavoriteLinkTable.user_id == user_id,
-            )
-            .first()
-            is not None
-        )
+    ### LOADING ###
+
+    def _load_options(self) -> list[ExecutableOption]:
+        # the object handle tells the attached object of MemoRead
+        return [selectinload(self.model.attached_to)]
 
 
 crud_memo = CRUDMemo(MemoORM)
