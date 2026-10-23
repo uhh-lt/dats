@@ -1,5 +1,6 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import LaunchIcon from "@mui/icons-material/Launch";
 import {
@@ -15,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { githubReleaseQueries } from "../../api/githubReleaseQueries";
@@ -43,9 +44,8 @@ function storeDismissedVersion(): void {
 }
 
 export function WhatsNewDialog() {
-  // opens itself on start, so its initial open state comes from localStorage
-  // eslint-disable-next-line local/dialog-conventions
-  const [isOpen, setIsOpen] = useState(() => readDismissedVersion() !== currentVersion);
+  // opens itself on start, unless this version was dismissed
+  const { isOpen, close: handleClose } = useDialog({ initialOpen: readDismissedVersion() !== currentVersion });
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const releaseQuery = useQuery({
@@ -53,14 +53,10 @@ export function WhatsNewDialog() {
     enabled: isOpen,
   });
 
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
   const handleDoNotShowAgain = useCallback(() => {
     storeDismissedVersion();
-    setIsOpen(false);
-  }, []);
+    handleClose();
+  }, [handleClose]);
 
   const { refetch } = releaseQuery;
   const handleRetry = useCallback(() => {

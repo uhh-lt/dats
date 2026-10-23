@@ -77,7 +77,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 2. **Feature slice**: only for wizard dialogs whose steps read and write shared state in the feature's slice (`ClassifierDialog`, `LLMAssistantDialog`). Open state (`isOpen`), step and settings live in that slice; openers dispatch the slice's open action with the initial payload.
 3. **Self-contained**: the dialog has exactly one opener, its own trigger. The dialog renders the trigger and the `Dialog` in a fragment and holds the state with `const { isOpen, open: handleOpen, close: handleClose } = useDialog();` from `@hooks/useDialog`. The trigger is styled by the dialog; whiteboard toolbar dialogs accept `buttonProps?: Omit<ButtonProps, "onClick">`.
 
-- Never pass `open`/`onClose` props to a dialog and never keep its open state in `useState` (lint). The one exception is a dialog that opens itself on start (`WhatsNewDialog`).
+- Never pass `open`/`onClose` props to a dialog and never keep its open state in `useState` (lint). A dialog that opens itself on start passes `useDialog({ initialOpen })` (`WhatsNewDialog`).
 - Local cleanup on close (row selection, a created API key): wrap the bus' close (`close: closeDialog` + `handleClose` that resets and calls `closeDialog`), or pass `useDialog({ onClose })`. Do not `setState` in the open effect.
 
 ### Chrome
@@ -85,7 +85,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 - Every dialog renders `DATSDialogHeader` with `useDialogMaximize` and passes `fullScreen={isMaximized}` to `Dialog` (lint). Never `DialogTitle`.
 - `Dialog` props in this order: `open`, `onClose`, `maxWidth`, `fullWidth`, `fullScreen`. Wizards omit `onClose` and settings dialogs close on `escapeKeyDown` only, so a click on the backdrop does not lose progress.
 - Tables (`CodeTable`, `*ReduxFilterTable`) go directly into the `Dialog`, forms and text into `DialogContent`.
-- Exceptions (with an `eslint-disable` and reason): `ConfirmationDialog` (small alert) and `ClusterJobProgressDialog` (closes itself).
+- Something that blocks a page while it is computing is not a dialog: the view renders the progress instead of its content (the perspectives map shows `ClusterJobProgressCard` while its job runs).
 
 ### Forms
 
