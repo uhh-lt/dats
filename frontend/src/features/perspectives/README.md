@@ -2,145 +2,96 @@
 
 ## Overview
 
-The **Perspectives** module enables users to create, visualize, and analyze semantic maps of their document collections. By leveraging Large Language Models (LLMs) and dimensionality reduction techniques (UMAP), it organizes documents into clusters based on topics, sentiment, style, or other semantic instructions.
+The **Perspectives** feature lets users create, visualize and analyze semantic maps of their document collections. Using Large Language Models (LLMs) and dimensionality reduction (UMAP), it groups documents into clusters by topic, sentiment, style or any other instruction. The clustering pipeline itself is described in `.github/instructions/perspectives.instructions.md`.
 
-The frontend is built using React, Redux Toolkit, and React Query, with heavy reliance on **Plotly.js** for interactive visualizations.
+The feature follows the frontend conventions (`.github/instructions/frontend-*.instructions.md`) and relies on **Plotly.js** for its interactive visualizations.
 
 ## Dependencies & Technologies
 
-- **[Plotly.js](https://plotly.com/javascript/)**: Used via `react-plotly.js` for the main scatter plot visualization (`MapPlot.tsx`) and diverse charts (bar, pie) in the dashboard.
-- **[React Query (TanStack Query)](https://tanstack.com/query/latest)**: Manages server state, caching, and background polling for long-running jobs (via `perspectivesQueryOptions.ts`).
-- **[Redux Toolkit](https://redux-toolkit.js.org/)**: Manages local UI state (selections, view settings, filters) via `perspectivesSlice.ts`.
-- **[D3.js](https://d3js.org/)**: Used for color scales and some utility functions.
+- **[Plotly.js](https://plotly.com/javascript/)**: via `react-plotly.js` for the map scatter plot (`MapPlot.tsx`) and the charts of a perspective (bar, pie, similarity).
+- **[TanStack Query](https://tanstack.com/query/latest)**: server state, through the query factory `api/perspectivesQueries.ts` and the hooks object `api/perspectivesHooks.ts`.
+- **[Redux Toolkit](https://redux-toolkit.js.org/)**: UI state (selection, view settings, map filter, chat) in `store/perspectivesSlice.ts`.
+- **[D3.js](https://d3js.org/)**: color scales and small utilities.
+
+## Folder Structure
+
+- `api/`: `perspectivesQueries.ts` (query factory) and `perspectivesHooks.ts` (`PerspectivesHooks`).
+- `store/perspectivesSlice.ts`: the Redux slice.
+- `views/dashboard/`: the list of perspectives (`PerspectivesDashboardView`) with `PerspectiveCard` and `PerspectiveCreationDialog`.
+- `views/detail/`: one perspective (`PerspectiveView`) with its plots and cluster list.
+- `views/map/`: the interactive map (`PerspectivesMapView`) with toolbar, settings panel and info panel.
+- `_components/`: used by several views: `DocAspectTable`, the job progress card and dialog, and the cluster detail dialog (`dialog/`).
 
 ## Server Communication
 
-Server communication is centralized in `perspectivesQueryOptions.ts`, which provides feature-local React Query hooks. These hooks handle:
+All queries are defined once in `perspectivesQueries` (root key `"perspectives"`):
 
-- **Fetching Data**: `useGetAllAspectsList`, `useGetAspect`, `useGetDocVisualization`.
-- **Mutations**: `useCreateAspect` (triggering generation), `useUpdateAspect`, `useDeleteAspect`.
-- **Job Polling**: `useLiveJob(perspectivesQueries.job.byId(jobId))` monitors the backend job status for perspective generation (Queued -> Started -> Finished).
-- **Caching**: Automatically invalidates queries (e.g., `PROJECT_ASPECTS`) upon successful mutations to keep the UI in sync.
+| Leaf                                           | Data                                                       |
+| ---------------------------------------------- | ---------------------------------------------------------- |
+| `aspectsByProject(projectId)`                  | all perspectives (aspects) of a project, as a map by id    |
+| `docAspect(aspectId, sdocId)`                  | the LLM-generated content of one document in a perspective |
+| `visualization(aspectId, searchQuery, filter)` | the map data: coordinates, clusters, document assignments  |
+| `clusterSimilarities(aspectId)`                | the similarity matrix between the clusters                 |
+| `clustersBySdoc(aspectId, sdocId)`             | the clusters of one document                               |
+| `job.byId(jobId)`                              | a perspectives background job                              |
 
-### React Query Cache Keys
+`PerspectivesHooks` holds the hooks that add something on top of the factory: `useGetAspect`, `useGetDocVisualization`, the mutations `useCreateAspect`, `useUpdateAspect`, `useDeleteAspect`, `useStartPerspectivesJob`, `useUpdateClusterDetails`, `useLabelDocs`, `useUnlabelDocs`, and `useRAGChat`.
 
-The following cache keys are used to manage state synchronization and invalidation:
-
-- **`QueryKey.PROJECT_ASPECTS`**: Stores the list of all perspectives (Aspects) for a project. Invalidated when a new perspective is created or an existing one is deleted.
-- **`QueryKey.PERSPECTIVES_JOB`**: Stores the status of a specific background job (e.g., creating a map, updating clusters). Used for polling.
-- **`QueryKey.DOCUMENT_VISUALIZATION`**: Stores the heavy visualization data (coordinates, clusters) for a specific perspective.
-- **`QueryKey.CLUSTER_SIMILARITIES`**: Stores the similarity matrix between clusters.
-- **`QueryKey.SDOC_CLUSTES`**: Stores the cluster assignments for a specific source document.
-- **`QueryKey.SDOC_ASPECT_CONTENT`**: Stores the LLM-generated content (e.g., summary/embedding text) for a specific document within a perspective.
+The routes under `routes/_auth/project/$projectId/perspectives/` load `aspectsByProject` in their `context`/`loader`; the views read it with `useSuspenseQuery` from the route context. The `$aspectId` routes throw `notFound()` for an unknown aspect. Running jobs are followed with `useLiveJob(perspectivesQueries.job.byId(jobId))`.
 
 ## State Management
 
 ### Redux State (`perspectivesSlice.ts`)
 
-The `perspectivesSlice` manages the **local** state of the user interface. Key responsibilities include:
+The slice holds the UI state of the feature:
 
-- **Selection**: Tracking selected document IDs (`selectedSdocIds`).
-- **View Settings**: Managing visualization parameters like `pointSize`, `colorBy`, `showLabels`, `xAxis`, `yAxis`.
-- **Highlighting**: Controlling highlighted clusters (`highlightedClusterId`) or reviewed documents.
-- **Filtering**: Managing the complex filter state (keywords, tags, metadata) specific to the perspectives view.
-- **Dialogs**: Controlling the visibility of the cluster details dialog.
-- **Chat**: Managing the state of the chat session associated with the perspective.
+- **Selection**: the selected document ids (`selectedSdocIds`) and the position in that selection.
+- **View settings**: `colorBy`, color scheme, `pointSize`, `showLabels`, axes, ticks and grid.
+- **Highlighting**: the highlighted cluster (`highlightedClusterId`) and whether reviewed documents are highlighted.
+- **Filtering**: the map filter; the slice builds on the generic `filterReducer` (see `frontend-filter.instructions.md`), plus the search query and the pinned statistics.
+- **Chat**: the model, session and messages of the analysis assistant.
+
+The cluster detail dialog is opened through the global dialog bus (`useOpenDialog("clusterDetail")`), not through this slice.
 
 ## Key Components
 
-### 1. Overview (`Perspectives.tsx`)
+### 1. Dashboard (`views/dashboard/PerspectivesDashboardView.tsx`)
 
-This is the entry point for the module.
+The entry point: a grid of the project's perspectives (`PerspectiveCard`) with search and sorting by name, creation date or size. The "Create Perspective" button opens the `PerspectiveCreationDialog`; a card navigates to the perspective.
 
-- **Functionality**: Displays a grid of existing perspectives (`PerspectiveCard`) and provides search/sort functionality.
-- **Interactions**:
-  - **Filter/Sort**: Users can search for perspectives by name and sort them by name, creation date, or size.
-  - **Create**: Clicking the "Create Perspective" button opens the `PerspectiveCreationDialog`.
-  - **Navigate**: Clicking a card navigates to the `PerspectiveDashboard`.
-- **Server Communication**:
-  - **Fetching**: `PerspectivesQueryOptions.useGetAllAspectsList()` fetches the list of available perspectives.
-- **Sub Components**: `PerspectiveCard`.
+### 2. Creation Dialog (`views/dashboard/_components/PerspectiveCreationDialog.tsx`)
 
-### 2. Creation Dialog (`PerspectiveCreationDialog.tsx`)
+A dialog for configuring a new perspective; it renders its own trigger button.
 
-A wizard-like dialog for configuring new perspectives.
+- **Templates**: presets like "Topic Discovery" or "Sentiment Analysis" fill in the prompts.
+- **Configuration**: document type (modality), optional tags, and the LLM instructions (embedding and modification prompts).
+- **Expert settings**: UMAP (neighbors, metric, components) and HDBSCAN (min cluster size) parameters.
+- **Server**: `PerspectivesHooks.useCreateAspect()` starts the backend job; the dialog closes on success.
 
-- **Functionality**: Allows users to configure the parameters for generating a new semantic map. It supports both simple templates and an "Expert Mode" for fine-tuning algorithms.
-- **Interactions**:
-  - **Template Selection**: Users can pick from presets like "Topic Discovery" or "Sentiment Analysis" to auto-fill prompts.
-  - **Configuration**: Users specify the document type (modality), optional tags, and the core LLM instructions (embedding & modification prompts).
-  - **Expert Settings**: Advanced users can toggle this to adjust UMAP (neighbors, metric, components) and HDBSCAN (min cluster size) parameters.
-  - **Maximize**: The dialog can be maximized for better visibility.
-- **Server Communication**:
-  - **Data Manipulation**: `PerspectivesQueryOptions.useCreateAspect()` triggers the backend job to generate the perspective.
+### 3. Perspective (`views/detail/PerspectiveView.tsx`)
 
-### 3. Dashboard (`dashboard/PerspectiveDashboard.tsx`)
+The overview of one perspective: generation status, clustering statistics and previews.
 
-The landing page for a specific perspective, providing analytics and status.
+- **Interactions**: switch between pie and bar chart for the cluster distribution, open the map, adjust the color scale of the similarity plot.
+- **Sub components**: `DocumentClusterScatterPlot` (preview), `ClusterList`, `ClusterDistributionPlot`, `ClusterSimilarityPlot`, `DocAspectTable`.
 
-- **Functionality**: Presents a high-level summary of the perspective, including generation status, document clustering stats, and previews.
-- **Interactions**:
-  - **View Toggle**: Users can switch between Pie and Bar charts for cluster distribution.
-  - **Navigation**: "Open Map" button leads to the interactive visualization.
-  - **Color Scale**: Users can adjust the color scale for similarity plots.
-- **Server Communication**:
-  - **Fetching**:
-    - `PerspectivesQueryOptions.useGetAspect(aspectId)`: Gets metadata.
-    - `useLiveJob(perspectivesQueries.job.byId(jobId))`: Polls the status of the generation job.
-- **Sub Components**:
-  - `DocumentClusterScatterPlot` (Preview)
-  - `ClusterList`
-  - `ClusterDistributionPlot`
-  - `ClusterSimilarityPlot`
-  - `DocAspectTable`
+### 4. Interactive Map (`views/map/PerspectivesMapView.tsx`)
 
-### 4. Interactive Map (`map/Map.tsx`)
+The layout around the scatter plot: `SettingsPanel` (left), `MapContent` with `MapPlot` (center), `InfoPanel` (right), the `MapToolbar`, and the job progress and cluster detail dialogs. The filter dialog in the toolbar loads the column infos with `TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId))`.
 
-The core visualization interface, wrapping the `MapPlot`.
+### 5. Map Plot (`views/map/_components/MapPlot.tsx`)
 
-- **Functionality**: A complex lay-out managing the central scatter plot, side panels for settings and info, and dialogs.
-- **Interactions**: Coordinates the layout of the `SettingsPanel` (left), `MapContent` (center), and `InfoPanel` (right).
-- **Server Communication**: none itself; the filter dialog loads the column infos (`sdocQueries.tableInfo`) through `MapToolbar`.
-- **Sub Components**: `SettingsPanel`, `MapContent` (wraps `MapPlot`), `InfoPanel`, `ClusterJobProgressDialog`, `ClusterDetailDialog`.
+The WebGL scatter plot of the documents.
 
-### 5. Map Plot (`map/MapPlot.tsx`)
+- **Selection**: box/lasso selection updates the Redux selection.
+- **Hover**: a custom tooltip (`MapTooltip`) with document details.
+- **Panning/zooming**: standard Plotly zoom plus a custom right-click panning, which works better than Plotly's pan tool in `select` mode.
+- **Data**: receives the visualization data from its parents.
 
-The actual scatter plot implementation.
+### 6. Cluster Detail Dialog (`_components/dialog/ClusterDetailDialog.tsx`)
 
-- **Functionality**: Renders thousands of document points using WebGL. It handles the mapping of abstract high-dimensional data (reduced to 2D) to visual properties (color, position, size).
-- **Interactions**:
-  - **Selection**: Users can box/lasso select points to update the Redux selection state.
-  - **Hover**: Displays a custom tooltip (`MapTooltip`) with document details.
-  - **Panning/Zooming**: Supports standard Plotly zoom. **Crucially**, it implements a custom right-click panning mechanism to provide a better UX than the default Plotly pan tool in `select` mode.
-- **Server Communication**:
-  - **Fetching**: Receives the `PerspectivesVisualization` data object (fetched by parent components).
+Details of one cluster: its generated label and description, keywords (`ClusterWordCloud`) and documents (`DocAspectTable`). Users can edit the details or recompute the description (`RecomputeClusterDescriptionButton`). It is opened from `ClusterList` and `ColorSettings` through the dialog bus.
 
-### 6. Cluster Drill-Down (`dialog/ClusterDetailDialog.tsx`)
+### 7. Job Progress (`_components/ClusterJobProgressCard.tsx`, `_components/ClusterJobProgressDialog.tsx`)
 
-A detailed view for a specific cluster.
-
-- **Functionality**: Shows deep insights into a single cluster, including its generated label, description, and representative keywords/documents.
-- **Interactions**:
-  - **Maximize**: Can be expanded to full screen.
-  - **Read**: Users browse the AI-generated description and word cloud.
-  - **Recompute**: Users can trigger a re-computation of the cluster description.
-- **Server Communication**:
-  - **Fetching**: `useGetDocVisualization` (cached) provides the cluster data.
-- **Sub Components**: `ClusterWordCloud`, `DocAspectTable`, `RecomputeClusterDescriptionButton`.
-
-### 7. Job Progress Card (`components/ClusterJobProgressCard.tsx`)
-
-A visual indicator of a background job's status.
-
-- **Functionality**: Displays the current step, status (Queued, Started, Finished, Failed), and progress of a perspectives-related job (e.g., "Map Creation", "Refine Model").
-- **Interactions**: Read-only display.
-- **Sub Components**: Uses MUI `Stepper` to show progress through defined job steps.
-
-### 8. Job Progress Dialog (`components/ClusterJobProgressDialog.tsx`)
-
-A modal wrapper for the progress card.
-
-- **Functionality**: Automatically appears to show the progress of an active job associated with the current perspective.
-- **Interactions**: It is modal but generally non-interactive (dismissal is handled by completion or explicit close if enabled).
-- **Server Communication**:
-  - **Fetching**: `useLiveJob(perspectivesQueries.job.byId(jobId))` is used to check if the dialog should be open (i.e., if a job is running).
+The card shows the steps and status (queued, started, finished, failed) of a perspectives job with an MUI `Stepper`. The dialog wraps it and is shown while the aspect's most recent job is running (`useLiveJob`).
