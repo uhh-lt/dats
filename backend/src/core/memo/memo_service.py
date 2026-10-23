@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoRead, MemoUpdate, MemoUpdateBulk
-from core.memo.memo_utils import get_memo_read_dto_from_orm
+from core.memo.memo_utils import get_memo_read_dtos_from_orms
 
 
 class MemoService(metaclass=SingletonMeta):
@@ -75,12 +75,11 @@ class MemoService(metaclass=SingletonMeta):
         )
 
         # 3) read all memos as seen by the requesting user
-        return [
-            get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=user_id)
-            for db_obj in crud_memo.read_by_ids(
-                db=db, ids=[u.memo_id for u in update_dtos]
-            )
-        ]
+        return get_memo_read_dtos_from_orms(
+            db=db,
+            db_objs=crud_memo.read_by_ids(db=db, ids=[u.memo_id for u in update_dtos]),
+            user_id=user_id,
+        )
 
     def delete_multi(
         self, db: Session, *, user_id: int, ids: list[int]
@@ -98,10 +97,9 @@ class MemoService(metaclass=SingletonMeta):
         """
         # 1) snapshot the memos before they are deleted: the attached object must
         # still exist
-        deleted = [
-            get_memo_read_dto_from_orm(db=db, db_obj=db_obj, user_id=user_id)
-            for db_obj in crud_memo.read_by_ids(db=db, ids=ids)
-        ]
+        deleted = get_memo_read_dtos_from_orms(
+            db=db, db_objs=crud_memo.read_by_ids(db=db, ids=ids), user_id=user_id
+        )
 
         # 2) delete them
         crud_memo.delete_multi(db=db, ids=ids)

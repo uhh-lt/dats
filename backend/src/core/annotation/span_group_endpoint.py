@@ -85,9 +85,7 @@ def get_annotations(
 ) -> list[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
-    span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
-    spans = span_group_db_obj.span_annotations
-    return [SpanAnnotationRead.model_validate(span) for span in spans]
+    return SpanGroupService().read_annotations(db=db, id=span_group_id)
 
 
 @router.get(
@@ -126,13 +124,9 @@ def get_by_sdoc_and_user(
 ) -> list[SpanGroupWithAnnotationsRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    span_group_db_obj = crud_span_group.read_by_user_and_sdoc(
-        db, user_id=user_id, sdoc_id=sdoc_id
+    return SpanGroupService().read_with_annotations_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id
     )
-    return [
-        SpanGroupWithAnnotationsRead.model_validate(group)
-        for group in span_group_db_obj
-    ]
 
 
 # --- update operations
