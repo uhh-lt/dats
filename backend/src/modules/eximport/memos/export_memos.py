@@ -13,7 +13,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
-from core.memo.memo_utils import get_memo_read_dto_from_orm
+from core.memo.memo_utils import get_memo_read_dtos_from_orms
 from core.memo.object_handle_crud import crud_object_handle
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
@@ -88,8 +88,8 @@ def __generate_export_df_for_memos(
         favorited_by_emails.setdefault(memo_id, []).append(email)
 
     memo_export_items = []
-    for memo in memos:
-        memo_dto = get_memo_read_dto_from_orm(db=db, db_obj=memo)
+    memo_dtos = get_memo_read_dtos_from_orms(db=db, db_objs=memos)
+    for memo, memo_dto in zip(memos, memo_dtos, strict=True):
         user = memo.user
 
         # Skip if memo doesn't have attachment

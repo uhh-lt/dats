@@ -1,9 +1,5 @@
 """Annotation Read DTOs are built with a constant number of queries (no N+1)."""
 
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-
-from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -13,28 +9,11 @@ from core.annotation.span_annotation_dto import (
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
 
-from .conftest import SdocWithSpanAnnotations
+from .conftest import SdocWithSpanAnnotations, count_queries
 
 # One query for the annotations plus one per eager-loaded relationship. Lazy loading
 # needed about four queries per annotation, i.e. over 100 for the 30 fixture spans.
 MAX_READ_QUERIES = 6
-
-
-@contextmanager
-def count_queries(db: Session) -> Iterator[Callable[[], int]]:
-    """Count the SQL statements the session executes inside the block."""
-    count = 0
-
-    def on_execute(*args: object, **kwargs: object) -> None:
-        nonlocal count
-        count += 1
-
-    engine = db.get_bind()
-    event.listen(engine, "before_cursor_execute", on_execute)
-    try:
-        yield lambda: count
-    finally:
-        event.remove(engine, "before_cursor_execute", on_execute)
 
 
 def test_read_by_user_and_sdoc_dtos_use_constant_queries(
