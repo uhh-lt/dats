@@ -8,7 +8,6 @@ from modules.search_view.search_view_dto import (
     SearchViewReadUnion,
     search_view_read_from_orm,
 )
-from modules.search_view.search_view_orm import SearchViewORM
 
 
 class SearchViewService(metaclass=SingletonMeta):
@@ -29,17 +28,6 @@ class SearchViewService(metaclass=SingletonMeta):
         Returns:
             The created view.
         """
-        return search_view_read_from_orm(
-            self.create_view_orm(db=db, user_id=user_id, create_dto=create_dto)
-        )
-
-    def create_view_orm(
-        self, db: Session, *, user_id: int, create_dto: SearchViewCreateUnion
-    ) -> SearchViewORM:
-        """
-        Like `create`, but returns the ORM object. For other services, jobs and
-        test fixtures that need the ORM object.
-        """
         # 1) append the view after the user's other views of the entity type
         last_position = crud_search_view.read_last_position(
             db=db,
@@ -49,7 +37,7 @@ class SearchViewService(metaclass=SingletonMeta):
         )
 
         # 2) store the serialized view
-        return crud_search_view.create(
+        db_obj = crud_search_view.create(
             db=db,
             create_dto=SearchViewCreateIntern(
                 name=create_dto.name.strip(),
@@ -72,3 +60,4 @@ class SearchViewService(metaclass=SingletonMeta):
                 position=last_position + 1 if last_position is not None else 0,
             ),
         )
+        return search_view_read_from_orm(db_obj)

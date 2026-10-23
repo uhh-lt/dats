@@ -12,7 +12,6 @@ from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationUpdate,
     BBoxAnnotationUpdateBulk,
 )
-from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
 
 
@@ -39,18 +38,6 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         Returns:
             The created annotations, in the order of `create_dtos`.
         """
-        db_objs = self.create_annotation_orms(
-            db=db, user_id=user_id, create_dtos=create_dtos
-        )
-        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
-
-    def create_annotation_orms(
-        self, db: Session, *, user_id: int, create_dtos: list[BBoxAnnotationCreate]
-    ) -> list[BBoxAnnotationORM]:
-        """
-        Like `create_multi`, but returns the ORM objects. For other services,
-        jobs and test fixtures that need the ORM objects.
-        """
         if not create_dtos:
             return []
 
@@ -67,7 +54,7 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         )
 
         # 3) create the annotations
-        return crud_bbox_anno.create_multi(
+        db_objs = crud_bbox_anno.create_multi(
             db=db,
             create_dtos=[
                 BBoxAnnotationCreateIntern(
@@ -83,6 +70,9 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
                 for create_dto in create_dtos
             ],
         )
+
+        # 4) read them back with their relationships for the DTOs
+        return self._to_read_dtos(db=db, ids=[db_obj.id for db_obj in db_objs])
 
     def update_multi(
         self, db: Session, *, update_dtos: list[BBoxAnnotationUpdateBulk]

@@ -1353,7 +1353,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             affected_sdoc_ids.add(annotation["sdoc_id"])
 
         # Write to db
-        SpanAnnotationService().create_annotation_orms(
+        SpanAnnotationService().create_multi(
             db=db, user_id=ASSISTANT_TRAINED_ID, create_dtos=create_dtos
         )
 

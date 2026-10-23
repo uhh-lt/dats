@@ -3,6 +3,7 @@ from typing import TypedDict
 import pytest
 
 from common.doc_type_enum import DocType
+from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
@@ -149,18 +150,21 @@ def project_with_sentence_annotation(
     )
 
     # Create a sentence annotation
-    sentence_annotation = SentenceAnnotationService().create_annotation_orms(
+    sentence_annotation = crud_sentence_anno.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dtos=[
-            SentenceAnnotationCreate(
+        id=SentenceAnnotationService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SentenceAnnotationCreate(
                 sentence_id_start=0,
                 sentence_id_end=1,
                 code_id=code.id,
                 sdoc_id=sdoc.id,
-            )
-        ],
-    )[0]
+            ),
+        )
+        .id,
+    )
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()

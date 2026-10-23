@@ -379,7 +379,7 @@ def span_statistics_dataset(db_session, test_project, test_user) -> SpanDataset:
         _create_span_dto(sdoc, tokens, 0, i + 1, codes[entity_type])
         for i, (sdoc, entity_type) in enumerate(zip(sdocs, CONLL_ENTITY_TYPES))
     ]
-    SpanAnnotationService().create_annotation_orms(
+    SpanAnnotationService().create_multi(
         db=db_session, user_id=test_user.id, create_dtos=span_dtos
     )
     subset_tags = _create_subset_tags(db_session, test_project)
@@ -471,7 +471,7 @@ def conll_span_dataset(db_session, test_project, test_user) -> SpanDataset:
                 start = None
                 current_type = None
 
-    SpanAnnotationService().create_annotation_orms(
+    SpanAnnotationService().create_multi(
         db=db_session, user_id=test_user.id, create_dtos=span_dtos
     )
 
@@ -735,7 +735,7 @@ def sentence_statistics_dataset(db_session, test_project, test_user) -> SentData
         for sdoc, label in zip(sdocs, CSABSTRUCT_LABELS)
         for sentence_id in range(len(sentences))
     ]
-    SentenceAnnotationService().create_annotation_orms(
+    SentenceAnnotationService().create_multi(
         db=db_session, user_id=test_user.id, create_dtos=sent_dtos
     )
     subset_tags = _create_subset_tags(db_session, test_project)
@@ -815,7 +815,7 @@ def csabstruct_sent_dataset(db_session, test_project, test_user) -> SentDataset:
                     )
                 )
 
-    SentenceAnnotationService().create_annotation_orms(
+    SentenceAnnotationService().create_multi(
         db=db_session, user_id=test_user.id, create_dtos=sent_dtos
     )
 
