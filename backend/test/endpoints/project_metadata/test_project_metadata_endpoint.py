@@ -178,12 +178,26 @@ def test_update_read_only(
         f"/projmeta/{ro_meta.id}", json=payload.model_dump(exclude_none=True)
     )
 
-    assert resp.status_code == 200, resp.text
-    updated = ProjectMetadataRead.model_validate(resp.json())
-    assert updated.id == ro_meta.id
-    assert updated.key == ro_meta.key, (
-        "Key should not be updated for read-only metadata"
+    # read-only keys belong to the system: the update is rejected, nothing changes
+    assert resp.status_code == 400, resp.text
+    assert ro_meta.key in resp.text
+    unchanged = ProjectMetadataRead.model_validate(
+        client.get(f"/projmeta/{ro_meta.id}").json()
     )
+    assert unchanged.key == ro_meta.key
+
+
+def test_delete_read_only(
+    client: TestClient,
+    project_with_metadata,
+):
+    """Deleting a read-only key is rejected and the key stays."""
+    ro_meta = next(m for m in project_with_metadata["metadata"] if m.read_only)
+
+    resp = client.delete(f"/projmeta/{ro_meta.id}")
+
+    assert resp.status_code == 400, resp.text
+    assert client.get(f"/projmeta/{ro_meta.id}").status_code == 200
 
 
 def test_update_read_only_if_not_exists(

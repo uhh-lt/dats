@@ -1,4 +1,3 @@
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -142,19 +141,7 @@ class CRUDProjectMetadata(
     def update_multi(
         self, db: Session, *, ids: list[int], update_dtos: list[ProjectMetadataUpdate]
     ) -> list[ProjectMetadataORM]:
-        db_objs = self.read_by_ids(db=db, ids=ids)
-        writable_ids: list[int] = []
-        writable_dtos: list[ProjectMetadataUpdate] = []
-        for db_obj, update_dto in zip(db_objs, update_dtos):
-            if db_obj.read_only:
-                logger.warning(
-                    (
-                        f"Cannot update read-only ProjectMetadata {db_obj.key} from"
-                        f" Project {db_obj.project_id}!"
-                    )
-                )
-                continue
-
+        for db_obj, update_dto in zip(self.read_by_ids(db=db, ids=ids), update_dtos):
             # If the user wants to change the type of a metadata,
             # there's no way to reasonably convert the
             # values of existing sdoc metadatas,
@@ -175,13 +162,8 @@ class CRUDProjectMetadata(
                     metatype=update_dto.metatype,
                 )
 
-            writable_ids.append(db_obj.id)
-            writable_dtos.append(update_dto)
-
         # update metadata
-        super().update_multi(db=db, ids=writable_ids, update_dtos=writable_dtos)
-
-        return db_objs
+        return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
     ### OTHER OPERATIONS ###
 

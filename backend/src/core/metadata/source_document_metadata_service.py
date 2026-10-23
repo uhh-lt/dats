@@ -1,13 +1,14 @@
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
+from core.metadata.metadata_exceptions import ReadOnlyMetadataError
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
     SourceDocumentMetadataUpdateBulk,
 )
+from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 
 
 class SourceDocumentMetadataService(metaclass=SingletonMeta):
@@ -32,41 +33,32 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
     ) -> list[SourceDocumentMetadataRead]:
         """
         Update user-editable source document metadata, each identified by its id.
-        Read-only metadata is left unchanged (and logged).
 
         Args:
             update_dtos: The new values. Must not repeat an id.
 
         Returns:
-            All given metadata (read-only ones unchanged), in the order of
-            `update_dtos`.
+            The updated metadata, in the order of `update_dtos`.
 
         Raises:
+            ReadOnlyMetadataError: If any metadata is read-only.
             ValueError: If a value has the wrong type for its metadata key.
         """
-        # 1) skip read-only metadata: only the system may change it
+        # 1) only the system may change read-only metadata (doc processing fills it)
         metadatas = crud_sdoc_meta.read_by_ids(
             db=db, ids=[u.sdoc_metadata_id for u in update_dtos]
         )
-        writable: list[SourceDocumentMetadataUpdateBulk] = []
-        for metadata, update_dto in zip(metadatas, update_dtos):
-            if metadata.project_metadata.read_only:
-                logger.warning(
-                    f"Cannot update read-only SourceDocumentMetadata {metadata.project_metadata.key} from"
-                    f" SourceDocument {metadata.source_document_id}!"
-                )
-                continue
-            writable.append(update_dto)
+        self._assert_writable(metadatas)
 
-        # 2) update the writable ones
+        # 2) update them
         crud_sdoc_meta.update_multi(
             db=db,
-            ids=[u.sdoc_metadata_id for u in writable],
+            ids=[u.sdoc_metadata_id for u in update_dtos],
             update_dtos=[
                 SourceDocumentMetadataUpdate(
                     **u.model_dump(exclude={"sdoc_metadata_id"})
                 )
-                for u in writable
+                for u in update_dtos
             ],
         )
 
@@ -74,3 +66,34 @@ class SourceDocumentMetadataService(metaclass=SingletonMeta):
             SourceDocumentMetadataRead.model_validate(metadata)
             for metadata in metadatas
         ]
+
+    def delete(self, db: Session, *, id: int) -> SourceDocumentMetadataRead:
+        """
+        Delete a user-editable source document metadata value.
+
+        Returns:
+            The deleted metadata as it was before the deletion.
+
+        Raises:
+            ReadOnlyMetadataError: If the metadata is read-only.
+        """
+        # 1) only the system may delete read-only metadata (doc processing fills it)
+        metadata = crud_sdoc_meta.read(db=db, id=id)
+        self._assert_writable([metadata])
+        deleted = SourceDocumentMetadataRead.model_validate(metadata)
+
+        # 2) delete it
+        crud_sdoc_meta.delete(db=db, id=id)
+
+        return deleted
+
+    def _assert_writable(self, metadatas: list[SourceDocumentMetadataORM]) -> None:
+        read_only_keys = list(
+            dict.fromkeys(
+                m.project_metadata.key
+                for m in metadatas
+                if m.project_metadata.read_only
+            )
+        )
+        if read_only_keys:
+            raise ReadOnlyMetadataError(read_only_keys)

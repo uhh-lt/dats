@@ -17,7 +17,8 @@ class ProjectWithMetadata(TypedDict):
 
 @pytest.fixture(scope="function")
 def project_with_metadata(db_session, test_project, test_user) -> ProjectWithMetadata:
-    """Create a project for the test user with 5 additional project metadata."""
+    """Create a project for the test user with 6 additional project metadata; the
+    last one, "category_ro", is read-only (updates and deletes are rejected)."""
 
     # Create project metadata for the project
     metadata = crud_project_meta.create_multi(
