@@ -34,7 +34,7 @@ import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useURLConnectorDebounced } from "@hooks/useURLConnectorDebounced";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
-import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
+import { selectSelectedIds, selectSelectedRowIds } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import parse from "html-react-parser";
 import {
@@ -165,7 +165,7 @@ export function SearchDocumentTable({
   const selectedDocumentId = useAppSelector((state) => state.documentSearch.selectedDocumentId);
   const selectedSdocFolderId = useAppSelector((state) => state.documentSearch.selectedSdocFolderId);
   const [showFolders] = useShowFolders();
-  const selectedRows = useAppSelector((state) => selectSelectedRows(state.documentSearch));
+  const selectedRows = useAppSelector((state) => selectSelectedRowIds(state.documentSearch));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.documentSearch));
 
   // virtualization

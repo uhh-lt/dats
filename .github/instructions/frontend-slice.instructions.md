@@ -65,7 +65,7 @@ const sentenceSearchSlice = createSlice({
 // 6. actions
 export const SentenceSearchActions = sentenceSearchSlice.actions;
 
-// 7. selectors (only those that compute or take parameters)
+// 7. selectors (only those that derive something)
 
 // 8. reducer map, always the last statement
 export const sentenceSearchReducer = {
@@ -104,10 +104,7 @@ export const sentenceSearchReducer = {
 
 ### Selectors
 
-- Components read plain fields inline: `useAppSelector((state) => state.x.field)`. Do not write `selectField` one-liners.
-- A selector exists only when it derives data or takes parameters. It is named `selectX`, lives in the slice file after `XActions`, and takes `(state: RootState, ...params)`: `useAppSelector((state) => selectProjectTabs(state, projectId))`.
-- Use `createSelector` only when the result is a new array/object; never build selectors in a factory (`selectX(projectId)` returns a new memoized selector per render).
-- Generic modules' selectors take the composed state: `selectSelectedIds(state.documentSearch)`.
+- Read fields inline (`useAppSelector((state) => state.x.field)`). A selector `selectX` (in the slice file after `XActions`) only derives something; wrap it in `createSelector` only when it builds a new array or object (`selectProjectTabs`, `selectSelectedIds`; a plain function for `selectIsValuesOutdated`).
 
 ### Generic slices (`store/generic/*Slice.ts`, `core/filter/store/filterSlice.ts`)
 
