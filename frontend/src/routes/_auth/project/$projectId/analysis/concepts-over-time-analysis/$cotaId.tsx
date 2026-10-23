@@ -1,4 +1,5 @@
 import { Icon } from "@components/icons";
+import { parseIdParam } from "@core/navigation";
 import { cotaQueries, CotaView } from "@features/concept-over-time-analysis";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
     },
   },
   params: {
-    parse: ({ cotaId }) => ({ cotaId: parseInt(cotaId) }),
+    parse: ({ cotaId }) => ({ cotaId: parseIdParam(cotaId) }),
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ cotasByProjectOptions: cotaQueries.byProject(params.projectId) }),

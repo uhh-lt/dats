@@ -15,6 +15,7 @@ A page route (`classifier.tsx`, `$sdocId.tsx`, `index.tsx`) exports exactly one 
 ```tsx
 import { Icon } from "@components/icons";
 import { booleanSearchParam, FILTER_PARAM, filterSearchParams, sortingModelSearchParam } from "@core/filter";
+import { parseIdParam } from "@core/navigation";
 import { xxxQueries, XxxView } from "@features/xxx"; // public index.ts only
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
     },
   },
   // 3. Params, search params, guards
-  params: { parse: ({ xxxId }) => ({ xxxId: parseInt(xxxId) }) },
+  params: { parse: ({ xxxId }) => ({ xxxId: parseIdParam(xxxId) }) },
   validateSearch: zodValidator(xxxSearchSchema),
   beforeLoad: ({ context }) => {
     if (!context.auth.isAuthenticated) throw redirect({ to: "/login" });
@@ -79,7 +80,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 
 ### Params and search params
 
-- **Params** are parsed to numbers in the route that declares them: `params: { parse: ({ xxxId }) => ({ xxxId: parseInt(xxxId) }) }`.
+- **Params** are parsed to numbers in the route that declares them with `parseIdParam` from `@core/navigation`: `params: { parse: ({ xxxId }) => ({ xxxId: parseIdParam(xxxId) }) }`. It throws `notFound()` for a param that is not a positive integer, so a malformed URL shows the not-found page. Never `parseInt` a param in `params.parse` (`staticData.getTitle` gets the raw string params and only uses them to look up the cache, `Number(params.xxxId)`).
 - **Search params**: a module-level `const <page>SearchSchema = z.object({...})`, passed as `validateSearch: zodValidator(<page>SearchSchema)`. Every key has a `.default(...)` or is `.optional()`.
 - Use the shared schemas from `@core/filter`: `...filterSearchParams<Columns>()` (filter + filter expert mode), `sortingModelSearchParam(default?)`, `booleanSearchParam(default)`. Numbers use `z.coerce.number()`, enums `z.nativeEnum(...)` / `z.enum([...])`. Read the filter as `deps[FILTER_PARAM]`.
 

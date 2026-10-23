@@ -1,7 +1,7 @@
 import { CodeCreateDialog, CodeEditDialog } from "@core/code";
 import { FolderCreateDialog, FolderEditDialog } from "@core/folder";
 import { MemoDialog } from "@core/memo";
-import { QuickCommandMenu, ShortcutManager } from "@core/navigation";
+import { parseIdParam, QuickCommandMenu, ShortcutManager } from "@core/navigation";
 import { TagCreateDialog, TagEditDialog } from "@core/tag";
 import { CodeShortcutManagerDialog, CodeShortcutSynchronizer } from "@features/annotation";
 // eslint-disable-next-line local/no-internal-modules-public-entry
@@ -21,7 +21,7 @@ import { useCallback } from "react";
 
 export const Route = createFileRoute("/_auth/project/$projectId")({
   params: {
-    parse: ({ projectId }) => ({ projectId: parseInt(projectId) }),
+    parse: ({ projectId }) => ({ projectId: parseIdParam(projectId) }),
   },
   component: ProjectRouteLayout,
 });
