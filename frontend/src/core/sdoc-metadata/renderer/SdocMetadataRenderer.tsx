@@ -36,17 +36,18 @@ export const SdocMetadataRendererWithData = memo(
     sdocMetadata: SourceDocumentMetadataRead;
     projectMetadata: ProjectMetadataRead;
   }) => {
+    // only a missing value is "empty": 0 and false are values
     switch (projectMetadata.metatype) {
       case MetaType.STRING:
         return <>{sdocMetadata.str_value ? sdocMetadata.str_value : <i>empty</i>}</>;
       case MetaType.NUMBER:
-        return <>{sdocMetadata.int_value ? sdocMetadata.int_value : <i>empty</i>}</>;
+        return <>{sdocMetadata.int_value !== null ? sdocMetadata.int_value : <i>empty</i>}</>;
       case MetaType.DATE:
         return <>{sdocMetadata.date_value ? formatDateOnly(sdocMetadata.date_value) : <i>empty</i>}</>;
       case MetaType.BOOLEAN:
-        return <>{sdocMetadata.boolean_value ? sdocMetadata.boolean_value : <i>empty</i>}</>;
+        return <>{sdocMetadata.boolean_value !== null ? String(sdocMetadata.boolean_value) : <i>empty</i>}</>;
       case MetaType.LIST:
-        return <>{sdocMetadata.list_value ? sdocMetadata.list_value.join(", ") : <i>empty</i>}</>;
+        return <>{sdocMetadata.list_value?.length ? sdocMetadata.list_value.join(", ") : <i>empty</i>}</>;
       default:
         return <>Unknown MetaType!</>;
     }
