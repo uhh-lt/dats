@@ -8,7 +8,6 @@ from core.annotation.span_group_dto import (
     SpanGroupCreateIntern,
     SpanGroupRead,
 )
-from core.annotation.span_group_orm import SpanGroupORM
 
 
 class SpanGroupService(metaclass=SingletonMeta):
@@ -28,26 +27,16 @@ class SpanGroupService(metaclass=SingletonMeta):
         Returns:
             The created span group.
         """
-        return SpanGroupRead.model_validate(
-            self.create_span_group_orm(db=db, user_id=user_id, create_dto=create_dto)
-        )
-
-    def create_span_group_orm(
-        self, db: Session, *, user_id: int, create_dto: SpanGroupCreate
-    ) -> SpanGroupORM:
-        """
-        Like `create`, but returns the ORM object. For other services,
-        jobs and test fixtures that need the ORM object.
-        """
         # 1) find or create the user's annotation document
         adoc = crud_adoc.exists_or_create(
             db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
         )
 
         # 2) create the span group
-        return crud_span_group.create(
+        db_obj = crud_span_group.create(
             db=db,
             create_dto=SpanGroupCreateIntern(
                 name=create_dto.name, annotation_document_id=adoc.id
             ),
         )
+        return SpanGroupRead.model_validate(db_obj)

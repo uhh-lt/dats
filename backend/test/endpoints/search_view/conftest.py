@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 import dats_test_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+from modules.search_view.search_view_crud import crud_search_view
 from modules.search_view.search_view_dto import (
     BBoxSearchViewCreate,
     MemoSearchViewCreate,
@@ -87,8 +88,11 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
     from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
 
     def create_view(create_dto) -> SearchViewORM:
-        return SearchViewService().create_view_orm(
-            db=db_session, user_id=test_user.id, create_dto=create_dto
+        return crud_search_view.read(
+            db=db_session,
+            id=SearchViewService()
+            .create(db=db_session, user_id=test_user.id, create_dto=create_dto)
+            .id,
         )
 
     memo_view_a = create_view(

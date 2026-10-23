@@ -117,7 +117,7 @@ def sdoc_with_span_annotations(
             is_system=False,
         ),
     )
-    spans = SpanAnnotationService().create_annotation_orms(
+    spans = SpanAnnotationService().create_multi(
         db=db_session,
         user_id=test_user.id,
         create_dtos=[

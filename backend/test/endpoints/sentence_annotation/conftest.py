@@ -2,6 +2,7 @@ from typing import TypedDict
 
 import pytest
 
+from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
@@ -80,18 +81,21 @@ def project_with_sentence_annotation(
     )
 
     # Create a sentence annotation
-    sentence_annotation = SentenceAnnotationService().create_annotation_orms(
+    sentence_annotation = crud_sentence_anno.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dtos=[
-            SentenceAnnotationCreate(
+        id=SentenceAnnotationService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=SentenceAnnotationCreate(
                 sentence_id_start=0,
                 sentence_id_end=0,
                 code_id=code.id,
                 sdoc_id=sdoc.id,
-            )
-        ],
-    )[0]
+            ),
+        )
+        .id,
+    )
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
@@ -125,25 +129,29 @@ def project_with_multiple_sentence_annotations(
     code = project_with_sdoc_and_code["code"]
 
     # Create multiple (2) sentence annotations
-    [sentence_anno1, sentence_anno2] = (
-        SentenceAnnotationService().create_annotation_orms(
-            db=db_session,
-            user_id=test_user.id,
-            create_dtos=[
-                SentenceAnnotationCreate(
-                    sentence_id_start=0,
-                    sentence_id_end=0,
-                    code_id=code.id,
-                    sdoc_id=sdoc.id,
-                ),
-                SentenceAnnotationCreate(
-                    sentence_id_start=1,
-                    sentence_id_end=1,
-                    code_id=code.id,
-                    sdoc_id=sdoc.id,
-                ),
-            ],
-        )
+    [sentence_anno1, sentence_anno2] = crud_sentence_anno.read_by_ids(
+        db=db_session,
+        ids=[
+            dto.id
+            for dto in SentenceAnnotationService().create_multi(
+                db=db_session,
+                user_id=test_user.id,
+                create_dtos=[
+                    SentenceAnnotationCreate(
+                        sentence_id_start=0,
+                        sentence_id_end=0,
+                        code_id=code.id,
+                        sdoc_id=sdoc.id,
+                    ),
+                    SentenceAnnotationCreate(
+                        sentence_id_start=1,
+                        sentence_id_end=1,
+                        code_id=code.id,
+                        sdoc_id=sdoc.id,
+                    ),
+                ],
+            )
+        ],
     )
 
     # Commit the changes to the database and refresh the objects

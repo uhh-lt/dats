@@ -3,6 +3,7 @@ from typing import TypedDict
 import pytest
 
 from common.doc_type_enum import DocType
+from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.bbox_annotation_service import BBoxAnnotationService
@@ -70,20 +71,23 @@ def project_with_bbox_annotation(
     )
 
     # Create a bounding box annotation
-    bbox_annotation = BBoxAnnotationService().create_annotation_orms(
+    bbox_annotation = crud_bbox_anno.read(
         db=db_session,
-        user_id=test_user.id,
-        create_dtos=[
-            BBoxAnnotationCreate(
+        id=BBoxAnnotationService()
+        .create(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=BBoxAnnotationCreate(
                 x_min=1,
                 x_max=5,
                 y_min=2,
                 y_max=6,
                 code_id=code.id,
                 sdoc_id=sdoc.id,
-            )
-        ],
-    )[0]
+            ),
+        )
+        .id,
+    )
     db_session.commit()
     db_session.refresh(test_project)
     db_session.refresh(sdoc)
