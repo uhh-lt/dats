@@ -21,7 +21,7 @@ interface WorkspaceToolbarProps<TColumns extends string, TRow extends { id: numb
   activeViewId?: number;
   searchQuery: string;
   expertMode: boolean;
-  columnInfo?: Record<string, ColumnInfo>;
+  columnInfo: Record<string, ColumnInfo>;
   isRenaming: boolean;
   onSelectView: (viewId: number) => void;
   onReorderViews: (viewIds: number[]) => void;
@@ -126,22 +126,20 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
       {view ? (
         <Stack direction="row" spacing={0.25} alignItems="center" sx={{ flexShrink: 0 }}>
           <LayoutMenuButton layout={view.layout} onChange={handleLayoutChange} />
-          {columnInfo ? (
-            <FilterDialog
-              anchorEl={null}
-              filterName={view.name}
-              filter={view.filters}
-              defaultFilterExpression={config.defaultFilterExpression}
-              column2Info={columnInfo}
-              expertMode={expertMode}
-              onExpertModeChange={onExpertModeChange}
-              onFilterChange={(filter) => onUpdate({ filters: filter })}
-              iconOnly
-              iconButtonProps={{ size: "small", color: filterCount > 0 ? "primary" : "default" }}
-              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-              transformOrigin={{ horizontal: "right", vertical: "top" }}
-            />
-          ) : null}
+          <FilterDialog
+            anchorEl={null}
+            filterName={view.name}
+            filter={view.filters}
+            defaultFilterExpression={config.defaultFilterExpression}
+            column2Info={columnInfo}
+            expertMode={expertMode}
+            onExpertModeChange={onExpertModeChange}
+            onFilterChange={(filter) => onUpdate({ filters: filter })}
+            iconOnly
+            iconButtonProps={{ size: "small", color: filterCount > 0 ? "primary" : "default" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+          />
           <SortMenuButton
             columns={columnValues}
             columnIcons={config.columnIcons}

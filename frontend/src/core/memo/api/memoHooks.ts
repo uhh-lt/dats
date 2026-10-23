@@ -1,25 +1,9 @@
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
-import { toColumnInfoMap } from "@core/filter";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { memoQueries } from "./memoQueries";
-
-// MEMO QUERIES
-/**
- * Fetches the memo column info (label, sortable, filter operator, filter value type)
- * from the backend memo search info endpoint.
- *
- * Returns a map from column id to ColumnInfo. This is the single source of truth
- * for which filters/operators are available on memo columns - do not hardcode
- * column info in views.
- */
-const useMemoSearchInfo = (projectId: number) =>
-  useQuery({
-    ...memoQueries.tableInfo(projectId),
-    select: toColumnInfoMap,
-  });
 
 // MEMO MUTATIONS
 const useCreateMemo = () =>
@@ -93,7 +77,6 @@ const useGetObjectMemos = (
   });
 
 export const MemoHooks = {
-  useMemoSearchInfo,
   useCreateMemo,
   useUpdateMemo,
   useUpdateMemos,

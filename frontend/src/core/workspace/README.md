@@ -47,8 +47,8 @@ interface EntityWorkspaceConfig<TColumns extends string, TRow extends { id: numb
   dateColumns: TColumns[];                // columns that get a date-granularity selector
   emptyFilter: () => MyFilter<TColumns>;  // filter factory for a brand-new view
 
-  // data hooks
-  useSearchInfo: ...;   // column metadata for the filter dialog
+  // data
+  tableInfo: (projectId) => TableInfoOptions;  // the factory's tableInfo leaf: column infos for the filter dialog
   useQueryRows: ...;    // paged rows for a view
   useQueryGroups: ...;  // paged groups for a grouped view
   useSearchViews: ...;  // CRUD + reorder for saved views

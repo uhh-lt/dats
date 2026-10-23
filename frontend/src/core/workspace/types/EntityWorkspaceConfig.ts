@@ -1,9 +1,9 @@
-import { ColumnInfo, MyFilter, MyFilterExpression } from "@core/filter";
+import { MyFilter, MyFilterExpression, TableInfoOptions } from "@core/filter";
 import { GroupPage } from "@models/GroupPage";
 import { GroupSummary } from "@models/GroupSummary";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { SearchViewLayout } from "@models/SearchViewLayout";
-import { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
+import { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
 import { ReactNode } from "react";
 import { createSearchViewHooks } from "../api/searchViewHooks";
@@ -49,8 +49,9 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
   /** Default filter factory for a brand-new view. */
   emptyFilter: () => MyFilter<TColumns>;
 
-  // ---- data hooks ----
-  useSearchInfo: (projectId: number) => UseQueryResult<Record<string, ColumnInfo>, Error>;
+  // ---- data ----
+  /** The tableInfo leaf of the entity's query factory (e.g. `memoQueries.tableInfo`): the column infos for filtering. */
+  tableInfo: (projectId: number) => TableInfoOptions;
   useQueryRows: (
     request: WorkspaceQueryRequest<TColumns>,
     enabled?: boolean,
