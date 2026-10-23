@@ -130,40 +130,79 @@ class CRUDFolder(SQLCRUDBase[FolderORM, FolderCreate, FolderUpdate]):
     ) -> list[FolderORM]:
         # Guard every move before writing anything
         folders = self.read_by_ids(db=db, ids=ids)
-        for folder, update_dto in zip(folders, update_dtos):
-            self._assert_valid_move(db=db, folder=folder, update_dto=update_dto)
+        self._assert_valid_moves(db=db, folders=folders, update_dtos=update_dtos)
         return super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
     ### OTHER OPERATIONS ###
 
-    def _assert_valid_move(
-        self, db: Session, *, folder: FolderORM, update_dto: FolderUpdate
+    def _assert_valid_moves(
+        self, db: Session, *, folders: list[FolderORM], update_dtos: list[FolderUpdate]
     ) -> None:
-        # Guard every move (single or bulk): when parent_id is being set to a
-        # real folder, the target must be a NORMAL folder in the same project.
-        # parent_id=None (move to root) needs no target check.
-        if (
-            "parent_id" not in update_dto.model_fields_set
-            or update_dto.parent_id is None
-        ):
+        """
+        Guard every move (single or bulk) of one update request.
+
+        When parent_id is set to a real folder, the target must be a NORMAL folder
+        in the same project. parent_id=None (move to root) needs no target check.
+        No folder may end up inside itself or one of its descendants. This is
+        checked against the folder tree after ALL moves of the request, so moves
+        that only together form a cycle are rejected as well.
+
+        Raises:
+            FolderMoveToNonNormalFolderError: If a target folder is not NORMAL.
+            FolderMoveAcrossProjectsError: If a target folder is in another project.
+            FolderMoveCycleError: If the moves would create a cycle.
+        """
+        moves: dict[int, int | None] = {
+            folder.id: update_dto.parent_id
+            for folder, update_dto in zip(folders, update_dtos)
+            if "parent_id" in update_dto.model_fields_set
+        }
+        if not moves:
             return
-        target_folder = self.read(db=db, id=update_dto.parent_id)
-        if target_folder.folder_type != FolderType.NORMAL:
-            raise FolderMoveToNonNormalFolderError(target_folder.id)
-        if target_folder.project_id != folder.project_id:
-            raise FolderMoveAcrossProjectsError(folder.id, target_folder.id)
-        # Cycle prevention: the target must not be the folder itself or one of its
-        # descendants. Walk up the ancestor chain from the target; if we reach the
-        # folder being moved, the move would create a cycle.
-        ancestor: FolderORM | None = target_folder
-        while ancestor is not None:
-            if ancestor.id == folder.id:
-                raise FolderMoveCycleError(folder.id, target_folder.id)
-            ancestor = (
-                self.read(db=db, id=ancestor.parent_id)
-                if ancestor.parent_id is not None
-                else None
-            )
+
+        # Target checks
+        folder_by_id = {folder.id: folder for folder in folders}
+        target_ids = [
+            target_id for target_id in moves.values() if target_id is not None
+        ]
+        targets = {t.id: t for t in self.read_by_ids(db=db, ids=target_ids)}
+        for folder_id, target_id in moves.items():
+            if target_id is None:
+                continue
+            target_folder = targets[target_id]
+            if target_folder.folder_type != FolderType.NORMAL:
+                raise FolderMoveToNonNormalFolderError(target_folder.id)
+            if target_folder.project_id != folder_by_id[folder_id].project_id:
+                raise FolderMoveAcrossProjectsError(folder_id, target_folder.id)
+
+        # Build the parent map of the tree after the moves: the current parents of
+        # all ancestors of the targets (read level by level, in batches), overridden
+        # by the requested parents of the moved folders.
+        parent_of: dict[int, int | None] = {
+            folder.id: folder.parent_id for folder in folders
+        }
+        parent_of.update({t.id: t.parent_id for t in targets.values()})
+        parent_of.update(moves)
+        unknown = {p for p in parent_of.values() if p is not None} - parent_of.keys()
+        while unknown:
+            for ancestor in self.read_by_ids(db=db, ids=list(unknown)):
+                parent_of[ancestor.id] = ancestor.parent_id
+            unknown = {
+                p for p in parent_of.values() if p is not None
+            } - parent_of.keys()
+
+        # Cycle prevention: walk up the ancestor chain from each moved folder's new
+        # parent; if we reach the moved folder, the moves would create a cycle.
+        for folder_id, target_id in moves.items():
+            if target_id is None:
+                continue
+            ancestor_id: int | None = target_id
+            visited: set[int] = set()
+            while ancestor_id is not None and ancestor_id not in visited:
+                if ancestor_id == folder_id:
+                    raise FolderMoveCycleError(folder_id, target_id)
+                visited.add(ancestor_id)
+                ancestor_id = parent_of[ancestor_id]
 
 
 crud_folder = CRUDFolder(FolderORM)
