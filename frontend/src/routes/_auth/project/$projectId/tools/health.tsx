@@ -1,15 +1,16 @@
 import { Icon } from "@components/icons";
-import { sortingModelSearchParam, toSorts } from "@core/filter";
+import { toSorts } from "@core/filter";
 import { healthQueries, HealthView } from "@features/health";
 import { DocType } from "@models/DocType";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { searchParamSortingModelValidator } from "@utils/searchParamValidators";
 
 const healthSearchSchema = z.object({
   doctype: z.nativeEnum(DocType).default(DocType.TEXT),
-  sortingModel: sortingModelSearchParam(),
+  sortingModel: searchParamSortingModelValidator(),
   fetchSize: z.coerce.number().default(20),
 });
 

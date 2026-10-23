@@ -1,14 +1,15 @@
 import { Icon } from "@components/icons";
-import { filterSearchParams, sortingModelSearchParam } from "@core/filter";
+import { searchParamFilterValidators } from "@core/filter";
 import { SentAnnotationAnalysisView } from "@features/sent-annotation-analysis";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
+import { searchParamSortingModelValidator } from "@utils/searchParamValidators";
 
 const sentenceAnnotationAnalysisSearchSchema = z.object({
-  ...filterSearchParams<SentAnnoColumns>(),
-  sortingModel: sortingModelSearchParam(),
+  ...searchParamFilterValidators<SentAnnoColumns>(),
+  sortingModel: searchParamSortingModelValidator(),
   fetchSize: z.coerce.number().default(20),
 });
 
