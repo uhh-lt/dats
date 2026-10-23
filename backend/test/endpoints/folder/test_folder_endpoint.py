@@ -290,3 +290,50 @@ def test_update_folders_bulk_rejects_cycle(
     assert FolderRead.model_validate(client.get(f"/folder/{child.id}").json()).name == (
         "Child"
     )
+
+
+def test_update_folders_bulk_rejects_cycle_across_moves(
+    client: TestClient, project_with_multiple_folders
+):
+    """Moves that only together form a cycle are rejected and change nothing."""
+    a, b, _ = project_with_multiple_folders["folders"]
+
+    response = client.patch(
+        "/folder/bulk/update",
+        json=[
+            {"folder_id": a.id, "parent_id": b.id},
+            {"folder_id": b.id, "parent_id": a.id},
+        ],
+    )
+
+    assert response.status_code == 400, response.text
+    for folder in (a, b):
+        current = FolderRead.model_validate(client.get(f"/folder/{folder.id}").json())
+        assert current.parent_id is None
+
+
+def test_update_folders_bulk_validates_against_tree_after_moves(
+    client: TestClient, project_with_nested_folders
+):
+    """Moves are validated against the tree after all moves: moving the parent
+    under its grandchild is valid when the grandchild moves to the root first."""
+    parent = project_with_nested_folders["parent"]
+    child = project_with_nested_folders["child"]
+    grandchild = project_with_nested_folders["grandchild"]
+
+    response = client.patch(
+        "/folder/bulk/update",
+        json=[
+            {"folder_id": parent.id, "parent_id": grandchild.id},
+            {"folder_id": grandchild.id, "parent_id": None},
+        ],
+    )
+
+    assert response.status_code == 200, response.text
+    results = {
+        r.id: r.parent_id
+        for r in (FolderRead.model_validate(item) for item in response.json())
+    }
+    assert results == {parent.id: grandchild.id, grandchild.id: None}
+    current = FolderRead.model_validate(client.get(f"/folder/{child.id}").json())
+    assert current.parent_id == parent.id
