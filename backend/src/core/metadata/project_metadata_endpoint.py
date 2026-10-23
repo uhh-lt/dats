@@ -11,6 +11,7 @@ from core.metadata.project_metadata_dto import (
     ProjectMetadataRead,
     ProjectMetadataUpdate,
 )
+from core.metadata.project_metadata_service import ProjectMetadataService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -103,12 +104,9 @@ def update_by_id(
 ) -> ProjectMetadataRead:
     authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
 
-    db_obj = crud_project_meta.update(db=db, id=metadata_id, update_dto=metadata)
-    result = ProjectMetadataRead.model_validate(db_obj)
+    result = ProjectMetadataService().update(db=db, id=metadata_id, update_dto=metadata)
     ws.emit_to_project(
-        DATSEvent.PROJECT_METADATA_UPDATED,
-        result,
-        project_id=db_obj.get_project_id(),
+        DATSEvent.PROJECT_METADATA_UPDATED, result, project_id=result.project_id
     )
     return result
 
@@ -130,11 +128,8 @@ def delete_by_id(
 ) -> ProjectMetadataRead:
     authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
 
-    metadata = crud_project_meta.read(db=db, id=metadata_id)
-    project_id = metadata.get_project_id()
-    db_obj = crud_project_meta.delete(db=db, id=metadata_id)
-    result = ProjectMetadataRead.model_validate(db_obj)
+    result = ProjectMetadataService().delete(db=db, id=metadata_id)
     ws.emit_to_project(
-        DATSEvent.PROJECT_METADATA_DELETED, result, project_id=project_id
+        DATSEvent.PROJECT_METADATA_DELETED, result, project_id=result.project_id
     )
     return result

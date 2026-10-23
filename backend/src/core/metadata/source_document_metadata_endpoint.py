@@ -150,9 +150,8 @@ def delete_by_id(
     ws: WebsocketEmitter = Depends(),
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
-    metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
-    project_id = metadata.get_project_id()
-    db_obj = crud_sdoc_meta.delete(db=db, id=metadata_id)
-    result = SourceDocumentMetadataRead.model_validate(db_obj)
-    ws.emit_to_project(DATSEvent.SDOC_METADATA_DELETED, result, project_id=project_id)
+    result = SourceDocumentMetadataService().delete(db=db, id=metadata_id)
+    ws.emit_to_project(
+        DATSEvent.SDOC_METADATA_DELETED, result, project_id=result.project_id
+    )
     return result
