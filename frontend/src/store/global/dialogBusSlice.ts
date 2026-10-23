@@ -59,6 +59,11 @@ export interface ClusterDetailDialogData {
   clusterId: number;
 }
 
+export interface ConfirmationDialogData {
+  text: string;
+  type?: "DELETE";
+}
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
 /**
@@ -83,6 +88,7 @@ export interface DialogPayloadMap {
   projectSettings: undefined;
   quickCommandMenu: undefined;
   codeShortcutManager: undefined;
+  confirmation: ConfirmationDialogData;
 }
 
 // ─── Callback Registry ────────────────────────────────────────────────────────
@@ -94,6 +100,7 @@ export interface DialogCallbackMap {
   sentenceAnnotationEdit: () => void;
   bboxAnnotationEdit: () => void;
   memo: (memo: MemoRead) => void;
+  confirmation: (accepted: boolean) => void;
 }
 
 // Utility type to extract the callback for a given key, or undefined
@@ -129,6 +136,7 @@ const initialState: DialogBusState = {
   projectSettings: closed,
   quickCommandMenu: closed,
   codeShortcutManager: closed,
+  confirmation: closed,
 };
 
 // ─── Action payload type ───────────────────────────────────────────────────────

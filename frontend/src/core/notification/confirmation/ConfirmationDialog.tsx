@@ -1,37 +1,37 @@
-/* eslint-disable local/dialog-conventions -- a confirmation is a small alert dialog: DialogTitle, no maximize */
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText } from "@mui/material";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useCallback } from "react";
-import { ConfirmationActions } from "./confirmationSlice";
 
 export function ConfirmationDialog() {
-  const isConfirmationDialogOpen = useAppSelector((state) => state.confirmation.isConfirmationDialogOpen);
-  const confirmationEventData = useAppSelector((state) => state.confirmation.confirmationData);
-  const dispatch = useAppDispatch();
-
-  // ui events
-  const handleClose = useCallback(() => {
-    dispatch(ConfirmationActions.closeConfirmationDialog());
-  }, [dispatch]);
+  const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("confirmation");
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const handleReject = useCallback(() => {
     handleClose();
-    if (confirmationEventData?.onReject) confirmationEventData.onReject();
-  }, [confirmationEventData, handleClose]);
+    onSuccess(false);
+  }, [handleClose, onSuccess]);
 
   const handleAccept = useCallback(() => {
     handleClose();
-    if (confirmationEventData?.onAccept) confirmationEventData.onAccept();
-  }, [confirmationEventData, handleClose]);
+    onSuccess(true);
+  }, [handleClose, onSuccess]);
 
+  const isDelete = dialogData?.type === "DELETE";
   return (
-    <Dialog open={isConfirmationDialogOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-      {confirmationEventData && (
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={isMaximized}>
+      <DATSDialogHeader
+        title="Warning!"
+        onClose={handleClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={toggleMaximize}
+      />
+      {dialogData && (
         <>
-          <DialogTitle id="alert-dialog-title">{"Warning!"}</DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">{confirmationEventData.text}</DialogContentText>
+            <DialogContentText>{dialogData.text}</DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleReject}>Cancel</Button>
@@ -39,10 +39,10 @@ export function ConfirmationDialog() {
               onClick={handleAccept}
               autoFocus
               variant="contained"
-              startIcon={confirmationEventData.type == "DELETE" ? <DeleteIcon /> : null}
-              color={confirmationEventData.type == "DELETE" ? "error" : "primary"}
+              startIcon={isDelete ? <DeleteIcon /> : null}
+              color={isDelete ? "error" : "primary"}
             >
-              {confirmationEventData.type == "DELETE" ? "Delete" : "Confirm"}
+              {isDelete ? "Delete" : "Confirm"}
             </Button>
           </DialogActions>
         </>
