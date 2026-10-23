@@ -124,8 +124,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
     sdocQueries.search({
       projectId,
       searchQuery: searchQuery || "",
-      filter,
-      sorts: toSorts<SdocColumns>(sortingModel),
+      requestBody: { filter, sorts: toSorts<SdocColumns>(sortingModel) },
       pageSize: fetchSize,
       expertMode: false,
       showFolders: false,
