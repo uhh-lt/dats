@@ -1,6 +1,10 @@
-import { SidebarContentSidebarLayout } from "@components/content-layouts";
+import { ContentContainerLayout, SidebarContentSidebarLayout } from "@components/content-layouts";
+import { useLiveJob } from "@core/job";
+import { JobStatus } from "@models/JobStatus";
 import { useAppDispatch } from "@store/storeHooks";
-import { ClusterJobProgressDialog } from "../../_components/ClusterJobProgressDialog";
+import { PerspectivesHooks } from "../../api/perspectivesHooks";
+import { perspectivesQueries } from "../../api/perspectivesQueries";
+import { ClusterJobProgressCard } from "../../_components/ClusterJobProgressCard";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { MapContent } from "./_components/MapContent";
@@ -15,7 +19,18 @@ export function PerspectivesMapView() {
   const dispatch = useAppDispatch();
   dispatch(PerspectivesActions.onOpenMap({ projectId, aspectId: aspectId }));
 
+  // the map is outdated while the aspect's most recent job runs, so the job's progress replaces it
+  const aspect = PerspectivesHooks.useGetAspect(aspectId);
+  const job = useLiveJob(perspectivesQueries.job.byId(aspect.data?.most_recent_job_id));
+
   // render
+  if (job.data && job.data.status !== JobStatus.FINISHED) {
+    return (
+      <ContentContainerLayout>
+        <ClusterJobProgressCard perspectivesJob={job.data} />
+      </ContentContainerLayout>
+    );
+  }
   return (
     <>
       <SidebarContentSidebarLayout
@@ -23,7 +38,6 @@ export function PerspectivesMapView() {
         content={<MapContent aspectId={aspectId} />}
         rightSidebar={<InfoPanel projectId={projectId} aspectId={aspectId} />}
       />
-      <ClusterJobProgressDialog aspectId={aspectId} />
       <ClusterDetailDialog aspectId={aspectId} />
     </>
   );

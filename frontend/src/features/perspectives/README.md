@@ -20,7 +20,7 @@ The feature follows the frontend conventions (`.github/instructions/frontend-*.i
 - `views/dashboard/`: the list of perspectives (`PerspectivesDashboardView`) with `PerspectiveCard` and `PerspectiveCreationDialog`.
 - `views/detail/`: one perspective (`PerspectiveView`) with its plots and cluster list.
 - `views/map/`: the interactive map (`PerspectivesMapView`) with toolbar, settings panel and info panel.
-- `_components/`: used by several views: `DocAspectTable`, the job progress card and dialog, and the cluster detail dialog (`dialog/`).
+- `_components/`: used by several views: `DocAspectTable`, the job progress card, and the cluster detail dialog (`dialog/`).
 
 ## Server Communication
 
@@ -77,7 +77,7 @@ The overview of one perspective: generation status, clustering statistics and pr
 
 ### 4. Interactive Map (`views/map/PerspectivesMapView.tsx`)
 
-The layout around the scatter plot: `SettingsPanel` (left), `MapContent` with `MapPlot` (center), `InfoPanel` (right), the `MapToolbar`, and the job progress and cluster detail dialogs. The filter dialog in the toolbar loads the column infos with `TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId))`.
+The layout around the scatter plot: `SettingsPanel` (left), `MapContent` with `MapPlot` (center), `InfoPanel` (right), the `MapToolbar`, and the cluster detail dialog. While the aspect's most recent job has not finished, the view shows its `ClusterJobProgressCard` instead of the map. The filter dialog in the toolbar loads the column infos with `TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId))`.
 
 ### 5. Map Plot (`views/map/_components/MapPlot.tsx`)
 
@@ -92,6 +92,6 @@ The WebGL scatter plot of the documents.
 
 Details of one cluster: its generated label and description, keywords (`ClusterWordCloud`) and documents (`DocAspectTable`). Users can edit the details or recompute the description (`RecomputeClusterDescriptionButton`). It is opened from `ClusterList` and `ColorSettings` through the dialog bus.
 
-### 7. Job Progress (`_components/ClusterJobProgressCard.tsx`, `_components/ClusterJobProgressDialog.tsx`)
+### 7. Job Progress (`_components/ClusterJobProgressCard.tsx`)
 
-The card shows the steps and status (queued, started, finished, failed) of a perspectives job with an MUI `Stepper`. The dialog wraps it and is shown while the aspect's most recent job is running (`useLiveJob`).
+The card shows the steps and status (queued, started, finished, failed) of a perspectives job with an MUI `Stepper`. The perspective view and the map view show it while the aspect's most recent job is running (`useLiveJob`).
