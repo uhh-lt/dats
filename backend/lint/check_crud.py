@@ -128,13 +128,13 @@ ALLOW_RE = re.compile(r"#\s*check_crud:\s*allow\s+([\w-]+)")
 
 
 def generic_params(crud_class: ast.ClassDef) -> tuple[str, str] | None:
-    """The (Create, Update) DTO type names of `SQLCRUDBase[ORM, Create, Update]`."""
+    """The (Create, Update) DTO type names of `SQLCRUDBase[ORM, Create, Update(, ID)]`."""
     for b in crud_class.bases:
         if (
             isinstance(b, ast.Subscript)
             and base_name(b) == SQL.base
             and isinstance(b.slice, ast.Tuple)
-            and len(b.slice.elts) == 3
+            and len(b.slice.elts) in (3, 4)
         ):
             return ast.unparse(b.slice.elts[1]), ast.unparse(b.slice.elts[2])
     return None
