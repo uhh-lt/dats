@@ -1,4 +1,5 @@
 import { Icon } from "@components/icons";
+import { parseIdParam } from "@core/navigation";
 import { whiteboardQueries, WhiteboardView } from "@features/whiteboard";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whit
     },
   },
   params: {
-    parse: ({ whiteboardId }) => ({ whiteboardId: parseInt(whiteboardId) }),
+    parse: ({ whiteboardId }) => ({ whiteboardId: parseIdParam(whiteboardId) }),
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({

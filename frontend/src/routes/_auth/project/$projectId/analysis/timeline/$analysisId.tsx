@@ -1,4 +1,5 @@
 import { Icon } from "@components/icons";
+import { parseIdParam } from "@core/navigation";
 import { timelineAnalysisQueries, TimelineAnalysisView } from "@features/timeline-analysis";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
     },
   },
   params: {
-    parse: ({ analysisId }) => ({ analysisId: parseInt(analysisId) }),
+    parse: ({ analysisId }) => ({ analysisId: parseIdParam(analysisId) }),
   },
   // the query options are built once here; the loader and the view use the same ones
   context: ({ params }) => ({ timelineAnalysesByProjectOptions: timelineAnalysisQueries.byProject(params.projectId) }),

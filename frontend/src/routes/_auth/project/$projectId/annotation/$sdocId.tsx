@@ -1,4 +1,5 @@
 import { Icon } from "@components/icons";
+import { parseIdParam } from "@core/navigation";
 import { sdocQueries } from "@core/source-document";
 import { AnnotationView } from "@features/annotation";
 import { CircularProgress } from "@mui/material";
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
     },
   },
   params: {
-    parse: ({ sdocId }) => ({ sdocId: parseInt(sdocId) }),
+    parse: ({ sdocId }) => ({ sdocId: parseIdParam(sdocId) }),
   },
   validateSearch: zodValidator(annotationSearchSchema),
   // the query options are built once here; the loader and the view use the same ones
