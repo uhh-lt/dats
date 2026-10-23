@@ -2,7 +2,6 @@ import {
   MemoCard,
   MemoCreateIconButton,
   MemoFeedItem,
-  MemoHooks,
   MemoListItem,
   memoColumnsToFlags,
   memoQueries,
@@ -65,7 +64,7 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
   defaultGroupBy: { field: MemoColumns.M_ATTACHED_OBJECT_TYPE },
   emptyFilter: emptyMemoFilter,
 
-  useSearchInfo: MemoHooks.useMemoSearchInfo,
+  tableInfo: memoQueries.tableInfo,
   useQueryRows: (request: WorkspaceQueryRequest<MemoColumns>, enabled?: boolean) =>
     useInfiniteQuery({ ...memoQueries.search(request as QueryRequest_MemoColumns_), enabled }),
   useQueryGroups: (request: WorkspaceGroupQueryRequest<MemoColumns>, enabled?: boolean) =>

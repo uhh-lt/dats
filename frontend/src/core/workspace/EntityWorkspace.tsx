@@ -1,3 +1,4 @@
+import { TableInfoHooks } from "@core/filter";
 import { SearchViewLayout } from "@models/SearchViewLayout";
 import { Button, CircularProgress, Stack, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
@@ -55,7 +56,7 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
     handleRenameView,
   } = useWorkspaceViews({ projectId, config, lastViewId, onRememberView });
 
-  const { data: columnInfo } = config.useSearchInfo(projectId);
+  const columnInfo = TableInfoHooks.useColumnInfoMap(config.tableInfo(projectId));
 
   const handleSelectViewAndResetSearch = useCallback(
     (viewId: number) => {
