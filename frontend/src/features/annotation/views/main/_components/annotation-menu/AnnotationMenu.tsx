@@ -1,6 +1,5 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
-import { useAuth } from "@core/auth";
 import { CodeHooks } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -27,7 +26,8 @@ import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Annotation, Annotations } from "../../../../_types/Annotation";
-import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../../../../store/codeShortcutsSlice";
+import { useCodeShortcuts } from "../../../../_hooks/useCodeShortcuts";
+import { CODE_SHORTCUT_KEYS, CodeShortcutKey } from "../../../../store/codeShortcutsSlice";
 import { useComputeCodesForSelection } from "./_hooks/useComputeCodesForSelection";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();
@@ -60,9 +60,8 @@ interface ICodeFilterWithLevel extends NamedObjWithParentWithLevel<CodeRead> {
 
 export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplicate }: AnnotationMenuProps) => {
   const openCodeCreate = useOpenDialog("codeCreate");
-  const { user } = useAuth();
   const projectId = useAppSelector((state) => state.project.projectId);
-  const bindings = useAppSelector((state) => selectCodeShortcuts(state, user?.id, projectId));
+  const shortcuts = useCodeShortcuts(projectId);
   const submissionLockedRef = useRef(false);
   const memoButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -79,17 +78,14 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
 
   // computed
   const codes = useComputeCodesForSelection();
-  const enabledCodes = CodeHooks.useGetEnabledCodes();
   const codeTree = useWithLevel(codes, codes[0]?.parent_id ?? null);
   const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
     const scopedOptions = codeTree.map((c) => ({
       ...c,
       title: c.data.name,
     }));
-    const enabledCodesById = new Map((enabledCodes.data ?? []).map((code) => [code.id, code]));
     const shortcutOptions = CODE_SHORTCUT_KEYS.flatMap((shortcutKey) => {
-      const codeId = bindings[shortcutKey];
-      const code = codeId === undefined ? undefined : enabledCodesById.get(codeId);
+      const code = shortcuts[shortcutKey];
       if (!code) {
         return [];
       }
@@ -99,7 +95,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     const shortcutCodeIds = new Set(shortcutOptions.map((option) => option.data.id));
 
     return [...shortcutOptions, ...scopedOptions.filter((option) => !shortcutCodeIds.has(option.data.id))];
-  }, [bindings, codeTree, enabledCodes.data]);
+  }, [codeTree, shortcuts]);
 
   // methods
   const openAnnotationMenu = (position: PopoverPosition, annotations?: Annotations) => {
@@ -215,8 +211,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
       return;
     }
 
-    const codeId = bindings[shortcutKey];
-    const code = codeId === undefined ? undefined : enabledCodes.data?.find((candidate) => candidate.id === codeId);
+    const code = shortcuts[shortcutKey];
     if (!code) {
       return;
     }
