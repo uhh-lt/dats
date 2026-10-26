@@ -77,7 +77,7 @@ The overview of one perspective: generation status, clustering statistics and pr
 
 ### 4. Interactive Map (`views/map/PerspectivesMapView.tsx`)
 
-The layout around the scatter plot: `SettingsPanel` (left), `MapContent` with `MapPlot` (center), `InfoPanel` (right), the `MapToolbar`, and the cluster detail dialog. While the aspect's most recent job has not finished, the view shows its `ClusterJobProgressCard` instead of the map. The filter dialog in the toolbar loads the column infos with `TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId))`.
+The layout around the scatter plot: `SettingsPanel` (left), `MapContent` with `MapPlot` (center), `InfoPanel` (right), the `MapToolbar`, and the cluster detail dialog. While the aspect's most recent job has not finished, the view shows its `ClusterJobProgressCard` instead of the map. The filter popover in the toolbar loads the column infos with `TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId))`.
 
 ### 5. Map Plot (`views/map/_components/MapPlot.tsx`)
 

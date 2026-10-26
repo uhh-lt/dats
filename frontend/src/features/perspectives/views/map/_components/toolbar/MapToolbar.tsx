@@ -1,5 +1,5 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@core/filter";
+import { ReduxFilterPopover } from "@core/filter";
 import { sdocQueries } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { useDebounce } from "@hooks/useDebounce";
@@ -21,14 +21,14 @@ interface MapToolbarProps {
 
 export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
   const { projectId } = PerspectivesMapRouteAPI.useParams();
-  // keeps its identity, so that the memoized filter dialog does not re-render with every render
+  // keeps its identity, so that the memoized filter popover does not re-render with every render
   const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
 
   // selection
   const selectedDocumentIds = useAppSelector((state) => state.perspectives.selectedSdocIds);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
-  // filter dialog
+  // filter popover
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
 
   // search bar
@@ -63,7 +63,7 @@ export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
         </Stack>
       )}
       <Box sx={{ flexGrow: 1 }} />
-      <ReduxFilterDialog
+      <ReduxFilterPopover
         anchorEl={toolbarEl}
         buttonProps={{ size: "small" }}
         filterName={`aspect-${aspectId}`}

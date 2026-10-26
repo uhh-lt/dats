@@ -18,7 +18,7 @@ An entity that can be listed with filters, sorting and infinite scrolling (sdocs
 | `store/filterSlice.ts`    | `FilterState` (`filter: Record<filterName, MyFilter>`, `defaultFilterExpression`, `expertMode`), `createInitialFilterState`, `resetProjectFilterState`, `filterReducer`                                                              |
 | `store/filterURLStore.ts` | `FILTER_PARAM` / `FILTER_EXPERT_MODE_PARAM` search params and the pure filter edit functions the dialogs use (`store/_utils/filterLogic.ts` does the work)                                                                           |
 | `api/`                    | `TableInfoOptions`, `tableInfoQueries` (key prefixes of every `tableInfo` leaf), `toColumnInfos`, `TableInfoHooks.useColumnInfoMap` / `useColumnVisibility`                                                                          |
-| `filter-dialogs/`         | `FilterDialog` (the caller owns filter + expert mode), `ReduxFilterDialog` (a `*FilterSlice`), `URLFilterDialog` (the route's search params); all three wrap `InternalFilterDialog`                                                  |
+| `filter-popovers/`        | `FilterPopover` (the caller owns filter + expert mode), `ReduxFilterPopover` (a `*FilterSlice`), `URLFilterPopover` (the route's search params); all three wrap `InternalFilterPopover`                                              |
 | `filter-renderer/`        | `FilterRenderer` (expert) / `FilterRendererSimple`, one row per expression: `FilterColumnSelector`, `FilterOperatorSelector`, `FilterValueSelector` → one `<Type>ValueSelector` per `FilterValueType`                                |
 | `toolbar/`                | `FilterTableToolbarProps` (`table`, `selectedData`, `anchor`), `Redux` / `URL` / `LocalFilterTableToolbarLeft` (the matching dialog), `FilterTableToolbarRight`                                                                      |
 | `table/`                  | `FilterTable` (MRT table with virtualization, infinite scroll, selection, manual sorting and the toolbars), `FilterTableContainerProps`, the variant props `ReduxFilterTableProps` / `URLFilterTableProps` / `LocalFilterTableProps` |
@@ -154,7 +154,7 @@ export const <Entity>LocalFilterTable = memo(
 
 - The caller owns `rowSelectionModel`, `sortingModel`, `columnVisibilityModel` and `fetchSize` (local `useState`, or its feature slice / route search params) and passes `projectId`. Column visibility defaults come from `TableInfoHooks.useColumnVisibility(<domain>Queries.tableInfo(projectId), storedModel, HIDDEN_BY_DEFAULT)`.
 - Pick the variant by where the filter must live: a dialog or panel → Redux with a unique `filterName` constant; a page whose filter belongs in the URL → URL; a feature that keeps the filter in its own state → Local. Domain actions on the selection go in a custom `renderTopLeftToolbar` / `renderBottomToolbar` that receives `selectedData`.
-- URL-backed filters (the URL variant, `URLFilterDialog`, or a Local variant fed from `useURLConnector`) get their search params from the validators used in the route's `validateSearch` schema (see [frontend-route.instructions.md](frontend-route.instructions.md)): `searchParamFilterValidators<Columns>()` (`searchParamFilterValidators.ts`) adds `FILTER_PARAM` (deserialized to a `MyFilter`) and `FILTER_EXPERT_MODE_PARAM`; `searchParamSortingModelValidator({ default? })` and `searchParamBooleanValidator({ default })` from `@utils/searchParamValidators` add the sorting state and any other flag. Never write these schemas by hand.
+- URL-backed filters (the URL variant, `URLFilterPopover`, or a Local variant fed from `useURLConnector`) get their search params from the validators used in the route's `validateSearch` schema (see [frontend-route.instructions.md](frontend-route.instructions.md)): `searchParamFilterValidators<Columns>()` (`searchParamFilterValidators.ts`) adds `FILTER_PARAM` (deserialized to a `MyFilter`) and `FILTER_EXPERT_MODE_PARAM`; `searchParamSortingModelValidator({ default? })` and `searchParamBooleanValidator({ default })` from `@utils/searchParamValidators` add the sorting state and any other flag. Never write these schemas by hand.
 
   ```ts
   const wordFrequencySearchSchema = z.object({
@@ -165,10 +165,10 @@ export const <Entity>LocalFilterTable = memo(
   // createFileRoute(...)({ validateSearch: zodValidator(wordFrequencySearchSchema), ... })
   ```
 
-### Filter Dialogs and Selectors
+### Filter Popovers and Selectors
 
-- Pass the column infos of a dialog as `tableInfoOptions` (Redux / URL) or `column2Info` (`FilterDialog`); the dialog never fetches anything else.
-- `URLFilterDialog` takes a `routeApi` whose search schema has `FILTER_PARAM` and `FILTER_EXPERT_MODE_PARAM` (checked by its type).
+- Pass the column infos of a dialog as `tableInfoOptions` (Redux / URL) or `column2Info` (`FilterPopover`); the dialog never fetches anything else.
+- `URLFilterPopover` takes a `routeApi` whose search schema has `FILTER_PARAM` and `FILTER_EXPERT_MODE_PARAM` (checked by its type).
 - A value selector is `export const <Type>ValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => ...)` with one `handleValueChange` callback that calls `onChangeValue(filterExpression.id, value)`; register it in the `FilterValueSelector` switch under its `FilterValueType`.
 - Filter edits go through the pure functions of `store/filterURLStore.ts` (they return a new filter); never mutate a `MyFilter`.
 

@@ -7,7 +7,7 @@ export * from "./store";
 export * from "./api/tableInfoHooks";
 export * from "./api/tableInfoQueries";
 export * from "./api/tableInfoUtils";
-export * from "./filter-dialogs";
+export * from "./filter-popovers";
 export * from "./filter-renderer";
 export * from "./table";
 export * from "./toolbar";

@@ -31,7 +31,7 @@ import {
   withDefaultFilterExpression,
 } from "../store";
 
-export interface InternalFilterDialogProps {
+export interface InternalFilterPopoverProps {
   anchorEl: HTMLElement | null;
   filter: MyFilter;
   filterName?: string;
@@ -49,7 +49,7 @@ export interface InternalFilterDialogProps {
   onResetEditFilter: () => void;
 }
 
-const InternalFilterDialog = memo(
+const InternalFilterPopover = memo(
   ({
     anchorEl,
     filter,
@@ -69,7 +69,7 @@ const InternalFilterDialog = memo(
       horizontal: "left",
     },
     ...props
-  }: InternalFilterDialogProps & FilterRendererHandlers) => {
+  }: InternalFilterPopoverProps & FilterRendererHandlers) => {
     // local client state
     const dialog = useDialog();
     const [triggerAnchorEl, setTriggerAnchorEl] = useState<HTMLElement | null>(null);
@@ -174,7 +174,7 @@ const InternalFilterDialog = memo(
   },
 );
 
-export interface FilterDialogProps<T extends string = string> {
+export interface FilterPopoverProps<T extends string = string> {
   filterName: string;
   defaultFilterExpression: MyFilterExpression;
   filter: MyFilter<T>;
@@ -184,7 +184,7 @@ export interface FilterDialogProps<T extends string = string> {
   column2Info: Record<string, ColumnInfo>;
 }
 
-function FilterDialogInner<T extends string = string>({
+function FilterPopoverInner<T extends string = string>({
   filterName,
   defaultFilterExpression,
   filter,
@@ -199,9 +199,9 @@ function FilterDialogInner<T extends string = string>({
   iconOnly,
   anchorOrigin,
   transformOrigin,
-}: FilterDialogProps<T> &
+}: FilterPopoverProps<T> &
   Pick<
-    InternalFilterDialogProps,
+    InternalFilterPopoverProps,
     "anchorEl" | "buttonProps" | "iconButtonProps" | "iconOnly" | "transformOrigin" | "anchorOrigin"
   >) {
   const [editableFilter, setEditableFilter] = useState(filter);
@@ -255,7 +255,7 @@ function FilterDialogInner<T extends string = string>({
   }, []);
 
   return (
-    <InternalFilterDialog
+    <InternalFilterPopover
       anchorEl={anchorEl}
       buttonProps={buttonProps}
       iconButtonProps={iconButtonProps}
@@ -282,4 +282,4 @@ function FilterDialogInner<T extends string = string>({
   );
 }
 
-export const FilterDialog = memo(FilterDialogInner) as typeof FilterDialogInner;
+export const FilterPopover = memo(FilterPopoverInner) as typeof FilterPopoverInner;

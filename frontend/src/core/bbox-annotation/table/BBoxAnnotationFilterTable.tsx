@@ -205,7 +205,7 @@ export const BBoxAnnotationReduxFilterTable = memo(
   }: ReduxFilterTableProps<BBoxAnnotationRow, BBoxColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => bboxAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
@@ -243,7 +243,7 @@ export const BBoxAnnotationURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<BBoxAnnotationRow, BBoxColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => bboxAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],

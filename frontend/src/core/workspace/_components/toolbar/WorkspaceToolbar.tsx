@@ -1,5 +1,5 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ColumnInfo, countFilterExpressions, FilterDialog } from "@core/filter";
+import { ColumnInfo, countFilterExpressions, FilterPopover } from "@core/filter";
 import { DateGranularity } from "@models/DateGranularity";
 import { SearchViewLayout } from "@models/SearchViewLayout";
 import { SortDirection } from "@models/SortDirection";
@@ -126,7 +126,7 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
       {view ? (
         <Stack direction="row" spacing={0.25} alignItems="center" sx={{ flexShrink: 0 }}>
           <LayoutMenuButton layout={view.layout} onChange={handleLayoutChange} />
-          <FilterDialog
+          <FilterPopover
             anchorEl={null}
             filterName={view.name}
             filter={view.filters}

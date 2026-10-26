@@ -1,5 +1,5 @@
 import { MRT_RowData } from "material-react-table";
-import { FilterDialogProps, ReduxFilterDialogProps, URLFilterDialogProps } from "../filter-dialogs";
+import { FilterPopoverProps, ReduxFilterPopoverProps, URLFilterPopoverProps } from "../filter-popovers";
 import { MyFilter } from "../filterUtils";
 import {
   FilterTableToolbarProps,
@@ -27,7 +27,7 @@ export type ReduxFilterTableProps<T extends MRT_RowData, TColumns extends string
   ReduxFilterTableToolbarProps<T>,
   TColumns
 > &
-  Pick<ReduxFilterDialogProps, "filterName">;
+  Pick<ReduxFilterPopoverProps, "filterName">;
 
 /** Props of a <Domain>URLFilterTable: the filter lives in the search params of the route (FILTER_PARAM). */
 export type URLFilterTableProps<T extends MRT_RowData, TColumns extends string> = FilterTableVariantProps<
@@ -35,7 +35,7 @@ export type URLFilterTableProps<T extends MRT_RowData, TColumns extends string> 
   URLFilterTableToolbarProps<T>,
   TColumns
 > &
-  Pick<URLFilterDialogProps, "routeApi">;
+  Pick<URLFilterPopoverProps, "routeApi">;
 
 /** Props of a <Domain>LocalFilterTable: the caller owns the filter and the expert mode. */
 export type LocalFilterTableProps<T extends MRT_RowData, TColumns extends string> = FilterTableVariantProps<
@@ -43,4 +43,4 @@ export type LocalFilterTableProps<T extends MRT_RowData, TColumns extends string
   LocalFilterTableToolbarProps<T, TColumns>,
   TColumns
 > &
-  Omit<FilterDialogProps<TColumns>, "column2Info" | "defaultFilterExpression">;
+  Omit<FilterPopoverProps<TColumns>, "column2Info" | "defaultFilterExpression">;

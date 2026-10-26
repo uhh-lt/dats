@@ -1,4 +1,4 @@
-import { FilterDialog, LocalFilterTableToolbarProps } from "@core/filter";
+import { FilterPopover, LocalFilterTableToolbarProps } from "@core/filter";
 import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import { BBoxColumns } from "@models/BBoxColumns";
 import { Stack } from "@mui/material";
@@ -19,7 +19,7 @@ export function BBoxAnnotationAnalysisTableToolbarLeft({
 }: LocalFilterTableToolbarProps<BBoxAnnotationRow, BBoxColumns>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <FilterDialog
+      <FilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}

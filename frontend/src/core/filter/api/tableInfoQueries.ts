@@ -1,7 +1,7 @@
 import type { QueryKey, UseQueryOptions } from "@tanstack/react-query";
 import type { ColumnInfo } from "../filterUtils";
 
-/** The query options of a `<domain>Queries.tableInfo(...)` leaf: what a filter dialog needs to load the column infos. */
+/** The query options of a `<domain>Queries.tableInfo(...)` leaf: what a filter popover needs to load the column infos. */
 export type TableInfoOptions = UseQueryOptions<ColumnInfo[], Error, ColumnInfo[], QueryKey>;
 
 /**

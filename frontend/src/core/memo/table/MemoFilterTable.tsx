@@ -178,7 +178,7 @@ export const MemoReduxFilterTable = memo(
   }: ReduxFilterTableProps<MemoRead, MemoColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
@@ -213,7 +213,7 @@ export const MemoURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<MemoRead, MemoColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (

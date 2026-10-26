@@ -1,4 +1,4 @@
-import { FilterDialog, LocalFilterTableToolbarProps } from "@core/filter";
+import { FilterPopover, LocalFilterTableToolbarProps } from "@core/filter";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { Stack } from "@mui/material";
@@ -19,7 +19,7 @@ export function SentAnnotationAnalysisTableToolbarLeft({
 }: LocalFilterTableToolbarProps<SentenceAnnotationRow, SentAnnoColumns>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <FilterDialog
+      <FilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}

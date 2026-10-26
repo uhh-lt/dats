@@ -48,7 +48,7 @@ export const WordFrequencyTable = memo(
       WordFrequencyActions.onColumnVisibilityChange,
     );
 
-    // the column infos; the options keep their identity, so that the memoized filter dialog does not re-render with every render of the table
+    // the column infos; the options keep their identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => wordFrequencyQueries.tableInfo(projectId), [projectId]);
     const columnVisibilityModel = TableInfoHooks.useColumnVisibility(tableInfoOptions, storedColumnVisibility);
 

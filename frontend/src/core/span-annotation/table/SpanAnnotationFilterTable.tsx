@@ -196,7 +196,7 @@ export const SpanAnnotationReduxFilterTable = memo(
   }: ReduxFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => spanAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
@@ -234,7 +234,7 @@ export const SpanAnnotationURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => spanAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
