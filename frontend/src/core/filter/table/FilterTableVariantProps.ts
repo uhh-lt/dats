@@ -43,4 +43,4 @@ export type LocalFilterTableProps<T extends MRT_RowData, TColumns extends string
   LocalFilterTableToolbarProps<T, TColumns>,
   TColumns
 > &
-  Omit<FilterPopoverProps<TColumns>, "column2Info" | "defaultFilterExpression">;
+  Omit<FilterPopoverProps<TColumns>, "tableInfoOptions" | "defaultFilterExpression">;

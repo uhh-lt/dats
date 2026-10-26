@@ -143,7 +143,7 @@ export const <Entity>LocalFilterTable = memo(
 
 - **Exports**: exactly `<Entity>ReduxFilterTable`, `<Entity>URLFilterTable` and `<Entity>LocalFilterTable`, each `memo(...)` with a JSDoc that names where the filter lives. The inner `<Entity>FilterTable` is not exported.
 - **Variant props**: type the variants with `ReduxFilterTableProps<Row, Columns>` / `URLFilterTableProps` / `LocalFilterTableProps`, never with hand-written `Omit<FilterTableContainerProps ...>`. Every variant defaults `renderTopLeftToolbar` to its generic toolbar (or the domain's own, e.g. `MemoReduxToolbarLeft`) and lets the caller override it.
-- **Table infos**: the Redux and URL variants pass `tableInfoOptions` wrapped in `useMemo` (the dialog is memoized); the Local variant passes `column2Info = TableInfoHooks.useColumnInfoMap(<domain>Queries.tableInfo(projectId))`. Never copy column infos into Redux.
+- **Table infos**: every filter popover (Redux, URL and Local) takes the domain's `tableInfo` leaf as `tableInfoOptions` (`sdocQueries.tableInfo(projectId)`, no `useMemo`) and loads the column infos itself. Code that needs the infos as a map (`addMetadataFilter`, `ConceptFilterEditor`) reads `columnInfoMap = TableInfoHooks.useColumnInfoMap(...)`.
 - **Columns**: built in one `useMemo` from `tableInfo`, `[]` while loading. Type the map callback (`(column): MRT_ColumnDef<Row> =>`) and the base `colDef`; never cast with `as MRT_ColumnDef`. The base `colDef` has `accessorFn: () => null`, because MRT only sorts columns with an accessor. Metadata columns (numeric `column`) render `SdocMetadataRenderer`; unknown columns render `<i>Cannot render column …</i>`. Extra columns that are not in `tableInfo` are typed constants prepended to the result (`textColumn`, `previewColumn`); columns to skip go in a `HIDDEN_COLUMNS: string[]` constant filtered before the map.
 - **Data**: `useInfiniteQuery(<domain>Queries.search({...}))` with `toSorts<Columns>(sortingModel)` and `fetchSize` as page size; pass the factory leaf directly (no spread, no `enabled`).
 - **Reset**: `useResetStateOnSearch([...searchParams], resetState)` clears the selection, sets the fetch size back to 20 and calls `onSearchParameterChange`. The params are every input of the search: `[filter, sortingModel]`, plus `searchQuery` if the table has a global search.
@@ -167,7 +167,6 @@ export const <Entity>LocalFilterTable = memo(
 
 ### Filter Popovers and Selectors
 
-- Pass the column infos of a dialog as `tableInfoOptions` (Redux / URL) or `column2Info` (`FilterPopover`); the dialog never fetches anything else.
 - `URLFilterPopover` takes a `routeApi` whose search schema has `FILTER_PARAM` and `FILTER_EXPERT_MODE_PARAM` (checked by its type).
 - A value selector is `export const <Type>ValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => ...)` with one `handleValueChange` callback that calls `onChangeValue(filterExpression.id, value)`; register it in the `FilterValueSelector` switch under its `FilterValueType`.
 - Filter edits go through the pure edit functions of `filterUtils.ts` (each returns a new filter); never mutate a `MyFilter`.

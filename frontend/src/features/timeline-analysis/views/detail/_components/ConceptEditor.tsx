@@ -27,7 +27,7 @@ export function ConceptEditor({ timelineAnalysis, onUpdate, onCancel }: ConceptE
   const defaultFilterExpression = useAppSelector((state) => state.timelineAnalysis.defaultFilterExpression);
 
   // global server state
-  const column2Info = TableInfoHooks.useColumnInfoMap(timelineAnalysisQueries.tableInfo(timelineAnalysis));
+  const columnInfoMap = TableInfoHooks.useColumnInfoMap(timelineAnalysisQueries.tableInfo(timelineAnalysis));
 
   // local state for transient filter edits while dialog is open
   const [editableFilter, setEditableFilter] = useState<MyFilter>(() =>
@@ -140,7 +140,7 @@ export function ConceptEditor({ timelineAnalysis, onUpdate, onCancel }: ConceptE
           />
           <ConceptFilterEditor
             editableFilter={editableFilter}
-            column2Info={column2Info}
+            columnInfoMap={columnInfoMap}
             defaultFilterExpression={defaultFilterExpression}
             setEditableFilter={setEditableFilter}
           />

@@ -4,12 +4,12 @@ import { ColumnInfo, MyFilterExpression } from "../../../../filterUtils";
 
 interface FilterColumnSelectorProps {
   filterExpression: MyFilterExpression;
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
   onChangeColumn(id: string, columnValue: string): void;
 }
 
 export const FilterColumnSelector = memo(
-  ({ filterExpression, column2Info, onChangeColumn }: FilterColumnSelectorProps) => {
+  ({ filterExpression, columnInfoMap, onChangeColumn }: FilterColumnSelectorProps) => {
     const handleChangeColumn = useCallback(
       (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const column: string = event.target.value;
@@ -27,7 +27,7 @@ export const FilterColumnSelector = memo(
         variant="standard"
         fullWidth
       >
-        {Object.values(column2Info).map((columnInfo) => (
+        {Object.values(columnInfoMap).map((columnInfo) => (
           <MenuItem key={columnInfo.label} value={columnInfo.column}>
             {columnInfo.label}
           </MenuItem>

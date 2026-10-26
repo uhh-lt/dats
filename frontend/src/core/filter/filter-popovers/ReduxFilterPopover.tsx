@@ -1,7 +1,6 @@
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
-import { memo, useCallback, useMemo } from "react";
-import { TableInfoHooks } from "../api/tableInfoHooks";
+import { useCallback, useMemo } from "react";
 import type { TableInfoOptions } from "../api/tableInfoQueries";
 import { createEmptyFilter, MyFilter } from "../filterUtils";
 import { FilterActions, FilterState } from "../store";
@@ -15,52 +14,49 @@ export interface ReduxFilterPopoverProps {
   tableInfoOptions: TableInfoOptions;
 }
 
-export const ReduxFilterPopover = memo(
-  ({
-    anchorEl,
-    buttonProps,
-    anchorOrigin,
-    transformOrigin,
-    filterStateSelector,
-    filterName,
-    filterActions,
-    tableInfoOptions,
-  }: ReduxFilterPopoverProps &
-    Pick<InternalFilterPopoverProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
-    const dispatch = useAppDispatch();
+export function ReduxFilterPopover({
+  anchorEl,
+  buttonProps,
+  anchorOrigin,
+  transformOrigin,
+  filterStateSelector,
+  filterName,
+  filterActions,
+  tableInfoOptions,
+}: ReduxFilterPopoverProps &
+  Pick<InternalFilterPopoverProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) {
+  const dispatch = useAppDispatch();
 
-    const column2Info = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
-    const defaultFilterExpression = useAppSelector((state) => filterStateSelector(state).defaultFilterExpression);
+  const defaultFilterExpression = useAppSelector((state) => filterStateSelector(state).defaultFilterExpression);
 
-    const [expertMode, setExpertMode] = useReduxConnector(
-      (state) => filterStateSelector(state).expertMode,
-      filterActions.onChangeFilterExpertMode,
-    );
+  const [expertMode, setExpertMode] = useReduxConnector(
+    (state) => filterStateSelector(state).expertMode,
+    filterActions.onChangeFilterExpertMode,
+  );
 
-    const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
-    const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    const setFilter = useCallback(
-      (nextFilter: MyFilter) => {
-        dispatch(filterActions.onChangeFilter({ filterName, filter: nextFilter }));
-      },
-      [dispatch, filterActions, filterName],
-    );
+  const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
+  const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
+  const setFilter = useCallback(
+    (nextFilter: MyFilter) => {
+      dispatch(filterActions.onChangeFilter({ filterName, filter: nextFilter }));
+    },
+    [dispatch, filterActions, filterName],
+  );
 
-    return (
-      <FilterPopover
-        anchorEl={anchorEl}
-        buttonProps={buttonProps}
-        anchorOrigin={anchorOrigin}
-        transformOrigin={transformOrigin}
-        // filter props
-        filterName={filterName}
-        defaultFilterExpression={defaultFilterExpression}
-        filter={filter}
-        onFilterChange={setFilter}
-        expertMode={expertMode}
-        onExpertModeChange={setExpertMode}
-        column2Info={column2Info}
-      />
-    );
-  },
-);
+  return (
+    <FilterPopover
+      anchorEl={anchorEl}
+      buttonProps={buttonProps}
+      anchorOrigin={anchorOrigin}
+      transformOrigin={transformOrigin}
+      // filter props
+      filterName={filterName}
+      defaultFilterExpression={defaultFilterExpression}
+      filter={filter}
+      onFilterChange={setFilter}
+      expertMode={expertMode}
+      onExpertModeChange={setExpertMode}
+      tableInfoOptions={tableInfoOptions}
+    />
+  );
+}

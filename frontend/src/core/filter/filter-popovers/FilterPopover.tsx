@@ -15,8 +15,10 @@ import {
   Switch,
   Tooltip,
 } from "@mui/material";
-import { ChangeEvent, memo, MouseEvent, useCallback, useState } from "react";
+import { ChangeEvent, MouseEvent, useCallback, useState } from "react";
 import { FilterRendererHandlers } from "../_types/FilterRendererProps";
+import { TableInfoHooks } from "../api/tableInfoHooks";
+import type { TableInfoOptions } from "../api/tableInfoQueries";
 import { FilterRenderer, FilterRendererSimple } from "../filter-renderer";
 import {
   addDefaultFilter,
@@ -47,136 +49,134 @@ export interface InternalFilterPopoverProps {
   anchorOrigin?: PopoverProps["anchorOrigin"];
   transformOrigin?: PopoverProps["transformOrigin"];
   editableFilter: MyFilter;
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
   onStartFilterEdit: (filterName: string) => void;
   onFinishFilterEdit: () => void;
   onResetEditFilter: () => void;
 }
 
-const InternalFilterPopover = memo(
-  ({
-    anchorEl,
-    filter,
-    expertMode,
-    onChangeExpertMode,
-    onResetEditFilter,
-    buttonProps,
-    iconButtonProps,
-    iconOnly = false,
-    filterName = "root",
-    anchorOrigin = {
-      vertical: "top",
-      horizontal: "left",
-    },
-    transformOrigin = {
-      vertical: "top",
-      horizontal: "left",
-    },
-    ...props
-  }: InternalFilterPopoverProps & FilterRendererHandlers) => {
-    // local client state
-    const dialog = useDialog();
-    const [triggerAnchorEl, setTriggerAnchorEl] = useState<HTMLElement | null>(null);
-    const numFilterExpressions = countFilterExpressions(filter);
-
-    // actions
-    const handleOpenEditDialog = useCallback(
-      (event: MouseEvent<HTMLElement>) => {
-        setTriggerAnchorEl(event.currentTarget);
-        dialog.open();
-        props.onStartFilterEdit(filterName);
-      },
-      [filterName, props, dialog],
-    );
-
-    const handleApplyChanges = useCallback(() => {
-      dialog.close();
-      props.onFinishFilterEdit();
-    }, [props, dialog]);
-
-    const handleExpertModeChange = useCallback(
-      (event: ChangeEvent<HTMLInputElement>) => {
-        onChangeExpertMode(event.target.checked);
-      },
-      [onChangeExpertMode],
-    );
-
-    const handlePopoverClose = useCallback(() => {
-      dialog.close();
-    }, [dialog]);
-
-    return (
-      <>
-        {iconOnly ? (
-          <Tooltip title={`Filter (${numFilterExpressions})`}>
-            <IconButton onClick={handleOpenEditDialog} {...iconButtonProps}>
-              <FilterListIcon />
-            </IconButton>
-          </Tooltip>
-        ) : (
-          <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog} {...buttonProps}>
-            <b>Filter ({numFilterExpressions})</b>
-          </Button>
-        )}
-        <Popover
-          open={dialog.isOpen}
-          onClose={handlePopoverClose}
-          anchorEl={anchorEl ?? triggerAnchorEl}
-          anchorOrigin={anchorOrigin}
-          transformOrigin={transformOrigin}
-          slotProps={{
-            paper: {
-              sx: {
-                width: "50%",
-                p: 1,
-              },
-            },
-          }}
-        >
-          {expertMode ? (
-            <FilterRenderer
-              editableFilter={props.editableFilter}
-              column2Info={props.column2Info}
-              onAddFilter={props.onAddFilter}
-              onAddFilterExpression={props.onAddFilterExpression}
-              onDeleteFilter={props.onDeleteFilter}
-              onChangeFilterLogicalOperator={props.onChangeFilterLogicalOperator}
-              onChangeFilterColumn={props.onChangeFilterColumn}
-              onChangeFilterOperator={props.onChangeFilterOperator}
-              onChangeFilterValue={props.onChangeFilterValue}
-            />
-          ) : (
-            <FilterRendererSimple
-              editableFilter={props.editableFilter}
-              column2Info={props.column2Info}
-              onAddFilter={props.onAddFilter}
-              onAddFilterExpression={props.onAddFilterExpression}
-              onDeleteFilter={props.onDeleteFilter}
-              onChangeFilterLogicalOperator={props.onChangeFilterLogicalOperator}
-              onChangeFilterColumn={props.onChangeFilterColumn}
-              onChangeFilterOperator={props.onChangeFilterOperator}
-              onChangeFilterValue={props.onChangeFilterValue}
-            />
-          )}
-          <Box display="flex" width="100%">
-            <FormControlLabel
-              control={<Switch checked={expertMode} onChange={handleExpertModeChange} />}
-              label="Expert filtering"
-              sx={{ ml: 0.25 }}
-            />
-            <Box flexGrow={1} />
-            <Button startIcon={<DeleteForeverIcon />} onClick={onResetEditFilter} sx={{ mr: 3 }}>
-              Remove All
-            </Button>
-            <Button startIcon={<DoneIcon />} onClick={handleApplyChanges} variant="contained" color="success">
-              Apply filter
-            </Button>
-          </Box>
-        </Popover>
-      </>
-    );
+function InternalFilterPopover({
+  anchorEl,
+  filter,
+  expertMode,
+  onChangeExpertMode,
+  onResetEditFilter,
+  buttonProps,
+  iconButtonProps,
+  iconOnly = false,
+  filterName = "root",
+  anchorOrigin = {
+    vertical: "top",
+    horizontal: "left",
   },
-);
+  transformOrigin = {
+    vertical: "top",
+    horizontal: "left",
+  },
+  ...props
+}: InternalFilterPopoverProps & FilterRendererHandlers) {
+  // local client state
+  const dialog = useDialog();
+  const [triggerAnchorEl, setTriggerAnchorEl] = useState<HTMLElement | null>(null);
+  const numFilterExpressions = countFilterExpressions(filter);
+
+  // actions
+  const handleOpenEditDialog = useCallback(
+    (event: MouseEvent<HTMLElement>) => {
+      setTriggerAnchorEl(event.currentTarget);
+      dialog.open();
+      props.onStartFilterEdit(filterName);
+    },
+    [filterName, props, dialog],
+  );
+
+  const handleApplyChanges = useCallback(() => {
+    dialog.close();
+    props.onFinishFilterEdit();
+  }, [props, dialog]);
+
+  const handleExpertModeChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onChangeExpertMode(event.target.checked);
+    },
+    [onChangeExpertMode],
+  );
+
+  const handlePopoverClose = useCallback(() => {
+    dialog.close();
+  }, [dialog]);
+
+  return (
+    <>
+      {iconOnly ? (
+        <Tooltip title={`Filter (${numFilterExpressions})`}>
+          <IconButton onClick={handleOpenEditDialog} {...iconButtonProps}>
+            <FilterListIcon />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog} {...buttonProps}>
+          <b>Filter ({numFilterExpressions})</b>
+        </Button>
+      )}
+      <Popover
+        open={dialog.isOpen}
+        onClose={handlePopoverClose}
+        anchorEl={anchorEl ?? triggerAnchorEl}
+        anchorOrigin={anchorOrigin}
+        transformOrigin={transformOrigin}
+        slotProps={{
+          paper: {
+            sx: {
+              width: "50%",
+              p: 1,
+            },
+          },
+        }}
+      >
+        {expertMode ? (
+          <FilterRenderer
+            editableFilter={props.editableFilter}
+            columnInfoMap={props.columnInfoMap}
+            onAddFilter={props.onAddFilter}
+            onAddFilterExpression={props.onAddFilterExpression}
+            onDeleteFilter={props.onDeleteFilter}
+            onChangeFilterLogicalOperator={props.onChangeFilterLogicalOperator}
+            onChangeFilterColumn={props.onChangeFilterColumn}
+            onChangeFilterOperator={props.onChangeFilterOperator}
+            onChangeFilterValue={props.onChangeFilterValue}
+          />
+        ) : (
+          <FilterRendererSimple
+            editableFilter={props.editableFilter}
+            columnInfoMap={props.columnInfoMap}
+            onAddFilter={props.onAddFilter}
+            onAddFilterExpression={props.onAddFilterExpression}
+            onDeleteFilter={props.onDeleteFilter}
+            onChangeFilterLogicalOperator={props.onChangeFilterLogicalOperator}
+            onChangeFilterColumn={props.onChangeFilterColumn}
+            onChangeFilterOperator={props.onChangeFilterOperator}
+            onChangeFilterValue={props.onChangeFilterValue}
+          />
+        )}
+        <Box display="flex" width="100%">
+          <FormControlLabel
+            control={<Switch checked={expertMode} onChange={handleExpertModeChange} />}
+            label="Expert filtering"
+            sx={{ ml: 0.25 }}
+          />
+          <Box flexGrow={1} />
+          <Button startIcon={<DeleteForeverIcon />} onClick={onResetEditFilter} sx={{ mr: 3 }}>
+            Remove All
+          </Button>
+          <Button startIcon={<DoneIcon />} onClick={handleApplyChanges} variant="contained" color="success">
+            Apply filter
+          </Button>
+        </Box>
+      </Popover>
+    </>
+  );
+}
 
 export interface FilterPopoverProps<T extends string = string> {
   filterName: string;
@@ -185,17 +185,18 @@ export interface FilterPopoverProps<T extends string = string> {
   onFilterChange: (filter: MyFilter<T>) => void;
   expertMode: boolean;
   onExpertModeChange: (expertMode: boolean) => void;
-  column2Info: Record<string, ColumnInfo>;
+  // the query of the column infos of the table, e.g. memoQueries.tableInfo(projectId)
+  tableInfoOptions: TableInfoOptions;
 }
 
-function FilterPopoverInner<T extends string = string>({
+export function FilterPopover<T extends string = string>({
   filterName,
   defaultFilterExpression,
   filter,
   onFilterChange,
   expertMode,
   onExpertModeChange,
-  column2Info,
+  tableInfoOptions,
   // ----
   anchorEl,
   buttonProps,
@@ -208,6 +209,7 @@ function FilterPopoverInner<T extends string = string>({
     InternalFilterPopoverProps,
     "anchorEl" | "buttonProps" | "iconButtonProps" | "iconOnly" | "transformOrigin" | "anchorOrigin"
   >) {
+  const columnInfoMap = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
   const [editableFilter, setEditableFilter] = useState(filter);
   const typedDefaultFilterExpression = defaultFilterExpression as MyFilterExpression<T>;
 
@@ -245,9 +247,9 @@ function FilterPopoverInner<T extends string = string>({
 
   const handleChangeFilterColumn = useCallback(
     (filterId: string, columnValue: string) => {
-      setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, column2Info));
+      setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, columnInfoMap));
     },
-    [column2Info],
+    [columnInfoMap],
   );
 
   const handleChangeFilterOperator = useCallback((filterId: string, operator: FilterOperators) => {
@@ -270,7 +272,7 @@ function FilterPopoverInner<T extends string = string>({
       filterName={filterName}
       editableFilter={editableFilter}
       expertMode={expertMode}
-      column2Info={column2Info}
+      columnInfoMap={columnInfoMap}
       onStartFilterEdit={handleStartFilterEdit}
       onFinishFilterEdit={handleFinishFilterEdit}
       onResetEditFilter={handleResetEditFilter}
@@ -285,5 +287,3 @@ function FilterPopoverInner<T extends string = string>({
     />
   );
 }
-
-export const FilterPopover = memo(FilterPopoverInner) as typeof FilterPopoverInner;

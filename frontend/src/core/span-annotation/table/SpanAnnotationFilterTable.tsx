@@ -10,7 +10,6 @@ import {
   MyFilter,
   ReduxFilterTableProps,
   ReduxFilterTableToolbarLeft,
-  TableInfoHooks,
   toSorts,
   URLFilterTableProps,
   URLFilterTableToolbarLeft,
@@ -196,7 +195,6 @@ export const SpanAnnotationReduxFilterTable = memo(
   }: ReduxFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => spanAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
@@ -234,7 +232,6 @@ export const SpanAnnotationURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => spanAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
@@ -269,7 +266,7 @@ export const SpanAnnotationLocalFilterTable = memo(
     renderTopLeftToolbar = LocalFilterTableToolbarLeft,
     ...tableProps
   }: LocalFilterTableProps<SpanAnnotationRow, SpanColumns>) => {
-    const column2Info = TableInfoHooks.useColumnInfoMap(spanAnnotationQueries.tableInfo(tableProps.projectId));
+    const tableInfoOptions = spanAnnotationQueries.tableInfo(tableProps.projectId);
 
     return (
       <SpanAnnotationFilterTable
@@ -279,7 +276,7 @@ export const SpanAnnotationLocalFilterTable = memo(
         toolbarExtraProps={{
           filterName,
           defaultFilterExpression,
-          column2Info,
+          tableInfoOptions,
           filter,
           onFilterChange,
           expertMode,

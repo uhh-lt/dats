@@ -86,9 +86,9 @@ export const addMetadataFilter = (
   appliedFilter: MyFilter<SdocColumns>,
   metadata: SourceDocumentMetadataUpdate,
   projectMetadata: ProjectMetadataRead,
-  column2Info: Record<string, ColumnInfo>,
+  columnInfoMap: Record<string, ColumnInfo>,
 ): MyFilter<SdocColumns> => {
-  const filterOperator = column2Info[projectMetadata.id.toString()]?.operator;
+  const filterOperator = columnInfoMap[projectMetadata.id.toString()]?.operator;
   if (!filterOperator) {
     return appliedFilter;
   }

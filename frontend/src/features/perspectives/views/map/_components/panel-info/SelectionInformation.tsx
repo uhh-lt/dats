@@ -55,10 +55,10 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
 
   // filtering
   const { projectId: routeProjectId } = PerspectivesMapRouteAPI.useParams();
-  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(routeProjectId));
+  const columnInfoMap = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(routeProjectId));
   const handleAddMetadataFilter = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
     // the column of a metadata filter is the project_metadata_id
-    const filterOperator = column2Info[projectMetadata.id.toString()]?.operator;
+    const filterOperator = columnInfoMap[projectMetadata.id.toString()]?.operator;
     if (!filterOperator) return;
     dispatch(
       PerspectivesActions.onAddMetadataFilter({

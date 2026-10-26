@@ -57,14 +57,14 @@ const operator2HumanReadable: Record<FilterOperators, string> = {
 interface FilterOperatorSelectorProps {
   filterExpression: MyFilterExpression;
   onChangeOperator(id: string, operator: FilterOperators): void;
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
 }
 
 export const FilterOperatorSelector = memo(
-  ({ filterExpression, onChangeOperator, column2Info }: FilterOperatorSelectorProps) => {
+  ({ filterExpression, onChangeOperator, columnInfoMap }: FilterOperatorSelectorProps) => {
     const filterOperator = useMemo(
-      () => column2Info[filterExpression.column].operator,
-      [column2Info, filterExpression.column],
+      () => columnInfoMap[filterExpression.column].operator,
+      [columnInfoMap, filterExpression.column],
     );
     const filterOperatorType = useMemo(() => filterOperator2FilterOperatorType[filterOperator], [filterOperator]);
 

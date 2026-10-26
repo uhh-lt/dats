@@ -92,7 +92,7 @@ export function SentenceSimilaritySearchTable({
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
 
   // table columns
-  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+  const tableInfoOptions = sdocQueries.tableInfo(projectId);
   const { data: tableInfo } = useQuery(tableInfoOptions);
   const columnVisibilityModel = TableInfoHooks.useColumnVisibility(tableInfoOptions, storedColumnVisibility);
   const columns = useMemo(() => {

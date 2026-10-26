@@ -6,7 +6,7 @@ import { SdocColumns } from "@models/SdocColumns";
 import { StringOperator } from "@models/StringOperator";
 import { Box, Checkbox, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DocumentSearchActions } from "../../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";
 import { ImageSearchRouteAPI } from "../_hooks/imageSearchRouteAPI";
@@ -29,7 +29,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
   const selectedDocumentIds = useAppSelector((state) => state.imageSearch.selectedDocumentIds);
   const dispatch = useAppDispatch();
   const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+  const tableInfoOptions = sdocQueries.tableInfo(projectId);
 
   // local client state
   const [filterPopoverAnchor, setFilterPopoverAnchor] = useState<HTMLDivElement | null>(null);

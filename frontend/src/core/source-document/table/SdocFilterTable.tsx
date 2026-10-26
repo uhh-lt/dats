@@ -9,7 +9,6 @@ import {
   MyFilter,
   ReduxFilterTableProps,
   ReduxFilterTableToolbarLeft,
-  TableInfoHooks,
   toSorts,
   URLFilterTableProps,
   URLFilterTableToolbarLeft,
@@ -202,8 +201,7 @@ export const SdocReduxFilterTable = memo(
   }: ReduxFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
-    const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
+    const tableInfoOptions = sdocQueries.tableInfo(tableProps.projectId);
 
     return (
       <SdocFilterTable
@@ -237,8 +235,7 @@ export const SdocURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
-    const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
+    const tableInfoOptions = sdocQueries.tableInfo(tableProps.projectId);
 
     return (
       <SdocFilterTable
@@ -269,7 +266,7 @@ export const SdocLocalFilterTable = memo(
     renderTopLeftToolbar = LocalFilterTableToolbarLeft,
     ...tableProps
   }: LocalFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
-    const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(tableProps.projectId));
+    const tableInfoOptions = sdocQueries.tableInfo(tableProps.projectId);
 
     return (
       <SdocFilterTable
@@ -279,7 +276,7 @@ export const SdocLocalFilterTable = memo(
         toolbarExtraProps={{
           filterName,
           defaultFilterExpression,
-          column2Info,
+          tableInfoOptions,
           filter,
           onFilterChange,
           expertMode,

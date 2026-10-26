@@ -14,7 +14,7 @@ export function MemoLocalToolbarLeft({
   onFilterChange,
   expertMode,
   onExpertModeChange,
-  column2Info,
+  tableInfoOptions,
   defaultFilterExpression,
 }: LocalFilterTableToolbarProps<MemoRead, MemoColumns>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
@@ -29,7 +29,7 @@ export function MemoLocalToolbarLeft({
         onFilterChange={onFilterChange}
         expertMode={expertMode}
         onExpertModeChange={onExpertModeChange}
-        column2Info={column2Info}
+        tableInfoOptions={tableInfoOptions}
         defaultFilterExpression={defaultFilterExpression}
       />
       {selectedMemoIds.length > 0 && (

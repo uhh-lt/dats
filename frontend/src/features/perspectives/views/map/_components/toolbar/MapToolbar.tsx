@@ -7,7 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ChangeEvent, memo, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, memo, useEffect, useState } from "react";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterMenuButton } from "./ClusterMenuButton";
 import { ClusterReviewButtons } from "./ClusterReviewButtons";
@@ -21,8 +21,7 @@ interface MapToolbarProps {
 
 export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
   const { projectId } = PerspectivesMapRouteAPI.useParams();
-  // keeps its identity, so that the memoized filter popover does not re-render with every render
-  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+  const tableInfoOptions = sdocQueries.tableInfo(projectId);
 
   // selection
   const selectedDocumentIds = useAppSelector((state) => state.perspectives.selectedSdocIds);

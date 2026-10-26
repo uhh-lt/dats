@@ -1,8 +1,6 @@
 import { useURLConnector } from "@hooks/useURLConnector";
 import type { RouteApi } from "@tanstack/react-router";
 import type { AnyRouter, RouteTypesById } from "@tanstack/router-core";
-import { memo } from "react";
-import { TableInfoHooks } from "../api/tableInfoHooks";
 import type { TableInfoOptions } from "../api/tableInfoQueries";
 import { MyFilter, MyFilterExpression } from "../filterUtils";
 import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "../searchParamFilterValidators";
@@ -26,7 +24,7 @@ export interface URLFilterPopoverProps<
   tableInfoOptions: TableInfoOptions;
 }
 
-const URLFilterPopoverInner = <TId extends string, TRouter extends AnyRouter, TFilter extends string = string>({
+export function URLFilterPopover<TId extends string, TRouter extends AnyRouter, TFilter extends string = string>({
   routeApi,
   defaultFilterExpression,
   tableInfoOptions,
@@ -36,9 +34,7 @@ const URLFilterPopoverInner = <TId extends string, TRouter extends AnyRouter, TF
   anchorOrigin,
   transformOrigin,
 }: URLFilterPopoverProps<TId, TRouter, TFilter> &
-  Pick<InternalFilterPopoverProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
-  const column2Info = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
-
+  Pick<InternalFilterPopoverProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) {
   const [expertMode, setExpertMode] = useURLConnector(routeApi, FILTER_EXPERT_MODE_PARAM);
   const [filter, setFilter] = useURLConnector(routeApi, FILTER_PARAM);
 
@@ -54,9 +50,7 @@ const URLFilterPopoverInner = <TId extends string, TRouter extends AnyRouter, TF
       onFilterChange={setFilter}
       expertMode={expertMode}
       onExpertModeChange={setExpertMode}
-      column2Info={column2Info}
+      tableInfoOptions={tableInfoOptions}
     />
   );
-};
-
-export const URLFilterPopover = memo(URLFilterPopoverInner) as typeof URLFilterPopoverInner;
+}
