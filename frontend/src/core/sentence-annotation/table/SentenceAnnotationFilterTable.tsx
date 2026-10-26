@@ -10,7 +10,6 @@ import {
   MyFilter,
   ReduxFilterTableProps,
   ReduxFilterTableToolbarLeft,
-  TableInfoHooks,
   toSorts,
   URLFilterTableProps,
   URLFilterTableToolbarLeft,
@@ -201,7 +200,6 @@ export const SentenceAnnotationReduxFilterTable = memo(
   }: ReduxFilterTableProps<SentenceAnnotationRow, SentAnnoColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => sentenceAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
@@ -239,7 +237,6 @@ export const SentenceAnnotationURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<SentenceAnnotationRow, SentAnnoColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(
       () => sentenceAnnotationQueries.tableInfo(tableProps.projectId),
       [tableProps.projectId],
@@ -274,7 +271,7 @@ export const SentenceAnnotationLocalFilterTable = memo(
     renderTopLeftToolbar = LocalFilterTableToolbarLeft,
     ...tableProps
   }: LocalFilterTableProps<SentenceAnnotationRow, SentAnnoColumns>) => {
-    const column2Info = TableInfoHooks.useColumnInfoMap(sentenceAnnotationQueries.tableInfo(tableProps.projectId));
+    const tableInfoOptions = sentenceAnnotationQueries.tableInfo(tableProps.projectId);
 
     return (
       <SentenceAnnotationFilterTable
@@ -284,7 +281,7 @@ export const SentenceAnnotationLocalFilterTable = memo(
         toolbarExtraProps={{
           filterName,
           defaultFilterExpression,
-          column2Info,
+          tableInfoOptions,
           filter,
           onFilterChange,
           expertMode,

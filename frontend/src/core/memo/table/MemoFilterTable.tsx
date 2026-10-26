@@ -7,7 +7,6 @@ import {
   LocalFilterTableProps,
   MyFilter,
   ReduxFilterTableProps,
-  TableInfoHooks,
   toSorts,
   URLFilterTableProps,
 } from "@core/filter";
@@ -178,8 +177,7 @@ export const MemoReduxFilterTable = memo(
   }: ReduxFilterTableProps<MemoRead, MemoColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
-    const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
+    const tableInfoOptions = memoQueries.tableInfo(tableProps.projectId);
 
     return (
       <MemoFilterTable
@@ -213,8 +211,7 @@ export const MemoURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<MemoRead, MemoColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
-    const tableInfoOptions = useMemo(() => memoQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
+    const tableInfoOptions = memoQueries.tableInfo(tableProps.projectId);
 
     return (
       <MemoFilterTable
@@ -245,7 +242,7 @@ export const MemoLocalFilterTable = memo(
     renderTopLeftToolbar = MemoLocalToolbarLeft,
     ...tableProps
   }: LocalFilterTableProps<MemoRead, MemoColumns>) => {
-    const column2Info = TableInfoHooks.useColumnInfoMap(memoQueries.tableInfo(tableProps.projectId));
+    const tableInfoOptions = memoQueries.tableInfo(tableProps.projectId);
 
     return (
       <MemoFilterTable
@@ -255,7 +252,7 @@ export const MemoLocalFilterTable = memo(
         toolbarExtraProps={{
           filterName,
           defaultFilterExpression,
-          column2Info,
+          tableInfoOptions,
           filter,
           onFilterChange,
           expertMode,

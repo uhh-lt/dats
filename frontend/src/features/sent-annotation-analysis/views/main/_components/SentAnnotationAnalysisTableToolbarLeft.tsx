@@ -14,7 +14,7 @@ export function SentAnnotationAnalysisTableToolbarLeft({
   onFilterChange,
   expertMode,
   onExpertModeChange,
-  column2Info,
+  tableInfoOptions,
   selectedData,
 }: LocalFilterTableToolbarProps<SentenceAnnotationRow, SentAnnoColumns>) {
   return (
@@ -28,7 +28,7 @@ export function SentAnnotationAnalysisTableToolbarLeft({
         onFilterChange={onFilterChange}
         expertMode={expertMode}
         onExpertModeChange={onExpertModeChange}
-        column2Info={column2Info}
+        tableInfoOptions={tableInfoOptions}
       />
       <BulkChangeSentAnnotationCodeButton selectedData={selectedData} />
       <BulkDeleteSentAnnotationsButton selectedData={selectedData} />

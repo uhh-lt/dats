@@ -173,7 +173,7 @@ export function SearchDocumentTable({
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
+  const tableInfoOptions = sdocQueries.tableInfo(projectId);
   const { data: tableInfo } = useQuery(tableInfoOptions);
   const columnVisibilityModel = TableInfoHooks.useColumnVisibility(
     tableInfoOptions,

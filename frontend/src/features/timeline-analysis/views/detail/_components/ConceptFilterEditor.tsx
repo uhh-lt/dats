@@ -18,14 +18,14 @@ import { Dispatch, SetStateAction, useCallback } from "react";
 
 interface ConceptFilterEditorProps {
   editableFilter: MyFilter;
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
   defaultFilterExpression: MyFilterExpression;
   setEditableFilter: Dispatch<SetStateAction<MyFilter>>;
 }
 
 export function ConceptFilterEditor({
   editableFilter,
-  column2Info,
+  columnInfoMap,
   defaultFilterExpression,
   setEditableFilter,
 }: ConceptFilterEditorProps) {
@@ -59,9 +59,9 @@ export function ConceptFilterEditor({
 
   const handleColumnChange = useCallback(
     (filterId: string, columnValue: string) => {
-      setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, column2Info));
+      setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, columnInfoMap));
     },
-    [column2Info, setEditableFilter],
+    [columnInfoMap, setEditableFilter],
   );
 
   const handleOperatorChange = useCallback(
@@ -83,7 +83,7 @@ export function ConceptFilterEditor({
       <Typography>Filter:</Typography>
       <FilterRenderer
         editableFilter={editableFilter}
-        column2Info={column2Info}
+        columnInfoMap={columnInfoMap}
         onAddFilter={handleAddFilter}
         onAddFilterExpression={handleAddFilterExpression}
         onDeleteFilter={handleDeleteFilter}

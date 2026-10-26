@@ -10,7 +10,7 @@ export function LocalFilterTableToolbarLeft<T extends MRT_RowData, U extends str
   onFilterChange,
   expertMode,
   onExpertModeChange,
-  column2Info,
+  tableInfoOptions,
   defaultFilterExpression,
 }: LocalFilterTableToolbarProps<T, U>) {
   return (
@@ -23,7 +23,7 @@ export function LocalFilterTableToolbarLeft<T extends MRT_RowData, U extends str
         onFilterChange={onFilterChange}
         expertMode={expertMode}
         onExpertModeChange={onExpertModeChange}
-        column2Info={column2Info}
+        tableInfoOptions={tableInfoOptions}
         defaultFilterExpression={defaultFilterExpression}
       />
     </Stack>

@@ -56,7 +56,8 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
     handleRenameView,
   } = useWorkspaceViews({ projectId, config, lastViewId, onRememberView });
 
-  const columnInfo = TableInfoHooks.useColumnInfoMap(config.tableInfo(projectId));
+  const tableInfoOptions = config.tableInfo(projectId);
+  const columnInfo = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
 
   const handleSelectViewAndResetSearch = useCallback(
     (viewId: number) => {
@@ -76,6 +77,7 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
         searchQuery={searchQuery}
         expertMode={expertMode}
         columnInfo={columnInfo}
+        tableInfoOptions={tableInfoOptions}
         isRenaming={updateView.isPending}
         onSelectView={handleSelectViewAndResetSearch}
         onReorderViews={handleReorderViews}

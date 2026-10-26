@@ -13,12 +13,12 @@ import { UserIdValueSelector } from "./components/UserIdValueSelector";
 import { SharedFilterValueSelectorProps } from "./types/SharedFilterValueSelectorProps";
 
 interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
 }
 
 export const FilterValueSelector = memo(
-  ({ filterExpression, onChangeValue, column2Info }: FilterValueSelectorProps) => {
-    const filterInfo = useMemo(() => column2Info[filterExpression.column], [column2Info, filterExpression.column]);
+  ({ filterExpression, onChangeValue, columnInfoMap }: FilterValueSelectorProps) => {
+    const filterInfo = useMemo(() => columnInfoMap[filterExpression.column], [columnInfoMap, filterExpression.column]);
 
     switch (filterInfo.value) {
       case FilterValueType.ATTACHED_OBJECT_TYPE:

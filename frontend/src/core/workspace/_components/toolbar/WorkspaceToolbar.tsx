@@ -1,5 +1,5 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ColumnInfo, countFilterExpressions, FilterPopover } from "@core/filter";
+import { ColumnInfo, countFilterExpressions, FilterPopover, TableInfoOptions } from "@core/filter";
 import { DateGranularity } from "@models/DateGranularity";
 import { SearchViewLayout } from "@models/SearchViewLayout";
 import { SortDirection } from "@models/SortDirection";
@@ -22,6 +22,7 @@ interface WorkspaceToolbarProps<TColumns extends string, TRow extends { id: numb
   searchQuery: string;
   expertMode: boolean;
   columnInfo: Record<string, ColumnInfo>;
+  tableInfoOptions: TableInfoOptions;
   isRenaming: boolean;
   onSelectView: (viewId: number) => void;
   onReorderViews: (viewIds: number[]) => void;
@@ -47,6 +48,7 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
   searchQuery,
   expertMode,
   columnInfo,
+  tableInfoOptions,
   isRenaming,
   onSelectView,
   onReorderViews,
@@ -131,7 +133,7 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
             filterName={view.name}
             filter={view.filters}
             defaultFilterExpression={config.defaultFilterExpression}
-            column2Info={columnInfo}
+            tableInfoOptions={tableInfoOptions}
             expertMode={expertMode}
             onExpertModeChange={onExpertModeChange}
             onFilterChange={(filter) => onUpdate({ filters: filter })}

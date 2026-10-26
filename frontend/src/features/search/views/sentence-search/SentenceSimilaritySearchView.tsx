@@ -32,7 +32,7 @@ export function SentenceSimilaritySearchView() {
   const dispatch = useAppDispatch();
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
   const expandedTagIds = useAppSelector((state) => state.documentSearch.expandedTagIds);
-  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
+  const columnInfoMap = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
 
   // sentence similarity search feature
   const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
@@ -76,9 +76,9 @@ export function SentenceSimilaritySearchView() {
   );
   const handleAddMetadataFilter = useCallback(
     (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-      setFilter((currentFilter) => addMetadataFilter(currentFilter, metadata, projectMetadata, column2Info));
+      setFilter((currentFilter) => addMetadataFilter(currentFilter, metadata, projectMetadata, columnInfoMap));
     },
-    [column2Info, setFilter],
+    [columnInfoMap, setFilter],
   );
 
   // tag explorer handlers

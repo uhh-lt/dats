@@ -45,7 +45,7 @@ export function DocumentSearchView() {
   const rowSelectionModel = useAppSelector((state) => selectSelectedRowIds(state.documentSearch));
   const expandedFolderIds = useAppSelector((state) => state.documentSearch.expandedFolderIds);
   const expandedTagIds = useAppSelector((state) => state.documentSearch.expandedTagIds);
-  const column2Info = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
+  const columnInfoMap = TableInfoHooks.useColumnInfoMap(sdocQueries.tableInfo(projectId));
   const dispatch = useAppDispatch();
 
   const documentSearchQuery = useSuspenseInfiniteQuery(documentSearchOptions);
@@ -143,9 +143,9 @@ export function DocumentSearchView() {
   );
   const handleAddMetadataFilter = useCallback(
     (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-      setFilter((filter) => addMetadataFilter(filter, metadata, projectMetadata, column2Info));
+      setFilter((filter) => addMetadataFilter(filter, metadata, projectMetadata, columnInfoMap));
     },
-    [column2Info, setFilter],
+    [columnInfoMap, setFilter],
   );
 
   // folder explorer handlers

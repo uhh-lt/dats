@@ -253,7 +253,7 @@ export const changeFilterColumn = <T = string>(
   filter: MyFilter<T>,
   filterId: string,
   columnValue: string,
-  column2Info: Record<string, ColumnInfo>,
+  columnInfoMap: Record<string, ColumnInfo>,
 ): MyFilter<T> => {
   const nextFilter = cloneFilter(filter);
   const filterItem = findInFilter(nextFilter, filterId);
@@ -261,7 +261,7 @@ export const changeFilterColumn = <T = string>(
     // numeric columns are project metadata ids, all others are the table's column names
     filterItem.column = parseInt(columnValue) || (columnValue as T);
 
-    const columnInfo = column2Info[columnValue];
+    const columnInfo = columnInfoMap[columnValue];
     if (!columnInfo) {
       return nextFilter;
     }

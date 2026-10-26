@@ -13,5 +13,5 @@ export interface FilterRendererHandlers {
 
 export interface FilterRendererProps extends FilterRendererHandlers {
   editableFilter: MyFilter;
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
 }

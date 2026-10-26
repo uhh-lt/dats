@@ -14,7 +14,7 @@ export function SpanAnnotationAnalysisTableToolbarLeft({
   onFilterChange,
   expertMode,
   onExpertModeChange,
-  column2Info,
+  tableInfoOptions,
   selectedData,
 }: LocalFilterTableToolbarProps<SpanAnnotationRow, SpanColumns>) {
   return (
@@ -28,7 +28,7 @@ export function SpanAnnotationAnalysisTableToolbarLeft({
         onFilterChange={onFilterChange}
         expertMode={expertMode}
         onExpertModeChange={onExpertModeChange}
-        column2Info={column2Info}
+        tableInfoOptions={tableInfoOptions}
       />
       <BulkChangeSpanAnnotationCodeButton selectedData={selectedData} />
       <BulkDeleteSpanAnnotationsButton selectedData={selectedData} />

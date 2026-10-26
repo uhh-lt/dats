@@ -15,7 +15,7 @@ export function BBoxAnnotationAnalysisTableToolbarLeft({
   onFilterChange,
   expertMode,
   onExpertModeChange,
-  column2Info,
+  tableInfoOptions,
 }: LocalFilterTableToolbarProps<BBoxAnnotationRow, BBoxColumns>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
@@ -28,7 +28,7 @@ export function BBoxAnnotationAnalysisTableToolbarLeft({
         onFilterChange={onFilterChange}
         expertMode={expertMode}
         onExpertModeChange={onExpertModeChange}
-        column2Info={column2Info}
+        tableInfoOptions={tableInfoOptions}
       />
       <BulkChangeBBoxAnnotationCodeButton selectedData={selectedData} />
       <BulkDeleteBBoxAnnotationsButton selectedData={selectedData} />

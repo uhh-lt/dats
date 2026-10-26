@@ -14,7 +14,7 @@ interface FilterExpressionRendererProps {
   onChangeColumn(filterId: string, columnValue: string): void;
   onChangeOperator(id: string, operator: FilterOperators): void;
   onChangeValue(id: string, value: string | number | boolean | string[]): void;
-  column2Info: Record<string, ColumnInfo>;
+  columnInfoMap: Record<string, ColumnInfo>;
 }
 
 const CustomContent = ({
@@ -24,7 +24,7 @@ const CustomContent = ({
   onChangeColumn,
   onChangeOperator,
   onChangeValue,
-  column2Info,
+  columnInfoMap,
 }: FilterExpressionRendererProps) => {
   const handleDeleteClick = useCallback(() => {
     onDeleteFilter(filterExpression.id);
@@ -41,18 +41,18 @@ const CustomContent = ({
       </Tooltip>
       <FilterColumnSelector
         filterExpression={filterExpression}
-        column2Info={column2Info}
+        columnInfoMap={columnInfoMap}
         onChangeColumn={onChangeColumn}
       />
       <FilterOperatorSelector
         filterExpression={filterExpression}
         onChangeOperator={onChangeOperator}
-        column2Info={column2Info}
+        columnInfoMap={columnInfoMap}
       />
       <FilterValueSelector
         filterExpression={filterExpression}
         onChangeValue={onChangeValue}
-        column2Info={column2Info}
+        columnInfoMap={columnInfoMap}
       />
     </Stack>
   );

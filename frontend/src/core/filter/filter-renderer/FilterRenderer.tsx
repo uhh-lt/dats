@@ -13,7 +13,7 @@ import "./_styles/filter.css";
 export const FilterRenderer = memo(
   ({
     editableFilter,
-    column2Info,
+    columnInfoMap,
     onAddFilter,
     onAddFilterExpression,
     onDeleteFilter,
@@ -63,7 +63,7 @@ export const FilterRenderer = memo(
                     onChangeColumn={onChangeFilterColumn}
                     onChangeOperator={onChangeFilterOperator}
                     onChangeValue={onChangeFilterValue}
-                    column2Info={column2Info}
+                    columnInfoMap={columnInfoMap}
                   />
                 );
               }
@@ -80,7 +80,7 @@ export const FilterRenderer = memo(
         onChangeFilterColumn,
         onChangeFilterOperator,
         onChangeFilterValue,
-        column2Info,
+        columnInfoMap,
       ],
     );
 
