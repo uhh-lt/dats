@@ -5,7 +5,7 @@ import { memo } from "react";
 import { TableInfoHooks } from "../api/tableInfoHooks";
 import type { TableInfoOptions } from "../api/tableInfoQueries";
 import { MyFilter, MyFilterExpression } from "../filterUtils";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "../store";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "../searchParamFilterValidators";
 import { FilterPopover, InternalFilterPopoverProps } from "./FilterPopover";
 
 // This ensures that the routeAPI passed to URLFilterPopover has the required search params for filter (FILTER_PARAM) and expert mode (FILTER_EXPERT_MODE_PARAM)

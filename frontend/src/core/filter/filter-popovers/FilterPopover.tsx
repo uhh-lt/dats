@@ -18,7 +18,6 @@ import {
 import { ChangeEvent, memo, MouseEvent, useCallback, useState } from "react";
 import { FilterRendererHandlers } from "../_types/FilterRendererProps";
 import { FilterRenderer, FilterRendererSimple } from "../filter-renderer";
-import { ColumnInfo, countFilterExpressions, FilterOperators, MyFilter, MyFilterExpression } from "../filterUtils";
 import {
   addDefaultFilter,
   addDefaultFilterExpression,
@@ -26,10 +25,15 @@ import {
   changeFilterLogicalOperator,
   changeFilterOperator,
   changeFilterValue,
-  deleteFilterItem,
-  resetFilter,
+  ColumnInfo,
+  countFilterExpressions,
+  createEmptyFilter,
+  deleteInFilter,
+  FilterOperators,
+  MyFilter,
+  MyFilterExpression,
   withDefaultFilterExpression,
-} from "../store";
+} from "../filterUtils";
 
 export interface InternalFilterPopoverProps {
   anchorEl: HTMLElement | null;
@@ -217,7 +221,7 @@ function FilterPopoverInner<T extends string = string>({
   }, [editableFilter, onFilterChange]);
 
   const handleResetEditFilter = useCallback(() => {
-    setEditableFilter((prev) => resetFilter(prev));
+    setEditableFilter((prev) => createEmptyFilter<T>(prev.id));
   }, []);
 
   const handleAddFilter = useCallback((filterId: string) => {
@@ -232,7 +236,7 @@ function FilterPopoverInner<T extends string = string>({
   );
 
   const handleDeleteFilter = useCallback((filterId: string) => {
-    setEditableFilter((prev) => deleteFilterItem(prev, filterId));
+    setEditableFilter((prev) => deleteInFilter(prev, filterId));
   }, []);
 
   const handleChangeFilterLogicalOperator = useCallback((filterId: string, operator: LogicalOperator) => {

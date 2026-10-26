@@ -1,4 +1,5 @@
 import {
+  cloneFilter,
   ColumnInfo,
   MyFilter,
   MyFilterExpression,
@@ -13,10 +14,6 @@ import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SdocColumns } from "@models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
-
-const cloneFilter = (filter: MyFilter<SdocColumns>): MyFilter<SdocColumns> => {
-  return JSON.parse(JSON.stringify(filter)) as MyFilter<SdocColumns>;
-};
 
 export const addKeywordFilter = (
   appliedFilter: MyFilter<SdocColumns>,
