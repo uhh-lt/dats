@@ -100,7 +100,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
         case BBoxColumns.BB_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,
+            Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
           };
         case BBoxColumns.BB_CODE_ID_LIST_RECURSIVE:
           return {

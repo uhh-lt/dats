@@ -3,18 +3,14 @@ import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 
-interface SdocTagsRendererProps {
-  sdocId?: number;
-  tagIds?: number[];
-}
+// the tags of a document: loaded by the document's id, or given as tag ids
+type SdocTagsRendererProps = { sdocId: number } | { tagIds: number[] };
 
-export const SdocTagsRenderer = memo(({ sdocId, tagIds }: SdocTagsRendererProps) => {
-  if (tagIds) {
-    return <SdocTagsRendererWithData tagIds={tagIds} />;
-  } else if (sdocId !== undefined) {
-    return <SdocTagsRendererWithoutData sdocId={sdocId} />;
+export const SdocTagsRenderer = memo((props: SdocTagsRendererProps) => {
+  if ("sdocId" in props) {
+    return <SdocTagsRendererWithoutData sdocId={props.sdocId} />;
   } else {
-    return <>Nothing to show :(</>;
+    return <SdocTagsRendererWithData tagIds={props.tagIds} />;
   }
 });
 
