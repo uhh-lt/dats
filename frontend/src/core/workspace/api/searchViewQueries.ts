@@ -1,17 +1,7 @@
 import { SearchViewService } from "@api/services/SearchViewService";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { queryOptions } from "@tanstack/react-query";
-
-/**
- * Minimal structural shape every search view satisfies, regardless of entity.
- * The generated per-entity view types (MemoSearchViewRead, SpanSearchViewRead, ...)
- * are all assignable to this.
- */
-export interface SearchViewBase {
-  id: number;
-  project_id: number;
-  position: number;
-}
+import { SearchViewBase } from "../types/SearchViewBase";
 
 // the generated type of the endpoints: the union of the view types of all entities
 type AnySearchViewRead = Awaited<ReturnType<typeof SearchViewService.getByProject>>[number];

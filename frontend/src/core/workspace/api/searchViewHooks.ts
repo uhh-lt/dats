@@ -2,7 +2,8 @@ import { queryClient } from "@api/queryClient";
 import { SearchViewService } from "@api/services/SearchViewService";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { useMutation } from "@tanstack/react-query";
-import { asViewsOfEntity, SearchViewBase, searchViewQueries } from "./searchViewQueries";
+import { SearchViewBase } from "../types/SearchViewBase";
+import { asViewsOfEntity, searchViewQueries } from "./searchViewQueries";
 
 /**
  * Factory for per-entity search-view hooks. The backend search-view CRUD is already
