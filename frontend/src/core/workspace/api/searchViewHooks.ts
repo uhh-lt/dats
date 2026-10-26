@@ -1,19 +1,8 @@
 import { queryClient } from "@api/queryClient";
 import { SearchViewService } from "@api/services/SearchViewService";
 import { SearchEntityType } from "@models/SearchEntityType";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { searchViewQueries } from "./searchViewQueries";
-
-/**
- * Minimal structural shape every search view satisfies, regardless of entity.
- * The generated per-entity view types (MemoSearchViewRead, SpanSearchViewRead, ...)
- * are all assignable to this.
- */
-export interface SearchViewBase {
-  id: number;
-  project_id: number;
-  position: number;
-}
+import { useMutation } from "@tanstack/react-query";
+import { asViewsOfEntity, SearchViewBase, searchViewQueries } from "./searchViewQueries";
 
 /**
  * Factory for per-entity search-view hooks. The backend search-view CRUD is already
@@ -22,15 +11,6 @@ export interface SearchViewBase {
  * (e.g. `MemoViewHooks` in the memo workspace).
  */
 export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: SearchEntityType) => {
-  // the service returns the union of all view types, the entity type selects the one of this hook
-  const asViews = (views: Awaited<ReturnType<typeof SearchViewService.getByProject>>) => views as unknown as TView[];
-
-  const useGetViews = (projectId: number) =>
-    useQuery({
-      ...searchViewQueries.byProject(entityType, projectId),
-      select: asViews,
-    });
-
   const useCreateView = () =>
     useMutation({
       mutationKey: [...searchViewQueries.all(), entityType, "createView"],
@@ -77,13 +57,12 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
       mutationKey: [...searchViewQueries.all(), entityType, "reorderViews"],
       mutationFn: SearchViewService.reorder,
       scope: { id: `searchViews-order-${projectId}` },
-      onMutate: ({ requestBody }) => {
-        // untagged key: the cache of this hook is typed as TView[] (see useGetViews)
-        const key = [...searchViewQueries.byProjectOfEntityScope(entityType), projectId];
-        queryClient.cancelQueries({ queryKey: key });
-        const previousViews = queryClient.getQueryData<TView[]>(key);
+      onMutate: async ({ requestBody }) => {
+        const key = searchViewQueries.byProject<TView>(entityType, projectId).queryKey;
+        await queryClient.cancelQueries({ queryKey: key });
+        const previousViews = queryClient.getQueryData(key);
 
-        queryClient.setQueryData<TView[]>(key, (views) => {
+        queryClient.setQueryData(key, (views) => {
           if (!views) return views;
           const viewById = new Map(views.map((view) => [view.id, view]));
           const reorderedViews = requestBody.view_ids.flatMap((viewId) => {
@@ -97,15 +76,15 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
         return { previousViews };
       },
       onError: (_error, _variables, context) => {
-        queryClient.setQueryData<TView[]>(
-          [...searchViewQueries.byProjectOfEntityScope(entityType), projectId],
-          (context as { previousViews?: TView[] })?.previousViews,
+        queryClient.setQueryData(
+          searchViewQueries.byProject<TView>(entityType, projectId).queryKey,
+          context?.previousViews,
         );
       },
       onSuccess: (views) => {
-        queryClient.setQueryData<TView[]>(
-          [...searchViewQueries.byProjectOfEntityScope(entityType), projectId],
-          asViews(views),
+        queryClient.setQueryData(
+          searchViewQueries.byProject<TView>(entityType, projectId).queryKey,
+          asViewsOfEntity<TView>(views),
         );
       },
     });
@@ -119,5 +98,5 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(entityType: 
       },
     });
 
-  return { useGetViews, useCreateView, useUpdateView, useReorderViews, useDeleteView };
+  return { useCreateView, useUpdateView, useReorderViews, useDeleteView };
 };
