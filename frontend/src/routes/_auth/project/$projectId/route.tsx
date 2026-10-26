@@ -1,7 +1,10 @@
+import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
 import { CodeCreateDialog, CodeEditDialog } from "@core/code";
 import { FolderCreateDialog, FolderEditDialog } from "@core/folder";
 import { MemoDialog } from "@core/memo";
 import { parseIdParam, QuickCommandMenu, ShortcutManager } from "@core/navigation";
+import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
+import { SpanAnnotationEditDialog } from "@core/span-annotation";
 import { TagCreateDialog, TagEditDialog } from "@core/tag";
 import { CodeShortcutManagerDialog } from "@features/annotation";
 // eslint-disable-next-line local/no-internal-modules-public-entry
@@ -77,6 +80,9 @@ function ProjectRouteLayout() {
       <CodeCreateDialog projectId={projectId} onCodesCreated={handleCodesCreated} />
       <CodeEditDialog onCodeUpdated={handleCodeUpdated} onCodeDeleted={handleCodeDeleted} />
       <CodeShortcutManagerDialog projectId={projectId} />
+      <SpanAnnotationEditDialog projectId={projectId} />
+      <SentenceAnnotationEditDialog projectId={projectId} />
+      <BBoxAnnotationEditDialog projectId={projectId} />
       <ProjectSettingsDialog
         projectId={projectId}
         hiddenCodeIds={hiddenCodeIds}

@@ -1,9 +1,9 @@
 import { EditableTypography } from "@components/EditableTypography";
 import { getIconComponent, Icon } from "@components/icons";
-import { BBoxAnnotationEditDialog, BboxAnnotationHooks } from "@core/bbox-annotation";
+import { BboxAnnotationHooks } from "@core/bbox-annotation";
 import { CodeHooks } from "@core/code";
-import { SentenceAnnotationEditDialog, SentenceAnnotationHooks } from "@core/sentence-annotation";
-import { SpanAnnotationEditDialog, SpanAnnotationHooks } from "@core/span-annotation";
+import { SentenceAnnotationHooks } from "@core/sentence-annotation";
+import { SpanAnnotationHooks } from "@core/span-annotation";
 import { TagHooks } from "@core/tag";
 import { WhiteboardEdgeData } from "@models/WhiteboardEdgeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
@@ -633,9 +633,6 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
           </ReactFlow>
         </Box>
       </Box>
-      <SpanAnnotationEditDialog projectId={whiteboard.project_id} />
-      <SentenceAnnotationEditDialog projectId={whiteboard.project_id} />
-      <BBoxAnnotationEditDialog projectId={whiteboard.project_id} />
     </>
   );
 }
