@@ -76,7 +76,7 @@ const MemoRendererWithData = memo(
           {renderStar && (memo.is_favorite ? <StarIcon /> : <StarOutlineIcon />)}
           {renderAttachedObject && (
             <AttachedObjectRenderer
-              attachedObject={memo.attached_object_id}
+              attachedObjectId={memo.attached_object_id}
               attachedObjectType={memo.attached_object_type}
               link={attachedObjectLink}
             />
