@@ -202,7 +202,7 @@ export const SdocReduxFilterTable = memo(
   }: ReduxFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
     const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (
@@ -237,7 +237,7 @@ export const SdocURLFilterTable = memo(
     ...tableProps
   }: URLFilterTableProps<HierarchicalElasticSearchHit, SdocColumns>) => {
     const [filter] = useURLConnector(routeApi, FILTER_PARAM);
-    // keeps its identity, so that the memoized filter dialog does not re-render with every render of the table
+    // keeps its identity, so that the memoized filter popover does not re-render with every render of the table
     const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(tableProps.projectId), [tableProps.projectId]);
 
     return (

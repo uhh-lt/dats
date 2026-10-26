@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { MRT_RowData } from "material-react-table";
-import { ReduxFilterDialog } from "../filter-dialogs";
+import { ReduxFilterPopover } from "../filter-popovers";
 import { ReduxFilterTableToolbarProps } from "./FilterTableToolbarProps";
 
 export function ReduxFilterTableToolbarLeft<T extends MRT_RowData>({
@@ -12,7 +12,7 @@ export function ReduxFilterTableToolbarLeft<T extends MRT_RowData>({
 }: ReduxFilterTableToolbarProps<T>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <ReduxFilterDialog
+      <ReduxFilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}

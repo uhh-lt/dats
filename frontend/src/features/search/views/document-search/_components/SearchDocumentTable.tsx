@@ -2,7 +2,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { TableInfoHooks, URLFilterDialog } from "@core/filter";
+import { TableInfoHooks, URLFilterPopover } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton, useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -444,7 +444,7 @@ export function SearchDocumentTable({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DATSToolbar variant="dense" ref={setToolbarEl}>
-        <URLFilterDialog
+        <URLFilterPopover
           anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
           routeApi={DocumentSearchRouteAPI}

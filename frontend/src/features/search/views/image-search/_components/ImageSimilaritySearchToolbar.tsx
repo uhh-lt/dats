@@ -1,5 +1,5 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { URLFilterDialog } from "@core/filter";
+import { URLFilterPopover } from "@core/filter";
 import { DeleteSdocsButton, SdocExportButton, sdocQueries } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { SdocColumns } from "@models/SdocColumns";
@@ -32,7 +32,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
   const tableInfoOptions = useMemo(() => sdocQueries.tableInfo(projectId), [projectId]);
 
   // local client state
-  const [filterDialogAnchor, setFilterDialogAnchor] = useState<HTMLDivElement | null>(null);
+  const [filterPopoverAnchor, setFilterPopoverAnchor] = useState<HTMLDivElement | null>(null);
 
   // toggle documents button
   const numSelectedDocuments = selectedDocumentIds.length;
@@ -45,7 +45,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
   };
 
   return (
-    <DATSToolbar disableGutters variant="dense" ref={setFilterDialogAnchor}>
+    <DATSToolbar disableGutters variant="dense" ref={setFilterPopoverAnchor}>
       <Checkbox
         color="primary"
         indeterminate={numSelectedDocuments > 0 && numSelectedDocuments < searchResultDocumentIds.length}
@@ -68,8 +68,8 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
         </>
       )}
       <Box sx={{ flexGrow: 1 }} />
-      <URLFilterDialog
-        anchorEl={filterDialogAnchor}
+      <URLFilterPopover
+        anchorEl={filterPopoverAnchor}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         routeApi={ImageSearchRouteAPI}
         defaultFilterExpression={defaultFilterExpression}

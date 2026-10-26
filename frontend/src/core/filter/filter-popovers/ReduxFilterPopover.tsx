@@ -5,9 +5,9 @@ import { TableInfoHooks } from "../api/tableInfoHooks";
 import type { TableInfoOptions } from "../api/tableInfoQueries";
 import { createEmptyFilter, MyFilter } from "../filterUtils";
 import { FilterActions, FilterState } from "../store";
-import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
+import { FilterPopover, InternalFilterPopoverProps } from "./FilterPopover";
 
-export interface ReduxFilterDialogProps {
+export interface ReduxFilterPopoverProps {
   filterName: string;
   filterStateSelector: (state: RootState) => FilterState;
   filterActions: FilterActions;
@@ -15,7 +15,7 @@ export interface ReduxFilterDialogProps {
   tableInfoOptions: TableInfoOptions;
 }
 
-export const ReduxFilterDialog = memo(
+export const ReduxFilterPopover = memo(
   ({
     anchorEl,
     buttonProps,
@@ -25,8 +25,8 @@ export const ReduxFilterDialog = memo(
     filterName,
     filterActions,
     tableInfoOptions,
-  }: ReduxFilterDialogProps &
-    Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
+  }: ReduxFilterPopoverProps &
+    Pick<InternalFilterPopoverProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
     const dispatch = useAppDispatch();
 
     const column2Info = TableInfoHooks.useColumnInfoMap(tableInfoOptions);
@@ -47,7 +47,7 @@ export const ReduxFilterDialog = memo(
     );
 
     return (
-      <FilterDialog
+      <FilterPopover
         anchorEl={anchorEl}
         buttonProps={buttonProps}
         anchorOrigin={anchorOrigin}

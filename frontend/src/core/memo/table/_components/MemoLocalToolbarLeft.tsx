@@ -1,4 +1,4 @@
-import { FilterDialog, LocalFilterTableToolbarProps } from "@core/filter";
+import { FilterPopover, LocalFilterTableToolbarProps } from "@core/filter";
 import { MemoColumns } from "@models/MemoColumns";
 import { MemoRead } from "@models/MemoRead";
 import { Stack } from "@mui/material";
@@ -21,7 +21,7 @@ export function MemoLocalToolbarLeft({
 
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <FilterDialog
+      <FilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}

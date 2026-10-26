@@ -1,4 +1,4 @@
-import { ReduxFilterDialog, ReduxFilterTableToolbarProps } from "@core/filter";
+import { ReduxFilterPopover, ReduxFilterTableToolbarProps } from "@core/filter";
 import { MemoRead } from "@models/MemoRead";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
@@ -17,7 +17,7 @@ export function MemoReduxToolbarLeft({
 
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <ReduxFilterDialog
+      <ReduxFilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}

@@ -12,7 +12,7 @@ single entity-specific **config**. The workspace itself contains no entity logic
 
 - **Saved views** — each user can save multiple named views per entity. Views are
   shown as draggable chips and persisted on the server (per project + entity).
-- **Toolbar** — layout switcher, filter dialog, sort menu, group menu, and a
+- **Toolbar** — layout switcher, filter popover, sort menu, group menu, and a
   search toggle. All controls operate on the active view and auto-save (optimistic updates).
 - **Results** — rows are fetched with infinite pagination and rendered in the
   active layout. When a view is grouped, results render as a column of groups (or
@@ -48,7 +48,7 @@ interface EntityWorkspaceConfig<TColumns extends string, TRow extends { id: numb
   emptyFilter: () => MyFilter<TColumns>;  // filter factory for a brand-new view
 
   // data
-  tableInfo: (projectId) => TableInfoOptions;  // the factory's tableInfo leaf: column infos for the filter dialog
+  tableInfo: (projectId) => TableInfoOptions;  // the factory's tableInfo leaf: column infos for the filter popover
   useQueryRows: ...;    // paged rows for a view
   useQueryGroups: ...;  // paged groups for a grouped view
   useSearchViews: ...;  // CRUD + reorder for saved views

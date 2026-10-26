@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { MRT_RowData } from "material-react-table";
-import { FilterDialog } from "../filter-dialogs";
+import { FilterPopover } from "../filter-popovers";
 import { LocalFilterTableToolbarProps } from "./FilterTableToolbarProps";
 
 export function LocalFilterTableToolbarLeft<T extends MRT_RowData, U extends string = string>({
@@ -15,7 +15,7 @@ export function LocalFilterTableToolbarLeft<T extends MRT_RowData, U extends str
 }: LocalFilterTableToolbarProps<T, U>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <FilterDialog
+      <FilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}

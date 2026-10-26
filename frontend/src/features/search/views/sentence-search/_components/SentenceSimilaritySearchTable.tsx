@@ -1,7 +1,7 @@
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
-import { TableInfoHooks, URLFilterDialog } from "@core/filter";
+import { TableInfoHooks, URLFilterPopover } from "@core/filter";
 import { useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
@@ -251,7 +251,7 @@ export function SentenceSimilaritySearchTable({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DATSToolbar variant="dense" ref={setToolbarEl}>
-        <URLFilterDialog
+        <URLFilterPopover
           anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
           routeApi={SentenceSearchRouteAPI}

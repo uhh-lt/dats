@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { MRT_RowData } from "material-react-table";
-import { URLFilterDialog } from "../filter-dialogs";
+import { URLFilterPopover } from "../filter-popovers";
 import { URLFilterTableToolbarProps } from "./FilterTableToolbarProps";
 
 export function URLFilterTableToolbarLeft<T extends MRT_RowData>({
@@ -11,7 +11,7 @@ export function URLFilterTableToolbarLeft<T extends MRT_RowData>({
 }: URLFilterTableToolbarProps<T>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <URLFilterDialog
+      <URLFilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         routeApi={routeApi}

@@ -1,4 +1,4 @@
-import { URLFilterDialog, URLFilterTableToolbarProps } from "@core/filter";
+import { URLFilterPopover, URLFilterTableToolbarProps } from "@core/filter";
 import { MemoRead } from "@models/MemoRead";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
@@ -16,7 +16,7 @@ export function MemoURLToolbarLeft({
 
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <URLFilterDialog
+      <URLFilterPopover
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         routeApi={routeApi}

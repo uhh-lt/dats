@@ -5,7 +5,7 @@ export const toColumnInfos = <T extends Omit<ColumnInfo, "column"> & { column: {
   infos: T[],
 ): ColumnInfo[] => infos.map((info) => ({ ...info, column: info.column.toString() }));
 
-/** The filter dialogs and tables work with the column infos as a map by column. */
+/** The filter popovers and tables work with the column infos as a map by column. */
 export const toColumnInfoMap = (infos: ColumnInfo[]): Record<string, ColumnInfo> =>
   Object.fromEntries(infos.map((info) => [info.column, info]));
 
