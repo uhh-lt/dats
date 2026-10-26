@@ -12,6 +12,7 @@ import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { PendingAddNodeAction } from "../../_types/PendingAddNodeAction";
 import { createCodeNodes } from "../../_utils/whiteboardUtils";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface AddCodeNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
@@ -59,7 +60,7 @@ export function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNo
           {getIconComponent(Icon.CODE)}
         </Button>
       </Tooltip>
-      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select codes to add to Whiteboard"
           onClose={handleClose}

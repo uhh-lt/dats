@@ -34,6 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { PerspectivesHooks } from "../../../api/perspectivesHooks";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface AspectTemplate {
   name: string;
@@ -192,7 +193,7 @@ export function PerspectiveCreationDialog() {
       </Button>
       <Dialog
         open={isOpen}
-        onClose={handleClose}
+        onClose={closeOnEscape(handleClose)}
         maxWidth="md"
         fullWidth
         fullScreen={isMaximized}

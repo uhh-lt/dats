@@ -20,6 +20,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 export function ProjectCreationDialog() {
   // dialog state
@@ -96,7 +97,7 @@ export function ProjectCreationDialog() {
       </Card>
       <Dialog
         open={isOpen}
-        onClose={handleClose}
+        onClose={closeOnEscape(handleClose)}
         maxWidth="md"
         fullWidth
         fullScreen={isMaximized}

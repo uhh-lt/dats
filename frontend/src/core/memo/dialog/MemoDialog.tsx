@@ -7,6 +7,7 @@ import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useCallback } from "react";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { MemoAttachedObject, MemoEditor, useMemoEditorData, useMemoPersistence } from "../editor";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 /**
  * Global memo dialog container: dialog bus open state + dialog chrome
@@ -26,7 +27,7 @@ export function MemoDialog() {
   return (
     <Dialog
       open={isOpen && dialogData !== undefined}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}

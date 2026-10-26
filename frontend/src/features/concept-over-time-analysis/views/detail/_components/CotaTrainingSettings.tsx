@@ -9,6 +9,7 @@ import { Button, Dialog, DialogActions, DialogContent, Divider, MenuItem, Stack 
 import { useAppSelector } from "@store/storeHooks";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface CotaTrainingSettingsProps {
   onUpdate: (trainingSettings: COTATrainingSettings) => void;
@@ -47,7 +48,7 @@ export function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSetting
   return (
     <Dialog
       open={trainingSettingsOpen}
-      onClose={onCancel}
+      onClose={closeOnEscape(onCancel)}
       fullWidth
       maxWidth="md"
       fullScreen={isMaximized}

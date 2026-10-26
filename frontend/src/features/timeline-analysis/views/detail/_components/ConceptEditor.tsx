@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { timelineAnalysisQueries } from "../../../api/timelineAnalysisQueries";
 import { ConceptFilterEditor } from "./ConceptFilterEditor";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ConceptEditorProps {
   timelineAnalysis: TimelineAnalysisRead;
@@ -85,7 +86,7 @@ export function ConceptEditor({ timelineAnalysis, onUpdate, onCancel }: ConceptE
   return (
     <Dialog
       open={conceptEditorOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       fullWidth
       maxWidth="md"
       fullScreen={isMaximized}

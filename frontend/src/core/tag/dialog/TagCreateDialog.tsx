@@ -12,6 +12,7 @@ import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagHooks } from "../api/tagHooks";
 import { TagRenderer } from "../renderer";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface TagCreateDialogProps {
   projectId: number;
@@ -87,7 +88,7 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
   return (
     <Dialog
       open={isOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}

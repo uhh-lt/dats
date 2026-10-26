@@ -1798,3 +1798,45 @@ const tableBannerTopRule = {
 };
 
 datsRulesPlugin.rules["table-banner-top"] = tableBannerTopRule;
+
+// DIALOG CLOSE BEHAVIOUR (see .github/instructions/frontend-dialog.instructions.md)
+
+/** @type {Rule.RuleModule} */
+const dialogCloseOnEscapeRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "Every MUI Dialog closes on Escape and the X, never on a backdrop click: onClose={closeOnEscape(handleClose)} from @utils/dialogUtils.",
+    },
+    messages: {
+      closeOnEscape:
+        "Pass `onClose={closeOnEscape(handleClose)}` (from @utils/dialogUtils) to <Dialog>: every dialog closes on Escape, never on a backdrop click.",
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      "JSXOpeningElement[name.name='Dialog']"(node) {
+        const onClose = node.attributes.find(
+          (attribute) => attribute.type === "JSXAttribute" && attribute.name.name === "onClose",
+        );
+        const expression =
+          onClose?.type === "JSXAttribute" && onClose.value?.type === "JSXExpressionContainer"
+            ? onClose.value.expression
+            : undefined;
+        if (
+          expression?.type === "CallExpression" &&
+          expression.callee.type === "Identifier" &&
+          expression.callee.name === "closeOnEscape"
+        ) {
+          return;
+        }
+        context.report({ node, messageId: "closeOnEscape" });
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["dialog-close-on-escape"] = dialogCloseOnEscapeRule;

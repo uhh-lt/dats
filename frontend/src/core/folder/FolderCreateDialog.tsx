@@ -12,6 +12,7 @@ import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderHooks } from "./api/folderHooks";
 import { FolderRenderer } from "./renderer";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface FolderCreateDialogProps {
   projectId: number;
@@ -85,7 +86,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
   return (
     <Dialog
       open={isOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}

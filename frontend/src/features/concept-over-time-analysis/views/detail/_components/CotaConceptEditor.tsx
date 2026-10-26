@@ -8,6 +8,7 @@ import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/materi
 import { useAppSelector } from "@store/storeHooks";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface CotaConceptEditorProps {
   onUpdate: (concept: COTAConcept) => void;
@@ -52,7 +53,7 @@ export function CotaConceptEditor({ onUpdate, onCancel, isDescriptionEditable }:
   return (
     <Dialog
       open={conceptEditorOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       fullWidth
       maxWidth="md"
       fullScreen={isMaximized}

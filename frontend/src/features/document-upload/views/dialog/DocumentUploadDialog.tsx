@@ -5,6 +5,7 @@ import { useDialogBus } from "@store/global/dialogBusHooks";
 import { DocumentUploadJobsView } from "./_components/DocumentUploadJobsView";
 import { FileUploadSection } from "./_components/FileUploadSection";
 import { UrlCrawlerSection } from "./_components/UrlCrawlerSection";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface DocumentUploadDialogProps {
   projectId: number;
@@ -18,7 +19,7 @@ export function DocumentUploadDialog({ projectId }: DocumentUploadDialogProps) {
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Upload Documents"
         onClose={handleClose}

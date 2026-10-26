@@ -26,6 +26,7 @@ import { useAppDispatch } from "@store/storeHooks";
 import { useCallback, useMemo, useState } from "react";
 import { useCodeShortcuts } from "../../_hooks/useCodeShortcuts";
 import { CODE_SHORTCUT_KEYS, CodeShortcutsActions, CodeShortcutKey } from "../../store/codeShortcutsSlice";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface CodeShortcutManagerDialogProps {
   projectId: number;
@@ -116,7 +117,7 @@ export function CodeShortcutManagerDialog({ projectId }: CodeShortcutManagerDial
   );
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Code shortcuts"
         onClose={handleClose}

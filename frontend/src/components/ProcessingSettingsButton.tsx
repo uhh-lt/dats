@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ProcessingSettingsButtonProps {
   settings: ProcessingSettings;
@@ -80,7 +81,7 @@ export const ProcessingSettingsButton = ({
           <IconButton onClick={handleOpen}>{getIconComponent(Icon.SETTINGS)}</IconButton>
         </span>
       </Tooltip>
-      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+      <Dialog open={open} onClose={closeOnEscape(handleClose)} maxWidth="xs" fullWidth>
         <DialogTitle>
           <span style={{ display: "flex", alignItems: "center" }}>
             {getIconComponent(Icon.SETTINGS)}

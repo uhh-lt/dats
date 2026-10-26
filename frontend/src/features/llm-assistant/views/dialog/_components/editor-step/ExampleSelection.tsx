@@ -20,6 +20,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch } from "@store/storeHooks";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 const filterNameSentAnno = "selectExampleSentenceAnnotationDialog";
 const filterNameSpanAnno = "selectExampleSpanAnnotationDialog";
@@ -135,7 +136,13 @@ export function ExampleSelection({ projectId, codeIds, onConfirmSelection, metho
           </MenuItem>
         ))}
       </Menu>
-      <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog
+        onClose={closeOnEscape(dialog.close)}
+        open={dialog.isOpen}
+        maxWidth="lg"
+        fullWidth
+        fullScreen={isMaximized}
+      >
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader

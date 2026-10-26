@@ -16,6 +16,7 @@ import { ProjectMetadataSelectionStep } from "./_components/ProjectMetadataSelec
 import { SentenceAnnotationResultStep } from "./_components/SentenceAnnotationResultStep";
 import { SettingsStep } from "./_components/SettingsStep";
 import { StatusStep } from "./_components/StatusStep";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 const title: Record<TaskType, string> = {
   [TaskType.TAGGING]: "Document Tagging",
@@ -112,7 +113,7 @@ export function LLMAssistantDialog() {
   );
 
   return (
-    <Dialog open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog open={open} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title={dialogTitle}
         onClose={handleClose}

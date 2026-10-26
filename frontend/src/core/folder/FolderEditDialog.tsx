@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderHooks } from "./api/folderHooks";
 import { FolderRenderer } from "./renderer";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 export function FolderEditDialog() {
   const { isOpen, data: dialogData, close: handleClose } = useDialogBus("folderEdit");
@@ -100,7 +101,7 @@ export function FolderEditDialog() {
   return (
     <Dialog
       open={isOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}
