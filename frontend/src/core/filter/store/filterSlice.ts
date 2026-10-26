@@ -1,6 +1,5 @@
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
-import { MyFilter, MyFilterExpression } from "../filterUtils";
-import { createClearedFilter } from "./_utils/filterLogic";
+import { createEmptyFilter, MyFilter, MyFilterExpression } from "../filterUtils";
 
 export interface FilterState {
   // project state:
@@ -13,7 +12,7 @@ export interface FilterState {
 export const createInitialFilterState = (defaultFilterExpression: MyFilterExpression): FilterState => {
   return {
     filter: {
-      root: createClearedFilter("root"),
+      root: createEmptyFilter("root"),
     },
     defaultFilterExpression,
     expertMode: false,

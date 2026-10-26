@@ -10,7 +10,7 @@ import {
   changeFilterLogicalOperator,
   changeFilterOperator,
   changeFilterValue,
-  deleteFilterItem,
+  deleteInFilter,
 } from "@core/filter";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { Box, Typography } from "@mui/material";
@@ -45,7 +45,7 @@ export function ConceptFilterEditor({
 
   const handleDeleteFilter = useCallback(
     (filterId: string) => {
-      setEditableFilter((prev) => deleteFilterItem(prev, filterId));
+      setEditableFilter((prev) => deleteInFilter(prev, filterId));
     },
     [setEditableFilter],
   );

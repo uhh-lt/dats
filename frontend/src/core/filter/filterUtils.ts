@@ -39,14 +39,6 @@ export interface MyFilter<T = string> {
   logic_operator: LogicalOperator;
 }
 
-export const createEmptyFilter = (id: string): MyFilter => {
-  return {
-    id,
-    items: [],
-    logic_operator: LogicalOperator.AND,
-  };
-};
-
 export type FilterOperatorType =
   | typeof IDOperator
   | typeof NumberOperator
@@ -75,12 +67,14 @@ export type FilterOperators =
 
 // TYPE GUARDS
 
-export const isFilter = (filter: MyFilter | MyFilterExpression): filter is MyFilter => {
-  return (filter as MyFilter).items !== undefined;
+export const isFilter = <T = string>(filter: MyFilter<T> | MyFilterExpression<T>): filter is MyFilter<T> => {
+  return "items" in filter;
 };
 
-export const isFilterExpression = (filter: MyFilter | MyFilterExpression): filter is MyFilterExpression => {
-  return (filter as MyFilter).items === undefined;
+export const isFilterExpression = <T = string>(
+  filter: MyFilter<T> | MyFilterExpression<T>,
+): filter is MyFilterExpression<T> => {
+  return !("items" in filter);
 };
 
 // MAPS
@@ -140,8 +134,11 @@ export const getDefaultOperator = (operator: FilterOperatorType): FilterOperator
   return Object.values(operator)[0];
 };
 
-export const findInFilter = (filter: MyFilter, filterId: string): MyFilter | MyFilterExpression | undefined => {
-  const stack: (MyFilter | MyFilterExpression)[] = [filter];
+export const findInFilter = <T = string>(
+  filter: MyFilter<T>,
+  filterId: string,
+): MyFilter<T> | MyFilterExpression<T> | undefined => {
+  const stack: (MyFilter<T> | MyFilterExpression<T>)[] = [filter];
   while (stack?.length > 0) {
     const currentFilter = stack.pop();
     if (!currentFilter) return undefined;
@@ -156,7 +153,7 @@ export const findInFilter = (filter: MyFilter, filterId: string): MyFilter | MyF
   return undefined;
 };
 
-export const deleteInFilter = (filter: MyFilter, filterId: string): MyFilter => {
+export const deleteInFilter = <T = string>(filter: MyFilter<T>, filterId: string): MyFilter<T> => {
   return {
     ...filter,
     items: filter.items
@@ -185,6 +182,121 @@ export const countFilterExpressions = (filter: MyFilter): number => {
     }
   }
   return count;
+};
+
+// EDITING: pure functions, each returns a new filter (never mutate a MyFilter)
+
+export const createEmptyFilter = <T = string>(id: string): MyFilter<T> => {
+  return {
+    id,
+    items: [],
+    logic_operator: LogicalOperator.AND,
+  };
+};
+
+export const cloneFilter = <T = string>(filter: MyFilter<T>): MyFilter<T> => {
+  return JSON.parse(JSON.stringify(filter)) as MyFilter<T>;
+};
+
+/** A copy of the filter to edit; an empty filter gets the default expression, so the editor shows one row. */
+export const withDefaultFilterExpression = <T = string>(
+  filter: MyFilter<T>,
+  defaultExpression: MyFilterExpression<T>,
+): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  if (nextFilter.items.length === 0) {
+    nextFilter.items = [{ ...defaultExpression, id: crypto.randomUUID() }];
+  }
+  return nextFilter;
+};
+
+/** Adds an empty group at the start of the group filterId. */
+export const addDefaultFilter = <T = string>(filter: MyFilter<T>, filterId: string): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  const filterItem = findInFilter(nextFilter, filterId);
+  if (filterItem && isFilter(filterItem)) {
+    const group: MyFilter<T> = { id: crypto.randomUUID(), items: [], logic_operator: LogicalOperator.AND };
+    filterItem.items = [group, ...filterItem.items];
+  }
+  return nextFilter;
+};
+
+/** Adds the default expression at the end of the group filterId. */
+export const addDefaultFilterExpression = <T = string>(
+  filter: MyFilter<T>,
+  filterId: string,
+  defaultExpression: MyFilterExpression<T>,
+): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  const filterItem = findInFilter(nextFilter, filterId);
+  if (filterItem && isFilter(filterItem)) {
+    filterItem.items = [...filterItem.items, { ...defaultExpression, id: crypto.randomUUID() }];
+  }
+  return nextFilter;
+};
+
+export const changeFilterLogicalOperator = <T = string>(
+  filter: MyFilter<T>,
+  filterId: string,
+  operator: LogicalOperator,
+): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  const filterItem = findInFilter(nextFilter, filterId);
+  if (filterItem && isFilter(filterItem)) {
+    filterItem.logic_operator = operator;
+  }
+  return nextFilter;
+};
+
+/** Sets the column of an expression and resets its operator and value to the column's defaults. */
+export const changeFilterColumn = <T = string>(
+  filter: MyFilter<T>,
+  filterId: string,
+  columnValue: string,
+  column2Info: Record<string, ColumnInfo>,
+): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  const filterItem = findInFilter(nextFilter, filterId);
+  if (filterItem && isFilterExpression(filterItem)) {
+    // numeric columns are project metadata ids, all others are the table's column names
+    filterItem.column = parseInt(columnValue) || (columnValue as T);
+
+    const columnInfo = column2Info[columnValue];
+    if (!columnInfo) {
+      return nextFilter;
+    }
+
+    const filterOperatorType = filterOperator2FilterOperatorType[columnInfo.operator];
+    filterItem.operator = getDefaultOperator(filterOperatorType);
+    filterItem.value = getDefaultValue(columnInfo.value, columnInfo.operator);
+  }
+  return nextFilter;
+};
+
+export const changeFilterOperator = <T = string>(
+  filter: MyFilter<T>,
+  filterId: string,
+  operator: FilterOperators,
+): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  const filterItem = findInFilter(nextFilter, filterId);
+  if (filterItem && isFilterExpression(filterItem)) {
+    filterItem.operator = operator;
+  }
+  return nextFilter;
+};
+
+export const changeFilterValue = <T = string>(
+  filter: MyFilter<T>,
+  filterId: string,
+  value: string | number | boolean | string[],
+): MyFilter<T> => {
+  const nextFilter = cloneFilter(filter);
+  const filterItem = findInFilter(nextFilter, filterId);
+  if (filterItem && isFilterExpression(filterItem)) {
+    filterItem.value = value;
+  }
+  return nextFilter;
 };
 
 /** Converts the sorting state of a table (sort ids are the columns the table was configured with) to backend sorts. */
