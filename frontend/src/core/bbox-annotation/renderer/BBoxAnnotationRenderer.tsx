@@ -6,7 +6,6 @@ import { SdocHooks } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CircularProgress, Typography } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { bboxAnnotationQueries } from "../api/bboxAnnotationQueries";
@@ -42,26 +41,27 @@ const BBoxAnnotationRendererWithoutData = memo(
 const BBoxAnnotationRendererWithData = memo(
   ({
     bboxAnnotation,
-    expandable,
-    expandMaxHeight,
-    expandButtonPosition,
-    ...summaryProps
+    renderCode,
+    renderText,
+    renderSdoc,
+    renderSdocTags,
+    renderSdocProjectMetadataId,
+    sdocRendererProps,
+    link,
+    renderMemoIndicator,
+    ...expandProps
   }: { bboxAnnotation: BBoxAnnotationRead } & BBoxAnnotationRendererSharedProps) => {
-    const projectId = useAppSelector((state) => state.project.projectId);
-
-    if (!projectId) {
-      return <div>Error: This component requires a project ID.</div>;
-    }
-
     return (
-      <ExpandableRenderer
-        expandable={expandable}
-        expandMaxHeight={expandMaxHeight}
-        expandButtonPosition={expandButtonPosition}
-        expandedContent={<BBoxAnnotationContext bboxAnnotation={bboxAnnotation} />}
-      >
+      <ExpandableRenderer {...expandProps} expandedContent={<BBoxAnnotationContext bboxAnnotation={bboxAnnotation} />}>
         <AnnotationSummaryRow
-          {...summaryProps}
+          renderCode={renderCode}
+          renderText={renderText}
+          renderSdoc={renderSdoc}
+          renderSdocTags={renderSdocTags}
+          renderSdocProjectMetadataId={renderSdocProjectMetadataId}
+          sdocRendererProps={sdocRendererProps}
+          link={link}
+          renderMemoIndicator={renderMemoIndicator}
           sdocId={bboxAnnotation.sdoc_id}
           codeId={bboxAnnotation.code_id}
           text={
@@ -69,7 +69,6 @@ const BBoxAnnotationRendererWithData = memo(
               {bboxAnnotation.x_min}, {bboxAnnotation.y_min}, {bboxAnnotation.x_max}, {bboxAnnotation.y_max}
             </>
           }
-          projectId={projectId}
           userId={bboxAnnotation.user_id}
           annotationId={bboxAnnotation.id}
           annotationType={AttachedObjectType.BBOX_ANNOTATION}

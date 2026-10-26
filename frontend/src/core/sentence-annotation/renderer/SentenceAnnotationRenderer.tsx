@@ -4,7 +4,6 @@ import { SdocHooks } from "@core/source-document";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { sentenceAnnotationQueries } from "../api/sentenceAnnotationQueries";
@@ -40,26 +39,30 @@ const SentenceAnnotationRendererWithoutData = memo(
 const SentenceAnnotationRendererWithData = memo(
   ({
     sentenceAnnotation,
-    expandable,
-    expandMaxHeight,
-    expandButtonPosition,
-    ...summaryProps
+    renderCode,
+    renderText,
+    renderSdoc,
+    renderSdocTags,
+    renderSdocProjectMetadataId,
+    sdocRendererProps,
+    link,
+    renderMemoIndicator,
+    ...expandProps
   }: { sentenceAnnotation: SentenceAnnotationRead } & SentenceAnnotationRendererSharedProps) => {
-    const projectId = useAppSelector((state) => state.project.projectId);
-
-    if (!projectId) {
-      return <div>Error: This component requires a project ID.</div>;
-    }
-
     return (
       <ExpandableRenderer
-        expandable={expandable}
-        expandMaxHeight={expandMaxHeight}
-        expandButtonPosition={expandButtonPosition}
+        {...expandProps}
         expandedContent={<SentenceAnnotationContext sentenceAnnotation={sentenceAnnotation} />}
       >
         <AnnotationSummaryRow
-          {...summaryProps}
+          renderCode={renderCode}
+          renderText={renderText}
+          renderSdoc={renderSdoc}
+          renderSdocTags={renderSdocTags}
+          renderSdocProjectMetadataId={renderSdocProjectMetadataId}
+          sdocRendererProps={sdocRendererProps}
+          link={link}
+          renderMemoIndicator={renderMemoIndicator}
           sdocId={sentenceAnnotation.sdoc_id}
           codeId={sentenceAnnotation.code_id}
           text={
@@ -68,7 +71,6 @@ const SentenceAnnotationRendererWithData = memo(
               {sentenceAnnotation.sentence_id_end + 1}.
             </>
           }
-          projectId={projectId}
           userId={sentenceAnnotation.user_id}
           annotationId={sentenceAnnotation.id}
           annotationType={AttachedObjectType.SENTENCE_ANNOTATION}

@@ -3,7 +3,6 @@ import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annot
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Typography } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { spanAnnotationQueries } from "../api/spanAnnotationQueries";
@@ -39,30 +38,30 @@ const SpanAnnotationRendererWithoutData = memo(
 const SpanAnnotationRendererWithData = memo(
   ({
     spanAnnotation,
-    expandable,
-    expandMaxHeight,
-    expandButtonPosition,
-    ...summaryProps
+    renderCode,
+    renderText,
+    renderSdoc,
+    renderSdocTags,
+    renderSdocProjectMetadataId,
+    sdocRendererProps,
+    link,
+    renderMemoIndicator,
+    ...expandProps
   }: { spanAnnotation: SpanAnnotationRead } & SpanAnnotationRendererSharedProps) => {
-    const projectId = useAppSelector((state) => state.project.projectId);
-
-    if (!projectId) {
-      return <div>Error: This component requires a project ID.</div>;
-    }
-
     return (
-      <ExpandableRenderer
-        expandable={expandable}
-        expandMaxHeight={expandMaxHeight}
-        expandButtonPosition={expandButtonPosition}
-        expandedContent={<SpanAnnotationContext spanAnnotation={spanAnnotation} />}
-      >
+      <ExpandableRenderer {...expandProps} expandedContent={<SpanAnnotationContext spanAnnotation={spanAnnotation} />}>
         <AnnotationSummaryRow
-          {...summaryProps}
+          renderCode={renderCode}
+          renderText={renderText}
+          renderSdoc={renderSdoc}
+          renderSdocTags={renderSdocTags}
+          renderSdocProjectMetadataId={renderSdocProjectMetadataId}
+          sdocRendererProps={sdocRendererProps}
+          link={link}
+          renderMemoIndicator={renderMemoIndicator}
           sdocId={spanAnnotation.sdoc_id}
           codeId={spanAnnotation.code_id}
           text={spanAnnotation.text}
-          projectId={projectId}
           userId={spanAnnotation.user_id}
           annotationId={spanAnnotation.id}
           annotationType={AttachedObjectType.SPAN_ANNOTATION}
