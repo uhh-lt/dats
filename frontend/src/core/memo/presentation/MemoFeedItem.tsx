@@ -10,7 +10,6 @@ import remarkGfm from "remark-gfm";
 import { memoQueries } from "../api/memoQueries";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
-import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
 
 /**
@@ -52,8 +51,6 @@ const MemoFeedItemWithData = memo(
     attachedObjectLink,
     renderActionMenu,
   }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead }) => {
-    const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
-
     const handleClick = useCallback(() => {
       onSelect?.(memo.id);
     }, [onSelect, memo.id]);
@@ -78,10 +75,10 @@ const MemoFeedItemWithData = memo(
         )}
         {showHeader && (
           <Stack direction="row" alignItems="center" spacing={0.5}>
-            {renderAttachedObject && attachedObject.data && (
+            {renderAttachedObject && (
               <AttachedObjectRenderer
-                attachedObject={attachedObject.data}
                 attachedObjectType={memo.attached_object_type}
+                attachedObjectId={memo.attached_object_id}
                 link={attachedObjectLink}
               />
             )}

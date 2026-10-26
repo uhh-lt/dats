@@ -7,7 +7,6 @@ import { memo, useCallback } from "react";
 import { memoQueries } from "../api/memoQueries";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
-import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
 
 /**
@@ -50,8 +49,6 @@ const MemoListItemWithData = memo(
     attachedObjectLink,
     renderActionMenu,
   }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead }) => {
-    const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
-
     const handleClick = useCallback(() => {
       onSelect?.(memo.id);
     }, [onSelect, memo.id]);
@@ -110,15 +107,15 @@ const MemoListItemWithData = memo(
                     {renderCreatedDate && `Created: ${formatDate(memo.created)}`}
                   </Typography>
                 )}
-                {renderAttachedObject && attachedObject.data && (
+                {renderAttachedObject && (
                   <Stack direction="row" alignItems="center" spacing={0.5} minWidth={0}>
                     <Typography variant="caption" color="text.secondary" noWrap flexShrink={0}>
                       Attached to:
                     </Typography>
                     <Box minWidth={0} color="text.secondary" sx={{ "& .MuiTypography-root": { fontSize: "0.75rem" } }}>
                       <AttachedObjectRenderer
-                        attachedObject={attachedObject.data}
                         attachedObjectType={memo.attached_object_type}
+                        attachedObjectId={memo.attached_object_id}
                         link={attachedObjectLink}
                       />
                     </Box>

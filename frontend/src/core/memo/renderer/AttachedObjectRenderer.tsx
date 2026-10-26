@@ -7,36 +7,22 @@ import { SdocRenderer } from "@core/source-document";
 import { SpanAnnotationRenderer } from "@core/span-annotation";
 import { TagRenderer } from "@core/tag";
 import { AttachedObjectType } from "@models/AttachedObjectType";
-import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
-import { CodeRead } from "@models/CodeRead";
-import { ProjectRead } from "@models/ProjectRead";
-import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "@models/SourceDocumentRead";
-import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { TagRead } from "@models/TagRead";
 import { memo } from "react";
 
+// the object a memo is attached to, as the memo references it: its type and id (each case renders the entity by id)
 interface AttachedObjectRendererProps extends ExpandableRendererProps {
-  attachedObject:
-    | TagRead
-    | SourceDocumentRead
-    | CodeRead
-    | SpanAnnotationRead
-    | SentenceAnnotationRead
-    | BBoxAnnotationRead
-    | ProjectRead
-    | number;
   attachedObjectType: AttachedObjectType;
+  attachedObjectId: number;
   link?: boolean;
 }
 
 export const AttachedObjectRenderer = memo(
-  ({ attachedObject, attachedObjectType, link, ...expandProps }: AttachedObjectRendererProps) => {
+  ({ attachedObjectType, attachedObjectId, link, ...expandProps }: AttachedObjectRendererProps) => {
     switch (attachedObjectType) {
       case AttachedObjectType.BBOX_ANNOTATION:
         return (
           <BBoxAnnotationRenderer
-            bboxAnnotation={attachedObject as BBoxAnnotationRead | number}
+            bboxAnnotation={attachedObjectId}
             link={link}
             renderCode
             renderText
@@ -46,7 +32,7 @@ export const AttachedObjectRenderer = memo(
       case AttachedObjectType.SPAN_ANNOTATION:
         return (
           <SpanAnnotationRenderer
-            spanAnnotation={attachedObject as SpanAnnotationRead | number}
+            spanAnnotation={attachedObjectId}
             link={link}
             renderCode
             renderText
@@ -56,7 +42,7 @@ export const AttachedObjectRenderer = memo(
       case AttachedObjectType.SENTENCE_ANNOTATION:
         return (
           <SentenceAnnotationRenderer
-            sentenceAnnotation={attachedObject as SentenceAnnotationRead | number}
+            sentenceAnnotation={attachedObjectId}
             link={link}
             renderCode
             renderText
@@ -64,21 +50,13 @@ export const AttachedObjectRenderer = memo(
           />
         );
       case AttachedObjectType.TAG:
-        return <TagRenderer tag={attachedObject as TagRead | number} {...expandProps} />;
+        return <TagRenderer tag={attachedObjectId} {...expandProps} />;
       case AttachedObjectType.CODE:
-        return <CodeRenderer code={attachedObject as CodeRead | number} {...expandProps} />;
+        return <CodeRenderer code={attachedObjectId} {...expandProps} />;
       case AttachedObjectType.SOURCE_DOCUMENT:
-        return (
-          <SdocRenderer
-            sdoc={attachedObject as SourceDocumentRead | number}
-            renderName
-            renderDoctypeIcon
-            link={link}
-            {...expandProps}
-          />
-        );
+        return <SdocRenderer sdoc={attachedObjectId} renderName renderDoctypeIcon link={link} {...expandProps} />;
       case AttachedObjectType.PROJECT:
-        return <ProjectRenderer project={attachedObject as ProjectRead | number} {...expandProps} />;
+        return <ProjectRenderer project={attachedObjectId} {...expandProps} />;
       default:
         return <>{attachedObjectType}</>;
     }

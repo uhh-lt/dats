@@ -104,8 +104,8 @@ export const MemoEditor = memo(
             <MetadataRow label="Last modified">{lastModified}</MetadataRow>
             <MetadataRow label="Attached to">
               <AttachedObjectRenderer
-                attachedObject={attachedObject}
                 attachedObjectType={attachedObjectType}
+                attachedObjectId={attachedObject.id}
                 link
                 expandable
                 expandMaxHeight={280}
