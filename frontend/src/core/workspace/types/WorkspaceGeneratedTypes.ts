@@ -2,7 +2,7 @@ import { MyFilter } from "@core/filter";
 import { DateGranularity } from "@models/DateGranularity";
 import { SearchViewLayout } from "@models/SearchViewLayout";
 import { SortDirection } from "@models/SortDirection";
-import { SearchViewBase } from "../api/searchViewQueries";
+import { SearchViewBase } from "./SearchViewBase";
 // Memo
 import { GroupConfig_MemoColumns_ } from "@models/GroupConfig_MemoColumns_";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
