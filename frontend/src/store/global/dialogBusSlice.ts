@@ -55,10 +55,6 @@ export type MemoDialogData =
   | { memoId: number; attachedObjectType?: AttachedObjectType; attachedObjectId?: number }
   | { memoId?: undefined; attachedObjectType: AttachedObjectType; attachedObjectId: number };
 
-export interface ClusterDetailDialogData {
-  clusterId: number;
-}
-
 export interface ConfirmationDialogData {
   text: string;
   type?: "DELETE";
@@ -83,7 +79,6 @@ export interface DialogPayloadMap {
   sentenceAnnotationEdit: SentenceAnnotationEditDialogData;
   bboxAnnotationEdit: BBoxAnnotationEditDialogData;
   memo: MemoDialogData;
-  clusterDetail: ClusterDetailDialogData;
   documentUpload: undefined;
   projectSettings: undefined;
   quickCommandMenu: undefined;
@@ -131,7 +126,6 @@ const initialState: DialogBusState = {
   sentenceAnnotationEdit: closed,
   bboxAnnotationEdit: closed,
   memo: closed,
-  clusterDetail: closed,
   documentUpload: closed,
   projectSettings: closed,
   quickCommandMenu: closed,

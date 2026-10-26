@@ -50,8 +50,7 @@ The slice holds the UI state of the feature:
 - **Highlighting**: the highlighted cluster (`highlightedClusterId`) and whether reviewed documents are highlighted.
 - **Filtering**: the map filter; the slice builds on the generic `filterReducer` (see `frontend-filter.instructions.md`), plus the search query and the pinned statistics.
 - **Chat**: the model, session and messages of the analysis assistant.
-
-The cluster detail dialog is opened through the global dialog bus (`useOpenDialog("clusterDetail")`), not through this slice.
+- **Cluster detail dialog**: whether it is open and which cluster it shows (`openClusterDetailDialog(clusterId)`, `closeClusterDetailDialog()`).
 
 ## Key Components
 
@@ -90,7 +89,7 @@ The WebGL scatter plot of the documents.
 
 ### 6. Cluster Detail Dialog (`_components/dialog/ClusterDetailDialog.tsx`)
 
-Details of one cluster: its generated label and description, keywords (`ClusterWordCloud`) and documents (`DocAspectTable`). Users can edit the details or recompute the description (`RecomputeClusterDescriptionButton`). It is opened from `ClusterList` and `ColorSettings` through the dialog bus.
+Details of one cluster: its generated label and description, keywords (`ClusterWordCloud`) and documents (`DocAspectTable`). Users can edit the details or recompute the description (`RecomputeClusterDescriptionButton`). It is opened from `ClusterList` and `ColorSettings` through the slice (`PerspectivesActions.openClusterDetailDialog`).
 
 ### 7. Job Progress (`_components/ClusterJobProgressCard.tsx`)
 

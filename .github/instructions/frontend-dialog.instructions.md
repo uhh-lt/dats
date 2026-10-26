@@ -69,14 +69,23 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 
 The open state comes from exactly one of these three sources, chosen by who opens the dialog; never from `open`/`onClose` props or `useState` (lint). A dialog that opens itself on start passes `useDialog({ initialOpen })` (`WhatsNewDialog`).
 
-1. **Dialog bus** (types and slice in `store/global/dialogBusSlice.ts`, hooks and the callback store in `store/global/dialogBusHooks.ts`): the dialog is opened by components that are not its parent (several openers, other features, menus, shortcuts). Mount it once (the project route layout, or the view that needs it), open it with `useOpenDialog(key)` from anywhere:
+| Opened from                                      | Source           | Mounted in                                                                           |
+| ------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------ |
+| several features (menus, tables, shortcuts, ...) | 1. dialog bus    | `routes/_auth/project/$projectId/route.tsx`, or `routes/_auth.tsx` outside a project |
+| several places in one feature, or a wizard       | 2. feature slice | the feature's views (a wizard: the project route)                                    |
+| one place: its own trigger                       | 3. `useDialog()` | the dialog renders its trigger                                                       |
+
+1. **Dialog bus** (types and slice in `store/global/dialogBusSlice.ts`, hooks and the callback store in `store/global/dialogBusHooks.ts`): a global dialog, opened from several features (`TagEditDialog`, `SpanAnnotationEditDialog`, `ConfirmationDialog`). It is mounted exactly once, in `$projectId/route.tsx` (or `_auth.tsx` when it is needed outside a project), never in a view, so it opens wherever `useOpenDialog(key)` is called:
    - Dialog: `const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("key");`
    - Opener: `const openCodeEditDialog = useOpenDialog("codeEdit"); openCodeEditDialog({ code });`, or `openX(data, onSuccess)` with a callback.
    - A new key: a `<Name>DialogData` interface (always a named type, even for one field; `undefined` for no data), one line in `DialogPayloadMap`, one entry in `initialState`, and for a callback one line in `DialogCallbackMap` plus `keysWithCallbacks` (hooks file). The slice file follows the slice conventions and holds no React code.
    - Callbacks are kept outside Redux by the bus. Never put functions into a slice.
    - `close` keeps `data` (the content stays rendered during the exit transition). Gate content with `{dialogData && ...}`.
    - A domain may wrap the opener in a hook with its own signature (`useOpenMemoDialog`).
-2. **Feature slice**: only for wizard dialogs whose steps read and write shared state in the feature's slice (`ClassifierDialog`, `LLMAssistantDialog`). Open state (`isOpen`), step and settings live in that slice; openers dispatch the slice's open action with the initial payload.
+2. **Feature slice**: a dialog of one feature, opened from several places in it, or a wizard whose steps share state in the slice.
+   - Feature dialog (`ClusterDetailDialog`, opened from the perspective view and the map): the slice holds `is<Name>DialogOpen` and the data it shows (`clusterDetailDialogClusterId`), with `open<Name>Dialog(data)` / `close<Name>Dialog()`; close keeps the data for the exit transition. The views that open it mount it.
+   - Wizard (`ClassifierDialog`, `LLMAssistantDialog`): open state (`isOpen`), step and settings live in the slice; openers dispatch the slice's open action with the initial payload. Wizards are opened from other features too, so they are mounted in the project route.
+   - A feature slice holds no callbacks; a dialog that reports back to its opener uses the bus.
 3. **Self-contained**: the dialog has exactly one opener, its own trigger. The dialog renders the trigger and the `Dialog` in a fragment and holds the state with `const { isOpen, open: handleOpen, close: handleClose } = useDialog();` from `@hooks/useDialog`. The trigger is styled by the dialog; whiteboard toolbar dialogs accept `buttonProps?: Omit<ButtonProps, "onClick">`.
 
 - Local cleanup on close (row selection, a created API key): wrap the bus' close (`close: closeDialog` + `handleClose` that resets and calls `closeDialog`), or pass `useDialog({ onClose })`. Do not `setState` in the open effect.
