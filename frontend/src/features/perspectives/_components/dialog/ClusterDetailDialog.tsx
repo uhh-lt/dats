@@ -4,11 +4,12 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ClusterUpdate } from "@models/ClusterUpdate";
 import { Close, Edit, Save } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton, Stack, Tooltip, Typography } from "@mui/material";
-import { useDialogBus } from "@store/global/dialogBusHooks";
-import { useEffect, useMemo, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
 import { PerspectivesHooks } from "../../api/perspectivesHooks";
+import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";
 import { RecomputeClusterDescriptionButton } from "./RecomputeClusterDescriptionButton";
@@ -19,14 +20,17 @@ interface ClusterDetailDialogProps {
 }
 
 export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
-  const { isOpen, data: dialogData, close: handleClose } = useDialogBus("clusterDetail");
+  const dispatch = useAppDispatch();
+  const isOpen = useAppSelector((state) => state.perspectives.isClusterDetailDialogOpen);
+  const clusterId = useAppSelector((state) => state.perspectives.clusterDetailDialogClusterId);
+  const handleClose = useCallback(() => dispatch(PerspectivesActions.closeClusterDetailDialog()), [dispatch]);
 
   // get cluster information
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
   const cluster = useMemo(() => {
     if (!vis.data) return null;
-    return vis.data.clusters.find((t) => t.id === dialogData?.clusterId);
-  }, [vis.data, dialogData]);
+    return vis.data.clusters.find((t) => t.id === clusterId);
+  }, [vis.data, clusterId]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

@@ -56,6 +56,9 @@ export interface PerspectivesState extends FilterState {
   yAxis: string;
   showTicks: boolean;
   showGrid: boolean;
+  // cluster detail dialog (close keeps the cluster id, so the content stays rendered during the exit transition)
+  isClusterDetailDialogOpen: boolean;
+  clusterDetailDialogClusterId: number | undefined;
   // highlighting
   highlightedClusterId: number | undefined;
   highlightReviewedDocs: boolean;
@@ -95,6 +98,9 @@ const initialState: PerspectivesState = {
   yAxis: "Cluster Dimension 2",
   showTicks: false,
   showGrid: true,
+  // cluster detail dialog
+  isClusterDetailDialogOpen: false,
+  clusterDetailDialogClusterId: undefined,
   // highlighting
   highlightedClusterId: undefined,
   highlightReviewedDocs: false,
@@ -122,6 +128,14 @@ const perspectivesSlice = createSlice({
   initialState,
   reducers: {
     ...filterReducer,
+    // cluster detail dialog
+    openClusterDetailDialog: (state, action: PayloadAction<number>) => {
+      state.isClusterDetailDialogOpen = true;
+      state.clusterDetailDialogClusterId = action.payload;
+    },
+    closeClusterDetailDialog: (state) => {
+      state.isClusterDetailDialogOpen = false;
+    },
     // selection
     onSelectionChange: (state, action: PayloadAction<number[]>) => {
       state.selectedSdocIds = action.payload.slice();
