@@ -11,6 +11,7 @@ import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/mat
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { SentenceAnnotationReduxFilterTable } from "../table";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 const filterName = "selectSentenceAnnotationDialog";
 
@@ -42,7 +43,7 @@ export function SelectSentenceAnnotationsDialog({
           {getIconComponent(Icon.SENTENCE_ANNOTATION)}
         </Button>
       </Tooltip>
-      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader

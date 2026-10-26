@@ -10,6 +10,7 @@ import { KeyboardEventHandler, MouseEventHandler, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
 import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface SearchFormValues {
   query: string;
@@ -134,7 +135,7 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
             }}
           />
         </Button>
-        <Dialog open={open} onClose={handleClose} fullScreen={isMaximized}>
+        <Dialog open={open} onClose={closeOnEscape(handleClose)} fullScreen={isMaximized}>
           <DATSDialogHeader
             title="Image Preview"
             onClose={handleClose}

@@ -14,6 +14,7 @@ import { useCallback, useState } from "react";
 import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { createSdocNodes } from "../../_utils/whiteboardUtils";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 const filterName = "documentDialogWhiteboard";
 
@@ -38,7 +39,7 @@ export function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddD
           {getIconComponent(Icon.DOCUMENT)}
         </Button>
       </Tooltip>
-      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader

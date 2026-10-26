@@ -4,6 +4,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { useDialogBus } from "@store/global/dialogBusHooks";
 import { useCallback } from "react";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 export function ConfirmationDialog() {
   const { isOpen, data: dialogData, close: handleClose, onSuccess } = useDialogBus("confirmation");
@@ -21,7 +22,7 @@ export function ConfirmationDialog() {
 
   const isDelete = dialogData?.type === "DELETE";
   return (
-    <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="sm" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Warning!"
         onClose={handleClose}

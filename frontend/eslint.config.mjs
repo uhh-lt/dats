@@ -395,6 +395,12 @@ export default defineConfig(
     plugins: { local: datsRulesPlugin },
     rules: { "local/dialog-conventions": "error" },
   },
+  {
+    files: ["src/**/*.tsx"],
+    ignores: ["src/api/**"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/dialog-close-on-escape": "error" },
+  },
   // FILTER TABLES AND FILTER SLICES (see .github/instructions/frontend-filter.instructions.md)
   {
     files: ["src/**/*FilterTable.tsx"],

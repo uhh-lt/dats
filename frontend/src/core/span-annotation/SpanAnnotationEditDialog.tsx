@@ -9,6 +9,7 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { SpanAnnotationHooks } from "./api/spanAnnotationHooks";
 import { SpanAnnotationRenderer } from "./renderer";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface SpanAnnotationEditDialogProps {
   projectId: number;
@@ -55,7 +56,7 @@ export function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialog
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="md" fullWidth fullScreen={isMaximized}>
       {dialogData && (
         <>
           <DATSDialogHeader

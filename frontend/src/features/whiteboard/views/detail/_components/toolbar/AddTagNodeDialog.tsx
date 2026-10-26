@@ -12,6 +12,7 @@ import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { PendingAddNodeAction } from "../../_types/PendingAddNodeAction";
 import { createTagNodes } from "../../_utils/whiteboardUtils";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface AddTagNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
@@ -61,7 +62,7 @@ export function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNode
           {getIconComponent(Icon.TAG)}
         </Button>
       </Tooltip>
-      <Dialog open={isOpen} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select tags to add to Whiteboard"
           onClose={handleClose}

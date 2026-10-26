@@ -13,6 +13,7 @@ import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, T
 import { useCallback, useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { ApiKeyHooks } from "../../../api/apiKeyHooks";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ApiKeyCreateFormValues {
   name: string;
@@ -88,7 +89,7 @@ export function ApiKeyCreateDialog() {
       </Button>
       <Dialog
         open={isOpen}
-        onClose={handleClose}
+        onClose={closeOnEscape(handleClose)}
         maxWidth="sm"
         fullWidth
         fullScreen={isMaximized}

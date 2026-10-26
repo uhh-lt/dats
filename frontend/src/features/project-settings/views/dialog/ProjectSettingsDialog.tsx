@@ -13,6 +13,7 @@ import { ProjectDangerZone } from "./_components/ProjectDangerZone";
 import { ProjectDetails } from "./_components/ProjectDetails";
 import { ProjectTags } from "./_components/ProjectTags";
 import { ProjectUsers } from "./_components/ProjectUsers";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ProjectSettingsDialogProps {
   projectId: number;
@@ -43,7 +44,7 @@ export function ProjectSettingsDialog({
   return (
     <Dialog
       open={isOpen}
-      onClose={(_, reason) => reason === "escapeKeyDown" && handleClose()}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="xl"
       fullWidth
       slotProps={{

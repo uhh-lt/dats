@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagHooks } from "../api/tagHooks";
 import { TagRenderer } from "../renderer";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 export function TagEditDialog() {
   const { isOpen, data: dialogData, close: handleClose } = useDialogBus("tagEdit");
@@ -104,7 +105,7 @@ export function TagEditDialog() {
   return (
     <Dialog
       open={isOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}

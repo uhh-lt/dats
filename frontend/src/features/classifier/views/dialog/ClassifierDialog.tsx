@@ -15,6 +15,7 @@ import { ResultStep } from "./_components/ResultStep";
 import { StatusStep } from "./_components/StatusStep";
 import { TrainingDataSelectionStep } from "./_components/TrainingDataSelectionStep";
 import { TrainingSettingsStep } from "./_components/TrainingSettingsStep";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 const taskTitle: Record<ClassifierTask, string> = {
   [ClassifierTask.TRAINING]: "Training",
@@ -89,7 +90,7 @@ export function ClassifierDialog() {
     [task],
   );
   return (
-    <Dialog open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog open={open} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title={dialogTitle}
         onClose={handleClose}

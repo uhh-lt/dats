@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { CodeHooks } from "../api/codeHooks";
 import { CodeRenderer } from "../renderer";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -143,7 +144,7 @@ export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogP
   return (
     <Dialog
       open={isOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}

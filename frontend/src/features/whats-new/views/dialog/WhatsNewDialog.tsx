@@ -21,6 +21,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { githubReleaseQueries } from "../../api/githubReleaseQueries";
 import { getGitHubReleasePageUrl } from "../../_utils/githubReleaseUtils";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 const DISMISSED_VERSION_KEY = "dats-whats-new-dismissed-version";
 const currentVersion = OpenAPI.VERSION;
@@ -66,7 +67,7 @@ export function WhatsNewDialog() {
   return (
     <Dialog
       open={isOpen}
-      onClose={handleClose}
+      onClose={closeOnEscape(handleClose)}
       maxWidth="md"
       fullWidth
       fullScreen={isMaximized}

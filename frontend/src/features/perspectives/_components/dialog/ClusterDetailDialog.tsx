@@ -12,6 +12,7 @@ import { PerspectivesHooks } from "../../api/perspectivesHooks";
 import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";
 import { RecomputeClusterDescriptionButton } from "./RecomputeClusterDescriptionButton";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ClusterDetailDialogProps {
   aspectId: number;
@@ -75,7 +76,13 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   };
 
   return (
-    <Dialog open={isOpen && !!cluster} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+    <Dialog
+      open={isOpen && !!cluster}
+      onClose={closeOnEscape(handleClose)}
+      maxWidth="lg"
+      fullWidth
+      fullScreen={isMaximized}
+    >
       <DATSDialogHeader
         title="Cluster Details"
         onClose={handleClose}

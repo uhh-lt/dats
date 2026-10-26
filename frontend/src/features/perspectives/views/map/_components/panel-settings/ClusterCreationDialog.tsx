@@ -11,6 +11,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { PerspectivesHooks } from "../../../../api/perspectivesHooks";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ClusterCreationDialogProps {
   aspectId: number;
@@ -93,7 +94,7 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
       </Tooltip>
       <Dialog
         open={isOpen}
-        onClose={handleClose}
+        onClose={closeOnEscape(handleClose)}
         maxWidth="md"
         fullWidth
         fullScreen={isMaximized}

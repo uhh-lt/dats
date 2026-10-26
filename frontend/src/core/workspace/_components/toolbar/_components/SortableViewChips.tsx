@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import { FormEvent, useCallback, useState } from "react";
 import { WorkspaceView } from "../../../types/WorkspaceGeneratedTypes";
+import { closeOnEscape } from "@utils/dialogUtils";
 
 interface SortableViewChipProps {
   view: WorkspaceView<string>;
@@ -123,7 +124,7 @@ function SortableViewChip({
           </Menu>
           <Dialog
             open={renameDialogOpen}
-            onClose={handleCloseRenameDialog}
+            onClose={closeOnEscape(handleCloseRenameDialog)}
             maxWidth="xs"
             fullWidth
             TransitionProps={{ onEnter: () => setRenameValue(view.name) }}
