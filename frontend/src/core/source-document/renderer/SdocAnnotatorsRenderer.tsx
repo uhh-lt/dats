@@ -5,18 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Fragment, memo } from "react";
 import { sdocQueries } from "../api/sdocQueries";
 
-interface SdocAnnotatorsRendererProps {
-  sdocId?: number;
-  annotators?: number[] | UserRead[];
-}
+// the annotators of a document: loaded by the document's id, or given as user ids or users
+type SdocAnnotatorsRendererProps = { sdocId: number } | { annotators: number[] | UserRead[] };
 
-export const SdocAnnotatorsRenderer = memo(({ sdocId, annotators }: SdocAnnotatorsRendererProps) => {
-  if (annotators) {
-    return <SdocAnnotatorsRendererWithData annotators={annotators} />;
-  } else if (sdocId !== undefined) {
-    return <SdocAnnotatorsRendererWithoutData sdocId={sdocId} />;
+export const SdocAnnotatorsRenderer = memo((props: SdocAnnotatorsRendererProps) => {
+  if ("sdocId" in props) {
+    return <SdocAnnotatorsRendererWithoutData sdocId={props.sdocId} />;
   } else {
-    return <>Nothing to show :(</>;
+    return <SdocAnnotatorsRendererWithData annotators={props.annotators} />;
   }
 });
 
