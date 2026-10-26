@@ -1,6 +1,8 @@
 import { useOpenConfirmationDialog } from "@core/notification";
 import { SearchViewLayout } from "@models/SearchViewLayout";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
+import { searchViewQueries } from "../api/searchViewQueries";
 import { EntityWorkspaceConfig } from "../types/EntityWorkspaceConfig";
 import {
   WorkspaceGroupConfig,
@@ -31,7 +33,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
 }: UseWorkspaceViewsParams<TColumns, TRow>) {
   const openConfirmationDialog = useOpenConfirmationDialog();
   const viewHooks = config.useSearchViews;
-  const viewsQuery = viewHooks.useGetViews(projectId);
+  const viewsQuery = useQuery(searchViewQueries.byProject<WorkspaceView<TColumns>>(config.entityType, projectId));
   const createView = viewHooks.useCreateView();
   const updateView = viewHooks.useUpdateView();
   const { mutate: reorderViewOrder } = viewHooks.useReorderViews(projectId);
@@ -40,10 +42,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
   const [activeViewId, setActiveViewId] = useState<number>();
 
   const views = useMemo(
-    () =>
-      [...((viewsQuery.data ?? []) as WorkspaceView<TColumns>[])].sort(
-        (left, right) => left.position - right.position || left.id - right.id,
-      ),
+    () => [...(viewsQuery.data ?? [])].sort((left, right) => left.position - right.position || left.id - right.id),
     [viewsQuery.data],
   );
   const activeView = views.find((view) => view.id === activeViewId);
