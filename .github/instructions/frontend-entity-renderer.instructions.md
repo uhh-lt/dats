@@ -105,11 +105,20 @@ function TagContext({ tag }: { tag: TagRead }) {
 - Context that loads data: `CircularProgress size={20}` while loading, `Typography color="error"` on error.
 - Sentence lists: `Stack component="ol" spacing={1} sx={{ my: 0, pl: 3 }}` with one `Typography component="li"` per sentence.
 
-### Variations
+### Kinds of renderers
 
-- **Annotation renderers** (span, sentence, bbox) use `AnnotationRendererSharedProps` from `@core/annotation`. `WithData` destructures `expandable`, `expandMaxHeight`, `expandButtonPosition` explicitly, passes them to `ExpandableRenderer`, and spreads the rest into `AnnotationSummaryRow`.
-- **List renderers** (`SdocTagsRenderer`, `SdocAnnotatorsRenderer`) take `sdocId?` or the list, render the entity renderer per item, and show `Nothing to show :(` when both are missing. They do not use `ExpandableRenderer`.
-- **Composite renderers** combine other renderers or values without their own `ExpandableRenderer`: `SdocFolderRenderer` (picks `FolderRenderer` or `FolderRootRenderer`), `SdocMetadataRenderer` (value by meta type), `AttachedObjectRenderer` (switch over `AttachedObjectType`). They still use `memo` and the same loading/error output.
+All kinds follow the rules above (`memo`, the loading/error output, only the dispatcher exported, the input as id or Read DTO).
+
+| Kind       | Renderers                                                                                 | `ExpandableRenderer`                                              |
+| ---------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Entity     | tag, code, sdoc, memo, folder, user, project, span / sentence / bbox annotation           | its own, around the summary                                       |
+| Delegating | `SdocFolderRenderer` (folder or root), `AttachedObjectRenderer` (by `AttachedObjectType`) | none of its own; passes the expand props to the renderer it picks |
+| List       | `SdocTagsRenderer`, `SdocAnnotatorsRenderer`                                              | none; one entity renderer per item                                |
+| Value      | `SdocMetadataRenderer`                                                                    | none (a value has no context)                                     |
+
+- **Annotation renderers** (span, sentence, bbox) are entity renderers whose summary is the shared `AnnotationSummaryRow` from `@core/annotation`, with `AnnotationRendererSharedProps`. `WithData` names the summary flags, passes them to `AnnotationSummaryRow` and spreads the expand props into `ExpandableRenderer`, like every other entity renderer. The link takes the project from the route params, so annotation renderers are only used inside a project page.
+- **List renderers** take `{ sdocId } | { tagIds }` (`{ annotators }`): loaded by the document or given as ids.
+- **`AttachedObjectRenderer`** takes the memo's reference, `attachedObjectType` and `attachedObjectId`, and renders the matching entity renderer by id.
 
 ### Enforced by ESLint
 
