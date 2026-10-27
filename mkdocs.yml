@@ -53,6 +53,7 @@ nav:
       - Analysis:
           - feature-guides/analysis/index.md
           - Annotation Tables: feature-guides/analysis/annotation-tables.md
+          - Annotator Agreement: feature-guides/analysis/agreement-analysis.md
           - Code Frequency: feature-guides/analysis/code-frequency-analysis.md
           - Concept Over Time Analysis: feature-guides/analysis/concept-over-time-analysis.md
           - Timeline Analysis: feature-guides/analysis/timeline-analysis.md
