@@ -6,11 +6,11 @@
 #    paths that exist on the host daemon.
 # 2. A shared Ray model cache, mounted into all runners at /ray_cache and
 #    reused by sibling Ray containers spawned by CI jobs.
-# 3. A shared uv cache, mounted into all runners at /home/runner/.cache/uv so
-#    Python dependencies are downloaded/built once and reused by all runners.
+#
+# Each runner keeps its uv cache inside its work directory (see compose.yml).
 #
 # Usage:
-#   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR / RAY_CACHE_HOST_DIR / UV_CACHE_HOST_DIR from .env
+#   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR / RAY_CACHE_HOST_DIR from .env
 #   ./setup-folders.sh --recreate      # delete all managed directories first, then recreate them
 
 set -euo pipefail
@@ -25,7 +25,7 @@ for arg in "$@"; do
 	fi
 done
 
-# Load .env if present (for RUNNER_WORK_BASE_DIR, RAY_CACHE_HOST_DIR, UV_CACHE_HOST_DIR)
+# Load .env if present (for RUNNER_WORK_BASE_DIR, RAY_CACHE_HOST_DIR)
 if [[ -f .env ]]; then
 	# shellcheck disable=SC1091
 	set -a && source .env && set +a
@@ -33,11 +33,10 @@ fi
 
 BASE_DIR="${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is not set. Copy .env.example to .env and configure it.}"
 RAY_CACHE="${RAY_CACHE_HOST_DIR:?RAY_CACHE_HOST_DIR is not set. Copy .env.example to .env and configure it.}"
-UV_CACHE="${UV_CACHE_HOST_DIR:?UV_CACHE_HOST_DIR is not set. Copy .env.example to .env and configure it.}"
 
 if [[ "${RECREATE}" -eq 1 ]]; then
 	echo "Recreating directories — deleting existing content..."
-	for dir in "${BASE_DIR}" "${RAY_CACHE}" "${UV_CACHE}"; do
+	for dir in "${BASE_DIR}" "${RAY_CACHE}"; do
 		if [[ -d "${dir}" ]]; then
 			echo "  removing: ${dir}"
 			rm -rf "${dir}"
@@ -76,19 +75,8 @@ else
 fi
 chown -R "${RUNNER_UID}:${RUNNER_GID}" "${RAY_CACHE}"
 
-echo "Creating shared uv cache: ${UV_CACHE}"
-if [[ -d "${UV_CACHE}" ]]; then
-	echo "  exists:  ${UV_CACHE}"
-else
-	mkdir -p "${UV_CACHE}"
-	echo "  created: ${UV_CACHE}"
-fi
-chown -R "${RUNNER_UID}:${RUNNER_GID}" "${UV_CACHE}"
-
 echo "Done. Directory layout:"
 echo "Worker directories:"
 ls -la "${BASE_DIR}"
 echo "Ray cache:"
 ls -la "${RAY_CACHE}"
-echo "uv cache:"
-ls -la "${UV_CACHE}"
