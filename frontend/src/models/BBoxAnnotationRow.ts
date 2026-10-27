@@ -49,4 +49,16 @@ export type BBoxAnnotationRow = {
    * The IDs of the Memos attached to the Annotation.
    */
   memo_ids: Array<number>;
+  /**
+   * Created timestamp of the BBoxAnnotation
+   */
+  created: string;
+  /**
+   * User of the BBoxAnnotation this one was copied from
+   */
+  source_user_id: number | null;
+  /**
+   * Code of the copied BBoxAnnotation at copy time
+   */
+  source_code_id: number | null;
 };

@@ -27,4 +27,8 @@ export type BBoxAnnotationCreate = {
    * SourceDocument the BBoxAnnotation refers to
    */
   sdoc_id: number;
+  /**
+   * BBoxAnnotation this one is copied from (e.g. accepted in the annotation comparison); records the provenance
+   */
+  source_annotation_id?: number | null;
 };

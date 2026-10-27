@@ -180,6 +180,8 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
         begin_token: annotation.begin_token,
         end_token: annotation.end_token,
         span_text: annotation.text,
+        // records the provenance of the copy
+        source_annotation_id: annotation.id,
       });
     },
     [createMutation],
@@ -214,6 +216,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       begin_token: anno.begin_token,
       end_token: anno.end_token,
       span_text: anno.text,
+      source_annotation_id: anno.id,
     }));
 
     createBulkMutation.mutate({ requestBody: toCreate });

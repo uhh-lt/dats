@@ -40,6 +40,18 @@ export type SentenceAnnotationRead = {
    */
   updated: string;
   /**
+   * SentenceAnnotation this one was copied from (provenance)
+   */
+  source_annotation_id: number | null;
+  /**
+   * User of the SentenceAnnotation this one was copied from
+   */
+  source_user_id: number | null;
+  /**
+   * Code of the copied SentenceAnnotation at copy time
+   */
+  source_code_id: number | null;
+  /**
    * Memo IDs attached to the SentenceAnnotation
    */
   memo_ids: Array<number>;

@@ -48,6 +48,18 @@ export type BBoxAnnotationRead = {
    */
   updated: string;
   /**
+   * BBoxAnnotation this one was copied from (provenance)
+   */
+  source_annotation_id: number | null;
+  /**
+   * User of the BBoxAnnotation this one was copied from
+   */
+  source_user_id: number | null;
+  /**
+   * Code of the copied BBoxAnnotation at copy time
+   */
+  source_code_id: number | null;
+  /**
    * Memo IDs attached to the BBoxAnnotation
    */
   memo_ids: Array<number>;

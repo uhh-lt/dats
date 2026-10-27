@@ -29,5 +29,9 @@ export function toPendingSpanAnnotation(
     project_id: projectId,
     group_ids: [],
     memo_ids: [],
+    // the server fills the source user and code of a copy
+    source_annotation_id: requestBody.source_annotation_id ?? null,
+    source_user_id: null,
+    source_code_id: null,
   };
 }

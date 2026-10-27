@@ -33,4 +33,16 @@ export type SentenceAnnotationRow = {
    * The IDs of the Memos attached to the Annotation.
    */
   memo_ids: Array<number>;
+  /**
+   * Created timestamp of the SentenceAnnotation
+   */
+  created: string;
+  /**
+   * User of the SentenceAnnotation this one was copied from
+   */
+  source_user_id: number | null;
+  /**
+   * Code of the copied SentenceAnnotation at copy time
+   */
+  source_code_id: number | null;
 };

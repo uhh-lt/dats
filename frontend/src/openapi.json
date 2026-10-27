@@ -8492,6 +8492,11 @@
             "type": "integer",
             "title": "Sdoc Id",
             "description": "SourceDocument the BBoxAnnotation refers to"
+          },
+          "source_annotation_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Annotation Id",
+            "description": "BBoxAnnotation this one is copied from (e.g. accepted in the annotation comparison); records the provenance"
           }
         },
         "type": "object",
@@ -8569,6 +8574,21 @@
             "title": "Updated",
             "description": "Updated timestamp of the BBoxAnnotation"
           },
+          "source_annotation_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Annotation Id",
+            "description": "BBoxAnnotation this one was copied from (provenance)"
+          },
+          "source_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source User Id",
+            "description": "User of the BBoxAnnotation this one was copied from"
+          },
+          "source_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Code Id",
+            "description": "Code of the copied BBoxAnnotation at copy time"
+          },
           "memo_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8589,6 +8609,9 @@
           "project_id",
           "created",
           "updated",
+          "source_annotation_id",
+          "source_user_id",
+          "source_code_id",
           "memo_ids"
         ],
         "title": "BBoxAnnotationRead"
@@ -8618,10 +8641,41 @@
             "type": "array",
             "title": "Memo Ids",
             "description": "The IDs of the Memos attached to the Annotation."
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the BBoxAnnotation"
+          },
+          "source_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source User Id",
+            "description": "User of the BBoxAnnotation this one was copied from"
+          },
+          "source_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Code Id",
+            "description": "Code of the copied BBoxAnnotation at copy time"
           }
         },
         "type": "object",
-        "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tag_ids", "memo_ids"],
+        "required": [
+          "id",
+          "x",
+          "y",
+          "width",
+          "height",
+          "url",
+          "code",
+          "user_id",
+          "sdoc",
+          "tag_ids",
+          "memo_ids",
+          "created",
+          "source_user_id",
+          "source_code_id"
+        ],
         "title": "BBoxAnnotationRow"
       },
       "BBoxAnnotationUpdate": {
@@ -8673,6 +8727,7 @@
         "enum": [
           "BB_CODE_ID_LIST_RECURSIVE",
           "BB_USER_ID",
+          "BB_SOURCE_USER_ID",
           "BB_MEMO_CONTENT",
           "BB_SOURCE_SOURCE_DOCUMENT_NAME",
           "BB_TAG_ID_LIST_RECURSIVE",
@@ -15026,6 +15081,7 @@
         "enum": [
           "SentAnno_CODE_ID_LIST_RECURSIVE",
           "SentAnno_USER_ID",
+          "SentAnno_SOURCE_USER_ID",
           "SentAnno_MEMO_CONTENT",
           "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME",
           "SentAnno_TAG_ID_LIST_RECURSIVE",
@@ -15084,6 +15140,11 @@
             "type": "integer",
             "title": "Sdoc Id",
             "description": "SourceDocument the SentenceAnnotation refers to"
+          },
+          "source_annotation_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Annotation Id",
+            "description": "SentenceAnnotation this one is copied from (e.g. accepted in the annotation comparison); records the provenance"
           }
         },
         "type": "object",
@@ -15269,6 +15330,21 @@
             "title": "Updated",
             "description": "Updated timestamp of the SentenceAnnotation"
           },
+          "source_annotation_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Annotation Id",
+            "description": "SentenceAnnotation this one was copied from (provenance)"
+          },
+          "source_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source User Id",
+            "description": "User of the SentenceAnnotation this one was copied from"
+          },
+          "source_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Code Id",
+            "description": "Code of the copied SentenceAnnotation at copy time"
+          },
           "memo_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -15287,6 +15363,9 @@
           "project_id",
           "created",
           "updated",
+          "source_annotation_id",
+          "source_user_id",
+          "source_code_id",
           "memo_ids"
         ],
         "title": "SentenceAnnotationRead"
@@ -15342,10 +15421,37 @@
             "type": "array",
             "title": "Memo Ids",
             "description": "The IDs of the Memos attached to the Annotation."
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SentenceAnnotation"
+          },
+          "source_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source User Id",
+            "description": "User of the SentenceAnnotation this one was copied from"
+          },
+          "source_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Code Id",
+            "description": "Code of the copied SentenceAnnotation at copy time"
           }
         },
         "type": "object",
-        "required": ["id", "text", "code", "user_id", "sdoc", "tag_ids", "memo_ids"],
+        "required": [
+          "id",
+          "text",
+          "code",
+          "user_id",
+          "sdoc",
+          "tag_ids",
+          "memo_ids",
+          "created",
+          "source_user_id",
+          "source_code_id"
+        ],
         "title": "SentenceAnnotationRow"
       },
       "SentenceAnnotationUpdate": {
@@ -16224,6 +16330,11 @@
             "type": "integer",
             "title": "Sdoc Id",
             "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "source_annotation_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Annotation Id",
+            "description": "SpanAnnotation this one is copied from (e.g. accepted in the annotation comparison); records the provenance"
           }
         },
         "type": "object",
@@ -16443,6 +16554,21 @@
             "title": "Group Ids",
             "description": "The group ids this span annotations belongs to"
           },
+          "source_annotation_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Annotation Id",
+            "description": "SpanAnnotation this one was copied from (provenance)"
+          },
+          "source_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source User Id",
+            "description": "User of the SpanAnnotation this one was copied from"
+          },
+          "source_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Code Id",
+            "description": "Code of the copied SpanAnnotation at copy time"
+          },
           "memo_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -16465,6 +16591,9 @@
           "created",
           "updated",
           "group_ids",
+          "source_annotation_id",
+          "source_user_id",
+          "source_code_id",
           "memo_ids"
         ],
         "title": "SpanAnnotationRead"
@@ -16494,10 +16623,37 @@
             "type": "array",
             "title": "Memo Ids",
             "description": "The IDs of the Memos attached to the Annotation."
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the SpanAnnotation"
+          },
+          "source_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source User Id",
+            "description": "User of the SpanAnnotation this one was copied from"
+          },
+          "source_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Code Id",
+            "description": "Code of the copied SpanAnnotation at copy time"
           }
         },
         "type": "object",
-        "required": ["id", "span_text", "code", "user_id", "sdoc", "tag_ids", "memo_ids"],
+        "required": [
+          "id",
+          "span_text",
+          "code",
+          "user_id",
+          "sdoc",
+          "tag_ids",
+          "memo_ids",
+          "created",
+          "source_user_id",
+          "source_code_id"
+        ],
         "title": "SpanAnnotationRow"
       },
       "SpanAnnotationUpdate": {
@@ -16587,6 +16743,7 @@
           "SP_SPAN_TEXT",
           "SP_CODE_ID_LIST_RECURSIVE",
           "SP_USER_ID",
+          "SP_SOURCE_USER_ID",
           "SP_MEMO_CONTENT",
           "SP_SOURCE_SOURCE_DOCUMENT_NAME",
           "SP_TAG_ID_LIST_RECURSIVE",
