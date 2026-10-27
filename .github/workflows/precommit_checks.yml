@@ -1,5 +1,7 @@
 # Runs all repository-wide pre-commit formatting, linting, and static-analysis checks.
 # It runs for every pull request and every push to main.
+# Only the components (backend, frontend, ray) that the pull request or push changed
+# are installed and checked; a change to the hooks, the justfile or bin/ checks all.
 name: precommit-checks
 on:
   push:
@@ -16,13 +18,67 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7
+      - name: Detect changed components
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          # The changed files; empty if they are unknown (e.g. a force push), which checks all
+          changed=""
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            git fetch --depth=1 origin "${BASE_REF}"
+            changed="$(git diff --name-only FETCH_HEAD HEAD)"
+          elif git fetch --depth=1 origin "${BEFORE_SHA}"; then
+            changed="$(git diff --name-only "${BEFORE_SHA}" HEAD)"
+          fi
+
+          all=false
+          if [ -z "${changed}" ] || grep -qE '^(\.pre-commit-config\.yaml|justfile|bin/|\.github/workflows/precommit_checks\.yml)' <<<"${changed}"; then
+            all=true
+          fi
+
+          skip=()
+          for component in backend frontend ray; do
+            if [ "${all}" = true ] || grep -q "^${component}/" <<<"${changed}"; then
+              echo "${component}=true" >>"$GITHUB_OUTPUT"
+              continue
+            fi
+            echo "${component}=false" >>"$GITHUB_OUTPUT"
+            # The hook ids of a component contain its name (see .pre-commit-config.yaml)
+            while read -r hook; do
+              skip+=("${hook}")
+            done < <(grep -oE "id: [a-z-]*-${component}[a-z-]*" .pre-commit-config.yaml | cut -d' ' -f2)
+          done
+
+          # format-repo formats the files outside the components with the frontend's prettier
+          outside="$(grep -vE '^(backend|frontend|ray|tools)/' <<<"${changed}" || true)"
+          if [ "${all}" = true ] || grep -qE '\.([jt]sx?|json|ya?ml|md|css|html)$' <<<"${outside}"; then
+            echo "prettier=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "prettier=false" >>"$GITHUB_OUTPUT"
+            skip+=(format-repo)
+          fi
+
+          echo "skip=$(IFS=,; echo "${skip[*]}")" >>"$GITHUB_OUTPUT"
+          echo "Changed files:"
+          echo "${changed:-<unknown, checking all>}"
+          echo "Skipped hooks: ${skip[*]:-<none>}"
       - name: Install Frontend Dependencies
+        if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.prettier == 'true'
         run: just install frontend
       - name: Install Backend Dependencies
+        if: steps.changes.outputs.backend == 'true'
         run: just install backend
       - name: Install Ray Dependencies
+        if: steps.changes.outputs.ray == 'true'
         run: just install ray
       - name: Run pre-commit
+        env:
+          SKIP: ${{ steps.changes.outputs.skip }}
         run: |
           uv tool install pre-commit
           just precommit

@@ -3,6 +3,10 @@
 #   2. lint        (catch bugs/style after formatting)
 #   3. typecheck   (whole-project; slowest, runs last)
 #   4. everything else (generic file hygiene, shell formatting)
+#
+# The id of a component's hook contains the component name (`-backend`, `-frontend`,
+# `-ray`, e.g. `lint-backend-crud`): CI (.github/workflows/precommit_checks.yml)
+# skips the hooks of the components a pull request does not change by their id.
 repos:
   # --- 1. Format -------------------------------------------------------------
   - repo: local
