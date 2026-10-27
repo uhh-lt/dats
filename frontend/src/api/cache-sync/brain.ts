@@ -21,6 +21,7 @@ import { tagRecommendationQueries } from "@features/tag-recommendations/api/tagR
 import { timelineAnalysisQueries } from "@features/timeline-analysis/api/timelineAnalysisQueries";
 import { whiteboardQueries } from "@features/whiteboard/api/whiteboardQueries";
 import type { ApiKeyRead } from "@models/ApiKeyRead";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import type { ClusterRead } from "@models/ClusterRead";
 import type { DATSEvent } from "@models/datsEvents";
 import type { FolderRead } from "@models/FolderRead";
@@ -40,6 +41,7 @@ import { handleJobUpdate } from "./_utils/jobCacheUtils";
 import {
   appendMemo,
   invalidateAttachedObjectMemoIds,
+  invalidateCopiedAnnotationMemos,
   invalidateMemoRecents,
   invalidateMemoWorkspace,
   removeMemo,
@@ -356,6 +358,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       setSingle(spanAnnotationQueries.byId(anno.id).queryKey, anno);
       appendListItem(spanAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
       queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(anno.code_id).queryKey });
+      invalidateCopiedAnnotationMemos(AttachedObjectType.SPAN_ANNOTATION, [anno]);
       break;
     }
     case "SPAN_ANNOTATION_CREATED_BATCH": {
@@ -367,6 +370,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       new Set(annos.map((anno) => anno.code_id)).forEach((codeId) => {
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.byUserCode(codeId).queryKey });
       });
+      invalidateCopiedAnnotationMemos(AttachedObjectType.SPAN_ANNOTATION, annos);
       break;
     }
     case "SPAN_ANNOTATION_UPDATED": {
@@ -411,6 +415,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       setSingle(bboxAnnotationQueries.byId(anno.id).queryKey, anno);
       appendListItem(bboxAnnotationQueries.bySdoc(anno.sdoc_id, anno.user_id).queryKey, anno);
       queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.byUserCode(anno.code_id).queryKey });
+      invalidateCopiedAnnotationMemos(AttachedObjectType.BBOX_ANNOTATION, [anno]);
       break;
     }
     case "BBOX_ANNOTATION_UPDATED": {
@@ -456,6 +461,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       const anno = event.payload;
       setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
       upsertSentenceAnnotation(anno);
+      invalidateCopiedAnnotationMemos(AttachedObjectType.SENTENCE_ANNOTATION, [anno]);
       break;
     }
     case "SENTENCE_ANNOTATION_CREATED_BATCH":
@@ -463,6 +469,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
         setSingle(sentenceAnnotationQueries.byId(anno.id).queryKey, anno);
         upsertSentenceAnnotation(anno);
       });
+      invalidateCopiedAnnotationMemos(AttachedObjectType.SENTENCE_ANNOTATION, event.payload);
       break;
     case "SENTENCE_ANNOTATION_UPDATED": {
       const anno = event.payload;

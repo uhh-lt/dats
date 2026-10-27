@@ -31,4 +31,8 @@ export type SpanAnnotationCreate = {
    * SourceDocument the SpanAnnotation refers to
    */
   sdoc_id: number;
+  /**
+   * SpanAnnotation this one is copied from (e.g. accepted in the annotation comparison); records the provenance
+   */
+  source_annotation_id?: number | null;
 };
