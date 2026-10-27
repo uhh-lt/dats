@@ -2,12 +2,14 @@
 # Create (or prepare) a git worktree with its own isolated DATS dev stack.
 #
 # Usage:
-#   worktree-up.sh <branch> [base]   create ../<repo>.worktrees/<slug> on <branch>, then set it up
-#   worktree-up.sh                   set up the current, already existing linked worktree
+#   worktree-up.sh [--no-services] <branch> [base]   create ../<repo>.worktrees/<slug> on <branch>, then set it up
+#   worktree-up.sh [--no-services]                   set up the current, already existing linked worktree
 #
 # Steps: env files cloned from the main checkout (own compose project + port block),
 # folders, dependencies, then the backing services (postgres, redis, elasticsearch,
 # weaviate, lighttpd) are started and verified. Fails loudly if any step fails.
+# --no-services stops after the dependencies. Running it again in a worktree that has
+# its env files already keeps them and installs the dependencies and starts the services.
 #
 # Port prefixes are claimed in a shared directory (see DATS_WORKTREE_CLAIMS_DIR) under a
 # machine-wide lock, so developers sharing this machine never get the same prefix, even
@@ -26,6 +28,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 MAIN_CHECKOUT="$(git -C "${DATS_ROOT}" worktree list --porcelain | sed -n '1s/^worktree //p')"
 SOURCE="${DATS_ENV_SOURCE:-${MAIN_CHECKOUT}}"
 PORT_RANGE="${DATS_WORKTREE_PORT_RANGE:-200-299}"
+
+NO_SERVICES=0
+args=()
+for arg in "$@"; do
+	case "${arg}" in
+	--no-services) NO_SERVICES=1 ;;
+	*) args+=("${arg}") ;;
+	esac
+done
+set -- "${args[@]+"${args[@]}"}"
 
 slugify() {
 	local slug
@@ -94,23 +106,31 @@ else
 		echo "error: run this inside a linked worktree, or pass a branch name." >&2
 		exit 1
 	fi
-	if [ -f "${TARGET}/docker/.env" ]; then
-		echo "error: ${TARGET}/docker/.env already exists; this worktree is already set up." >&2
-		exit 1
-	fi
 	SLUG="$(slugify "$(basename "${TARGET}")")"
 fi
 
-PREFIX="$(allocate_prefix)"
-"${DATS_ROOT}/bin/setup/setup-worktree-envs.sh" \
-	--source "${SOURCE}" --target "${TARGET}" --slug "${SLUG}" --prefix "${PREFIX}"
-(umask 000 && printf '%s\n' "${TARGET}" >"${DATS_CLAIMS_DIR}/${PREFIX}")
+if [ -f "${TARGET}/docker/.env" ]; then
+	echo "${TARGET} has its env files already; keeping them."
+	PREFIX="$(sed -n 's/^API_EXPOSED=\([0-9]\{3\}\)[0-9]\{2\}$/\1/p' "${TARGET}/docker/.env")"
+else
+	PREFIX="$(allocate_prefix)"
+	"${DATS_ROOT}/bin/setup/setup-worktree-envs.sh" \
+		--source "${SOURCE}" --target "${TARGET}" --slug "${SLUG}" --prefix "${PREFIX}"
+	(umask 000 && printf '%s\n' "${TARGET}" >"${DATS_CLAIMS_DIR}/${PREFIX}")
+fi
 exec 9>&-
 
 cd "${TARGET}"
 ./bin/setup/setup-folders.sh --development
 (cd backend && uv sync)
 (cd frontend && npm ci)
+
+if [ "${NO_SERVICES}" -eq 1 ]; then
+	echo
+	echo "Worktree ready without services: ${TARGET}"
+	echo "  start the services later with: just worktree-up"
+	exit 0
+fi
 
 # Backing services only; ray, vLLM and docling are shared hosted services.
 (

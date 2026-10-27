@@ -186,14 +186,11 @@ release version:
 
 # --- 8. Worktrees ---------------------------------------------------------------
 
-[arg("branch", help="Branch to create a worktree for; omit inside an existing linked worktree to set it up in place")]
-[arg("base", help="Optional base ref for a new branch (default: HEAD)")]
+[arg("args", help="[--no-services] [branch] [base]: branch to create a worktree for (omit inside a linked worktree to set it up in place); --no-services installs the dependencies without starting the stack")]
 [doc("Create an isolated worktree with its own env, ports and docker stack, and start the stack")]
 [group("8. Worktrees")]
-worktree-up branch="" base="":
-    if [ -z "$1" ]; then ./bin/dev/worktree-up.sh
-    elif [ -z "${2:-}" ]; then ./bin/dev/worktree-up.sh "$1"
-    else ./bin/dev/worktree-up.sh "$1" "$2"; fi
+worktree-up *args:
+    ./bin/dev/worktree-up.sh "$@"
 
 [arg("args", help="Optional branch (omit inside a linked worktree) and --force to discard uncommitted or unpushed work")]
 [doc("Stop a worktree's servers and docker stack (deleting its volumes) and remove the worktree")]

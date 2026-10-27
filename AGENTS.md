@@ -26,7 +26,7 @@ Run `just --list` to see all available commands.
 | `just precommit`                                      | Run all pre-commit hooks over all files                            |
 | `just update-api`                                     | Regenerate the frontend API client from the running backend        |
 | `just alembic migrate\|check\|revision "msg"`         | Database migrations                                                |
-| `just worktree-up [branch]`                           | Create/set up a worktree with its own isolated dev stack           |
+| `just worktree-up [--no-services] [branch]`           | Create/set up a worktree with its own isolated dev stack           |
 | `just worktree-down [branch] [--force]`               | Remove a worktree, its docker stack and volumes                    |
 
 ## Architecture
@@ -53,6 +53,8 @@ Ports follow a prefix scheme: `<port_prefix>00` = frontend, `<port_prefix>20` = 
 Each worktree has its own isolated dev stack (own compose project, own port block, own databases). Ray, vLLM and Docling are shared hosted services and are never started locally.
 
 - First thing in a fresh worktree: run `just worktree-up` (inside an existing linked worktree) or `just worktree-up <branch>` (from the main checkout, creates the worktree). It clones the env files from the main checkout, installs dependencies and starts and verifies postgres, redis, elasticsearch and weaviate. Do not run any other command (tests, dev servers, migrations) before it succeeded.
+- If the task needs no running stack (docs, CI, lint and typecheck only), run `just worktree-up --no-services` instead: it installs the dependencies without starting any services. Run `just worktree-up` later to start them.
+- Never skip the pre-commit hooks (`git commit --no-verify`). They need the installed dependencies; if one is missing, install it (`just install <component>`) and commit again.
 - Use `just` recipes only. Never hardcode ports or hostnames: they live in this worktree's `docker/.env`, `backend/.env` and `frontend/.env`.
 - Only touch this worktree's compose project; never run docker commands against other projects or containers.
 - Run dev servers (`just dev ...`) in the background and check their logs; do not block on them.
