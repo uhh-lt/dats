@@ -22,11 +22,30 @@ class BBoxAnnotationCreateIntern(BBoxAnnotationBaseDTO):
     annotation_document_id: int = Field(
         description="AnnotationDocument the BBoxAnnotation refers to"
     )
+    source_annotation_id: int | None = Field(
+        default=None,
+        description="BBoxAnnotation this one was copied from (provenance)",
+    )
+    source_user_id: int | None = Field(
+        default=None,
+        description="User of the BBoxAnnotation this one was copied from",
+    )
+    source_code_id: int | None = Field(
+        default=None,
+        description="Code of the copied BBoxAnnotation at copy time",
+    )
 
 
 class BBoxAnnotationCreate(BBoxAnnotationBaseDTO):
     code_id: int = Field(description="Code the BBoxAnnotation refers to")
     sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
+    source_annotation_id: int | None = Field(
+        default=None,
+        description=(
+            "BBoxAnnotation this one is copied from (e.g. accepted in the "
+            "annotation comparison); records the provenance"
+        ),
+    )
 
 
 # Properties for updating
@@ -106,5 +125,14 @@ class BBoxAnnotationRead(BBoxAnnotationBaseDTO):
     project_id: int = Field(description="Project the BBoxAnnotation belongs to")
     created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
     updated: datetime = Field(description="Updated timestamp of the BBoxAnnotation")
+    source_annotation_id: int | None = Field(
+        description="BBoxAnnotation this one was copied from (provenance)",
+    )
+    source_user_id: int | None = Field(
+        description="User of the BBoxAnnotation this one was copied from",
+    )
+    source_code_id: int | None = Field(
+        description="Code of the copied BBoxAnnotation at copy time",
+    )
     memo_ids: list[int] = Field(description="Memo IDs attached to the BBoxAnnotation")
     model_config = ConfigDict(from_attributes=True)
