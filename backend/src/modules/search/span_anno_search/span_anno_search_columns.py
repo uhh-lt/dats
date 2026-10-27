@@ -1,3 +1,4 @@
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.types import String
@@ -21,7 +22,7 @@ from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
-from systems.search_system.grouping import GroupExpressions
+from systems.search_system.grouping import NONE_GROUP_KEY, GroupExpressions
 from systems.search_system.search_builder import SearchBuilder
 
 
@@ -29,6 +30,7 @@ class SpanColumns(str, AbstractColumns):
     SPAN_TEXT = "SP_SPAN_TEXT"
     CODE_ID_LIST_RECURSIVE = "SP_CODE_ID_LIST_RECURSIVE"
     USER_ID = "SP_USER_ID"
+    SOURCE_USER_ID = "SP_SOURCE_USER_ID"
     MEMO_CONTENT = "SP_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SP_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "SP_TAG_ID_LIST_RECURSIVE"
@@ -50,6 +52,8 @@ class SpanColumns(str, AbstractColumns):
                 return MemoORM.content
             case SpanColumns.USER_ID:
                 return AnnotationDocumentORM.user_id
+            case SpanColumns.SOURCE_USER_ID:
+                return SpanAnnotationORM.source_user_id
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
@@ -66,6 +70,8 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
             case SpanColumns.USER_ID:
+                return FilterOperator.ID
+            case SpanColumns.SOURCE_USER_ID:
                 return FilterOperator.ID
 
     def get_filter_value_type(self) -> FilterValueType:
@@ -84,6 +90,8 @@ class SpanColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case SpanColumns.USER_ID:
                 return FilterValueType.USER_ID
+            case SpanColumns.SOURCE_USER_ID:
+                return FilterValueType.USER_ID
 
     def get_sort_column(self, subquery_dict=None):
         match self:
@@ -101,6 +109,8 @@ class SpanColumns(str, AbstractColumns):
                 return MemoORM.content
             case SpanColumns.USER_ID:
                 return UserORM.last_name
+            case SpanColumns.SOURCE_USER_ID:
+                return None
 
     def get_label(self) -> str:
         match self:
@@ -118,6 +128,8 @@ class SpanColumns(str, AbstractColumns):
                 return "Memo content"
             case SpanColumns.USER_ID:
                 return "User"
+            case SpanColumns.SOURCE_USER_ID:
+                return "Accepted from"
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -202,6 +214,7 @@ class SpanColumns(str, AbstractColumns):
         return self in {
             SpanColumns.CODE_ID_LIST_RECURSIVE,
             SpanColumns.USER_ID,
+            SpanColumns.SOURCE_USER_ID,
             SpanColumns.SOURCE_DOCUMENT_NAME,
         }
 
@@ -220,6 +233,20 @@ class SpanColumns(str, AbstractColumns):
                 return GroupExpressions(
                     key=cast(AnnotationDocumentORM.user_id, String),
                     label=UserORM.email,
+                )
+            case SpanColumns.SOURCE_USER_ID:
+                # copies are labeled with their source user, the others form
+                # their own group
+                source_user_email = (
+                    select(UserORM.email)
+                    .where(UserORM.id == SpanAnnotationORM.source_user_id)
+                    .scalar_subquery()
+                )
+                return GroupExpressions(
+                    key=func.coalesce(
+                        cast(SpanAnnotationORM.source_user_id, String), NONE_GROUP_KEY
+                    ),
+                    label=func.coalesce(source_user_email, "Not accepted"),
                 )
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return GroupExpressions(
@@ -242,7 +269,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
-            case SpanColumns.USER_ID:
+            case SpanColumns.USER_ID | SpanColumns.SOURCE_USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
                 return [user.email for user in users]
             case _:
@@ -266,7 +293,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
-            case SpanColumns.USER_ID:
+            case SpanColumns.USER_ID | SpanColumns.SOURCE_USER_ID:
                 result = crud_user.read_by_emails(db, emails=names)
                 return [user.id for user in result]
             case _:

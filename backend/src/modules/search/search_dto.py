@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field, model_validator
@@ -83,6 +84,13 @@ class SpanAnnotationRow(BaseModel):
     memo_ids: list[int] = Field(
         description="The IDs of the Memos attached to the Annotation."
     )
+    created: datetime = Field(description="Created timestamp of the SpanAnnotation")
+    source_user_id: int | None = Field(
+        description="User of the SpanAnnotation this one was copied from"
+    )
+    source_code_id: int | None = Field(
+        description="Code of the copied SpanAnnotation at copy time"
+    )
 
 
 class SentenceAnnotationRow(BaseModel):
@@ -96,6 +104,13 @@ class SentenceAnnotationRow(BaseModel):
     tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
     memo_ids: list[int] = Field(
         description="The IDs of the Memos attached to the Annotation."
+    )
+    created: datetime = Field(description="Created timestamp of the SentenceAnnotation")
+    source_user_id: int | None = Field(
+        description="User of the SentenceAnnotation this one was copied from"
+    )
+    source_code_id: int | None = Field(
+        description="Code of the copied SentenceAnnotation at copy time"
     )
 
 
@@ -114,6 +129,13 @@ class BBoxAnnotationRow(BaseModel):
     tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
     memo_ids: list[int] = Field(
         description="The IDs of the Memos attached to the Annotation."
+    )
+    created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
+    source_user_id: int | None = Field(
+        description="User of the BBoxAnnotation this one was copied from"
+    )
+    source_code_id: int | None = Field(
+        description="Code of the copied BBoxAnnotation at copy time"
     )
 
 
