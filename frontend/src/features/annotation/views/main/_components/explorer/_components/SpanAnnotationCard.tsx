@@ -1,3 +1,4 @@
+import { AnnotationIdChip } from "@core/annotation";
 import { CodeRenderer } from "@core/code";
 import { MemoIndicator } from "@core/memo";
 import { UserRenderer } from "@core/user";
@@ -15,6 +16,7 @@ export function SpanAnnotationCard({ annotation, code, onClick, cardProps }: Ann
         title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
         action={
           <Stack direction="row" alignItems="center">
+            <AnnotationIdChip annotationId={annotation.id} sx={{ mr: 0.5 }} />
             <MemoIndicator
               memoIds={annotation.memo_ids}
               attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}

@@ -1,3 +1,4 @@
+import { AnnotationIdChip } from "@core/annotation";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import { MemoIndicator } from "@core/memo";
@@ -30,6 +31,7 @@ export const BBoxAnnotationCard = memo(
           title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
           action={
             <Stack direction="row" alignItems="center">
+              <AnnotationIdChip annotationId={annotation.id} sx={{ mr: 0.5 }} />
               <MemoIndicator
                 memoIds={annotation.memo_ids}
                 attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}

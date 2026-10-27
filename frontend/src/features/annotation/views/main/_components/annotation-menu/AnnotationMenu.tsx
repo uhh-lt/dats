@@ -1,5 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
+import { AnnotationIdChip } from "@core/annotation";
 import { CodeHooks } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -415,6 +416,7 @@ function CodeSelectorListItem({
         <ListItem>
           <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
           <ListItemText primary={code.data.name} />
+          {annotation.id > 0 && <AnnotationIdChip annotationId={annotation.id} sx={{ mr: 1 }} />}
           <MemoCreateOrSelectMenu
             attachedObjectType={getMemoAttachedObjectType(annotation)}
             attachedObjectId={annotation.id}
