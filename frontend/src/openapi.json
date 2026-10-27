@@ -2,6 +2,70 @@
   "openapi": "3.1.0",
   "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.12.1" },
   "paths": {
+    "/agreement/compute": {
+      "post": {
+        "tags": ["agreement"],
+        "summary": "Compare the annotations of two annotators: scores, confusion matrix and segments.",
+        "operationId": "compute_agreement",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgreementParams" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgreementResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/agreement/export_counts": {
+      "post": {
+        "tags": ["agreement"],
+        "summary": "Export the raw agreement counts (TP, FP, FN) per document and code as CSV.",
+        "operationId": "export_agreement_counts",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgreementParams" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "title": "Response Agreement-Export Agreement Counts" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/analysis/code_frequencies": {
       "post": {
         "tags": ["analysis"],
@@ -8042,6 +8106,281 @@
         "type": "object",
         "required": ["perspectives_job_type"],
         "title": "AddMissingDocsToAspectParams"
+      },
+      "AgreementCodeScore": {
+        "properties": {
+          "true_positives": {
+            "type": "integer",
+            "title": "True Positives",
+            "description": "Units that carry the code in the reference and in the comparison"
+          },
+          "false_positives": {
+            "type": "integer",
+            "title": "False Positives",
+            "description": "Units that carry the code in the comparison only"
+          },
+          "false_negatives": {
+            "type": "integer",
+            "title": "False Negatives",
+            "description": "Units that carry the code in the reference only"
+          },
+          "precision": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Precision",
+            "description": "TP / (TP + FP), null if there are no positive predictions"
+          },
+          "recall": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Recall",
+            "description": "TP / (TP + FN), null if the reference has no positives"
+          },
+          "f1": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "F1",
+            "description": "2 TP / (2 TP + FP + FN), null if all counts are zero"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "ID of the Code the scores refer to" }
+        },
+        "type": "object",
+        "required": ["true_positives", "false_positives", "false_negatives", "precision", "recall", "f1", "code_id"],
+        "title": "AgreementCodeScore"
+      },
+      "AgreementMode": {
+        "type": "string",
+        "enum": ["sentence", "span_strict", "span_word"],
+        "title": "AgreementMode",
+        "description": "How the annotations of two annotators are split into scoring units."
+      },
+      "AgreementParams": {
+        "properties": {
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the SourceDocuments to compare"
+          },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Code Ids",
+            "description": "IDs of the Codes to compare. Annotations with other codes are ignored. The order defines the order of the scores and the confusion matrix."
+          },
+          "reference_user_id": {
+            "type": "integer",
+            "title": "Reference User Id",
+            "description": "ID of the reference annotator (gold standard)"
+          },
+          "compared_user_id": {
+            "type": "integer",
+            "title": "Compared User Id",
+            "description": "ID of the annotator compared with the reference"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/AgreementMode",
+            "description": "How the annotations are split into scoring units"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "code_ids", "reference_user_id", "compared_user_id", "mode"],
+        "title": "AgreementParams"
+      },
+      "AgreementResult": {
+        "properties": {
+          "mode": { "$ref": "#/components/schemas/AgreementMode", "description": "The scoring mode of the result" },
+          "reference_user_id": {
+            "type": "integer",
+            "title": "Reference User Id",
+            "description": "ID of the reference annotator"
+          },
+          "compared_user_id": {
+            "type": "integer",
+            "title": "Compared User Id",
+            "description": "ID of the compared annotator"
+          },
+          "num_units": {
+            "type": "integer",
+            "title": "Num Units",
+            "description": "Number of units that carry a code on at least one side"
+          },
+          "total": {
+            "$ref": "#/components/schemas/AgreementScore",
+            "description": "Scores over all codes (micro average: the counts are summed)"
+          },
+          "code_scores": {
+            "items": { "$ref": "#/components/schemas/AgreementCodeScore" },
+            "type": "array",
+            "title": "Code Scores",
+            "description": "Scores per code, in the order of the requested codes"
+          },
+          "confusion_matrix_code_ids": {
+            "items": { "anyOf": [{ "type": "integer" }, { "type": "null" }] },
+            "type": "array",
+            "title": "Confusion Matrix Code Ids",
+            "description": "Code IDs labeling the rows and columns of the confusion matrix. The last entry is null and stands for 'no code'."
+          },
+          "confusion_matrix": {
+            "items": { "items": { "type": "integer" }, "type": "array" },
+            "type": "array",
+            "title": "Confusion Matrix",
+            "description": "Confusion matrix: cell [i][j] counts the units that carry code i in the reference and code j in the comparison. A unit with several codes is counted in every combination of them."
+          },
+          "segments": {
+            "items": { "$ref": "#/components/schemas/AgreementSegment" },
+            "type": "array",
+            "title": "Segments",
+            "description": "All segments, agreeing and disagreeing, sorted by document and position"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "reference_user_id",
+          "compared_user_id",
+          "num_units",
+          "total",
+          "code_scores",
+          "confusion_matrix_code_ids",
+          "confusion_matrix",
+          "segments"
+        ],
+        "title": "AgreementResult"
+      },
+      "AgreementScore": {
+        "properties": {
+          "true_positives": {
+            "type": "integer",
+            "title": "True Positives",
+            "description": "Units that carry the code in the reference and in the comparison"
+          },
+          "false_positives": {
+            "type": "integer",
+            "title": "False Positives",
+            "description": "Units that carry the code in the comparison only"
+          },
+          "false_negatives": {
+            "type": "integer",
+            "title": "False Negatives",
+            "description": "Units that carry the code in the reference only"
+          },
+          "precision": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Precision",
+            "description": "TP / (TP + FP), null if there are no positive predictions"
+          },
+          "recall": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Recall",
+            "description": "TP / (TP + FN), null if the reference has no positives"
+          },
+          "f1": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "F1",
+            "description": "2 TP / (2 TP + FP + FN), null if all counts are zero"
+          }
+        },
+        "type": "object",
+        "required": ["true_positives", "false_positives", "false_negatives", "precision", "recall", "f1"],
+        "title": "AgreementScore"
+      },
+      "AgreementSegment": {
+        "properties": {
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "ID of the SourceDocument of the segment"
+          },
+          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the segment in characters" },
+          "end": { "type": "integer", "title": "End", "description": "End of the segment in characters (exclusive)" },
+          "begin_token": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Begin Token",
+            "description": "Begin of the segment in tokens (span modes only)"
+          },
+          "end_token": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "End Token",
+            "description": "End of the segment in tokens, exclusive (span modes only)"
+          },
+          "sentence_id_start": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Sentence Id Start",
+            "description": "First sentence of the segment (sentence mode only)"
+          },
+          "sentence_id_end": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Sentence Id End",
+            "description": "Last sentence of the segment, inclusive (sentence mode only)"
+          },
+          "num_units": {
+            "type": "integer",
+            "title": "Num Units",
+            "description": "Number of units (words, spans, sentences)"
+          },
+          "text": { "type": "string", "title": "Text", "description": "Text of the segment" },
+          "reference_code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Reference Code Ids",
+            "description": "Codes the reference annotator assigned to the segment"
+          },
+          "compared_code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Compared Code Ids",
+            "description": "Codes the compared annotator assigned to the segment"
+          },
+          "true_positive_code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "True Positive Code Ids",
+            "description": "Codes assigned by both"
+          },
+          "false_negative_code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "False Negative Code Ids",
+            "description": "Codes assigned by the reference annotator only"
+          },
+          "false_positive_code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "False Positive Code Ids",
+            "description": "Codes assigned by the compared annotator only"
+          },
+          "reference_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Reference Annotation Ids",
+            "description": "IDs of the reference annotator's annotations in the segment"
+          },
+          "compared_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Compared Annotation Ids",
+            "description": "IDs of the compared annotator's annotations in the segment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sdoc_id",
+          "begin",
+          "end",
+          "begin_token",
+          "end_token",
+          "sentence_id_start",
+          "sentence_id_end",
+          "num_units",
+          "text",
+          "reference_code_ids",
+          "compared_code_ids",
+          "true_positive_code_ids",
+          "false_negative_code_ids",
+          "false_positive_code_ids",
+          "reference_annotation_ids",
+          "compared_annotation_ids"
+        ],
+        "title": "AgreementSegment",
+        "description": "A stretch of consecutive units of one document with the same codes on both sides.\n\nIn the strict span mode, every segment is exactly one span. In the word and\nsentence modes, neighboring words or sentences are merged as long as both\nannotators assign them the same codes."
       },
       "AnnoscalingConfirmSuggest": {
         "properties": {
