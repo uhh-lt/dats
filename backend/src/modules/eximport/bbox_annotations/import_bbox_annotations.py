@@ -8,6 +8,9 @@ from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from modules.eximport.annotation_provenance_utils import (
+    import_annotation_provenance,
+)
 from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportCollection,
     BBoxAnnotationExportSchema,
@@ -120,6 +123,7 @@ def import_bbox_annotations_to_proj(
 
     # Everything is fine, prepare the creation (finding / creating annotation documents)
     create_dtos: list[BBoxAnnotationCreateIntern] = []
+    created_annotations: list[BBoxAnnotationExportSchema] = []
     for user_email, annotations in user_email2annos.items():
         user = project_user_emails[user_email]
 
@@ -135,6 +139,7 @@ def import_bbox_annotations_to_proj(
                 db=db, user_id=user.id, sdoc_id=sdoc_id
             ).id
 
+        created_annotations.extend(annotations)
         create_dtos.extend(
             BBoxAnnotationCreateIntern(
                 uuid=annotation.uuid,
@@ -155,6 +160,13 @@ def import_bbox_annotations_to_proj(
     created_annos = crud_bbox_anno.create_multi(
         db=db,
         create_dtos=create_dtos,
+    )
+    import_annotation_provenance(
+        db=db,
+        crud=crud_bbox_anno,
+        project_id=project_id,
+        provenances=created_annotations,
+        annotations=created_annos,
     )
     imported_anno_ids = [anno.id for anno in created_annos]
 

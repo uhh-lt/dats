@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from modules.eximport.annotation_provenance_utils import (
+    export_annotation_provenance,
+)
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
@@ -53,7 +56,7 @@ def __export_span_annotations(
         raise NoDataToExportError("No span annotations to export.")
 
     export_data = __generate_export_df_for_span_annotations(
-        span_annotations=span_annotations
+        db=db, span_annotations=span_annotations
     )
     return fsr.write_df_to_temp_file(
         df=export_data,
@@ -62,17 +65,22 @@ def __export_span_annotations(
 
 
 def __generate_export_df_for_span_annotations(
+    db: Session,
     span_annotations: list[SpanAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(span_annotations)} Span Annotations ...")
 
     annotation_export_items = []
-    for span in span_annotations:
+    provenances = export_annotation_provenance(
+        db=db, crud=crud_span_anno, annotations=span_annotations
+    )
+    for span, provenance in zip(span_annotations, provenances):
         sdoc = span.annotation_document.source_document
         user = span.annotation_document.user
 
         annotation_export_items.append(
             SpanAnnotationExportSchema(
+                **provenance.model_dump(),
                 uuid=span.uuid,
                 sdoc_name=sdoc.filename,
                 user_email=user.email,

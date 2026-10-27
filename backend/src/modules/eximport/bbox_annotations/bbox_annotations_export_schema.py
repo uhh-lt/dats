@@ -1,8 +1,12 @@
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
+from modules.eximport.annotation_provenance_utils import (
+    AnnotationProvenanceExportSchema,
+)
 
-class BBoxAnnotationExportSchema(BaseModel):
+
+class BBoxAnnotationExportSchema(AnnotationProvenanceExportSchema):
     """Schema definition for bbox annotation export/import operations."""
 
     uuid: str = Field(description="UUID of the bbox annotation")
