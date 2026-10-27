@@ -36,7 +36,7 @@ GITHUB_PAT=ghp_YourSuperSecretTokenHere
 
 ### 3. Prepare the host directories
 
-Three kinds of host directories are needed:
+Two kinds of host directories are needed:
 
 - **Runner work directories** (`RUNNER_WORK_BASE_DIR/runner-XX`) — each runner's
   `_work` is bind-mounted from the host so that Docker-out-of-Docker bind
@@ -45,18 +45,15 @@ Three kinds of host directories are needed:
 - **Shared Ray cache** (`RAY_CACHE_HOST_DIR`) — mounted into all runners at
   `/ray_cache` and reused by sibling Ray containers spawned by CI jobs, so
   model downloads persist across jobs and runners.
-- **Shared uv cache** (`UV_CACHE_HOST_DIR`) — mounted into all runners at
-  `/home/runner/.cache/uv`, so Python dependencies are downloaded/built once
-  and reused by all runners.
 
-Create all three with:
+Create both with:
 
 ```bash
 ./setup-folders.sh
 ```
 
-The script reads `RUNNER_WORK_BASE_DIR`, `RAY_CACHE_HOST_DIR`, and
-`UV_CACHE_HOST_DIR` from `.env`, creates the directories, and sets ownership
+The script reads `RUNNER_WORK_BASE_DIR` and `RAY_CACHE_HOST_DIR` from `.env`,
+creates the directories, and sets ownership
 to uid/gid 1000 (the container's `runner` user). It may need `sudo` if the
 base directory is outside your home:
 
@@ -96,7 +93,7 @@ After starting the fleet, verify your runners are registered and online:
 Each runner is named after its container hostname: `dats-runner-01`, `dats-runner-02`, etc.
 
 !!! warning "CI Compatibility"
-The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). The CI's `prepare-env` step extracts these digits to compute port prefixes (`501`, `502`) and Compose project names. This ensures multiple runners can execute jobs concurrently without port or container conflicts.
+The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). The CI's `prepare-env` step extracts these digits to compute port prefixes (`301`, `302`) and Compose project names. This ensures multiple runners can execute jobs concurrently without port or container conflicts.
 
 ## Configuration Reference
 
@@ -106,7 +103,6 @@ The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). Th
 | `GITHUB_REPO`          | Repository name                                      | —             | Yes      |
 | `GITHUB_PAT`           | Personal Access Token with `repo` scope              | —             | Yes      |
 | `RAY_CACHE_HOST_DIR`   | Shared Ray model cache on the host                   | —             | Yes      |
-| `UV_CACHE_HOST_DIR`    | Shared uv (Python) cache on the host                 | —             | Yes      |
 | `RUNNER_WORK_BASE_DIR` | Host base dir for runner work dirs (one subdir each) | —             | Yes      |
 | `RUNNER_GPU_DEVICE_ID` | Single GPU index or UUID for runner containers (CDI) | `0`           | No       |
 | `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping             | `dats-action` | No       |
@@ -121,18 +117,21 @@ Each runner gets a unique identity from its hostname (`dats-runner-01`, `dats-ru
 
 | Runner name      | Port prefix | Compose project                | Example API port |
 | ---------------- | ----------- | ------------------------------ | ---------------- |
-| `dats-runner-01` | `501`       | `action-runner-dats-runner-01` | `50120`          |
-| `dats-runner-02` | `502`       | `action-runner-dats-runner-02` | `50220`          |
+| `dats-runner-01` | `301`       | `action-runner-dats-runner-01` | `30120`          |
+| `dats-runner-02` | `302`       | `action-runner-dats-runner-02` | `30220`          |
 
-The CI's `prepare-env` step extracts the two digits, builds the port prefix as `5<digits>`, and passes it to `bin/setup/setup-envs.sh`, which rewrites every port in the generated `.env` files.
+The CI's `prepare-env` step extracts the two digits, builds the port prefix as `3<digits>`, and passes it to `bin/setup/setup-envs.sh`, which rewrites every port in the generated `.env` files.
 
 ### Shared Resources
 
 - **Runner work dirs** (`$RUNNER_WORK_BASE_DIR/runner-XX`) — host-mounted `_work` directories; each runner's CI checkouts and compose bind mounts live here
 - **Ray cache** (`$RAY_CACHE_HOST_DIR`) — mounted into all runners at `/ray_cache`; shared model downloads persist across jobs and runners
-- **uv cache** (`$UV_CACHE_HOST_DIR`) — mounted into all runners at `/home/runner/.cache/uv`; Python dependencies are downloaded/built once and shared
 - **GPU** — Ray jobs pin `RAY_DEVICE_IDS=1`; only one Ray job should run at a time per machine
 - **Hosted services** — LLM, embedding, and Docling endpoints point at shared infrastructure
+
+### Per-runner uv cache
+
+Each runner keeps its uv cache in its own work directory (`UV_CACHE_DIR=/actions-runner/_work/.cache/uv`, i.e. `$RUNNER_WORK_BASE_DIR/runner-XX/.cache/uv` on the host). Every job starts from a clean checkout without a `.venv`, so `just install` rebuilds the virtual environments each time. uv hardlinks the packages from its cache into a `.venv`, which only works within one mount: a cache in a separate bind mount (even of the same host filesystem) makes uv copy every package, 6+ GB per venv and job, and saturates the disks when several runners work at once. A cache per runner costs some disk space and one download per runner, and keeps installs at a few seconds.
 
 ### Installed Tools
 

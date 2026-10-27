@@ -6,6 +6,10 @@ x-runner-common: &runner-base
     GITHUB_REPO: ${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
     GITHUB_PAT: ${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
     RAY_CACHE_HOST_DIR: ${RAY_CACHE_HOST_DIR:?RAY_CACHE_HOST_DIR is missing - copy .env.example to .env and set it}
+    # The uv cache lives in the runner's own _work mount, next to the checkouts:
+    # uv can only hardlink packages into a .venv on the same mount. From a
+    # separate cache mount it copies every package (6+ GB per venv, per job).
+    UV_CACHE_DIR: /actions-runner/_work/.cache/uv
   restart: unless-stopped
   security_opt:
     - no-new-privileges:true
@@ -33,7 +37,6 @@ services:
       HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-01
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${UV_CACHE_HOST_DIR:?}:/home/runner/.cache/uv
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-01:/actions-runner/_work
   runner-02:
     <<: *runner-base
@@ -43,7 +46,6 @@ services:
       HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-02
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${UV_CACHE_HOST_DIR:?}:/home/runner/.cache/uv
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-02:/actions-runner/_work
   runner-03:
     <<: *runner-base
@@ -53,7 +55,6 @@ services:
       HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-03
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${UV_CACHE_HOST_DIR:?}:/home/runner/.cache/uv
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-03:/actions-runner/_work
   runner-04:
     <<: *runner-base
@@ -63,5 +64,4 @@ services:
       HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-04
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${UV_CACHE_HOST_DIR:?}:/home/runner/.cache/uv
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-04:/actions-runner/_work
