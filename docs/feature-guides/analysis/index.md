@@ -23,6 +23,7 @@ The following tools can be accessed from this dashboard:
 - 📊 **[Code Frequency Analysis](./code-frequency-analysis.md):** Visualize how often specific codes from your Codebook have been applied across your corpus, filterable by modality and user.
 - 📈 **[Timeline Analysis](./timeline-analysis.md):** Track the evolution of custom concepts over time to uncover discursive shifts, narrative peaks, and historical trends.
 - ☁️ **[Word Frequency Analysis](./word-frequency-analysis.md):** Generate statistical word counts and customizable word clouds to quickly identify dominant vocabulary.
+- ⚖️ **[Annotator Agreement](./annotator-agreement.md):** Compare two annotators with precision, recall and F1 per code, a confusion matrix and a list of all disagreements.
 - 🗄️ **[Annotation Tables](./annotation-tables.md):** Access highly filterable, comprehensive lists of every Span, Sentence, and Bounding Box annotation in your project for bulk review and editing.
 - 🧠 **[Concept-over-Time Analysis (COTA)](./concept-over-time-analysis.md):** An advanced, AI-assisted extension of the Timeline tool that iteratively refines complex thematic concepts.
 
