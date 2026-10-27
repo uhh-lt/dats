@@ -1,6 +1,7 @@
 export * from "./api/codeHooks";
 export * from "./api/codeQueries";
 export * from "./CodeExportButton";
+export * from "./CodeSelector";
 export * from "./CodeTable";
 export * from "./CodeToggleEnabledButton";
 export * from "./CodeToggleVisibilityButton";
