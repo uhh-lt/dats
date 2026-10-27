@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,
@@ -12,13 +15,17 @@ from modules.llm_assistant.llm_assistant_enum import (
     StrategyType,
     TaskType,
 )
+from modules.llm_assistant.llm_assistant_exceptions import InvalidPromptPreviewError
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     LLMAssistantJobParameters,
+    LLMAssistantPromptPreview,
+    LLMAssistantPromptPreviewRequest,
     LLMAssistantPromptTemplates,
     SpecificStrategyParameters,
     StrategyInfo,
 )
+from modules.llm_assistant.prompt_template_service import PromptTemplateService
 from modules.llm_assistant.strategies.strategy_factory import (
     STRATEGIES_FOR_TASK_TYPE,
     build_strategy,
@@ -124,3 +131,59 @@ class LLMAssistantService(metaclass=SingletonMeta):
             example_ids=example_ids,
         )
         return list(strategy.lang2prompt_templates.values())
+
+    def preview_prompt(
+        self, db: Session, request: LLMAssistantPromptPreviewRequest
+    ) -> LLMAssistantPromptPreview:
+        """Render the prompts of one message of a document as the job would send them.
+
+        The code definitions come from the task parameters (or the project), so
+        unsaved template edits and experiment-scoped definitions can be previewed.
+        """
+        # 1) resolve the prompts and build the strategy that renders them
+        prompt_templates = PromptTemplateService().resolve_prompts(
+            db=db,
+            project_id=request.project_id,
+            task_type=request.task_type,
+            strategy_type=request.strategy_type,
+            source=request,
+        )
+        strategy = build_strategy(
+            db=db,
+            project_id=request.project_id,
+            is_fewshot=False,
+            task_type=request.task_type,
+            strategy_type=request.strategy_type,
+            params=request.specific_task_parameters,
+            strategy_params=request.specific_strategy_parameters,
+            prompt_templates=prompt_templates,
+        )
+
+        # 2) render the requested message in the document's language
+        if crud_sdoc.read(db=db, id=request.sdoc_id).project_id != request.project_id:
+            raise InvalidPromptPreviewError(
+                f"Document {request.sdoc_id} does not belong to project "
+                f"{request.project_id}."
+            )
+        sdoc_data = crud_sdoc_data.read(db=db, id=request.sdoc_id)
+        language = crud_sdoc_meta.read_by_sdoc_and_key(
+            db=db, sdoc_id=request.sdoc_id, key="language"
+        ).str_value
+        if language is None or language not in strategy.supported_languages:
+            raise InvalidPromptPreviewError(
+                f"Document {request.sdoc_id} has the unsupported language "
+                f"'{language}'. Supported languages are {strategy.supported_languages}."
+            )
+        message, num_messages = strategy.preview_prompt(
+            language=language,
+            sdoc_data=sdoc_data,
+            message_index=request.message_index,
+        )
+        return LLMAssistantPromptPreview(
+            sdoc_id=request.sdoc_id,
+            language=language,
+            message_index=request.message_index,
+            num_messages=num_messages,
+            system_prompt=message.system_prompt,
+            user_prompt=message.user_prompt,
+        )

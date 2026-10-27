@@ -12,6 +12,8 @@ from modules.llm_assistant.llm_assistant_enum import (
 from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     LLMAssistantJobParameters,
+    LLMAssistantPromptPreview,
+    LLMAssistantPromptPreviewRequest,
     LLMAssistantPromptTemplates,
     StrategyInfo,
 )
@@ -49,6 +51,22 @@ def create_prompt_templates(
         strategy_type=strategy_type,
         example_ids=example_ids,
     )
+
+
+@router.post(
+    "/preview_prompt",
+    response_model=LLMAssistantPromptPreview,
+    summary="Returns the filled system and user prompt for one sentence or chunk of a document",
+)
+def preview_prompt(
+    *,
+    db: Session = Depends(get_db_session),
+    request: LLMAssistantPromptPreviewRequest,
+    authz_user: AuthzUser = Depends(),
+) -> LLMAssistantPromptPreview:
+    authz_user.assert_in_project(request.project_id)
+
+    return llmas.preview_prompt(db=db, request=request)
 
 
 @router.post(

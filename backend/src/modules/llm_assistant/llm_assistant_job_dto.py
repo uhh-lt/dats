@@ -381,4 +381,41 @@ class StrategyInfo(BaseModel):
     )
 
 
+class LLMAssistantPromptPreviewRequest(LLMAssistantJobParameters, PromptTemplateSource):
+    """Renders the prompt templates for one message of one document."""
+
+    strategy_type: StrategyType = Field(
+        description="The strategy to render the prompts with"
+    )
+    specific_strategy_parameters: (
+        DefaultStrategyParams
+        | NERInlineTagStrategyParams
+        | FuzzyGroundingStrategyParams
+    ) = Field(
+        description="Specific parameters for the strategy w.r.t it's type",
+        discriminator="strategy_type",
+    )
+    sdoc_id: int = Field(description="ID of the source document to render")
+    message_index: int = Field(
+        description="Index of the message (sentence or chunk) within the document",
+        ge=0,
+        default=0,
+    )
+
+
+class LLMAssistantPromptPreview(BaseModel):
+    """The filled system and user prompt of one message of one document."""
+
+    sdoc_id: int = Field(description="ID of the rendered source document")
+    language: str = Field(description="Language of the document and of the prompts")
+    message_index: int = Field(
+        description="Index of the rendered message (sentence or chunk) within the document"
+    )
+    num_messages: int = Field(
+        description="Number of messages (sentences or chunks) the document is split into"
+    )
+    system_prompt: str = Field(description="The filled system prompt")
+    user_prompt: str = Field(description="The filled user prompt")
+
+
 # --- END OTHER DTOs ---
