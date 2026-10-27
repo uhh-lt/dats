@@ -56,6 +56,18 @@ export type SpanAnnotationRead = {
    */
   group_ids: Array<number>;
   /**
+   * SpanAnnotation this one was copied from (provenance)
+   */
+  source_annotation_id: number | null;
+  /**
+   * User of the SpanAnnotation this one was copied from
+   */
+  source_user_id: number | null;
+  /**
+   * Code of the copied SpanAnnotation at copy time
+   */
+  source_code_id: number | null;
+  /**
    * Memo IDs attached to the SpanAnnotation
    */
   memo_ids: Array<number>;

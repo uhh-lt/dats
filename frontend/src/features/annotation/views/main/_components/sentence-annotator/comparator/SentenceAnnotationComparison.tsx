@@ -31,6 +31,15 @@ const isSentenceAnnotation = (annotation: Annotation): annotation is SentenceAnn
   return "sentence_id_start" in annotation;
 };
 
+// copying the other user's annotation records it as the source (provenance)
+const toCopyCreate = (annotation: SentenceAnnotationRead): SentenceAnnotationCreate => ({
+  code_id: annotation.code_id,
+  sdoc_id: annotation.sdoc_id,
+  sentence_id_start: annotation.sentence_id_start,
+  sentence_id_end: annotation.sentence_id_end,
+  source_annotation_id: annotation.id,
+});
+
 export const SentenceAnnotationComparison = memo(
   ({ sdocData, virtualizerScrollElement, ...props }: SentenceAnnotationComparisonProps & BoxProps) => {
     // auth state
@@ -229,7 +238,7 @@ export const SentenceAnnotationComparison = memo(
       }
 
       createBulkMutation.mutate({
-        requestBody: newAnnotations,
+        requestBody: newAnnotations.map(toCopyCreate),
       });
     };
 
@@ -273,7 +282,7 @@ export const SentenceAnnotationComparison = memo(
     // single processing events
     const handleApplyAnnotation = (annotation: SentenceAnnotationRead) => {
       createMutation.mutate({
-        requestBody: annotation,
+        requestBody: toCopyCreate(annotation),
       });
     };
 

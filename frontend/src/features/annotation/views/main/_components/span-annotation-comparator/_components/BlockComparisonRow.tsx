@@ -200,6 +200,7 @@ export const BlockComparisonRow = memo(
                     {isAnnotationAllowedLeft ? (
                       <>
                         <IconButton
+                          aria-label="Accept annotation"
                           sx={{ p: 0.25 }}
                           disabled={item.isApplied || !item.annotationRight}
                           onClick={() => item.annotationRight && handleApplyAnnotation(item.annotationRight)}
@@ -210,6 +211,7 @@ export const BlockComparisonRow = memo(
                           <ArrowBackIcon fontSize="small" />
                         </IconButton>
                         <IconButton
+                          aria-label="Remove annotation"
                           sx={{ p: 0.25 }}
                           disabled={!item.annotationLeft}
                           onClick={() => item.annotationLeft && handleRevertAnnotation(item.annotationLeft)}
@@ -225,6 +227,7 @@ export const BlockComparisonRow = memo(
                       <>
                         {code && <SquareIcon style={{ color: code.color }} fontSize="small" />}
                         <IconButton
+                          aria-label="Remove annotation"
                           sx={{ p: 0.25 }}
                           disabled={!item.annotationRight}
                           onClick={() => item.annotationRight && handleRevertAnnotation(item.annotationRight)}
@@ -235,6 +238,7 @@ export const BlockComparisonRow = memo(
                           <ClearIcon fontSize="small" />
                         </IconButton>
                         <IconButton
+                          aria-label="Accept annotation"
                           sx={{ p: 0.25 }}
                           disabled={item.isApplied || !item.annotationLeft}
                           onClick={() => item.annotationLeft && handleApplyAnnotation(item.annotationLeft)}

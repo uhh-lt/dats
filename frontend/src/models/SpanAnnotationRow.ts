@@ -33,4 +33,16 @@ export type SpanAnnotationRow = {
    * The IDs of the Memos attached to the Annotation.
    */
   memo_ids: Array<number>;
+  /**
+   * Created timestamp of the SpanAnnotation
+   */
+  created: string;
+  /**
+   * User of the SpanAnnotation this one was copied from
+   */
+  source_user_id: number | null;
+  /**
+   * Code of the copied SpanAnnotation at copy time
+   */
+  source_code_id: number | null;
 };

@@ -395,6 +395,7 @@ function AnnotationApplyPart({
                     >
                       <Stack direction="row" alignItems="center" justifyContent="center">
                         <IconButton
+                          aria-label="Accept annotation"
                           sx={{ p: 0.5, ml: -0.5 }}
                           disabled={!!sameAnnotation}
                           onClick={() => onApplyAnnotation(annotation)}
@@ -405,6 +406,7 @@ function AnnotationApplyPart({
                           <ArrowBackIcon fontSize="small" />
                         </IconButton>
                         <IconButton
+                          aria-label="Remove annotation"
                           sx={{ p: 0.5 }}
                           disabled={!sameAnnotation}
                           onClick={() => onRevertAnnotation(sameAnnotation!)}
@@ -445,6 +447,7 @@ function AnnotationApplyPart({
                       <Stack key={key} direction="row" alignItems="center" justifyContent="center">
                         <SquareIcon style={{ color: code.color }} fontSize="small" />
                         <IconButton
+                          aria-label="Remove annotation"
                           sx={{ p: 0.5 }}
                           disabled={!sameAnnotation}
                           onClick={() => onRevertAnnotation(sameAnnotation!)}
@@ -455,6 +458,7 @@ function AnnotationApplyPart({
                           <ClearIcon fontSize="small" />
                         </IconButton>
                         <IconButton
+                          aria-label="Accept annotation"
                           sx={{ p: 0.5, ml: -0.5 }}
                           disabled={!!sameAnnotation}
                           onClick={() => onApplyAnnotation(annotation)}

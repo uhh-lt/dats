@@ -68,6 +68,27 @@ export function invalidateAttachedObjectMemoIds(
   }
 }
 
+/**
+ * A copied annotation (accepted from another annotation) gets copies of its source's memos inside the annotation
+ * create, which emits no MEMO_CREATED event. Its memo_ids already list the copies, so only the memo lists of the
+ * copies and the memo workspace need a refresh.
+ */
+export function invalidateCopiedAnnotationMemos(
+  attachedObjectType: AttachedObjectType,
+  annotations: { id: number; source_annotation_id: number | null; memo_ids: number[] }[],
+): void {
+  const copiesWithMemos = annotations.filter(
+    (annotation) => annotation.source_annotation_id !== null && annotation.memo_ids.length > 0,
+  );
+  if (copiesWithMemos.length === 0) return;
+  copiesWithMemos.forEach((annotation) =>
+    queryClient.invalidateQueries({
+      queryKey: memoQueries.byAttachedObject(attachedObjectType, annotation.id).queryKey,
+    }),
+  );
+  invalidateMemoWorkspace();
+}
+
 export function writeMemo(memo: MemoRead): void {
   setSingle(memoQueries.byId(memo.id).queryKey, memo);
   queryClient.setQueryData(
