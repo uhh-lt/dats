@@ -24,6 +24,7 @@ The following tools can be accessed from this dashboard:
 - 📈 **[Timeline Analysis](./timeline-analysis.md):** Track the evolution of custom concepts over time to uncover discursive shifts, narrative peaks, and historical trends.
 - ☁️ **[Word Frequency Analysis](./word-frequency-analysis.md):** Generate statistical word counts and customizable word clouds to quickly identify dominant vocabulary.
 - 🗄️ **[Annotation Tables](./annotation-tables.md):** Access highly filterable, comprehensive lists of every Span, Sentence, and Bounding Box annotation in your project for bulk review and editing.
+- 🤝 **[Annotator Agreement](./annotator-agreement.md):** Measure inter-annotator agreement by comparing two annotators: per-code precision, recall and F1 scores, a confusion matrix, and a mismatch finder that lists every disagreement.
 - 🧠 **[Concept-over-Time Analysis (COTA)](./concept-over-time-analysis.md):** An advanced, AI-assisted extension of the Timeline tool that iteratively refines complex thematic concepts.
 
 _(Each of these tools is covered in detail in the following sections)._
