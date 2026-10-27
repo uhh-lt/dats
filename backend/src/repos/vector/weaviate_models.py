@@ -1,6 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar
 
 from pydantic import BaseModel
 from weaviate.types import UUID
@@ -14,7 +14,8 @@ class ObjectIdentifier(ABC, BaseModel):
     DO NOT include project_id in the identifier
     """
 
-    UUID_NAMESPACE: uuid.UUID = uuid.UUID(conf.api.uuid_namespace)
+    # ClassVar: not a model field, so it is not stored as a Weaviate property
+    UUID_NAMESPACE: ClassVar[uuid.UUID] = uuid.UUID(conf.api.uuid_namespace)
 
     def uuidv5(self) -> str:
         """
