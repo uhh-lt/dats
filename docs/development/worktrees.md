@@ -25,6 +25,8 @@ This creates the worktree in `../<repo>.worktrees/<branch-slug>` (reusing the br
 
 If a tool created the worktree for you (for example a coding agent harness), run `just worktree-up` without arguments inside it to set it up in place.
 
+Work that needs no running stack (documentation, CI, lint and typecheck) can skip step 4 with `just worktree-up --no-services`. Running `just worktree-up` later in the same worktree keeps its `.env` files and port block, and installs the dependencies and starts the services.
+
 When it finishes it prints the project name and the backend and frontend URLs. Start the servers with the usual `just dev backend`, `just dev worker` and `just dev frontend`; every `just` recipe uses the worktree's own configuration.
 
 ## Ports
@@ -59,7 +61,7 @@ This stops dev servers running in the worktree, runs `docker compose down -v` (d
 
 ## Resource usage
 
-Every worktree runs its own Elasticsearch and Weaviate, which take a few GB of RAM each. Plan for a handful of parallel worktrees and remove the ones you no longer need. Linting, type checking and frontend work do not need a running stack.
+Every worktree runs its own Elasticsearch and Weaviate, which take a few GB of RAM each. Plan for a handful of parallel worktrees and remove the ones you no longer need. Linting and type checking do not need a running stack: set those worktrees up with `just worktree-up --no-services`.
 
 ## Working with coding agents
 

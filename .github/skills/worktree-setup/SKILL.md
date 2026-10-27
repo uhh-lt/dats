@@ -23,11 +23,14 @@ just worktree-up <branch> [base]
 
 The recipe clones the `.env` files from the main checkout (secrets and hosted ray/vLLM/docling endpoints are inherited), assigns this worktree its own compose project and port block, installs dependencies, and starts and verifies postgres, redis, elasticsearch and weaviate. It exits non-zero if any step fails.
 
+If the task needs no running stack (docs, CI, lint and typecheck only), run `just worktree-up --no-services` instead. It does the same without starting any services. Running `just worktree-up` later in the same worktree keeps its env files and starts the services.
+
 Do not run tests, dev servers or migrations until it has succeeded. If it fails, read the error, fix the cause (for example a missing `.env` in the main checkout means the developer must run `just bootstrap` there first) and rerun. Do not work around it by editing ports by hand or touching other compose projects.
 
 ## Rules
 
 - Use `just` recipes only (`just test backend`, `just dev backend`, `just lint ...`).
+- Never skip the pre-commit hooks (`git commit --no-verify`). If a hook reports a missing dependency (for example `frontend/node_modules`), install it with `just install <component>` and commit again.
 - Never hardcode ports or hostnames. They are in `docker/.env`, `backend/.env` and `frontend/.env` of this worktree.
 - Only touch this worktree's compose project. Never run docker commands against other projects or containers.
 - Start dev servers (`just dev backend|worker|frontend`) in the background and check their logs instead of blocking on them.
