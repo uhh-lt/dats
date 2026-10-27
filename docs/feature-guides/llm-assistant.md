@@ -70,6 +70,24 @@ DATS automatically generates the complex instruction prompt that will be sent to
 
 - In this view, you can read the exact prompt (in English or German) that the AI will receive.
 - You can manually edit this text to add extra instructions, refine the definitions, or correct the example sentences before execution.
+- For the code-based tasks (Span Annotation and Sentence Annotation), the prompt contains a `<codes>` placeholder. It is automatically replaced with the names and descriptions of the codes you selected in Step 2, so you do not have to write them out yourself. Keep the placeholder in the prompt — without it, the AI does not learn which codes it may apply.
+
+#### Prompt Templates
+
+Prompts do not have to be written from scratch every time: they can be stored as reusable **Prompt Templates** of your project.
+
+- Click **Save as new template** to store the current prompts (of all languages) under a name you choose.
+- When a stored template is selected, **Save as new version** appends your edited prompts as the next version of that template. Older versions stay available, so you can always return to a prompt that worked well.
+- Use the dropdowns above the prompt to load a stored template and one of its versions instead of the generated prompts. A template belongs to one task and strategy, so the list only shows templates that fit your current configuration.
+- If you start the job from an unchanged stored version, the job list shows its template name and version. Prompts you edited are marked as _(edited, not saved)_ and are used for this run only — the stored template stays unchanged.
+
+#### Preview
+
+The **Preview** panel on the right shows exactly what the AI will receive:
+
+- Select one of the documents you chose for the job and step through its sentences or chunks with the arrow buttons.
+- The preview fills in all placeholders (the document text, the `<codes>` definitions, ...) and shows the final system and user prompt in the document's language.
+- Mistakes in the prompt (for example a missing `<codes>` placeholder) are reported here while you edit.
 
 ### Step 5: Wait (Background Processing)
 
