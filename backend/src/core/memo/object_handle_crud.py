@@ -1,6 +1,5 @@
-from psycopg2.errors import UniqueViolation
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
@@ -73,31 +72,47 @@ class CRUDObjectHandle(
 
     ### CREATE OPERATIONS ###
 
-    # check_crud: allow override-multi (a savepoint per handle returns the existing one on a unique violation)
-    def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
-        try:
-            with db.begin_nested():  # create a database savepoint
-                return super().create(db=db, create_dto=create_dto)
+    def create_multi(
+        self, db: Session, *, create_dtos: list[ObjectHandleCreate]
+    ) -> list[ObjectHandleORM]:
+        """
+        Create the object handles in one batch. An object has at most one handle, so
+        for an object that already has one, the existing handle is returned instead.
 
-        except IntegrityError as e:
-            # Flo: return existing OH when UC constraint fails
-            if isinstance(e.orig, UniqueViolation):
-                obj_id_key, obj_id_val = next(
-                    filter(
-                        lambda item: item[0] is not None and item[1] is not None,
-                        create_dto.model_dump().items(),
-                    ),
-                    (None, None),
-                )
+        Args:
+            create_dtos: The handles to create, each referring to one object.
 
-                if obj_id_key is not None and obj_id_val is not None:
-                    return self.read_by_attached_object_id(
-                        db=db, obj_id_key=obj_id_key, obj_id_val=obj_id_val
-                    )
-                raise e
-            else:
-                # Flo: Re-raise Exception since it's not a UC Violation
-                raise e
+        Returns:
+            The handles, in the order of `create_dtos`.
+        """
+        if not create_dtos:
+            return []
+
+        # 1) insert the handles, skipping the objects that already have one
+        rows = [create_dto.model_dump() for create_dto in create_dtos]
+        for i in range(0, len(rows), BATCH_SIZE):
+            db.execute(
+                insert(self.model)
+                .values(rows[i : i + BATCH_SIZE])
+                .on_conflict_do_nothing()
+            )
+
+        # 2) read the handles of all objects, grouped by the column of their type
+        object_keys = [self._attached_object_key(row) for row in rows]
+        object_ids_by_column: dict[str, list[int]] = {}
+        for column, object_id in dict.fromkeys(object_keys):
+            object_ids_by_column.setdefault(column, []).append(object_id)
+
+        handle_by_object_key: dict[tuple[str, int], ObjectHandleORM] = {}
+        for column, object_ids in object_ids_by_column.items():
+            for i in range(0, len(object_ids), BATCH_SIZE):
+                batch_ids = object_ids[i : i + BATCH_SIZE]
+                for db_obj in db.scalars(
+                    select(self.model).where(getattr(self.model, column).in_(batch_ids))
+                ):
+                    handle_by_object_key[(column, getattr(db_obj, column))] = db_obj
+
+        return [handle_by_object_key[object_key] for object_key in object_keys]
 
     ### READ OPERATIONS ###
 
@@ -190,6 +205,16 @@ class CRUDObjectHandle(
                 )
 
         raise KeyError(f"Unknown target_id: {target_id}!")
+
+    ### OTHER OPERATIONS ###
+
+    def _attached_object_key(self, row: dict[str, int | None]) -> tuple[str, int]:
+        """The column and id of the one object a handle row refers to."""
+        return next(
+            (column, object_id)
+            for column, object_id in row.items()
+            if object_id is not None
+        )
 
 
 crud_object_handle = CRUDObjectHandle(ObjectHandleORM)
