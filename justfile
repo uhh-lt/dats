@@ -6,6 +6,9 @@ set positional-arguments
 set default-script
 set script-interpreter := ["bash", "-eu", "-o", "pipefail"]
 
+# Without frontend/node_modules, npx would download unpinned tools instead of failing
+require_node_modules := 'if [ ! -d "' + justfile_directory() + '/frontend/node_modules" ]; then echo "error: frontend/node_modules is missing. Run: just install frontend" >&2; exit 1; fi'
+
 # --- 1. Bootstrap: install deps, generate .env, create folders -------------
 
 [arg("project_name", help="Docker Compose project name, e.g. dats")]
@@ -100,6 +103,7 @@ lint target *files:
           uv run python lint/check_core.py
         else uv run ruff check --fix "${rel[@]}"; fi ;;
       frontend)
+        {{ require_node_modules }}
         cd frontend
         if [ ${#rel[@]} -eq 0 ]; then npx eslint . --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs
         else npx eslint --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs "${rel[@]}"; fi ;;
@@ -127,10 +131,12 @@ format target *files:
         if [ ${#rel[@]} -eq 0 ]; then uv run ruff format src
         else uv run ruff format "${rel[@]}"; fi ;;
       frontend)
+        {{ require_node_modules }}
         cd frontend
         if [ ${#rel[@]} -eq 0 ]; then npx prettier --write --no-color --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore . | sed '/ (unchanged)$/d'
         else npx prettier --write --no-color --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore "${rel[@]}" | sed '/ (unchanged)$/d'; fi ;;
       repo)
+        {{ require_node_modules }}
         if [ ${#rel[@]} -eq 0 ]; then
           git ls-files -z | xargs -0 npx --prefix frontend prettier --write --no-color --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore | sed '/ (unchanged)$/d'
         else
@@ -146,7 +152,7 @@ typecheck target *args:
     target="$1"; shift
     case "$target" in
       backend)  cd backend && uv run pyright --project . "$@" ;;
-      frontend) cd frontend && npx tsc --noEmit "$@" ;;
+      frontend) {{ require_node_modules }}; cd frontend && npx tsc --noEmit "$@" ;;
       ray)      cd ray && uv run pyright --project . "$@" ;;
     esac
 
@@ -180,8 +186,8 @@ release version:
 
 # --- 8. Worktrees ---------------------------------------------------------------
 
-[arg("base", help="Optional base ref for a new branch (default: HEAD)")]
 [arg("branch", help="Branch to create a worktree for; omit inside an existing linked worktree to set it up in place")]
+[arg("base", help="Optional base ref for a new branch (default: HEAD)")]
 [doc("Create an isolated worktree with its own env, ports and docker stack, and start the stack")]
 [group("8. Worktrees")]
 worktree-up branch="" base="":
