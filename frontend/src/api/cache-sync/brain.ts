@@ -1,5 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { statisticsQueries } from "@api/statistics/statisticsQueries";
+import { agreementQueries } from "@core/agreement/api/agreementQueries";
 import { bboxAnnotationQueries } from "@core/bbox-annotation/api/bboxAnnotationQueries";
 import { codeQueries } from "@core/code/api/codeQueries";
 import { tableInfoQueries } from "@core/filter/api/tableInfoQueries";
@@ -64,6 +65,10 @@ export type DATSEventSource = "mutation" | "websocket";
  */
 export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void {
   void source;
+  // Agreement results are computed from span and sentence annotations.
+  if (event.type.startsWith("SPAN_ANNOTATION_") || event.type.startsWith("SENTENCE_ANNOTATION_")) {
+    queryClient.invalidateQueries({ queryKey: agreementQueries.computeScope() });
+  }
   switch (event.type) {
     // ── Jobs ──────────────────────────────────────────────────────────────
     case "JOB_UPDATED":

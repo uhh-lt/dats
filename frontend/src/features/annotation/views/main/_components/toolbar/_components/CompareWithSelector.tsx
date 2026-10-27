@@ -21,7 +21,15 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
 
   // global server state (react query)
   const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
-  const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
+  // the selected users are listed even without annotations in this document (e.g. after a deep link)
+  const userIds = Array.from(
+    new Set([
+      ...(user ? [user.id] : []),
+      ...(annotatorUserIds.data || []),
+      ...(visibleUserId !== undefined ? [visibleUserId] : []),
+      ...(compareWithUserId !== undefined ? [compareWithUserId] : []),
+    ]),
+  );
 
   // when no comparison is active, exclude the currently visible user (cannot compare with yourself)
   // when a comparison is active, keep all users to allow swapping

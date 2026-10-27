@@ -17,9 +17,11 @@ import { TextAnnotator } from "./_components/TextAnnotator";
 import { BBoxAnnotationExplorer, SentenceAnnotationExplorer, SpanAnnotationExplorer } from "./_components/explorer";
 import { SentenceAnnotationComparison, SentenceAnnotator } from "./_components/sentence-annotator";
 import { SpanAnnotationComparison } from "./_components/span-annotation-comparator";
+import { MismatchNavigator } from "./_components/MismatchNavigator";
 import { TextViewer } from "./_components/text-viewer";
 import { AnnotationToolbar } from "./_components/toolbar";
 import { AnnotationRouteAPI } from "./_hooks/annotationRouteAPI";
+import { useSyncAnnotationModeWithAgreement } from "./_hooks/useSyncAnnotationModeWithAgreement";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { AnnotationsActions } from "../../store/annotationsSlice";
 
@@ -124,6 +126,11 @@ const comparatorComponent = (
   },
 });
 
+// the doctypes and annotation modes for which comparatorComponent renders a comparator
+const hasComparator = (doctype: DocType, annotationMode: AnnotationMode) =>
+  (annotationMode === AnnotationMode.SentenceAnnotation && doctype !== DocType.IMAGE) ||
+  (annotationMode === AnnotationMode.Annotation && doctype === DocType.TEXT);
+
 const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMode, ReactElement>> => ({
   [DocType.TEXT]: {
     [AnnotationMode.Annotation]: <SpanAnnotationExplorer sdocId={sdocId} />,
@@ -152,6 +159,7 @@ export function AnnotationView() {
   const sdocId = AnnotationRouteAPI.useParams({ select: (params) => params.sdocId });
   const { compareWithUserId } = AnnotationRouteAPI.useSearch();
   const isCompareMode = compareWithUserId !== undefined;
+  useSyncAnnotationModeWithAgreement();
 
   // global client state (redux)
   const dispatch = useAppDispatch();
@@ -262,6 +270,9 @@ export function AnnotationView() {
                           mb: 2,
                         }}
                       />
+                      {isCompareMode && hasComparator(sdoc.doctype, annotationMode) && (
+                        <MismatchNavigator sdocId={sdoc.id} />
+                      )}
                       {isCompareMode
                         ? comparatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]
                         : annotatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]}

@@ -57,7 +57,7 @@ interface AgreementSegmentListProps {
 export function AgreementSegmentList({ result, codeIds }: AgreementSegmentListProps) {
   // global client state (URL)
   const navigate = AgreementAnalysisRouteAPI.useNavigate();
-  const { cellReferenceCodeId, cellComparedCodeId } = AgreementAnalysisRouteAPI.useSearch();
+  const { cellReferenceCodeId, cellComparedCodeId, tagIds } = AgreementAnalysisRouteAPI.useSearch();
   const [errorType, setErrorType] = useURLConnector(AgreementAnalysisRouteAPI, "errorType");
   const [filterCodeId, setFilterCodeId] = useURLConnector(AgreementAnalysisRouteAPI, "filterCodeId");
   const [filterSdocId, setFilterSdocId] = useURLConnector(AgreementAnalysisRouteAPI, "filterSdocId");
@@ -269,8 +269,11 @@ export function AgreementSegmentList({ result, codeIds }: AgreementSegmentListPr
                       result && (
                         <AgreementSegmentRow
                           segment={row.segment}
-                          referenceUserId={result.reference_user_id}
-                          comparedUserId={result.compared_user_id}
+                          result={result}
+                          codeIds={codeIds}
+                          tagIds={tagIds}
+                          errorType={errorType}
+                          filterCodeId={filterCodeId}
                         />
                       )
                     )}

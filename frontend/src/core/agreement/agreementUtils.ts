@@ -170,3 +170,23 @@ export function segmentsToCsv(segments: AgreementSegment[], context: SegmentsCsv
   ]);
   return [header, ...rows].map((row) => row.map(csvValue).join(",")).join("\n");
 }
+
+/** The scoring modes that the span comparator and the sentence comparator can show. */
+export const SPAN_AGREEMENT_MODES = [AgreementMode.SPAN_WORD, AgreementMode.SPAN_STRICT];
+export const SENTENCE_AGREEMENT_MODES = [AgreementMode.SENTENCE];
+
+/**
+ * The units a segment covers: tokens [start, end) in the span modes,
+ * sentences [start, end] (inclusive) in the sentence mode.
+ */
+export interface AgreementFocus {
+  start: number;
+  end: number;
+}
+
+export function segmentFocus(segment: AgreementSegment): AgreementFocus {
+  if (segment.sentence_id_start !== null && segment.sentence_id_end !== null) {
+    return { start: segment.sentence_id_start, end: segment.sentence_id_end };
+  }
+  return { start: segment.begin_token ?? 0, end: segment.end_token ?? 0 };
+}

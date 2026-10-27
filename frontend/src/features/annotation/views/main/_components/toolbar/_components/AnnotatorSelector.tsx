@@ -28,7 +28,15 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // global server state (react query)
   const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
-  const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
+  // the selected users are listed even without annotations in this document (e.g. after a deep link)
+  const userIds = Array.from(
+    new Set([
+      ...(user ? [user.id] : []),
+      ...(annotatorUserIds.data || []),
+      ...(visibleUserId !== undefined ? [visibleUserId] : []),
+      ...(compareWithUserId !== undefined ? [compareWithUserId] : []),
+    ]),
+  );
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number>) => {

@@ -1,7 +1,9 @@
 import { Icon } from "@components/icons";
+import { SegmentErrorType } from "@core/agreement";
 import { parseIdParam } from "@core/navigation";
 import { sdocQueries } from "@core/source-document";
 import { AnnotationView } from "@features/annotation";
+import { AgreementMode } from "@models/AgreementMode";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -12,6 +14,16 @@ const annotationSearchSchema = z.object({
   selectedAnnotationId: z.coerce.number().optional(),
   compareWithUserId: z.coerce.number().optional(),
   explorerTab: z.enum(["code", "annotation"]).default("code"),
+  // mismatch navigation in the comparison view (only set while in use): scoring mode,
+  // codes (all if unset), the documents by tags (current document only if unset),
+  // the focused segment (tokens [start, end) or sentences [start, end]) and the filters
+  agreementMode: z.nativeEnum(AgreementMode).optional(),
+  agreementCodeIds: z.array(z.coerce.number()).optional(),
+  agreementTagIds: z.array(z.coerce.number()).optional(),
+  agreementFocusStart: z.coerce.number().optional(),
+  agreementFocusEnd: z.coerce.number().optional(),
+  mismatchCodeId: z.coerce.number().optional(),
+  mismatchErrorType: z.nativeEnum(SegmentErrorType).optional(),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdocId")({

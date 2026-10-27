@@ -18,6 +18,7 @@ import { Annotation } from "../../../../../_types/Annotation";
 import { AnnotationsActions } from "../../../../../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
 import { useGetSentenceAnnotator } from "../_hooks/useGetSentenceAnnotator";
+import { useJumpToAgreementSentences } from "./_hooks/useJumpToAgreementSentences";
 import { DocumentSentence } from "./_components/DocumentSentence";
 import { DocumentSentenceHeader } from "./_components/DocumentSentenceHeader";
 import { isAnnotationSame } from "./_utils/comparisonUtils";
@@ -442,6 +443,9 @@ export const SentenceAnnotationComparison = memo(
 
     useJumpToSentenceAnnotation(selectedAnnotationId, virtualizer, allAnnotations, { block: "center" });
     useSentenceAnnotationHighlight(selectedAnnotationId);
+
+    // jump to & highlight the segment of the mismatch navigation
+    useJumpToAgreementSentences(virtualizer, virtualizerScrollElement);
 
     // rendering
     const numSentenceDigits = useMemo(() => Math.ceil(Math.log10(sdocData.sentences.length + 1)), [sdocData.sentences]);

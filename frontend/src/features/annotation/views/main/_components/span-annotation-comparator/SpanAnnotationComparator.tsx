@@ -21,6 +21,7 @@ import { AnnotationsActions } from "../../../../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../annotation-menu";
 import { BlockComparisonRow } from "./_components/BlockComparisonRow";
 import { useBlockPartition } from "./_hooks/useBlockPartition";
+import { useJumpToAgreementTokens } from "./_hooks/useJumpToAgreementTokens";
 
 // the header text is an h6; the user renderer's own Typography would reset it to body1
 const inheritHeaderFont = { "& .MuiTypography-root": { font: "inherit" } };
@@ -168,6 +169,10 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   // jump to & highlight the selected annotation
   useSpanAnnotationHighlight(selectedAnnotationId);
   useJumpToSpanAnnotation(selectedAnnotationId, { block: "center" });
+
+  // jump to & highlight the segment of the mismatch navigation
+  const getScrollContainer = useCallback(() => scrollContainerRef.current, []);
+  useJumpToAgreementTokens(virtualizer, renderBlocks, sentenceTokenIds, getScrollContainer);
 
   // Single annotation actions
   const handleApplyAnnotation = useCallback(

@@ -37,6 +37,19 @@ Sentences carry a `data-annotation-ids` attribute with space-separated IDs.
 }
 
 /*
+AGREEMENT FOCUS: useAgreementFocusHighlight.ts
+The segment focused by the mismatch navigation (MismatchNavigator.tsx) in the
+span and sentence comparators: its tokens or sentence rows on both sides.
+*/
+
+.agreement-focus {
+  /* an outline instead of a background: span colours would cover a background */
+  outline: 2px solid #ed6c02 !important;
+  outline-offset: -1px;
+  border-radius: 2px;
+}
+
+/*
 TOKEN: Token.tsx
 A token (.tok) consists of:
 - A group (.spangroup) of CodeIndicator(s) (for NER tags) -> CodeIndicator.tsx
