@@ -76,6 +76,11 @@ def find_span_annotations(
         )
         .add_entity(CodeORM)
         .add_entity(SourceDocumentORM)
+        .add_columns(
+            SpanAnnotationORM.created,
+            SpanAnnotationORM.source_user_id,
+            SpanAnnotationORM.source_code_id,
+        )
         .join(subquery, SpanAnnotationORM.id == subquery.c.id)
         .filter(SourceDocumentORM.project_id == request.project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
@@ -121,6 +126,9 @@ def find_span_annotations(
                 sdoc=SourceDocumentRead.model_validate(sdoc_orm),
                 tag_ids=[tag.id for tag in sdoc_orm.tags],
                 memo_ids=memo_ids_by_annotation.get(row[0], []),
+                created=row[5],
+                source_user_id=row[6],
+                source_code_id=row[7],
             )
         )
     return Page[SpanAnnotationRow](items=items, total_results=total_results)

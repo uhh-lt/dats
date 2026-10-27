@@ -66,16 +66,19 @@ GROUPABLE = {
     "span": {
         SpanColumns.CODE_ID_LIST_RECURSIVE,
         SpanColumns.USER_ID,
+        SpanColumns.SOURCE_USER_ID,
         SpanColumns.SOURCE_DOCUMENT_NAME,
     },
     "sentence": {
         SentAnnoColumns.CODE_ID_LIST_RECURSIVE,
         SentAnnoColumns.USER_ID,
+        SentAnnoColumns.SOURCE_USER_ID,
         SentAnnoColumns.SOURCE_DOCUMENT_NAME,
     },
     "bbox": {
         BBoxColumns.CODE_ID_LIST_RECURSIVE,
         BBoxColumns.USER_ID,
+        BBoxColumns.SOURCE_USER_ID,
         BBoxColumns.SOURCE_DOCUMENT_NAME,
     },
 }
