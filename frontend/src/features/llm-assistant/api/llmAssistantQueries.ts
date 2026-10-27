@@ -1,8 +1,9 @@
 import { createJobQueries } from "@core/job";
 import { LlmAssistantService } from "@api/services/LlmAssistantService";
 import { ApproachType } from "@models/ApproachType";
+import type { LLMAssistantPromptPreviewRequest } from "@models/LLMAssistantPromptPreviewRequest";
 import { TaskType } from "@models/TaskType";
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, skipToken } from "@tanstack/react-query";
 
 export interface ExistingAnnotationCountParams {
   taskType: TaskType | undefined;
@@ -17,6 +18,7 @@ export interface ExistingAnnotationCountParams {
  *   llmAssistantQueries.all()                         ["llmAssistant"]
  *   llmAssistantQueries.strategies(taskType)          ["llmAssistant", "strategies", taskType]
  *   llmAssistantQueries.existingAnnotationCount(...)  ["llmAssistant", "existingAnnotationCount", ...]
+ *   llmAssistantQueries.promptPreview(request)        ["llmAssistant", "promptPreview", request]
  *   llmAssistantQueries.job.byId(jobId)               ["llmAssistant", "job", "detail", jobId]
  *   llmAssistantQueries.job.byProject(projectId)      ["llmAssistant", "job", "project", projectId]
  */
@@ -48,6 +50,16 @@ export const llmAssistantQueries = {
               approachType,
               requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
             }),
+    }),
+
+  // the filled prompts of one message (sentence or chunk) of a document, rendered by the backend
+  promptPreviewScope: () => [...llmAssistantQueries.all(), "promptPreview"] as const,
+  promptPreview: (request: LLMAssistantPromptPreviewRequest | undefined) =>
+    queryOptions({
+      queryKey: [...llmAssistantQueries.promptPreviewScope(), request] as const,
+      queryFn: !request ? skipToken : () => LlmAssistantService.previewPrompt({ requestBody: request }),
+      retry: false,
+      placeholderData: keepPreviousData,
     }),
 
   // the background job of the LLM assistant

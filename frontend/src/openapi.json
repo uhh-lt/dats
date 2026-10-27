@@ -2291,6 +2291,32 @@
         }
       }
     },
+    "/llm_assistant/preview_prompt": {
+      "post": {
+        "tags": ["llm_assistant"],
+        "summary": "Returns the filled system and user prompt for one sentence or chunk of a document",
+        "operationId": "preview_prompt",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantPromptPreviewRequest" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantPromptPreview" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/llm_assistant/list_strategies": {
       "post": {
         "tags": ["llm_assistant"],
@@ -3565,6 +3591,200 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template": {
+      "put": {
+        "tags": ["prompt_template"],
+        "summary": "Creates a prompt template with its first version",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/prompt_template/{prompt_template_id}/version": {
+      "put": {
+        "tags": ["prompt_template"],
+        "summary": "Saves new prompts as the next immutable version of the prompt template",
+        "operationId": "create_version",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateVersionCreate" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/project/{project_id}": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the prompt templates of the project with all their versions",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PromptTemplateRead" },
+                  "title": "Response Prompt Template-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/version/{version_id}": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the prompt template version with the given ID",
+        "operationId": "get_version_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Version Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateVersionRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/{prompt_template_id}": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the prompt template with the given ID and all its versions",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["prompt_template"],
+        "summary": "Renames the prompt template (does not create a version)",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["prompt_template"],
+        "summary": "Removes the prompt template with all its versions",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8015,6 +8235,48 @@
         }
       }
     },
+    "PROMPT_TEMPLATE_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_prompt_template_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "PROMPT_TEMPLATE_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_prompt_template_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "PROMPT_TEMPLATE_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_prompt_template_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateDeletedEvent" } }
+            }
+          }
+        }
+      }
+    },
     "JOB_UPDATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -8136,6 +8398,14 @@
             "type": "array",
             "title": "Code Ids",
             "description": "IDs of the codes to use for the annotation"
+          },
+          "code_definitions": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/CodeDefinition" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Code Definitions",
+            "description": "Code definitions to render into the prompts instead of the project's current definitions of the codes (e.g. experiment-scoped drafts). If set, it contains exactly one definition per code in code_ids."
           },
           "delete_existing_annotations": {
             "type": "boolean",
@@ -10668,6 +10938,30 @@
         "required": ["payload"],
         "title": "CodeCreatedEvent"
       },
+      "CodeDefinition": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "ID of the project code this definition belongs to"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the code as shown to the LLM"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the code as shown to the LLM"
+          }
+        },
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "title": "CodeDefinition",
+        "description": "The definition of a code as it is rendered into a prompt."
+      },
       "CodeDeletedEvent": {
         "properties": {
           "type": { "type": "string", "const": "CODE_DELETED", "title": "Type", "default": "CODE_DELETED" },
@@ -11605,22 +11899,29 @@
       },
       "FewShotParams": {
         "properties": {
+          "prompts": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Prompts",
+            "description": "The prompt templates to use, one per supported language. Exactly one of prompts and prompt_template_version_id is set."
+          },
+          "prompt_template_version_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Prompt Template Version Id",
+            "description": "ID of the stored prompt template version to use. Exactly one of prompts and prompt_template_version_id is set."
+          },
           "approach_type": {
             "type": "string",
             "const": "LLM_FEW_SHOT",
             "title": "Approach Type",
             "description": "The approach of the LLM Assistant job"
           },
-          "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
-            "type": "array",
-            "title": "Prompts",
-            "description": "The prompt templates to use for the job"
-          },
           "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
         },
         "type": "object",
-        "required": ["approach_type", "prompts", "model"],
+        "required": ["approach_type", "model"],
         "title": "FewShotParams"
       },
       "FilterExpression_BBoxColumns_": {
@@ -12979,6 +13280,119 @@
         "type": "object",
         "required": ["project_id", "task_type", "specific_task_parameters"],
         "title": "LLMAssistantJobParameters"
+      },
+      "LLMAssistantPromptPreview": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the rendered source document" },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "Language of the document and of the prompts"
+          },
+          "message_index": {
+            "type": "integer",
+            "title": "Message Index",
+            "description": "Index of the rendered message (sentence or chunk) within the document"
+          },
+          "num_messages": {
+            "type": "integer",
+            "title": "Num Messages",
+            "description": "Number of messages (sentences or chunks) the document is split into"
+          },
+          "system_prompt": { "type": "string", "title": "System Prompt", "description": "The filled system prompt" },
+          "user_prompt": { "type": "string", "title": "User Prompt", "description": "The filled user prompt" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "language", "message_index", "num_messages", "system_prompt", "user_prompt"],
+        "title": "LLMAssistantPromptPreview",
+        "description": "The filled system and user prompt of one message of one document."
+      },
+      "LLMAssistantPromptPreviewRequest": {
+        "properties": {
+          "prompts": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Prompts",
+            "description": "The prompt templates to use, one per supported language. Exactly one of prompts and prompt_template_version_id is set."
+          },
+          "prompt_template_version_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Prompt Template Version Id",
+            "description": "ID of the stored prompt template version to use. Exactly one of prompts and prompt_template_version_id is set."
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType",
+            "description": "The type of the LLMAssistantJob (what to llm)"
+          },
+          "specific_task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
+            ],
+            "title": "Specific Task Parameters",
+            "description": "Specific parameters for the LLMAssistantJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "task_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
+                "TAGGING": "#/components/schemas/TaggingParams"
+              }
+            }
+          },
+          "strategy_type": {
+            "$ref": "#/components/schemas/StrategyType",
+            "description": "The strategy to render the prompts with"
+          },
+          "specific_strategy_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DefaultStrategyParams" },
+              { "$ref": "#/components/schemas/NERInlineTagStrategyParams" },
+              { "$ref": "#/components/schemas/FuzzyGroundingStrategyParams" }
+            ],
+            "title": "Specific Strategy Parameters",
+            "description": "Specific parameters for the strategy w.r.t it's type",
+            "discriminator": {
+              "propertyName": "strategy_type",
+              "mapping": {
+                "CONTEXT_ANCHORED_FUZZY_MATCHING": "#/components/schemas/FuzzyGroundingStrategyParams",
+                "METADATA_DEFAULT": "#/components/schemas/DefaultStrategyParams",
+                "NER_INLINE_TAGS": "#/components/schemas/NERInlineTagStrategyParams",
+                "SENTENCE_ANNOTATION_DEFAULT": "#/components/schemas/DefaultStrategyParams",
+                "TAGGING_DEFAULT": "#/components/schemas/DefaultStrategyParams"
+              }
+            }
+          },
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document to render" },
+          "message_index": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Message Index",
+            "description": "Index of the message (sentence or chunk) within the document",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "task_type",
+          "specific_task_parameters",
+          "strategy_type",
+          "specific_strategy_parameters",
+          "sdoc_id"
+        ],
+        "title": "LLMAssistantPromptPreviewRequest",
+        "description": "Renders the prompt templates for one message of one document."
       },
       "LLMAssistantPromptTemplates": {
         "properties": {
@@ -14371,6 +14785,174 @@
         "required": ["payload"],
         "title": "ProjectUsersLinkedEvent"
       },
+      "PromptTemplateCreate": {
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "title": "Name", "description": "Name of the prompt template" },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType",
+            "description": "The LLM assistant task of the template"
+          },
+          "strategy_type": {
+            "$ref": "#/components/schemas/StrategyType",
+            "description": "The strategy that renders the template"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the prompt template belongs to"
+          },
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The prompts of the first version, one per supported language"
+          }
+        },
+        "type": "object",
+        "required": ["name", "task_type", "strategy_type", "project_id", "prompts"],
+        "title": "PromptTemplateCreate"
+      },
+      "PromptTemplateCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROMPT_TEMPLATE_CREATED",
+            "title": "Type",
+            "default": "PROMPT_TEMPLATE_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/PromptTemplateRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "PromptTemplateCreatedEvent"
+      },
+      "PromptTemplateDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROMPT_TEMPLATE_DELETED",
+            "title": "Type",
+            "default": "PROMPT_TEMPLATE_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/PromptTemplateRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "PromptTemplateDeletedEvent"
+      },
+      "PromptTemplateRead": {
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "title": "Name", "description": "Name of the prompt template" },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType",
+            "description": "The LLM assistant task of the template"
+          },
+          "strategy_type": {
+            "$ref": "#/components/schemas/StrategyType",
+            "description": "The strategy that renders the template"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the prompt template" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the prompt template belongs to"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the prompt template"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the prompt template"
+          },
+          "versions": {
+            "items": { "$ref": "#/components/schemas/PromptTemplateVersionRead" },
+            "type": "array",
+            "title": "Versions",
+            "description": "All versions of the template, oldest first"
+          }
+        },
+        "type": "object",
+        "required": ["name", "task_type", "strategy_type", "id", "project_id", "created", "updated", "versions"],
+        "title": "PromptTemplateRead"
+      },
+      "PromptTemplateUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the prompt template"
+          }
+        },
+        "type": "object",
+        "title": "PromptTemplateUpdate"
+      },
+      "PromptTemplateUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROMPT_TEMPLATE_UPDATED",
+            "title": "Type",
+            "default": "PROMPT_TEMPLATE_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/PromptTemplateRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "PromptTemplateUpdatedEvent"
+      },
+      "PromptTemplateVersionCreate": {
+        "properties": {
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The system and user prompt of every supported language"
+          }
+        },
+        "type": "object",
+        "required": ["prompts"],
+        "title": "PromptTemplateVersionCreate"
+      },
+      "PromptTemplateVersionRead": {
+        "properties": {
+          "prompts": {
+            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
+            "type": "array",
+            "title": "Prompts",
+            "description": "The system and user prompt of every supported language"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the prompt template version" },
+          "prompt_template_id": {
+            "type": "integer",
+            "title": "Prompt Template Id",
+            "description": "ID of the prompt template the version belongs to"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Number of the version within its template (1, 2, 3, ...)"
+          },
+          "user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "User Id",
+            "description": "ID of the user who saved the version"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the version"
+          }
+        },
+        "type": "object",
+        "required": ["prompts", "id", "prompt_template_id", "version", "user_id", "created"],
+        "title": "PromptTemplateVersionRead"
+      },
       "PublicUserRead": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "ID of the User" },
@@ -15215,7 +15797,15 @@
             "items": { "type": "integer" },
             "type": "array",
             "title": "Code Ids",
-            "description": "IDs of the codes to use for the sentence annotation"
+            "description": "IDs of the codes to use for the annotation"
+          },
+          "code_definitions": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/CodeDefinition" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Code Definitions",
+            "description": "Code definitions to render into the prompts instead of the project's current definitions of the codes (e.g. experiment-scoped drafts). If set, it contains exactly one definition per code in code_ids."
           },
           "delete_existing_annotations": {
             "type": "boolean",
@@ -18097,22 +18687,29 @@
       },
       "ZeroShotParams": {
         "properties": {
+          "prompts": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Prompts",
+            "description": "The prompt templates to use, one per supported language. Exactly one of prompts and prompt_template_version_id is set."
+          },
+          "prompt_template_version_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Prompt Template Version Id",
+            "description": "ID of the stored prompt template version to use. Exactly one of prompts and prompt_template_version_id is set."
+          },
           "approach_type": {
             "type": "string",
             "const": "LLM_ZERO_SHOT",
             "title": "Approach Type",
             "description": "The approach of the LLM Assistant job"
           },
-          "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
-            "type": "array",
-            "title": "Prompts",
-            "description": "The prompt templates to use for the job"
-          },
           "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
         },
         "type": "object",
-        "required": ["approach_type", "prompts", "model"],
+        "required": ["approach_type", "model"],
         "title": "ZeroShotParams"
       }
     },

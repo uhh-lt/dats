@@ -15,6 +15,7 @@ import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
+import { promptTemplateQueries } from "@features/llm-assistant/api/promptTemplateQueries";
 import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
 import { apiKeyQueries } from "@features/profile/api/apiKeyQueries";
 import { tagRecommendationQueries } from "@features/tag-recommendations/api/tagRecommendationQueries";
@@ -169,6 +170,16 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
     case "COTA_DELETED":
       removeMapItem(cotaQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
+      break;
+
+    // ── Prompt templates ────────────────────────────────────────────────────
+    // A new version is an update of its template, whose payload lists all versions.
+    case "PROMPT_TEMPLATE_CREATED":
+    case "PROMPT_TEMPLATE_UPDATED":
+      upsertMapItem(promptTemplateQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      break;
+    case "PROMPT_TEMPLATE_DELETED":
+      removeMapItem(promptTemplateQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Folders ─────────────────────────────────────────────────────────────

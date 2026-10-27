@@ -9,6 +9,8 @@ import type { Body_llm_assistant_create_prompt_templates } from "@models/Body_ll
 import type { LLMAssistantJobInput } from "@models/LLMAssistantJobInput";
 import type { LLMAssistantJobParameters } from "@models/LLMAssistantJobParameters";
 import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
+import type { LLMAssistantPromptPreview } from "@models/LLMAssistantPromptPreview";
+import type { LLMAssistantPromptPreviewRequest } from "@models/LLMAssistantPromptPreviewRequest";
 import type { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
 import type { StrategyInfo } from "@models/StrategyInfo";
 import type { StrategyType } from "@models/StrategyType";
@@ -38,6 +40,26 @@ export class LlmAssistantService {
         approach_type: approachType,
         strategy_type: strategyType,
       },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the filled system and user prompt for one sentence or chunk of a document
+   * @returns LLMAssistantPromptPreview Successful Response
+   * @throws ApiError
+   */
+  public static previewPrompt({
+    requestBody,
+  }: {
+    requestBody: LLMAssistantPromptPreviewRequest;
+  }): CancelablePromise<LLMAssistantPromptPreview> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/llm_assistant/preview_prompt",
       body: requestBody,
       mediaType: "application/json",
       errors: {

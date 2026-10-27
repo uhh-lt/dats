@@ -1,19 +1,29 @@
 import { JobListItem, jobStatusToTypographyColor, useLiveJob } from "@core/job";
 import { SdocRenderer } from "@core/source-document";
-import { ApproachType } from "@models/ApproachType";
-import { FewShotParams } from "@models/FewShotParams";
 import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
-import { ZeroShotParams } from "@models/ZeroShotParams";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, List, ListItem, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Tab,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
+import { PromptTemplateHooks } from "../../../api/promptTemplateHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
 interface LLMAssistantJobListItemProps {
@@ -98,14 +108,29 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
 });
 
 function InputViewer({ llmAssistantJob }: { llmAssistantJob: LlmAssistantJobRead }) {
-  switch (llmAssistantJob.input.approach_type) {
-    case ApproachType.LLM_ZERO_SHOT:
-      return <PromptViewer prompts={(llmAssistantJob.input.specific_approach_parameters as ZeroShotParams).prompts} />;
-    case ApproachType.LLM_FEW_SHOT:
-      return <PromptViewer prompts={(llmAssistantJob.input.specific_approach_parameters as FewShotParams).prompts} />;
-    default:
-      return <>Approach is not supported!</>;
+  const { prompts, prompt_template_version_id: versionId } = llmAssistantJob.input.specific_approach_parameters;
+  if (prompts) {
+    return <PromptViewer prompts={prompts} />;
   }
+  if (versionId !== null && versionId !== undefined) {
+    return <PromptTemplateVersionViewer projectId={llmAssistantJob.project_id} versionId={versionId} />;
+  }
+  return <>No prompts available!</>;
+}
+
+function PromptTemplateVersionViewer({ projectId, versionId }: { projectId: number; versionId: number }) {
+  const templateVersion = PromptTemplateHooks.useGetPromptTemplateVersion({ projectId, versionId });
+
+  if (templateVersion.isLoading) return <CircularProgress />;
+  if (!templateVersion.data) return <>The prompt template version {versionId} was deleted.</>;
+  return (
+    <Stack>
+      <Typography variant="subtitle2" sx={{ pt: 1 }}>
+        Prompt template {templateVersion.data.template.name}, version {templateVersion.data.version.version}
+      </Typography>
+      <PromptViewer prompts={templateVersion.data.version.prompts} />
+    </Stack>
+  );
 }
 
 function PromptViewer({ prompts }: { prompts: LLMAssistantPromptTemplates[] }) {
