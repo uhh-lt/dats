@@ -6,9 +6,7 @@ x-runner-common: &runner-base
     GITHUB_REPO: ${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
     GITHUB_PAT: ${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
     RAY_CACHE_HOST_DIR: ${RAY_CACHE_HOST_DIR:?RAY_CACHE_HOST_DIR is missing - copy .env.example to .env and set it}
-    # The uv cache lives in the runner's own _work mount, next to the checkouts:
-    # uv can only hardlink packages into a .venv on the same mount. From a
-    # separate cache mount it copies every package (6+ GB per venv, per job).
+    # uv cache in the runner's own _work mount, so uv sync hardlinks it into the checkouts
     UV_CACHE_DIR: /actions-runner/_work/.cache/uv
   restart: unless-stopped
   security_opt:

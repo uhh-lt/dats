@@ -109,20 +109,19 @@ Navigate to **Settings → Actions → Runners** in the repository. You should s
 
 A few resources are deliberately shared across all runners on the machine:
 
-- **Disks** — all runners and their sibling containers write to the host's disks. Several concurrent jobs can saturate them, which slows down every job and everything else on the machine. The CI keeps its disk writes low: see [Keeping the disk load low](#keeping-the-disk-load-low).
+- **Disks** — all runners and their sibling containers write to the host's disks, see [Keeping the disk load low](#keeping-the-disk-load-low).
 - **Ray cache** (`$HOME/ray_cache`) — model downloads are cached machine-wide to avoid re-downloading large models for every runner. Concurrent access is tolerable for a cache.
 - **GPU** — Ray jobs pin `RAY_DEVICE_IDS=1`. This means only one Ray-enabled job should run at a time per machine; running two concurrently will contend for the same GPU. If you need parallel Ray jobs, assign different GPUs per runner.
 - **Hosted services** — LLM, embedding, and Docling endpoints point at shared hosted infrastructure (`ltdwise.informatik.uni-hamburg.de`), which is stateless and safe to share.
 
 ## Keeping the disk load low
 
-Every job starts from a clean checkout (`actions/checkout` removes all untracked files, including `.venv` and `node_modules`), installs its dependencies, and starts its own DATS stack. Three measures keep the disk writes of this setup low:
+Every job starts from a clean checkout (`actions/checkout` removes all untracked files, including `.venv` and `node_modules`), installs its dependencies, and starts its own DATS stack. These measures keep its disk writes low:
 
-- **Per-runner uv cache** — each runner keeps its uv cache in its own work directory (`UV_CACHE_DIR` in `action-runner/compose.yml`), so `uv sync` hardlinks the packages into a `.venv` instead of copying them. uv cannot hardlink across mounts: with the cache in a separate bind mount, every job copied 6+ GB per virtual environment.
+- **uv cache in the work directory** — each runner keeps its uv cache in its own work directory (`UV_CACHE_DIR` in `action-runner/compose.yml`), on the same mount as its checkouts, so `uv sync` hardlinks the packages into each `.venv`.
 - **Data services in memory** — `prepare-env` adds `docker/compose.ci.yml` to `COMPOSE_FILE` in the generated `docker/.env`. It replaces the volumes of PostgreSQL, Redis, Weaviate and Elasticsearch with tmpfs mounts, since a run throws its data away in the cleanup anyway.
 - **Only the changed components** — `precommit-checks` installs and checks only the components (backend, frontend, ray) that a pull request or push changed. A change to `.pre-commit-config.yaml`, the `justfile` or `bin/` checks all of them.
-
-The Dockerfiles pin the uv image (`ghcr.io/astral-sh/uv:<version>`): with `latest`, every uv release invalidated the cached image layers and rebuilt the full virtual environment of the image.
+- **Pinned uv image** — the Dockerfiles pin `ghcr.io/astral-sh/uv:<version>`, so the cached image layers survive uv releases.
 
 ### Applying changes to the fleet
 
