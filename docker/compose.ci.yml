@@ -1,0 +1,36 @@
+# CI overrides for compose.yml and compose.override.yml, enabled by the
+# prepare-env action (.github/actions/prepare-env) through COMPOSE_FILE.
+#
+# A CI run throws its data away in the cleanup (`docker compose down -v`), so the
+# data services keep it in memory instead of writing it to the host's disks,
+# which several runners and dev stacks share.
+services:
+  postgres:
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+        tmpfs:
+          size: 8g
+
+  redis:
+    volumes:
+      - type: tmpfs
+        target: /data
+        tmpfs:
+          size: 1g
+
+  weaviate:
+    volumes:
+      - type: tmpfs
+        target: /var/lib/weaviate
+        tmpfs:
+          size: 8g
+
+  elasticsearch:
+    volumes:
+      - type: tmpfs
+        target: /usr/share/elasticsearch/data
+        tmpfs:
+          size: 8g
+          # elasticsearch runs as DOCKER_UID, which must be able to write here
+          mode: 01777

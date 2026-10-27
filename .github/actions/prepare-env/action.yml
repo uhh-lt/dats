@@ -54,6 +54,10 @@ runs:
         # lives at $HOST_WORK_DIR/dats/dats/docker. Point compose at it.
         echo "DATS_DOCKER_DIR=${HOST_WORK_DIR}/dats/dats/docker" >> docker/.env
 
+        # Keep the data of the data services in memory (see docker/compose.ci.yml).
+        # Compose reads COMPOSE_FILE from docker/.env; `-f compose.ray.yml` ignores it.
+        echo "COMPOSE_FILE=compose.yml:compose.override.yml:compose.ci.yml" >> docker/.env
+
         # Bump the image version of every enabled component for this run.
         if [ "${BACKEND}" = "true" ]; then
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
