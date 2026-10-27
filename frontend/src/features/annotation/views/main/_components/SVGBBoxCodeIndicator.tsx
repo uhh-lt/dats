@@ -35,6 +35,7 @@ export const SVGBBoxText = memo(({ bbox, xCentering = 0, scaledRatio = 1, onClic
           annotationId={bbox.id}
           memoCount={bbox.memo_ids.length}
           attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
+          provenance={bbox}
         />
       </div>
     </foreignObject>

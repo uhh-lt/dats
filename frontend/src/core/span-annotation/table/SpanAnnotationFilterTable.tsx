@@ -1,3 +1,4 @@
+import { AnnotationSourceUser } from "@core/annotation";
 import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,
@@ -94,6 +95,12 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
             ...colDef,
             accessorFn: (row) => row.user_id,
             Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
+          };
+        case SpanColumns.SP_SOURCE_USER_ID:
+          return {
+            ...colDef,
+            accessorFn: (row) => row.source_user_id,
+            Cell: ({ row }) => <AnnotationSourceUser annotation={{ ...row.original, code_id: row.original.code.id }} />,
           };
         case SpanColumns.SP_MEMO_CONTENT:
           return {

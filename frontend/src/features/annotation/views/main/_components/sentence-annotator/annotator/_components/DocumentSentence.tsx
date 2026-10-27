@@ -7,6 +7,7 @@ import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSent
 import "../../../_styles/Annotation.css";
 import { SentenceAnnotationResizeHandles } from "../../_components/SentenceAnnotationResizeHandles";
 import { SentenceMemoBadge } from "../../_components/SentenceMemoBadge";
+import { SentenceProvenanceBadge } from "../../_components/SentenceProvenanceBadge";
 
 // the browser-native selection color, used for the flat in-progress sentence selection (matches the span annotator)
 const SELECTION_COLOR = "rgba(0, 120, 215, 0.3)";
@@ -201,6 +202,7 @@ export function DocumentSentence({
                   {isStartOfAnnotation && annotation.memo_ids.length > 0 && (
                     <SentenceMemoBadge annotation={annotation} color={code.color} />
                   )}
+                  {isStartOfAnnotation && <SentenceProvenanceBadge annotation={annotation} />}
                 </div>
               </div>
             </Tooltip>

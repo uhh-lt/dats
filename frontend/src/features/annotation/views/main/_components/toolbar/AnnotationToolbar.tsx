@@ -48,6 +48,7 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
   // global client state (redux)
   const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
+  const showProvenance = useAppSelector((state) => state.annotations.showProvenance);
   const dispatch = useAppDispatch();
 
   return (
@@ -132,6 +133,29 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
               </ToggleButtonGroup>
             </Box>
           )}
+          <Box sx={groupSx}>
+            <Typography variant="overline" color="text.secondary" sx={groupLabelSx}>
+              Provenance
+            </Typography>
+            <Tooltip
+              title={
+                showProvenance
+                  ? "Hide where accepted annotations came from"
+                  : "Show where accepted annotations came from"
+              }
+              placement="bottom"
+            >
+              <ToggleButton
+                value="provenance"
+                selected={showProvenance}
+                onChange={() => dispatch(AnnotationsActions.onSetShowProvenance(!showProvenance))}
+                size="small"
+                color="primary"
+              >
+                {getIconComponent(Icon.ANNOTATION_PROVENANCE)}
+              </ToggleButton>
+            </Tooltip>
+          </Box>
           <Box sx={groupSx}>
             <Typography variant="overline" color="text.secondary" sx={groupLabelSx}>
               Shortcuts

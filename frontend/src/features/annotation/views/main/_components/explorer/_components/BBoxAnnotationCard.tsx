@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { memo } from "react";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
+import { ProvenanceIndicator } from "../../_components/ProvenanceIndicator";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";
 
 export const BBoxAnnotationCard = memo(
@@ -29,6 +30,7 @@ export const BBoxAnnotationCard = memo(
           title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
           action={
             <Stack direction="row" alignItems="center">
+              <ProvenanceIndicator annotation={annotation} />
               <MemoIndicator
                 memoIds={annotation.memo_ids}
                 attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}

@@ -11,6 +11,7 @@ import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSent
 import "../../../_styles/Annotation.css";
 import { SentenceAnnotationResizeHandles } from "../../_components/SentenceAnnotationResizeHandles";
 import { SentenceMemoBadge } from "../../_components/SentenceMemoBadge";
+import { SentenceProvenanceBadge } from "../../_components/SentenceProvenanceBadge";
 import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
 import { SentAnnoMap, useComputeSentAnnoMap } from "../_hooks/useComputeSentAnnoMap";
 import { isAnnotationSame } from "../_utils/comparisonUtils";
@@ -320,6 +321,7 @@ function DocumentSentencePart({
                   {isStartOfAnnotation && annotation.memo_ids.length > 0 && (
                     <SentenceMemoBadge annotation={annotation} color={code.color} />
                   )}
+                  {isStartOfAnnotation && <SentenceProvenanceBadge annotation={annotation} />}
                 </div>
               </div>
             </Tooltip>

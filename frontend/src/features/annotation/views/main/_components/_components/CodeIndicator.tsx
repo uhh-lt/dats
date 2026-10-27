@@ -1,9 +1,11 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { CodeHooks } from "@core/code";
 import { MemoCreateOrSelectMenu } from "@core/memo";
+import { AnnotationProvenance } from "@core/annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CircularProgress } from "@mui/material";
 import { contrastiveColors } from "@utils/colors/colors";
+import { ProvenanceIndicator } from "./ProvenanceIndicator";
 
 interface CodeIndicatorProps {
   codeId: number;
@@ -13,6 +15,8 @@ interface CodeIndicatorProps {
   memoCount?: number;
   /** The attached object type for the memo dialog. Defaults to SPAN_ANNOTATION. */
   attachedObjectType?: AttachedObjectType;
+  /** The annotation's provenance: copies (accepted from another annotation) show a badge inside the pill. */
+  provenance?: AnnotationProvenance;
 }
 
 /**
@@ -22,6 +26,7 @@ interface CodeIndicatorProps {
  * @param annotationId - The ID of the annotation this indicator belongs to
  * @param groups - Optional group IDs for coreference annotations
  * @param memoCount - Number of memos attached to this annotation (renders a memo section in the pill)
+ * @param provenance - The annotation's provenance (renders a provenance badge in the pill for copies)
  */
 export function CodeIndicator({
   codeId,
@@ -29,6 +34,7 @@ export function CodeIndicator({
   groups,
   memoCount = 0,
   attachedObjectType = AttachedObjectType.SPAN_ANNOTATION,
+  provenance,
 }: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
 
@@ -60,6 +66,7 @@ export function CodeIndicator({
       >
         <span className="code-indicator__color-dot" />
         <span className="code-indicator__text">{text}</span>
+        {provenance && !isPending && <ProvenanceIndicator annotation={provenance} />}
         {memoCount > 0 && !isPending && (
           <MemoCreateOrSelectMenu
             attachedObjectType={attachedObjectType}

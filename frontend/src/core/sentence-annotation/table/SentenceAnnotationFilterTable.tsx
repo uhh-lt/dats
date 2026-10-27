@@ -1,3 +1,4 @@
+import { AnnotationSourceUser } from "@core/annotation";
 import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,
@@ -102,6 +103,12 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
             ...colDef,
             accessorFn: (row) => row.user_id,
             Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
+          };
+        case SentAnnoColumns.SENT_ANNO_SOURCE_USER_ID:
+          return {
+            ...colDef,
+            accessorFn: (row) => row.source_user_id,
+            Cell: ({ row }) => <AnnotationSourceUser annotation={{ ...row.original, code_id: row.original.code.id }} />,
           };
         case SentAnnoColumns.SENT_ANNO_MEMO_CONTENT:
           return {

@@ -66,6 +66,7 @@ export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
               annotationId={spanAnnotation.id}
               groups={spanAnnotation.group_ids}
               memoCount={spanAnnotation.memo_ids.length}
+              provenance={spanAnnotation}
             />
           ) : (
             spanAnnotation.memo_ids.length > 0 && <MemoTokenBadge key={spanAnnotation.id} annotation={spanAnnotation} />

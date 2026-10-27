@@ -1,4 +1,5 @@
 import { ImageCropper } from "@components/ImageCropper";
+import { AnnotationSourceUser } from "@core/annotation";
 import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,
@@ -106,6 +107,12 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           return {
             ...colDef,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
+          };
+        case BBoxColumns.BB_SOURCE_USER_ID:
+          return {
+            ...colDef,
+            accessorFn: (row) => row.source_user_id,
+            Cell: ({ row }) => <AnnotationSourceUser annotation={{ ...row.original, code_id: row.original.code.id }} />,
           };
         case BBoxColumns.BB_MEMO_CONTENT:
           return {

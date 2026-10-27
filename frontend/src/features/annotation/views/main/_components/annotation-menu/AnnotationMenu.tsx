@@ -29,6 +29,7 @@ import { Annotation, Annotations } from "../../../../_types/Annotation";
 import { useCodeShortcuts } from "../../../../_hooks/useCodeShortcuts";
 import { CODE_SHORTCUT_KEYS, CodeShortcutKey } from "../../../../store/codeShortcutsSlice";
 import { useComputeCodesForSelection } from "./_hooks/useComputeCodesForSelection";
+import { ProvenanceIndicator } from "../_components/ProvenanceIndicator";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();
 
@@ -415,6 +416,7 @@ function CodeSelectorListItem({
         <ListItem>
           <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
           <ListItemText primary={code.data.name} />
+          <ProvenanceIndicator annotation={annotation} />
           <MemoCreateOrSelectMenu
             attachedObjectType={getMemoAttachedObjectType(annotation)}
             attachedObjectId={annotation.id}

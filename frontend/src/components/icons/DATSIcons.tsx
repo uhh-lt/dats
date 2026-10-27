@@ -10,6 +10,7 @@ import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import CallReceivedIcon from "@mui/icons-material/CallReceived";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ChatIcon from "@mui/icons-material/Chat";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
@@ -204,6 +205,7 @@ export enum Icon {
   INFO = "info",
   FAVORITE = "favorite",
   FAVORITE_BORDER = "favorite_border",
+  ANNOTATION_PROVENANCE = "annotation_provenance",
 }
 
 // Define a type for icon component factory functions
@@ -343,6 +345,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.INFO]: (iconProps) => <InfoIcon {...iconProps} />,
   [Icon.FAVORITE]: (iconProps) => <StarIcon {...iconProps} />,
   [Icon.FAVORITE_BORDER]: (iconProps) => <StarBorderIcon {...iconProps} />,
+  [Icon.ANNOTATION_PROVENANCE]: (iconProps) => <CallReceivedIcon {...iconProps} />,
 };
 
 /**

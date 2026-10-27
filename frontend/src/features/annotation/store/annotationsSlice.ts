@@ -15,6 +15,7 @@ export interface AnnotationsState {
   // app state:
   annotationMode: AnnotationMode; // the annotation mode.
   tagStyle: TagStyle; // position of the tag in the Annotator.
+  showProvenance: boolean; // whether annotations copied from another annotation show the provenance badge.
 }
 
 const initialState: AnnotationsState = {
@@ -27,6 +28,7 @@ const initialState: AnnotationsState = {
   // app state:
   annotationMode: AnnotationMode.Reader,
   tagStyle: TagStyle.Inline,
+  showProvenance: true,
 };
 
 const annotationsSlice = createSlice({
@@ -85,6 +87,9 @@ const annotationsSlice = createSlice({
       if (action.payload !== undefined && action.payload !== null) {
         state.tagStyle = action.payload;
       }
+    },
+    onSetShowProvenance: (state, action: PayloadAction<boolean>) => {
+      state.showProvenance = action.payload;
     },
     onDeleteCode: (state, action: PayloadAction<number>) => {
       // remove references to deleted code
