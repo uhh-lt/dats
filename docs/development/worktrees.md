@@ -64,3 +64,18 @@ Every worktree runs its own Elasticsearch and Weaviate, which take a few GB of R
 ## Working with coding agents
 
 [`AGENTS.md`](https://github.com/uhh-lt/dats/blob/main/AGENTS.md) instructs agents to run `just worktree-up` before anything else in a fresh worktree, to use `just` recipes only, and to touch only their own compose project.
+
+### Browser checks (one-time setup per developer)
+
+The `browser-check` skill (`.github/skills/browser-check/SKILL.md`) lets an agent start its worktree's dev servers, log in as the demo user and click through a UI change in a headless browser before opening a PR. The browser tools come from the [Playwright MCP server](https://github.com/microsoft/playwright-mcp), which every developer adds once to their own Claude Code configuration, on the machine where the agents run (for example the SSH host):
+
+```bash
+claude mcp add --scope user playwright -- npx -y @playwright/mcp@latest --headless --isolated
+```
+
+- `--headless`: no display is needed, so it works on remote hosts.
+- `--isolated`: every agent session gets its own in-memory browser profile, so parallel sessions do not block each other.
+- The browser runs next to the agent and therefore reaches each worktree's dev servers on `localhost`. The built-in browser of the Claude desktop app cannot do that for sessions on an SSH host.
+- It uses an installed Google Chrome. Without one, install Playwright's Chromium (`npx playwright install chromium`) and add `--browser chromium` to the command.
+
+Check the setup with `claude mcp list`: `playwright` should be listed as connected. Only agent sessions started afterwards get the tools. Without the server, the skill skips the visual check and says so in its report.
