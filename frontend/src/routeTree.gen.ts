@@ -39,6 +39,7 @@ import { Route as AuthProjectProjectIdAnalysisSentenceAnnotationsRouteImport } f
 import { Route as AuthProjectProjectIdAnalysisCodeFrequencyRouteImport } from './routes/_auth/project/$projectId/analysis/code-frequency'
 import { Route as AuthProjectProjectIdAnalysisBboxAnnotationsRouteImport } from './routes/_auth/project/$projectId/analysis/bbox-annotations'
 import { Route as AuthProjectProjectIdAnalysisAnnotationScalingRouteImport } from './routes/_auth/project/$projectId/analysis/annotation-scaling'
+import { Route as AuthProjectProjectIdAnalysisAgreementRouteImport } from './routes/_auth/project/$projectId/analysis/agreement'
 import { Route as AuthProjectProjectIdPerspectivesAspectIdRouteRouteImport } from './routes/_auth/project/$projectId/perspectives/$aspectId/route'
 import { Route as AuthProjectProjectIdPerspectivesAspectIdIndexRouteImport } from './routes/_auth/project/$projectId/perspectives/$aspectId/index'
 import { Route as AuthProjectProjectIdAnalysisTimelineIndexRouteImport } from './routes/_auth/project/$projectId/analysis/timeline/index'
@@ -218,6 +219,12 @@ const AuthProjectProjectIdAnalysisAnnotationScalingRoute =
     path: '/analysis/annotation-scaling',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
+const AuthProjectProjectIdAnalysisAgreementRoute =
+  AuthProjectProjectIdAnalysisAgreementRouteImport.update({
+    id: '/analysis/agreement',
+    path: '/analysis/agreement',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
 const AuthProjectProjectIdPerspectivesAspectIdRouteRoute =
   AuthProjectProjectIdPerspectivesAspectIdRouteRouteImport.update({
     id: '/perspectives/$aspectId',
@@ -274,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
+  '/project/$projectId/analysis/agreement': typeof AuthProjectProjectIdAnalysisAgreementRoute
   '/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
   '/project/$projectId/analysis/bbox-annotations': typeof AuthProjectProjectIdAnalysisBboxAnnotationsRoute
   '/project/$projectId/analysis/code-frequency': typeof AuthProjectProjectIdAnalysisCodeFrequencyRoute
@@ -310,6 +318,7 @@ export interface FileRoutesByTo {
   '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
+  '/project/$projectId/analysis/agreement': typeof AuthProjectProjectIdAnalysisAgreementRoute
   '/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
   '/project/$projectId/analysis/bbox-annotations': typeof AuthProjectProjectIdAnalysisBboxAnnotationsRoute
   '/project/$projectId/analysis/code-frequency': typeof AuthProjectProjectIdAnalysisCodeFrequencyRoute
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/_auth/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/_auth/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
+  '/_auth/project/$projectId/analysis/agreement': typeof AuthProjectProjectIdAnalysisAgreementRoute
   '/_auth/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
   '/_auth/project/$projectId/analysis/bbox-annotations': typeof AuthProjectProjectIdAnalysisBboxAnnotationsRoute
   '/_auth/project/$projectId/analysis/code-frequency': typeof AuthProjectProjectIdAnalysisCodeFrequencyRoute
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
     | '/project/$projectId/perspectives/$aspectId'
+    | '/project/$projectId/analysis/agreement'
     | '/project/$projectId/analysis/annotation-scaling'
     | '/project/$projectId/analysis/bbox-annotations'
     | '/project/$projectId/analysis/code-frequency'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/memo-workspace'
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
+    | '/project/$projectId/analysis/agreement'
     | '/project/$projectId/analysis/annotation-scaling'
     | '/project/$projectId/analysis/bbox-annotations'
     | '/project/$projectId/analysis/code-frequency'
@@ -464,6 +476,7 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/search'
     | '/_auth/project/$projectId/sentencesearch'
     | '/_auth/project/$projectId/perspectives/$aspectId'
+    | '/_auth/project/$projectId/analysis/agreement'
     | '/_auth/project/$projectId/analysis/annotation-scaling'
     | '/_auth/project/$projectId/analysis/bbox-annotations'
     | '/_auth/project/$projectId/analysis/code-frequency'
@@ -706,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectProjectIdAnalysisAnnotationScalingRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
+    '/_auth/project/$projectId/analysis/agreement': {
+      id: '/_auth/project/$projectId/analysis/agreement'
+      path: '/analysis/agreement'
+      fullPath: '/project/$projectId/analysis/agreement'
+      preLoaderRoute: typeof AuthProjectProjectIdAnalysisAgreementRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
     '/_auth/project/$projectId/perspectives/$aspectId': {
       id: '/_auth/project/$projectId/perspectives/$aspectId'
       path: '/perspectives/$aspectId'
@@ -783,6 +803,7 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdSearchRoute: typeof AuthProjectProjectIdSearchRoute
   AuthProjectProjectIdSentencesearchRoute: typeof AuthProjectProjectIdSentencesearchRoute
   AuthProjectProjectIdPerspectivesAspectIdRouteRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
+  AuthProjectProjectIdAnalysisAgreementRoute: typeof AuthProjectProjectIdAnalysisAgreementRoute
   AuthProjectProjectIdAnalysisAnnotationScalingRoute: typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
   AuthProjectProjectIdAnalysisBboxAnnotationsRoute: typeof AuthProjectProjectIdAnalysisBboxAnnotationsRoute
   AuthProjectProjectIdAnalysisCodeFrequencyRoute: typeof AuthProjectProjectIdAnalysisCodeFrequencyRoute
@@ -817,6 +838,8 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
       AuthProjectProjectIdSentencesearchRoute,
     AuthProjectProjectIdPerspectivesAspectIdRouteRoute:
       AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren,
+    AuthProjectProjectIdAnalysisAgreementRoute:
+      AuthProjectProjectIdAnalysisAgreementRoute,
     AuthProjectProjectIdAnalysisAnnotationScalingRoute:
       AuthProjectProjectIdAnalysisAnnotationScalingRoute,
     AuthProjectProjectIdAnalysisBboxAnnotationsRoute:
