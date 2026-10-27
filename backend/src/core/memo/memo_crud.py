@@ -7,7 +7,6 @@ from core.memo.memo_dto import MemoCreateIntern, MemoUpdate
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
-from core.memo.object_handle_orm import ObjectHandleORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 
 
@@ -17,22 +16,8 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
     def create_multi(
         self, db: Session, *, create_dtos: list[MemoCreateIntern]
     ) -> list[MemoORM]:
-        # a memo needs an object handle: use create_for_attached_object
+        # a memo needs an object handle: use create_multi_for_attached_objects
         raise NotImplementedError()
-
-    def _create_memo(
-        self, db: Session, *, create_dto: MemoCreateIntern, oh_db_obj: ObjectHandleORM
-    ) -> MemoORM:
-        # create the Memo
-        dto_obj_data = jsonable_encoder(create_dto)
-        dto_obj_data["attached_to_id"] = oh_db_obj.id
-        # noinspection PyArgumentList
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.flush()
-        db.refresh(db_obj)
-
-        return db_obj
 
     def create_for_attached_object(
         self,
@@ -42,44 +27,91 @@ class CRUDMemo(SQLCRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         attached_object_type: AttachedObjectType,
         create_dto: MemoCreateIntern,
     ) -> MemoORM:
+        return self.create_multi_for_attached_objects(
+            db=db,
+            attached_object_type=attached_object_type,
+            attached_object_ids=[attached_object_id],
+            create_dtos=[create_dto],
+        )[0]
+
+    def create_multi_for_attached_objects(
+        self,
+        db: Session,
+        *,
+        attached_object_type: AttachedObjectType,
+        attached_object_ids: list[int],
+        create_dtos: list[MemoCreateIntern],
+    ) -> list[MemoORM]:
+        """
+        Create memos attached to objects of one type, with a constant number of
+        queries: the missing object handles are created in one batch, the memos
+        with one flush.
+
+        Args:
+            attached_object_type: The type of the objects the memos are attached to.
+            attached_object_ids: The object each memo is attached to, parallel to
+                `create_dtos`. An object may get several memos.
+            create_dtos: The memos to create.
+
+        Returns:
+            The created memos, in the order of `create_dtos`.
+        """
         # Flo: this is necessary to avoid circular imports.
         from core.memo.object_handle_crud import crud_object_handle
 
-        # create an ObjectHandle for the attached object
-        oh_create_dto = None
-        match attached_object_type:
-            case AttachedObjectType.code:
-                oh_create_dto = ObjectHandleCreate(code_id=attached_object_id)
-            case AttachedObjectType.span_annotation:
-                oh_create_dto = ObjectHandleCreate(
-                    span_annotation_id=attached_object_id
+        if len(attached_object_ids) != len(create_dtos):
+            raise ValueError(
+                f"Got {len(attached_object_ids)} attached objects for "
+                f"{len(create_dtos)} memos."
+            )
+        if not create_dtos:
+            return []
+
+        # 1) find or create the object handle of every attached object
+        oh_db_objs = crud_object_handle.create_multi(
+            db=db,
+            create_dtos=[
+                self._object_handle_create_dto(
+                    attached_object_id=attached_object_id,
+                    attached_object_type=attached_object_type,
                 )
-            case AttachedObjectType.sentence_annotation:
-                oh_create_dto = ObjectHandleCreate(
-                    sentence_annotation_id=attached_object_id
-                )
-            case AttachedObjectType.span_group:
-                oh_create_dto = ObjectHandleCreate(span_group_id=attached_object_id)
-            case AttachedObjectType.bbox_annotation:
-                oh_create_dto = ObjectHandleCreate(
-                    bbox_annotation_id=attached_object_id
-                )
-            case AttachedObjectType.source_document:
-                oh_create_dto = ObjectHandleCreate(
-                    source_document_id=attached_object_id
-                )
-            case AttachedObjectType.project:
-                oh_create_dto = ObjectHandleCreate(project_id=attached_object_id)
-            case AttachedObjectType.tag:
-                oh_create_dto = ObjectHandleCreate(tag_id=attached_object_id)
-        assert oh_create_dto is not None, (
-            f"Unknown AttachedObjectType: {attached_object_type}"
+                for attached_object_id in attached_object_ids
+            ],
         )
 
-        # create an ObjectHandle for the attached object
-        oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
-        db_obj = self._create_memo(db=db, create_dto=create_dto, oh_db_obj=oh_db_obj)
-        return db_obj
+        # 2) create the memos, linked to the object handles via the relationship, so
+        # that reading memo.attached_to needs no query
+        # noinspection PyArgumentList
+        db_objs = [
+            self.model(**jsonable_encoder(create_dto), attached_to=oh_db_obj)
+            for create_dto, oh_db_obj in zip(create_dtos, oh_db_objs)
+        ]
+        db.add_all(db_objs)
+        db.flush()
+
+        return db_objs
+
+    def _object_handle_create_dto(
+        self, *, attached_object_id: int, attached_object_type: AttachedObjectType
+    ) -> ObjectHandleCreate:
+        """The object handle that refers to the attached object."""
+        match attached_object_type:
+            case AttachedObjectType.code:
+                return ObjectHandleCreate(code_id=attached_object_id)
+            case AttachedObjectType.span_annotation:
+                return ObjectHandleCreate(span_annotation_id=attached_object_id)
+            case AttachedObjectType.sentence_annotation:
+                return ObjectHandleCreate(sentence_annotation_id=attached_object_id)
+            case AttachedObjectType.span_group:
+                return ObjectHandleCreate(span_group_id=attached_object_id)
+            case AttachedObjectType.bbox_annotation:
+                return ObjectHandleCreate(bbox_annotation_id=attached_object_id)
+            case AttachedObjectType.source_document:
+                return ObjectHandleCreate(source_document_id=attached_object_id)
+            case AttachedObjectType.project:
+                return ObjectHandleCreate(project_id=attached_object_id)
+            case AttachedObjectType.tag:
+                return ObjectHandleCreate(tag_id=attached_object_id)
 
     ### READ OPERATIONS ###
 
