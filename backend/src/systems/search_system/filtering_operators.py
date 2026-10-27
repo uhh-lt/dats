@@ -12,6 +12,9 @@ from systems.search_system.search_system_exceptions import (
 
 FilterValue = bool | str | int | list[str] | list[list[str]]
 
+# the id the frontend's value selectors send for "None"
+NONE_FILTER_ID = -1
+
 
 class FilterValueType(Enum):
     ATTACHED_OBJECT_TYPE = "ATTACHED_OBJECT_TYPE"

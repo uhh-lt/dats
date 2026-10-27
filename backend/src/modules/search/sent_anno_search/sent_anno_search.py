@@ -72,6 +72,11 @@ def find_sentence_annotations(
         )
         .add_entity(CodeORM)
         .add_entity(SourceDocumentORM)
+        .add_columns(
+            SentenceAnnotationORM.created,
+            SentenceAnnotationORM.source_user_id,
+            SentenceAnnotationORM.source_code_id,
+        )
         .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
         .filter(SourceDocumentORM.project_id == request.project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
@@ -112,6 +117,9 @@ def find_sentence_annotations(
                 tag_ids=[tag.id for tag in sdoc_orm.tags],
                 text=" ".join(sdoc_orm.data.sentences[sent_start : sent_end + 1]),
                 memo_ids=memo_ids_by_annotation.get(row[0], []),
+                created=row[6],
+                source_user_id=row[7],
+                source_code_id=row[8],
             )
         )
     return Page[SentenceAnnotationRow](items=items, total_results=total_results)

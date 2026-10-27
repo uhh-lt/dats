@@ -1,3 +1,4 @@
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.types import String
@@ -19,14 +20,19 @@ from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
-from systems.search_system.filtering_operators import FilterOperator, FilterValueType
-from systems.search_system.grouping import GroupExpressions
+from systems.search_system.filtering_operators import (
+    NONE_FILTER_ID,
+    FilterOperator,
+    FilterValueType,
+)
+from systems.search_system.grouping import NONE_GROUP_KEY, GroupExpressions
 from systems.search_system.search_builder import SearchBuilder
 
 
 class SentAnnoColumns(str, AbstractColumns):
     CODE_ID_LIST_RECURSIVE = "SentAnno_CODE_ID_LIST_RECURSIVE"
     USER_ID = "SentAnno_USER_ID"
+    SOURCE_USER_ID = "SentAnno_SOURCE_USER_ID"
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "SentAnno_TAG_ID_LIST_RECURSIVE"
@@ -48,6 +54,12 @@ class SentAnnoColumns(str, AbstractColumns):
                 return MemoORM.content
             case SentAnnoColumns.USER_ID:
                 return AnnotationDocumentORM.user_id
+            case SentAnnoColumns.SOURCE_USER_ID:
+                # annotations without a source user compare as NONE_FILTER_ID, so
+                # "!= user" keeps them and "= None" selects them
+                return func.coalesce(
+                    SentenceAnnotationORM.source_user_id, NONE_FILTER_ID
+                )
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
@@ -62,6 +74,8 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
             case SentAnnoColumns.USER_ID:
+                return FilterOperator.ID
+            case SentAnnoColumns.SOURCE_USER_ID:
                 return FilterOperator.ID
 
     def get_filter_value_type(self) -> FilterValueType:
@@ -78,6 +92,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case SentAnnoColumns.USER_ID:
                 return FilterValueType.USER_ID
+            case SentAnnoColumns.SOURCE_USER_ID:
+                return FilterValueType.USER_ID
 
     def get_sort_column(self, subquery_dict=None):
         match self:
@@ -93,6 +109,12 @@ class SentAnnoColumns(str, AbstractColumns):
                 return MemoORM.content
             case SentAnnoColumns.USER_ID:
                 return UserORM.last_name
+            case SentAnnoColumns.SOURCE_USER_ID:
+                return (
+                    select(UserORM.last_name)
+                    .where(UserORM.id == SentenceAnnotationORM.source_user_id)
+                    .scalar_subquery()
+                )
 
     def get_label(self) -> str:
         match self:
@@ -108,6 +130,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return "Memo content"
             case SentAnnoColumns.USER_ID:
                 return "User"
+            case SentAnnoColumns.SOURCE_USER_ID:
+                return "Accepted from"
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -191,6 +215,7 @@ class SentAnnoColumns(str, AbstractColumns):
         return self in {
             SentAnnoColumns.CODE_ID_LIST_RECURSIVE,
             SentAnnoColumns.USER_ID,
+            SentAnnoColumns.SOURCE_USER_ID,
             SentAnnoColumns.SOURCE_DOCUMENT_NAME,
         }
 
@@ -209,6 +234,21 @@ class SentAnnoColumns(str, AbstractColumns):
                 return GroupExpressions(
                     key=cast(AnnotationDocumentORM.user_id, String),
                     label=UserORM.email,
+                )
+            case SentAnnoColumns.SOURCE_USER_ID:
+                # copies are labeled with their source user, the others form
+                # their own group
+                source_user_email = (
+                    select(UserORM.email)
+                    .where(UserORM.id == SentenceAnnotationORM.source_user_id)
+                    .scalar_subquery()
+                )
+                return GroupExpressions(
+                    key=func.coalesce(
+                        cast(SentenceAnnotationORM.source_user_id, String),
+                        NONE_GROUP_KEY,
+                    ),
+                    label=func.coalesce(source_user_email, "Not accepted"),
                 )
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return GroupExpressions(
@@ -231,7 +271,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
-            case SentAnnoColumns.USER_ID:
+            case SentAnnoColumns.USER_ID | SentAnnoColumns.SOURCE_USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
                 return [user.email for user in users]
             case _:
@@ -255,7 +295,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
-            case SentAnnoColumns.USER_ID:
+            case SentAnnoColumns.USER_ID | SentAnnoColumns.SOURCE_USER_ID:
                 result = crud_user.read_by_emails(db, emails=names)
                 return [user.id for user in result]
             case _:
