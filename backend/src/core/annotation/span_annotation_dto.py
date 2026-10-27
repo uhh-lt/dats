@@ -23,12 +23,31 @@ class SpanAnnotationCreateIntern(SpanAnnotationBaseDTO):
     annotation_document_id: int = Field(
         description="AnnotationDocument the SpanAnnotation refers to"
     )
+    source_annotation_id: int | None = Field(
+        default=None,
+        description="SpanAnnotation this one was copied from (provenance)",
+    )
+    source_user_id: int | None = Field(
+        default=None,
+        description="User of the SpanAnnotation this one was copied from",
+    )
+    source_code_id: int | None = Field(
+        default=None,
+        description="Code of the copied SpanAnnotation at copy time",
+    )
 
 
 class SpanAnnotationCreate(SpanAnnotationBaseDTO):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
     code_id: int = Field(description="Code the SpanAnnotation refers to")
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
+    source_annotation_id: int | None = Field(
+        default=None,
+        description=(
+            "SpanAnnotation this one is copied from (e.g. accepted in the "
+            "annotation comparison); records the provenance"
+        ),
+    )
 
 
 # Properties for updating
@@ -123,6 +142,15 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
     group_ids: list[int] = Field(
         description="The group ids this span annotations belongs to"
+    )
+    source_annotation_id: int | None = Field(
+        description="SpanAnnotation this one was copied from (provenance)",
+    )
+    source_user_id: int | None = Field(
+        description="User of the SpanAnnotation this one was copied from",
+    )
+    source_code_id: int | None = Field(
+        description="Code of the copied SpanAnnotation at copy time",
     )
     memo_ids: list[int] = Field(description="Memo IDs attached to the SpanAnnotation")
     model_config = ConfigDict(from_attributes=True)

@@ -24,11 +24,30 @@ class SentenceAnnotationCreateIntern(SentenceAnnotationBaseDTO):
     annotation_document_id: int = Field(
         description="AnnotationDocument the SentenceAnnotation refers to"
     )
+    source_annotation_id: int | None = Field(
+        default=None,
+        description="SentenceAnnotation this one was copied from (provenance)",
+    )
+    source_user_id: int | None = Field(
+        default=None,
+        description="User of the SentenceAnnotation this one was copied from",
+    )
+    source_code_id: int | None = Field(
+        default=None,
+        description="Code of the copied SentenceAnnotation at copy time",
+    )
 
 
 class SentenceAnnotationCreate(SentenceAnnotationBaseDTO):
     code_id: int = Field(description="Code the SentenceAnnotation refers to")
     sdoc_id: int = Field(description="SourceDocument the SentenceAnnotation refers to")
+    source_annotation_id: int | None = Field(
+        default=None,
+        description=(
+            "SentenceAnnotation this one is copied from (e.g. accepted in the "
+            "annotation comparison); records the provenance"
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_sentence_range(self):
@@ -98,6 +117,15 @@ class SentenceAnnotationRead(SentenceAnnotationBaseDTO):
     project_id: int = Field(description="Project the SentenceAnnotation belongs to")
     created: datetime = Field(description="Created timestamp of the SentenceAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SentenceAnnotation")
+    source_annotation_id: int | None = Field(
+        description="SentenceAnnotation this one was copied from (provenance)",
+    )
+    source_user_id: int | None = Field(
+        description="User of the SentenceAnnotation this one was copied from",
+    )
+    source_code_id: int | None = Field(
+        description="Code of the copied SentenceAnnotation at copy time",
+    )
     memo_ids: list[int] = Field(
         description="Memo IDs attached to the SentenceAnnotation"
     )

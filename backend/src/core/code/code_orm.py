@@ -62,6 +62,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="spanannotation.c.code_id",
     )
 
     bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
@@ -69,6 +70,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="bboxannotation.c.code_id",
     )
 
     sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
@@ -76,6 +78,7 @@ class CodeORM(ORMBase):
         back_populates="code",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="sentenceannotation.c.code_id",
     )
 
     # hierarchy reference

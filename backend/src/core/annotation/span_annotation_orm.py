@@ -59,7 +59,11 @@ class SpanAnnotationORM(ORMBase):
         nullable=False,
         index=True,
     )
-    code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="span_annotations")
+    code: Mapped["CodeORM"] = relationship(
+        "CodeORM",
+        back_populates="span_annotations",
+        foreign_keys="spanannotation.c.code_id",
+    )
 
     annotation_document_id: Mapped[int] = mapped_column(
         Integer,
@@ -69,6 +73,37 @@ class SpanAnnotationORM(ORMBase):
     )
     annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM", back_populates="span_annotations"
+    )
+
+    # provenance: set when the annotation was copied from another annotation
+    # (e.g. accepted in the annotation comparison); SET NULL keeps the record
+    # when the source annotation, its user or its code is deleted
+    source_annotation_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey(
+            "spanannotation.id",
+            ondelete="SET NULL",
+            name="FK_span_annotation_source_annotation_id",
+        ),
+        index=True,
+    )
+    source_user_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey(
+            "user.id",
+            ondelete="SET NULL",
+            name="FK_span_annotation_source_user_id",
+        ),
+        index=True,
+    )
+    source_code_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey(
+            "code.id",
+            ondelete="SET NULL",
+            name="FK_span_annotation_source_code_id",
+        ),
+        index=True,
     )
 
     span_text_id: Mapped[int] = mapped_column(
