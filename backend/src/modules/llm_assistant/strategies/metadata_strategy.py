@@ -77,9 +77,8 @@ class MetadataStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
         "etc.) from documents."
     )
     strategy_params_type = DefaultStrategyParams
-    allowed_data_tags = [DataTag.DOCUMENT.value]
+    allowed_data_tags = [DataTag.DOCUMENT]
 
-    supported_languages = ["en", "de"]
     prompt_templates = {
         "en": en_prompt_template.strip(),
         "de": de_prompt_template.strip(),
@@ -90,10 +89,9 @@ class MetadataStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
         db: Session,
         project_id: int,
         is_fewshot: bool,
-        #  either prompt templates are provided
+        params: MetadataExtractionParams,
+        # if no prompt templates are provided, the default ones are built from params
         prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        #  or parameters to build them
-        params: MetadataExtractionParams | None = None,
         example_ids: list[int] | None = None,
     ):
         project = crud_project.read(db=db, id=project_id)
@@ -106,21 +104,17 @@ class MetadataStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
         self.metadataname2metadata = {
             metadata.key.lower(): metadata for metadata in self.project_metadata
         }
-        if params:
-            self.output_model = self._generate_dynamic_model(
-                params.project_metadata_ids
-            )
-            logger.info(
-                "Generated Dynamic Model Schema: \n{}",
-                json.dumps(self.output_model.model_json_schema(), indent=2),
-            )
+        self.output_model = self._generate_dynamic_model(params.project_metadata_ids)
+        logger.info(
+            "Generated Dynamic Model Schema: \n{}",
+            json.dumps(self.output_model.model_json_schema(), indent=2),
+        )
         super().__init__(
             db,
             project_id,
             is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.DOCUMENT],
-            prompt_templates=prompt_templates,
             params=params,
+            prompt_templates=prompt_templates,
             example_ids=example_ids,
         )
 

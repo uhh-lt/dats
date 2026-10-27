@@ -45,29 +45,41 @@ class MetadataExtractionParams(DocumentBasedTaskParams):
     )
 
 
-class AnnotationParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.ANNOTATION] = Field(
-        description="The type of the LLM Assistant task"
-    )
+class CodeDefinition(BaseModel):
+    """The definition of a code as it is rendered into a prompt."""
+
+    id: int = Field(description="ID of the project code this definition belongs to")
+    name: str = Field(description="Name of the code as shown to the LLM", min_length=1)
+    description: str = Field(description="Description of the code as shown to the LLM")
+
+
+class CodeBasedTaskParams(DocumentBasedTaskParams):
     code_ids: list[int] = Field(
         description="IDs of the codes to use for the annotation"
     )
+    code_definitions: list[CodeDefinition] | None = Field(
+        description=(
+            "Code definitions to render into the prompts instead of the project's "
+            "current definitions of the codes (e.g. experiment-scoped drafts). "
+            "If set, it contains exactly one definition per code in code_ids."
+        ),
+        default=None,
+    )
     delete_existing_annotations: bool = Field(
         description="Delete existing annotations before creating new ones",
         default=False,
     )
 
 
-class SentenceAnnotationParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.SENTENCE_ANNOTATION] = Field(
+class AnnotationParams(CodeBasedTaskParams):
+    task_type: Literal[TaskType.ANNOTATION] = Field(
         description="The type of the LLM Assistant task"
     )
-    code_ids: list[int] = Field(
-        description="IDs of the codes to use for the sentence annotation"
-    )
-    delete_existing_annotations: bool = Field(
-        description="Delete existing annotations before creating new ones",
-        default=False,
+
+
+class SentenceAnnotationParams(CodeBasedTaskParams):
+    task_type: Literal[TaskType.SENTENCE_ANNOTATION] = Field(
+        description="The type of the LLM Assistant task"
     )
 
 

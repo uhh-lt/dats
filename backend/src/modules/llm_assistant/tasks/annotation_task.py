@@ -248,7 +248,7 @@ class AnnotationTask(
             )
             for span in parsed_spans:
                 code_id = span["code_id"]
-                if code_id not in strategy.codeids2code_dict:
+                if code_id not in strategy.codeid2definition:
                     continue
                 if span["text"].strip() == "":
                     continue

@@ -265,6 +265,79 @@ def test_create_prompt_templates_covers_task_strategy_and_approach_variants(
 
 
 @pytest.mark.parametrize(
+    "task_type,strategy_type,approach_type,expects_codes",
+    [
+        # Tagging writes its tag definitions into the template.
+        pytest.param(
+            TaskType.TAGGING,
+            StrategyType.TAGGING_DEFAULT,
+            ApproachType.LLM_ZERO_SHOT,
+            False,
+            id="tagging",
+        ),
+        # Inline tagging references the codes by placeholder.
+        pytest.param(
+            TaskType.ANNOTATION,
+            StrategyType.NER_INLINE_TAGS,
+            ApproachType.LLM_FEW_SHOT,
+            True,
+            id="inline-few-shot",
+        ),
+        # Fuzzy grounding references the codes by placeholder.
+        pytest.param(
+            TaskType.ANNOTATION,
+            StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
+            ApproachType.LLM_ZERO_SHOT,
+            True,
+            id="fuzzy-zero-shot",
+        ),
+        # Sentence annotation references the codes by placeholder, also with examples.
+        pytest.param(
+            TaskType.SENTENCE_ANNOTATION,
+            StrategyType.SENTENCE_ANNOTATION_DEFAULT,
+            ApproachType.LLM_FEW_SHOT,
+            True,
+            id="sentence-few-shot",
+        ),
+    ],
+)
+def test_create_prompt_templates_uses_the_codes_placeholder_for_code_tasks(
+    client: TestClient,
+    llm_assistant_project: LLMAssistantProject,
+    task_type: TaskType,
+    strategy_type: StrategyType,
+    approach_type: ApproachType,
+    expects_codes: bool,
+) -> None:
+    """Code templates contain <codes> instead of the written-out code descriptions."""
+    response = _post_prompt_templates(
+        client,
+        parameters=_job_parameters(llm_assistant_project, task_type),
+        approach_type=approach_type,
+        strategy_type=strategy_type,
+    )
+    assert response.status_code == 200, response.text
+    prompts = TypeAdapter(list[LLMAssistantPromptTemplates]).validate_python(
+        response.json()
+    )
+
+    code_descriptions = [
+        description
+        for description in [
+            llm_assistant_project["person_code"].description,
+            llm_assistant_project["fact_code"].description,
+        ]
+        if description
+    ]
+    for prompt in prompts:
+        assert ("<codes>" in prompt.user_prompt) is expects_codes
+        if expects_codes:
+            assert not any(
+                description in prompt.user_prompt for description in code_descriptions
+            )
+
+
+@pytest.mark.parametrize(
     "strategy_type",
     [
         # Inline-tag examples render the selected human span annotations.
@@ -323,17 +396,18 @@ def test_create_prompt_templates_uses_explicit_sentence_example_ids(
 
 
 def test_create_prompt_templates_rejects_an_incompatible_task_and_strategy(
-    error_client: TestClient,
+    client: TestClient,
     llm_assistant_project: LLMAssistantProject,
 ) -> None:
     """A strategy registered for another task is rejected instead of substituted."""
     response = _post_prompt_templates(
-        error_client,
+        client,
         parameters=_job_parameters(llm_assistant_project, TaskType.TAGGING),
         approach_type=ApproachType.LLM_ZERO_SHOT,
         strategy_type=StrategyType.NER_INLINE_TAGS,
     )
-    assert response.status_code == 500, response.text
+    assert response.status_code == 400, response.text
+    assert "is not supported for task TAGGING" in response.text
 
 
 def test_create_prompt_templates_rejects_examples_for_zero_shot(

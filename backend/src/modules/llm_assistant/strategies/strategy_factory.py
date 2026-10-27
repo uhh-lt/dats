@@ -1,7 +1,16 @@
 from sqlalchemy.orm import Session
 
 from modules.llm_assistant.llm_assistant_enum import StrategyType, TaskType
-from modules.llm_assistant.llm_assistant_job_dto import LLMAssistantPromptTemplates
+from modules.llm_assistant.llm_assistant_exceptions import (
+    UnsupportedLLMAssistantStrategyError,
+)
+from modules.llm_assistant.llm_assistant_job_dto import (
+    AnnotationParams,
+    DocumentBasedTaskParams,
+    FuzzyGroundingStrategyParams,
+    LLMAssistantPromptTemplates,
+    SpecificStrategyParameters,
+)
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
 )
@@ -48,9 +57,7 @@ def get_strategy_class(
     """Return the strategy class registered for a task and strategy type."""
     strategy_cls = STRATEGY_FOR_TASK_AND_STRATEGY.get((task_type, strategy_type))
     if strategy_cls is None:
-        raise ValueError(
-            f"Strategy {strategy_type} is not supported for task {task_type}"
-        )
+        raise UnsupportedLLMAssistantStrategyError(task_type, strategy_type)
     return strategy_cls
 
 
@@ -60,27 +67,31 @@ def build_strategy(
     is_fewshot: bool,
     task_type: TaskType,
     strategy_type: StrategyType,
-    strategy_params=None,
+    params: DocumentBasedTaskParams,
+    strategy_params: SpecificStrategyParameters | None = None,
     prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-    params=None,
     example_ids: list[int] | None = None,
 ) -> LLMAssistantStrategy:
-    """Instantiate the strategy for the given task and strategy type."""
+    """Instantiate the strategy for the given task and strategy type.
+
+    Without prompt templates, the strategy builds its default templates from the
+    task parameters.
+    """
     strategy_cls = get_strategy_class(task_type, strategy_type)
 
     # FuzzyGroundingStrategy takes strategy_params explicitly
-    from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
-        FuzzyGroundingStrategy,
-    )
-
     if issubclass(strategy_cls, FuzzyGroundingStrategy):
+        assert isinstance(params, AnnotationParams)
+        assert strategy_params is None or isinstance(
+            strategy_params, FuzzyGroundingStrategyParams
+        )
         return strategy_cls(
             db=db,
             project_id=project_id,
             is_fewshot=is_fewshot,
+            params=params,
             strategy_params=strategy_params,
             prompt_templates=prompt_templates,
-            params=params,
             example_ids=example_ids,
         )
 
@@ -88,7 +99,7 @@ def build_strategy(
         db=db,
         project_id=project_id,
         is_fewshot=is_fewshot,
+        params=params,  # type: ignore[arg-type]
         prompt_templates=prompt_templates,
-        params=params,
         example_ids=example_ids,
     )

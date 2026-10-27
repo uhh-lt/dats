@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.project.project_crud import crud_project
 from modules.llm_assistant.llm_assistant_enum import (
     DataTag,
     GroundingMethod,
@@ -19,12 +18,14 @@ from modules.llm_assistant.llm_assistant_enum import (
 )
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
+    CodeDefinition,
     FuzzyGroundingStrategyParams,
     LLMAssistantPromptTemplates,
 )
-from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
+from modules.llm_assistant.strategies.code_annotation_strategy import (
+    CodeAnnotationStrategy,
+)
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
-from repos.llm_repo import LLMMessage
 
 lac = conf.llm_assistant
 
@@ -57,11 +58,7 @@ class GroundedQuote:
 EN_PROMPT_TEMPLATE = """
 You are an extraction engine that identifies relevant text passages.
 
-Allowed codes:
-{codes}
-
-Code definitions:
-{code_definitions}
+<codes>
 
 Rules:
 - Extract passages matching the code system.
@@ -83,11 +80,7 @@ Text:
 DE_PROMPT_TEMPLATE = """
 Du bist eine Extraktions-Engine, die relevante Textpassagen identifiziert.
 
-Erlaubte Codes:
-{codes}
-
-Code-Definitionen:
-{code_definitions}
+<codes>
 
 Regeln:
 - Extrahiere Passagen, die zum Code-System passen.
@@ -106,7 +99,7 @@ Text:
 """.strip()
 
 
-class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams]):
+class FuzzyGroundingStrategy(CodeAnnotationStrategy[FuzzyGroundingStrategyParams]):
     """Span annotation via structured extraction and context-anchored grounding.
 
     The LLM acts as an extraction engine and outputs structured data with the
@@ -147,25 +140,18 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         "tagging but requires more LLM calls due to chunking."
     )
     strategy_params_type = FuzzyGroundingStrategyParams
-    allowed_data_tags = [DataTag.CHUNK.value]
-
-    supported_languages = ["en", "de"]
+    allowed_data_tags = [DataTag.CHUNK]
 
     def __init__(
         self,
         db: Session,
         project_id: int,
         is_fewshot: bool,
+        params: AnnotationParams,
         strategy_params: FuzzyGroundingStrategyParams | None = None,
         prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        params: AnnotationParams | None = None,
         example_ids: list[int] | None = None,
     ):
-        project = crud_project.read(db=db, id=project_id)
-        self.db = db
-        self.codes = project.codes
-        self.codename2id_dict = {code.name.upper(): code.id for code in self.codes}
-        self.codeids2code_dict = {code.id: code for code in self.codes}
         self.fuzzy_params = strategy_params or FuzzyGroundingStrategyParams(
             strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
         )
@@ -174,9 +160,8 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
             db=db,
             project_id=project_id,
             is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.CHUNK],
-            prompt_templates=prompt_templates,
             params=params,
+            prompt_templates=prompt_templates,
             example_ids=example_ids,
         )
 
@@ -215,16 +200,7 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         example_ids: list[int] | None = None,
         params: AnnotationParams,
     ) -> str:
-        """Build a chunk-extraction prompt template for the selected codes."""
-        codes = ", ".join(
-            self.codeids2code_dict[cid].name.upper() for cid in params.code_ids
-        )
-        code_definitions = "\n".join(
-            f"{self.codeids2code_dict[cid].name.upper()}: "
-            f"{self.codeids2code_dict[cid].description}"
-            for cid in params.code_ids
-        )
-
+        """Build a chunk-extraction prompt template; the codes stay a placeholder."""
         examples_block = self._build_examples_block(language)
 
         # few-shot: render real examples with the relevant extraction fields
@@ -235,8 +211,6 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
 
         template = EN_PROMPT_TEMPLATE if language == "en" else DE_PROMPT_TEMPLATE
         return template.format(
-            codes=codes,
-            code_definitions=code_definitions,
             context_before_chars=self.fuzzy_params.context_before_chars,
             context_after_chars=self.fuzzy_params.context_after_chars,
             examples_block=examples_block,
@@ -267,7 +241,8 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
 
         code_id2annos: dict[int, list[SpanAnnotationORM]] = defaultdict(list)
         for anno in annotations:
-            code_id2annos[anno.code_id].append(anno)
+            if anno.code_id in self.codeid2definition:
+                code_id2annos[anno.code_id].append(anno)
 
         threshold = lac.few_shot_threshold
         if example_ids is None:
@@ -302,7 +277,7 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         # render each example with human-readable extraction labels
         example_lines: list[str] = []
         for cid, annos in code_id2annos.items():
-            code = self.codeids2code_dict[cid].name.upper()
+            code = self._code_name(cid).upper()
             for a in annos:
                 sdoc = sdoc_id2data[a.sdoc_id]
                 quote = sdoc.content[a.begin : a.end]
@@ -404,18 +379,17 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         char_end = token_ends[end_token - 1]
         return char_start, sdoc_data.content[char_start:char_end]
 
-    def generate_prompts(
-        self, language: str, sdoc_data: SourceDocumentDataORM
-    ) -> Iterator[LLMMessage]:
-        """Yield one extraction prompt for each chunk of a document."""
-        system_prompt = self._build_system_prompt(language)
+    def _iter_message_data(self, sdoc_data: SourceDocumentDataORM) -> Iterator[str]:
+        """Yield the text of each chunk of a document, one extraction prompt each."""
         for chunk_id in range(self._get_num_chunks(sdoc_data)):
             _, chunk_text = self._get_chunk(sdoc_data, chunk_id)
-            user_prompt = self._build_user_prompt(language=language, data=chunk_text)
-            yield LLMMessage(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-            )
+            yield chunk_text
+
+    def _render_code_definition(self, definition: CodeDefinition) -> str:
+        return f"{definition.name.upper()}: {definition.description}"
+
+    def _render_definitions(self, language: str) -> str:
+        return self._render_allowed_codes_block(language)
 
     # --- PARSING + GROUNDING ---
 
@@ -429,7 +403,7 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         chunk_start, chunk_text = self._get_chunk(sdoc_data, message_id)
         spans: list[ParsedSpan] = []
         for passage in result.passages:
-            code_id = self.codename2id_dict.get(passage.category.upper())
+            code_id = self._code_id_for_name(passage.category)
             if code_id is None:
                 continue
             if passage.exact_quote.strip() == "":

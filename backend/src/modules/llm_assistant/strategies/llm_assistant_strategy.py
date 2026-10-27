@@ -1,3 +1,4 @@
+import re
 from abc import abstractmethod
 from collections.abc import Iterator
 from typing import Any, Generic, TypeVar
@@ -7,7 +8,15 @@ from sqlalchemy.orm import Session
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
+from modules.llm_assistant.llm_assistant_enum import (
+    DataTag,
+    PromptPlaceholder,
+    StrategyType,
+)
+from modules.llm_assistant.llm_assistant_exceptions import (
+    InvalidPromptPreviewError,
+    InvalidPromptTemplateError,
+)
 from modules.llm_assistant.llm_assistant_job_dto import (
     DocumentBasedTaskParams,
     LLMAssistantPromptTemplates,
@@ -21,6 +30,18 @@ from repos.llm_repo import LLMMessage
 StrategyParamsT = TypeVar("StrategyParamsT", bound=SpecificStrategyParameters)
 
 
+def fill_placeholders(template: str, values: dict[str, str]) -> str:
+    """Replace all placeholders of a template in a single pass.
+
+    Inserted values are never scanned again, so a document or a code description
+    that contains a placeholder text (e.g. "<codes>") is inserted verbatim.
+    """
+    if not values:
+        return template
+    pattern = re.compile("|".join(re.escape(placeholder) for placeholder in values))
+    return pattern.sub(lambda match: values[match.group(0)], template)
+
+
 class LLMAssistantStrategy(Generic[StrategyParamsT]):
     """A strategy describes HOW the LLM assistant does a job.
 
@@ -31,15 +52,18 @@ class LLMAssistantStrategy(Generic[StrategyParamsT]):
     - chunking behaviour (via the DataTag mechanism)
 
     A strategy declares which DataTags (document content placeholders) it
-    supports via ``valid_data_tags``; prompt validation fails fast if a
+    supports via ``allowed_data_tags``; prompt validation fails fast if a
     template uses an unsupported tag.
 
     Prompt building
     ---------------
     A system prompt template may contain the placeholders "<project_title>"
     and "<project_description>".
-    A user prompt template must contain the placeholder "<document>",
-    "<sentence>" or "<chunk>".
+    A user prompt template must contain exactly one of the data placeholders
+    "<document>", "<sentence>" or "<chunk>". Strategies that work with
+    category definitions (``definitions_placeholder``, e.g. "<codes>") require
+    that placeholder in the user prompt and render it from the definitions
+    passed as data, so templates and definitions can change independently.
 
     A user prompt template usually consists of these building blocks:
     1. The task description, e.g. Please classify the documents ...
@@ -66,8 +90,11 @@ class LLMAssistantStrategy(Generic[StrategyParamsT]):
     description: str
     # The params model type for this strategy.
     strategy_params_type: type[StrategyParamsT]
-    # The DataTags this strategy supports (class-level, for introspection).
-    allowed_data_tags: list[str] = []
+    # The DataTags this strategy supports.
+    allowed_data_tags: list[DataTag] = [DataTag.DOCUMENT]
+    # The placeholder for the category definitions in the user prompt, rendered
+    # by ``_render_definitions``. None if the strategy has no such placeholder.
+    definitions_placeholder: PromptPlaceholder | None = None
 
     supported_languages = ["en", "de"]
     system_prompt_templates = system_prompt_templates
@@ -77,11 +104,9 @@ class LLMAssistantStrategy(Generic[StrategyParamsT]):
         db: Session,
         project_id: int,
         is_fewshot: bool,
-        valid_data_tags: list[DataTag] = [DataTag.DOCUMENT],
-        # either prompt templates are provided
+        params: DocumentBasedTaskParams,
+        # if no prompt templates are provided, the default ones are built from params
         prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        # or the parameters to build them
-        params: DocumentBasedTaskParams | None = None,
         example_ids: list[int] | None = None,
     ):
         project = crud_project.read(db=db, id=project_id)
@@ -91,24 +116,14 @@ class LLMAssistantStrategy(Generic[StrategyParamsT]):
 
         # if no prompt templates are provided, create the default ones
         if prompt_templates is None:
-            if params is None:
-                raise ValueError("Either prompt_templates or params must be provided!")
             prompt_templates = self._build_prompt_templates(
                 params=params, example_ids=example_ids
             )
 
-        # valid_data_tags are the placeholders, one of which must be present in the user prompt template and will be replaced accordingly
-        self.valid_data_tags = valid_data_tags
+        # validate provided prompts and remember the data tag that is used in
+        # the user prompt templates (e.g. "<document>" or "<sentence>")
+        self.data_tag = self.validate_prompt_templates(prompt_templates)
         self.lang2prompt_templates = {p.language: p for p in prompt_templates}
-
-        # validate provided prompts
-        is_valid, data_tag, err_msg = self._check_prompt_templates()
-        if not is_valid:
-            raise ValueError(f"Provided prompts are not valid: {err_msg}")
-
-        # the data tag that is used in the user prompt templates (e.g. "<document>" or "<sentence>")
-        assert data_tag is not None, "Data tag must not be None!"
-        self.data_tag = data_tag
 
     # STRATEGY METADATA
 
@@ -142,97 +157,173 @@ class LLMAssistantStrategy(Generic[StrategyParamsT]):
 
     # VALIDATION
 
-    def _is_system_prompt_valid(self, system_prompt: str) -> bool:
-        """Return whether a system prompt satisfies the shared requirements."""
-        return True
+    @classmethod
+    def validate_prompt_templates(
+        cls, prompt_templates: list[LLMAssistantPromptTemplates]
+    ) -> DataTag:
+        """Validate the templates of all supported languages.
 
-    def _is_user_prompt_valid(self, user_prompt: str) -> bool:
-        """Return whether a user prompt contains an allowed data placeholder."""
-        for tag in self.valid_data_tags:
-            if tag.value in user_prompt:
-                return True
-        return False
+        Every supported language has exactly one template. Each user prompt
+        contains exactly one data tag, which the strategy supports and which is
+        the same in all languages, and the strategy's definitions placeholder.
+        Placeholders that the strategy does not render are rejected.
 
-    def _extract_data_tag(self, user_prompt: str) -> DataTag | None:
-        """Extract the first allowed data placeholder used by a user prompt."""
-        for tag in self.valid_data_tags:
-            if tag.value in user_prompt:
-                return tag
-        return None
+        Returns:
+            The data tag shared by all user prompts.
 
-    def _check_prompt_templates(self) -> tuple[bool, DataTag | None, str]:
-        """Validate all language templates and return their shared data tag."""
-        for language in self.supported_languages:
-            if language not in self.lang2prompt_templates:
-                return False, None, f"No prompts provided for language '{language}'!"
-            prompts = self.lang2prompt_templates[language]
-            if self._is_system_prompt_valid(prompts.system_prompt) is False:
-                return False, None, f"Invalid system prompt for language '{language}'!"
-            if self._is_user_prompt_valid(prompts.user_prompt) is False:
-                return False, None, f"Invalid user prompt for language '{language}'!"
+        Raises:
+            InvalidPromptTemplateError: If a rule is violated.
+        """
+        lang2prompt_templates: dict[str, LLMAssistantPromptTemplates] = {}
+        for prompts in prompt_templates:
+            if prompts.language not in cls.supported_languages:
+                raise InvalidPromptTemplateError(
+                    f"Language '{prompts.language}' is not supported! "
+                    f"Supported languages are {cls.supported_languages}."
+                )
+            if prompts.language in lang2prompt_templates:
+                raise InvalidPromptTemplateError(
+                    f"Multiple prompts provided for language '{prompts.language}'!"
+                )
+            lang2prompt_templates[prompts.language] = prompts
 
-        # determine which data tag is used
-        # and validate that the same tag is used in all languages
-        data_tags = [
-            self._extract_data_tag(self.lang2prompt_templates[lang].user_prompt)
-            for lang in self.supported_languages
-        ]
-        if None in data_tags:
-            return (
-                False,
-                None,
-                f"No valid data tag found in user prompt! Valid tags are {self.valid_data_tags}",
-            )
+        allowed_tags = [tag.value for tag in cls.allowed_data_tags]
+        data_tags: list[DataTag] = []
+        for language in cls.supported_languages:
+            if language not in lang2prompt_templates:
+                raise InvalidPromptTemplateError(
+                    f"No prompts provided for language '{language}'!"
+                )
+            prompts = lang2prompt_templates[language]
+            used_tags = [tag for tag in DataTag if tag.value in prompts.user_prompt]
+            if len(used_tags) == 0:
+                raise InvalidPromptTemplateError(
+                    f"The user prompt for language '{language}' contains no data tag! "
+                    f"Valid tags are {allowed_tags}."
+                )
+            if len(used_tags) > 1:
+                raise InvalidPromptTemplateError(
+                    f"The user prompt for language '{language}' contains multiple "
+                    f"data tags ({[tag.value for tag in used_tags]})! Use exactly one."
+                )
+            if used_tags[0] not in cls.allowed_data_tags:
+                raise InvalidPromptTemplateError(
+                    f"The data tag {used_tags[0].value} in the user prompt for language "
+                    f"'{language}' is not supported! Valid tags are {allowed_tags}."
+                )
+            data_tags.append(used_tags[0])
+            cls._validate_definitions_placeholder(language=language, prompts=prompts)
+
         if len(set(data_tags)) > 1:
-            return (
-                False,
-                None,
-                f"Different data tags ({set(data_tags)}) used in different languages!",
+            raise InvalidPromptTemplateError(
+                f"Different data tags ({sorted(tag.value for tag in set(data_tags))}) "
+                "used in different languages!"
             )
-        return True, data_tags[0], ""
+        return data_tags[0]
+
+    @classmethod
+    def _validate_definitions_placeholder(
+        cls, *, language: str, prompts: LLMAssistantPromptTemplates
+    ) -> None:
+        """Require the strategy's definitions placeholder in the user prompt only."""
+        codes = PromptPlaceholder.CODES.value
+        if codes in prompts.system_prompt:
+            raise InvalidPromptTemplateError(
+                f"The system prompt for language '{language}' must not contain {codes}!"
+            )
+        if cls.definitions_placeholder is None:
+            if codes in prompts.user_prompt:
+                raise InvalidPromptTemplateError(
+                    f"This strategy does not support the placeholder {codes} "
+                    f"(user prompt for language '{language}')!"
+                )
+            return
+        placeholder = cls.definitions_placeholder.value
+        if placeholder not in prompts.user_prompt:
+            raise InvalidPromptTemplateError(
+                f"The user prompt for language '{language}' must contain {placeholder}!"
+            )
 
     # PROMPT BUILDING
+
+    def _render_definitions(self, language: str) -> str:
+        """Render the category definitions that replace ``definitions_placeholder``."""
+        raise NotImplementedError()
 
     def _build_system_prompt(self, language: str) -> str:
         """Render the configured system prompt for a language and project."""
         if language not in self.supported_languages:
             raise ValueError("Language not supported")
 
-        system_prompt = self.lang2prompt_templates[language].system_prompt.replace(
-            "<project_title>", self.project_title
+        return fill_placeholders(
+            self.lang2prompt_templates[language].system_prompt,
+            {
+                PromptPlaceholder.PROJECT_TITLE.value: self.project_title,
+                PromptPlaceholder.PROJECT_DESCRIPTION.value: self.project_description,
+            },
         )
-        return system_prompt.replace("<project_description>", self.project_description)
 
     def _build_user_prompt(self, language: str, data: str) -> str:
-        """Render the configured user prompt with the supplied document data."""
+        """Render the configured user prompt with the definitions and document data."""
         if language not in self.supported_languages:
             raise ValueError("Language not supported")
 
-        user_prompt_template = self.lang2prompt_templates[language].user_prompt
-        return user_prompt_template.replace(self.data_tag.value, data)
+        values = {self.data_tag.value: data}
+        if self.definitions_placeholder is not None:
+            values[self.definitions_placeholder.value] = self._render_definitions(
+                language
+            )
+        return fill_placeholders(
+            self.lang2prompt_templates[language].user_prompt, values
+        )
+
+    def _iter_message_data(self, sdoc_data: SourceDocumentDataORM) -> Iterator[str]:
+        """Yield the data that replaces the data tag, one item per LLM message."""
+        match self.data_tag:
+            case DataTag.DOCUMENT:
+                yield sdoc_data.content
+            case DataTag.SENTENCE:
+                yield from sdoc_data.sentences
+            case _:
+                raise ValueError(f"Data tag {self.data_tag} not supported!")
 
     def generate_prompts(
         self, language: str, sdoc_data: SourceDocumentDataORM
     ) -> Iterator[LLMMessage]:
         """Yield the LLM messages required to process one document."""
-        match self.data_tag:
-            case DataTag.DOCUMENT:
-                datas = iter([sdoc_data.content])
-            case DataTag.SENTENCE:
-                datas = iter(sdoc_data.sentences)
-            case _:
-                raise ValueError(f"Data tag {self.data_tag} not supported!")
-
         system_prompt = self._build_system_prompt(language)
-        for data in datas:
-            user_prompt = self._build_user_prompt(
-                language=language,
-                data=data,
-            )
+        for data in self._iter_message_data(sdoc_data):
             yield LLMMessage(
                 system_prompt=system_prompt,
-                user_prompt=user_prompt,
+                user_prompt=self._build_user_prompt(language=language, data=data),
             )
+
+    def preview_prompt(
+        self, language: str, sdoc_data: SourceDocumentDataORM, message_index: int
+    ) -> tuple[LLMMessage, int]:
+        """Render one message of a document exactly as ``generate_prompts`` does.
+
+        Returns:
+            The message and the number of messages of the document.
+
+        Raises:
+            InvalidPromptPreviewError: If the message index is out of range.
+        """
+        datas = list(self._iter_message_data(sdoc_data))
+        if message_index >= len(datas):
+            raise InvalidPromptPreviewError(
+                f"Message {message_index} does not exist, document {sdoc_data.id} "
+                f"has {len(datas)} message(s)."
+            )
+        return (
+            LLMMessage(
+                system_prompt=self._build_system_prompt(language),
+                user_prompt=self._build_user_prompt(
+                    language=language, data=datas[message_index]
+                ),
+            ),
+            len(datas),
+        )
 
     # PROMPT TEMPLATE BUILDING
 

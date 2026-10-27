@@ -86,7 +86,7 @@ class TaggingStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
         "**When to use:** For categorizing documents into a flat tag set."
     )
     strategy_params_type = DefaultStrategyParams
-    allowed_data_tags = [DataTag.DOCUMENT.value]
+    allowed_data_tags = [DataTag.DOCUMENT]
 
     prompt_templates = {
         "en": en_prompt_template.strip(),
@@ -102,10 +102,9 @@ class TaggingStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
         db: Session,
         project_id: int,
         is_fewshot: bool,
-        # either prompt templates are provided
+        params: TaggingParams,
+        # if no prompt templates are provided, the default ones are built from params
         prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        # or the parameters to build them
-        params: TaggingParams | None = None,
         example_ids: list[int] | None = None,
     ):
         project = crud_project.read(db=db, id=project_id)
@@ -117,9 +116,8 @@ class TaggingStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
             db,
             project_id,
             is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.DOCUMENT],
-            prompt_templates=prompt_templates,
             params=params,
+            prompt_templates=prompt_templates,
             example_ids=example_ids,
         )
 

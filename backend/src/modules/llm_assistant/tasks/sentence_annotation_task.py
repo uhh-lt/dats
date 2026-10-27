@@ -228,7 +228,7 @@ class SentenceAnnotationTask(
                             annotation.code_id,
                         )
                         for annotation in parsed_response
-                        if annotation.code_id in strategy.codeids2code_dict
+                        if annotation.code_id in strategy.codeid2definition
                     )
                 case DataTag.DOCUMENT:
                     parsed_items.extend(
@@ -237,7 +237,7 @@ class SentenceAnnotationTask(
                             annotation.code_id,
                         )
                         for annotation in parsed_response
-                        if annotation.code_id in strategy.codeids2code_dict
+                        if annotation.code_id in strategy.codeid2definition
                         and annotation.sent_id > 0
                         and annotation.sent_id <= num_sentences
                     )

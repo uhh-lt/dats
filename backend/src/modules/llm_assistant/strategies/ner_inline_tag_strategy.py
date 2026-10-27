@@ -8,14 +8,16 @@ from sqlalchemy.orm import Session
 from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.project.project_crud import crud_project
 from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationParams,
+    CodeDefinition,
     LLMAssistantPromptTemplates,
     NERInlineTagStrategyParams,
 )
-from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
+from modules.llm_assistant.strategies.code_annotation_strategy import (
+    CodeAnnotationStrategy,
+)
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 
 
@@ -33,11 +35,7 @@ lac = conf.llm_assistant
 EN_PROMPT_TEMPLATE = """
 You are an assistant that identifies and classifies relevant text passages.
 
-Allowed codes:
-{codes}
-
-Code definitions:
-{code_definitions}
+<codes>
 
 Rules:
 - Repeat the original text with relevant passages wrapped in inline XML-style tags (e.g. <CODE>text</CODE>)
@@ -56,11 +54,7 @@ Text:
 DE_PROMPT_TEMPLATE = """
 Du bist ein Assistent, der relevante Textpassagen identifiziert und klassifiziert.
 
-Erlaubte Codes:
-{codes}
-
-Code-Definitionen:
-{code_definitions}
+<codes>
 
 Regeln:
 - Wiederhole den Originaltext und umschließe relevante Passagen mit Inline-XML-Tags (z. B. <CODE>Text</CODE>)
@@ -157,7 +151,7 @@ def _render_sentence_example_multi(
     return " ".join(rendered_sentences)
 
 
-class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
+class NERInlineTagStrategy(CodeAnnotationStrategy[NERInlineTagStrategyParams]):
     """Span annotation via inline XML-style tags.
 
     The LLM repeats the original text and wraps relevant text passages in inline
@@ -188,9 +182,8 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
         "reproduce the full text. Supports whole-document and sentence-by-sentence modes."
     )
     strategy_params_type = NERInlineTagStrategyParams
-    allowed_data_tags = [DataTag.DOCUMENT.value, DataTag.SENTENCE.value]
+    allowed_data_tags = [DataTag.DOCUMENT, DataTag.SENTENCE]
 
-    supported_languages = ["en", "de"]
     prompt_templates = {
         "en": EN_PROMPT_TEMPLATE,
         "de": DE_PROMPT_TEMPLATE,
@@ -201,29 +194,28 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
         db: Session,
         project_id: int,
         is_fewshot: bool,
+        params: AnnotationParams,
         prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        params: AnnotationParams | None = None,
         example_ids: list[int] | None = None,
     ):
-        project = crud_project.read(db=db, id=project_id)
-        self.db = db
-        self.codes = project.codes
-        self.codename2id_dict = {code.name.upper(): code.id for code in self.codes}
-        self.codeids2code_dict = {code.id: code for code in self.codes}
-        self.code_pattern = _compile_code_pattern(list(self.codename2id_dict))
-
         super().__init__(
             db=db,
             project_id=project_id,
             is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.DOCUMENT, DataTag.SENTENCE],
-            prompt_templates=prompt_templates,
             params=params,
+            prompt_templates=prompt_templates,
             example_ids=example_ids,
         )
+        self.code_pattern = _compile_code_pattern(list(self.codename2id))
 
     def get_response_model(self) -> type[LLMHighlightedAnnotationResult]:
         return LLMHighlightedAnnotationResult
+
+    def _render_code_definition(self, definition: CodeDefinition) -> str:
+        return f"{definition.name.upper()}: {definition.description}"
+
+    def _render_definitions(self, language: str) -> str:
+        return self._render_allowed_codes_block(language)
 
     def _build_user_prompt_template(
         self,
@@ -232,16 +224,6 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
         example_ids: list[int] | None = None,
         params: AnnotationParams,
     ) -> str:
-        codes = ", ".join(
-            self.codeids2code_dict[cid].name.upper() for cid in params.code_ids
-        )
-
-        code_definitions = "\n".join(
-            f"{self.codeids2code_dict[cid].name.upper()}: "
-            f"{self.codeids2code_dict[cid].description}"
-            for cid in params.code_ids
-        )
-
         examples_block = ""
 
         if self.is_fewshot:
@@ -263,7 +245,8 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
 
             code_id2annos: dict[int, list[SpanAnnotationORM]] = defaultdict(list)
             for anno in annotations:
-                code_id2annos[anno.code_id].append(anno)
+                if anno.code_id in self.codeid2definition:
+                    code_id2annos[anno.code_id].append(anno)
 
             # sample examples
             threshold = lac.few_shot_threshold
@@ -285,7 +268,7 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
             # build example text
             example_blocks = []
             for cid, annos in code_id2annos.items():
-                code = self.codeids2code_dict[cid].name.upper()
+                code = self._code_name(cid).upper()
 
                 rendered = []
                 for a in annos:
@@ -309,12 +292,7 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
                 EN_FALLBACK_EXAMPLE if language == "en" else DE_FALLBACK_EXAMPLE
             )
 
-        return (
-            self.prompt_templates[language].format(
-                codes=codes, code_definitions=code_definitions
-            )
-            + examples_block
-        )
+        return self.prompt_templates[language] + examples_block
 
     def parse_result(
         self,
@@ -353,10 +331,11 @@ class NERInlineTagStrategy(LLMAssistantStrategy[NERInlineTagStrategyParams]):
             source_begin = begin + start_offset
             source_end = end + start_offset
             source_text = sdoc_data.content[source_begin:source_end]
-            if code.upper() in self.codename2id_dict and source_text == passage_text:
+            code_id = self._code_id_for_name(code)
+            if code_id is not None and source_text == passage_text:
                 spans.append(
                     ParsedSpan(
-                        code_id=self.codename2id_dict[code.upper()],
+                        code_id=code_id,
                         text=passage_text,
                         begin=source_begin,
                         end=source_end,

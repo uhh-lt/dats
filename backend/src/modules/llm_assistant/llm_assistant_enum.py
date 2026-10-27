@@ -35,6 +35,20 @@ class DataTag(str, Enum):
     CHUNK = "<chunk>"
 
 
+class PromptPlaceholder(str, Enum):
+    """Placeholder tags used in LLM prompt templates besides the data tags.
+
+    The project placeholders may appear in the system prompt. The codes
+    placeholder is required in the user prompt of every strategy that works
+    with code definitions; the strategy renders it from the code definitions
+    (id, name, description) in its own format.
+    """
+
+    PROJECT_TITLE = "<project_title>"
+    PROJECT_DESCRIPTION = "<project_description>"
+    CODES = "<codes>"
+
+
 class GroundingMethod(str, Enum):
     ANCHORED_EXACT = "anchored exact"
     QUOTE_EXACT = "quote exact"

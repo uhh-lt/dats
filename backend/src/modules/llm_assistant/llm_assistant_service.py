@@ -16,6 +16,7 @@ from modules.llm_assistant.llm_assistant_job_dto import (
     ApproachRecommendation,
     LLMAssistantJobParameters,
     LLMAssistantPromptTemplates,
+    SpecificStrategyParameters,
     StrategyInfo,
 )
 from modules.llm_assistant.strategies.strategy_factory import (
@@ -94,7 +95,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     name=strategy_cls.display_name,
                     description=strategy_cls.description,
                     default_params=strategy_cls.default_params(),
-                    allowed_data_tags=list(strategy_cls.allowed_data_tags),
+                    allowed_data_tags=[
+                        tag.value for tag in strategy_cls.allowed_data_tags
+                    ],
                 )
             )
         return infos
@@ -105,7 +108,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         job_params: LLMAssistantJobParameters,
         approach_type: ApproachType,
         strategy_type: StrategyType,
-        strategy_params=None,
+        strategy_params: SpecificStrategyParameters | None = None,
         example_ids: list[int] | None = None,
     ) -> list[LLMAssistantPromptTemplates]:
         # init the strategy with the provided specific parameters
@@ -116,8 +119,8 @@ class LLMAssistantService(metaclass=SingletonMeta):
             is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
             task_type=job_params.task_type,
             strategy_type=strategy_type,
-            strategy_params=strategy_params,
             params=job_params.specific_task_parameters,
+            strategy_params=strategy_params,
             example_ids=example_ids,
         )
         return list(strategy.lang2prompt_templates.values())
