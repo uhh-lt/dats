@@ -38,6 +38,12 @@ If you are working in a team and want to check inter-coder reliability or simply
 - You can view your annotations on the left and a colleague's on the right.
 - You can even "take over" or apply annotations from their side to yours!
 
+#### Provenance of Accepted Annotations
+
+When you take over an annotation (with the single arrow or "apply all"), DATS records where the copy came from and marks it with a small **provenance badge**. The badge appears on the annotation in the viewer, in the annotation menu, and on its card in the Annotation Explorer. Hovering over it shows who originally made the annotation, when you accepted it, and the original code — with a note when the code was changed after accepting. Any memos on the original annotation are copied along and keep their original author.
+
+Provenance is for transparency only: an accepted annotation counts as your own everywhere, and nothing is filtered or excluded automatically. If you prefer a cleaner view, you can hide the badges with the **Provenance** toggle button in the Annotation Toolbar (on by default; the setting is remembered per user in your browser).
+
 ### Rendering Settings & LLM Assistant
 
 - **Rendering Settings:** Click the settings icon to change how annotations visually overlap the text (e.g., rendering code names inline with the text or stacked at the top of the highlighted span).
