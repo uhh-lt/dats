@@ -18,6 +18,7 @@ import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CircleIcon from "@mui/icons-material/Circle";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
 import DynamicFeedIcon from "@mui/icons-material/DynamicFeed";
@@ -143,6 +144,7 @@ export enum Icon {
   SPAN_ANNOTATION_TABLE = "span_annotation_table",
   BBOX_ANNOTATION_TABLE = "bbox_annotation_table",
   TAG_RECOMMENDATION = "tag_recommendation",
+  AGREEMENT = "agreement",
 
   // TOOLS
   TOOLS = "tools",
@@ -283,6 +285,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.ANNOTATION_SCALING]: (iconProps) => <ScaleIcon {...iconProps} />,
   [Icon.WORD_FREQUENCY]: (iconProps) => <TextFormatIcon {...iconProps} />,
   [Icon.CODE_FREQUENCY]: (iconProps) => <BarChartIcon {...iconProps} />,
+  [Icon.AGREEMENT]: (iconProps) => <CompareArrowsIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION_TABLE]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.SPAN_ANNOTATION_TABLE]: (iconProps) => <ShortTextIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION_TABLE]: (iconProps) => <FilterIcon {...iconProps} />,

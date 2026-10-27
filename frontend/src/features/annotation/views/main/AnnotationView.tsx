@@ -20,6 +20,7 @@ import { SpanAnnotationComparison } from "./_components/span-annotation-comparat
 import { TextViewer } from "./_components/text-viewer";
 import { AnnotationToolbar } from "./_components/toolbar";
 import { AnnotationRouteAPI } from "./_hooks/annotationRouteAPI";
+import { useAnnotationModeFromURL } from "./_hooks/useAnnotationModeFromURL";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { AnnotationsActions } from "../../store/annotationsSlice";
 
@@ -152,6 +153,7 @@ export function AnnotationView() {
   const sdocId = AnnotationRouteAPI.useParams({ select: (params) => params.sdocId });
   const { compareWithUserId } = AnnotationRouteAPI.useSearch();
   const isCompareMode = compareWithUserId !== undefined;
+  useAnnotationModeFromURL();
 
   // global client state (redux)
   const dispatch = useAppDispatch();

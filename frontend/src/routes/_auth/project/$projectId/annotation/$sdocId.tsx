@@ -12,6 +12,8 @@ const annotationSearchSchema = z.object({
   selectedAnnotationId: z.coerce.number().optional(),
   compareWithUserId: z.coerce.number().optional(),
   explorerTab: z.enum(["code", "annotation"]).default("code"),
+  // opens the view in span or sentence annotation mode (e.g. from the agreement analysis)
+  annotationMode: z.enum(["span", "sentence"]).optional(),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdocId")({
