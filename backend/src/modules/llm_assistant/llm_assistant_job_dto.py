@@ -110,28 +110,49 @@ class LLMAssistantPromptTemplates(BaseModel):
     user_prompt: str = Field(description="The user prompt to use for the job")
 
 
+class PromptTemplateSource(BaseModel):
+    """Selects the prompt templates: inline prompts or a stored template version."""
+
+    prompts: list[LLMAssistantPromptTemplates] | None = Field(
+        description=(
+            "The prompt templates to use, one per supported language. "
+            "Exactly one of prompts and prompt_template_version_id is set."
+        ),
+        default=None,
+    )
+    prompt_template_version_id: int | None = Field(
+        description=(
+            "ID of the stored prompt template version to use. "
+            "Exactly one of prompts and prompt_template_version_id is set."
+        ),
+        default=None,
+    )
+
+    @model_validator(mode="after")
+    def check_exactly_one_prompt_source(self) -> Self:
+        if (self.prompts is None) == (self.prompt_template_version_id is None):
+            raise ValueError(
+                "Exactly one of prompts and prompt_template_version_id must be set"
+            )
+        return self
+
+
 class SpecificApproachParameters(BaseModel):
     approach_type: ApproachType = Field(
         description="The type of the LLMAssistantJob (what to llm)"
     )
 
 
-class ZeroShotParams(SpecificApproachParameters):
+class ZeroShotParams(SpecificApproachParameters, PromptTemplateSource):
     approach_type: Literal[ApproachType.LLM_ZERO_SHOT] = Field(
         description="The approach of the LLM Assistant job"
-    )
-    prompts: list[LLMAssistantPromptTemplates] = Field(
-        description="The prompt templates to use for the job"
     )
     model: str = Field(description="Large Language Model to use for the job")
 
 
-class FewShotParams(SpecificApproachParameters):
+class FewShotParams(SpecificApproachParameters, PromptTemplateSource):
     approach_type: Literal[ApproachType.LLM_FEW_SHOT] = Field(
         description="The approach of the LLM Assistant job"
-    )
-    prompts: list[LLMAssistantPromptTemplates] = Field(
-        description="The prompt templates to use for the job"
     )
     model: str = Field(description="Large Language Model to use for the job")
 

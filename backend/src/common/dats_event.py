@@ -23,6 +23,7 @@ from core.tag.tag_dto import SdocTagLinks, TagRead
 from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
 from modules.concept_over_time_analysis.cota_dto import COTARead
+from modules.llm_assistant.prompt_template_dto import PromptTemplateRead
 from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkRead,
 )
@@ -131,6 +132,10 @@ class DATSEvent(StrEnum):
     SEARCH_VIEW_DELETED = "SEARCH_VIEW_DELETED"
     SEARCH_VIEW_UPDATED_BATCH = "SEARCH_VIEW_UPDATED_BATCH"
 
+    PROMPT_TEMPLATE_CREATED = "PROMPT_TEMPLATE_CREATED"
+    PROMPT_TEMPLATE_UPDATED = "PROMPT_TEMPLATE_UPDATED"
+    PROMPT_TEMPLATE_DELETED = "PROMPT_TEMPLATE_DELETED"
+
     JOB_UPDATED = "JOB_UPDATED"
 
 
@@ -227,6 +232,9 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.SEARCH_VIEW_UPDATED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_DELETED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_UPDATED_BATCH: list[SearchViewReadUnion],
+    DATSEvent.PROMPT_TEMPLATE_CREATED: PromptTemplateRead,
+    DATSEvent.PROMPT_TEMPLATE_UPDATED: PromptTemplateRead,
+    DATSEvent.PROMPT_TEMPLATE_DELETED: PromptTemplateRead,
     # NOTE: DATSEvent.JOB_UPDATED is intentionally absent — its payload is a
     # per-JobType union of concrete JobRead models, built lazily by
     # build_job_event_models() once all jobs are registered.

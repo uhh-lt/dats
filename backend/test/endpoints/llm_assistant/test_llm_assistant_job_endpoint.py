@@ -14,6 +14,7 @@ from modules.llm_assistant.llm_assistant_enum import (
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
     AnnotationParams,
+    CodeDefinition,
     DefaultStrategyParams,
     FewShotParams,
     FuzzyGroundingStrategyParams,
@@ -32,7 +33,7 @@ from modules.llm_assistant.llm_assistant_job_dto import (
 from systems.job_system.job_dto import JobRead
 from systems.job_system.job_system_enum import JobStatus
 
-from .conftest import LLMAssistantProject
+from .conftest import LLMAssistantProject, PromptTemplateProject
 
 LLM_ASSISTANT_JOB_URL = "/llm_assistant/llm_assistant"
 PROMPT_TEMPLATES_URL = "/llm_assistant/create_prompt_templates"
@@ -734,3 +735,112 @@ def test_job_start_rejects_invalid_fuzzy_strategy_parameters(
     response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
     assert response.status_code == 422, response.text
     assert expected_fragment in response.text
+
+
+# --- Stored prompt template versions and code definitions ------------------
+
+
+def _version_sentence_payload(
+    project: PromptTemplateProject,
+    *,
+    version_id: int,
+    code_definitions: list[CodeDefinition] | None = None,
+) -> LLMAssistantJobInput:
+    """Build a zero-shot sentence-annotation job that uses a stored version."""
+    base = project["base"]
+    return LLMAssistantJobInput(
+        project_id=base["project"].id,
+        task_type=TaskType.SENTENCE_ANNOTATION,
+        specific_task_parameters=SentenceAnnotationParams(
+            task_type=TaskType.SENTENCE_ANNOTATION,
+            sdoc_ids=[base["target_sdoc"].id],
+            code_ids=[base["fact_code"].id],
+            code_definitions=code_definitions,
+            delete_existing_annotations=True,
+        ),
+        approach_type=ApproachType.LLM_ZERO_SHOT,
+        specific_approach_parameters=ZeroShotParams(
+            approach_type=ApproachType.LLM_ZERO_SHOT,
+            prompt_template_version_id=version_id,
+            model="default",
+        ),
+        strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT,
+        specific_strategy_parameters=DefaultStrategyParams(
+            strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT
+        ),
+    )
+
+
+@pytest.mark.llm
+def test_sentence_job_runs_with_a_stored_version_and_renamed_codes(
+    client: TestClient,
+    prompt_template_project: PromptTemplateProject,
+) -> None:
+    """Answers with an experiment-scoped code name are stored for the original code.
+
+    Version 2 is document-level; FACT is shown to the LLM as STATEMENT only.
+    """
+    base = prompt_template_project["base"]
+    payload = _version_sentence_payload(
+        prompt_template_project,
+        version_id=prompt_template_project["sentence_v2"].id,
+        code_definitions=[
+            CodeDefinition(
+                id=base["fact_code"].id,
+                name="STATEMENT",
+                description=base["fact_code"].description or "",
+            )
+        ],
+    )
+    started = _start_job(client, payload)
+    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+
+    assert finished.output is not None
+    task_result = finished.output.specific_task_result
+    assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
+    result = task_result.results[0]
+    assert result.status == "finished", result.model_dump_json(indent=2)
+    assert result.suggested_annotations
+    assert all(
+        annotation.code_id == base["fact_code"].id
+        and annotation.user_id == ASSISTANT_ZEROSHOT_ID
+        for annotation in result.suggested_annotations
+    )
+
+
+def test_job_fails_with_a_template_version_of_another_task(
+    client: TestClient,
+    prompt_template_project: PromptTemplateProject,
+) -> None:
+    """The job checks that the version belongs to its project, task and strategy."""
+    version_id = prompt_template_project["tagging_template"].versions[0].id
+    started = _start_job(
+        client,
+        _version_sentence_payload(prompt_template_project, version_id=version_id),
+    )
+    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    assert f"Prompt template version {version_id} cannot be used" in (
+        failed.status_message or ""
+    )
+
+
+@pytest.mark.parametrize(
+    "approach_update",
+    [
+        # Neither inline prompts nor a stored version.
+        pytest.param({"prompts": None, "prompt_template_version_id": None}, id="none"),
+        # Inline prompts and a stored version at the same time.
+        pytest.param({"prompt_template_version_id": 1}, id="both"),
+    ],
+)
+def test_job_start_requires_exactly_one_prompt_source(
+    client: TestClient,
+    llm_assistant_project: LLMAssistantProject,
+    approach_update: dict[str, object],
+) -> None:
+    """A job uses either inline prompts or a template version (HTTP 422)."""
+    payload = _tagging_payload(client, llm_assistant_project).model_dump(mode="json")
+    payload["specific_approach_parameters"].update(approach_update)
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
+    assert response.status_code == 422, response.text
+    assert "Exactly one of prompts and prompt_template_version_id" in response.text

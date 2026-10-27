@@ -38,6 +38,15 @@ from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
 from core.user.user_orm import UserORM
+from modules.llm_assistant.llm_assistant_enum import StrategyType, TaskType
+from modules.llm_assistant.llm_assistant_job_dto import LLMAssistantPromptTemplates
+from modules.llm_assistant.prompt_template_dto import (
+    PromptTemplateCreate,
+    PromptTemplateRead,
+    PromptTemplateVersionCreate,
+    PromptTemplateVersionRead,
+)
+from modules.llm_assistant.prompt_template_service import PromptTemplateService
 
 
 @pytest.fixture(scope="function")
@@ -537,4 +546,133 @@ def llm_assistant_project(
         "foreign_sdoc": foreign_sdoc,
         "foreign_code": foreign_code,
         "foreign_span_annotation": foreign_span_annotation,
+    }
+
+
+SENTENCE_TEMPLATE_V1_USER_PROMPTS = {
+    "en": "Classify the sentence with these codes:\n<codes>\nSentence:\n<sentence>",
+    "de": "Klassifiziere den Satz mit diesen Codes:\n<codes>\nSatz:\n<sentence>",
+}
+SENTENCE_TEMPLATE_V2_USER_PROMPTS = {
+    "en": "Classify the document with these codes:\n<codes>\nDocument:\n<document>",
+    "de": "Klassifiziere das Dokument mit diesen Codes:\n<codes>\nDokument:\n<document>",
+}
+TEMPLATE_SYSTEM_PROMPTS = {
+    "en": "You analyse texts of <project_title>.",
+    "de": "Du analysierst Texte von <project_title>.",
+}
+TAGGING_TEMPLATE_USER_PROMPTS = {
+    "en": "Tag the document with People or Other:\n<document>",
+    "de": "Tagge das Dokument mit People oder Other:\n<document>",
+}
+FUZZY_TEMPLATE_USER_PROMPTS = {
+    "en": "Extract passages for these codes:\n<codes>\nText:\n<chunk>",
+    "de": "Extrahiere Passagen für diese Codes:\n<codes>\nText:\n<chunk>",
+}
+
+
+def template_prompts(user_prompts: dict[str, str]) -> list[LLMAssistantPromptTemplates]:
+    """Build the prompts of both languages with the shared test system prompts."""
+    return [
+        LLMAssistantPromptTemplates(
+            language=language,
+            system_prompt=TEMPLATE_SYSTEM_PROMPTS[language],
+            user_prompt=user_prompts[language],
+        )
+        for language in ["en", "de"]
+    ]
+
+
+class PromptTemplateProject(TypedDict):
+    """This fixture extends ``llm_assistant_project`` with stored prompt templates.
+
+    Every version was saved by ``testuser@dats.org`` and uses the system prompts
+    ``TEMPLATE_SYSTEM_PROMPTS`` ("You analyse texts of <project_title>." and its
+    German counterpart).
+
+    - Template ``Sentence classification`` (task SENTENCE_ANNOTATION, strategy
+      SENTENCE_ANNOTATION_DEFAULT) of the main project with two versions:
+      version 1 uses ``SENTENCE_TEMPLATE_V1_USER_PROMPTS`` (``<codes>`` and
+      ``<sentence>``), version 2 uses ``SENTENCE_TEMPLATE_V2_USER_PROMPTS``
+      (``<codes>`` and ``<document>``).
+    - Template ``Tagging`` (task TAGGING, strategy TAGGING_DEFAULT) of the main
+      project with one version using ``TAGGING_TEMPLATE_USER_PROMPTS``.
+    - Template ``Foreign extraction`` (task ANNOTATION, strategy
+      CONTEXT_ANCHORED_FUZZY_MATCHING) of the unauthorized project with one
+      version using ``FUZZY_TEMPLATE_USER_PROMPTS``.
+
+    Non-obvious derived behavior:
+
+    - The project templates are listed by name, so ``Sentence classification``
+      comes before ``Tagging``.
+    - The target document has five sentences, so a sentence-level template
+      renders five messages and a document-level template renders one.
+    """
+
+    base: LLMAssistantProject
+    sentence_template: PromptTemplateRead
+    sentence_v1: PromptTemplateVersionRead
+    sentence_v2: PromptTemplateVersionRead
+    tagging_template: PromptTemplateRead
+    foreign_template: PromptTemplateRead
+
+
+@pytest.fixture(scope="function")
+def prompt_template_project(
+    db_session: Session,
+    llm_assistant_project: LLMAssistantProject,
+    test_user: UserORM,
+) -> PromptTemplateProject:
+    """Create the prompt templates described by PromptTemplateProject."""
+    service = PromptTemplateService()
+    sentence_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=llm_assistant_project["project"].id,
+            name="Sentence classification",
+            task_type=TaskType.SENTENCE_ANNOTATION,
+            strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT,
+            prompts=template_prompts(SENTENCE_TEMPLATE_V1_USER_PROMPTS),
+        ),
+    )
+    sentence_template = service.create_prompt_template_version(
+        db=db_session,
+        user_id=test_user.id,
+        prompt_template_id=sentence_template.id,
+        create_dto=PromptTemplateVersionCreate(
+            prompts=template_prompts(SENTENCE_TEMPLATE_V2_USER_PROMPTS)
+        ),
+    )
+    tagging_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=llm_assistant_project["project"].id,
+            name="Tagging",
+            task_type=TaskType.TAGGING,
+            strategy_type=StrategyType.TAGGING_DEFAULT,
+            prompts=template_prompts(TAGGING_TEMPLATE_USER_PROMPTS),
+        ),
+    )
+    foreign_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=llm_assistant_project["foreign_project"].id,
+            name="Foreign extraction",
+            task_type=TaskType.ANNOTATION,
+            strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
+            prompts=template_prompts(FUZZY_TEMPLATE_USER_PROMPTS),
+        ),
+    )
+    db_session.commit()
+
+    return {
+        "base": llm_assistant_project,
+        "sentence_template": sentence_template,
+        "sentence_v1": sentence_template.versions[0],
+        "sentence_v2": sentence_template.versions[1],
+        "tagging_template": tagging_template,
+        "foreign_template": foreign_template,
     }

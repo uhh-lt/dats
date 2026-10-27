@@ -5,6 +5,7 @@ from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
 )
+from modules.llm_assistant.prompt_template_service import PromptTemplateService
 from modules.llm_assistant.strategies.strategy_factory import build_strategy
 from modules.llm_assistant.tasks.task_factory import build_task
 from repos.db.sql_repo import SQLRepo
@@ -43,6 +44,15 @@ def llm_assistant(
     is_fewshot = isinstance(approach_parameters, FewShotParams)
 
     with sqlr.transaction() as db:
+        # resolve the prompts (inline or a stored template version)
+        prompt_templates = PromptTemplateService().resolve_prompts(
+            db=db,
+            project_id=payload.project_id,
+            task_type=task_type,
+            strategy_type=payload.strategy_type,
+            source=approach_parameters,
+        )
+
         # build the strategy
         strategy = build_strategy(
             db=db,
@@ -50,9 +60,9 @@ def llm_assistant(
             is_fewshot=is_fewshot,
             task_type=task_type,
             strategy_type=payload.strategy_type,
-            strategy_params=payload.specific_strategy_parameters,
-            prompt_templates=approach_parameters.prompts,
             params=task_parameters,
+            strategy_params=payload.specific_strategy_parameters,
+            prompt_templates=prompt_templates,
         )
 
         # build the task

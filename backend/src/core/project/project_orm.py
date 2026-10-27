@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
     from modules.classifier.classifier_orm import ClassifierORM
+    from modules.llm_assistant.prompt_template_orm import PromptTemplateORM
     from modules.perspectives.aspect_orm import AspectORM
     from modules.search_view.search_view_orm import SearchViewORM
     from modules.whiteboard.whiteboard_orm import WhiteboardORM
@@ -112,6 +113,13 @@ class ProjectORM(ORMBase):
 
     whiteboards: Mapped[list["WhiteboardORM"]] = relationship(
         "WhiteboardORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    prompt_templates: Mapped[list["PromptTemplateORM"]] = relationship(
+        "PromptTemplateORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

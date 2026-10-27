@@ -23,6 +23,10 @@ from modules.classifier.classifier_crud import crud_classifier
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
+from modules.llm_assistant.prompt_template_crud import crud_prompt_template
+from modules.llm_assistant.prompt_template_version_crud import (
+    crud_prompt_template_version,
+)
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
@@ -53,6 +57,8 @@ class Crud(Enum):
     OBJECT_HANDLE = crud_object_handle
     PROJECT = crud_project
     PROJECT_METADATA = crud_project_meta
+    PROMPT_TEMPLATE = crud_prompt_template
+    PROMPT_TEMPLATE_VERSION = crud_prompt_template_version
     REFRESH_TOKEN = crud_refresh_token
     SENTENCE_ANNOTATION = crud_sentence_anno
     SOURCE_DOCUMENT_DATA = crud_sdoc_data

@@ -59,6 +59,22 @@ class InvalidCodeDefinitionsError(Exception):
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
+class PromptTemplateMismatchError(Exception):
+    """Raised when a prompt template version is used for another task or strategy."""
+
+    def __init__(
+        self,
+        version_id: int,
+        task_type: TaskType,
+        strategy_type: StrategyType,
+    ) -> None:
+        super().__init__(
+            f"Prompt template version {version_id} cannot be used for task "
+            f"{task_type.value} with strategy {strategy_type.value}."
+        )
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
 class InvalidPromptPreviewError(Exception):
     """Raised when a prompt preview requests a document or message that does not exist."""
 
