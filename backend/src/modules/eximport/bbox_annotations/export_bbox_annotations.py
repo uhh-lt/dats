@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
+from modules.eximport.annotation_provenance_utils import (
+    export_annotation_provenance,
+)
 from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportCollection,
     BBoxAnnotationExportSchema,
@@ -53,7 +56,7 @@ def __export_bbox_annotations(
         raise NoDataToExportError("No bbox annotations to export.")
 
     export_data = __generate_export_df_for_bbox_annotations(
-        bbox_annotations=bbox_annotations
+        db=db, bbox_annotations=bbox_annotations
     )
     return fsr.write_df_to_temp_file(
         df=export_data,
@@ -62,17 +65,22 @@ def __export_bbox_annotations(
 
 
 def __generate_export_df_for_bbox_annotations(
+    db: Session,
     bbox_annotations: list[BBoxAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(bbox_annotations)} BBox Annotations ...")
 
     annotation_export_items = []
-    for bbox in bbox_annotations:
+    provenances = export_annotation_provenance(
+        db=db, crud=crud_bbox_anno, annotations=bbox_annotations
+    )
+    for bbox, provenance in zip(bbox_annotations, provenances):
         sdoc = bbox.annotation_document.source_document
         user = bbox.annotation_document.user
 
         annotation_export_items.append(
             BBoxAnnotationExportSchema(
+                **provenance.model_dump(),
                 uuid=bbox.uuid,
                 sdoc_name=sdoc.filename,
                 user_email=user.email,

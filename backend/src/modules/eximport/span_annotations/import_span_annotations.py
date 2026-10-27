@@ -8,6 +8,9 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from modules.eximport.annotation_provenance_utils import (
+    import_annotation_provenance,
+)
 from modules.eximport.import_exceptions import ImportSpanAnnotationsError
 from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
@@ -113,6 +116,7 @@ def import_span_annotations_to_proj(
 
     # Everything is fine, prepare the creation (finding / creating annotation documents)
     create_dtos: list[SpanAnnotationCreateIntern] = []
+    created_annotations: list[SpanAnnotationExportSchema] = []
     for user_email, annotations in user_email2annos.items():
         user = project_user_emails[user_email]
 
@@ -128,6 +132,7 @@ def import_span_annotations_to_proj(
                 db=db, user_id=user.id, sdoc_id=sdoc_id
             ).id
 
+        created_annotations.extend(annotations)
         create_dtos.extend(
             SpanAnnotationCreateIntern(
                 uuid=annotation.uuid,
@@ -149,6 +154,13 @@ def import_span_annotations_to_proj(
     created_annos = crud_span_anno.create_multi(
         db=db,
         create_dtos=create_dtos,
+    )
+    import_annotation_provenance(
+        db=db,
+        crud=crud_span_anno,
+        project_id=project_id,
+        provenances=created_annotations,
+        annotations=created_annos,
     )
     imported_anno_ids = [anno.id for anno in created_annos]
 
