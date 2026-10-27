@@ -29,6 +29,13 @@ function AnalysisView() {
           color={cardColor}
         />
         <LinkCard
+          to="/project/$projectId/analysis/agreement"
+          params={{ projectId }}
+          title={"Annotator Agreement"}
+          description={"Compare two annotators: scores, confusion matrix and disagreements."}
+          color={cardColor}
+        />
+        <LinkCard
           to="/project/$projectId/analysis/timeline"
           params={{ projectId }}
           title={"Timeline Analysis"}
