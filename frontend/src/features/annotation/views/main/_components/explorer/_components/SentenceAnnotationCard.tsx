@@ -6,6 +6,7 @@ import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";
+import { AnnotationProvenanceText } from "./AnnotationProvenanceText";
 
 export function SentenceAnnotationCard({
   annotation,
@@ -52,6 +53,7 @@ export function SentenceAnnotationCard({
           >
             This annotation spans sentence {annotation.sentence_id_start + 1} - {annotation.sentence_id_end + 1}.
           </Typography>
+          <AnnotationProvenanceText annotation={annotation} />
           <Stack direction="row" justifyContent="end" width="100%">
             <Typography variant="subtitle2" color="textDisabled" fontSize={12}>
               <UserRenderer user={annotation.user_id} />
