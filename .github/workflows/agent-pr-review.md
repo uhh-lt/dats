@@ -17,6 +17,7 @@ permissions:
   pull-requests: read
 max-turns: 500
 max-turn-cache-misses: 500
+timeout-minutes: 40
 engine:
   id: copilot
   env:
@@ -58,9 +59,9 @@ safe-outputs:
     pull-requests: true
   noop:
     report-as-issue: false
-  missing-tool:
+  report-missing-tool:
     create-issue: false
-  missing-data:
+  report-missing-data:
     create-issue: false
   report-incomplete:
     create-issue: false
