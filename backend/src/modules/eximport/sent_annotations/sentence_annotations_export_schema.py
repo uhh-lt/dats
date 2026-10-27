@@ -1,8 +1,12 @@
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
+from modules.eximport.annotation_provenance_utils import (
+    AnnotationProvenanceExportSchema,
+)
 
-class SentenceAnnotationExportSchema(BaseModel):
+
+class SentenceAnnotationExportSchema(AnnotationProvenanceExportSchema):
     """Schema definition for sentence annotation export/import operations."""
 
     uuid: str = Field(description="UUID of the sentence annotation")
