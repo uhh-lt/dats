@@ -1,9 +1,7 @@
 # CI overrides for compose.yml and compose.override.yml, enabled by the
 # prepare-env action (.github/actions/prepare-env) through COMPOSE_FILE.
-#
-# A CI run throws its data away in the cleanup (`docker compose down -v`), so the
-# data services keep it in memory instead of writing it to the host's disks,
-# which several runners and dev stacks share.
+# The data services keep their data in memory: a CI run throws it away in the
+# cleanup (`docker compose down -v`).
 services:
   postgres:
     volumes:

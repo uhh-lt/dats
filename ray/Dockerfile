@@ -22,8 +22,7 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -r /var/cache
 
-# install uv, pinned: a new `latest` would invalidate the cached layers below
-# and rebuild the whole virtual environment on every uv release
+# install uv (pinned, so the cached layers below survive uv releases)
 COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /bin/
 
 # install dependencies

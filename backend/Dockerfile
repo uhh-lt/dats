@@ -3,8 +3,7 @@
 
 FROM ubuntu:jammy-20250404 AS ubuntu
 
-# install uv, pinned: a new `latest` would invalidate the cached layers below
-# and rebuild the whole virtual environment on every uv release
+# install uv (pinned, so the cached layers below survive uv releases)
 COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /bin/
 
 CMD ["/bin/bash"]

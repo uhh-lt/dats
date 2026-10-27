@@ -131,7 +131,7 @@ The CI's `prepare-env` step extracts the two digits, builds the port prefix as `
 
 ### Per-runner uv cache
 
-Each runner keeps its uv cache in its own work directory (`UV_CACHE_DIR=/actions-runner/_work/.cache/uv`, i.e. `$RUNNER_WORK_BASE_DIR/runner-XX/.cache/uv` on the host). Every job starts from a clean checkout without a `.venv`, so `just install` rebuilds the virtual environments each time. uv hardlinks the packages from its cache into a `.venv`, which only works within one mount: a cache in a separate bind mount (even of the same host filesystem) makes uv copy every package, 6+ GB per venv and job, and saturates the disks when several runners work at once. A cache per runner costs some disk space and one download per runner, and keeps installs at a few seconds.
+Each runner keeps its uv cache in its own work directory (`UV_CACHE_DIR=/actions-runner/_work/.cache/uv`, i.e. `$RUNNER_WORK_BASE_DIR/runner-XX/.cache/uv` on the host), on the same mount as its checkouts, so `uv sync` hardlinks the packages into each `.venv`.
 
 ### Installed Tools
 
