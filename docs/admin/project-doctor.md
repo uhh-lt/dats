@@ -40,22 +40,24 @@ Stop uploads and processing in the affected projects while you heal them. `check
 
 ## Checks
 
-| Check                      | Finds                                                                                  | Heal                                        |
-| -------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                           | Deletes the document from all stores        |
-| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                           | None: recompute in the document health view |
-| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document                         | Moves the file to the quarantine folder     |
-| `orphaned_project_dir`     | Project folders of deleted projects                                                    | Moves the folder to the quarantine folder   |
-| `missing_sdoc_data`        | Documents without processed data (content, sentences), with no step still running      | None: retry the processing or delete them   |
-| `failed_processing`        | Documents with failed processing steps                                                 | None: retry in the document health view     |
-| `cross_project_reference`  | Annotations, folders, tags or metadata that reference another project                  | None: inspect them in the database          |
-| `annotation_out_of_bounds` | Annotations beyond the text of their document, bounding boxes with invalid coordinates | Deletes the annotations                     |
-| `missing_es_document`      | Indexed documents missing in the project's Elasticsearch index (breaks the search)     | Indexes them again (if the index exists)    |
-| `orphaned_es_document`     | Elasticsearch documents of deleted documents                                           | Deletes them                                |
-| `orphaned_es_index`        | Elasticsearch indices of deleted projects                                              | Deletes them                                |
-| `missing_embeddings`       | Documents without sentence or image embeddings, although the embedding step finished   | None: recompute in the document health view |
-| `orphaned_embeddings`      | Weaviate embeddings of deleted documents                                               | Deletes them                                |
-| `orphaned_weaviate_tenant` | Weaviate tenants of deleted projects                                                   | Deletes them                                |
+| Check                      | Finds                                                                                                           | Heal                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                                                    | Deletes the document from all stores        |
+| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                                                    | None: recompute in the document health view |
+| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document (see below)                                      | Moves the file to the quarantine folder     |
+| `orphaned_project_dir`     | Project folders of deleted projects                                                                             | Moves the folder to the quarantine folder   |
+| `missing_sdoc_data`        | Documents without processed data (content, sentences) after a failed or finished processing (breaks the export) | None: retry the processing or delete them   |
+| `failed_processing`        | Documents with failed processing steps                                                                          | None: retry in the document health view     |
+| `cross_project_reference`  | Annotations, folders, tags or metadata that reference another project                                           | None: inspect them in the database          |
+| `annotation_out_of_bounds` | Annotations beyond the text of their document, bounding boxes with invalid coordinates                          | Deletes the annotations                     |
+| `missing_es_document`      | Indexed documents missing in the project's Elasticsearch index (breaks the search)                              | Indexes them again (if the index exists)    |
+| `orphaned_es_document`     | Elasticsearch documents of deleted documents                                                                    | Deletes them                                |
+| `orphaned_es_index`        | Elasticsearch indices of deleted projects                                                                       | Deletes them                                |
+| `missing_embeddings`       | Documents without sentence or image embeddings, although the embedding step finished                            | None: recompute in the document health view |
+| `orphaned_embeddings`      | Weaviate embeddings of deleted documents                                                                        | Deletes them                                |
+| `orphaned_weaviate_tenant` | Weaviate tenants of deleted projects                                                                            | Deletes them                                |
+
+DATS keeps some files that no document references, so `orphaned_file` skips them: the original of an upload that the chunking split into several documents (named like the folder of its chunks) and uploaded `.zip` archives, whose content became documents.
 
 If the file of a document is missing, but a file exists whose name differs only in case or unicode normalization, the doctor proposes to rename that file instead of deleting the document.
 
