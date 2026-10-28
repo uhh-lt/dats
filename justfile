@@ -197,3 +197,11 @@ worktree-up *args:
 [group("8. Worktrees")]
 worktree-down *args:
     ./bin/dev/worktree-down.sh "$@"
+
+# --- 9. Maintenance -------------------------------------------------------------
+
+[arg("args", help="check [--project ID ...] [-o report.json] | heal report.json [--only CHECK ...] [--apply]")]
+[doc("Find and heal inconsistencies between the data stores of the dev stack (tools/project_doctor)")]
+[group("9. Maintenance")]
+doctor *args:
+    ./tools/project_doctor/dats-doctor.sh --local "$@"

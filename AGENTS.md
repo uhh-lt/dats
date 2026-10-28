@@ -28,6 +28,7 @@ Run `just --list` to see all available commands.
 | `just alembic migrate\|check\|revision "msg"`         | Database migrations                                                |
 | `just worktree-up [--no-services] [branch]`           | Create/set up a worktree with its own isolated dev stack           |
 | `just worktree-down [branch] [--force]`               | Remove a worktree, its docker stack and volumes                    |
+| `just doctor check\|heal [args]`                      | Find / heal inconsistencies between the data stores                |
 
 ## Architecture
 
