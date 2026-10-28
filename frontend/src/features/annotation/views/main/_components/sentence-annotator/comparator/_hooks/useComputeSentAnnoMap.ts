@@ -1,7 +1,6 @@
+import { SentAnnoMap } from "@core/annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { useMemo } from "react";
-
-export type SentAnnoMap = Record<number, SentenceAnnotationRead>;
 
 export function useComputeSentAnnoMap(
   sentenceAnnotations: Record<number, SentenceAnnotationRead[]> | undefined,

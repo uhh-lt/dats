@@ -4,26 +4,23 @@ import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { CircularProgress } from "@mui/material";
-import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
-import { SpanAnnotationResizeStartHandler } from "../../_hooks/useSpanAnnotationResize";
-import { IToken } from "../../../../_types/IToken";
-import { TagStyle } from "../../../../_types/TagStyle";
+import { IToken, SpanAnnotationResizeStartHandler, TagStyle } from "./annotationDocumentTypes";
 import { CodeIndicator } from "./CodeIndicator";
 import { Mark } from "./Mark";
+import "./AnnotationDocument.css";
 
 interface TokenProps {
   spanAnnotations: SpanAnnotationRead[];
   token: IToken;
+  /** The codes whose annotations are not rendered. */
+  hiddenCodeIds: number[];
+  tagStyle: TagStyle;
   onResizeStart?: SpanAnnotationResizeStartHandler;
 }
 
-export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
-  // global client state (redux)
-  const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
-  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
-
+export function Token({ token, spanAnnotations, hiddenCodeIds, tagStyle, onResizeStart }: TokenProps) {
   // computed
   const spans = useMemo(
     () => spanAnnotations.filter((span) => hiddenCodeIds.indexOf(span.code_id) === -1),

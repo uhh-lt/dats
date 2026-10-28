@@ -1,9 +1,9 @@
+import { TagStyle } from "@core/annotation";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppSelector } from "@store/storeHooks";
 import { MouseEvent, useRef } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { useComputeTokenData } from "../../_hooks/useComputeTokenData";
-import { TagStyle } from "../../../../_types/TagStyle";
 import { DocumentRenderer } from "../DocumentRenderer";
 import { SentenceMenu, SentenceMenuHandle } from "./_components/SentenceMenu";
 

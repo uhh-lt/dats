@@ -1,3 +1,4 @@
+import { computeSentenceAnnotationLanes } from "@core/annotation";
 import { sentenceAnnotationQueries } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
@@ -107,46 +108,7 @@ export function useGetSentenceAnnotator({
         numPositions: 0,
       };
 
-    // collect unique annotations (the backend includes each annotation once per covered sentence)
-    // and sort them by (start, end, id) so that lane assignment is deterministic:
-    // annotations that start earlier always get lower lanes
-    const seen = new Set<number>();
-    const allAnnotations = withOverride.flat().filter((a) => {
-      if (seen.has(a.id)) return false;
-      seen.add(a.id);
-      return true;
-    });
-    allAnnotations.sort(
-      (a, b) => a.sentence_id_start - b.sentence_id_start || a.sentence_id_end - b.sentence_id_end || a.id - b.id,
-    );
-
-    // assign lanes in sorted order: each annotation gets the lowest lane that is free
-    // for its entire sentence range
-    const laneByAnnotationId = new Map<number, number>();
-    // laneEndByLane[lane] = the last sentence index occupied by that lane
-    const laneEndByLane: number[] = [];
-    for (const annotation of allAnnotations) {
-      let lane = 0;
-      while (lane < laneEndByLane.length && laneEndByLane[lane] >= annotation.sentence_id_start) {
-        lane++;
-      }
-      laneByAnnotationId.set(annotation.id, lane);
-      laneEndByLane[lane] = annotation.sentence_id_end;
-    }
-
-    // build per-sentence position maps (key: position, value: annotation id)
-    let numPositions = 0;
-    const annotationPositions: Record<number, number>[] = withOverride.map((annotations) => {
-      const positions: Record<number, number> = {};
-      for (const annotation of annotations) {
-        const lane = laneByAnnotationId.get(annotation.id);
-        if (lane !== undefined) {
-          positions[lane] = annotation.id;
-          if (lane > numPositions) numPositions = lane;
-        }
-      }
-      return positions;
-    });
+    const { annotationPositions, numPositions } = computeSentenceAnnotationLanes(withOverride);
 
     // build the overridden sentence annotations record (sentence index → annotations)
     const sentenceAnnotationsRecord: Record<number, SentenceAnnotationRead[]> = {};

@@ -1,3 +1,4 @@
+import { TagStyle } from "@core/annotation";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { DocTypeIcons, getIconComponent, Icon } from "@components/icons";
 import { DocType } from "@models/DocType";
@@ -12,7 +13,6 @@ import { Box, IconButton, Theme, ToggleButton, ToggleButtonGroup, Tooltip, Typog
 import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationMode } from "../../../../_types/AnnotationMode";
-import { TagStyle } from "../../../../_types/TagStyle";
 import { AnnotationsActions } from "../../../../store/annotationsSlice";
 import { AnnotatorSelector } from "./_components/AnnotatorSelector";
 import { CompareWithSelector } from "./_components/CompareWithSelector";

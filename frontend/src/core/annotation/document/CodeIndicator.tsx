@@ -4,6 +4,7 @@ import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CircularProgress } from "@mui/material";
 import { contrastiveColors } from "@utils/colors/colors";
+import "./AnnotationDocument.css";
 
 interface CodeIndicatorProps {
   codeId: number;

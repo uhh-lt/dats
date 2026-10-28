@@ -1,17 +1,20 @@
+import {
+  IToken,
+  SdocAudioLink,
+  SdocImage,
+  SdocVideoLink,
+  SpanAnnotationResizeStartHandler,
+  Token,
+} from "@core/annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
+import { useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { useJumpToSpanAnnotation } from "../_hooks/useJumpToSpanAnnotation";
 import { useSpanAnnotationHighlight } from "../_hooks/useSpanAnnotationHighlight";
-import { SpanAnnotationResizeStartHandler } from "../_hooks/useSpanAnnotationResize";
-import { IToken } from "../../../_types/IToken";
 import { DocumentPage } from "./_components/DocumentPage";
-import { SdocAudioLink } from "./_components/SdocAudioLink";
-import { SdocImage } from "./_components/SdocImage";
-import { SdocVideoLink } from "./_components/SdocVideoLink";
-import { Token } from "./_components/Token";
 import "./_styles/Annotation.css";
 
 interface DocumentRendererProps {
@@ -39,6 +42,10 @@ export function DocumentRenderer({
   const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
   useJumpToSpanAnnotation(selectedAnnotationId);
   useSpanAnnotationHighlight(selectedAnnotationId);
+
+  // global client state (redux)
+  const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
+  const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 
   const basicProcessingInstructions = useCallback(
     (options: HTMLReactParserOptions) => (domNode: Element) => {
@@ -126,6 +133,8 @@ export function DocumentRenderer({
                   key={`token-${tokenId}`}
                   token={token}
                   spanAnnotations={spanAnnotations}
+                  hiddenCodeIds={hiddenCodeIds}
+                  tagStyle={tagStyle}
                   onResizeStart={onResizeStart}
                 />
               );
@@ -138,7 +147,15 @@ export function DocumentRenderer({
       };
       return options;
     }
-  }, [annotationMap, annotationsPerToken, tokenData, basicProcessingInstructions, onResizeStart]);
+  }, [
+    annotationMap,
+    annotationsPerToken,
+    tokenData,
+    basicProcessingInstructions,
+    hiddenCodeIds,
+    tagStyle,
+    onResizeStart,
+  ]);
 
   return (
     <Box {...props}>
