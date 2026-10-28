@@ -163,7 +163,19 @@ class Checker:
         normalized_on_disk = {_normalize_filename(n): n for n in on_disk}
 
         issues: list[Issue] = []
-        owned: set[str] = set()
+        # the chunking splits a long upload into documents and keeps the original
+        # file, named like the SDOC_FOLDER of its chunks (the folder type is
+        # stored as name or as value, depending on the DATS version)
+        owned: set[str] = {
+            self.stores.truncate_filename(name)
+            for name in self.conn.execute(
+                text(
+                    "SELECT name FROM folder WHERE project_id = :pid "
+                    "AND lower(folder_type::text) = 'sdoc_folder'"
+                ),
+                {"pid": project_id},
+            ).scalars()
+        }
         for sdoc in sdocs:
             owned |= self.stores.owned_filenames(sdoc.filename, sdoc.doctype)
             name = self.stores.truncate_filename(sdoc.filename)
@@ -217,6 +229,9 @@ class Checker:
         now = time.time()
         for name, path in sorted(on_disk.items()):
             if name in owned:
+                continue
+            # the archive upload extracts a zip into the docs folder and keeps it
+            if path.suffix.lower() == ".zip":
                 continue
             if now - path.stat().st_mtime < self.min_file_age_seconds:
                 continue
@@ -282,16 +297,19 @@ class Checker:
                         hint=_HINT_FAILED_PROCESSING,
                     )
                 )
-            # the export needs the processed data of every document
-            if sdoc.id not in data_ids and not sdoc.is_processing:
+            # the export needs the processed data of every document. After a
+            # failed step, the later steps stay "processing" forever.
+            if sdoc.id not in data_ids and (
+                sdoc.failed_steps or not sdoc.is_processing
+            ):
                 issues.append(
                     Issue(
                         key=f"{CheckName.MISSING_SDOC_DATA.value}:sdoc:{sdoc.id}",
                         check=CheckName.MISSING_SDOC_DATA,
                         project_id=sdoc.project_id,
                         message=f"SourceDocument {sdoc.id} ({sdoc.filename}) has no "
-                        "processed data (content, html, sentences), but no step is "
-                        "processing anymore",
+                        "processed data (content, html, sentences), so the project "
+                        "export fails on it",
                         fix=None,
                         hint=_HINT_FAILED_PROCESSING,
                     )
