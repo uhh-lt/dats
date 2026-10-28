@@ -4,55 +4,33 @@ instance (Postgres, filesystem, Elasticsearch, Weaviate) and heals them.
     dats_doctor.py check [--project ID ...] [-o report.json]
     dats_doctor.py heal report.json [--only CHECK ...] [--apply]
 
-Runs inside the DATS backend environment (see README.md); use the wrapper
-script dats-doctor.sh.
+Imports no DATS code, so it works with every DATS version whose database has
+the tables it needs (see doctor_stores.py). Use the wrapper dats-doctor.sh,
+which runs it in the environment of the backend.
 """
 
 import argparse
 import sys
-import warnings
+import traceback
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from doctor_checks import Checker
+from doctor_heal import Healer
 from doctor_report import CheckName, Issue, Report, ReportScope
-from loguru import logger
-
-from bootstrap import close_repos, init_services, register_jobs
-from config import conf
-from repos.db.sql_repo import SQLRepo
-from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisRepo
-from repos.repo_base import RepoBase
-from repos.vector.weaviate_repo import WeaviateRepo
+from doctor_stores import Stores, UnsupportedSchemaError, connect
 
 # heal deletes documents first and checks again, so that the other fixes do not
 # act on documents that are gone by then
 _FIRST_ROUND_ACTIONS = {"delete_sdocs"}
 
 
-def _connect() -> list[RepoBase]:
-    """Connects the data stores (not the ML services, which heal never calls)."""
-    repos: list[RepoBase] = [
-        FilesystemRepo(),
-        SQLRepo(),
-        ElasticSearchRepo(),
-        WeaviateRepo(),
-        RedisRepo(),
-    ]
-    for repo in repos:
-        repo.connect()
-    return repos
-
-
-def _run_checks(scope: ReportScope) -> list[Issue]:
-    from doctor_checks import Checker
-
-    with SQLRepo().transaction() as db:
-        return Checker(db=db, min_file_age_minutes=scope.min_file_age_minutes).run(
-            project_ids=scope.project_ids, instance=scope.instance
-        )
+def _run_checks(stores: Stores, scope: ReportScope) -> list[Issue]:
+    with stores.db.connect() as conn:
+        return Checker(
+            conn=conn, stores=stores, min_file_age_minutes=scope.min_file_age_minutes
+        ).run(project_ids=scope.project_ids, instance=scope.instance)
 
 
 def _print_issues(issues: list[Issue], *, limit: int | None) -> None:
@@ -78,7 +56,7 @@ def _print_issues(issues: list[Issue], *, limit: int | None) -> None:
 # ==============================================================================
 # COMMANDS
 # ==============================================================================
-def check(args: argparse.Namespace) -> int:
+def check(stores: Stores, args: argparse.Namespace) -> int:
     scope = ReportScope(
         project_ids=args.project or None,
         # leftovers of deleted projects belong to no project, so they are only
@@ -86,10 +64,10 @@ def check(args: argparse.Namespace) -> int:
         instance=not args.project,
         min_file_age_minutes=args.min_file_age,
     )
-    issues = _run_checks(scope)
+    issues = _run_checks(stores, scope)
     report = Report(
         created=datetime.now(),
-        dats_version=conf.api.version,
+        schema_revision=stores.schema_revision(),
         scope=scope,
         issues=issues,
     )
@@ -108,14 +86,14 @@ def check(args: argparse.Namespace) -> int:
     return 1 if issues else 0
 
 
-def heal(args: argparse.Namespace) -> int:
-    from doctor_heal import Healer
-
+def heal(stores: Stores, args: argparse.Namespace) -> int:
     report = Report.load(Path(args.report))
-    if report.dats_version != conf.api.version:
-        logger.warning(
-            f"The report was created by DATS {report.dats_version}, this is "
-            f"{conf.api.version}"
+    revision = stores.schema_revision()
+    if report.schema_revision != revision:
+        print(
+            f"warning: the report was created at database revision "
+            f"{report.schema_revision}, the database is at {revision}",
+            file=sys.stderr,
         )
     only = {CheckName(c) for c in args.only} if args.only else None
     wanted = {
@@ -129,7 +107,7 @@ def heal(args: argparse.Namespace) -> int:
 
     if not args.apply:
         # the fixes are taken from a fresh check, the state may have changed
-        fresh = [i for i in _run_checks(report.scope) if i.key in wanted]
+        fresh = [i for i in _run_checks(stores, report.scope) if i.key in wanted]
         print(f"Dry run: heal would apply these {len(fresh)} fixes:")
         _print_issues(fresh, limit=None)
         print(
@@ -138,29 +116,26 @@ def heal(args: argparse.Namespace) -> int:
         )
         return 0
 
-    # recompute jobs need the job queues
-    with warnings.catch_warnings():
-        # registering the jobs imports the ML libraries, which warn a lot
-        warnings.simplefilter("ignore")
-        register_jobs()
-    init_services()
-    quarantine_dir = Healer.new_quarantine_dir()
-
+    quarantine_dir = Healer.new_quarantine_dir(stores)
     applied, failed = 0, 0
     for round_no in (1, 2):
-        fresh = [i for i in _run_checks(report.scope) if i.key in wanted]
+        fresh = [i for i in _run_checks(stores, report.scope) if i.key in wanted]
         if round_no == 1:
             fresh = [i for i in fresh if i.fix and i.fix.action in _FIRST_ROUND_ACTIONS]
         for issue in fresh:
             wanted.discard(issue.key)
             try:
-                with SQLRepo().transaction() as db:
-                    result = Healer(db=db, quarantine_dir=quarantine_dir).apply(issue)
+                # one transaction per fix: a failing fix does not undo the others
+                with stores.db.begin() as conn:
+                    result = Healer(
+                        conn=conn, stores=stores, quarantine_dir=quarantine_dir
+                    ).apply(issue)
                 applied += 1
                 print(f"  OK   {issue.key}: {result}")
             except Exception as e:
                 failed += 1
-                logger.exception(e)
+                if args.verbose:
+                    traceback.print_exc()
                 print(f"  FAIL {issue.key}: {e}")
 
     print(
@@ -173,6 +148,9 @@ def heal(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Find and heal inconsistencies between the data stores of DATS."
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Print the tracebacks of errors"
     )
     commands = parser.add_subparsers(dest="command", required=True)
 
@@ -214,19 +192,19 @@ def main() -> int:
     )
     heal_parser.set_defaults(func=heal)
 
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Show the DATS info logs"
-    )
-
     args = parser.parse_args()
-    # the issues are the output, the DATS logs only distract from them
-    logger.remove()
-    logger.add(sys.stderr, level="INFO" if args.verbose else "WARNING")
-    repos = _connect()
     try:
-        return args.func(args)
+        stores = connect()
+    except (UnsupportedSchemaError, ConnectionError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    try:
+        return args.func(stores, args)
+    except ValueError as e:  # e.g. an unknown project id
+        print(f"error: {e}", file=sys.stderr)
+        return 2
     finally:
-        close_repos(repos)
+        stores.close()
 
 
 if __name__ == "__main__":

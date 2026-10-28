@@ -13,7 +13,9 @@ The project doctor (`tools/project_doctor`) finds these inconsistencies and heal
 
 ## Usage
 
-Run the doctor on the host of the deployment, from the checkout whose `docker/` folder runs DATS. The wrapper script starts a one-off container of the backend image with the same environment and volumes as the API (like the scripts in `bin/prod`), so it reaches all stores with the instance's own configuration:
+Run the doctor on the host of the deployment, from the checkout whose `docker/` folder runs DATS. The wrapper script starts a one-off container of the backend image with the same environment and volumes as the API (like the scripts in `bin/prod`), so it reaches all stores with the instance's own configuration.
+
+The doctor imports no DATS code, only the libraries of the backend image (SQLAlchemy, Elasticsearch, Weaviate). It therefore works with the DATS version the deployment runs, also when the checkout is newer than the deployment: copy `tools/project_doctor` into the checkout of the deployment if it is missing there. Before it touches anything, the doctor verifies that the database has every table and column it uses; on an incompatible version it stops with an error that names the missing columns.
 
 ```bash
 # 1) check one project (or omit --project to check all projects and the leftovers of deleted ones)
@@ -29,7 +31,7 @@ tools/project_doctor/dats-doctor.sh heal report.json --apply
 tools/project_doctor/dats-doctor.sh check --project 27
 ```
 
-`heal --only <check>` limits heal to the issues of one check (repeatable). `check --all` prints every issue instead of 20 per check, `-v` shows the DATS logs.
+`heal --only <check>` limits heal to the issues of one check (repeatable). `check --all` prints every issue instead of 20 per check, `-v` prints the tracebacks of failing fixes.
 
 In development, `just doctor check|heal ...` runs the doctor against the dev stack of the checkout (`backend/.env`).
 
@@ -38,22 +40,22 @@ Stop uploads and processing in the affected projects while you heal them. `check
 
 ## Checks
 
-| Check                      | Finds                                                                                  | Heal                                       |
-| -------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                           | Deletes the document from all stores       |
-| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                           | Recomputes the thumbnail                   |
-| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document                         | Moves the file to the quarantine folder    |
-| `orphaned_project_dir`     | Project folders of deleted projects                                                    | Moves the folder to the quarantine folder  |
-| `missing_sdoc_data`        | Documents without processed data (content, sentences), with no step still running      | None: retry the processing or delete them  |
-| `failed_processing`        | Documents with failed processing steps                                                 | None: retry in the document health view    |
-| `cross_project_reference`  | Annotations, folders, tags or metadata that reference another project                  | None: inspect them in the database         |
-| `annotation_out_of_bounds` | Annotations beyond the text of their document, bounding boxes with invalid coordinates | Deletes the annotations                    |
-| `missing_es_document`      | Indexed documents missing in the project's Elasticsearch index (breaks the search)     | Indexes them again                         |
-| `orphaned_es_document`     | Elasticsearch documents of deleted documents                                           | Deletes them                               |
-| `orphaned_es_index`        | Elasticsearch indices of deleted projects                                              | Deletes them                               |
-| `missing_embeddings`       | Documents without sentence or image embeddings, although the embedding step finished   | Recomputes the embeddings (needs a worker) |
-| `orphaned_embeddings`      | Weaviate embeddings of deleted documents                                               | Deletes them                               |
-| `orphaned_weaviate_tenant` | Weaviate tenants of deleted projects                                                   | Deletes them                               |
+| Check                      | Finds                                                                                  | Heal                                        |
+| -------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                           | Deletes the document from all stores        |
+| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                           | None: recompute in the document health view |
+| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document                         | Moves the file to the quarantine folder     |
+| `orphaned_project_dir`     | Project folders of deleted projects                                                    | Moves the folder to the quarantine folder   |
+| `missing_sdoc_data`        | Documents without processed data (content, sentences), with no step still running      | None: retry the processing or delete them   |
+| `failed_processing`        | Documents with failed processing steps                                                 | None: retry in the document health view     |
+| `cross_project_reference`  | Annotations, folders, tags or metadata that reference another project                  | None: inspect them in the database          |
+| `annotation_out_of_bounds` | Annotations beyond the text of their document, bounding boxes with invalid coordinates | Deletes the annotations                     |
+| `missing_es_document`      | Indexed documents missing in the project's Elasticsearch index (breaks the search)     | Indexes them again (if the index exists)    |
+| `orphaned_es_document`     | Elasticsearch documents of deleted documents                                           | Deletes them                                |
+| `orphaned_es_index`        | Elasticsearch indices of deleted projects                                              | Deletes them                                |
+| `missing_embeddings`       | Documents without sentence or image embeddings, although the embedding step finished   | None: recompute in the document health view |
+| `orphaned_embeddings`      | Weaviate embeddings of deleted documents                                               | Deletes them                                |
+| `orphaned_weaviate_tenant` | Weaviate tenants of deleted projects                                                   | Deletes them                                |
 
 If the file of a document is missing, but a file exists whose name differs only in case or unicode normalization, the doctor proposes to rename that file instead of deleting the document.
 
@@ -62,6 +64,6 @@ If the file of a document is missing, but a file exists whose name differs only 
 - **The report is the approval.** Heal only touches issues that are in the report. Delete an issue from the report to keep it as it is.
 - **Fresh state.** Heal checks again before it applies anything and takes the fixes from the fresh check. Issues that were resolved in the meantime are skipped, and the ids it acts on are current.
 - **Documents first.** Heal deletes documents first, then checks again and applies the remaining fixes, so they do not act on deleted documents.
-- **Same code paths.** Heal deletes documents and annotations through the DATS services, which clean up all stores (annotations, memos, files, Elasticsearch, Weaviate).
-- **Quarantine instead of delete.** Files and folders are moved to `<filesystem root>/quarantine/<timestamp>/`, from where you restore them or delete them by hand.
+- **Same deletes as DATS.** Heal deletes documents and annotations like DATS does: the database cascades remove the dependent rows (data, annotations, tags, metadata, memos, ...), and heal removes the files, the Elasticsearch documents, the Weaviate objects and the document folders that are empty afterwards.
+- **Quarantine instead of delete.** Files and folders, also those of deleted documents, are moved to `<filesystem root>/quarantine/<timestamp>/`, from where you restore them or delete them by hand.
 - **One transaction per fix.** A failing fix does not roll back the others; heal reports it and continues.

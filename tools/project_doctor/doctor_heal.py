@@ -1,5 +1,7 @@
-"""The fixes of the DATS project doctor. Each fix goes through the same services
-and CRUDs that DATS itself uses, so it cleans up all stores at once."""
+"""The fixes of the DATS project doctor. They do what DATS does when it deletes
+documents or annotations (SourceDocumentService, *AnnotationService): the
+database cascades remove the dependent rows, the fixes clean up the files,
+Elasticsearch and Weaviate."""
 
 import shutil
 from datetime import datetime
@@ -15,55 +17,27 @@ from doctor_report import (
     Fix,
     Issue,
     QuarantinePath,
-    RecomputeStep,
     ReindexEs,
 )
-from sqlalchemy.orm import Session
-
-from common.doc_type_enum import DocType
-from common.languages_enum import Language
-from core.annotation.bbox_annotation_service import BBoxAnnotationService
-from core.annotation.sentence_annotation_service import SentenceAnnotationService
-from core.annotation.span_annotation_service import SpanAnnotationService
-from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
-from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.sdoc_elastic_index import SdocIndex
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_service import SourceDocumentService
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
-from modules.doc_processing.doc_processing_service import DocProcessingService
-from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
-from repos.vector.collection_base import BaseCollection
-from repos.vector.weaviate_repo import WeaviateRepo
-
-# The steps that heal recomputes (thumbnails, embeddings) ignore the settings,
-# but the recompute requires them
-_RECOMPUTE_SETTINGS = ProcessingSettings(
-    extract_images=False,
-    pages_per_chunk=10,
-    keyword_number=5,
-    keyword_deduplication_threshold=0.5,
-    keyword_max_ngram_size=2,
-    language=Language.auto,
-    model="",
-)
+from doctor_stores import ANNOTATION_TABLES, SDOC_COLLECTIONS, Stores
+from elasticsearch import helpers
+from sqlalchemy import Connection, text
+from weaviate.classes.query import Filter
 
 
 class Healer:
-    def __init__(self, *, db: Session, quarantine_dir: Path) -> None:
-        self.db = db
+    def __init__(
+        self, *, conn: Connection, stores: Stores, quarantine_dir: Path
+    ) -> None:
+        self.conn = conn
+        self.stores = stores
         self.quarantine_dir = quarantine_dir
-        self.fsr = FilesystemRepo()
-        self.es = ElasticSearchRepo().get_client()
-        self.weaviate = WeaviateRepo().get_client()
 
     @staticmethod
-    def new_quarantine_dir() -> Path:
+    def new_quarantine_dir(stores: Stores) -> Path:
         """The folder of one heal run, inside the DATS filesystem (so that moving
         a file there never crosses a volume)."""
-        return FilesystemRepo().root_dir.joinpath(
+        return stores.root_dir.joinpath(
             "quarantine", datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         )
 
@@ -74,32 +48,28 @@ class Healer:
             case None:
                 return "nothing to do (needs a manual decision)"
             case DeleteSdocs():
-                result = SourceDocumentService().delete_multi(
-                    db=self.db, sdoc_ids=fix.sdoc_ids
-                )
-                return f"deleted SourceDocuments {[s.id for s in result.sdocs]}"
+                return self._delete_sdocs(fix.sdoc_ids)
             case QuarantinePath():
                 return self._quarantine(Path(fix.path))
             case ReindexEs():
                 return self._reindex_es(project_id=self._project_id(issue), fix=fix)
             case DeleteEsDocuments():
-                deleted = crud_sdoc_elastic.delete_multi(
-                    client=self.es, project_id=self._project_id(issue), ids=fix.sdoc_ids
+                deleted = self._delete_es_documents(
+                    project_id=self._project_id(issue), sdoc_ids=fix.sdoc_ids
                 )
                 return f"deleted {deleted} Elasticsearch documents"
             case DeleteEsIndex():
-                self.es.indices.delete(index=fix.index)
+                self.stores.es.indices.delete(index=fix.index)
                 return f"deleted index {fix.index}"
-            case RecomputeStep():
-                return self._recompute(project_id=self._project_id(issue), fix=fix)
             case DeleteEmbeddings():
-                collection = self._collection(fix.collection)
-                collection.delete_by_sdoc_ids(
-                    self.weaviate, self._project_id(issue), fix.sdoc_ids
+                self._delete_embeddings(
+                    collection=fix.collection,
+                    project_id=self._project_id(issue),
+                    sdoc_ids=fix.sdoc_ids,
                 )
                 return f"deleted embeddings of {len(fix.sdoc_ids)} SourceDocuments"
             case DeleteWeaviateTenant():
-                self.weaviate.collections.get(fix.collection).tenants.remove(
+                self.stores.weaviate.collections.get(fix.collection).tenants.remove(
                     [fix.tenant]
                 )
                 return f"deleted tenant {fix.tenant} of {fix.collection}"
@@ -113,62 +83,147 @@ class Healer:
             raise ValueError(f"Issue {issue.key} has no project")
         return issue.project_id
 
-    @staticmethod
-    def _collection(name: str) -> type[BaseCollection]:
-        for collection in BaseCollection.all_collections():
-            if collection.get_collection_name() == name:
-                return collection
-        raise ValueError(f"Unknown Weaviate collection {name}")
-
+    # ==========================================================================
+    # FILESYSTEM
+    # ==========================================================================
     def _quarantine(self, path: Path) -> str:
         # only paths inside the DATS filesystem, the report may have been edited
+        root = self.stores.root_dir.resolve()
         path = path.resolve()
-        if not path.is_relative_to(self.fsr.root_dir.resolve()):
-            raise ValueError(f"{path} lies outside of {self.fsr.root_dir}")
-        dst = self.quarantine_dir / path.relative_to(self.fsr.root_dir.resolve())
+        if not path.is_relative_to(root):
+            raise ValueError(f"{path} lies outside of {root}")
+        dst = self.quarantine_dir / path.relative_to(root)
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(path, dst)
         return f"moved to {dst}"
 
-    def _reindex_es(self, *, project_id: int, fix: ReindexEs) -> str:
-        SdocIndex.create_index(self.es, project_id=project_id)
-        for sdoc in crud_sdoc.read_by_ids(db=self.db, ids=fix.sdoc_ids):
-            sdoc_data = crud_sdoc_data.read(db=self.db, id=sdoc.id)
-            crud_sdoc_elastic.create(
-                client=self.es,
-                project_id=project_id,
-                create_dto=ElasticSearchDocumentCreate(
-                    filename=sdoc.filename,
-                    content=sdoc_data.content,
-                    sdoc_id=sdoc.id,
-                    project_id=project_id,
-                    created=sdoc.created,
-                ),
-            )
-        return f"indexed {len(fix.sdoc_ids)} SourceDocuments"
+    # ==========================================================================
+    # DOCUMENTS AND ANNOTATIONS
+    # ==========================================================================
+    def _delete_sdocs(self, sdoc_ids: list[int]) -> str:
+        # 1) read the documents
+        sdocs = self.conn.execute(
+            text(
+                "SELECT id, filename, doctype, project_id, folder_id "
+                "FROM sourcedocument WHERE id = ANY(:ids)"
+            ),
+            {"ids": sdoc_ids},
+        ).all()
+        if not sdocs:
+            return "nothing to do (deleted already)"
 
-    def _recompute(self, *, project_id: int, fix: RecomputeStep) -> str:
-        # the recompute needs documents of one doctype per call
-        by_doctype: dict[DocType, list[int]] = {}
-        for sdoc in crud_sdoc.read_by_ids(db=self.db, ids=fix.sdoc_ids):
-            by_doctype.setdefault(DocType(sdoc.doctype), []).append(sdoc.id)
-        jobs = []
-        for sdoc_ids in by_doctype.values():
-            jobs += DocProcessingService().recompute_processing_step(
-                db=self.db,
-                project_id=project_id,
-                sdoc_ids=sdoc_ids,
-                settings=_RECOMPUTE_SETTINGS,
-                processing_step=fix.step,
-            )
-        return f"started {len(jobs)} {fix.step} jobs (see the worker logs)"
+        # 2) delete them; the foreign keys cascade to their data, annotations,
+        #    tags, metadata, memos, ...
+        self.conn.execute(
+            text("DELETE FROM sourcedocument WHERE id = ANY(:ids)"), {"ids": sdoc_ids}
+        )
+
+        # 3) delete their SDOC_FOLDERs that are empty now (the folder type is
+        #    stored as name or as value, depending on the DATS version)
+        self.conn.execute(
+            text(
+                "DELETE FROM folder f WHERE f.id = ANY(:ids) "
+                "AND lower(f.folder_type::text) = 'sdoc_folder' "
+                "AND NOT EXISTS (SELECT 1 FROM sourcedocument s WHERE s.folder_id = f.id) "
+                "AND NOT EXISTS (SELECT 1 FROM folder c WHERE c.parent_id = f.id)"
+            ),
+            {"ids": list({sdoc.folder_id for sdoc in sdocs if sdoc.folder_id})},
+        )
+
+        # 4) quarantine their files (the original and the derived files)
+        for sdoc in sdocs:
+            docs_dir = self.stores.docs_dir(sdoc.project_id)
+            for name in self.stores.owned_filenames(sdoc.filename, sdoc.doctype):
+                if (docs_dir / name).exists():
+                    self._quarantine(docs_dir / name)
+
+        # 5) delete their Elasticsearch documents and Weaviate objects
+        by_project: dict[int, list[int]] = {}
+        for sdoc in sdocs:
+            by_project.setdefault(sdoc.project_id, []).append(sdoc.id)
+        for project_id, ids in by_project.items():
+            self._delete_es_documents(project_id=project_id, sdoc_ids=ids)
+            for name in SDOC_COLLECTIONS:
+                self._delete_embeddings(
+                    collection=self.stores.collection_name(name),
+                    project_id=project_id,
+                    sdoc_ids=ids,
+                )
+        return f"deleted SourceDocuments {[sdoc.id for sdoc in sdocs]}"
 
     def _delete_annotations(self, fix: DeleteAnnotations) -> str:
-        match fix.kind:
-            case "span":
-                SpanAnnotationService().delete_multi(self.db, ids=fix.ids)
-            case "sentence":
-                SentenceAnnotationService().delete_multi(self.db, ids=fix.ids)
-            case "bbox":
-                BBoxAnnotationService().delete_multi(self.db, ids=fix.ids)
+        table = ANNOTATION_TABLES[fix.kind]
+        adoc_ids = self.conn.execute(
+            text(
+                f"DELETE FROM {table} WHERE id = ANY(:ids) "
+                "RETURNING annotation_document_id"
+            ),
+            {"ids": fix.ids},
+        ).scalars()
+        # like DATS, mark the annotation documents as changed
+        self.conn.execute(
+            text("UPDATE annotationdocument SET updated = now() WHERE id = ANY(:ids)"),
+            {"ids": list(set(adoc_ids))},
+        )
         return f"deleted {len(fix.ids)} {fix.kind} annotations"
+
+    # ==========================================================================
+    # ELASTICSEARCH
+    # ==========================================================================
+    def _reindex_es(self, *, project_id: int, fix: ReindexEs) -> str:
+        rows = self.conn.execute(
+            text(
+                "SELECT s.id, s.filename, s.created, d.content FROM sourcedocument s "
+                "JOIN sourcedocumentdata d ON d.id = s.id "
+                "WHERE s.id = ANY(:ids) AND s.project_id = :pid"
+            ),
+            {"ids": fix.sdoc_ids, "pid": project_id},
+        ).all()
+        index = self.stores.index_name(project_id)
+        for row in rows:
+            # the document of core/doc/sdoc_elastic_dto.py, with the sdoc id as id
+            self.stores.es.index(
+                index=index,
+                id=str(row.id),
+                document={
+                    "filename": row.filename,
+                    "content": row.content,
+                    "sdoc_id": row.id,
+                    "project_id": project_id,
+                    "created": row.created,
+                },
+            )
+        return f"indexed {len(rows)} SourceDocuments"
+
+    def _delete_es_documents(self, *, project_id: int, sdoc_ids: list[int]) -> int:
+        index = self.stores.index_name(project_id)
+        if not self.stores.es.indices.exists(index=index):
+            return 0
+        deleted, _ = helpers.bulk(
+            self.stores.es,
+            ({"_op_type": "delete", "_index": index, "_id": str(i)} for i in sdoc_ids),
+            raise_on_error=False,
+            refresh=True,
+        )
+        return deleted
+
+    # ==========================================================================
+    # WEAVIATE
+    # ==========================================================================
+    def _delete_embeddings(
+        self, *, collection: str, project_id: int, sdoc_ids: list[int]
+    ) -> None:
+        client = self.stores.weaviate
+        if not sdoc_ids or not client.collections.exists(collection):
+            return
+        handle = client.collections.get(collection)
+        tenant = self.stores.tenant_name(project_id)
+        if not handle.tenants.exists(tenant):
+            return
+        where = Filter.by_property("sdoc_id").contains_any(sdoc_ids)
+        # one call deletes at most QUERY_MAXIMUM_RESULTS objects, so repeat
+        # until nothing matches (or nothing could be deleted)
+        while True:
+            result = handle.with_tenant(tenant).data.delete_many(where=where)
+            if result.matches == 0 or result.successful == 0:
+                break

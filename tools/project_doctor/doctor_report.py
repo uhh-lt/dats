@@ -66,14 +66,6 @@ class DeleteEsIndex(BaseModel):
     index: str
 
 
-class RecomputeStep(BaseModel):
-    """Re-run one processing step of the documents (needs a running worker)."""
-
-    action: Literal["recompute_step"] = "recompute_step"
-    step: str
-    sdoc_ids: list[int]
-
-
 class DeleteEmbeddings(BaseModel):
     action: Literal["delete_embeddings"] = "delete_embeddings"
     collection: str
@@ -98,7 +90,6 @@ Fix = Annotated[
     | ReindexEs
     | DeleteEsDocuments
     | DeleteEsIndex
-    | RecomputeStep
     | DeleteEmbeddings
     | DeleteWeaviateTenant
     | DeleteAnnotations,
@@ -132,7 +123,7 @@ class ReportScope(BaseModel):
 
 class Report(BaseModel):
     created: datetime
-    dats_version: str
+    schema_revision: str = Field(description="Alembic revision of the database")
     scope: ReportScope
     issues: list[Issue]
 
@@ -142,8 +133,11 @@ class Report(BaseModel):
 
     def save(self, path: Path) -> None:
         path.write_text(self.model_dump_json(indent=2), encoding="utf-8")
-        # set by dats-doctor.sh, whose container runs as root
+        # set by dats-doctor.sh, in case its container runs as root
         owner = os.environ.get("DOCTOR_OWNER")
         if owner:
             uid, gid = owner.split(":")
-            os.chown(path, int(uid), int(gid))
+            try:
+                os.chown(path, int(uid), int(gid))
+            except PermissionError:
+                pass  # the container does not run as root, the file is ours anyway
