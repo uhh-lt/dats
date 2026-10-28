@@ -1,7 +1,7 @@
+import { CodeIndicator } from "@core/annotation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { memo } from "react";
-import { CodeIndicator } from "./_components/CodeIndicator";
 
 interface SVGBBoxTextProps {
   bbox: BBoxAnnotationRead;

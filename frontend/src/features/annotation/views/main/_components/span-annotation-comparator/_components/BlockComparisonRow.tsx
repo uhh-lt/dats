@@ -1,3 +1,4 @@
+import { BlockContent, IToken, RenderBlock, SpanAnnotationResizeStartHandler } from "@core/annotation";
 import { CodeMap } from "@core/code";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -5,11 +6,8 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ClearIcon from "@mui/icons-material/Clear";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, IconButton, Stack } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
 import { memo, MouseEvent, useMemo } from "react";
-import { SpanAnnotationResizeStartHandler } from "../../../_hooks/useSpanAnnotationResize";
-import { IToken } from "../../../../../_types/IToken";
-import { RenderBlock } from "../_hooks/useBlockPartition";
-import { BlockContent } from "./BlockContent";
 
 interface BlockComparisonRowProps {
   block: RenderBlock;
@@ -67,6 +65,10 @@ export const BlockComparisonRow = memo(
     handleLeftResizeStart,
     handleRightResizeStart,
   }: BlockComparisonRowProps) => {
+    // global client state (redux)
+    const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
+    const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
+
     const blockTokenIds = useMemo(() => {
       return block.sentenceIds.flatMap((sentId) => sentenceTokenIds[sentId] || []);
     }, [block.sentenceIds, sentenceTokenIds]);
@@ -161,6 +163,8 @@ export const BlockComparisonRow = memo(
             tokenData={leftTokenData}
             annotationsPerToken={leftAnnotationsPerToken}
             annotationMap={leftAnnotationMap}
+            hiddenCodeIds={hiddenCodeIds}
+            tagStyle={tagStyle}
             projectId={projectId}
             onResizeStart={handleLeftResizeStart}
           />
@@ -267,6 +271,8 @@ export const BlockComparisonRow = memo(
             tokenData={rightTokenData}
             annotationsPerToken={rightAnnotationsPerToken}
             annotationMap={rightAnnotationMap}
+            hiddenCodeIds={hiddenCodeIds}
+            tagStyle={tagStyle}
             projectId={projectId}
             onResizeStart={handleRightResizeStart}
           />

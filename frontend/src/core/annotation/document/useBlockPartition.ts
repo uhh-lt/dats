@@ -173,20 +173,23 @@ function createRenderBlock(nodes: Node[]): RenderBlock {
  *          - `sentenceTokenIds`: Two-dimensional array mapping sentence index to token IDs.
  */
 export function useBlockPartition(html: string) {
-  return useMemo(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
+  return useMemo(() => partitionDocument(html), [html]);
+}
 
-    // Extract sentence token IDs
-    const sentences = doc.querySelectorAll("sent");
-    const sentTokenIds = Array.from(sentences).map((sentNode) => {
-      const tokenNodes = sentNode.querySelectorAll("t");
-      return Array.from(tokenNodes).map((tNode) => parseInt(tNode.getAttribute("id")!));
-    });
+/** Partitions a document's HTML into RenderBlocks and extracts the sentence token IDs (see useBlockPartition). */
+export function partitionDocument(html: string) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
 
-    // Partition body into blocks
-    const blocks = partitionNode(doc.body);
+  // Extract sentence token IDs
+  const sentences = doc.querySelectorAll("sent");
+  const sentTokenIds = Array.from(sentences).map((sentNode) => {
+    const tokenNodes = sentNode.querySelectorAll("t");
+    return Array.from(tokenNodes).map((tNode) => parseInt(tNode.getAttribute("id")!));
+  });
 
-    return { renderBlocks: blocks, sentenceTokenIds: sentTokenIds };
-  }, [html]);
+  // Partition body into blocks
+  const blocks = partitionNode(doc.body);
+
+  return { renderBlocks: blocks, sentenceTokenIds: sentTokenIds };
 }

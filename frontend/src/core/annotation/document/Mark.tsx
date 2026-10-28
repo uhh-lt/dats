@@ -1,7 +1,8 @@
 import { CodeHooks } from "@core/code";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { contrastiveColors } from "@utils/colors/colors";
-import { SpanAnnotationResizeStartHandler } from "../../_hooks/useSpanAnnotationResize";
+import { SpanAnnotationResizeStartHandler } from "./annotationDocumentTypes";
+import "./AnnotationDocument.css";
 
 interface MarkProps {
   annotation: SpanAnnotationRead;

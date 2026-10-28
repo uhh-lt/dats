@@ -1,14 +1,7 @@
+import { SentenceAnnotationBoundary, SentenceAnnotationResizeStartHandler } from "@core/annotation";
 import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
-
-export type SentenceAnnotationBoundary = "start" | "end";
-
-export type SentenceAnnotationResizeStartHandler = (
-  annotation: SentenceAnnotationRead,
-  boundary: SentenceAnnotationBoundary,
-  event: ReactPointerEvent<HTMLElement>,
-) => void;
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ResizeState {
   boundary: SentenceAnnotationBoundary;

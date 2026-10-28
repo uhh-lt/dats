@@ -1,3 +1,5 @@
+import { useBlockPartition, useTokenData } from "@core/annotation";
+import { useComputeTokenData } from "../../_hooks/useComputeTokenData";
 import { useAuth } from "@core/auth";
 import { CodeHooks } from "@core/code";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
@@ -12,7 +14,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, MouseEvent, useCallback, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { toPendingSpanAnnotation } from "../../_hooks/pendingSpanAnnotation";
-import { useComputeTokenData, useTokenData } from "../../_hooks/useComputeTokenData";
 import { useJumpToSpanAnnotation } from "../../_hooks/useJumpToSpanAnnotation";
 import { useSpanAnnotationHighlight } from "../../_hooks/useSpanAnnotationHighlight";
 import { useSpanAnnotationResize } from "../../_hooks/useSpanAnnotationResize";
@@ -20,7 +21,6 @@ import { Annotation } from "../../../../_types/Annotation";
 import { AnnotationsActions } from "../../../../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../annotation-menu";
 import { BlockComparisonRow } from "./_components/BlockComparisonRow";
-import { useBlockPartition } from "./_hooks/useBlockPartition";
 
 // the header text is an h6; the user renderer's own Typography would reset it to body1
 const inheritHeaderFont = { "& .MuiTypography-root": { font: "inherit" } };

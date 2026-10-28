@@ -1,18 +1,20 @@
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import parse, { DOMNode, domToReact, Element, HTMLReactParserOptions } from "html-react-parser";
 import { memo, useMemo } from "react";
-import { IToken } from "../../../../../_types/IToken";
-import { SpanAnnotationResizeStartHandler } from "../../../_hooks/useSpanAnnotationResize";
-import { SdocAudioLink } from "../../_components/SdocAudioLink";
-import { SdocImage } from "../../_components/SdocImage";
-import { SdocVideoLink } from "../../_components/SdocVideoLink";
-import { Token } from "../../_components/Token";
+import { IToken, SpanAnnotationResizeStartHandler, TagStyle } from "./annotationDocumentTypes";
+import { SdocAudioLink } from "./SdocAudioLink";
+import { SdocImage } from "./SdocImage";
+import { SdocVideoLink } from "./SdocVideoLink";
+import { Token } from "./Token";
 
 interface BlockContentProps {
   html: string;
   tokenData: IToken[] | undefined;
   annotationsPerToken: Map<number, number[]> | undefined;
   annotationMap: Map<number, SpanAnnotationRead> | undefined;
+  /** The codes whose annotations are not rendered. */
+  hiddenCodeIds: number[];
+  tagStyle: TagStyle;
   projectId: number;
   onResizeStart?: SpanAnnotationResizeStartHandler;
 }
@@ -27,7 +29,16 @@ interface BlockContentProps {
  * - Media tags (`<img>`, `<video>`, `<audio>`) with customized application components.
  */
 export const BlockContent = memo(
-  ({ html, tokenData, annotationsPerToken, annotationMap, projectId, onResizeStart }: BlockContentProps) => {
+  ({
+    html,
+    tokenData,
+    annotationsPerToken,
+    annotationMap,
+    hiddenCodeIds,
+    tagStyle,
+    projectId,
+    onResizeStart,
+  }: BlockContentProps) => {
     const options = useMemo<HTMLReactParserOptions>(() => {
       const parserOpts: HTMLReactParserOptions = {
         replace(domNode: DOMNode): React.ReactElement | string | null | boolean | object | void {
@@ -68,6 +79,8 @@ export const BlockContent = memo(
                   key={`token-${tokenId}`}
                   token={token}
                   spanAnnotations={spanAnnotations}
+                  hiddenCodeIds={hiddenCodeIds}
+                  tagStyle={tagStyle}
                   onResizeStart={onResizeStart}
                 />
               );
@@ -76,7 +89,7 @@ export const BlockContent = memo(
         },
       };
       return parserOpts;
-    }, [tokenData, annotationsPerToken, annotationMap, projectId, onResizeStart]);
+    }, [tokenData, annotationsPerToken, annotationMap, hiddenCodeIds, tagStyle, projectId, onResizeStart]);
 
     const parsed = useMemo(() => {
       return parse(html, options);

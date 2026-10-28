@@ -3,6 +3,7 @@ import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress } from "@mui/material";
+import "./AnnotationDocument.css";
 
 /**
  * A small memo badge rendered at the top of a sentence annotation bar.
