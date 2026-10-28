@@ -6,6 +6,7 @@ from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate, ProjectRead
+from core.prompt_template.prompt_template_service import PromptTemplateService
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_TRAINED_ID,
@@ -29,6 +30,7 @@ class ProjectService(metaclass=SingletonMeta):
         cls.es_repo = ElasticSearchRepo()
         cls.weaviate = WeaviateRepo()
         cls.js = JobService()
+        cls.pts = PromptTemplateService()
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserRead:
@@ -65,19 +67,22 @@ class ProjectService(metaclass=SingletonMeta):
             db=db, project_id=project_id
         )
 
-        # 6) create filesystem directory structure
+        # 6) create the default prompt templates
+        self.pts.create_default_prompt_templates(db=db, project_id=project_id)
+
+        # 7) create filesystem directory structure
         self.fsr.create_directory_structure_for_project(project_id=project_id)
 
-        # 7) create elasticsearch indices for this project
+        # 8) create elasticsearch indices for this project
         client = self.es_repo.get_client()
         crud_sdoc_elastic.index.create_index(client=client, project_id=project_id)
 
-        # 8) create weaviate tenants for this project
+        # 9) create weaviate tenants for this project
         client = self.weaviate.get_client()
         for collection in BaseCollection.all_collections():
             collection.create_tenant(client, project_id)
 
-        # 9) re-load a fresh instance to avoid detachment
+        # 10) re-load a fresh instance to avoid detachment
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def delete_project(self, *, db: Session, project_id: int) -> ProjectRead:

@@ -1,272 +1,55 @@
-from abc import abstractmethod
 from collections.abc import Iterator
-from typing import Any, Generic, TypeVar
+from typing import ClassVar
 
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
-from modules.llm_assistant.llm_assistant_job_dto import (
-    DocumentBasedTaskParams,
-    LLMAssistantPromptTemplates,
-    SpecificStrategyParameters,
+from core.prompt_template.prompt_template_enum import OutputFormat
+from core.prompt_template.prompt_template_renderer import (
+    PromptRenderer,
+    PromptSegment,
 )
-from modules.llm_assistant.prompts.system_prompt import system_prompt_templates
-from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 from repos.llm_repo import LLMMessage
 
-# The strategy params type
-StrategyParamsT = TypeVar("StrategyParamsT", bound=SpecificStrategyParameters)
 
+class LLMAssistantStrategy:
+    """A strategy implements the output format of a prompt.
 
-class LLMAssistantStrategy(Generic[StrategyParamsT]):
-    """A strategy describes HOW the LLM assistant does a job.
-
-    It combines the prompt-building machinery with:
+    The prompt (see ``core.prompt_template``) decides what the LLM sees: the
+    renderer fills its blocks and splits documents into segments, one LLM message
+    each. The strategy adds what the answers need:
     - the structured-output response model used for the LLM call
-    - parsing of the LLM response (``parse_result``)
+    - parsing of the LLM response (``parse_result`` of the concrete strategy)
     - grounding of parsed results to document offsets (where applicable)
-    - chunking behaviour (via the DataTag mechanism)
-
-    A strategy declares which DataTags (document content placeholders) it
-    supports via ``valid_data_tags``; prompt validation fails fast if a
-    template uses an unsupported tag.
-
-    Prompt building
-    ---------------
-    A system prompt template may contain the placeholders "<project_title>"
-    and "<project_description>".
-    A user prompt template must contain the placeholder "<document>",
-    "<sentence>" or "<chunk>".
-
-    A user prompt template usually consists of these building blocks:
-    1. The task description, e.g. Please classify the documents ...
-    2. The categories or fields to work with
-    3. Semantic requirements that are not fully expressed by the response schema
-    4. Optional examples demonstrating the intended classification or extraction
-    5. The document content placeholder
-    6. A brief reiteration of important task constraints
-
-    Consequently, prompts can contain the following building blocks:
-    <task_description>
-    <task_data>
-    <semantic_requirements>
-    <answer_example>
-    <document>
-    <task_reiteration>
     """
 
-    # The strategy type this class implements.
-    strategy_type: StrategyType
-    # Human-readable name (shown in the frontend).
-    display_name: str
-    # Explanation of what the strategy does (shown in the frontend).
-    description: str
-    # The params model type for this strategy.
-    strategy_params_type: type[StrategyParamsT]
-    # The DataTags this strategy supports (class-level, for introspection).
-    allowed_data_tags: list[str] = []
+    # The output format this class implements.
+    output_format: ClassVar[OutputFormat]
 
-    supported_languages = ["en", "de"]
-    system_prompt_templates = system_prompt_templates
+    def __init__(self, renderer: PromptRenderer):
+        self.renderer = renderer
+        self.prompt = renderer.prompt
+        # the segments of the last document, parsers look them up by message id
+        self._segments: tuple[int, list[PromptSegment]] | None = None
 
-    def __init__(
-        self,
-        db: Session,
-        project_id: int,
-        is_fewshot: bool,
-        valid_data_tags: list[DataTag] = [DataTag.DOCUMENT],
-        # either prompt templates are provided
-        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        # or the parameters to build them
-        params: DocumentBasedTaskParams | None = None,
-        example_ids: list[int] | None = None,
-    ):
-        project = crud_project.read(db=db, id=project_id)
-        self.project_title = project.title
-        self.project_description = project.description
-        self.is_fewshot = is_fewshot
-
-        # if no prompt templates are provided, create the default ones
-        if prompt_templates is None:
-            if params is None:
-                raise ValueError("Either prompt_templates or params must be provided!")
-            prompt_templates = self._build_prompt_templates(
-                params=params, example_ids=example_ids
-            )
-
-        # valid_data_tags are the placeholders, one of which must be present in the user prompt template and will be replaced accordingly
-        self.valid_data_tags = valid_data_tags
-        self.lang2prompt_templates = {p.language: p for p in prompt_templates}
-
-        # validate provided prompts
-        is_valid, data_tag, err_msg = self._check_prompt_templates()
-        if not is_valid:
-            raise ValueError(f"Provided prompts are not valid: {err_msg}")
-
-        # the data tag that is used in the user prompt templates (e.g. "<document>" or "<sentence>")
-        assert data_tag is not None, "Data tag must not be None!"
-        self.data_tag = data_tag
-
-    # STRATEGY METADATA
+    @property
+    def is_fewshot(self) -> bool:
+        """A prompt that shows examples makes a few-shot run."""
+        return self.renderer.is_fewshot
 
     def get_response_model(self) -> type[BaseModel]:
         """The pydantic model used as the structured-output schema."""
         raise NotImplementedError()
 
-    @abstractmethod
-    def parse_result(
-        self,
-        result: Any,
-        sdoc_data: SourceDocumentDataORM,
-        message_id: int,
-    ) -> list[ParsedSpan]:
-        """Parse a validated LLM response into spans with absolute char offsets.
-
-        Args:
-            result: The validated LLM response (instance of ``get_response_model()``).
-            sdoc_data: The source document data (for grounding/offset computation).
-            message_id: The index of the message within the document (e.g. sentence
-                index for sentence-level strategies, chunk index for chunk-level).
-        """
-        ...
-
-    @classmethod
-    def default_params(cls) -> StrategyParamsT:
-        """Default strategy parameters."""
-        return cls.strategy_params_type.model_validate(
-            {"strategy_type": cls.strategy_type}
-        )
-
-    # VALIDATION
-
-    def _is_system_prompt_valid(self, system_prompt: str) -> bool:
-        """Return whether a system prompt satisfies the shared requirements."""
-        return True
-
-    def _is_user_prompt_valid(self, user_prompt: str) -> bool:
-        """Return whether a user prompt contains an allowed data placeholder."""
-        for tag in self.valid_data_tags:
-            if tag.value in user_prompt:
-                return True
-        return False
-
-    def _extract_data_tag(self, user_prompt: str) -> DataTag | None:
-        """Extract the first allowed data placeholder used by a user prompt."""
-        for tag in self.valid_data_tags:
-            if tag.value in user_prompt:
-                return tag
-        return None
-
-    def _check_prompt_templates(self) -> tuple[bool, DataTag | None, str]:
-        """Validate all language templates and return their shared data tag."""
-        for language in self.supported_languages:
-            if language not in self.lang2prompt_templates:
-                return False, None, f"No prompts provided for language '{language}'!"
-            prompts = self.lang2prompt_templates[language]
-            if self._is_system_prompt_valid(prompts.system_prompt) is False:
-                return False, None, f"Invalid system prompt for language '{language}'!"
-            if self._is_user_prompt_valid(prompts.user_prompt) is False:
-                return False, None, f"Invalid user prompt for language '{language}'!"
-
-        # determine which data tag is used
-        # and validate that the same tag is used in all languages
-        data_tags = [
-            self._extract_data_tag(self.lang2prompt_templates[lang].user_prompt)
-            for lang in self.supported_languages
-        ]
-        if None in data_tags:
-            return (
-                False,
-                None,
-                f"No valid data tag found in user prompt! Valid tags are {self.valid_data_tags}",
-            )
-        if len(set(data_tags)) > 1:
-            return (
-                False,
-                None,
-                f"Different data tags ({set(data_tags)}) used in different languages!",
-            )
-        return True, data_tags[0], ""
-
-    # PROMPT BUILDING
-
-    def _build_system_prompt(self, language: str) -> str:
-        """Render the configured system prompt for a language and project."""
-        if language not in self.supported_languages:
-            raise ValueError("Language not supported")
-
-        system_prompt = self.lang2prompt_templates[language].system_prompt.replace(
-            "<project_title>", self.project_title
-        )
-        return system_prompt.replace("<project_description>", self.project_description)
-
-    def _build_user_prompt(self, language: str, data: str) -> str:
-        """Render the configured user prompt with the supplied document data."""
-        if language not in self.supported_languages:
-            raise ValueError("Language not supported")
-
-        user_prompt_template = self.lang2prompt_templates[language].user_prompt
-        return user_prompt_template.replace(self.data_tag.value, data)
+    def segments(self, sdoc_data: SourceDocumentDataORM) -> list[PromptSegment]:
+        """The segments of a document, one per LLM message."""
+        if self._segments is None or self._segments[0] != sdoc_data.id:
+            self._segments = (sdoc_data.id, self.renderer.segments(sdoc_data))
+        return self._segments[1]
 
     def generate_prompts(
-        self, language: str, sdoc_data: SourceDocumentDataORM
+        self, sdoc_data: SourceDocumentDataORM
     ) -> Iterator[LLMMessage]:
         """Yield the LLM messages required to process one document."""
-        match self.data_tag:
-            case DataTag.DOCUMENT:
-                datas = iter([sdoc_data.content])
-            case DataTag.SENTENCE:
-                datas = iter(sdoc_data.sentences)
-            case _:
-                raise ValueError(f"Data tag {self.data_tag} not supported!")
-
-        system_prompt = self._build_system_prompt(language)
-        for data in datas:
-            user_prompt = self._build_user_prompt(
-                language=language,
-                data=data,
-            )
-            yield LLMMessage(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-            )
-
-    # PROMPT TEMPLATE BUILDING
-
-    def _build_system_prompt_template(self, language: str) -> str:
-        """Return the default system prompt template for a language."""
-        return self.system_prompt_templates[language]
-
-    def _build_user_prompt_template(
-        self,
-        *,
-        language: str,
-        example_ids: list[int] | None = None,
-        params: DocumentBasedTaskParams,
-    ) -> str:
-        """Build the task-specific user prompt template for a language."""
-        raise NotImplementedError()
-
-    def _build_prompt_templates(
-        self, params: DocumentBasedTaskParams, example_ids: list[int] | None = None
-    ) -> list[LLMAssistantPromptTemplates]:
-        """Build system and user prompt templates for every supported language."""
-        if example_ids is not None and not self.is_fewshot:
-            raise ValueError("Example IDs are only allowed for few-shot learning!")
-
-        # create the prompt templates for all supported languages
-        result: list[LLMAssistantPromptTemplates] = []
-        for language in self.supported_languages:
-            result.append(
-                LLMAssistantPromptTemplates(
-                    language=language,
-                    system_prompt=self._build_system_prompt_template(language),
-                    user_prompt=self._build_user_prompt_template(
-                        language=language, example_ids=example_ids, params=params
-                    ),
-                )
-            )
-        return result
+        for segment in self.segments(sdoc_data):
+            yield LLMMessage(user_prompt=self.renderer.render(segment))

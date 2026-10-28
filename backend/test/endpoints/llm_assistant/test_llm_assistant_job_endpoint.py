@@ -1,42 +1,41 @@
 import time
-from collections.abc import Sequence
 
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
-from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
-from modules.llm_assistant.llm_assistant_enum import (
-    ApproachType,
-    StrategyType,
+from core.prompt_template.prompt_template_defaults import DEFAULT_PROMPTS
+from core.prompt_template.prompt_template_dto import (
+    PromptSettings,
+    PromptTemplateSnapshot,
+)
+from core.prompt_template.prompt_template_enum import (
+    DocumentUnit,
+    OutputFormat,
+    PromptLanguage,
     TaskType,
 )
+from core.prompt_template.prompt_template_specs import OUTPUT_FORMAT_SPECS
+from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
+from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
-    AnnotationParams,
-    DefaultStrategyParams,
-    FewShotParams,
-    FuzzyGroundingStrategyParams,
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
-    LLMAssistantPromptTemplates,
     MetadataExtractionLLMAssistantJobResult,
-    MetadataExtractionParams,
-    NERInlineTagStrategyParams,
     SentenceAnnotationLLMAssistantJobResult,
-    SentenceAnnotationParams,
     TaggingLLMAssistantJobResult,
-    TaggingParams,
-    ZeroShotParams,
 )
 from systems.job_system.job_dto import JobRead
 from systems.job_system.job_system_enum import JobStatus
 
-from .conftest import LLMAssistantProject
+from .conftest import JobPromptProject, prompt_code
 
 LLM_ASSISTANT_JOB_URL = "/llm_assistant/llm_assistant"
-PROMPT_TEMPLATES_URL = "/llm_assistant/create_prompt_templates"
 LLMAssistantJobRead = JobRead[LLMAssistantJobInput, LLMAssistantJobOutput]
+# six tokens per chunk with an overlap of three: the target document becomes
+# several chunks and "Alice" is part of the first two
+SMALL_CHUNKS = PromptSettings(chunk_size_tokens=6, chunk_overlap_tokens=3)
 
 
 def _wait_for_status(
@@ -44,7 +43,7 @@ def _wait_for_status(
     job_id: str,
     expected_status: JobStatus,
     *,
-    timeout: float = 180.0,
+    timeout: float = 300.0,
     poll_interval: float = 1,
 ) -> LLMAssistantJobRead:
     """Poll one assistant job until the expected or another terminal status occurs."""
@@ -94,220 +93,89 @@ def _start_job(
     return job
 
 
-def _prompt_templates(
-    client: TestClient,
+def _version_payload(
+    project: JobPromptProject,
     *,
-    project_id: int,
-    task_parameters: (
-        TaggingParams
-        | MetadataExtractionParams
-        | AnnotationParams
-        | SentenceAnnotationParams
-    ),
-    approach_type: ApproachType,
-    strategy_type: StrategyType,
-    example_ids: Sequence[int] | None = None,
-) -> list[LLMAssistantPromptTemplates]:
-    """Obtain prompts through the public endpoint for use in a job payload."""
-    response = client.post(
-        PROMPT_TEMPLATES_URL,
-        params={
-            "approach_type": approach_type.value,
-            "strategy_type": strategy_type.value,
-        },
-        json={
-            "job_params": {
-                "project_id": project_id,
-                "task_type": task_parameters.task_type.value,
-                "specific_task_parameters": task_parameters.model_dump(mode="json"),
-            },
-            "example_ids": list(example_ids) if example_ids is not None else None,
-        },
-    )
-    assert response.status_code == 200, response.text
-    return TypeAdapter(list[LLMAssistantPromptTemplates]).validate_python(
-        response.json()
-    )
-
-
-def _replace_data_tag(
-    prompts: list[LLMAssistantPromptTemplates], old: str, new: str
-) -> list[LLMAssistantPromptTemplates]:
-    """Return prompt copies using another strategy-supported data placeholder."""
-    return [
-        prompt.model_copy(update={"user_prompt": prompt.user_prompt.replace(old, new)})
-        for prompt in prompts
-    ]
-
-
-def _approach_parameters(
-    approach_type: ApproachType,
-    prompts: list[LLMAssistantPromptTemplates],
+    task_type: TaskType,
+    version_id: int,
     model: str = "default",
-) -> ZeroShotParams | FewShotParams:
-    """Build the discriminated approach parameters used by job payloads."""
-    if approach_type == ApproachType.LLM_FEW_SHOT:
-        return FewShotParams(
-            approach_type=approach_type,
-            prompts=prompts,
-            model=model,
-        )
-    return ZeroShotParams(
-        approach_type=approach_type,
-        prompts=prompts,
+) -> LLMAssistantJobInput:
+    """A job on the target document that runs a stored prompt template version."""
+    base = project["base"]
+    return LLMAssistantJobInput(
+        project_id=base["project"].id,
+        task_type=task_type,
+        sdoc_ids=[base["target_sdoc"].id],
         model=model,
+        prompt_template_version_id=version_id,
+        delete_existing_annotations=True,
     )
 
 
 def _tagging_payload(
-    client: TestClient,
-    project: LLMAssistantProject,
-    *,
-    model: str = "default",
+    project: JobPromptProject, *, model: str = "default"
 ) -> LLMAssistantJobInput:
-    """Build a zero-shot tagging job through the prompt-template workflow."""
-    task_parameters = TaggingParams(
+    """A tagging job with the ``Tagging`` template (tags People and Other)."""
+    return _version_payload(
+        project,
         task_type=TaskType.TAGGING,
-        sdoc_ids=[project["target_sdoc"].id],
-        tag_ids=[project["people_tag"].id, project["other_tag"].id],
-    )
-    prompts = _prompt_templates(
-        client,
-        project_id=project["project"].id,
-        task_parameters=task_parameters,
-        approach_type=ApproachType.LLM_ZERO_SHOT,
-        strategy_type=StrategyType.TAGGING_DEFAULT,
-    )
-    return LLMAssistantJobInput(
-        project_id=project["project"].id,
-        task_type=TaskType.TAGGING,
-        specific_task_parameters=task_parameters,
-        approach_type=ApproachType.LLM_ZERO_SHOT,
-        specific_approach_parameters=_approach_parameters(
-            ApproachType.LLM_ZERO_SHOT, prompts, model
-        ),
-        strategy_type=StrategyType.TAGGING_DEFAULT,
-        specific_strategy_parameters=DefaultStrategyParams(
-            strategy_type=StrategyType.TAGGING_DEFAULT
-        ),
+        version_id=project["tagging_template"].versions[0].id,
+        model=model,
     )
 
 
-def _metadata_payload(
-    client: TestClient, project: LLMAssistantProject
-) -> LLMAssistantJobInput:
-    """Build a zero-shot metadata job covering every supported metadata type."""
-    task_parameters = MetadataExtractionParams(
-        task_type=TaskType.METADATA_EXTRACTION,
-        sdoc_ids=[project["target_sdoc"].id],
-        project_metadata_ids=[item.id for item in project["metadata_fields"]],
-    )
-    prompts = _prompt_templates(
-        client,
-        project_id=project["project"].id,
-        task_parameters=task_parameters,
-        approach_type=ApproachType.LLM_ZERO_SHOT,
-        strategy_type=StrategyType.METADATA_DEFAULT,
-    )
-    return LLMAssistantJobInput(
-        project_id=project["project"].id,
-        task_type=TaskType.METADATA_EXTRACTION,
-        specific_task_parameters=task_parameters,
-        approach_type=ApproachType.LLM_ZERO_SHOT,
-        specific_approach_parameters=_approach_parameters(
-            ApproachType.LLM_ZERO_SHOT, prompts
-        ),
-        strategy_type=StrategyType.METADATA_DEFAULT,
-        specific_strategy_parameters=DefaultStrategyParams(
-            strategy_type=StrategyType.METADATA_DEFAULT
-        ),
-    )
-
-
-def _annotation_payload(
-    client: TestClient,
-    project: LLMAssistantProject,
+def _draft(
+    project: JobPromptProject,
     *,
-    approach_type: ApproachType,
-    strategy_type: StrategyType,
-    data_tag: str,
-    use_small_overlapping_chunks: bool = False,
+    output_format: OutputFormat,
+    unit: DocumentUnit,
+    is_fewshot: bool,
+) -> PromptTemplateSnapshot:
+    """The English default prompt of a format with another unit and the test codes.
+
+    Span prompts select PERSON (few-shot: the PERSON examples), sentence prompts
+    select FACT (few-shot: the FACT examples). Chunks are small.
+    """
+    base = project["base"]
+    spec = OUTPUT_FORMAT_SPECS[output_format]
+    is_sentence = output_format == OutputFormat.SENTENCES
+    default_document = f"<document:{spec.default_document_unit.value}>"
+    return PromptTemplateSnapshot(
+        task_type=spec.task_type,
+        language=PromptLanguage.EN,
+        prompt=DEFAULT_PROMPTS[output_format][PromptLanguage.EN].replace(
+            default_document, f"<document:{unit.value}>"
+        ),
+        settings=SMALL_CHUNKS,
+        codes=[prompt_code(base["fact_code" if is_sentence else "person_code"])],
+        examples=(
+            (project["sentence_examples"] if is_sentence else project["span_examples"])
+            if is_fewshot
+            else []
+        ),
+    )
+
+
+def _draft_payload(
+    project: JobPromptProject, draft: PromptTemplateSnapshot
 ) -> LLMAssistantJobInput:
-    """Build one span-annotation job variant through public prompt generation."""
-    task_parameters = AnnotationParams(
-        task_type=TaskType.ANNOTATION,
-        sdoc_ids=[project["target_sdoc"].id],
-        code_ids=[project["person_code"].id],
+    """A job on the target document that runs an unsaved prompt."""
+    base = project["base"]
+    return LLMAssistantJobInput(
+        project_id=base["project"].id,
+        task_type=draft.task_type,
+        sdoc_ids=[base["target_sdoc"].id],
+        model="default",
+        draft=draft,
         delete_existing_annotations=True,
     )
-    prompts = _prompt_templates(
-        client,
-        project_id=project["project"].id,
-        task_parameters=task_parameters,
-        approach_type=approach_type,
-        strategy_type=strategy_type,
-    )
-    if strategy_type == StrategyType.NER_INLINE_TAGS:
-        current_data_tag = "<sentence>"
-        if data_tag != current_data_tag:
-            prompts = _replace_data_tag(prompts, current_data_tag, data_tag)
-        strategy_parameters = NERInlineTagStrategyParams(
-            strategy_type=StrategyType.NER_INLINE_TAGS
-        )
-    else:
-        strategy_parameters = FuzzyGroundingStrategyParams(
-            strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
-            chunk_size_tokens=4 if use_small_overlapping_chunks else 650,
-            chunk_overlap_tokens=2 if use_small_overlapping_chunks else 100,
-            fuzzy_threshold=0.85,
-            context_before_chars=32,
-            context_after_chars=32,
-        )
-    return LLMAssistantJobInput(
-        project_id=project["project"].id,
-        task_type=TaskType.ANNOTATION,
-        specific_task_parameters=task_parameters,
-        approach_type=approach_type,
-        specific_approach_parameters=_approach_parameters(approach_type, prompts),
-        strategy_type=strategy_type,
-        specific_strategy_parameters=strategy_parameters,
-    )
 
 
-def _sentence_annotation_payload(
-    client: TestClient,
-    project: LLMAssistantProject,
-    *,
-    approach_type: ApproachType,
-    data_tag: str,
-) -> LLMAssistantJobInput:
-    """Build one sentence-annotation job variant through public prompt generation."""
-    task_parameters = SentenceAnnotationParams(
-        task_type=TaskType.SENTENCE_ANNOTATION,
-        sdoc_ids=[project["target_sdoc"].id],
-        code_ids=[project["fact_code"].id],
-        delete_existing_annotations=True,
-    )
-    prompts = _prompt_templates(
-        client,
-        project_id=project["project"].id,
-        task_parameters=task_parameters,
-        approach_type=approach_type,
-        strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT,
-    )
-    if data_tag != "<document>":
-        prompts = _replace_data_tag(prompts, "<document>", data_tag)
-    return LLMAssistantJobInput(
-        project_id=project["project"].id,
-        task_type=TaskType.SENTENCE_ANNOTATION,
-        specific_task_parameters=task_parameters,
-        approach_type=approach_type,
-        specific_approach_parameters=_approach_parameters(approach_type, prompts),
-        strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT,
-        specific_strategy_parameters=DefaultStrategyParams(
-            strategy_type=StrategyType.SENTENCE_ANNOTATION_DEFAULT
-        ),
-    )
+def _expected_approach(is_fewshot: bool) -> tuple[ApproachType, int]:
+    """The approach of a run and the assistant user that stores its annotations."""
+    if is_fewshot:
+        return ApproachType.LLM_FEW_SHOT, ASSISTANT_FEWSHOT_ID
+    return ApproachType.LLM_ZERO_SHOT, ASSISTANT_ZEROSHOT_ID
 
 
 # ===========================================================================
@@ -315,35 +183,47 @@ def _sentence_annotation_payload(
 # ===========================================================================
 
 
+# --- A. real LLM runs ---------------------------------------------------------------
+# These tests call the LLM provider configured in backend/.env.
+
+
 @pytest.mark.llm
 def test_tagging_job_returns_current_and_exact_suggested_tags(
     client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
+    job_prompt_project: JobPromptProject,
 ) -> None:
-    """A real zero-shot tagging job classifies the explicit person document."""
-    started = _start_job(client, _tagging_payload(client, llm_assistant_project))
+    """A stored tagging version classifies the target (names Alice) as People."""
+    base = job_prompt_project["base"]
+    started = _start_job(client, _tagging_payload(job_prompt_project))
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     assert finished.output is not None
     assert finished.output.task_type == TaskType.TAGGING
+    assert finished.output.approach_type == ApproachType.LLM_ZERO_SHOT
     task_result = finished.output.specific_task_result
     assert isinstance(task_result, TaggingLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
-    assert result.sdoc_id == llm_assistant_project["target_sdoc"].id
-    assert result.current_tag_ids == [llm_assistant_project["other_tag"].id]
-    assert result.suggested_tag_ids == [llm_assistant_project["people_tag"].id]
+    assert result.sdoc_id == base["target_sdoc"].id
+    assert result.current_tag_ids == [base["other_tag"].id]
+    assert result.suggested_tag_ids == [base["people_tag"].id]
     assert result.reasoning
 
 
 @pytest.mark.llm
 def test_metadata_job_extracts_all_supported_value_types(
     client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
+    job_prompt_project: JobPromptProject,
 ) -> None:
-    """A real metadata job extracts string, number, date, boolean, and list values."""
-    started = _start_job(client, _metadata_payload(client, llm_assistant_project))
+    """A stored metadata version extracts string, number, date, boolean and list values."""
+    base = job_prompt_project["base"]
+    payload = _version_payload(
+        job_prompt_project,
+        task_type=TaskType.METADATA_EXTRACTION,
+        version_id=job_prompt_project["metadata_template"].versions[0].id,
+    )
+    started = _start_job(client, payload)
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
     assert finished.output is not None
@@ -353,7 +233,7 @@ def test_metadata_job_extracts_all_supported_value_types(
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
-    assert result.sdoc_id == llm_assistant_project["target_sdoc"].id
+    assert result.sdoc_id == base["target_sdoc"].id
     assert len(result.current_metadata) == 5
     values = {
         item.project_metadata.key: item.get_value_serializable()
@@ -370,148 +250,105 @@ def test_metadata_job_extracts_all_supported_value_types(
 
 @pytest.mark.llm
 @pytest.mark.parametrize(
-    "approach_type,strategy_type,data_tag,use_small_overlapping_chunks",
+    "output_format,unit,is_fewshot",
     [
-        # Inline tagging processes the full target document in one prompt.
         pytest.param(
-            ApproachType.LLM_ZERO_SHOT,
-            StrategyType.NER_INLINE_TAGS,
-            "<document>",
-            False,
-            id="inline-zero-shot-document",
-        ),
-        # Few-shot inline tagging generates one prompt per sentence.
-        pytest.param(
-            ApproachType.LLM_FEW_SHOT,
-            StrategyType.NER_INLINE_TAGS,
-            "<sentence>",
-            False,
-            id="inline-few-shot-sentences",
-        ),
-        # Small overlapping chunks exercise multiple batched requests and deduplication.
-        pytest.param(
-            ApproachType.LLM_ZERO_SHOT,
-            StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
-            "<chunk>",
-            True,
-            id="fuzzy-zero-shot-overlapping-chunks",
-        ),
-        # Few-shot fuzzy grounding exercises rendered examples with normal chunking.
-        pytest.param(
-            ApproachType.LLM_FEW_SHOT,
-            StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
-            "<chunk>",
-            False,
-            id="fuzzy-few-shot",
-        ),
+            output_format,
+            unit,
+            is_fewshot,
+            id=f"{output_format.value}-{unit.value}-{'few' if is_fewshot else 'zero'}-shot",
+        )
+        # Inline tags and quotes with context, for every unit, zero- and few-shot.
+        for output_format in (OutputFormat.INLINE, OutputFormat.CONTEXT)
+        for unit in DocumentUnit
+        for is_fewshot in (False, True)
     ],
 )
-def test_span_annotation_job_covers_all_approaches_strategies_and_data_tags(
+def test_span_annotation_job_covers_all_formats_units_and_approaches(
     client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
-    approach_type: ApproachType,
-    strategy_type: StrategyType,
-    data_tag: str,
-    use_small_overlapping_chunks: bool,
+    job_prompt_project: JobPromptProject,
+    output_format: OutputFormat,
+    unit: DocumentUnit,
+    is_fewshot: bool,
 ) -> None:
-    """Every span variant persists one deduplicated PERSON suggestion for Alice."""
-    payload = _annotation_payload(
-        client,
-        llm_assistant_project,
-        approach_type=approach_type,
-        strategy_type=strategy_type,
-        data_tag=data_tag,
-        use_small_overlapping_chunks=use_small_overlapping_chunks,
+    """Every span variant persists one deduplicated PERSON suggestion for Alice.
+
+    The existing assistant annotations of Alice are deleted first, and the
+    examples of the prompt decide the approach and the assistant user.
+    """
+    base = job_prompt_project["base"]
+    draft = _draft(
+        job_prompt_project,
+        output_format=output_format,
+        unit=unit,
+        is_fewshot=is_fewshot,
     )
-    started = _start_job(client, payload)
+    started = _start_job(client, _draft_payload(job_prompt_project, draft))
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
+    approach_type, assistant_user_id = _expected_approach(is_fewshot)
     assert finished.output is not None
     assert finished.output.task_type == TaskType.ANNOTATION
+    assert finished.output.approach_type == approach_type
     task_result = finished.output.specific_task_result
     assert isinstance(task_result, AnnotationLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
     assert result.raw_response is None
-    assert result.sdoc_id == llm_assistant_project["target_sdoc"].id
-    assistant_user_id = (
-        ASSISTANT_FEWSHOT_ID
-        if approach_type == ApproachType.LLM_FEW_SHOT
-        else ASSISTANT_ZEROSHOT_ID
-    )
+    assert result.sdoc_id == base["target_sdoc"].id
     suggestions = [
         (annotation.text, annotation.code_id, annotation.user_id)
         for annotation in result.suggested_annotations
     ]
-    assert suggestions == [
-        (
-            "Alice",
-            llm_assistant_project["person_code"].id,
-            assistant_user_id,
-        )
-    ]
+    assert suggestions == [("Alice", base["person_code"].id, assistant_user_id)]
 
 
 @pytest.mark.llm
 @pytest.mark.parametrize(
-    "approach_type,data_tag",
+    "unit,is_fewshot",
     [
-        # Document mode classifies all sentences in one prompt.
         pytest.param(
-            ApproachType.LLM_ZERO_SHOT,
-            "<document>",
-            id="zero-shot-document",
-        ),
-        # Per-sentence mode processes every sentence in an independent prompt;
-        # the suggestions of all prompts are merged into ranges like in document mode.
-        pytest.param(
-            ApproachType.LLM_ZERO_SHOT,
-            "<sentence>",
-            id="zero-shot-sentences",
-        ),
-        # Few-shot document mode uses the four human sentence examples.
-        pytest.param(
-            ApproachType.LLM_FEW_SHOT,
-            "<document>",
-            id="few-shot-document",
-        ),
+            unit, is_fewshot, id=f"{unit.value}-{'few' if is_fewshot else 'zero'}-shot"
+        )
+        # Every unit, zero- and few-shot.
+        for unit in DocumentUnit
+        for is_fewshot in (False, True)
     ],
 )
-def test_sentence_annotation_job_covers_approaches_and_data_tags(
+def test_sentence_annotation_job_covers_all_units_and_approaches(
     client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
-    approach_type: ApproachType,
-    data_tag: str,
+    job_prompt_project: JobPromptProject,
+    unit: DocumentUnit,
+    is_fewshot: bool,
 ) -> None:
     """Sentence jobs persist valid, maximal FACT ranges without duplicate suggestions.
 
-    Whatever the LLM classifies, consecutive FACT sentences are merged into one range,
-    so two FACT ranges never touch.
+    Whatever the LLM classifies, consecutive FACT sentences are merged into one
+    range, so two FACT ranges never touch; sentences shown by several messages
+    (sentences, overlapping chunks) are merged as well.
     """
-    payload = _sentence_annotation_payload(
-        client,
-        llm_assistant_project,
-        approach_type=approach_type,
-        data_tag=data_tag,
+    base = job_prompt_project["base"]
+    draft = _draft(
+        job_prompt_project,
+        output_format=OutputFormat.SENTENCES,
+        unit=unit,
+        is_fewshot=is_fewshot,
     )
-    started = _start_job(client, payload)
+    started = _start_job(client, _draft_payload(job_prompt_project, draft))
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
+    approach_type, assistant_user_id = _expected_approach(is_fewshot)
     assert finished.output is not None
     assert finished.output.task_type == TaskType.SENTENCE_ANNOTATION
+    assert finished.output.approach_type == approach_type
     task_result = finished.output.specific_task_result
     assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
     assert len(task_result.results) == 1
     result = task_result.results[0]
     assert result.status == "finished", result.model_dump_json(indent=2)
     assert result.raw_response is None
-    assert result.sdoc_id == llm_assistant_project["target_sdoc"].id
-    assistant_user_id = (
-        ASSISTANT_FEWSHOT_ID
-        if approach_type == ApproachType.LLM_FEW_SHOT
-        else ASSISTANT_ZEROSHOT_ID
-    )
+    assert result.sdoc_id == base["target_sdoc"].id
     suggestions = [
         (
             annotation.sentence_id_start,
@@ -526,11 +363,11 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
     ranges = [(start, end) for start, end, _, _ in suggestions]
     assert ranges == sorted(set(ranges))
 
-    num_sentences = len(llm_assistant_project["target_sdoc"].data.sentences)
+    num_sentences = len(base["target_sdoc"].data.sentences)
     covered_sentence_ids: list[int] = []
     for start, end, code_id, user_id in suggestions:
         assert 0 <= start <= end < num_sentences
-        assert code_id == llm_assistant_project["fact_code"].id
+        assert code_id == base["fact_code"].id
         assert user_id == assistant_user_id
         covered_sentence_ids.extend(range(start, end + 1))
 
@@ -539,23 +376,225 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
         assert next_start > previous_end + 1, f"FACT ranges not merged: {ranges}"
 
 
+@pytest.mark.llm
+def test_sentence_annotation_job_runs_a_stored_version(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+) -> None:
+    """The ``Sentence classification`` version (FACT, no examples) runs zero-shot."""
+    base = job_prompt_project["base"]
+    payload = _version_payload(
+        job_prompt_project,
+        task_type=TaskType.SENTENCE_ANNOTATION,
+        version_id=job_prompt_project["sentence_template"].versions[0].id,
+    )
+    started = _start_job(client, payload)
+    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+
+    assert finished.output is not None
+    assert finished.output.approach_type == ApproachType.LLM_ZERO_SHOT
+    task_result = finished.output.specific_task_result
+    assert isinstance(task_result, SentenceAnnotationLLMAssistantJobResult)
+    result = task_result.results[0]
+    assert result.status == "finished", result.model_dump_json(indent=2)
+    assert result.suggested_annotations
+    assert all(
+        annotation.code_id == base["fact_code"].id
+        and annotation.user_id == ASSISTANT_ZEROSHOT_ID
+        for annotation in result.suggested_annotations
+    )
+
+
+# --- B. prompts a job rejects -------------------------------------------------------
+# The worker resolves and checks the prompt before it calls the LLM, so these jobs
+# fail without an LLM call.
+
+
+@pytest.mark.parametrize(
+    "template_key,task_type",
+    [
+        # A version of the unauthorized project cannot be used in the main project.
+        pytest.param("foreign_template", TaskType.ANNOTATION, id="other-project"),
+        # A tagging version cannot run a sentence annotation job.
+        pytest.param("tagging_template", TaskType.SENTENCE_ANNOTATION, id="other-task"),
+    ],
+)
+def test_job_fails_with_a_version_of_another_project_or_task(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    template_key: str,
+    task_type: TaskType,
+) -> None:
+    """The job checks that the version belongs to its project and task."""
+    template = job_prompt_project[template_key]  # type: ignore[literal-required]
+    version_id = template.versions[0].id
+    started = _start_job(
+        client,
+        _version_payload(
+            job_prompt_project, task_type=task_type, version_id=version_id
+        ),
+    )
+    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    assert failed.output is None
+    assert f"Prompt template version {version_id} cannot be used" in (
+        failed.status_message or ""
+    )
+
+
+def test_job_fails_with_a_draft_that_selects_no_codes(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+) -> None:
+    """A valid prompt without codes can be saved but not run."""
+    draft = _draft(
+        job_prompt_project,
+        output_format=OutputFormat.INLINE,
+        unit=DocumentUnit.WHOLE,
+        is_fewshot=False,
+    ).model_copy(update={"codes": []})
+    started = _start_job(client, _draft_payload(job_prompt_project, draft))
+    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    assert "The prompt selects no codes" in (failed.status_message or "")
+
+
+def test_job_fails_with_a_default_version_that_selects_no_tags(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+) -> None:
+    """The default templates of a new project select nothing, so they cannot run."""
+    started = _start_job(
+        client,
+        _version_payload(
+            job_prompt_project,
+            task_type=TaskType.TAGGING,
+            version_id=job_prompt_project["empty_tagging_version_id"],
+        ),
+    )
+    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    assert "The prompt selects no tags" in (failed.status_message or "")
+
+
+def test_job_fails_with_a_draft_that_breaks_the_block_rules(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+) -> None:
+    """Drafts are validated by the job like saved templates."""
+    draft = _draft(
+        job_prompt_project,
+        output_format=OutputFormat.INLINE,
+        unit=DocumentUnit.WHOLE,
+        is_fewshot=False,
+    )
+    draft = draft.model_copy(
+        update={"prompt": draft.prompt.replace("<document:whole>", "")}
+    )
+    started = _start_job(client, _draft_payload(job_prompt_project, draft))
+    failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
+    assert "must contain exactly one document block" in (failed.status_message or "")
+
+
+# --- C. invalid job payloads (HTTP 422 contracts) -----------------------------------
+
+
+@pytest.mark.parametrize(
+    "payload_update,expected_fragment",
+    [
+        # The task accepts only declared task enum values.
+        pytest.param({"task_type": "UNKNOWN"}, "task_type", id="unknown-task"),
+        # A job needs documents.
+        pytest.param({"sdoc_ids": None}, "sdoc_ids", id="missing-sdoc-ids"),
+        # A job needs a model.
+        pytest.param({"model": None}, "model", id="missing-model"),
+        # Both prompt sources are contradictory.
+        pytest.param(
+            {"draft": "tagging-draft"},
+            "Exactly one of prompt_template_version_id and draft",
+            id="version-and-draft",
+        ),
+        # One prompt source is required.
+        pytest.param(
+            {"prompt_template_version_id": None},
+            "Exactly one of prompt_template_version_id and draft",
+            id="neither-version-nor-draft",
+        ),
+        # A draft must be a prompt of the job's task.
+        pytest.param(
+            {"prompt_template_version_id": None, "draft": "span-draft"},
+            "The draft must be a prompt of the job's task",
+            id="draft-of-another-task",
+        ),
+    ],
+)
+def test_job_start_rejects_malformed_payloads(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    payload_update: dict[str, object],
+    expected_fragment: str,
+) -> None:
+    """Malformed tasks, missing fields and wrong prompt sources return HTTP 422.
+
+    The tagging job is the base payload; ``tagging-draft`` and ``span-draft``
+    stand for a valid tagging and span annotation draft.
+    """
+    drafts = {
+        "tagging-draft": PromptTemplateSnapshot(
+            task_type=TaskType.TAGGING,
+            language=PromptLanguage.EN,
+            prompt=DEFAULT_PROMPTS[OutputFormat.TAGS][PromptLanguage.EN],
+        ),
+        "span-draft": _draft(
+            job_prompt_project,
+            output_format=OutputFormat.INLINE,
+            unit=DocumentUnit.WHOLE,
+            is_fewshot=False,
+        ),
+    }
+    payload = _tagging_payload(job_prompt_project).model_dump(mode="json")
+    for key, value in payload_update.items():
+        payload[key] = (
+            drafts[value].model_dump(mode="json")
+            if isinstance(value, str) and value in drafts
+            else value
+        )
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
+    assert response.status_code == 422, response.text
+    assert expected_fragment in response.text
+
+
+def test_job_start_and_project_list_reject_foreign_project(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+) -> None:
+    """Both job creation and project listing require project membership."""
+    foreign_project = job_prompt_project["base"]["foreign_project"]
+    payload = _tagging_payload(job_prompt_project).model_copy(
+        update={"project_id": foreign_project.id}
+    )
+    start_response = client.post(
+        LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json")
+    )
+    assert start_response.status_code == 403, start_response.text
+
+    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{foreign_project.id}")
+    assert list_response.status_code == 403, list_response.text
+
+
 # ===========================================================================
-# JOB MANAGEMENT ENDPOINT TESTS
+# JOB MANAGEMENT (/llm_assistant/llm_assistant/...) TESTS
 # ===========================================================================
 
 
 @pytest.mark.llm
 def test_finished_job_can_be_read_listed_but_not_aborted_or_retried(
     client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
+    job_prompt_project: JobPromptProject,
 ) -> None:
-    """Get, project-list, abort, and retry expose consistent finished-job state."""
-    started = _start_job(client, _tagging_payload(client, llm_assistant_project))
+    """Get, project-list, abort and retry expose consistent finished-job state."""
+    project_id = job_prompt_project["base"]["project"].id
+    started = _start_job(client, _tagging_payload(job_prompt_project))
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
-    list_response = client.get(
-        f"{LLM_ASSISTANT_JOB_URL}/project/{llm_assistant_project['project'].id}"
-    )
+    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{project_id}")
     assert list_response.status_code == 200, list_response.text
     jobs = TypeAdapter(list[LLMAssistantJobRead]).validate_python(list_response.json())
     assert [job.job_id for job in jobs] == [finished.job_id]
@@ -573,11 +612,11 @@ def test_finished_job_can_be_read_listed_but_not_aborted_or_retried(
 @pytest.mark.llm
 def test_failed_job_can_be_retried_and_fails_again_with_the_same_invalid_model(
     client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
+    job_prompt_project: JobPromptProject,
 ) -> None:
     """Retry requeues a failed job while preserving its typed invalid input."""
     payload = _tagging_payload(
-        client, llm_assistant_project, model="definitely-not-an-available-model"
+        job_prompt_project, model="definitely-not-an-available-model"
     )
     started = _start_job(client, payload)
     failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
@@ -610,127 +649,3 @@ def test_job_management_rejects_nonexistent_job_ids(
     method = client.get if suffix == "" else client.post
     response = method(f"{LLM_ASSISTANT_JOB_URL}/not-a-real-job{suffix}")
     assert response.status_code == 404, response.text
-
-
-def test_job_start_and_project_list_reject_foreign_project(
-    client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
-) -> None:
-    """Both job creation and project listing require project membership."""
-    payload = _tagging_payload(client, llm_assistant_project)
-    foreign_payload = payload.model_copy(
-        update={"project_id": llm_assistant_project["foreign_project"].id}
-    )
-    start_response = client.post(
-        LLM_ASSISTANT_JOB_URL, json=foreign_payload.model_dump(mode="json")
-    )
-    assert start_response.status_code == 403, start_response.text
-
-    list_response = client.get(
-        f"{LLM_ASSISTANT_JOB_URL}/project/{llm_assistant_project['foreign_project'].id}"
-    )
-    assert list_response.status_code == 403, list_response.text
-
-
-# --- Invalid job payload contracts -----------------------------------------
-
-
-@pytest.mark.parametrize(
-    "payload_update,expected_fragment",
-    [
-        # The outer task discriminator accepts only declared task enum values.
-        pytest.param(
-            {"task_type": "UNKNOWN"},
-            "task_type",
-            id="unknown-task",
-        ),
-        # The strategy discriminator accepts only declared strategy enum values.
-        pytest.param(
-            {"strategy_type": "UNKNOWN"},
-            "strategy_type",
-            id="unknown-strategy",
-        ),
-        # A job cannot omit its task-specific discriminated payload.
-        pytest.param(
-            {"specific_task_parameters": None},
-            "specific_task_parameters",
-            id="missing-specific-task-parameters",
-        ),
-        # A job cannot omit its approach-specific discriminated payload.
-        pytest.param(
-            {"specific_approach_parameters": None},
-            "specific_approach_parameters",
-            id="missing-specific-approach-parameters",
-        ),
-        # A job cannot omit its strategy-specific discriminated payload.
-        pytest.param(
-            {"specific_strategy_parameters": None},
-            "specific_strategy_parameters",
-            id="missing-specific-strategy-parameters",
-        ),
-    ],
-)
-def test_job_start_rejects_malformed_discriminated_payloads(
-    client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
-    payload_update: dict[str, object],
-    expected_fragment: str,
-) -> None:
-    """Malformed task, approach, and strategy discriminators return HTTP 422."""
-    payload = _tagging_payload(client, llm_assistant_project).model_dump(mode="json")
-    payload.update(payload_update)
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
-    assert response.status_code == 422, response.text
-    assert expected_fragment in response.text
-
-
-@pytest.mark.parametrize(
-    "strategy_update,expected_fragment",
-    [
-        # Similarity must be in the inclusive zero-to-one interval.
-        pytest.param(
-            {"fuzzy_threshold": 1.1},
-            "fuzzy_threshold",
-            id="fuzzy-threshold-above-one",
-        ),
-        # Chunk size must be positive.
-        pytest.param(
-            {"chunk_size_tokens": 0},
-            "chunk_size_tokens",
-            id="zero-chunk-size",
-        ),
-        # Chunk overlap cannot be negative.
-        pytest.param(
-            {"chunk_overlap_tokens": -1},
-            "chunk_overlap_tokens",
-            id="negative-chunk-overlap",
-        ),
-        # Chunk overlap must remain strictly smaller than chunk size.
-        pytest.param(
-            {"chunk_size_tokens": 10, "chunk_overlap_tokens": 10},
-            "Chunk overlap must be smaller than chunk size",
-            id="overlap-equals-size",
-        ),
-    ],
-)
-def test_job_start_rejects_invalid_fuzzy_strategy_parameters(
-    client: TestClient,
-    llm_assistant_project: LLMAssistantProject,
-    strategy_update: dict[str, object],
-    expected_fragment: str,
-) -> None:
-    """Every fuzzy threshold and chunk boundary is enforced at the HTTP boundary."""
-    payload = _annotation_payload(
-        client,
-        llm_assistant_project,
-        approach_type=ApproachType.LLM_ZERO_SHOT,
-        strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
-        data_tag="<chunk>",
-    ).model_dump(mode="json")
-    strategy_parameters = payload["specific_strategy_parameters"]
-    assert isinstance(strategy_parameters, dict)
-    strategy_parameters.update(strategy_update)
-
-    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
-    assert response.status_code == 422, response.text
-    assert expected_fragment in response.text

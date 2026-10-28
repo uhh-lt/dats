@@ -1,13 +1,7 @@
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
-from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
-from modules.llm_assistant.llm_assistant_job_dto import (
-    DefaultStrategyParams,
-    LLMAssistantPromptTemplates,
-    TaggingParams,
-)
+from core.prompt_template.prompt_template_enum import OutputFormat
+from core.prompt_template.prompt_template_renderer import PromptRenderer
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 
@@ -21,143 +15,24 @@ class LLMTaggingResult(BaseModel):
     reasoning: str
 
 
-# ENGLISH
+class TaggingStrategy(LLMAssistantStrategy):
+    """Document tagging (<output-format:tags>): the LLM selects the prompt's tags."""
 
-en_prompt_template = """
-Please classify the document into all appropriate categories below. Multiple or zero categories are possible:
-{}.
+    output_format = OutputFormat.TAGS
 
-Select only from the provided categories and briefly explain your selection.
-
-e.g.
-{}
-
-Document:
-<document>
-
-Remember, you MUST classify the document using the provided categories, do not generate new categories!
-"""
-
-en_example_tempalate = """
-Category: {}
-Explanation: This document is about {}.
-"""
-
-
-# GERMAN
-
-de_prompt_template = """
-Bitte klassifiziere das Dokument in alle passenden folgenden Kategorien. Es sind mehrere oder keine Kategorien möglich:
-{}.
-
-Wähle ausschließlich aus den bereitgestellten Kategorien und begründe deine Auswahl kurz.
-
-e.g.
-{}
-
-Dokument:
-<document>
-
-Denke daran, das Dokument MUSS mithilfe der gegebenen Kategorien klassifiziert werden, generiere keine neuen Kategorien!
-"""
-
-de_example_tempalate = """
-Kategorie: {}
-Begründung: Das Dokument handelt von {}.
-"""
-
-
-class TaggingStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
-    strategy_type = StrategyType.TAGGING_DEFAULT
-    display_name = "Document Tagging"
-    description = (
-        "Classifies each document into the selected tags.\n"
-        "\n"
-        "**How it works:** The LLM sees the full document content along with the "
-        "available tags (name + description). It selects which tags apply to the "
-        "document and provides a reasoning for each assignment.\n"
-        "\n"
-        "**Example:** Given the tags `News` and `Sports` and a document about "
-        "a football match, the LLM selects:\n"
-        "\n"
-        "    Category: Sports\n"
-        "    Explanation: The document discusses a football match result.\n"
-        "\n"
-        "**When to use:** For categorizing documents into a flat tag set."
-    )
-    strategy_params_type = DefaultStrategyParams
-    allowed_data_tags = [DataTag.DOCUMENT.value]
-
-    prompt_templates = {
-        "en": en_prompt_template.strip(),
-        "de": de_prompt_template.strip(),
-    }
-    example_templates = {
-        "en": en_example_tempalate.strip(),
-        "de": de_example_tempalate.strip(),
-    }
-
-    def __init__(
-        self,
-        db: Session,
-        project_id: int,
-        is_fewshot: bool,
-        # either prompt templates are provided
-        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        # or the parameters to build them
-        params: TaggingParams | None = None,
-        example_ids: list[int] | None = None,
-    ):
-        project = crud_project.read(db=db, id=project_id)
-        self.tags = project.tags
-        self.tagid2tag = {tag.id: tag for tag in self.tags}
-        self.tagname2id_dict = {tag.name.lower(): tag.id for tag in self.tags}
-
-        super().__init__(
-            db,
-            project_id,
-            is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.DOCUMENT],
-            prompt_templates=prompt_templates,
-            params=params,
-            example_ids=example_ids,
-        )
+    def __init__(self, renderer: PromptRenderer):
+        super().__init__(renderer=renderer)
+        self.tagname2id = {tag.name.lower(): tag.tag_id for tag in self.prompt.tags}
 
     def get_response_model(self) -> type[BaseModel]:
         return LLMTaggingResult
 
-    def _build_example(self, language: str, tag_id: int) -> str:
-        """Build a tagging answer example for one tag."""
-        tag = self.tagid2tag[tag_id]
-
-        return self.example_templates[language].format(tag.name, tag.name)
-
-    def _build_user_prompt_template(
-        self,
-        *,
-        language: str,
-        example_ids: list[int] | None = None,
-        params: TaggingParams,
-    ) -> str:
-        # create task data (the list of tags to use for classification)
-        task_data = "\n".join(
-            [
-                f"{self.tagid2tag[tag_id].name} - {self.tagid2tag[tag_id].description}"
-                for tag_id in params.tag_ids
-            ]
-        )
-
-        # create answer example
-        answer_example = self._build_example(language, params.tag_ids[0])
-
-        return self.prompt_templates[language].format(task_data, answer_example)
-
     def parse_result(self, result: LLMTaggingResult) -> LLMParsedTaggingResult:
         return LLMParsedTaggingResult(
             tag_ids=[
-                self.tagname2id_dict[category.lower()]
+                self.tagname2id[category.lower()]
                 for category in result.categories
-                if category.lower() in self.tagname2id_dict
+                if category.lower() in self.tagname2id
             ],
             reasoning=result.reasoning,
         )

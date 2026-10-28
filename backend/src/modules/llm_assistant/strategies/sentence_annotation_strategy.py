@@ -1,27 +1,10 @@
-import random
-from collections.abc import Iterator
-
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
-from config import conf
-from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.project.project_crud import crud_project
-from core.user.user_crud import SYSTEM_USER_IDS
-from modules.llm_assistant.llm_assistant_enum import DataTag, StrategyType
-from modules.llm_assistant.llm_assistant_job_dto import (
-    DefaultStrategyParams,
-    LLMAssistantPromptTemplates,
-    SentenceAnnotationParams,
+from core.prompt_template.prompt_template_enum import OutputFormat
+from modules.llm_assistant.strategies.code_annotation_strategy import (
+    CodeAnnotationStrategy,
 )
-from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
-from repos.llm_repo import LLMMessage
-
-
-class LLMParsedSentenceAnnotationResult(BaseModel):
-    sent_id: int
-    code_id: int
 
 
 class LLMSentenceAnnotationResult(BaseModel):
@@ -33,263 +16,30 @@ class LLMSentenceAnnotationResults(BaseModel):
     data: list[LLMSentenceAnnotationResult]
 
 
-# ENGLISH
+class SentenceAnnotationStrategy(CodeAnnotationStrategy):
+    """Sentence annotation via sentence numbers (<output-format:sentences>).
 
-en_prompt_template = """
-Please use the following categories to classify sentences of the provided document:
-{}
+    The segments show numbered sentences (sentence index + 1). The LLM answers
+    the number and the code of every sentence that fits a code.
+    """
 
-Classify only sentences that clearly fit. Identify them by sentence number, use only the provided categories, and do not provide reasoning.
-
-e.g.
-{}
-
-This is the document, sentence by sentence:
-<document>
-
-Remember you do not have to provide a category for each sentence. Only assign a category if you are sure that the category fits well to the sentence. Use only the provided categories!
-
-"""
-
-en_example_template = """
-Sentence ID: {}
-Category: {}
-"""
-
-
-# GERMAN
-
-de_prompt_template = """
-Bitte nutze die folgenden Kategorien um Sätze des gegebenen Dokumentes zu klassifizieren:
-{}
-
-Klassifiziere nur Sätze, auf die eine Kategorie eindeutig passt. Identifiziere sie anhand der Satznummer, verwende nur die bereitgestellten Kategorien und gib keine Begründung an.
-
-e.g.
-{}
-
-Dies ist das Dokument, Satz für Satz:
-<document>
-
-Denke daran, dass du nicht für jeden Satz eine Kategorie angeben musst. Vergebe nur eine Kategorie, wenn du dir sicher bist, dass die Kategorie gut zu dem Satz passt. Verwende ausschließlich die bereitgestellten Kategorien!
-
-"""
-
-de_example_template = """
-Satz-ID: {}
-Kategorie: {}
-"""
-
-
-class SentenceAnnotationStrategy(LLMAssistantStrategy[DefaultStrategyParams]):
-    strategy_type = StrategyType.SENTENCE_ANNOTATION_DEFAULT
-    display_name = "Sentence Annotation"
-    description = (
-        "Classifies each sentence of a document with the selected codes.\n"
-        "\n"
-        "**How it works:** The document is split into individual sentences. For each "
-        "sentence, the LLM assigns one of the available codes (or none). Each sentence "
-        "is classified independently.\n"
-        "\n"
-        "**Example:** Given the codes `Claim` and `Evidence` and the sentences:\n"
-        "\n"
-        "    1. Climate change is real.\n"
-        "    2. Global temperatures rose by 1.1\u00b0C since 1880.\n"
-        "\n"
-        "The classifications are:\n"
-        "\n"
-        "    Sentence 1: Claim\n"
-        "    Sentence 2: Evidence\n"
-        "\n"
-        "**When to use:** For sentence-level classification tasks like argument "
-        "mining, stance detection, or discourse analysis."
-    )
-    strategy_params_type = DefaultStrategyParams
-    allowed_data_tags = [DataTag.DOCUMENT.value, DataTag.SENTENCE.value]
-
-    supported_languages = ["en", "de"]
-    prompt_templates = {
-        "en": en_prompt_template.strip(),
-        "de": de_prompt_template.strip(),
-    }
-    example_templates = {
-        "en": en_example_template.strip(),
-        "de": de_example_template.strip(),
-    }
-
-    def __init__(
-        self,
-        db: Session,
-        project_id: int,
-        is_fewshot: bool,
-        # either prompt templates are provided
-        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        # or the parameters to build them
-        params: SentenceAnnotationParams | None = None,
-        example_ids: list[int] | None = None,
-    ):
-        project = crud_project.read(db=db, id=project_id)
-        self.db = db
-        self.codes = project.codes
-        self.codename2id_dict = {code.name.lower(): code.id for code in self.codes}
-        self.codeid2name_dict = {code.id: code.name for code in self.codes}
-        self.codeids2code_dict = {code.id: code for code in self.codes}
-
-        super().__init__(
-            db,
-            project_id,
-            is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.DOCUMENT, DataTag.SENTENCE],
-            prompt_templates=prompt_templates,
-            params=params,
-            example_ids=example_ids,
-        )
+    output_format = OutputFormat.SENTENCES
 
     def get_response_model(self) -> type[BaseModel]:
         return LLMSentenceAnnotationResults
 
-    def generate_prompts(
-        self, language: str, sdoc_data: SourceDocumentDataORM
-    ) -> Iterator[LLMMessage]:
-        match self.data_tag:
-            case DataTag.DOCUMENT:
-                # we need to provide document sentence by sentence for sentence annotation
-                document_sentences = "\n".join(
-                    [
-                        f"{idx + 1}: {sentence}"
-                        for idx, sentence in enumerate(sdoc_data.sentences)
-                    ]
-                )
-                datas = iter([document_sentences])
-            case DataTag.SENTENCE:
-                datas = (f"1: {sentence}" for sentence in sdoc_data.sentences)
-            case _:
-                raise ValueError(f"Data tag {self.data_tag} not supported!")  # type: ignore
-
-        system_prompt = self._build_system_prompt(language)
-        for data in datas:
-            user_prompt = self._build_user_prompt(
-                language=language,
-                data=data,
-            )
-            yield LLMMessage(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-            )
-
-    def _build_example(self, language: str, code_ids: list[int]) -> str:
-        """Build a sentence-classification answer example for selected codes."""
-        examples: list[str] = []
-        for code_id in code_ids:
-            if code_id not in self.codeid2name_dict:
-                continue
-            examples.append(self.codeid2name_dict[code_id])
-
-        if len(examples) == 0:
-            # choose 3 random examples
-            examples.extend(random.sample(list(self.codeid2name_dict.values()), 3))
-
-        examples = [
-            self.example_templates[language].format(idx, example)
-            for idx, example in enumerate(examples, start=1)
-        ]
-
-        return "\n\n".join(examples)
-
-    def _build_user_prompt_template(
-        self,
-        *,
-        language: str,
-        example_ids: list[int] | None = None,
-        params: SentenceAnnotationParams,
-    ) -> str:
-        if self.is_fewshot:
-            from core.annotation.sentence_annotation_crud import crud_sentence_anno
-            from core.doc.source_document_data_crud import crud_sdoc_data
-
-            # find sentence annotations
-            if example_ids is None:
-                sentence_annotations = [
-                    sa
-                    for sa in crud_sentence_anno.read_by_code_ids(
-                        db=self.db, code_ids=params.code_ids
-                    )
-                    if sa.user_id
-                    not in SYSTEM_USER_IDS  # Filter out annotations of the system users
-                ]
-            # or use the provided examples
-            else:
-                sentence_annotations = crud_sentence_anno.read_by_ids(
-                    db=self.db, ids=example_ids
-                )
-
-            code_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {
-                code_id: [] for code_id in params.code_ids
-            }
-            for sa in sentence_annotations:
-                if sa.code_id not in code_id2sentence_annotations:
-                    code_id2sentence_annotations[sa.code_id] = []
-                code_id2sentence_annotations[sa.code_id].append(sa)
-
-            # select configured number of examples
-            if example_ids is None:
-                for code_id, annotations in code_id2sentence_annotations.items():
-                    assert len(annotations) >= conf.llm_assistant.few_shot_threshold, (
-                        f"Code {code_id} has less than {conf.llm_assistant.few_shot_threshold} annotations!"
-                    )
-                    code_id2sentence_annotations[code_id] = random.sample(
-                        annotations, conf.llm_assistant.few_shot_threshold
-                    )
-
-            # find corrsponding sdoc datas
-            sdoc_ids = [sa.sdoc_id for sa in sentence_annotations]
-            sdoc_id2data = {
-                sdoc.id: sdoc
-                for sdoc in crud_sdoc_data.read_by_ids(db=self.db, ids=sdoc_ids)
-                if sdoc is not None
-            }
-
-            # build task data
-            task_data = "\n".join(
-                [
-                    f"{self.codeids2code_dict[code_id].name}: {self.codeids2code_dict[code_id].description} For example:\n"
-                    + "\n".join(
-                        [
-                            "-"
-                            + " ".join(
-                                sdoc_id2data[sa.sdoc_id].sentences[
-                                    sa.sentence_id_start : sa.sentence_id_end + 1
-                                ]
-                            )
-                            for sa in code_id2sentence_annotations[code_id]
-                        ]
-                    )
-                    + "\n"
-                    for code_id in params.code_ids
-                ]
-            )
-        else:
-            task_data = "\n".join(
-                [
-                    f"{self.codeids2code_dict[code_id].name}: {self.codeids2code_dict[code_id].description}"
-                    for code_id in params.code_ids
-                ]
-            )
-        answer_example = self._build_example(language, params.code_ids)
-        return self.prompt_templates[language].format(task_data, answer_example)
-
     def parse_result(
-        self, result: LLMSentenceAnnotationResults
-    ) -> list[LLMParsedSentenceAnnotationResult]:
-        parsed_results = []
+        self,
+        result: LLMSentenceAnnotationResults,
+        sdoc_data: SourceDocumentDataORM,
+        message_id: int,
+    ) -> list[tuple[int, int]]:
+        """Return the (sentence index, code id) pairs of the message's sentences."""
+        sentence_ids = set(self.segments(sdoc_data)[message_id].sentence_ids)
+        pairs: list[tuple[int, int]] = []
         for annotation in result.data:
-            if annotation.category.lower() not in self.codename2id_dict:
+            code_id = self._code_id_for_name(annotation.category)
+            if code_id is None or annotation.sent_id - 1 not in sentence_ids:
                 continue
-
-            code_id = self.codename2id_dict[annotation.category.lower()]
-            parsed_results.append(
-                LLMParsedSentenceAnnotationResult(
-                    sent_id=annotation.sent_id, code_id=code_id
-                )
-            )
-        return parsed_results
+            pairs.append((annotation.sent_id - 1, code_id))
+        return pairs

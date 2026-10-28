@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from config import conf
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.llm_assistant.llm_assistant_exceptions import (
     LLMAssistantBatchProcessingError,
 )
@@ -179,20 +178,9 @@ class LLMAssistantDocumentProcessor:
                 )
 
         for sdoc_data in self._iter_sdoc_datas(db=db, sdoc_ids=sdoc_ids):
-            language = crud_sdoc_meta.read_by_sdoc_and_key(
-                db=db, sdoc_id=sdoc_data.id, key="language"
-            ).str_value
-            if language is None:
-                raise LLMAssistantBatchProcessingError(
-                    f"Document with ID {sdoc_data.id} has no language!"
-                )
-
             prompt_count = 0
             for message_id, prompt in enumerate(
-                strategy.generate_prompts(
-                    language=language,
-                    sdoc_data=sdoc_data,
-                )
+                strategy.generate_prompts(sdoc_data=sdoc_data)
             ):
                 prompt_count += 1
                 pending_work.append(

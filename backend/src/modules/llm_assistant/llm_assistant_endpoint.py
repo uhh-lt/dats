@@ -4,17 +4,8 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from modules.llm_assistant.llm_assistant_enum import (
-    ApproachType,
-    StrategyType,
-    TaskType,
-)
-from modules.llm_assistant.llm_assistant_job_dto import (
-    ApproachRecommendation,
-    LLMAssistantJobParameters,
-    LLMAssistantPromptTemplates,
-    StrategyInfo,
-)
+from core.prompt_template.prompt_template_enum import TaskType
+from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 
 router = APIRouter(
@@ -24,60 +15,6 @@ router = APIRouter(
 )
 
 llmas: LLMAssistantService = LLMAssistantService()
-
-
-@router.post(
-    "/create_prompt_templates",
-    response_model=list[LLMAssistantPromptTemplates],
-    summary="Returns the system and user prompt templates for the given LLM assistant task in all supported languages",
-)
-def create_prompt_templates(
-    *,
-    db: Session = Depends(get_db_session),
-    job_params: LLMAssistantJobParameters,
-    approach_type: ApproachType,
-    strategy_type: StrategyType,
-    example_ids: list[int] | None = None,
-    authz_user: AuthzUser = Depends(),
-) -> list[LLMAssistantPromptTemplates]:
-    authz_user.assert_in_project(job_params.project_id)
-
-    return llmas.create_prompt_templates(
-        db=db,
-        job_params=job_params,
-        approach_type=approach_type,
-        strategy_type=strategy_type,
-        example_ids=example_ids,
-    )
-
-
-@router.post(
-    "/list_strategies",
-    response_model=list[StrategyInfo],
-    summary="Returns the available strategies for the given LLM assistant task",
-)
-def list_strategies(
-    *,
-    task_type: TaskType,
-    authz_user: AuthzUser = Depends(),
-) -> list[StrategyInfo]:
-    return llmas.list_strategies(task_type=task_type)
-
-
-@router.post(
-    "/determine_approach",
-    response_model=ApproachRecommendation,
-    summary="Determines the appropriate approach based on the provided input",
-)
-def determine_approach(
-    *,
-    db: Session = Depends(get_db_session),
-    job_params: LLMAssistantJobParameters,
-    authz_user: AuthzUser = Depends(),
-) -> ApproachRecommendation:
-    authz_user.assert_in_project(job_params.project_id)
-
-    return llmas.determine_approach(db=db, job_params=job_params)
 
 
 @router.post(
