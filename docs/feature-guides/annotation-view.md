@@ -38,6 +38,12 @@ If you are working in a team and want to check inter-coder reliability or simply
 - You can view your annotations on the left and a colleague's on the right.
 - You can even "take over" or apply annotations from their side to yours!
 
+#### Provenance of Accepted Annotations
+
+When you take over an annotation (with the single arrow or "apply all"), DATS records where the copy came from. Any memos on the original annotation are copied along and keep their original author. The [Annotation Explorer](#the-annotation-explorer) and the [Annotation Tables](analysis/annotation-tables.md) ("Accepted from" column) show this provenance: the card of an accepted annotation says who originally made it, when you accepted it and its original code, with a note when the code was changed after accepting.
+
+Provenance is for transparency only: an accepted annotation counts as your own everywhere, and nothing is filtered or excluded automatically. The annotators therefore show accepted annotations like any other.
+
 ### Rendering Settings & LLM Assistant
 
 - **Rendering Settings:** Click the settings icon to change how annotations visually overlap the text (e.g., rendering code names inline with the text or stacked at the top of the highlighted span).
