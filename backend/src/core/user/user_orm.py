@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from core.memo.memo_orm import MemoORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
+    from modules.agent.agent_session_orm import AgentSessionORM
 
 
 class UserORM(ORMBase):
@@ -67,6 +68,13 @@ class UserORM(ORMBase):
 
     api_keys: Mapped[list["ApiKeyORM"]] = relationship(
         "ApiKeyORM", back_populates="user"
+    )
+
+    agent_sessions: Mapped[list["AgentSessionORM"]] = relationship(
+        "AgentSessionORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     def get_project_id(self) -> None:

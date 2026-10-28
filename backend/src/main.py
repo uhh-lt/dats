@@ -64,6 +64,11 @@ async def lifespan(app: FastAPI):
     for repo in repos:
         repo.connect()
 
+    # Setup agent toolsets
+    from modules.agent.agent_service import init_agent_toolsets
+
+    init_agent_toolsets(app)
+
     # Setup services lazily
     from systems.job_system.job_service import JobService
 

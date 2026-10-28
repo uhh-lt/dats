@@ -66,6 +66,7 @@ dependencies = [
     "weaviate-client>=4.22.0",
     "yake>=0.7.3",
     "fastmcp>=3.4.5",
+    "pydantic-ai[ag-ui]>=2.8.0",
 ]
 
 [dependency-groups]
