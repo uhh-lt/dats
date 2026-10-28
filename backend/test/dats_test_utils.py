@@ -14,7 +14,7 @@ import sys
 import time
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Generator, TypedDict
+from typing import TYPE_CHECKING, Any, Generator, TypedDict
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
@@ -26,6 +26,9 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+
+if TYPE_CHECKING:
+    from core.annotation.span_annotation_orm import SpanAnnotationORM
 
 # The tests authenticate with this header instead of a JWT (see `_install_test_auth`)
 _TEST_USER_HEADER = "x-dats-test-user"
@@ -373,3 +376,140 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
         "source_document": sdoc,
         "source_document_data": sdoc_data,
     }
+
+
+def _offsets(parts: list[str]) -> tuple[str, list[int], list[int]]:
+    """Join text parts with spaces and return their exact character offsets."""
+    content = " ".join(parts)
+    starts: list[int] = []
+    ends: list[int] = []
+    cursor = 0
+    for part in parts:
+        start = content.index(part, cursor)
+        starts.append(start)
+        ends.append(start + len(part))
+        cursor = start + len(part)
+    return content, starts, ends
+
+
+def _token_offsets(content: str) -> tuple[list[int], list[int]]:
+    """Return whitespace-token character offsets for deterministic test text."""
+    starts: list[int] = []
+    ends: list[int] = []
+    cursor = 0
+    while cursor < len(content):
+        while cursor < len(content) and content[cursor].isspace():
+            cursor += 1
+        if cursor >= len(content):
+            break
+        start = cursor
+        while cursor < len(content) and not content[cursor].isspace():
+            cursor += 1
+        starts.append(start)
+        ends.append(cursor)
+    return starts, ends
+
+
+def create_text_document(
+    db: Session,
+    *,
+    project: ProjectORM,
+    filename: str,
+    name: str,
+    sentences: list[str],
+    initialize_metadata: bool = True,
+) -> SourceDocumentORM:
+    """Create a fully tokenized text document with one sentence per entry."""
+    from core.doc.source_document_crud import crud_sdoc
+    from core.doc.source_document_data_crud import crud_sdoc_data
+    from core.doc.source_document_data_dto import SourceDocumentDataCreate
+    from core.doc.source_document_dto import SourceDocumentCreate
+    from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+
+    content, sentence_starts, sentence_ends = _offsets(sentences)
+    token_starts, token_ends = _token_offsets(content)
+    sdoc = crud_sdoc.create(
+        db=db,
+        create_dto=SourceDocumentCreate(
+            filename=filename,
+            name=name,
+            doctype=DocType.text,
+            project_id=project.id,
+        ),
+    )
+    crud_sdoc_data.create(
+        db=db,
+        create_dto=SourceDocumentDataCreate(
+            id=sdoc.id,
+            content=content,
+            repo_url=f"tests/{filename}",
+            raw_html=f"<p>{content}</p>",
+            html="<p>"
+            + " ".join(f"<sent>{sentence}</sent>" for sentence in sentences)
+            + "</p>",
+            token_starts=token_starts,
+            token_ends=token_ends,
+            sentence_starts=sentence_starts,
+            sentence_ends=sentence_ends,
+            token_time_starts=None,
+            token_time_ends=None,
+        ),
+    )
+    if initialize_metadata:
+        crud_sdoc_meta.create_initial_metadata(
+            db=db,
+            project_id=project.id,
+            sdoc_id=sdoc.id,
+            doctype=DocType.text,
+        )
+        language = crud_sdoc_meta.read_by_sdoc_and_key(
+            db=db, sdoc_id=sdoc.id, key="language"
+        )
+        language.str_value = "en"
+    return sdoc
+
+
+def create_span_for_text(
+    db: Session,
+    *,
+    sdoc: SourceDocumentORM,
+    text: str,
+    code_id: int,
+    user_id: int,
+) -> "SpanAnnotationORM":
+    """Create a span annotation by locating an exact string in a document."""
+    from core.annotation.span_annotation_crud import crud_span_anno
+    from core.annotation.span_annotation_dto import SpanAnnotationCreate
+    from core.annotation.span_annotation_service import SpanAnnotationService
+    from core.doc.source_document_data_crud import crud_sdoc_data
+
+    data = crud_sdoc_data.read(db=db, id=sdoc.id)
+    begin = data.content.index(text)
+    end = begin + len(text)
+    begin_token = next(
+        index for index, token_end in enumerate(data.token_ends) if token_end > begin
+    )
+    end_token = (
+        next(
+            index for index, token_end in enumerate(data.token_ends) if token_end >= end
+        )
+        + 1
+    )
+    return crud_span_anno.read(
+        db=db,
+        id=SpanAnnotationService()
+        .create(
+            db=db,
+            user_id=user_id,
+            create_dto=SpanAnnotationCreate(
+                sdoc_id=sdoc.id,
+                begin=begin,
+                end=end,
+                begin_token=begin_token,
+                end_token=end_token,
+                span_text=text,
+                code_id=code_id,
+            ),
+        )
+        .id,
+    )

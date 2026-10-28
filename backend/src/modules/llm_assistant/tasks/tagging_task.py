@@ -1,14 +1,9 @@
 from loguru import logger
-from sqlalchemy.orm import Session
 
 from core.doc.source_document_crud import crud_sdoc
-from modules.llm_assistant.llm_assistant_enum import ApproachType, TaskType
+from core.prompt_template.prompt_template_enum import TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
-    ApproachRecommendation,
-    LLMAssistantJobOutput,
-    SpecificTaskParameters,
     TaggingLLMAssistantJobResult,
-    TaggingParams,
     TaggingResult,
 )
 from modules.llm_assistant.strategies.tagging_strategy import (
@@ -24,25 +19,11 @@ from modules.llm_assistant.tasks.llm_assistant_task import (
 )
 
 
-class TaggingTask(
-    LLMAssistantTask[TaggingStrategy, TaggingParams, LLMTaggingResult, TaggingResult]
-):
+class TaggingTask(LLMAssistantTask[TaggingStrategy, LLMTaggingResult, TaggingResult]):
     """Generate document-tagging suggestions for source documents."""
 
     task_name = "Document Tagging"
-
-    @classmethod
-    def determine_approach(
-        cls, db: Session, task_parameters: SpecificTaskParameters
-    ) -> ApproachRecommendation:
-        return ApproachRecommendation(
-            recommended_approach=ApproachType.LLM_ZERO_SHOT,
-            available_approaches={
-                ApproachType.LLM_ZERO_SHOT: True,
-                ApproachType.LLM_FEW_SHOT: False,
-            },
-            reasoning="Only zero-shot approach is available for document tagging (yet).",
-        )
+    task_type = TaskType.TAGGING
 
     def _get_response_model(self, strategy: TaggingStrategy) -> type[LLMTaggingResult]:
         return LLMTaggingResult
@@ -50,7 +31,7 @@ class TaggingTask(
     def _process_document(
         self,
         *,
-        context: LLMAssistantTaskContext[TaggingStrategy, TaggingParams],
+        context: LLMAssistantTaskContext[TaggingStrategy],
         document: LLMAssistantDocumentResponse[LLMTaggingResult],
     ) -> TaggingResult:
         current_tag_ids = [
@@ -98,10 +79,7 @@ class TaggingTask(
             reasoning=parsed_result.reasoning,
         )
 
-    def _build_output(self, results: list[TaggingResult]) -> LLMAssistantJobOutput:
-        return LLMAssistantJobOutput(
-            task_type=TaskType.TAGGING,
-            specific_task_result=TaggingLLMAssistantJobResult(
-                task_type=TaskType.TAGGING, results=results
-            ),
-        )
+    def _build_result(
+        self, results: list[TaggingResult]
+    ) -> TaggingLLMAssistantJobResult:
+        return TaggingLLMAssistantJobResult(task_type=TaskType.TAGGING, results=results)

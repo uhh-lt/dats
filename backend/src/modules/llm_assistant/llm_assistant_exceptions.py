@@ -1,4 +1,4 @@
-from modules.llm_assistant.llm_assistant_enum import TaskType
+from core.prompt_template.prompt_template_enum import TaskType
 
 
 class LLMAssistantJobPreparationError(Exception):

@@ -1,7 +1,7 @@
 from common.job_type_enum import JobType
+from core.prompt_template.prompt_template_service import PromptTemplateService
 from modules.llm_assistant.llm_assistant_endpoint import router
 from modules.llm_assistant.llm_assistant_job_dto import (
-    FewShotParams,
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
 )
@@ -37,36 +37,31 @@ def llm_assistant(
         status_message="Started LLM Assistant!",
     )
 
-    task_type = payload.task_type
-    approach_parameters = payload.specific_approach_parameters
-    task_parameters = payload.specific_task_parameters
-    is_fewshot = isinstance(approach_parameters, FewShotParams)
-
+    pts = PromptTemplateService()
     with sqlr.transaction() as db:
-        # build the strategy
-        strategy = build_strategy(
-            db=db,
-            project_id=payload.project_id,
-            is_fewshot=is_fewshot,
-            task_type=task_type,
-            strategy_type=payload.strategy_type,
-            strategy_params=payload.specific_strategy_parameters,
-            prompt_templates=approach_parameters.prompts,
-            params=task_parameters,
-        )
+        # resolve the prompt, it decides everything but the documents and the model
+        if payload.draft is not None:
+            prompt = payload.draft
+            renderer = pts.validate_prompt_template(
+                db=db, project_id=payload.project_id, prompt=prompt
+            )
+        else:
+            assert payload.prompt_template_version_id is not None
+            prompt = pts.read_snapshot(
+                db=db,
+                version_id=payload.prompt_template_version_id,
+                project_id=payload.project_id,
+                task_type=payload.task_type,
+            )
+            renderer = pts.build_renderer(prompt=prompt)
+        pts.assert_runnable(prompt=prompt)
 
-        # build the task
-        task = build_task(task_type, llm=LLMRepo())
+        # build the strategy of the prompt's output format and the task
+        strategy = build_strategy(renderer=renderer)
+        task = build_task(payload.task_type, llm=LLMRepo())
 
         # execute
-        result = task.execute(
-            db=db,
-            job=job,
-            project_id=payload.project_id,
-            approach_parameters=approach_parameters,
-            task_parameters=task_parameters,
-            strategy=strategy,
-        )
+        result = task.execute(db=db, job=job, payload=payload, strategy=strategy)
 
     job.update(
         current_step=2,

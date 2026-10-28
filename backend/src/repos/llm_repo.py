@@ -17,7 +17,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class LLMMessage(BaseModel):
-    system_prompt: str
+    system_prompt: str | None = None
     user_prompt: str
 
 
@@ -309,10 +309,11 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         # prepare batch messages
         batch_messages = [
             [
-                {
-                    "role": "system",
-                    "content": message.system_prompt.strip(),
-                },
+                *(
+                    [{"role": "system", "content": message.system_prompt.strip()}]
+                    if message.system_prompt is not None
+                    else []
+                ),
                 {
                     "role": "user",
                     "content": message.user_prompt.strip(),

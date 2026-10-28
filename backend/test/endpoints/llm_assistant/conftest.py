@@ -1,55 +1,58 @@
-from collections.abc import Generator
 from datetime import date
 from typing import TypedDict
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import dats_test_utils
 from common.doc_type_enum import DocType
 from common.meta_type_enum import MetaType
-from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
-from core.annotation.span_annotation_crud import crud_span_anno
-from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.prompt_template.prompt_template_defaults import DEFAULT_PROMPTS
+from core.prompt_template.prompt_template_dto import (
+    PromptCode,
+    PromptExample,
+    PromptExamplesCreate,
+    PromptMetadataField,
+    PromptTag,
+    PromptTemplateCreate,
+    PromptTemplateRead,
+)
+from core.prompt_template.prompt_template_enum import (
+    OutputFormat,
+    PromptExampleKind,
+    PromptLanguage,
+    TaskType,
+)
+from core.prompt_template.prompt_template_service import PromptTemplateService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
 from core.user.user_orm import UserORM
 
-
-@pytest.fixture(scope="function")
-def error_client(
-    app_client: TestClient, test_user: UserORM
-) -> Generator[TestClient, None, None]:
-    """Return a client that exposes unhandled endpoint exceptions as HTTP 500."""
-    test_client = dats_test_utils.create_user_client(
-        app_client, test_user, raise_server_exceptions=False
-    )
-    yield test_client
-    test_client.close()
+EXAMPLE_NAMES = ["Anna", "Ben", "Cara", "Dan"]
+TARGET_SENTENCES = [
+    "The document author is Alice.",
+    "The document year is 2024.",
+    "The publication date is 2024-01-15.",
+    "The document's reviewed status is true.",
+    "The document topics are solar and energy.",
+]
 
 
 class LLMAssistantProject(TypedDict):
@@ -57,12 +60,14 @@ class LLMAssistantProject(TypedDict):
 
     Project ``Simple Test Project`` belongs to ``testuser@dats.org`` and contains:
 
-    - Target document ``Target facts`` with five short English sentences stating
-      author Alice, year 2024, publication date 2024-01-15, review status true,
-      and topics solar and energy. It is linked to the ``Other`` tag.
-    - Example document ``Few-shot examples`` with exactly the configured few-shot
-      threshold of short English sentences. Each name has a human ``PERSON`` span
-      annotation and each sentence has a human ``FACT`` sentence annotation.
+    - Target document ``Target facts`` with the five sentences
+      ``TARGET_SENTENCES`` stating author Alice, year 2024, publication date
+      2024-01-15, review status true, and topics solar and energy. It is linked
+      to the ``Other`` tag.
+    - Example document ``Few-shot examples`` with the four sentences "The text
+      names <name> as a person." for the names ``EXAMPLE_NAMES`` (Anna, Ben,
+      Cara, Dan). Each name has a ``PERSON`` span annotation and each sentence a
+      ``FACT`` sentence annotation, all by ``testuser@dats.org``.
     - Empty-result document ``No match`` containing only an explicit statement that
       it has no people or facts relevant to the fixture's labels.
     - Codes ``PERSON`` (person-name passages) and ``FACT`` (explicit factual
@@ -78,11 +83,12 @@ class LLMAssistantProject(TypedDict):
 
     Non-obvious derived behavior:
 
+    - The project was created by the project service, so it has the 10 default
+      prompt templates (one per output format and language, e.g.
+      ``default-document-tagging-en``), which select nothing; the unauthorized
+      project has none.
     - Every main-project document has its read-only ``language`` metadata set to
-      ``en`` because LLM document processing requires this metadata.
-    - The human annotations, not assistant annotations, determine whether few-shot
-      is available. Exactly the runtime-configured threshold exists for each
-      selected code, even when tests override the default threshold of four.
+      ``en``, as after preprocessing; the LLM assistant does not read it.
     - Existing assistant annotations are separated by assistant user, allowing the
       count endpoint and ``delete_existing_annotations`` to distinguish approaches.
     - The unauthorized project is intentionally not associated with the test user.
@@ -107,132 +113,6 @@ class LLMAssistantProject(TypedDict):
     foreign_sdoc: SourceDocumentORM
     foreign_code: CodeORM
     foreign_span_annotation: SpanAnnotationORM
-
-
-def _offsets(parts: list[str]) -> tuple[str, list[int], list[int]]:
-    """Join text parts with spaces and return their exact character offsets."""
-    content = " ".join(parts)
-    starts: list[int] = []
-    ends: list[int] = []
-    cursor = 0
-    for part in parts:
-        start = content.index(part, cursor)
-        starts.append(start)
-        ends.append(start + len(part))
-        cursor = start + len(part)
-    return content, starts, ends
-
-
-def _token_offsets(content: str) -> tuple[list[int], list[int]]:
-    """Return whitespace-token character offsets for deterministic test text."""
-    starts: list[int] = []
-    ends: list[int] = []
-    cursor = 0
-    while cursor < len(content):
-        while cursor < len(content) and content[cursor].isspace():
-            cursor += 1
-        if cursor >= len(content):
-            break
-        start = cursor
-        while cursor < len(content) and not content[cursor].isspace():
-            cursor += 1
-        starts.append(start)
-        ends.append(cursor)
-    return starts, ends
-
-
-def _create_text_document(
-    db: Session,
-    *,
-    project: ProjectORM,
-    filename: str,
-    name: str,
-    sentences: list[str],
-    initialize_metadata: bool = True,
-) -> SourceDocumentORM:
-    """Create a fully tokenized text document suitable for LLM processing."""
-    content, sentence_starts, sentence_ends = _offsets(sentences)
-    token_starts, token_ends = _token_offsets(content)
-    sdoc = crud_sdoc.create(
-        db=db,
-        create_dto=SourceDocumentCreate(
-            filename=filename,
-            name=name,
-            doctype=DocType.text,
-            project_id=project.id,
-        ),
-    )
-    crud_sdoc_data.create(
-        db=db,
-        create_dto=SourceDocumentDataCreate(
-            id=sdoc.id,
-            content=content,
-            repo_url=f"llm-assistant-tests/{filename}",
-            raw_html=f"<p>{content}</p>",
-            html="<p>"
-            + " ".join(f"<sent>{sentence}</sent>" for sentence in sentences)
-            + "</p>",
-            token_starts=token_starts,
-            token_ends=token_ends,
-            sentence_starts=sentence_starts,
-            sentence_ends=sentence_ends,
-            token_time_starts=None,
-            token_time_ends=None,
-        ),
-    )
-    if initialize_metadata:
-        crud_sdoc_meta.create_initial_metadata(
-            db=db,
-            project_id=project.id,
-            sdoc_id=sdoc.id,
-            doctype=DocType.text,
-        )
-        language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, sdoc_id=sdoc.id, key="language"
-        )
-        language.str_value = "en"
-    return sdoc
-
-
-def _span_for_text(
-    db: Session,
-    *,
-    sdoc: SourceDocumentORM,
-    text: str,
-    code_id: int,
-    user_id: int,
-) -> SpanAnnotationORM:
-    """Create a span annotation by locating an exact string in a document."""
-    data = crud_sdoc_data.read(db=db, id=sdoc.id)
-    begin = data.content.index(text)
-    end = begin + len(text)
-    begin_token = next(
-        index for index, token_end in enumerate(data.token_ends) if token_end > begin
-    )
-    end_token = (
-        next(
-            index for index, token_end in enumerate(data.token_ends) if token_end >= end
-        )
-        + 1
-    )
-    return crud_span_anno.read(
-        db=db,
-        id=SpanAnnotationService()
-        .create(
-            db=db,
-            user_id=user_id,
-            create_dto=SpanAnnotationCreate(
-                sdoc_id=sdoc.id,
-                begin=begin,
-                end=end,
-                begin_token=begin_token,
-                end_token=end_token,
-                span_text=text,
-                code_id=code_id,
-            ),
-        )
-        .id,
-    )
 
 
 def _create_metadata_field(
@@ -263,38 +143,23 @@ def llm_assistant_project(
     test_user: UserORM,
 ) -> LLMAssistantProject:
     """Create the deterministic LLM assistant project described by its TypedDict."""
-    example_names = ["Anna", "Ben", "Cara", "Dan"]
-    if conf.llm_assistant.few_shot_threshold > len(example_names):
-        example_names.extend(
-            f"Person{index}"
-            for index in range(
-                len(example_names) + 1,
-                conf.llm_assistant.few_shot_threshold + 1,
-            )
-        )
-    example_names = example_names[: conf.llm_assistant.few_shot_threshold]
+    example_names = EXAMPLE_NAMES
 
-    target_sdoc = _create_text_document(
+    target_sdoc = dats_test_utils.create_text_document(
         db_session,
         project=test_project,
         filename="target-facts.txt",
         name="Target facts",
-        sentences=[
-            "The document author is Alice.",
-            "The document year is 2024.",
-            "The publication date is 2024-01-15.",
-            "The document's reviewed status is true.",
-            "The document topics are solar and energy.",
-        ],
+        sentences=TARGET_SENTENCES,
     )
-    example_sdoc = _create_text_document(
+    example_sdoc = dats_test_utils.create_text_document(
         db_session,
         project=test_project,
         filename="few-shot-examples.txt",
         name="Few-shot examples",
         sentences=[f"The text names {name} as a person." for name in example_names],
     )
-    no_match_sdoc = _create_text_document(
+    no_match_sdoc = dats_test_utils.create_text_document(
         db_session,
         project=test_project,
         filename="no-match.txt",
@@ -395,7 +260,7 @@ def llm_assistant_project(
                 metadata.list_value = value
 
     human_span_annotations = [
-        _span_for_text(
+        dats_test_utils.create_span_for_text(
             db_session,
             sdoc=example_sdoc,
             text=name,
@@ -418,20 +283,20 @@ def llm_assistant_project(
                         sentence_id_end=sentence_id,
                         code_id=fact_code.id,
                     )
-                    for sentence_id in range(conf.llm_assistant.few_shot_threshold)
+                    for sentence_id in range(len(example_names))
                 ],
             )
         ],
     )
 
-    zero_span_annotation = _span_for_text(
+    zero_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
         sdoc=target_sdoc,
         text="Alice",
         code_id=person_code.id,
         user_id=ASSISTANT_ZEROSHOT_ID,
     )
-    few_span_annotation = _span_for_text(
+    few_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
         sdoc=target_sdoc,
         text="Alice",
@@ -476,7 +341,7 @@ def llm_assistant_project(
             description="Not associated with the test user",
         ),
     )
-    foreign_sdoc = _create_text_document(
+    foreign_sdoc = dats_test_utils.create_text_document(
         db_session,
         project=foreign_project,
         filename="foreign.txt",
@@ -493,7 +358,7 @@ def llm_assistant_project(
             is_system=False,
         ),
     )
-    foreign_span_annotation = _span_for_text(
+    foreign_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
         sdoc=foreign_sdoc,
         text="Eve",
@@ -537,4 +402,155 @@ def llm_assistant_project(
         "foreign_sdoc": foreign_sdoc,
         "foreign_code": foreign_code,
         "foreign_span_annotation": foreign_span_annotation,
+    }
+
+
+def prompt_code(code: CodeORM) -> PromptCode:
+    """The snapshot of a code as a prompt selects it."""
+    return PromptCode(
+        code_id=code.id, name=code.name, description=code.description or ""
+    )
+
+
+class JobPromptProject(TypedDict):
+    """This fixture extends ``llm_assistant_project`` with prompts for jobs.
+
+    - ``span_examples``: the span examples of the four human PERSON annotations
+      of ``Few-shot examples``, e.g. "The text names Anna as a person." with the
+      PERSON span "Anna" (one example per sentence, in name order).
+    - ``sentence_examples``: the sentence examples of the four human FACT
+      sentence annotations of ``Few-shot examples``.
+    - Template ``Tagging`` (TAGGING, English) with one version: the English
+      default tagging prompt with the tags People and Other.
+    - Template ``Metadata`` (METADATA_EXTRACTION, English) with one version: the
+      English default metadata prompt with the five metadata fields.
+    - Template ``Sentence classification`` (SENTENCE_ANNOTATION, English) with
+      one version: the English default sentence prompt with code FACT and
+      without examples.
+    - ``empty_tagging_version_id``: version 1 of the default template
+      ``default-document-tagging-en``, which selects no tags.
+    - Template ``Foreign tagging`` (ANNOTATION, English) of the unauthorized
+      project: the English default inline prompt with code FOREIGN.
+
+    All templates were saved by ``testuser@dats.org``.
+    """
+
+    base: LLMAssistantProject
+    span_examples: list[PromptExample]
+    sentence_examples: list[PromptExample]
+    tagging_template: PromptTemplateRead
+    metadata_template: PromptTemplateRead
+    sentence_template: PromptTemplateRead
+    empty_tagging_version_id: int
+    foreign_template: PromptTemplateRead
+
+
+@pytest.fixture(scope="function")
+def job_prompt_project(
+    db_session: Session,
+    llm_assistant_project: LLMAssistantProject,
+    test_user: UserORM,
+) -> JobPromptProject:
+    """Create the prompts described by JobPromptProject."""
+    service = PromptTemplateService()
+    base = llm_assistant_project
+    project_id = base["project"].id
+
+    def examples(
+        kind: PromptExampleKind, annotation_ids: list[int]
+    ) -> list[PromptExample]:
+        return service.create_prompt_examples(
+            db=db_session,
+            create_dto=PromptExamplesCreate(
+                project_id=project_id, kind=kind, annotation_ids=annotation_ids
+            ),
+        )
+
+    def template(
+        *,
+        project_id: int,
+        name: str,
+        task_type: TaskType,
+        output_format: OutputFormat,
+        **selections: object,
+    ) -> PromptTemplateRead:
+        return service.create_prompt_template(
+            db=db_session,
+            user_id=test_user.id,
+            create_dto=PromptTemplateCreate.model_validate(
+                {
+                    "project_id": project_id,
+                    "name": name,
+                    "task_type": task_type,
+                    "language": PromptLanguage.EN,
+                    "prompt": DEFAULT_PROMPTS[output_format][PromptLanguage.EN],
+                    **selections,
+                }
+            ),
+        )
+
+    span_examples = examples(
+        PromptExampleKind.SPAN, [a.id for a in base["human_span_annotations"]]
+    )
+    sentence_examples = examples(
+        PromptExampleKind.SENTENCE,
+        [a.id for a in base["human_sentence_annotations"]],
+    )
+    tagging_template = template(
+        project_id=project_id,
+        name="Tagging",
+        task_type=TaskType.TAGGING,
+        output_format=OutputFormat.TAGS,
+        tags=[
+            PromptTag(tag_id=tag.id, name=tag.name, description=tag.description or "")
+            for tag in [base["people_tag"], base["other_tag"]]
+        ],
+    )
+    metadata_template = template(
+        project_id=project_id,
+        name="Metadata",
+        task_type=TaskType.METADATA_EXTRACTION,
+        output_format=OutputFormat.METADATA,
+        metadata_fields=[
+            PromptMetadataField(
+                project_metadata_id=field.id,
+                key=field.key,
+                description=field.description,
+                metatype=MetaType(field.metatype),
+            )
+            for field in base["metadata_fields"]
+        ],
+    )
+    sentence_template = template(
+        project_id=project_id,
+        name="Sentence classification",
+        task_type=TaskType.SENTENCE_ANNOTATION,
+        output_format=OutputFormat.SENTENCES,
+        codes=[prompt_code(base["fact_code"])],
+    )
+    foreign_template = template(
+        project_id=base["foreign_project"].id,
+        name="Foreign tagging",
+        task_type=TaskType.ANNOTATION,
+        output_format=OutputFormat.INLINE,
+        codes=[prompt_code(base["foreign_code"])],
+    )
+    empty_tagging_template = next(
+        default
+        for default in service.read_prompt_templates_by_project(
+            db=db_session, project_id=project_id
+        )
+        if default.name == "default-document-tagging-en"
+    )
+    db_session.commit()
+
+    return {
+        "base": base,
+        "span_examples": span_examples,
+        "sentence_examples": sentence_examples,
+        "tagging_template": tagging_template,
+        "metadata_template": metadata_template,
+        "sentence_template": sentence_template,
+        "empty_tagging_version_id": empty_tagging_template.versions[0].id,
+        "foreign_template": foreign_template,
     }

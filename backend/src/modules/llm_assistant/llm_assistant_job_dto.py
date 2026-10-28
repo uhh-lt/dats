@@ -7,210 +7,57 @@ from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
-from modules.llm_assistant.llm_assistant_enum import (
-    ApproachType,
-    StrategyType,
-    TaskType,
-)
+from core.prompt_template.prompt_template_dto import PromptTemplateSnapshot
+from core.prompt_template.prompt_template_enum import TaskType
+from modules.llm_assistant.llm_assistant_enum import ApproachType
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # --- START INPUT ---
 
 
-class SpecificTaskParameters(BaseModel):
-    task_type: TaskType = Field(
-        description="The type of the LLMAssistantJob (what to llm)"
+class LLMAssistantJobInput(JobInputBase):
+    """Runs a prompt on documents: a stored prompt template version or a draft.
+
+    The prompt decides everything but the documents and the model: the task, the
+    selected codes, tags or metadata fields, the examples (few-shot if it shows
+    any), how documents are split and the answer format.
+    """
+
+    task_type: TaskType = Field(description="The task of the prompt")
+    sdoc_ids: list[int] = Field(description="IDs of the source documents to process")
+    model: str = Field(description="Large Language Model to use for the job")
+    prompt_template_version_id: int | None = Field(
+        description=(
+            "ID of the prompt template version to run. "
+            "Exactly one of prompt_template_version_id and draft is set."
+        ),
+        default=None,
     )
-
-
-class DocumentBasedTaskParams(SpecificTaskParameters):
-    sdoc_ids: list[int] = Field(description="IDs of the source documents to analyse")
-
-
-class TaggingParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.TAGGING] = Field(
-        description="The type of the LLM Assistant task"
-    )
-    tag_ids: list[int] = Field(
-        description="IDs of the tags to use for the document tagging"
-    )
-
-
-class MetadataExtractionParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.METADATA_EXTRACTION] = Field(
-        description="The type of the LLM Assistant task"
-    )
-    project_metadata_ids: list[int] = Field(
-        description="IDs of the project metadata to use for the metadata extraction"
-    )
-
-
-class AnnotationParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.ANNOTATION] = Field(
-        description="The type of the LLM Assistant task"
-    )
-    code_ids: list[int] = Field(
-        description="IDs of the codes to use for the annotation"
+    draft: PromptTemplateSnapshot | None = Field(
+        description=(
+            "An unsaved prompt to run, e.g. the prompt of the wizard. "
+            "Exactly one of prompt_template_version_id and draft is set."
+        ),
+        default=None,
     )
     delete_existing_annotations: bool = Field(
-        description="Delete existing annotations before creating new ones",
+        description=(
+            "Delete the existing annotations of the assistant for the documents and "
+            "codes of the prompt before creating new ones"
+        ),
         default=False,
-    )
-
-
-class SentenceAnnotationParams(DocumentBasedTaskParams):
-    task_type: Literal[TaskType.SENTENCE_ANNOTATION] = Field(
-        description="The type of the LLM Assistant task"
-    )
-    code_ids: list[int] = Field(
-        description="IDs of the codes to use for the sentence annotation"
-    )
-    delete_existing_annotations: bool = Field(
-        description="Delete existing annotations before creating new ones",
-        default=False,
-    )
-
-
-class LLMAssistantJobParameters(JobInputBase):
-    task_type: TaskType = Field(
-        description="The type of the LLMAssistantJob (what to llm)"
-    )
-    specific_task_parameters: (
-        TaggingParams
-        | MetadataExtractionParams
-        | AnnotationParams
-        | SentenceAnnotationParams
-    ) = Field(
-        description="Specific parameters for the LLMAssistantJob w.r.t it's type",
-        discriminator="task_type",
-    )
-
-
-# --- END TASK PARAMETERS ---
-
-# --- START APPROACH PARAMETERS ---
-
-
-# Prompt template
-class LLMAssistantPromptTemplates(BaseModel):
-    language: str = Field(description="The language of the prompt template")
-    system_prompt: str = Field(description="The system prompt to use for the job")
-    user_prompt: str = Field(description="The user prompt to use for the job")
-
-
-class SpecificApproachParameters(BaseModel):
-    approach_type: ApproachType = Field(
-        description="The type of the LLMAssistantJob (what to llm)"
-    )
-
-
-class ZeroShotParams(SpecificApproachParameters):
-    approach_type: Literal[ApproachType.LLM_ZERO_SHOT] = Field(
-        description="The approach of the LLM Assistant job"
-    )
-    prompts: list[LLMAssistantPromptTemplates] = Field(
-        description="The prompt templates to use for the job"
-    )
-    model: str = Field(description="Large Language Model to use for the job")
-
-
-class FewShotParams(SpecificApproachParameters):
-    approach_type: Literal[ApproachType.LLM_FEW_SHOT] = Field(
-        description="The approach of the LLM Assistant job"
-    )
-    prompts: list[LLMAssistantPromptTemplates] = Field(
-        description="The prompt templates to use for the job"
-    )
-    model: str = Field(description="Large Language Model to use for the job")
-
-
-# --- END APPROACH PARAMETERS ---
-
-# --- START STRATEGY PARAMETERS ---
-
-
-class SpecificStrategyParameters(BaseModel):
-    strategy_type: StrategyType = Field(
-        description="The type of the strategy (how to llm)"
-    )
-
-
-class DefaultStrategyParams(SpecificStrategyParameters):
-    """Params for single-strategy tasks (tagging, metadata, sentence annotation)."""
-
-    strategy_type: Literal[
-        StrategyType.TAGGING_DEFAULT,
-        StrategyType.METADATA_DEFAULT,
-        StrategyType.SENTENCE_ANNOTATION_DEFAULT,
-    ] = Field(description="The strategy to ground the LLM output in the document")
-
-
-class NERInlineTagStrategyParams(SpecificStrategyParameters):
-    strategy_type: Literal[StrategyType.NER_INLINE_TAGS] = Field(
-        description="The strategy to ground the LLM output in the document"
-    )
-
-
-class FuzzyGroundingStrategyParams(SpecificStrategyParameters):
-    strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING] = Field(
-        description="The strategy to ground the LLM output in the document"
-    )
-    fuzzy_threshold: float = Field(
-        default=0.85,
-        ge=0,
-        le=1,
-        description="Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes",
-    )
-    context_before_chars: int = Field(
-        default=64,
-        ge=0,
-        description="Number of context characters the LLM should provide before the quote",
-    )
-    context_after_chars: int = Field(
-        default=64,
-        ge=0,
-        description="Number of context characters the LLM should provide after the quote",
-    )
-    chunk_size_tokens: int = Field(
-        default=650,
-        gt=0,
-        description="Size of document chunks (in tokens) sent to the LLM",
-    )
-    chunk_overlap_tokens: int = Field(
-        default=100,
-        ge=0,
-        description="Overlap (in tokens) between consecutive chunks",
     )
 
     @model_validator(mode="after")
-    def validate_chunk_overlap(self) -> Self:
-        if self.chunk_overlap_tokens >= self.chunk_size_tokens:
-            raise ValueError("Chunk overlap must be smaller than chunk size")
+    def check_prompt_source(self) -> Self:
+        if (self.prompt_template_version_id is None) == (self.draft is None):
+            raise ValueError(
+                "Exactly one of prompt_template_version_id and draft must be set"
+            )
+        if self.draft is not None and self.draft.task_type != self.task_type:
+            raise ValueError("The draft must be a prompt of the job's task")
         return self
 
-
-class LLMAssistantJobInput(LLMAssistantJobParameters):
-    approach_type: ApproachType = Field(
-        description="The approach to use for the LLMAssistantJob"
-    )
-    specific_approach_parameters: ZeroShotParams | FewShotParams = Field(
-        description="Specific parameters for the approach w.r.t it's type",
-        discriminator="approach_type",
-    )
-    strategy_type: StrategyType = Field(
-        description="The strategy to use for the LLMAssistantJob"
-    )
-    specific_strategy_parameters: (
-        DefaultStrategyParams
-        | NERInlineTagStrategyParams
-        | FuzzyGroundingStrategyParams
-    ) = Field(
-        description="Specific parameters for the strategy w.r.t it's type",
-        discriminator="strategy_type",
-    )
-
-
-# --- END STRATEGY PARAMETERS ---
 
 # --- END INPUT ---
 
@@ -307,6 +154,9 @@ class LLMAssistantJobOutput(JobOutputBase):
     task_type: TaskType = Field(
         description="The type of the LLMAssistantJob (what to llm)"
     )
+    approach_type: ApproachType = Field(
+        description="Few-shot if the prompt showed examples, zero-shot otherwise"
+    )
     specific_task_result: (
         TaggingLLMAssistantJobResult
         | MetadataExtractionLLMAssistantJobResult
@@ -319,33 +169,3 @@ class LLMAssistantJobOutput(JobOutputBase):
 
 
 # --- END OUTPUT ---
-
-
-# --- START OTHER DTOs ---
-
-
-class ApproachRecommendation(BaseModel):
-    recommended_approach: ApproachType = Field(description="Recommended approach")
-    reasoning: str = Field(description="Reasoning for the recommendation")
-    available_approaches: dict[ApproachType, bool] = Field(
-        description="Available approaches"
-    )
-
-
-class StrategyInfo(BaseModel):
-    """Describes an available strategy for a task, for display in the frontend."""
-
-    strategy_type: StrategyType = Field(description="The strategy type")
-    name: str = Field(description="Human-readable name of the strategy")
-    description: str = Field(description="Explanation of what the strategy does")
-    default_params: (
-        DefaultStrategyParams
-        | NERInlineTagStrategyParams
-        | FuzzyGroundingStrategyParams
-    ) = Field(description="Default strategy parameters")
-    allowed_data_tags: list[str] = Field(
-        description="Data tags (document content placeholders) this strategy supports"
-    )
-
-
-# --- END OTHER DTOs ---

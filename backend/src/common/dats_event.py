@@ -19,6 +19,7 @@ from core.memo.memo_dto import MemoRead
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataRead
 from core.project.project_dto import ProjectRead, ProjectUserLinks
+from core.prompt_template.prompt_template_dto import PromptTemplateRead
 from core.tag.tag_dto import SdocTagLinks, TagRead
 from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
@@ -131,6 +132,9 @@ class DATSEvent(StrEnum):
     SEARCH_VIEW_DELETED = "SEARCH_VIEW_DELETED"
     SEARCH_VIEW_UPDATED_BATCH = "SEARCH_VIEW_UPDATED_BATCH"
 
+    PROMPT_TEMPLATE_CREATED = "PROMPT_TEMPLATE_CREATED"
+    PROMPT_TEMPLATE_UPDATED = "PROMPT_TEMPLATE_UPDATED"
+
     JOB_UPDATED = "JOB_UPDATED"
 
 
@@ -227,6 +231,8 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.SEARCH_VIEW_UPDATED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_DELETED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_UPDATED_BATCH: list[SearchViewReadUnion],
+    DATSEvent.PROMPT_TEMPLATE_CREATED: PromptTemplateRead,
+    DATSEvent.PROMPT_TEMPLATE_UPDATED: PromptTemplateRead,
     # NOTE: DATSEvent.JOB_UPDATED is intentionally absent — its payload is a
     # per-JobType union of concrete JobRead models, built lazily by
     # build_job_event_models() once all jobs are registered.

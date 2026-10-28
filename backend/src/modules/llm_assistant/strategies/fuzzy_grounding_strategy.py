@@ -1,32 +1,16 @@
 import difflib
-import random
-from collections import defaultdict
-from collections.abc import Iterator
 from dataclasses import dataclass
 
 from loguru import logger
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
-from config import conf
-from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_assistant_enum import (
-    DataTag,
-    GroundingMethod,
-    StrategyType,
+from core.prompt_template.prompt_template_enum import OutputFormat
+from modules.llm_assistant.llm_assistant_enum import GroundingMethod
+from modules.llm_assistant.strategies.code_annotation_strategy import (
+    CodeAnnotationStrategy,
 )
-from modules.llm_assistant.llm_assistant_job_dto import (
-    AnnotationParams,
-    FuzzyGroundingStrategyParams,
-    LLMAssistantPromptTemplates,
-)
-from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
-from repos.llm_repo import LLMMessage
-
-lac = conf.llm_assistant
 
 
 class LLMExtractedPassage(BaseModel):
@@ -54,368 +38,21 @@ class GroundedQuote:
     score: float
 
 
-EN_PROMPT_TEMPLATE = """
-You are an extraction engine that identifies relevant text passages.
-
-Allowed codes:
-{codes}
-
-Code definitions:
-{code_definitions}
-
-Rules:
-- Extract passages matching the code system.
-- For each relevant text passage, identify the category, the exact verbatim quote, and the surrounding context.
-- The exact_quote MUST be copied verbatim from the text (do not change whitespace or punctuation).
-- The exact_quote must contain ONLY the extracted passage. Do not include context, field names, explanations, character counts, or serialized data in it.
-- Provide up to {context_before_chars} characters of context_before and {context_after_chars} characters of context_after to uniquely locate the quote.
-- The context fields must contain only verbatim text immediately before or after the exact quote.
-- Do NOT generate passages that are not present in the text.
-- If no relevant text fits the codes, return no passages.
-
-{examples_block}
-
-Text:
-<chunk>
-""".strip()
-
-
-DE_PROMPT_TEMPLATE = """
-Du bist eine Extraktions-Engine, die relevante Textpassagen identifiziert.
-
-Erlaubte Codes:
-{codes}
-
-Code-Definitionen:
-{code_definitions}
-
-Regeln:
-- Extrahiere Passagen, die zum Code-System passen.
-- Gib für jede relevante Textpassage die Kategorie, das exakte wörtliche Zitat und den umgebenden Kontext an.
-- Das exact_quote MUSS wörtlich aus dem Text kopiert werden (keine Änderung von Leerzeichen oder Satzzeichen).
-- Das exact_quote darf NUR die extrahierte Passage enthalten. Füge dort keinen Kontext, keine Feldnamen, Erklärungen, Zeichenanzahlen oder serialisierten Daten ein.
-- Gib bis zu {context_before_chars} Zeichen context_before und {context_after_chars} Zeichen context_after an, um das Zitat eindeutig zu lokalisieren.
-- Die Kontextfelder dürfen nur den wörtlichen Text unmittelbar vor oder nach dem exakten Zitat enthalten.
-- Generiere KEINE Textpassagen, die nicht im Text vorhanden sind.
-- Wenn keine passende Textpassage zu den Codes vorhanden ist, gib keine Passagen zurück.
-
-{examples_block}
-
-Text:
-<chunk>
-""".strip()
-
-
-class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams]):
-    """Span annotation via structured extraction and context-anchored grounding.
+class FuzzyGroundingStrategy(CodeAnnotationStrategy):
+    """Span annotation via extraction and context-anchored grounding (<output-format:context>).
 
     The LLM acts as an extraction engine and outputs structured data with the
     category, an exact verbatim quote, and surrounding context. The backend
-    grounds each quote to character offsets via exact matching, falling back to
-    fuzzy matching (difflib) using the context as an anchor for disambiguation.
-    Documents are processed in overlapping chunks.
+    grounds each quote to character offsets within the message's segment via
+    exact matching, falling back to fuzzy matching (difflib) using the context
+    as an anchor for disambiguation.
     """
 
-    strategy_type = StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
-    display_name = "Context-Anchored Extraction"
-    description = (
-        "The LLM extracts relevant text passages; the backend locates them "
-        "in the document.\n"
-        "\n"
-        "**How it works:** The document is split into overlapping chunks. For each chunk, "
-        "the LLM extracts relevant passages, providing an exact "
-        "verbatim quote "
-        "plus the surrounding context (a few characters before and after). The backend "
-        "then locates each quote in the original document using exact matching, falling "
-        "back to fuzzy matching (difflib) with the context as an anchor.\n"
-        "\n"
-        "**Example:** Given the code `Claim` and the input text:\n"
-        "\n"
-        "    The report concludes that the policy reduced emissions substantially.\n"
-        "\n"
-        "An extracted passage contains:\n"
-        "\n"
-        "    Category: CLAIM\n"
-        "    Exact quote: the policy reduced emissions\n"
-        "    Context before: concludes that \n"
-        "    Context after:  substantially\n"
-        "\n"
-        "The backend finds the passage's exact position in the document.\n"
-        "\n"
-        "**When to use:** Best for long documents, repeated or similar passages, "
-        "or when the LLM struggles to reproduce text verbatim. More robust than inline "
-        "tagging but requires more LLM calls due to chunking."
-    )
-    strategy_params_type = FuzzyGroundingStrategyParams
-    allowed_data_tags = [DataTag.CHUNK.value]
-
-    supported_languages = ["en", "de"]
-
-    def __init__(
-        self,
-        db: Session,
-        project_id: int,
-        is_fewshot: bool,
-        strategy_params: FuzzyGroundingStrategyParams | None = None,
-        prompt_templates: list[LLMAssistantPromptTemplates] | None = None,
-        params: AnnotationParams | None = None,
-        example_ids: list[int] | None = None,
-    ):
-        project = crud_project.read(db=db, id=project_id)
-        self.db = db
-        self.codes = project.codes
-        self.codename2id_dict = {code.name.upper(): code.id for code in self.codes}
-        self.codeids2code_dict = {code.id: code for code in self.codes}
-        self.fuzzy_params = strategy_params or FuzzyGroundingStrategyParams(
-            strategy_type=StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
-        )
-
-        super().__init__(
-            db=db,
-            project_id=project_id,
-            is_fewshot=is_fewshot,
-            valid_data_tags=[DataTag.CHUNK],
-            prompt_templates=prompt_templates,
-            params=params,
-            example_ids=example_ids,
-        )
+    output_format = OutputFormat.CONTEXT
 
     def get_response_model(self) -> type[LLMExtractionResult]:
         """Return the structured schema for extracted text passages."""
         return LLMExtractionResult
-
-    # --- PROMPT TEMPLATE GENERATION ---
-
-    def _build_examples_block(self, language: str) -> str:
-        """Build the fallback extraction example for a language."""
-        if language == "en":
-            return (
-                "Example text:\n"
-                "The report concludes that the policy reduced emissions substantially.\n\n"
-                "Expected passage:\n"
-                "Category: CLAIM\n"
-                "Exact quote: the policy reduced emissions\n"
-                "Context before: The report concludes that \n"
-                "Context after:  substantially"
-            )
-        return (
-            "Beispieltext:\n"
-            "Der Bericht zeigt, dass die Maßnahme die Emissionen deutlich senkte.\n\n"
-            "Erwartete Passage:\n"
-            "Kategorie: BEHAUPTUNG\n"
-            "Exaktes Zitat: die Maßnahme die Emissionen deutlich senkte\n"
-            "Kontext davor: Der Bericht zeigt, dass \n"
-            "Kontext danach: ."
-        )
-
-    def _build_user_prompt_template(
-        self,
-        *,
-        language: str,
-        example_ids: list[int] | None = None,
-        params: AnnotationParams,
-    ) -> str:
-        """Build a chunk-extraction prompt template for the selected codes."""
-        codes = ", ".join(
-            self.codeids2code_dict[cid].name.upper() for cid in params.code_ids
-        )
-        code_definitions = "\n".join(
-            f"{self.codeids2code_dict[cid].name.upper()}: "
-            f"{self.codeids2code_dict[cid].description}"
-            for cid in params.code_ids
-        )
-
-        examples_block = self._build_examples_block(language)
-
-        # few-shot: render real examples with the relevant extraction fields
-        if self.is_fewshot:
-            examples_block = self._build_fewshot_examples_block(
-                language=language, example_ids=example_ids, params=params
-            )
-
-        template = EN_PROMPT_TEMPLATE if language == "en" else DE_PROMPT_TEMPLATE
-        return template.format(
-            codes=codes,
-            code_definitions=code_definitions,
-            context_before_chars=self.fuzzy_params.context_before_chars,
-            context_after_chars=self.fuzzy_params.context_after_chars,
-            examples_block=examples_block,
-        )
-
-    def _build_fewshot_examples_block(
-        self,
-        language: str,
-        example_ids: list[int] | None,
-        params: AnnotationParams,
-    ) -> str:
-        """Build extraction examples from existing span annotations."""
-        from core.annotation.span_annotation_crud import crud_span_anno
-        from core.doc.source_document_data_crud import crud_sdoc_data
-        from core.user.user_crud import SYSTEM_USER_IDS
-
-        # fetch annotations
-        if example_ids is None:
-            annotations = [
-                a
-                for a in crud_span_anno.read_by_codes(
-                    db=self.db, code_ids=params.code_ids
-                )
-                if a.user_id not in SYSTEM_USER_IDS
-            ]
-        else:
-            annotations = crud_span_anno.read_by_ids(db=self.db, ids=example_ids)
-
-        code_id2annos: dict[int, list[SpanAnnotationORM]] = defaultdict(list)
-        for anno in annotations:
-            code_id2annos[anno.code_id].append(anno)
-
-        threshold = lac.few_shot_threshold
-        if example_ids is None:
-            for cid, annos in code_id2annos.items():
-                assert len(annos) >= threshold, (
-                    f"Code {cid} has less than {threshold} annotations!"
-                )
-                code_id2annos[cid] = random.sample(annos, threshold)
-
-        sdoc_ids = {a.sdoc_id for a in annotations}
-        sdoc_id2data = {
-            d.id: d
-            for d in crud_sdoc_data.read_by_ids(db=self.db, ids=list(sdoc_ids))
-            if d is not None
-        }
-
-        if language == "en":
-            text_label = "Example text"
-            passage_label = "Expected passage"
-            category_label = "Category"
-            quote_label = "Exact quote"
-            context_before_label = "Context before"
-            context_after_label = "Context after"
-        else:
-            text_label = "Beispieltext"
-            passage_label = "Erwartete Passage"
-            category_label = "Kategorie"
-            quote_label = "Exaktes Zitat"
-            context_before_label = "Kontext davor"
-            context_after_label = "Kontext danach"
-
-        # render each example with human-readable extraction labels
-        example_lines: list[str] = []
-        for cid, annos in code_id2annos.items():
-            code = self.codeids2code_dict[cid].name.upper()
-            for a in annos:
-                sdoc = sdoc_id2data[a.sdoc_id]
-                quote = sdoc.content[a.begin : a.end]
-
-                sentence_offsets = [
-                    (sentence_start, sentence_end)
-                    for sentence_start, sentence_end in zip(
-                        sdoc.sentence_starts, sdoc.sentence_ends
-                    )
-                    if sentence_start < a.end and sentence_end > a.begin
-                ]
-                if sentence_offsets:
-                    example_start = sentence_offsets[0][0]
-                    example_end = sentence_offsets[-1][1]
-                else:
-                    example_start = max(
-                        0, a.begin - self.fuzzy_params.context_before_chars
-                    )
-                    example_end = min(
-                        len(sdoc.content),
-                        a.end + self.fuzzy_params.context_after_chars,
-                    )
-
-                example_text = sdoc.content[example_start:example_end]
-                ctx_before = sdoc.content[
-                    max(
-                        example_start,
-                        a.begin - self.fuzzy_params.context_before_chars,
-                    ) : a.begin
-                ]
-                ctx_after = sdoc.content[
-                    a.end : min(
-                        example_end,
-                        a.end + self.fuzzy_params.context_after_chars,
-                    )
-                ]
-                example_lines.append(
-                    f"{text_label}:\n{example_text}\n\n"
-                    f"{passage_label}:\n"
-                    f"{category_label}: {code}\n"
-                    f"{quote_label}: {quote}\n"
-                    f"{context_before_label}: {ctx_before}\n"
-                    f"{context_after_label}: {ctx_after}"
-                )
-
-        header = "Examples:" if language == "en" else "Beispiele:"
-        return f"{header}\n\n" + "\n\n---\n\n".join(example_lines)
-
-    # --- PROMPT BUILDING (chunked) ---
-
-    def _chunk_document(
-        self, sdoc_data: SourceDocumentDataORM
-    ) -> list[tuple[int, str]]:
-        """Split the document into overlapping token windows.
-
-        Returns a list of (chunk_start_char_offset, chunk_text).
-        """
-        return [
-            self._get_chunk(sdoc_data, chunk_id)
-            for chunk_id in range(self._get_num_chunks(sdoc_data))
-        ]
-
-    def _get_num_chunks(self, sdoc_data: SourceDocumentDataORM) -> int:
-        """Calculate how many overlapping token chunks a document requires."""
-        num_tokens = len(sdoc_data.token_starts)
-        size = self.fuzzy_params.chunk_size_tokens
-        if num_tokens <= size:
-            return 1
-
-        step = size - self.fuzzy_params.chunk_overlap_tokens
-        return (num_tokens - size + step - 1) // step + 1
-
-    def _get_chunk(
-        self, sdoc_data: SourceDocumentDataORM, chunk_id: int
-    ) -> tuple[int, str]:
-        """Return one chunk without materializing every chunk in the document."""
-        token_starts = sdoc_data.token_starts
-        token_ends = sdoc_data.token_ends
-        num_tokens = len(token_starts)
-        size = self.fuzzy_params.chunk_size_tokens
-
-        if num_tokens <= size:
-            if chunk_id != 0:
-                raise ValueError(
-                    f"Chunk index {chunk_id} is out of range for document {sdoc_data.id}"
-                )
-            return 0, sdoc_data.content
-
-        step = size - self.fuzzy_params.chunk_overlap_tokens
-        num_chunks = self._get_num_chunks(sdoc_data)
-        if chunk_id < 0 or chunk_id >= num_chunks:
-            raise ValueError(
-                f"Chunk index {chunk_id} is out of range for document {sdoc_data.id}"
-            )
-
-        start_token = chunk_id * step
-        end_token = min(start_token + size, num_tokens)
-        char_start = token_starts[start_token]
-        char_end = token_ends[end_token - 1]
-        return char_start, sdoc_data.content[char_start:char_end]
-
-    def generate_prompts(
-        self, language: str, sdoc_data: SourceDocumentDataORM
-    ) -> Iterator[LLMMessage]:
-        """Yield one extraction prompt for each chunk of a document."""
-        system_prompt = self._build_system_prompt(language)
-        for chunk_id in range(self._get_num_chunks(sdoc_data)):
-            _, chunk_text = self._get_chunk(sdoc_data, chunk_id)
-            user_prompt = self._build_user_prompt(language=language, data=chunk_text)
-            yield LLMMessage(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-            )
 
     # --- PARSING + GROUNDING ---
 
@@ -426,20 +63,21 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         message_id: int,
     ) -> list[ParsedSpan]:
         """Parse and ground extracted text passages to absolute char offsets."""
-        chunk_start, chunk_text = self._get_chunk(sdoc_data, message_id)
+        segment = self.segments(sdoc_data)[message_id]
+        segment_start, segment_text = segment.begin, segment.text
         spans: list[ParsedSpan] = []
         for passage in result.passages:
-            code_id = self.codename2id_dict.get(passage.category.upper())
+            code_id = self._code_id_for_name(passage.category)
             if code_id is None:
                 continue
             if passage.exact_quote.strip() == "":
                 continue
 
-            located = self._locate_quote(passage, chunk_text)
+            located = self._locate_quote(passage, segment_text)
             if located is None:
                 quote_preview = self._preview(passage.exact_quote)
                 logger.debug(
-                    "Could not ground quote for document {}, chunk {}, code {}: length={}, preview={!r}",
+                    "Could not ground quote for document {}, message {}, code {}: length={}, preview={!r}",
                     sdoc_data.id,
                     message_id,
                     passage.category,
@@ -448,10 +86,10 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
                 )
                 continue
 
-            begin = chunk_start + located.begin
-            end = chunk_start + located.end
+            begin = segment_start + located.begin
+            end = segment_start + located.end
             logger.debug(
-                "Grounded quote for document {}, chunk {}, code {}: method={}, score={:.3f}, offsets={}:{}, length={}, preview={!r}",
+                "Grounded quote for document {}, message {}, code {}: method={}, score={:.3f}, offsets={}:{}, length={}, preview={!r}",
                 sdoc_data.id,
                 message_id,
                 passage.category,
@@ -528,7 +166,7 @@ class FuzzyGroundingStrategy(LLMAssistantStrategy[FuzzyGroundingStrategyParams])
         if not anchored or not content:
             return None
 
-        threshold = self.fuzzy_params.fuzzy_threshold
+        threshold = self.prompt.settings.fuzzy_threshold
         win = len(anchored)
         best_ratio = 0.0
         best_start = -1

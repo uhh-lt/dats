@@ -3,26 +3,12 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
+from core.prompt_template.prompt_template_enum import TaskType
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,
 )
-from modules.llm_assistant.llm_assistant_enum import (
-    ApproachType,
-    StrategyType,
-    TaskType,
-)
-from modules.llm_assistant.llm_assistant_job_dto import (
-    ApproachRecommendation,
-    LLMAssistantJobParameters,
-    LLMAssistantPromptTemplates,
-    StrategyInfo,
-)
-from modules.llm_assistant.strategies.strategy_factory import (
-    STRATEGIES_FOR_TASK_TYPE,
-    build_strategy,
-)
-from modules.llm_assistant.tasks.task_factory import get_task_class
+from modules.llm_assistant.llm_assistant_enum import ApproachType
 from repos.llm_repo import LLMRepo
 from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -34,14 +20,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
         cls.ray: RayRepo = RayRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(LLMAssistantService, cls).__new__(cls)
-
-    def determine_approach(
-        self, db: Session, job_params: LLMAssistantJobParameters
-    ) -> ApproachRecommendation:
-        task_cls = get_task_class(job_params.task_type)
-        return task_cls.determine_approach(
-            db=db, task_parameters=job_params.specific_task_parameters
-        )
 
     def count_existing_assistant_annotations(
         self,
@@ -83,41 +61,3 @@ class LLMAssistantService(metaclass=SingletonMeta):
             code_id2num_existing_annos[existing_anno.code_id] += 1
 
         return code_id2num_existing_annos
-
-    def list_strategies(self, task_type: TaskType) -> list[StrategyInfo]:
-        """Return StrategyInfo for all strategies supporting the given task."""
-        infos: list[StrategyInfo] = []
-        for strategy_cls in STRATEGIES_FOR_TASK_TYPE.get(task_type, []):
-            infos.append(
-                StrategyInfo(
-                    strategy_type=strategy_cls.strategy_type,
-                    name=strategy_cls.display_name,
-                    description=strategy_cls.description,
-                    default_params=strategy_cls.default_params(),
-                    allowed_data_tags=list(strategy_cls.allowed_data_tags),
-                )
-            )
-        return infos
-
-    def create_prompt_templates(
-        self,
-        db: Session,
-        job_params: LLMAssistantJobParameters,
-        approach_type: ApproachType,
-        strategy_type: StrategyType,
-        strategy_params=None,
-        example_ids: list[int] | None = None,
-    ) -> list[LLMAssistantPromptTemplates]:
-        # init the strategy with the provided specific parameters
-        # the init process will generate prompt templates
-        strategy = build_strategy(
-            db=db,
-            project_id=job_params.project_id,
-            is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
-            task_type=job_params.task_type,
-            strategy_type=strategy_type,
-            strategy_params=strategy_params,
-            params=job_params.specific_task_parameters,
-            example_ids=example_ids,
-        )
-        return list(strategy.lang2prompt_templates.values())

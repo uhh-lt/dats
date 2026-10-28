@@ -1,20 +1,22 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
-from typing import Generic, TypeVar, final
+from typing import ClassVar, Generic, TypeVar, final
 
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from core.prompt_template.prompt_template_enum import TaskType
+from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_job_dto import (
-    ApproachRecommendation,
-    DocumentBasedTaskParams,
-    FewShotParams,
+    AnnotationLLMAssistantJobResult,
+    LLMAssistantJobInput,
     LLMAssistantJobOutput,
     LLMAssistantResultWithStatus,
-    SpecificTaskParameters,
-    ZeroShotParams,
+    MetadataExtractionLLMAssistantJobResult,
+    SentenceAnnotationLLMAssistantJobResult,
+    TaggingLLMAssistantJobResult,
 )
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 from modules.llm_assistant.tasks.llm_assistant_document_processor import (
@@ -27,18 +29,26 @@ from systems.job_system.job_dto import Job
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
 ResultT = TypeVar("ResultT", bound=LLMAssistantResultWithStatus)
 StrategyT = TypeVar("StrategyT", bound=LLMAssistantStrategy)
-TaskParamsT = TypeVar("TaskParamsT", bound=DocumentBasedTaskParams)
+SpecificTaskResult = (
+    TaggingLLMAssistantJobResult
+    | MetadataExtractionLLMAssistantJobResult
+    | AnnotationLLMAssistantJobResult
+    | SentenceAnnotationLLMAssistantJobResult
+)
 
 
 @dataclass(frozen=True)
-class LLMAssistantTaskContext(Generic[StrategyT, TaskParamsT]):
+class LLMAssistantTaskContext(Generic[StrategyT]):
     """Provide the shared job inputs required by task-specific execution hooks."""
 
     db: Session
-    project_id: int
-    approach_parameters: ZeroShotParams | FewShotParams
-    task_parameters: TaskParamsT
+    payload: LLMAssistantJobInput
     strategy: StrategyT
+
+    @property
+    def is_fewshot(self) -> bool:
+        """A prompt that shows examples makes a few-shot run."""
+        return self.strategy.is_fewshot
 
 
 def aggregate_raw_responses(raw_responses: list[str]) -> str:
@@ -53,7 +63,7 @@ def aggregate_raw_responses(raw_responses: list[str]) -> str:
 
 class LLMAssistantTask(
     ABC,
-    Generic[StrategyT, TaskParamsT, ResponseT, ResultT],
+    Generic[StrategyT, ResponseT, ResultT],
 ):
     """Define the shared execution lifecycle for every LLM assistant task.
 
@@ -62,17 +72,10 @@ class LLMAssistantTask(
     """
 
     task_name: str
+    task_type: ClassVar[TaskType]
 
     def __init__(self, llm: LLMRepo):
         self.document_processor = LLMAssistantDocumentProcessor(llm)
-
-    @classmethod
-    @abstractmethod
-    def determine_approach(
-        cls, db: Session, task_parameters: SpecificTaskParameters
-    ) -> ApproachRecommendation:
-        """Determine the recommended and available approaches for this task."""
-        ...
 
     @final
     def execute(
@@ -80,39 +83,36 @@ class LLMAssistantTask(
         *,
         db: Session,
         job: Job,
-        project_id: int,
-        approach_parameters: ZeroShotParams | FewShotParams,
-        task_parameters: TaskParamsT,
+        payload: LLMAssistantJobInput,
         strategy: StrategyT,
     ) -> LLMAssistantJobOutput:
         """Run the fixed task lifecycle around task-specific execution hooks."""
-        context = LLMAssistantTaskContext(
-            db=db,
-            project_id=project_id,
-            approach_parameters=approach_parameters,
-            task_parameters=task_parameters,
-            strategy=strategy,
+        context = LLMAssistantTaskContext(db=db, payload=payload, strategy=strategy)
+        approach_type = (
+            ApproachType.LLM_FEW_SHOT
+            if context.is_fewshot
+            else ApproachType.LLM_ZERO_SHOT
         )
-        self._start_job(job=job, num_documents=len(task_parameters.sdoc_ids))
+        self._start_job(job=job, num_documents=len(payload.sdoc_ids))
         logger.info(
             "Using model '{}', strategy '{}', and approach '{}'.",
-            approach_parameters.model,
+            payload.model,
             strategy.__class__.__name__,
-            approach_parameters.__class__.__name__,
+            approach_type.value,
         )
         self._prepare(context)
         self._update_progress(
             processed_documents=0,
-            total_documents=len(task_parameters.sdoc_ids),
+            total_documents=len(payload.sdoc_ids),
             completed_requests=0,
             job=job,
         )
 
         documents = self.document_processor.process(
-            model=approach_parameters.model,
+            model=payload.model,
             strategy=strategy,
             db=db,
-            sdoc_ids=task_parameters.sdoc_ids,
+            sdoc_ids=payload.sdoc_ids,
             response_model=self._get_response_model(strategy),
             on_progress=partial(self._update_progress, job=job),
         )
@@ -140,7 +140,11 @@ class LLMAssistantTask(
             sum(result.status == "error" for result in results),
         )
 
-        return self._build_output(results)
+        return LLMAssistantJobOutput(
+            task_type=self.task_type,
+            approach_type=approach_type,
+            specific_task_result=self._build_result(results),
+        )
 
     def _start_job(self, job: Job, num_documents: int) -> None:
         """Set and log the initial status for this task execution."""
@@ -171,7 +175,7 @@ class LLMAssistantTask(
 
     def _prepare(
         self,
-        context: LLMAssistantTaskContext[StrategyT, TaskParamsT],
+        context: LLMAssistantTaskContext[StrategyT],
     ) -> None:
         """Perform optional task-specific preparation before documents are processed."""
 
@@ -184,13 +188,13 @@ class LLMAssistantTask(
     def _process_document(
         self,
         *,
-        context: LLMAssistantTaskContext[StrategyT, TaskParamsT],
+        context: LLMAssistantTaskContext[StrategyT],
         document: LLMAssistantDocumentResponse[ResponseT],
     ) -> ResultT:
         """Validate, parse, deduplicate if needed, persist, and build the result for one document."""
         ...
 
     @abstractmethod
-    def _build_output(self, results: list[ResultT]) -> LLMAssistantJobOutput:
-        """Wrap all per-document results in the task-specific job output."""
+    def _build_result(self, results: list[ResultT]) -> SpecificTaskResult:
+        """Wrap all per-document results in the task-specific job result."""
         ...

@@ -1,28 +1,19 @@
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
-from config import conf
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.code.code_crud import crud_code
+from core.prompt_template.prompt_template_enum import TaskType
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,
-    SYSTEM_USER_IDS,
 )
-from modules.llm_assistant.llm_assistant_enum import ApproachType, TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
-    AnnotationParams,
     AnnotationResult,
-    ApproachRecommendation,
-    FewShotParams,
-    LLMAssistantJobOutput,
-    SpecificTaskParameters,
 )
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
@@ -42,9 +33,7 @@ from modules.llm_assistant.tasks.llm_assistant_task import (
 AnnotationStrategy = NERInlineTagStrategy | FuzzyGroundingStrategy
 
 
-class AnnotationTask(
-    LLMAssistantTask[AnnotationStrategy, AnnotationParams, BaseModel, AnnotationResult]
-):
+class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationResult]):
     """Span annotation task.
 
     Supports two strategies:
@@ -53,6 +42,7 @@ class AnnotationTask(
     """
 
     task_name = "Annotation"
+    task_type = TaskType.ANNOTATION
 
     @staticmethod
     def _dedupe_annotations(
@@ -125,83 +115,20 @@ class AnnotationTask(
             f"length={annotation.end - annotation.begin}, preview={preview!r}"
         )
 
-    @classmethod
-    def determine_approach(
-        cls, db: Session, task_parameters: SpecificTaskParameters
-    ) -> ApproachRecommendation:
-        assert isinstance(task_parameters, AnnotationParams)
-        selected_code_ids = task_parameters.code_ids
-
-        # 1. Find the number of labeled spans for each code
-        span_annotations = [
-            sa
-            for sa in crud_span_anno.read_by_codes(db=db, code_ids=selected_code_ids)
-            if sa.user_id not in SYSTEM_USER_IDS  # exclude system / assistant users
-        ]
-
-        # 2. Find the code names
-        codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
-        code_id2name = {code.id: code.name for code in codes}
-
-        # 3. Count annotations by code_id
-        code_id2num_span_annos = {code.id: 0 for code in codes}
-        for span_anno in span_annotations:
-            code_id2num_span_annos[span_anno.code_id] += 1
-
-        # 4. Determine the minimum number of labeled spans
-        code_with_min_labeled_spans = min(
-            code_id2num_span_annos.keys(),
-            key=lambda k: code_id2num_span_annos[k],
-        )
-        min_labeled_spans = code_id2num_span_annos[code_with_min_labeled_spans]
-
-        # 5. Create reasoning
-        reasoning = (
-            f"You selected {len(selected_code_ids)} codes. "
-            "I checked the number of labeled spans for each code and found:\n"
-        )
-        code_counts = []
-        for code_id, num_labeled_spans in code_id2num_span_annos.items():
-            code_counts.append(f"{code_id2name[code_id]}: {num_labeled_spans}")
-        reasoning += "\n".join(code_counts)
-        reasoning += (
-            f"\nThe code with the least labeled spans ({min_labeled_spans}) "
-            f"is {code_id2name[code_with_min_labeled_spans]}. "
-            "Based on this, I recommend the following approach:"
-        )
-
-        # 6. Determine available approaches
-        available_approaches: dict[ApproachType, bool] = {
-            ApproachType.LLM_ZERO_SHOT: True,
-            ApproachType.LLM_FEW_SHOT: min_labeled_spans
-            >= conf.llm_assistant.few_shot_threshold,
-        }
-
-        # 7. Determine recommended approach
-        if min_labeled_spans < conf.llm_assistant.few_shot_threshold:
-            recommended_approach = ApproachType.LLM_ZERO_SHOT
-        else:
-            recommended_approach = ApproachType.LLM_FEW_SHOT
-
-        return ApproachRecommendation(
-            recommended_approach=recommended_approach,
-            available_approaches=available_approaches,
-            reasoning=reasoning,
-        )
-
     def _prepare(
         self,
-        context: LLMAssistantTaskContext[AnnotationStrategy, AnnotationParams],
+        context: LLMAssistantTaskContext[AnnotationStrategy],
     ) -> None:
-        if not context.task_parameters.delete_existing_annotations:
+        if not context.payload.delete_existing_annotations:
             return
 
-        is_fewshot = isinstance(context.approach_parameters, FewShotParams)
         deleted_ids = crud_span_anno.delete_by_user_sdocs_codes(
             db=context.db,
-            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-            sdoc_ids=context.task_parameters.sdoc_ids,
-            code_ids=context.task_parameters.code_ids,
+            user_id=ASSISTANT_FEWSHOT_ID
+            if context.is_fewshot
+            else ASSISTANT_ZEROSHOT_ID,
+            sdoc_ids=context.payload.sdoc_ids,
+            code_ids=list(context.strategy.codeid2code),
         )
         logger.info("Deleted {} previous span annotations.", len(deleted_ids))
 
@@ -211,10 +138,9 @@ class AnnotationTask(
     def _process_document(
         self,
         *,
-        context: LLMAssistantTaskContext[AnnotationStrategy, AnnotationParams],
+        context: LLMAssistantTaskContext[AnnotationStrategy],
         document: LLMAssistantDocumentResponse[BaseModel],
     ) -> AnnotationResult:
-        is_fewshot = isinstance(context.approach_parameters, FewShotParams)
         strategy = context.strategy
         sdoc_data = document.sdoc_data
         suggested_annotations: list[SpanAnnotationCreate] = []
@@ -248,7 +174,7 @@ class AnnotationTask(
             )
             for span in parsed_spans:
                 code_id = span["code_id"]
-                if code_id not in strategy.codeids2code_dict:
+                if code_id not in strategy.codeid2code:
                     continue
                 if span["text"].strip() == "":
                     continue
@@ -303,7 +229,9 @@ class AnnotationTask(
         )
         created_annos_for_sdoc = SpanAnnotationService().create_multi(
             db=context.db,
-            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+            user_id=ASSISTANT_FEWSHOT_ID
+            if context.is_fewshot
+            else ASSISTANT_ZEROSHOT_ID,
             create_dtos=suggested_annotations,
         )
         logger.info(
@@ -355,10 +283,9 @@ class AnnotationTask(
             ),
         )
 
-    def _build_output(self, results: list[AnnotationResult]) -> LLMAssistantJobOutput:
-        return LLMAssistantJobOutput(
-            task_type=TaskType.ANNOTATION,
-            specific_task_result=AnnotationLLMAssistantJobResult(
-                task_type=TaskType.ANNOTATION, results=results
-            ),
+    def _build_result(
+        self, results: list[AnnotationResult]
+    ) -> AnnotationLLMAssistantJobResult:
+        return AnnotationLLMAssistantJobResult(
+            task_type=TaskType.ANNOTATION, results=results
         )
