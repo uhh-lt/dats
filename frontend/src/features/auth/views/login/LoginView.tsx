@@ -43,7 +43,7 @@ export function LoginView() {
   const { mutate: loginMutation, isPending: loginIsPending } = AuthHooks.useLogin({
     onSuccess(data) {
       updateAuthData(data);
-      navigate({ to: redirect });
+      navigate({ href: redirect });
     },
     onError(e: ApiError) {
       let msg = "Server is not available!";
