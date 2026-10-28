@@ -35,12 +35,14 @@ The dialog guides you through a simple, step-by-step configuration process. _(Th
 ![LLM Assistant Step 1](../assets/llm-assistant-step1.png)
 _Select the specific qualitative task you want the AI to automate._
 
-When the dialog opens, the assistant will greet you and ask what kind of help you need. You can choose from four distinct AI tasks:
+When the dialog opens, the assistant will greet you and ask what kind of help you need. You can choose from four distinct AI tasks, which guide you through the following steps:
 
 - **Document Tagging:** The AI will read the documents and suggest which structural Tags (e.g., Domain: Politics, Sentiment: Negative) should be applied to them as a whole.
 - **Metadata Extraction:** The AI will scan the text to automatically populate custom metadata fields (e.g., finding the Author or Publication Date hidden in the text).
 - **Span Annotation:** The AI will highlight specific words or phrases and assign them to your qualitative Codes.
 - **Sentence Annotation:** The AI will classify entire, discrete sentences according to your Codebook.
+
+Or choose **Prompt Template** to run one of your [prompt templates](prompt-templates.md). A template decides everything except the documents and the model: the task, the codes, tags or metadata fields, the few-shot examples and the answer format. You select the template and its version, then the model, review the prompt and start. Write templates, versions and examples on the **Prompts** page.
 
 ### Step 2: Select Targets (Codes, Tags, or Metadata)
 
@@ -52,24 +54,21 @@ You must tell the AI _what_ to look for.
 - Use the checkboxes to select the specific categories you want the AI to apply.
 - _Note:_ The AI relies heavily on the **Descriptions** you wrote for these codes in the Project Settings. The better your written description, the more accurate the AI's predictions will be!
 
-### Step 3: Select Approach
+### Step 3: Edit Settings
 
 ![LLM Assistant Step 3](../assets/llm-assistant-step3.png)
 
-Decide how much context the AI needs to do its job:
+Choose the language model and how the assistant works:
 
-- **ZERO-SHOT:** The AI will rely _only_ on the code descriptions you provided. It receives no examples. This is great for broad, obvious categories.
-- **FEW-SHOT:** The AI will be provided with your code descriptions _plus_ several examples of annotations you have already created manually. This usually yields much higher accuracy for nuanced, theoretical concepts.
+- **Language** of the prompt (English or German). The documents can be in any language.
+- **Answer format**, i.e. how the model answers and how DATS maps the answers back to your documents. For span annotation: inline tags (the model repeats the text with tagged passages) or quotes with context (the model returns quotes that DATS locates in the text). The quotes format has settings for the context length and the fuzzy matching.
+- **Send the document** as a whole, sentence by sentence, or in overlapping chunks (with chunk size and overlap). Tagging and metadata extraction always send the whole document.
 
-### Step 4: Edit Settings (The Prompt)
+### Step 4: Review the Prompt
 
-![LLM Assistant Step 4](../assets/llm-assistant-step4.png)
-_Review and manually tweak the AI prompt before starting the job._
+The **preview** shows exactly what the AI receives: the default prompt of the task with your selections. Pick one of the selected documents and step through its sentences or chunks. Guided runs are zero-shot; for few-shot examples and your own prompt texts, write a [prompt template](prompt-templates.md) and run it with **Prompt Template**.
 
-DATS automatically generates the complex instruction prompt that will be sent to the LLM.
-
-- In this view, you can read the exact prompt (in English or German) that the AI will receive.
-- You can manually edit this text to add extra instructions, refine the definitions, or correct the example sentences before execution.
+If the assistant already annotated the selected documents with the selected codes, you choose here whether these annotations are replaced or kept.
 
 ### Step 5: Wait (Background Processing)
 
