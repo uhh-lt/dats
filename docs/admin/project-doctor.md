@@ -40,26 +40,49 @@ Stop uploads and processing in the affected projects while you heal them. `check
 
 ## Checks
 
-| Check                      | Finds                                                                                                           | Heal                                        |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                                                    | Deletes the document from all stores        |
-| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                                                    | None: recompute in the document health view |
-| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document (see below)                                      | Moves the file to the quarantine folder     |
-| `orphaned_project_dir`     | Project folders of deleted projects                                                                             | Moves the folder to the quarantine folder   |
-| `missing_sdoc_data`        | Documents without processed data (content, sentences) after a failed or finished processing (breaks the export) | None: retry the processing or delete them   |
-| `failed_processing`        | Documents with failed processing steps                                                                          | None: retry in the document health view     |
-| `cross_project_reference`  | Annotations, folders, tags or metadata that reference another project                                           | None: inspect them in the database          |
-| `annotation_out_of_bounds` | Annotations beyond the text of their document, bounding boxes with invalid coordinates                          | Deletes the annotations                     |
-| `missing_es_document`      | Indexed documents missing in the project's Elasticsearch index (breaks the search)                              | Indexes them again (if the index exists)    |
-| `orphaned_es_document`     | Elasticsearch documents of deleted documents                                                                    | Deletes them                                |
-| `orphaned_es_index`        | Elasticsearch indices of deleted projects                                                                       | Deletes them                                |
-| `missing_embeddings`       | Documents without sentence or image embeddings, although the embedding step finished                            | None: recompute in the document health view |
-| `orphaned_embeddings`      | Weaviate embeddings of deleted documents                                                                        | Deletes them                                |
-| `orphaned_weaviate_tenant` | Weaviate tenants of deleted projects                                                                            | Deletes them                                |
+| Check                      | Finds                                                                                                           | Heal                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `missing_original_file`    | Documents whose uploaded file is missing (breaks the export)                                                    | Deletes the document from all stores                                            |
+| `missing_thumbnail`        | Images whose `.webp` or thumbnail is missing                                                                    | None: recompute in the document health view                                     |
+| `orphaned_file`            | Files in a project's `docs/` folder that belong to no document (see below)                                      | Moves the file to the quarantine folder                                         |
+| `orphaned_project_dir`     | Project folders of deleted projects                                                                             | Moves the folder to the quarantine folder                                       |
+| `missing_sdoc_data`        | Documents without processed data (content, sentences) after a failed or finished processing (breaks the export) | Deletes the document (retry its processing first to keep it)                    |
+| `failed_processing`        | Documents with failed processing steps                                                                          | None: retry in the document health view                                         |
+| `cross_project_reference`  | Annotations, folders, tags or metadata that reference another project                                           | Deletes the annotations, tag links and metadata; folders need a manual decision |
+| `annotation_out_of_bounds` | Span and sentence annotations beyond the text of their document                                                 | Deletes the annotations                                                         |
+| `missing_es_document`      | Indexed documents missing in the project's Elasticsearch index (breaks the search)                              | Indexes them again (if the index exists)                                        |
+| `orphaned_es_document`     | Elasticsearch documents of deleted documents                                                                    | Deletes them                                                                    |
+| `orphaned_es_index`        | Elasticsearch indices of deleted projects                                                                       | Deletes them                                                                    |
+| `missing_embeddings`       | Documents without sentence or image embeddings, although the embedding step finished                            | None: recompute in the document health view                                     |
+| `orphaned_embeddings`      | Weaviate embeddings of deleted documents                                                                        | Deletes them                                                                    |
+| `orphaned_weaviate_tenant` | Weaviate tenants of deleted projects                                                                            | Deletes them                                                                    |
 
 DATS keeps some files that no document references, so `orphaned_file` skips them: the original of an upload that the chunking split into several documents (named like the folder of its chunks) and uploaded `.zip` archives, whose content became documents.
 
 If the file of a document is missing, but a file exists whose name differs only in case or unicode normalization, the doctor proposes to rename that file instead of deleting the document.
+
+## Export and import
+
+Duplicating a project means a full project export and a full project import. Both make assumptions about the stored data that DATS itself does not always keep. The export validates every entity and aborts on the first violation. The import reads the exported CSV files back with pandas, which turns empty cells and values like `NA`, `N/A`, `None` or `null` into missing values, and matches codes, tags, folders, users and metadata by name. These checks find the data that breaks either one (checked against DATS v1.12.1):
+
+| Check                         | Finds                                                                                                                                                         | Heal                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `blank_span_text`             | Span annotations with a blank text, or one the import reads as missing (`NA`)                                                                                 | Takes the text from the document; deletes the annotation if it is blank there        |
+| `blank_value`                 | Blank memo, whiteboard and analysis titles, code, tag and folder names, metadata keys and descriptions; code and tag descriptions the import reads as missing | Sets a placeholder (`Untitled memo 12`, `N/A (12)`, a single space for descriptions) |
+| `empty_sdoc_html`             | Documents whose processing did not finish and whose HTML is empty                                                                                             | Sets an empty HTML document                                                          |
+| `duplicate_folder_name`       | Normal folders with the same name, or the name of a document folder                                                                                           | Appends the folder id to the name                                                    |
+| `broken_hierarchy`            | Codes, tags and folders whose parent is in another project, of the wrong type, or in a cycle                                                                  | Makes them root entries                                                              |
+| `system_code_conflict`        | Own codes named like a system code; system codes moved away from their configured parent                                                                      | Renames the codes (`PERSON (custom)`); moves the system codes back                   |
+| `metadata_key_conflict`       | Metadata keys DATS configures with another type (e.g. `language` as a number)                                                                                 | Renames the key (`language (custom)`)                                                |
+| `invalid_sdoc_metadata`       | Document metadata without a value for their type, or of a key of another document type                                                                        | Writes the default of the type; deletes the latter                                   |
+| `invalid_bbox`                | Bounding boxes with negative or inverted coordinates                                                                                                          | Clamps them to 0 and orders min and max                                              |
+| `non_member_author`           | Users who annotated or wrote memos, but were removed from the project                                                                                         | Adds them to the project again                                                       |
+| `unsupported_memo_attachment` | Memos attached to a span group, user or memo                                                                                                                  | Attaches them to the project                                                         |
+| `invalid_memo_content`        | Memos whose editor content is no valid JSON                                                                                                                   | Clears the editor content (the memo text stays)                                      |
+| `dangling_whiteboard_node`    | Whiteboard nodes of deleted documents, codes, tags or annotations; code nodes with a stale parent                                                             | Removes the nodes and their edges; corrects the parent                               |
+| `invalid_timeline_filter`     | Timeline analysis filters on deleted tags, codes, folders or users, or on unsupported columns                                                                 | Removes these filter expressions                                                     |
+
+Some data the import cannot carry over, whatever the source project looks like: documents lose their placement in normal folders, imported codes are always enabled and never system codes, timeline analyses lose their date metadata, and whiteboard memo nodes keep pointing at the memos of the source project.
 
 ## How heal stays safe
 

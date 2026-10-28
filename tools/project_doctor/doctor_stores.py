@@ -68,6 +68,45 @@ ANNOTATION_TABLES: dict[AnnotationKind, str] = {
     "bbox": "bboxannotation",
 }
 
+# The text columns heal may set (SetValues), as the report can be edited by hand
+SETTABLE_COLUMNS: dict[str, set[str]] = {
+    "memo": {"title", "content_json"},
+    "whiteboard": {"title"},
+    "timelineanalysis": {"name"},
+    "conceptovertimeanalysis": {"name"},
+    "projectmetadata": {"key", "description"},
+    "code": {"name", "description"},
+    "tag": {"name", "description"},
+    "folder": {"name"},
+    "sourcedocumentdata": {"html", "raw_html"},
+}
+
+# The values pandas.read_csv turns into NaN (pandas._libs.parsers.STR_NA_VALUES):
+# the project import reads them back as missing values
+CSV_NA_VALUES = frozenset(
+    {
+        "",
+        "#N/A",
+        "#N/A N/A",
+        "#NA",
+        "-1.#IND",
+        "-1.#QNAN",
+        "-NaN",
+        "-nan",
+        "1.#IND",
+        "1.#QNAN",
+        "<NA>",
+        "N/A",
+        "NA",
+        "NULL",
+        "NaN",
+        "None",
+        "n/a",
+        "nan",
+        "null",
+    }
+)
+
 # The filename limits of the uploaded files (core/doc/source_document_dto.py)
 _SDOC_FILENAME_MAX_LENGTH = 200
 _SDOC_SUFFIX_MAX_LENGTH = 30
@@ -135,6 +174,8 @@ class Stores:
     root_dir: Path
     index_prefix: str
     collection_postfix: str
+    system_code_parents: dict[str, str | None]
+    config_metadata: dict[tuple[str, str], str]
 
     # ==========================================================================
     # NAMING
@@ -233,6 +274,19 @@ def _bool(value: Any) -> bool:
     return bool(value)
 
 
+def _system_code_parents(
+    codes: Any, parent: str | None = None
+) -> dict[str, str | None]:
+    """The names of the system codes every project gets (config system_codes,
+    nested via `children`), mapped to the names of their parents."""
+    parents: dict[str, str | None] = {}
+    for name, code in codes.items():
+        parents[str(name)] = parent
+        if "children" in code and code.children:
+            parents |= _system_code_parents(code.children, str(name))
+    return parents
+
+
 def _load_config(backend_dir: Path) -> Any:
     """Loads the backend config like backend/src/config.py does (without the
     validation of the DATS version at hand)."""
@@ -298,6 +352,11 @@ def connect() -> Stores:
         root_dir=root_dir,
         index_prefix=str(es_conf.index_prefix),
         collection_postfix=str(wv.collection_postfix),
+        system_code_parents=_system_code_parents(conf.system_codes),
+        config_metadata={
+            (str(m.key), str(m.doctype)): str(m.metatype)
+            for m in conf.project_metadata.values()
+        },
     )
     try:
         stores.verify_schema()
