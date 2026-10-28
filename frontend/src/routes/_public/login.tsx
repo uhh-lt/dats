@@ -4,18 +4,24 @@ import { generalQueries } from "@api/general/generalQueries";
 import { LoginView } from "@features/auth";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
+import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
+const DEFAULT_REDIRECT = "/projects";
+
+// The redirect target is the full app-internal href (path, search params and hash) of the page that required login.
+// Only same-origin paths are allowed, so the login page cannot be abused as an open redirect.
+const isAppPath = (href: string) => href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\");
+
 const loginSearchSchema = z.object({
-  redirect: z.string().default("/projects"),
+  redirect: fallback(z.string().refine(isAppPath), DEFAULT_REDIRECT).default(DEFAULT_REDIRECT),
 });
 
 export const Route = createFileRoute("/_public/login")({
   validateSearch: zodValidator(loginSearchSchema),
   beforeLoad: ({ context, search }) => {
     if (context.auth.isAuthenticated) {
-      throw redirect({ to: search.redirect });
+      throw redirect({ href: search.redirect });
     }
   },
   context: () => ({ instanceInfoOptions: generalQueries.instanceInfo() }),
