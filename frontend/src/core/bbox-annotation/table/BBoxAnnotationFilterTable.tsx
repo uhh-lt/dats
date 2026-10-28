@@ -18,6 +18,7 @@ import {
 import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
+import { UserRenderer } from "@core/user";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -106,6 +107,12 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           return {
             ...colDef,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
+          };
+        case BBoxColumns.BB_USER_ID:
+          return {
+            ...colDef,
+            accessorFn: (row) => row.user_id,
+            Cell: ({ row }) => <UserRenderer user={row.original.user_id} />,
           };
         case BBoxColumns.BB_MEMO_CONTENT:
           return {
