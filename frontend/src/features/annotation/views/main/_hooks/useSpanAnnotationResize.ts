@@ -1,15 +1,7 @@
+import { IToken, SpanAnnotationBoundary, SpanAnnotationResizeStartHandler } from "@core/annotation";
 import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from "react";
-import { IToken } from "../../../_types/IToken";
-
-export type SpanAnnotationBoundary = "start" | "end";
-
-export type SpanAnnotationResizeStartHandler = (
-  annotation: SpanAnnotationRead,
-  boundary: SpanAnnotationBoundary,
-  event: ReactPointerEvent<HTMLSpanElement>,
-) => void;
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ResizeState {
   boundary: SpanAnnotationBoundary;

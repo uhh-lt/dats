@@ -1,9 +1,9 @@
+import { TagStyle } from "@core/annotation";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
 import { persistStorage } from "@store/persistStorage";
 import { AnnotationMode } from "../_types/AnnotationMode";
-import { TagStyle } from "../_types/TagStyle";
 
 export interface AnnotationsState {
   // project state:

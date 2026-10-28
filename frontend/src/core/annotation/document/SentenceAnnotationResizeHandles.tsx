@@ -1,5 +1,5 @@
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { SentenceAnnotationResizeStartHandler } from "../../../_hooks/useSentenceAnnotationResize";
+import { SentenceAnnotationResizeStartHandler } from "./annotationDocumentTypes";
 
 interface SentenceAnnotationResizeHandlesProps {
   annotation: SentenceAnnotationRead;

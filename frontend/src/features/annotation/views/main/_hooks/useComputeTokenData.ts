@@ -1,35 +1,9 @@
+import { computeSpanAnnotationMaps, useTokenData } from "@core/annotation";
 import { spanAnnotationQueries } from "@core/span-annotation";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { IToken } from "../../../_types/IToken";
-
-/**
- * Derives token metadata from a source document's raw tokens and character offsets.
- *
- * Each token is enriched with its character boundaries, index, whitespace flag,
- * and newline count. The result is memoized on `sdocData` and only recomputed
- * when the document data changes.
- *
- * @param sdocData The source document data containing tokens and their character offsets.
- * @returns The enriched token array, or `undefined` if no character offsets are available.
- */
-export function useTokenData(sdocData: SourceDocumentDataRead): IToken[] | undefined {
-  return useMemo(() => {
-    if (!sdocData.token_character_offsets) return undefined;
-
-    const offsets = sdocData.token_character_offsets;
-    return sdocData.tokens.map((text, index) => ({
-      beginChar: offsets[index][0],
-      endChar: offsets[index][1],
-      index,
-      text,
-      whitespace: offsets.length > index + 1 && offsets[index + 1][0] - offsets[index][1] > 0,
-      newLine: text.split("\n").length - 1,
-    }));
-  }, [sdocData]);
-}
 
 /**
  * Builds the token and annotation lookup data used by the text annotation renderers.
@@ -69,34 +43,7 @@ export function useComputeTokenData({
   // Layer 1: base maps from server data only
   const baseMaps = useMemo(() => {
     if (!annotations.data) return { annotationMap: undefined, annotationsPerToken: undefined };
-    const spanGroupIdMapping = new Map<number, number>();
-    const annotationMap = new Map<number, SpanAnnotationRead>();
-    const annotationsPerToken = new Map<number, number[]>();
-
-    const addAnnotation = (selectedAnnotation: SpanAnnotationRead) => {
-      const groupIds = selectedAnnotation.group_ids.map((id) => {
-        let mapped = spanGroupIdMapping.get(id);
-        if (mapped === undefined) {
-          mapped = spanGroupIdMapping.size + 1;
-          spanGroupIdMapping.set(id, mapped);
-        }
-        return mapped;
-      });
-      const annotation: SpanAnnotationRead = {
-        ...selectedAnnotation,
-        group_ids: groupIds,
-      };
-
-      for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {
-        const tokenAnnotations = annotationsPerToken.get(i) || [];
-        tokenAnnotations.push(annotation.id);
-        annotationsPerToken.set(i, tokenAnnotations);
-      }
-      annotationMap.set(annotation.id, annotation);
-    };
-
-    annotations.data.forEach(addAnnotation);
-    return { annotationMap, annotationsPerToken };
+    return computeSpanAnnotationMaps(annotations.data);
   }, [annotations.data]);
 
   // Layer 2: patch pending annotations on top (purely additive, short-circuits when empty)

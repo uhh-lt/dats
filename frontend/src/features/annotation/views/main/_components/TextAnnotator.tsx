@@ -1,3 +1,5 @@
+import { TagStyle, useTokenData } from "@core/annotation";
+import { useComputeTokenData } from "../_hooks/useComputeTokenData";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SpanAnnotationHooks } from "@core/span-annotation";
@@ -8,10 +10,8 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MouseEvent, MouseEventHandler, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { toPendingSpanAnnotation } from "../_hooks/pendingSpanAnnotation";
-import { useComputeTokenData, useTokenData } from "../_hooks/useComputeTokenData";
 import { useSpanAnnotationResize } from "../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
-import { TagStyle } from "../../../_types/TagStyle";
 import { AnnotationsActions } from "../../../store/annotationsSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { DocumentRenderer } from "./DocumentRenderer";

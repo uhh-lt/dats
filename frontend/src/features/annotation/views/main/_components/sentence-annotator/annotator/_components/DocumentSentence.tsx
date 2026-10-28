@@ -1,12 +1,14 @@
+import {
+  SentenceAnnotationResizeHandles,
+  SentenceAnnotationResizeStartHandler,
+  SentenceMemoBadge,
+} from "@core/annotation";
 import { CodeMap } from "@core/code";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { ListItemButton, Stack, StackProps, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
-import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSentenceAnnotationResize";
 import "../../../_styles/Annotation.css";
-import { SentenceAnnotationResizeHandles } from "../../_components/SentenceAnnotationResizeHandles";
-import { SentenceMemoBadge } from "../../_components/SentenceMemoBadge";
 
 // the browser-native selection color, used for the flat in-progress sentence selection (matches the span annotator)
 const SELECTION_COLOR = "rgba(0, 120, 215, 0.3)";
