@@ -24,6 +24,7 @@ _The Annotation Table provides a bird's-eye view of all manual and automated cod
 - **Customizing Columns:** Use the "Show/hide columns" button at the top right to select which metadata you want to see.
 - **Sorting and Searching:** Click on any column header to sort the table. You can use the global search bar, or use the **Filter** menu to create complex queries (e.g., "Show me all annotations made by _User A_ using the code _Economic Crisis_").
 - **Filtering by Memos:** A highly useful feature for qualitative researchers is the "Memo Content" column. You can use this to filter the table to show _only_ annotations where you or your team have written a specific interpretive memo!
+- **Filtering by Provenance:** The "Accepted from" column shows whose annotation a copied annotation was accepted from in the [Compare View](../annotation-view.md#the-compare-view). You can sort, filter and group by it: "Accepted from = None" shows the annotations that were not accepted from anyone, and grouping puts them in a "Not accepted" group.
 
 !!! tip "Cluttered Screen?"
 
