@@ -6,8 +6,7 @@ import sys
 import time
 import unicodedata
 from collections.abc import Callable
-from pathlib import Path
-from typing import Literal
+from typing import Any
 
 from doctor_report import (
     CheckName,
@@ -19,39 +18,22 @@ from doctor_report import (
     DeleteWeaviateTenant,
     Issue,
     QuarantinePath,
-    RecomputeStep,
     ReindexEs,
 )
+from doctor_stores import (
+    ALL_COLLECTIONS,
+    ALL_STEPS,
+    ANNOTATION_TABLES,
+    PROCESSING_STEPS,
+    SDOC_COLLECTIONS,
+    STATUS_ERRONEOUS,
+    STATUS_FINISHED,
+    STATUS_PROCESSING,
+    AnnotationKind,
+    Stores,
+)
 from elasticsearch import helpers
-from sqlalchemy import ColumnElement, func, or_, select
-from sqlalchemy.orm import Session
-
-from common.doc_processing_steps import PROCESSING_JOBS
-from common.doc_type_enum import DocType
-from common.sdoc_status_enum import SDocStatus
-from config import conf
-from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.annotation.span_annotation_orm import SpanAnnotationORM
-from core.code.code_orm import CodeORM
-from core.doc.folder_orm import FolderORM
-from core.doc.image_collection import ImageCollection
-from core.doc.sdoc_elastic_index import SdocIndex
-from core.doc.sentence_collection import SentenceCollection
-from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.doc.source_document_orm import SourceDocumentORM
-from core.metadata.project_metadata_orm import ProjectMetadataORM
-from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from core.project.project_orm import ProjectORM
-from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
-from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
-from repos.vector.collection_base import BaseCollection
-from repos.vector.weaviate_repo import WeaviateRepo
-
-# the processing steps that have a status column in the sourcedocument table
-_ALL_STEPS = sorted({step for steps in PROCESSING_JOBS.values() for step in steps})
+from sqlalchemy import Connection, text
 
 # how many ids a message lists before it abbreviates
 _MAX_IDS_IN_MESSAGE = 10
@@ -60,36 +42,43 @@ _HINT_FAILED_PROCESSING = (
     "Retry the failed steps in the document health view of the project, or "
     "delete the documents."
 )
+_HINT_RECOMPUTE = (
+    "Recompute the step '{step}' in the document health view of the project."
+)
 _HINT_CROSS_PROJECT = (
     "The rows reference entities of another project. Inspect them in the "
     "database and decide by hand."
 )
 
+# the steps that write the embeddings of a Weaviate collection
+_EMBEDDING_STEPS = {
+    "Sentence": "text_sentence_embedding",
+    "Image": "image_embedding",
+}
+
 
 class SdocRow:
     """The columns of a source document that the checks need (no content)."""
 
-    def __init__(self, row: dict) -> None:
+    def __init__(self, row: dict[str, Any]) -> None:
         self.id: int = row["id"]
         self.filename: str = row["filename"]
-        self.doctype = DocType(row["doctype"])
+        self.doctype: str = row["doctype"]
         self.project_id: int = row["project_id"]
-        self.statuses: dict[str, SDocStatus] = {
-            step: SDocStatus(row[step]) for step in PROCESSING_JOBS[self.doctype]
+        self.statuses: dict[str, int] = {
+            step: row[step] for step in PROCESSING_STEPS.get(self.doctype, [])
         }
 
     def is_finished(self, step: str) -> bool:
-        return self.statuses.get(step) == SDocStatus.finished
+        return self.statuses.get(step) == STATUS_FINISHED
 
     @property
     def is_processing(self) -> bool:
-        return SDocStatus.processing in self.statuses.values()
+        return STATUS_PROCESSING in self.statuses.values()
 
     @property
     def failed_steps(self) -> list[str]:
-        return [
-            s for s, status in self.statuses.items() if status == SDocStatus.erroneous
-        ]
+        return [s for s, status in self.statuses.items() if status == STATUS_ERRONEOUS]
 
 
 def _ids_text(ids: list[int]) -> str:
@@ -104,18 +93,21 @@ def _normalize_filename(name: str) -> str:
 
 
 class Checker:
-    def __init__(self, *, db: Session, min_file_age_minutes: int) -> None:
-        self.db = db
+    def __init__(
+        self, *, conn: Connection, stores: Stores, min_file_age_minutes: int
+    ) -> None:
+        self.conn = conn
+        self.stores = stores
         self.min_file_age_seconds = min_file_age_minutes * 60
-        self.fsr = FilesystemRepo()
-        self.es = ElasticSearchRepo().get_client()
-        self.weaviate = WeaviateRepo().get_client()
+
+    def _ids(self, sql: str, **params: Any) -> list[int]:
+        return [int(i) for i in self.conn.execute(text(sql), params).scalars()]
 
     # ==========================================================================
     # ENTRY POINT
     # ==========================================================================
     def run(self, *, project_ids: list[int] | None, instance: bool) -> list[Issue]:
-        existing_ids = set(self.db.scalars(select(ProjectORM.id)))
+        existing_ids = set(self._ids("SELECT id FROM project"))
         if project_ids is None:
             project_ids = sorted(existing_ids)
         unknown = [pid for pid in project_ids if pid not in existing_ids]
@@ -134,10 +126,10 @@ class Checker:
     def check_project(self, *, project_id: int) -> list[Issue]:
         sdocs = self._read_sdocs(project_id=project_id)
         data_ids = set(
-            self.db.scalars(
-                select(SourceDocumentDataORM.id)
-                .join(SourceDocumentORM)
-                .where(SourceDocumentORM.project_id == project_id)
+            self._ids(
+                "SELECT d.id FROM sourcedocumentdata d "
+                "JOIN sourcedocument s ON s.id = d.id WHERE s.project_id = :pid",
+                pid=project_id,
             )
         )
         checks: list[Callable[[], list[Issue]]] = [
@@ -165,32 +157,16 @@ class Checker:
     # ==========================================================================
     # POSTGRES <-> FILESYSTEM
     # ==========================================================================
-    def _docs_dir(self, project_id: int) -> Path:
-        return self.fsr.get_project_root_dir_path(project_id=project_id) / "docs"
-
-    def _owned_filenames(self, sdoc: SdocRow) -> set[str]:
-        """The files in the docs folder that belong to the document: the
-        original, and the files the processing derives from it."""
-        name = self.fsr.truncate_filename(sdoc.filename)
-        owned = {name}
-        if sdoc.doctype in (DocType.image, DocType.audio, DocType.video):
-            owned.add(self.fsr.generate_sdoc_filename(name, webp=True))
-            owned.add(self.fsr.generate_sdoc_filename(name, webp=True, thumbnail=True))
-            owned.add(self.fsr.generate_sdoc_filename(name, thumbnail=True))
-        if sdoc.doctype == DocType.video:
-            owned.add(Path(name).with_suffix(".mp3").name)
-        return owned
-
     def _check_files(self, *, project_id: int, sdocs: list[SdocRow]) -> list[Issue]:
-        docs_dir = self._docs_dir(project_id)
+        docs_dir = self.stores.docs_dir(project_id)
         on_disk = {p.name: p for p in docs_dir.iterdir()} if docs_dir.is_dir() else {}
         normalized_on_disk = {_normalize_filename(n): n for n in on_disk}
 
         issues: list[Issue] = []
         owned: set[str] = set()
         for sdoc in sdocs:
-            owned |= self._owned_filenames(sdoc)
-            name = self.fsr.truncate_filename(sdoc.filename)
+            owned |= self.stores.owned_filenames(sdoc.filename, sdoc.doctype)
+            name = self.stores.truncate_filename(sdoc.filename)
 
             # 1) the original file, which the export and the viewer need
             if name not in on_disk:
@@ -217,15 +193,10 @@ class Checker:
                 continue
 
             # 2) the image thumbnails, which the document views show
-            if sdoc.doctype == DocType.image and sdoc.is_finished("image_thumbnail"):
+            if sdoc.doctype == "image" and sdoc.is_finished("image_thumbnail"):
                 missing = [
                     fn
-                    for fn in (
-                        self.fsr.generate_sdoc_filename(name, webp=True),
-                        self.fsr.generate_sdoc_filename(
-                            name, webp=True, thumbnail=True
-                        ),
-                    )
+                    for fn in (f"{name}.webp", f"{name}.thumbnail.webp")
                     if fn not in on_disk
                 ]
                 if missing:
@@ -236,9 +207,8 @@ class Checker:
                             project_id=project_id,
                             message=f"SourceDocument {sdoc.id} ({sdoc.filename}): "
                             f"missing {', '.join(missing)}",
-                            fix=RecomputeStep(
-                                step="image_thumbnail", sdoc_ids=[sdoc.id]
-                            ),
+                            fix=None,
+                            hint=_HINT_RECOMPUTE.format(step="image_thumbnail"),
                         )
                     )
 
@@ -264,7 +234,8 @@ class Checker:
     def _check_orphaned_project_dirs(
         self, existing_project_ids: set[int]
     ) -> list[Issue]:
-        if not self.fsr.proj_root.is_dir():
+        projects_dir = self.stores.projects_dir
+        if not projects_dir.is_dir():
             return []
         return [
             Issue(
@@ -274,7 +245,7 @@ class Checker:
                 message=f"{path} belongs to the deleted project {path.name}",
                 fix=QuarantinePath(path=str(path)),
             )
-            for path in sorted(self.fsr.proj_root.iterdir())
+            for path in sorted(projects_dir.iterdir())
             if path.is_dir()
             and path.name.isdigit()
             and int(path.name) not in existing_project_ids
@@ -284,17 +255,13 @@ class Checker:
     # POSTGRES
     # ==========================================================================
     def _read_sdocs(self, *, project_id: int) -> list[SdocRow]:
-        columns = [
-            SourceDocumentORM.id,
-            SourceDocumentORM.filename,
-            SourceDocumentORM.doctype,
-            SourceDocumentORM.project_id,
-            *(getattr(SourceDocumentORM, step) for step in _ALL_STEPS),
-        ]
-        rows = self.db.execute(
-            select(*columns)
-            .where(SourceDocumentORM.project_id == project_id)
-            .order_by(SourceDocumentORM.id)
+        columns = ", ".join(["id", "filename", "doctype", "project_id", *ALL_STEPS])
+        rows = self.conn.execute(
+            text(
+                f"SELECT {columns} FROM sourcedocument "
+                "WHERE project_id = :pid ORDER BY id"
+            ),
+            {"pid": project_id},
         ).mappings()
         return [SdocRow(dict(row)) for row in rows]
 
@@ -350,85 +317,94 @@ class Checker:
 
     def _check_cross_project_references(self, *, project_id: int) -> list[Issue]:
         issues: list[Issue] = []
-        annotation_orms: list[
-            tuple[
-                str, type[SpanAnnotationORM | SentenceAnnotationORM | BBoxAnnotationORM]
-            ]
-        ] = [
-            ("span annotations", SpanAnnotationORM),
-            ("sentence annotations", SentenceAnnotationORM),
-            ("bbox annotations", BBoxAnnotationORM),
-        ]
-        for what, orm in annotation_orms:
-            ids = self.db.scalars(
-                select(orm.id)
-                .join(AnnotationDocumentORM)
-                .join(SourceDocumentORM)
-                .join(CodeORM, CodeORM.id == orm.code_id)
-                .where(SourceDocumentORM.project_id == project_id)
-                .where(
-                    or_(
-                        orm.project_id != project_id,
-                        CodeORM.project_id != project_id,
-                    )
-                )
-                .order_by(orm.id)
-            ).all()
+        for kind, table in ANNOTATION_TABLES.items():
+            ids = self._ids(
+                f"SELECT a.id FROM {table} a "
+                "JOIN annotationdocument ad ON ad.id = a.annotation_document_id "
+                "JOIN sourcedocument s ON s.id = ad.source_document_id "
+                "JOIN code c ON c.id = a.code_id "
+                "WHERE s.project_id = :pid "
+                "AND (a.project_id <> :pid OR c.project_id <> :pid) ORDER BY a.id",
+                pid=project_id,
+            )
             issues += self._cross_project_issue(
-                project_id=project_id, what=what, ids=list(ids)
+                project_id=project_id, what=f"{kind} annotations", ids=ids
             )
 
-        folder_ids = self.db.scalars(
-            select(SourceDocumentORM.id)
-            .join(FolderORM, FolderORM.id == SourceDocumentORM.folder_id)
-            .where(SourceDocumentORM.project_id == project_id)
-            .where(FolderORM.project_id != project_id)
-        ).all()
+        folder_ids = self._ids(
+            "SELECT s.id FROM sourcedocument s JOIN folder f ON f.id = s.folder_id "
+            "WHERE s.project_id = :pid AND f.project_id <> :pid ORDER BY s.id",
+            pid=project_id,
+        )
         issues += self._cross_project_issue(
-            project_id=project_id,
-            what="SourceDocuments (folder)",
-            ids=list(folder_ids),
+            project_id=project_id, what="SourceDocuments (folder)", ids=folder_ids
         )
 
-        tag_ids = self.db.scalars(
-            select(SourceDocumentORM.id)
-            .join(SourceDocumentTagLinkTable)
-            .join(TagORM, TagORM.id == SourceDocumentTagLinkTable.tag_id)
-            .where(SourceDocumentORM.project_id == project_id)
-            .where(TagORM.project_id != project_id)
-            .distinct()
-        ).all()
+        tag_ids = self._ids(
+            "SELECT DISTINCT s.id FROM sourcedocument s "
+            "JOIN sourcedocumenttaglinktable l ON l.source_document_id = s.id "
+            "JOIN tag t ON t.id = l.tag_id "
+            "WHERE s.project_id = :pid AND t.project_id <> :pid ORDER BY s.id",
+            pid=project_id,
+        )
         issues += self._cross_project_issue(
-            project_id=project_id, what="SourceDocuments (tags)", ids=list(tag_ids)
+            project_id=project_id, what="SourceDocuments (tags)", ids=tag_ids
         )
 
-        metadata_ids = self.db.scalars(
-            select(SourceDocumentMetadataORM.id)
-            .join(SourceDocumentORM)
-            .join(
-                ProjectMetadataORM,
-                ProjectMetadataORM.id == SourceDocumentMetadataORM.project_metadata_id,
-            )
-            .where(SourceDocumentORM.project_id == project_id)
-            .where(ProjectMetadataORM.project_id != project_id)
-        ).all()
+        metadata_ids = self._ids(
+            "SELECT m.id FROM sourcedocumentmetadata m "
+            "JOIN sourcedocument s ON s.id = m.source_document_id "
+            "JOIN projectmetadata pm ON pm.id = m.project_metadata_id "
+            "WHERE s.project_id = :pid AND pm.project_id <> :pid ORDER BY m.id",
+            pid=project_id,
+        )
         issues += self._cross_project_issue(
-            project_id=project_id,
-            what="SourceDocument metadata",
-            ids=list(metadata_ids),
+            project_id=project_id, what="SourceDocument metadata", ids=metadata_ids
         )
         return issues
 
-    def _out_of_bounds_issue(
-        self,
-        *,
-        project_id: int,
-        kind: Literal["span", "sentence", "bbox"],
-        ids: list[int],
-        rule: str,
-    ) -> list[Issue]:
-        if not ids:
-            return []
+    def _check_annotation_bounds(self, *, project_id: int) -> list[Issue]:
+        join_data = (
+            "JOIN annotationdocument ad ON ad.id = a.annotation_document_id "
+            "JOIN sourcedocumentdata d ON d.id = ad.source_document_id "
+        )
+        found: list[tuple[AnnotationKind, str, list[int]]] = [
+            (
+                "span",
+                "characters or tokens beyond the text",
+                self._ids(
+                    f"SELECT a.id FROM spanannotation a {join_data}"
+                    'WHERE a.project_id = :pid AND (a.begin < 0 OR a."end" < a.begin '
+                    'OR a."end" > length(d.content) OR a.begin_token < 0 '
+                    "OR a.end_token < a.begin_token "
+                    "OR a.end_token > cardinality(d.token_starts)) ORDER BY a.id",
+                    pid=project_id,
+                ),
+            ),
+            (
+                "sentence",
+                "sentences beyond the text",
+                self._ids(
+                    f"SELECT a.id FROM sentenceannotation a {join_data}"
+                    "WHERE a.project_id = :pid AND (a.sentence_id_start < 0 "
+                    "OR a.sentence_id_end < a.sentence_id_start "
+                    # sentence_id_end is inclusive
+                    "OR a.sentence_id_end >= cardinality(d.sentence_starts)) "
+                    "ORDER BY a.id",
+                    pid=project_id,
+                ),
+            ),
+            (
+                "bbox",
+                "negative or inverted coordinates",
+                self._ids(
+                    "SELECT a.id FROM bboxannotation a WHERE a.project_id = :pid "
+                    "AND (a.x_min < 0 OR a.y_min < 0 OR a.x_max < a.x_min "
+                    "OR a.y_max < a.y_min) ORDER BY a.id",
+                    pid=project_id,
+                ),
+            ),
+        ]
         return [
             Issue(
                 key=f"{CheckName.ANNOTATION_OUT_OF_BOUNDS.value}:{project_id}:{kind}",
@@ -440,92 +416,9 @@ class Checker:
                 hint="The annotations cannot be displayed. Remove this issue from "
                 "the report to keep them.",
             )
+            for kind, rule, ids in found
+            if ids
         ]
-
-    def _annotation_ids(
-        self,
-        *,
-        project_id: int,
-        orm: type[SpanAnnotationORM | SentenceAnnotationORM],
-        condition: ColumnElement[bool],
-    ) -> list[int]:
-        return list(
-            self.db.scalars(
-                select(orm.id)
-                .join(AnnotationDocumentORM)
-                .join(
-                    SourceDocumentDataORM,
-                    SourceDocumentDataORM.id
-                    == AnnotationDocumentORM.source_document_id,
-                )
-                .where(orm.project_id == project_id)
-                .where(condition)
-                .order_by(orm.id)
-            )
-        )
-
-    def _check_annotation_bounds(self, *, project_id: int) -> list[Issue]:
-        span = SpanAnnotationORM
-        span_ids = self._annotation_ids(
-            project_id=project_id,
-            orm=span,
-            condition=or_(
-                span.begin < 0,
-                span.end < span.begin,
-                span.end > func.length(SourceDocumentDataORM.content),
-                span.begin_token < 0,
-                span.end_token < span.begin_token,
-                span.end_token > func.cardinality(SourceDocumentDataORM.token_starts),
-            ),
-        )
-        sent = SentenceAnnotationORM
-        sentence_ids = self._annotation_ids(
-            project_id=project_id,
-            orm=sent,
-            condition=or_(
-                sent.sentence_id_start < 0,
-                sent.sentence_id_end < sent.sentence_id_start,
-                # sentence_id_end is inclusive
-                sent.sentence_id_end
-                >= func.cardinality(SourceDocumentDataORM.sentence_starts),
-            ),
-        )
-        bbox = BBoxAnnotationORM
-        bbox_ids = list(
-            self.db.scalars(
-                select(bbox.id)
-                .where(bbox.project_id == project_id)
-                .where(
-                    or_(
-                        bbox.x_min < 0,
-                        bbox.y_min < 0,
-                        bbox.x_max < bbox.x_min,
-                        bbox.y_max < bbox.y_min,
-                    )
-                )
-                .order_by(bbox.id)
-            )
-        )
-        return (
-            self._out_of_bounds_issue(
-                project_id=project_id,
-                kind="span",
-                ids=span_ids,
-                rule="characters or tokens beyond the text",
-            )
-            + self._out_of_bounds_issue(
-                project_id=project_id,
-                kind="sentence",
-                ids=sentence_ids,
-                rule="sentences beyond the text",
-            )
-            + self._out_of_bounds_issue(
-                project_id=project_id,
-                kind="bbox",
-                ids=bbox_ids,
-                rule="negative or inverted coordinates",
-            )
-        )
 
     # ==========================================================================
     # POSTGRES <-> ELASTICSEARCH
@@ -533,16 +426,15 @@ class Checker:
     def _check_elasticsearch(
         self, *, project_id: int, sdocs: list[SdocRow], data_ids: set[int]
     ) -> list[Issue]:
-        index = SdocIndex.get_index_name(project_id=project_id)
+        es = self.stores.es
+        index = self.stores.index_name(project_id)
+        index_exists = bool(es.indices.exists(index=index))
         es_ids: set[int] = set()
-        if self.es.indices.exists(index=index):
+        if index_exists:
             es_ids = {
                 int(hit["_id"])
                 for hit in helpers.scan(
-                    self.es,
-                    index=index,
-                    query={"query": {"match_all": {}}},
-                    _source=False,
+                    es, index=index, query={"query": {"match_all": {}}}, _source=False
                 )
             }
 
@@ -565,7 +457,12 @@ class Checker:
                     project_id=project_id,
                     message=f"{len(missing)} indexed SourceDocuments are missing in "
                     f"{index}: {_ids_text(missing)}",
-                    fix=ReindexEs(sdoc_ids=missing),
+                    # without the index, DATS has to create it with its mappings
+                    fix=ReindexEs(sdoc_ids=missing) if index_exists else None,
+                    hint=None
+                    if index_exists
+                    else f"The index {index} does not exist. "
+                    + _HINT_RECOMPUTE.format(step="text_es_index"),
                 )
             )
         if orphaned:
@@ -582,9 +479,9 @@ class Checker:
         return issues
 
     def _check_orphaned_es_indices(self, existing_project_ids: set[int]) -> list[Issue]:
-        prefix = f"{conf.elasticsearch.index_prefix}_project_"
+        prefix = f"{self.stores.index_prefix}_project_"
         pattern = re.compile(rf"^{re.escape(prefix)}(\d+)_")
-        indices = self.es.indices.get(index=f"{prefix}*", allow_no_indices=True)
+        indices = self.stores.es.indices.get(index=f"{prefix}*", allow_no_indices=True)
         issues: list[Issue] = []
         for index in sorted(indices.keys()):
             match = pattern.match(index)
@@ -605,64 +502,54 @@ class Checker:
     # ==========================================================================
     # POSTGRES <-> WEAVIATE
     # ==========================================================================
-    def _embedded_sdoc_ids(
-        self, collection: type[BaseCollection], project_id: int
-    ) -> set[int]:
-        if not self.weaviate.collections.exists(collection.get_collection_name()):
+    def _embedded_sdoc_ids(self, collection: str, project_id: int) -> set[int]:
+        client = self.stores.weaviate
+        if not client.collections.exists(collection):
             return set()
-        handle = self.weaviate.collections.get(collection.get_collection_name())
-        tenant = collection.get_tenant_name(project_id)
+        handle = client.collections.get(collection)
+        tenant = self.stores.tenant_name(project_id)
         if not handle.tenants.exists(tenant):
             return set()
-        prop = collection.properties["sdoc_id"].name
-        return {
-            int(obj.properties[prop])  # type: ignore[arg-type]
-            for obj in handle.with_tenant(tenant).iterator(return_properties=[prop])
-            if obj.properties.get(prop) is not None
-        }
+        ids: set[int] = set()
+        for obj in handle.with_tenant(tenant).iterator(return_properties=["sdoc_id"]):
+            value = obj.properties.get("sdoc_id")
+            if isinstance(value, (int, float)):
+                ids.add(int(value))
+        return ids
 
     def _check_weaviate(self, *, project_id: int, sdocs: list[SdocRow]) -> list[Issue]:
         sdoc_ids = {sdoc.id for sdoc in sdocs}
-        # the steps that write the embeddings of a collection
-        embedding_steps: dict[str, str] = {
-            SentenceCollection.name: "text_sentence_embedding",
-            ImageCollection.name: "image_embedding",
-        }
         sentence_counts: dict[int, int] = {
-            sdoc_id: count
-            for sdoc_id, count in self.db.execute(
-                select(
-                    SourceDocumentDataORM.id,
-                    func.coalesce(
-                        func.cardinality(SourceDocumentDataORM.sentence_starts), 0
-                    ),
-                )
-                .join(SourceDocumentORM)
-                .where(SourceDocumentORM.project_id == project_id)
+            int(sdoc_id): int(count)
+            for sdoc_id, count in self.conn.execute(
+                text(
+                    "SELECT d.id, COALESCE(cardinality(d.sentence_starts), 0) "
+                    "FROM sourcedocumentdata d JOIN sourcedocument s ON s.id = d.id "
+                    "WHERE s.project_id = :pid"
+                ),
+                {"pid": project_id},
             ).tuples()
         }
 
         issues: list[Issue] = []
-        for collection in BaseCollection.all_collections():
-            if "sdoc_id" not in collection.properties:
-                continue
+        for name in SDOC_COLLECTIONS:
+            collection = self.stores.collection_name(name)
             embedded = self._embedded_sdoc_ids(collection, project_id)
-            name = collection.get_collection_name()
 
             orphaned = sorted(embedded - sdoc_ids)
             if orphaned:
                 issues.append(
                     Issue(
-                        key=f"{CheckName.ORPHANED_EMBEDDINGS.value}:{project_id}:{name}",
+                        key=f"{CheckName.ORPHANED_EMBEDDINGS.value}:{project_id}:{collection}",
                         check=CheckName.ORPHANED_EMBEDDINGS,
                         project_id=project_id,
-                        message=f"{name} holds embeddings of {len(orphaned)} deleted "
-                        f"SourceDocuments: {_ids_text(orphaned)}",
-                        fix=DeleteEmbeddings(collection=name, sdoc_ids=orphaned),
+                        message=f"{collection} holds embeddings of {len(orphaned)} "
+                        f"deleted SourceDocuments: {_ids_text(orphaned)}",
+                        fix=DeleteEmbeddings(collection=collection, sdoc_ids=orphaned),
                     )
                 )
 
-            step = embedding_steps.get(collection.name)
+            step = _EMBEDDING_STEPS.get(name)
             if step is None:
                 continue
             missing = [
@@ -679,13 +566,13 @@ class Checker:
             if missing:
                 issues.append(
                     Issue(
-                        key=f"{CheckName.MISSING_EMBEDDINGS.value}:{project_id}:{name}",
+                        key=f"{CheckName.MISSING_EMBEDDINGS.value}:{project_id}:{collection}",
                         check=CheckName.MISSING_EMBEDDINGS,
                         project_id=project_id,
                         message=f"{len(missing)} SourceDocuments have no embeddings in "
-                        f"{name}: {_ids_text(missing)}",
-                        fix=RecomputeStep(step=step, sdoc_ids=missing),
-                        hint="Needs a running worker and the embedding service.",
+                        f"{collection}: {_ids_text(missing)}",
+                        fix=None,
+                        hint=_HINT_RECOMPUTE.format(step=step),
                     )
                 )
         return issues
@@ -693,25 +580,26 @@ class Checker:
     def _check_orphaned_weaviate_tenants(
         self, existing_project_ids: set[int]
     ) -> list[Issue]:
+        client = self.stores.weaviate
         pattern = re.compile(r"^Project(\d+)$")
         issues: list[Issue] = []
-        for collection in BaseCollection.all_collections():
-            name = collection.get_collection_name()
-            if not self.weaviate.collections.exists(name):
+        for name in ALL_COLLECTIONS:
+            collection = self.stores.collection_name(name)
+            if not client.collections.exists(collection):
                 continue
-            tenants = self.weaviate.collections.get(name).tenants.get()
+            tenants = client.collections.get(collection).tenants.get()
             for tenant in sorted(tenants.keys()):
                 match = pattern.match(tenant)
                 if match is None or int(match.group(1)) in existing_project_ids:
                     continue
                 issues.append(
                     Issue(
-                        key=f"{CheckName.ORPHANED_WEAVIATE_TENANT.value}:{name}:{tenant}",
+                        key=f"{CheckName.ORPHANED_WEAVIATE_TENANT.value}:{collection}:{tenant}",
                         check=CheckName.ORPHANED_WEAVIATE_TENANT,
                         project_id=None,
-                        message=f"Tenant {tenant} of {name} belongs to the deleted "
-                        f"project {match.group(1)}",
-                        fix=DeleteWeaviateTenant(collection=name, tenant=tenant),
+                        message=f"Tenant {tenant} of {collection} belongs to the "
+                        f"deleted project {match.group(1)}",
+                        fix=DeleteWeaviateTenant(collection=collection, tenant=tenant),
                     )
                 )
         return issues
