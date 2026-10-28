@@ -25,7 +25,7 @@ export function SentenceAnnotationResultStep() {
     return (
       <SentenceAnnotationResultStepContent
         jobResult={llmAssistantJob.data.output.specific_task_result as SentenceAnnotationLLMAssistantJobResult}
-        approachType={llmAssistantJob.data.input.approach_type}
+        approachType={llmAssistantJob.data.output.approach_type}
       />
     );
   } else if (llmAssistantJob.isLoading) {

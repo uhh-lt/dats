@@ -1,11 +1,16 @@
 import { generalQueries } from "@api/general/generalQueries";
-import { CodeRenderer } from "@core/code";
-import { ApproachType } from "@models/ApproachType";
-import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
-import { StrategyInfo } from "@models/StrategyInfo";
-import { StrategyType } from "@models/StrategyType";
-import { TaskType } from "@models/TaskType";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+  DEFAULT_OUTPUT_FORMATS,
+  DOCUMENT_UNIT_LABELS,
+  LANGUAGE_LABELS,
+  OUTPUT_FORMAT_LABELS,
+  promptTemplateQueries,
+  withDefaultSettings,
+} from "@core/prompt-template";
+import { DocumentUnit } from "@models/DocumentUnit";
+import { OutputFormat } from "@models/OutputFormat";
+import { PromptLanguage } from "@models/PromptLanguage";
+import { PromptSettings } from "@models/PromptSettings";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import {
   Alert,
@@ -14,8 +19,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CircularProgress,
-  Collapse,
   DialogActions,
   DialogContent,
   Divider,
@@ -26,247 +29,86 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
-import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
-import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
-import { LLMAssistantActions, LLMAssistantStrategyParams } from "../../../store/llmAssistantSlice";
+import { ChangeEvent, memo, ReactNode, useCallback, useState } from "react";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
-enum DeletionStrategy {
-  DELETE_EXISTING = "DELETE_EXISTING",
-  KEEP_EXISTING = "KEEP_EXISTING",
-}
+const isValidSettings = (settings: Required<PromptSettings>) =>
+  settings.fuzzy_threshold >= 0 &&
+  settings.fuzzy_threshold <= 1 &&
+  Number.isInteger(settings.context_before_chars) &&
+  settings.context_before_chars >= 0 &&
+  Number.isInteger(settings.context_after_chars) &&
+  settings.context_after_chars >= 0 &&
+  Number.isInteger(settings.chunk_size_tokens) &&
+  settings.chunk_size_tokens > 0 &&
+  Number.isInteger(settings.chunk_overlap_tokens) &&
+  settings.chunk_overlap_tokens >= 0 &&
+  settings.chunk_overlap_tokens < settings.chunk_size_tokens;
 
-type FuzzySettings = Required<Omit<FuzzyGroundingStrategyParams, "strategy_type">>;
-
-const fallbackFuzzySettings: FuzzySettings = {
-  fuzzy_threshold: 0.85,
-  context_before_chars: 64,
-  context_after_chars: 64,
-  chunk_size_tokens: 650,
-  chunk_overlap_tokens: 100,
-};
-
-const approachLabels: Record<ApproachType, string> = {
-  [ApproachType.LLM_ZERO_SHOT]: "Zero-shot",
-  [ApproachType.LLM_FEW_SHOT]: "Few-shot",
-};
-
-const approachDescriptions: Record<ApproachType, string> = {
-  [ApproachType.LLM_ZERO_SHOT]: "Use the prompt without labeled examples from this project.",
-  [ApproachType.LLM_FEW_SHOT]: "Use selected labeled examples from this project to supplement the prompt.",
-};
-
-function getFuzzySettings(strategy: StrategyInfo): FuzzySettings {
-  const defaults = strategy.default_params;
-  if (!("fuzzy_threshold" in defaults)) return fallbackFuzzySettings;
-
-  return {
-    fuzzy_threshold: defaults.fuzzy_threshold ?? fallbackFuzzySettings.fuzzy_threshold,
-    context_before_chars: defaults.context_before_chars ?? fallbackFuzzySettings.context_before_chars,
-    context_after_chars: defaults.context_after_chars ?? fallbackFuzzySettings.context_after_chars,
-    chunk_size_tokens: defaults.chunk_size_tokens ?? fallbackFuzzySettings.chunk_size_tokens,
-    chunk_overlap_tokens: defaults.chunk_overlap_tokens ?? fallbackFuzzySettings.chunk_overlap_tokens,
-  };
-}
-
-/** Configures the model, processing strategy, learning approach, and overwrite behavior for an LLM Assistant job. */
+/** Configures the model and, in guided mode, the language, answer format and document unit of the default prompt. */
 export const SettingsStep = memo(() => {
   const availableLLMs = useQuery(generalQueries.availableModels());
-  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
-  const recommendation = useAppSelector((state) => state.llmAssistant.approachRecommendation);
-  const savedModelId = useAppSelector((state) => state.llmAssistant.modelId);
+  const mode = useAppSelector((state) => state.llmAssistant.mode);
   const method = useAppSelector((state) => state.llmAssistant.method);
-  const projectMetadataIds = useAppSelector((state) => state.llmAssistant.projectMetadataIds);
-  const codeIds = useAppSelector((state) => state.llmAssistant.codeIds);
-  const tagIds = useAppSelector((state) => state.llmAssistant.tagIds);
-  const sdocIds = useAppSelector((state) => state.llmAssistant.documentIds);
-  const savedStrategy = useAppSelector((state) => state.llmAssistant.strategy);
-  const savedStrategyParams = useAppSelector((state) => state.llmAssistant.strategyParams);
-  const savedApproach = useAppSelector((state) => state.llmAssistant.approach);
-  const savedDeleteExisting = useAppSelector((state) => state.llmAssistant.deleteExistingAnnotations);
-  const savedPrompts = useAppSelector((state) => state.llmAssistant.prompts);
+  const savedModelId = useAppSelector((state) => state.llmAssistant.modelId);
+  const savedLanguage = useAppSelector((state) => state.llmAssistant.language);
+  const savedOutputFormat = useAppSelector((state) => state.llmAssistant.outputFormat);
+  const savedDocumentUnit = useAppSelector((state) => state.llmAssistant.documentUnit);
+  const savedSettings = useAppSelector((state) => state.llmAssistant.settings);
   const dispatch = useAppDispatch();
+  const taskInfo = useQuery({ ...promptTemplateQueries.taskInfo(method), enabled: mode === "guided" });
 
-  const strategies = useQuery(llmAssistantQueries.strategies(method));
+  // local state
   const [modelId, setModelId] = useState(savedModelId);
-  const [strategyType, setStrategyType] = useState<StrategyType | undefined>(savedStrategy);
-  const [approachType, setApproachType] = useState(savedApproach);
-  const [deletionStrategy, setDeletionStrategy] = useState(
-    savedPrompts.length === 0 || savedDeleteExisting
-      ? DeletionStrategy.DELETE_EXISTING
-      : DeletionStrategy.KEEP_EXISTING,
+  const [language, setLanguage] = useState(savedLanguage);
+  const [outputFormat, setOutputFormat] = useState<OutputFormat | undefined>(
+    savedOutputFormat ?? (method ? DEFAULT_OUTPUT_FORMATS[method] : undefined),
   );
-  const [strategyDetailsOpen, setStrategyDetailsOpen] = useState(false);
-  const [fuzzySettings, setFuzzySettings] = useState<FuzzySettings>(() => {
-    if (savedStrategyParams && "fuzzy_threshold" in savedStrategyParams) {
-      return {
-        fuzzy_threshold: savedStrategyParams.fuzzy_threshold ?? fallbackFuzzySettings.fuzzy_threshold,
-        context_before_chars: savedStrategyParams.context_before_chars ?? fallbackFuzzySettings.context_before_chars,
-        context_after_chars: savedStrategyParams.context_after_chars ?? fallbackFuzzySettings.context_after_chars,
-        chunk_size_tokens: savedStrategyParams.chunk_size_tokens ?? fallbackFuzzySettings.chunk_size_tokens,
-        chunk_overlap_tokens: savedStrategyParams.chunk_overlap_tokens ?? fallbackFuzzySettings.chunk_overlap_tokens,
-      };
-    }
-    return fallbackFuzzySettings;
-  });
-
-  const selectedStrategy = useMemo(
-    () => strategies.data?.find((strategy) => strategy.strategy_type === strategyType),
-    [strategies.data, strategyType],
-  );
-  const isAnnotationTask = method === TaskType.ANNOTATION || method === TaskType.SENTENCE_ANNOTATION;
-  const existingAnnotations = LlmAssistantHooks.useGetExistingAnnotationCount({
-    taskType: method,
-    approachType,
-    sdocIds,
-    codeIds,
-  });
-  const existingAnnotationCounts = useMemo(
-    () => Object.entries(existingAnnotations.data ?? {}).filter(([, count]) => count > 0),
-    [existingAnnotations.data],
-  );
-  const hasExistingAnnotations = existingAnnotationCounts.length > 0;
-
-  useEffect(() => {
-    if (!strategies.isSuccess || strategies.data.length === 0 || strategyType !== undefined) return;
-    const defaultStrategy = strategies.data[0];
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStrategyType(defaultStrategy.strategy_type);
-    setFuzzySettings(getFuzzySettings(defaultStrategy));
-  }, [strategies.data, strategies.isSuccess, strategyType]);
-
-  const fuzzySettingsAreValid =
-    fuzzySettings.fuzzy_threshold >= 0 &&
-    fuzzySettings.fuzzy_threshold <= 1 &&
-    Number.isInteger(fuzzySettings.context_before_chars) &&
-    fuzzySettings.context_before_chars >= 0 &&
-    Number.isInteger(fuzzySettings.context_after_chars) &&
-    fuzzySettings.context_after_chars >= 0 &&
-    Number.isInteger(fuzzySettings.chunk_size_tokens) &&
-    fuzzySettings.chunk_size_tokens > 0 &&
-    Number.isInteger(fuzzySettings.chunk_overlap_tokens) &&
-    fuzzySettings.chunk_overlap_tokens >= 0 &&
-    fuzzySettings.chunk_overlap_tokens < fuzzySettings.chunk_size_tokens;
+  const [documentUnit, setDocumentUnit] = useState<DocumentUnit | undefined>(savedDocumentUnit);
+  const [settings, setSettings] = useState(() => withDefaultSettings(savedSettings));
+  const formatInfo = taskInfo.data?.output_formats.find((info) => info.output_format === outputFormat);
+  // the document unit of the default prompt until the user chooses one
+  const unit = documentUnit ?? formatInfo?.default_document_unit;
 
   const handleChangeModel = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setModelId(event.target.value);
   }, []);
-
-  const handleChangeStrategy = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const strategy = strategies.data?.find((candidate) => candidate.strategy_type === event.target.value);
-      if (!strategy) return;
-      setStrategyType(strategy.strategy_type);
-      setFuzzySettings(getFuzzySettings(strategy));
-      setStrategyDetailsOpen(false);
-    },
-    [strategies.data],
-  );
-
-  const handleChangeApproach = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const approach = Object.values(ApproachType).find((candidate) => candidate === event.target.value);
-    if (approach) setApproachType(approach);
+  const handleChangeLanguage = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setLanguage(event.target.value as PromptLanguage);
   }, []);
-
-  const handleChangeDeletionStrategy = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const strategy = Object.values(DeletionStrategy).find((candidate) => candidate === event.target.value);
-    if (strategy) setDeletionStrategy(strategy);
+  const handleChangeOutputFormat = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setOutputFormat(event.target.value as OutputFormat);
+    setDocumentUnit(undefined);
   }, []);
-
-  const handleChangeFuzzySetting = useCallback(
-    (field: keyof FuzzySettings) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChangeDocumentUnit = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setDocumentUnit(event.target.value as DocumentUnit);
+  }, []);
+  const handleChangeSetting = useCallback(
+    (field: keyof PromptSettings) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const value = Number(event.target.value);
-      setFuzzySettings((current) => ({
-        ...current,
-        [field]: Number.isNaN(value) ? current[field] : value,
-      }));
+      setSettings((current) => ({ ...current, [field]: Number.isNaN(value) ? current[field] : value }));
     },
     [],
   );
 
-  const handleToggleStrategyDetails = useCallback(() => {
-    setStrategyDetailsOpen((open) => !open);
-  }, []);
-
   const handleBack = useCallback(() => {
     dispatch(LLMAssistantActions.previousDialogStep());
   }, [dispatch]);
-
-  const createPromptTemplates = LlmAssistantHooks.useCreatePromptTemplates();
   const handleSubmit = useCallback(() => {
-    if (!method || !modelId || !strategyType || !selectedStrategy) return;
+    if (!modelId) return;
+    if (mode === "template") {
+      dispatch(LLMAssistantActions.goToReview({ modelId }));
+      return;
+    }
+    dispatch(LLMAssistantActions.goToReview({ modelId, language, outputFormat, documentUnit: unit, settings }));
+  }, [dispatch, mode, modelId, language, outputFormat, unit, settings]);
 
-    const strategyParams: LLMAssistantStrategyParams =
-      strategyType === StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
-        ? { strategy_type: strategyType, ...fuzzySettings }
-        : selectedStrategy.default_params;
-
-    createPromptTemplates.mutate(
-      {
-        approachType,
-        strategyType,
-        requestBody: {
-          job_params: {
-            task_type: method,
-            project_id: projectId,
-            specific_task_parameters: {
-              task_type: method,
-              tag_ids: tagIds,
-              project_metadata_ids: projectMetadataIds,
-              code_ids: codeIds,
-              sdoc_ids: sdocIds,
-            },
-          },
-        },
-      },
-      {
-        onSuccess(prompts) {
-          dispatch(
-            LLMAssistantActions.goToPromptEditor({
-              prompts,
-              approach: approachType,
-              deleteExistingAnnotations:
-                hasExistingAnnotations && deletionStrategy === DeletionStrategy.DELETE_EXISTING,
-              modelId,
-              strategy: strategyType,
-              strategyParams,
-            }),
-          );
-        },
-      },
-    );
-  }, [
-    approachType,
-    codeIds,
-    createPromptTemplates,
-    deletionStrategy,
-    dispatch,
-    fuzzySettings,
-    hasExistingAnnotations,
-    method,
-    modelId,
-    projectId,
-    projectMetadataIds,
-    sdocIds,
-    selectedStrategy,
-    strategyType,
-    tagIds,
-  ]);
-
-  const annotationCheckPending = isAnnotationTask && !existingAnnotations.isSuccess;
   const nextDisabled =
     !modelId ||
-    !strategyType ||
-    !selectedStrategy ||
     availableLLMs.isError ||
     availableLLMs.data?.length === 0 ||
-    strategies.isError ||
-    annotationCheckPending ||
-    (strategyType === StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING && !fuzzySettingsAreValid) ||
-    createPromptTemplates.isPending;
+    (mode === "guided" && (!outputFormat || !unit || !isValidSettings(settings)));
 
   return (
     <form
@@ -280,11 +122,11 @@ export const SettingsStep = memo(() => {
         <Stack spacing={2}>
           <LLMAssistantUtterance>
             <Typography>
-              Configure how I should process the selected documents. Choose a model, strategy, and approach, then adjust
-              any strategy-specific settings.
+              {mode === "template"
+                ? "Choose the model that should run the prompt template. Next, you see the prompt as I will receive it."
+                : "Configure how I should process the selected documents. Next, you see the prompt as I will receive it."}
             </Typography>
           </LLMAssistantUtterance>
-
           {(availableLLMs.isError || (availableLLMs.isSuccess && availableLLMs.data.length === 0)) && (
             <Alert
               severity="error"
@@ -297,20 +139,7 @@ export const SettingsStep = memo(() => {
               Could not load any available language models.
             </Alert>
           )}
-          {(strategies.isError || (strategies.isSuccess && strategies.data.length === 0)) && (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={() => strategies.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Could not load any processing strategies for this task.
-            </Alert>
-          )}
-
-          <SettingsSection title="Required settings">
+          <SettingsSection title="Model">
             <FormItem
               title="Language model"
               subtitle="Select the language model that should process the selected documents."
@@ -341,230 +170,140 @@ export const SettingsStep = memo(() => {
                 )}
               </TextField>
             </FormItem>
-            <FormItem
-              title="Processing strategy"
-              subtitle="Choose how the model should structure its response and map results back to the documents."
-            >
-              <TextField
-                select
-                fullWidth
-                variant="filled"
-                label="Strategy"
-                value={strategyType ?? ""}
-                disabled={strategies.isLoading || strategies.isError || strategies.data?.length === 0}
-                onChange={handleChangeStrategy}
-              >
-                {strategies.isLoading ? (
-                  <MenuItem value="" disabled>
-                    Loading strategies…
-                  </MenuItem>
-                ) : strategies.data?.length === 0 ? (
-                  <MenuItem value="" disabled>
-                    No strategies available
-                  </MenuItem>
-                ) : (
-                  strategies.data?.map((strategy) => (
-                    <MenuItem key={strategy.strategy_type} value={strategy.strategy_type}>
-                      {strategy.name}
-                    </MenuItem>
-                  ))
-                )}
-              </TextField>
-            </FormItem>
-
-            {selectedStrategy && (
-              <Box sx={{ borderLeft: 3, borderColor: "primary.main", pl: 2 }}>
-                <Button
-                  size="small"
-                  endIcon={
-                    <ExpandMoreIcon
-                      sx={{
-                        transform: strategyDetailsOpen ? "rotate(180deg)" : "none",
-                        transition: "transform 200ms",
-                      }}
-                    />
-                  }
-                  onClick={handleToggleStrategyDetails}
-                >
-                  About {selectedStrategy.name}
-                </Button>
-                <Collapse in={strategyDetailsOpen}>
-                  <Box className="markdown-content" sx={{ pt: 1 }}>
-                    <Markdown remarkPlugins={[remarkGfm]}>{selectedStrategy.description}</Markdown>
-                  </Box>
-                </Collapse>
-              </Box>
-            )}
-
-            <FormItem title="Learning approach" subtitle={approachDescriptions[approachType]}>
-              <TextField
-                select
-                fullWidth
-                variant="filled"
-                label="Approach"
-                value={approachType}
-                onChange={handleChangeApproach}
-              >
-                {Object.values(ApproachType).map((approach) => (
-                  <MenuItem key={approach} value={approach} disabled={!recommendation.available_approaches[approach]}>
-                    {approachLabels[approach]}
-                    {recommendation.recommended_approach === approach ? " (recommended)" : ""}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </FormItem>
-            <Alert severity="info" variant="outlined">
-              <Typography variant="subtitle2" gutterBottom>
-                Recommendation: {approachLabels[recommendation.recommended_approach]}
-              </Typography>
-              <Typography variant="body2" sx={{ whiteSpace: "pre-line" }}>
-                {recommendation.reasoning}
-              </Typography>
-            </Alert>
           </SettingsSection>
-
-          {strategyType === StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING && (
-            <SettingsSection title="Strategy parameters">
-              <FormItem title="Fuzzy threshold" subtitle="Minimum similarity required to ground an extracted quote.">
+          {mode === "guided" && (
+            <SettingsSection title="Prompt">
+              {taskInfo.isError && <Alert severity="error">Could not load the answer formats of this task.</Alert>}
+              <FormItem title="Language" subtitle="The language of the prompt; documents can be in any language.">
                 <TextField
+                  select
                   fullWidth
                   variant="filled"
-                  type="number"
-                  label="Similarity"
-                  value={fuzzySettings.fuzzy_threshold}
-                  onChange={handleChangeFuzzySetting("fuzzy_threshold")}
-                  inputProps={{ step: 0.05, min: 0, max: 1 }}
-                  error={fuzzySettings.fuzzy_threshold < 0 || fuzzySettings.fuzzy_threshold > 1}
-                  helperText="Enter a value between 0 and 1."
-                />
+                  label="Language"
+                  value={language}
+                  onChange={handleChangeLanguage}
+                >
+                  {Object.values(PromptLanguage).map((candidate) => (
+                    <MenuItem key={candidate} value={candidate}>
+                      {LANGUAGE_LABELS[candidate]}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </FormItem>
-              <FormItem title="Context before" subtitle="Characters of context requested before each extracted quote.">
+              <FormItem title="Answer format" subtitle={formatInfo?.description ?? "How the LLM answers."}>
                 <TextField
+                  select
                   fullWidth
                   variant="filled"
-                  type="number"
-                  label="Characters"
-                  value={fuzzySettings.context_before_chars}
-                  onChange={handleChangeFuzzySetting("context_before_chars")}
-                  inputProps={{ step: 8, min: 0 }}
-                  error={
-                    !Number.isInteger(fuzzySettings.context_before_chars) || fuzzySettings.context_before_chars < 0
-                  }
-                  helperText="Enter a non-negative whole number."
-                />
-              </FormItem>
-              <FormItem title="Context after" subtitle="Characters of context requested after each extracted quote.">
-                <TextField
-                  fullWidth
-                  variant="filled"
-                  type="number"
-                  label="Characters"
-                  value={fuzzySettings.context_after_chars}
-                  onChange={handleChangeFuzzySetting("context_after_chars")}
-                  inputProps={{ step: 8, min: 0 }}
-                  error={!Number.isInteger(fuzzySettings.context_after_chars) || fuzzySettings.context_after_chars < 0}
-                  helperText="Enter a non-negative whole number."
-                />
-              </FormItem>
-              <FormItem title="Chunk size" subtitle="Maximum number of tokens sent to the model in one chunk.">
-                <TextField
-                  fullWidth
-                  variant="filled"
-                  type="number"
-                  label="Tokens"
-                  value={fuzzySettings.chunk_size_tokens}
-                  onChange={handleChangeFuzzySetting("chunk_size_tokens")}
-                  inputProps={{ step: 1, min: 1 }}
-                  error={!Number.isInteger(fuzzySettings.chunk_size_tokens) || fuzzySettings.chunk_size_tokens <= 0}
-                  helperText="Enter a positive whole number."
-                />
+                  label="Answer format"
+                  value={outputFormat ?? ""}
+                  onChange={handleChangeOutputFormat}
+                  disabled={!taskInfo.data}
+                >
+                  {(taskInfo.data?.output_formats ?? []).map((info) => (
+                    <MenuItem key={info.output_format} value={info.output_format}>
+                      {OUTPUT_FORMAT_LABELS[info.output_format]}
+                    </MenuItem>
+                  ))}
+                  {!taskInfo.data && outputFormat && (
+                    <MenuItem value={outputFormat}>{OUTPUT_FORMAT_LABELS[outputFormat]}</MenuItem>
+                  )}
+                </TextField>
               </FormItem>
               <FormItem
-                title="Chunk overlap"
-                subtitle="Tokens repeated between adjacent chunks to preserve surrounding context."
-              >
-                <TextField
-                  fullWidth
-                  variant="filled"
-                  type="number"
-                  label="Tokens"
-                  value={fuzzySettings.chunk_overlap_tokens}
-                  onChange={handleChangeFuzzySetting("chunk_overlap_tokens")}
-                  inputProps={{ step: 10, min: 0 }}
-                  error={
-                    !Number.isInteger(fuzzySettings.chunk_overlap_tokens) ||
-                    fuzzySettings.chunk_overlap_tokens < 0 ||
-                    fuzzySettings.chunk_overlap_tokens >= fuzzySettings.chunk_size_tokens
-                  }
-                  helperText="Must be a whole number smaller than the chunk size."
-                />
-              </FormItem>
-            </SettingsSection>
-          )}
-
-          {isAnnotationTask && existingAnnotations.isError && (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={() => existingAnnotations.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Could not check for existing assistant annotations.
-            </Alert>
-          )}
-
-          {hasExistingAnnotations && (
-            <SettingsSection title="Existing assistant annotations" error>
-              <Typography>
-                The assistant has already created annotations for some selected documents and codes:
-              </Typography>
-              <Stack spacing={1} pl={2}>
-                {existingAnnotationCounts.map(([codeId, count]) => (
-                  <Stack direction="row" alignItems="center" spacing={1} key={codeId}>
-                    <CodeRenderer code={Number(codeId)} />
-                    <Typography>{count}</Typography>
-                  </Stack>
-                ))}
-              </Stack>
-              <FormItem
-                title="Deletion strategy"
-                subtitle="Choose whether existing assistant annotations should be replaced or preserved."
+                title="Send the document"
+                subtitle={
+                  taskInfo.data?.document_units.find((info) => info.unit === unit)?.description ??
+                  "How documents are split into LLM calls."
+                }
               >
                 <TextField
                   select
                   fullWidth
                   variant="filled"
-                  label="Existing annotations"
-                  value={deletionStrategy}
-                  onChange={handleChangeDeletionStrategy}
+                  label="Document"
+                  value={unit ?? ""}
+                  onChange={handleChangeDocumentUnit}
+                  disabled={!taskInfo.data}
                 >
-                  <MenuItem value={DeletionStrategy.DELETE_EXISTING}>Delete and replace existing annotations</MenuItem>
-                  <MenuItem value={DeletionStrategy.KEEP_EXISTING}>Keep existing annotations</MenuItem>
+                  {(taskInfo.data?.document_units ?? []).map((info) => (
+                    <MenuItem key={info.unit} value={info.unit}>
+                      {DOCUMENT_UNIT_LABELS[info.unit]}
+                    </MenuItem>
+                  ))}
+                  {!taskInfo.data && unit && <MenuItem value={unit}>{DOCUMENT_UNIT_LABELS[unit]}</MenuItem>}
                 </TextField>
               </FormItem>
+              {unit === DocumentUnit.CHUNKS && (
+                <>
+                  <FormItem title="Chunk size" subtitle="Maximum number of tokens sent to the model in one chunk.">
+                    <NumberField
+                      label="Tokens"
+                      value={settings.chunk_size_tokens}
+                      onChange={handleChangeSetting("chunk_size_tokens")}
+                      error={!Number.isInteger(settings.chunk_size_tokens) || settings.chunk_size_tokens <= 0}
+                      helperText="Enter a positive whole number."
+                    />
+                  </FormItem>
+                  <FormItem title="Chunk overlap" subtitle="Tokens repeated between adjacent chunks.">
+                    <NumberField
+                      label="Tokens"
+                      value={settings.chunk_overlap_tokens}
+                      onChange={handleChangeSetting("chunk_overlap_tokens")}
+                      error={
+                        !Number.isInteger(settings.chunk_overlap_tokens) ||
+                        settings.chunk_overlap_tokens < 0 ||
+                        settings.chunk_overlap_tokens >= settings.chunk_size_tokens
+                      }
+                      helperText="Must be a whole number smaller than the chunk size."
+                    />
+                  </FormItem>
+                </>
+              )}
+              {outputFormat === OutputFormat.CONTEXT && (
+                <>
+                  <FormItem title="Context before" subtitle="Characters of context requested before each quote.">
+                    <NumberField
+                      label="Characters"
+                      value={settings.context_before_chars}
+                      onChange={handleChangeSetting("context_before_chars")}
+                      error={!Number.isInteger(settings.context_before_chars) || settings.context_before_chars < 0}
+                      helperText="Enter a non-negative whole number."
+                    />
+                  </FormItem>
+                  <FormItem title="Context after" subtitle="Characters of context requested after each quote.">
+                    <NumberField
+                      label="Characters"
+                      value={settings.context_after_chars}
+                      onChange={handleChangeSetting("context_after_chars")}
+                      error={!Number.isInteger(settings.context_after_chars) || settings.context_after_chars < 0}
+                      helperText="Enter a non-negative whole number."
+                    />
+                  </FormItem>
+                  <FormItem
+                    title="Fuzzy threshold"
+                    subtitle="Minimum similarity to locate a quote that is not found exactly."
+                  >
+                    <NumberField
+                      label="Similarity"
+                      step={0.05}
+                      value={settings.fuzzy_threshold}
+                      onChange={handleChangeSetting("fuzzy_threshold")}
+                      error={settings.fuzzy_threshold < 0 || settings.fuzzy_threshold > 1}
+                      helperText="Enter a value between 0 and 1."
+                    />
+                  </FormItem>
+                </>
+              )}
             </SettingsSection>
           )}
-
-          {createPromptTemplates.isError && <Alert severity="error">Could not create the prompt templates.</Alert>}
         </Stack>
       </DialogContent>
       <Divider />
       <DialogActions>
-        {annotationCheckPending && <CircularProgress size={24} aria-label="Checking existing annotations" />}
         <Box flexGrow={1} />
-        <Button disabled={createPromptTemplates.isPending} onClick={handleBack}>
-          Back
-        </Button>
-        <Button
-          variant="contained"
-          type="submit"
-          startIcon={<PlayCircleIcon />}
-          loading={createPromptTemplates.isPending}
-          loadingPosition="start"
-          disabled={nextDisabled}
-        >
+        <Button onClick={handleBack}>Back</Button>
+        <Button variant="contained" type="submit" startIcon={<PlayCircleIcon />} disabled={nextDisabled}>
           Next
         </Button>
       </DialogActions>
@@ -572,21 +311,41 @@ export const SettingsStep = memo(() => {
   );
 });
 
-interface SettingsSectionProps {
-  title: string;
-  children: React.ReactNode;
-  error?: boolean;
+interface NumberFieldProps {
+  label: string;
+  value: number;
+  step?: number;
+  error: boolean;
+  helperText: string;
+  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-function SettingsSection({ title, children, error = false }: SettingsSectionProps) {
+function NumberField({ label, value, step = 1, error, helperText, onChange }: NumberFieldProps) {
   return (
-    <Card variant="outlined" sx={{ borderColor: error ? "error.main" : undefined }}>
-      <CardHeader
-        title={title}
-        slotProps={{ title: { variant: "h6", color: error ? "error.main" : undefined } }}
-        sx={{ py: 1 }}
-      />
-      <Divider sx={{ borderColor: error ? "error.main" : undefined }} />
+    <TextField
+      fullWidth
+      variant="filled"
+      type="number"
+      label={label}
+      value={value}
+      onChange={onChange}
+      slotProps={{ htmlInput: { step, min: 0 } }}
+      error={error}
+      helperText={error ? helperText : undefined}
+    />
+  );
+}
+
+interface SettingsSectionProps {
+  title: string;
+  children: ReactNode;
+}
+
+function SettingsSection({ title, children }: SettingsSectionProps) {
+  return (
+    <Card variant="outlined">
+      <CardHeader title={title} slotProps={{ title: { variant: "h6" } }} sx={{ py: 1 }} />
+      <Divider />
       <CardContent>
         <Stack spacing={2}>{children}</Stack>
       </CardContent>
@@ -596,8 +355,8 @@ function SettingsSection({ title, children, error = false }: SettingsSectionProp
 
 interface FormItemProps {
   title: string;
-  subtitle: React.ReactNode;
-  children: React.ReactNode;
+  subtitle: ReactNode;
+  children: ReactNode;
 }
 
 function FormItem({ title, subtitle, children }: FormItemProps) {

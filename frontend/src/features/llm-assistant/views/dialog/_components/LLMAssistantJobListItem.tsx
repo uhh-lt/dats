@@ -1,19 +1,28 @@
 import { JobListItem, jobStatusToTypographyColor, useLiveJob } from "@core/job";
 import { SdocRenderer } from "@core/source-document";
-import { ApproachType } from "@models/ApproachType";
-import { FewShotParams } from "@models/FewShotParams";
 import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
-import { LLMAssistantPromptTemplates } from "@models/LLMAssistantPromptTemplates";
-import { ZeroShotParams } from "@models/ZeroShotParams";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, List, ListItem, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Tab,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
+import { LANGUAGE_LABELS, PromptTemplateHooks } from "@core/prompt-template";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
 interface LLMAssistantJobListItemProps {
@@ -37,7 +46,7 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
   // compute subtitle
   const subTitle = useMemo(() => {
     if (!llmAssistantJob.data) return "";
-    const count = llmAssistantJob.data.input.specific_task_parameters.sdoc_ids.length;
+    const count = llmAssistantJob.data.input.sdoc_ids.length;
     const createdDate = formatDateTime(llmAssistantJob.data.created);
     let title = `Processes ${count} document${count !== 1 ? "s" : ""}, started at ${createdDate}`;
     if (llmAssistantJob.data.status === JobStatus.FINISHED && llmAssistantJob.data.finished) {
@@ -57,7 +66,7 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
       <JobListItem
         jobStatus={llmAssistantJob.data.status}
         jobId={llmAssistantJob.data.job_id}
-        title={`LLM Assistant Job - ${llmAssistantJob.data.input.task_type} - ${llmAssistantJob.data.input.approach_type}`}
+        title={`LLM Assistant Job - ${llmAssistantJob.data.input.task_type}${llmAssistantJob.data.output ? ` - ${llmAssistantJob.data.output.approach_type}` : ""}`}
         subTitle={subTitle}
       >
         <Stack sx={{ px: 9 }}>
@@ -98,55 +107,46 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
 });
 
 function InputViewer({ llmAssistantJob }: { llmAssistantJob: LlmAssistantJobRead }) {
-  switch (llmAssistantJob.input.approach_type) {
-    case ApproachType.LLM_ZERO_SHOT:
-      return <PromptViewer prompts={(llmAssistantJob.input.specific_approach_parameters as ZeroShotParams).prompts} />;
-    case ApproachType.LLM_FEW_SHOT:
-      return <PromptViewer prompts={(llmAssistantJob.input.specific_approach_parameters as FewShotParams).prompts} />;
-    default:
-      return <>Approach is not supported!</>;
+  const { draft, prompt_template_version_id: versionId, model } = llmAssistantJob.input;
+  const templateVersion = PromptTemplateHooks.useGetPromptTemplateVersion({
+    projectId: llmAssistantJob.project_id,
+    versionId: versionId ?? undefined,
+  });
+
+  // a run of the wizard stores its prompt in the job
+  if (draft) {
+    return (
+      <Stack gap={3} sx={{ pt: 1, pr: 1, height: 400, overflowY: "auto" }}>
+        <Typography variant="subtitle2">
+          Prompt of the wizard ({LANGUAGE_LABELS[draft.language]}), model {model}
+        </Typography>
+        <TextField
+          fullWidth
+          label="Prompt"
+          value={draft.prompt}
+          multiline
+          slotProps={{ htmlInput: { readOnly: true, style: { fontFamily: "monospace" } } }}
+        />
+      </Stack>
+    );
   }
-}
-
-function PromptViewer({ prompts }: { prompts: LLMAssistantPromptTemplates[] }) {
-  // tab state
-  const [tab, setTab] = useState(prompts[0].language);
-  const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
-    setTab(newValue);
-  }, []);
-
+  if (templateVersion.isLoading) return <CircularProgress />;
+  if (!templateVersion.data) return <>The prompt template version {versionId} does not exist.</>;
+  const { template, version } = templateVersion.data;
   return (
-    <TabContext value={tab}>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <TabList onChange={handleChangeTab}>
-          {prompts.map((prompt) => (
-            <Tab key={prompt.language} label={prompt.language + " Prompts"} value={prompt.language} />
-          ))}
-        </TabList>
-      </Box>
-      {prompts.map((prompt) => (
-        <TabPanel key={prompt.language} value={prompt.language} sx={{ pl: 0, pr: 1, height: 352, overflowY: "auto" }}>
-          <Stack gap={3}>
-            <TextField
-              fullWidth
-              label="System Prompt"
-              value={prompt.system_prompt}
-              type="text"
-              multiline
-              inputProps={{ readOnly: true }}
-            />
-            <TextField
-              fullWidth
-              label="User Prompt"
-              value={prompt.user_prompt}
-              type="text"
-              multiline
-              inputProps={{ readOnly: true }}
-            />
-          </Stack>
-        </TabPanel>
-      ))}
-    </TabContext>
+    <Stack gap={3} sx={{ pt: 1, pr: 1, height: 400, overflowY: "auto" }}>
+      <Typography variant="subtitle2">
+        Prompt template {template.name} ({LANGUAGE_LABELS[template.language]}), version {version.version}
+        {template.is_archived ? " (archived)" : ""}, model {model}
+      </Typography>
+      <TextField
+        fullWidth
+        label="Prompt"
+        value={version.prompt}
+        multiline
+        slotProps={{ htmlInput: { readOnly: true, style: { fontFamily: "monospace" } } }}
+      />
+    </Stack>
   );
 }
 

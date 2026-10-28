@@ -1,5 +1,4 @@
 import { LlmAssistantService } from "@api/services/LlmAssistantService";
-import { ApproachType } from "@models/ApproachType";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -16,24 +15,6 @@ const useStartLLMAssistantJob = () =>
     },
   });
 
-const useCreatePromptTemplates = () =>
-  useMutation({
-    mutationKey: [...llmAssistantQueries.all(), "createPromptTemplates"],
-    mutationFn: LlmAssistantService.createPromptTemplates,
-    meta: {
-      successMessage: () => `Created prompt templates`,
-    },
-  });
-
-const useDetermineApproach = () =>
-  useMutation({
-    mutationKey: [...llmAssistantQueries.all(), "determineApproach"],
-    mutationFn: LlmAssistantService.determineApproach,
-    meta: {
-      successMessage: (data: ApproachType) => `Determined approach type: ${data}`,
-    },
-  });
-
 const useGetExistingAnnotationCount = (params: ExistingAnnotationCountParams) =>
   useQuery({
     ...llmAssistantQueries.existingAnnotationCount(params),
@@ -42,7 +23,5 @@ const useGetExistingAnnotationCount = (params: ExistingAnnotationCountParams) =>
 
 export const LlmAssistantHooks = {
   useStartLLMAssistantJob,
-  useCreatePromptTemplates,
-  useDetermineApproach,
   useGetExistingAnnotationCount,
 };

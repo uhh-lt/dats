@@ -15,20 +15,12 @@ export interface ExistingAnnotationCountParams {
  * Query factory for the LLM assistant.
  *
  *   llmAssistantQueries.all()                         ["llmAssistant"]
- *   llmAssistantQueries.strategies(taskType)          ["llmAssistant", "strategies", taskType]
  *   llmAssistantQueries.existingAnnotationCount(...)  ["llmAssistant", "existingAnnotationCount", ...]
  *   llmAssistantQueries.job.byId(jobId)               ["llmAssistant", "job", "detail", jobId]
  *   llmAssistantQueries.job.byProject(projectId)      ["llmAssistant", "job", "project", projectId]
  */
 export const llmAssistantQueries = {
   all: () => ["llmAssistant"] as const,
-
-  strategiesScope: () => [...llmAssistantQueries.all(), "strategies"] as const,
-  strategies: (taskType: TaskType | undefined) =>
-    queryOptions({
-      queryKey: [...llmAssistantQueries.strategiesScope(), taskType] as const,
-      queryFn: !taskType ? skipToken : () => LlmAssistantService.listStrategies({ taskType }),
-    }),
 
   existingAnnotationCountScope: () => [...llmAssistantQueries.all(), "existingAnnotationCount"] as const,
   existingAnnotationCount: ({ taskType, approachType, sdocIds, codeIds }: ExistingAnnotationCountParams) =>

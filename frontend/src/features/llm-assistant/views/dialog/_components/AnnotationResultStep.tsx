@@ -25,7 +25,7 @@ export const AnnotationResultStep = memo(() => {
     return (
       <AnnotationResultStepContent
         jobResult={llmAssistantJob.data.output.specific_task_result as AnnotationLLMAssistantJobResult}
-        approachType={llmAssistantJob.data.input.approach_type}
+        approachType={llmAssistantJob.data.output.approach_type}
       />
     );
   } else if (llmAssistantJob.isLoading) {
