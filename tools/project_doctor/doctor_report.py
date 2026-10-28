@@ -29,6 +29,21 @@ class CheckName(str, Enum):
     MISSING_EMBEDDINGS = "missing_embeddings"
     ORPHANED_EMBEDDINGS = "orphaned_embeddings"
     ORPHANED_WEAVIATE_TENANT = "orphaned_weaviate_tenant"
+    # Data the project export or import of DATS cannot handle
+    BLANK_SPAN_TEXT = "blank_span_text"
+    BLANK_VALUE = "blank_value"
+    EMPTY_SDOC_HTML = "empty_sdoc_html"
+    DUPLICATE_FOLDER_NAME = "duplicate_folder_name"
+    BROKEN_HIERARCHY = "broken_hierarchy"
+    SYSTEM_CODE_CONFLICT = "system_code_conflict"
+    METADATA_KEY_CONFLICT = "metadata_key_conflict"
+    INVALID_SDOC_METADATA = "invalid_sdoc_metadata"
+    INVALID_BBOX = "invalid_bbox"
+    NON_MEMBER_AUTHOR = "non_member_author"
+    UNSUPPORTED_MEMO_ATTACHMENT = "unsupported_memo_attachment"
+    INVALID_MEMO_CONTENT = "invalid_memo_content"
+    DANGLING_WHITEBOARD_NODE = "dangling_whiteboard_node"
+    INVALID_TIMELINE_FILTER = "invalid_timeline_filter"
 
 
 # ==============================================================================
@@ -84,6 +99,86 @@ class DeleteAnnotations(BaseModel):
     ids: list[int]
 
 
+class SetValues(BaseModel):
+    """Set a text column of rows to new values (placeholders, renames). Only the
+    columns in doctor_stores.SETTABLE_COLUMNS can be set."""
+
+    action: Literal["set_values"] = "set_values"
+    table: str
+    column: str
+    values: dict[int, str] = Field(description="Row id -> new value")
+
+
+class SetParents(BaseModel):
+    """Set the parent of codes, tags or folders (None: make them roots)."""
+
+    action: Literal["set_parents"] = "set_parents"
+    table: Literal["code", "tag", "folder"]
+    parents: dict[int, int | None] = Field(description="Row id -> new parent id")
+
+
+class RepairSpanTexts(BaseModel):
+    """Take the text of the span annotations from their document, or delete the
+    annotations whose text is blank there as well."""
+
+    action: Literal["repair_span_texts"] = "repair_span_texts"
+    ids: list[int]
+
+
+class ClampBBoxes(BaseModel):
+    """Clamp negative coordinates to 0 and order min and max."""
+
+    action: Literal["clamp_bboxes"] = "clamp_bboxes"
+    ids: list[int]
+
+
+class RepairSdocMetadata(BaseModel):
+    """Write the default value of its type into metadata without a value, and
+    remove NULL elements from list values."""
+
+    action: Literal["repair_sdoc_metadata"] = "repair_sdoc_metadata"
+    ids: list[int]
+
+
+class DeleteSdocMetadata(BaseModel):
+    action: Literal["delete_sdoc_metadata"] = "delete_sdoc_metadata"
+    ids: list[int]
+
+
+class DeleteTagLinks(BaseModel):
+    action: Literal["delete_tag_links"] = "delete_tag_links"
+    links: list[tuple[int, int]] = Field(description="(sdoc id, tag id) pairs")
+
+
+class AddProjectMembers(BaseModel):
+    action: Literal["add_project_members"] = "add_project_members"
+    user_ids: list[int]
+
+
+class ReattachMemos(BaseModel):
+    """Attach memos to the project instead of an object the export cannot
+    handle."""
+
+    action: Literal["reattach_memos"] = "reattach_memos"
+    memo_ids: list[int]
+
+
+class RepairWhiteboard(BaseModel):
+    """Remove the nodes (and their edges) that reference objects outside the
+    project, and correct stale parent codes of code nodes."""
+
+    action: Literal["repair_whiteboard"] = "repair_whiteboard"
+    whiteboard_id: int
+
+
+class RepairTimelineFilters(BaseModel):
+    """Remove the ids (and the filter expressions) of the timeline analysis
+    concepts that the export cannot resolve."""
+
+    action: Literal["repair_timeline_filters"] = "repair_timeline_filters"
+    timeline_analysis_id: int
+
+
 Fix = Annotated[
     DeleteSdocs
     | QuarantinePath
@@ -92,7 +187,18 @@ Fix = Annotated[
     | DeleteEsIndex
     | DeleteEmbeddings
     | DeleteWeaviateTenant
-    | DeleteAnnotations,
+    | DeleteAnnotations
+    | SetValues
+    | SetParents
+    | RepairSpanTexts
+    | ClampBBoxes
+    | RepairSdocMetadata
+    | DeleteSdocMetadata
+    | DeleteTagLinks
+    | AddProjectMembers
+    | ReattachMemos
+    | RepairWhiteboard
+    | RepairTimelineFilters,
     Field(discriminator="action"),
 ]
 

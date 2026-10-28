@@ -14,11 +14,13 @@ The doctor imports no DATS code, only the libraries of the backend environment, 
 
 See [docs/admin/project-doctor.md](../../docs/admin/project-doctor.md) for the checks, the fixes and how heal stays safe.
 
-| File               | Content                                                     |
-| ------------------ | ----------------------------------------------------------- |
-| `dats-doctor.sh`   | Wrapper: runs the doctor in docker or against the dev stack |
-| `dats_doctor.py`   | CLI (`check`, `heal`)                                       |
-| `doctor_stores.py` | Connections, naming and schema check of the data stores     |
-| `doctor_checks.py` | The checks (read only)                                      |
-| `doctor_heal.py`   | The fixes                                                   |
-| `doctor_report.py` | The report format (issues and their fixes)                  |
+| File                    | Content                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| `dats-doctor.sh`        | Wrapper: runs the doctor in docker or against the dev stack    |
+| `dats_doctor.py`        | CLI (`check`, `heal`)                                          |
+| `doctor_stores.py`      | Connections, naming and schema check of the data stores        |
+| `doctor_checks.py`      | The checks (read only)                                         |
+| `doctor_portability.py` | The checks for data the project export or import cannot handle |
+| `doctor_json_repair.py` | The repairs of whiteboard contents and timeline filters        |
+| `doctor_heal.py`        | The fixes                                                      |
+| `doctor_report.py`      | The report format (issues and their fixes)                     |

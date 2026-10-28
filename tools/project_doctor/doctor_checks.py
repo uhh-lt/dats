@@ -8,14 +8,18 @@ import unicodedata
 from collections.abc import Callable
 from typing import Any
 
+from doctor_portability import PortabilityChecker
 from doctor_report import (
     CheckName,
     DeleteAnnotations,
     DeleteEmbeddings,
     DeleteEsDocuments,
     DeleteEsIndex,
+    DeleteSdocMetadata,
     DeleteSdocs,
+    DeleteTagLinks,
     DeleteWeaviateTenant,
+    Fix,
     Issue,
     QuarantinePath,
     ReindexEs,
@@ -141,6 +145,9 @@ class Checker:
                 project_id=project_id, sdocs=sdocs, data_ids=data_ids
             ),
             lambda: self._check_weaviate(project_id=project_id, sdocs=sdocs),
+            lambda: PortabilityChecker(
+                conn=self.conn, stores=self.stores
+            ).check_project(project_id),
         ]
         issues: list[Issue] = []
         for check in checks:
@@ -310,14 +317,15 @@ class Checker:
                         message=f"SourceDocument {sdoc.id} ({sdoc.filename}) has no "
                         "processed data (content, html, sentences), so the project "
                         "export fails on it",
-                        fix=None,
-                        hint=_HINT_FAILED_PROCESSING,
+                        fix=DeleteSdocs(sdoc_ids=[sdoc.id]),
+                        hint="Retry its processing in the document health view to keep "
+                        "it; heal deletes it.",
                     )
                 )
         return issues
 
     def _cross_project_issue(
-        self, *, project_id: int, what: str, ids: list[int]
+        self, *, project_id: int, what: str, ids: list[int], fix: Fix | None
     ) -> list[Issue]:
         if not ids:
             return []
@@ -328,8 +336,11 @@ class Checker:
                 project_id=project_id,
                 message=f"{len(ids)} {what} reference another project: "
                 f"{_ids_text(ids)}",
-                fix=None,
-                hint=_HINT_CROSS_PROJECT,
+                fix=fix,
+                hint=_HINT_CROSS_PROJECT
+                if fix is None
+                else "DATS does not show them, and the import rejects them; heal "
+                "deletes them.",
             )
         ]
 
@@ -346,7 +357,10 @@ class Checker:
                 pid=project_id,
             )
             issues += self._cross_project_issue(
-                project_id=project_id, what=f"{kind} annotations", ids=ids
+                project_id=project_id,
+                what=f"{kind} annotations",
+                ids=ids,
+                fix=DeleteAnnotations(kind=kind, ids=ids),
             )
 
         folder_ids = self._ids(
@@ -355,18 +369,29 @@ class Checker:
             pid=project_id,
         )
         issues += self._cross_project_issue(
-            project_id=project_id, what="SourceDocuments (folder)", ids=folder_ids
+            project_id=project_id,
+            what="SourceDocuments (folder)",
+            ids=folder_ids,
+            fix=None,
         )
 
-        tag_ids = self._ids(
-            "SELECT DISTINCT s.id FROM sourcedocument s "
-            "JOIN sourcedocumenttaglinktable l ON l.source_document_id = s.id "
-            "JOIN tag t ON t.id = l.tag_id "
-            "WHERE s.project_id = :pid AND t.project_id <> :pid ORDER BY s.id",
-            pid=project_id,
-        )
+        tag_links = [
+            (int(sdoc_id), int(tag_id))
+            for sdoc_id, tag_id in self.conn.execute(
+                text(
+                    "SELECT s.id, t.id FROM sourcedocument s "
+                    "JOIN sourcedocumenttaglinktable l ON l.source_document_id = s.id "
+                    "JOIN tag t ON t.id = l.tag_id "
+                    "WHERE s.project_id = :pid AND t.project_id <> :pid ORDER BY s.id"
+                ),
+                {"pid": project_id},
+            ).tuples()
+        ]
         issues += self._cross_project_issue(
-            project_id=project_id, what="SourceDocuments (tags)", ids=tag_ids
+            project_id=project_id,
+            what="SourceDocuments (tags)",
+            ids=sorted({sdoc_id for sdoc_id, _ in tag_links}),
+            fix=DeleteTagLinks(links=tag_links) if tag_links else None,
         )
 
         metadata_ids = self._ids(
@@ -377,7 +402,10 @@ class Checker:
             pid=project_id,
         )
         issues += self._cross_project_issue(
-            project_id=project_id, what="SourceDocument metadata", ids=metadata_ids
+            project_id=project_id,
+            what="SourceDocument metadata",
+            ids=metadata_ids,
+            fix=DeleteSdocMetadata(ids=metadata_ids),
         )
         return issues
 
@@ -409,16 +437,6 @@ class Checker:
                     # sentence_id_end is inclusive
                     "OR a.sentence_id_end >= cardinality(d.sentence_starts)) "
                     "ORDER BY a.id",
-                    pid=project_id,
-                ),
-            ),
-            (
-                "bbox",
-                "negative or inverted coordinates",
-                self._ids(
-                    "SELECT a.id FROM bboxannotation a WHERE a.project_id = :pid "
-                    "AND (a.x_min < 0 OR a.y_min < 0 OR a.x_max < a.x_min "
-                    "OR a.y_max < a.y_min) ORDER BY a.id",
                     pid=project_id,
                 ),
             ),
