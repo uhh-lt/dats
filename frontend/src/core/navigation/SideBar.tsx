@@ -474,7 +474,35 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
               </LinkListItemButton>
             </Tooltip>
           </ListItem>
-
+          <ListItem disablePadding sx={{ display: "block" }}>
+            <Tooltip title="Agent (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
+              <LinkListItemButton
+                to="/agent"
+                sx={{
+                  minHeight: 48,
+                  justifyContent: isExpanded ? "initial" : "center",
+                  px: 2.5,
+                  bgcolor: isActive("/agent") ? selectedColor : "transparent",
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: isExpanded ? 3 : "auto",
+                    justifyContent: "center",
+                    color: "primary.contrastText",
+                  }}
+                >
+                  {getIconComponent(Icon.LLM_ASSISTANT)}
+                </ListItemIcon>
+                {isExpanded && (
+                  <ListItemText>
+                    <span style={{ textDecoration: "underline" }}>A</span>gent
+                  </ListItemText>
+                )}
+              </LinkListItemButton>
+            </Tooltip>
+          </ListItem>
           <ListItem disablePadding sx={{ display: "block" }}>
             <Tooltip title="Wiki (⌘⇧W)" placement="right" arrow disableHoverListener={isExpanded}>
               <ListItemButton

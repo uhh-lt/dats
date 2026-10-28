@@ -16,6 +16,7 @@ import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthProjectsRouteImport } from './routes/_auth/projects'
 import { Route as AuthMeRouteImport } from './routes/_auth/me'
+import { Route as AuthAgentRouteImport } from './routes/_auth/agent'
 import { Route as AuthProjectProjectIdRouteRouteImport } from './routes/_auth/project/$projectId/route'
 import { Route as AuthProjectProjectIdSentencesearchRouteImport } from './routes/_auth/project/$projectId/sentencesearch'
 import { Route as AuthProjectProjectIdSearchRouteImport } from './routes/_auth/project/$projectId/search'
@@ -78,6 +79,11 @@ const AuthProjectsRoute = AuthProjectsRouteImport.update({
 const AuthMeRoute = AuthMeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAgentRoute = AuthAgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthProjectProjectIdRouteRoute =
@@ -263,6 +269,7 @@ const AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
+  '/agent': typeof AuthAgentRoute
   '/me': typeof AuthMeRoute
   '/projects': typeof AuthProjectsRoute
   '/login': typeof PublicLoginRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
+  '/agent': typeof AuthAgentRoute
   '/me': typeof AuthMeRoute
   '/projects': typeof AuthProjectsRoute
   '/login': typeof PublicLoginRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_auth/agent': typeof AuthAgentRoute
   '/_auth/me': typeof AuthMeRoute
   '/_auth/projects': typeof AuthProjectsRoute
   '/_public/login': typeof PublicLoginRoute
@@ -378,6 +387,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agent'
     | '/me'
     | '/projects'
     | '/login'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agent'
     | '/me'
     | '/projects'
     | '/login'
@@ -452,6 +463,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_auth'
     | '/_public'
+    | '/_auth/agent'
     | '/_auth/me'
     | '/_auth/projects'
     | '/_public/login'
@@ -543,6 +555,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof AuthMeRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/agent': {
+      id: '/_auth/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AuthAgentRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/project/$projectId': {
@@ -865,12 +884,14 @@ const AuthProjectProjectIdRouteRouteWithChildren =
   )
 
 interface AuthRouteChildren {
+  AuthAgentRoute: typeof AuthAgentRoute
   AuthMeRoute: typeof AuthMeRoute
   AuthProjectsRoute: typeof AuthProjectsRoute
   AuthProjectProjectIdRouteRoute: typeof AuthProjectProjectIdRouteRouteWithChildren
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthAgentRoute: AuthAgentRoute,
   AuthMeRoute: AuthMeRoute,
   AuthProjectsRoute: AuthProjectsRoute,
   AuthProjectProjectIdRouteRoute: AuthProjectProjectIdRouteRouteWithChildren,
