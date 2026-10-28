@@ -1,19 +1,16 @@
 import { ProjectMetadataHooks, ProjectMetadataTable } from "@core/project-metadata";
 import { DocType } from "@models/DocType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
-import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
-import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
 export const ProjectMetadataSelectionStep = memo(() => {
   // global state
-  const projectId = useAppSelector((state) => state.llmAssistant.projectId);
   const selectedDocuments = useAppSelector((state) => state.llmAssistant.documentIds);
   const savedProjectMetadataIds = useAppSelector((state) => state.llmAssistant.projectMetadataIds);
   const dispatch = useAppDispatch();
@@ -30,39 +27,17 @@ export const ProjectMetadataSelectionStep = memo(() => {
     return projectMetadata.data.filter((metadata) => metadata.doctype === DocType.TEXT && metadata.read_only === false);
   }, [projectMetadata.data]);
 
-  // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = LlmAssistantHooks.useDetermineApproach();
-
   const handleNext = useCallback(
     (projectMetadata: ProjectMetadataRead[]) => {
-      const projectMetadataIds = projectMetadata.map((metadata) => metadata.id);
-      determineApproachMutation(
-        {
-          requestBody: {
-            task_type: TaskType.METADATA_EXTRACTION,
-            project_id: projectId,
-            specific_task_parameters: {
-              task_type: TaskType.METADATA_EXTRACTION,
-              project_metadata_ids: projectMetadataIds,
-              sdoc_ids: selectedDocuments,
-            },
-          },
-        },
-        {
-          onSuccess(data) {
-            dispatch(
-              LLMAssistantActions.goToSettings({
-                approach: data,
-                tagIds: [],
-                projectMetadataIds,
-                codeIds: [],
-              }),
-            );
-          },
-        },
+      dispatch(
+        LLMAssistantActions.goToSettings({
+          tagIds: [],
+          projectMetadataIds: projectMetadata.map((metadata) => metadata.id),
+          codeIds: [],
+        }),
       );
     },
-    [projectId, selectedDocuments, determineApproachMutation, dispatch],
+    [dispatch],
   );
 
   const handleBack = useCallback(() => {
@@ -73,14 +48,10 @@ export const ProjectMetadataSelectionStep = memo(() => {
     (props: { selectedProjectMetadata: ProjectMetadataRead[] }) => (
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
-        <Button disabled={isPending} onClick={handleBack}>
-          Back
-        </Button>
+        <Button onClick={handleBack}>Back</Button>
         <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={isPending}
-          loadingPosition="start"
           disabled={props.selectedProjectMetadata.length === 0}
           onClick={() => handleNext(props.selectedProjectMetadata)}
         >
@@ -88,7 +59,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
         </Button>
       </DialogActions>
     ),
-    [isPending, handleNext, handleBack],
+    [handleNext, handleBack],
   );
 
   return (

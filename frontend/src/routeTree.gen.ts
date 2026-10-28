@@ -19,6 +19,7 @@ import { Route as AuthMeRouteImport } from './routes/_auth/me'
 import { Route as AuthProjectProjectIdRouteRouteImport } from './routes/_auth/project/$projectId/route'
 import { Route as AuthProjectProjectIdSentencesearchRouteImport } from './routes/_auth/project/$projectId/sentencesearch'
 import { Route as AuthProjectProjectIdSearchRouteImport } from './routes/_auth/project/$projectId/search'
+import { Route as AuthProjectProjectIdPromptsRouteImport } from './routes/_auth/project/$projectId/prompts'
 import { Route as AuthProjectProjectIdMemoWorkspaceRouteImport } from './routes/_auth/project/$projectId/memo-workspace'
 import { Route as AuthProjectProjectIdImagesearchRouteImport } from './routes/_auth/project/$projectId/imagesearch'
 import { Route as AuthProjectProjectIdClassifierRouteImport } from './routes/_auth/project/$projectId/classifier'
@@ -96,6 +97,12 @@ const AuthProjectProjectIdSearchRoute =
   AuthProjectProjectIdSearchRouteImport.update({
     id: '/search',
     path: '/search',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
+const AuthProjectProjectIdPromptsRoute =
+  AuthProjectProjectIdPromptsRouteImport.update({
+    id: '/prompts',
+    path: '/prompts',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
 const AuthProjectProjectIdMemoWorkspaceRoute =
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
   '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
+  '/project/$projectId/prompts': typeof AuthProjectProjectIdPromptsRoute
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -308,6 +316,7 @@ export interface FileRoutesByTo {
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
   '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
+  '/project/$projectId/prompts': typeof AuthProjectProjectIdPromptsRoute
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
@@ -347,6 +356,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/_auth/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
   '/_auth/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
+  '/_auth/project/$projectId/prompts': typeof AuthProjectProjectIdPromptsRoute
   '/_auth/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/_auth/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/_auth/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/classifier'
     | '/project/$projectId/imagesearch'
     | '/project/$projectId/memo-workspace'
+    | '/project/$projectId/prompts'
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
     | '/project/$projectId/perspectives/$aspectId'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/classifier'
     | '/project/$projectId/imagesearch'
     | '/project/$projectId/memo-workspace'
+    | '/project/$projectId/prompts'
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
     | '/project/$projectId/analysis/annotation-scaling'
@@ -461,6 +473,7 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/classifier'
     | '/_auth/project/$projectId/imagesearch'
     | '/_auth/project/$projectId/memo-workspace'
+    | '/_auth/project/$projectId/prompts'
     | '/_auth/project/$projectId/search'
     | '/_auth/project/$projectId/sentencesearch'
     | '/_auth/project/$projectId/perspectives/$aspectId'
@@ -564,6 +577,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/project/$projectId/search'
       preLoaderRoute: typeof AuthProjectProjectIdSearchRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
+    '/_auth/project/$projectId/prompts': {
+      id: '/_auth/project/$projectId/prompts'
+      path: '/prompts'
+      fullPath: '/project/$projectId/prompts'
+      preLoaderRoute: typeof AuthProjectProjectIdPromptsRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
     '/_auth/project/$projectId/memo-workspace': {
@@ -780,6 +800,7 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdClassifierRoute: typeof AuthProjectProjectIdClassifierRoute
   AuthProjectProjectIdImagesearchRoute: typeof AuthProjectProjectIdImagesearchRoute
   AuthProjectProjectIdMemoWorkspaceRoute: typeof AuthProjectProjectIdMemoWorkspaceRoute
+  AuthProjectProjectIdPromptsRoute: typeof AuthProjectProjectIdPromptsRoute
   AuthProjectProjectIdSearchRoute: typeof AuthProjectProjectIdSearchRoute
   AuthProjectProjectIdSentencesearchRoute: typeof AuthProjectProjectIdSentencesearchRoute
   AuthProjectProjectIdPerspectivesAspectIdRouteRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -812,6 +833,7 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
     AuthProjectProjectIdImagesearchRoute: AuthProjectProjectIdImagesearchRoute,
     AuthProjectProjectIdMemoWorkspaceRoute:
       AuthProjectProjectIdMemoWorkspaceRoute,
+    AuthProjectProjectIdPromptsRoute: AuthProjectProjectIdPromptsRoute,
     AuthProjectProjectIdSearchRoute: AuthProjectProjectIdSearchRoute,
     AuthProjectProjectIdSentencesearchRoute:
       AuthProjectProjectIdSentencesearchRoute,

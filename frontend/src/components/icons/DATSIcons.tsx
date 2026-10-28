@@ -1,3 +1,5 @@
+import ArchiveIcon from "@mui/icons-material/Archive";
+import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
@@ -61,6 +63,7 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
+import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
@@ -165,6 +168,9 @@ export enum Icon {
   // SDOC HEALTH STATUS
   CLASSIFIER = "classifier",
 
+  // PROMPT TEMPLATES
+  PROMPT_TEMPLATE = "prompt_template",
+
   // SETTINGS
   SETTINGS = "project_settings",
 
@@ -186,6 +192,8 @@ export enum Icon {
   EDIT = "edit",
   DELETE = "delete",
   DUPLICATE = "duplicate",
+  ARCHIVE = "archive",
+  UNARCHIVE = "unarchive",
 
   // EXPORT
   EXPORT = "export",
@@ -304,6 +312,9 @@ const iconMap: Record<Icon, IconFactory> = {
   // CLASSIFIER
   [Icon.CLASSIFIER]: (iconProps) => <SmartToyIcon {...iconProps} />,
 
+  // PROMPT TEMPLATES
+  [Icon.PROMPT_TEMPLATE]: (iconProps) => <TextSnippetIcon {...iconProps} />,
+
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
 
@@ -325,6 +336,8 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.EDIT]: (iconProps) => <EditIcon {...iconProps} />,
   [Icon.DELETE]: (iconProps) => <DeleteIcon {...iconProps} />,
   [Icon.DUPLICATE]: (iconProps) => <FileCopyIcon {...iconProps} />,
+  [Icon.ARCHIVE]: (iconProps) => <ArchiveIcon {...iconProps} />,
+  [Icon.UNARCHIVE]: (iconProps) => <UnarchiveIcon {...iconProps} />,
 
   // EXPORT
   [Icon.EXPORT]: (iconProps) => <SaveAltIcon {...iconProps} />,

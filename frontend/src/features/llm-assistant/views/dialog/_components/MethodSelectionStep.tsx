@@ -34,6 +34,7 @@ export function MethodSelectionStep() {
             headline="Sentence Annotation"
             description="I will annotate your documents!"
           />
+          <PromptTemplateButton />
         </Stack>
       </DialogContent>
       <Box className="myFlexContainer myFlexFillAllContainer" p={3} bgcolor={"grey.100"}>
@@ -61,6 +62,23 @@ function MethodButton({ method, headline, description }: MethodButtonProps) {
         <CardContent style={{ textAlign: "center" }} sx={{ color: "info.contrastText", p: 3 }}>
           <h3 style={{ marginTop: 0 }}>{headline}</h3>
           {description}
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  );
+}
+
+function PromptTemplateButton() {
+  const dispatch = useAppDispatch();
+  const handleClick = useCallback(() => {
+    dispatch(LLMAssistantActions.goToTemplateSelection());
+  }, [dispatch]);
+
+  return (
+    <Card elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "secondary.main" }}>
+      <CardActionArea onClick={handleClick}>
+        <CardContent style={{ textAlign: "center" }} sx={{ color: "info.contrastText", p: 3 }}>
+          <h3 style={{ marginTop: 0 }}>Prompt Template</h3>I will run one of your prompts!
         </CardContent>
       </CardActionArea>
     </Card>

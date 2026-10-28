@@ -6,7 +6,6 @@ import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { LlmAssistantHooks } from "../../../api/llmAssistantHooks";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
 
@@ -23,45 +22,17 @@ export const CodeSelectionStep = memo(() => {
     Object.fromEntries(savedCodeIds.map((codeId) => [codeId, true])),
   );
 
-  // initiate next step (get the generated prompts)
-  const { mutate: determineApproachMutation, isPending } = LlmAssistantHooks.useDetermineApproach();
-
   const handleNext = useCallback(
     (codes: CodeRead[]) => {
-      if (!taskType) return;
-      if (taskType !== TaskType.ANNOTATION && taskType !== TaskType.SENTENCE_ANNOTATION) {
-        console.error("Invalid job type for code selection step");
-        return;
-      }
-
-      const codeIds = codes.map((code) => code.id);
-      const params = {
-        task_type: taskType,
-        project_id: projectId,
-        specific_task_parameters: {
-          task_type: taskType,
-          code_ids: codeIds,
-          sdoc_ids: selectedDocuments,
-        },
-      };
-
-      determineApproachMutation(
-        { requestBody: params },
-        {
-          onSuccess(data) {
-            dispatch(
-              LLMAssistantActions.goToSettings({
-                approach: data,
-                tagIds: [],
-                projectMetadataIds: [],
-                codeIds,
-              }),
-            );
-          },
-        },
+      dispatch(
+        LLMAssistantActions.goToSettings({
+          tagIds: [],
+          projectMetadataIds: [],
+          codeIds: codes.map((code) => code.id),
+        }),
       );
     },
-    [taskType, projectId, selectedDocuments, determineApproachMutation, dispatch],
+    [dispatch],
   );
 
   const handleBack = useCallback(() => {
@@ -73,14 +44,10 @@ export const CodeSelectionStep = memo(() => {
     (props: { selectedCodes: CodeRead[] }) => (
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
-        <Button disabled={isPending} onClick={handleBack}>
-          Back
-        </Button>
+        <Button onClick={handleBack}>Back</Button>
         <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={isPending}
-          loadingPosition="start"
           disabled={props.selectedCodes.length === 0}
           onClick={() => handleNext(props.selectedCodes)}
         >
@@ -88,7 +55,7 @@ export const CodeSelectionStep = memo(() => {
         </Button>
       </DialogActions>
     ),
-    [isPending, handleNext, handleBack],
+    [handleNext, handleBack],
   );
 
   return (

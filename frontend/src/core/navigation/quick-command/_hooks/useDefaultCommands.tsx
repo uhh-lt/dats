@@ -106,6 +106,17 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["classifier", "document", "span", "sentence", "annotation", "training", "evaluation", "inference"],
       },
       {
+        id: "prompts",
+        title: "Open Prompts",
+        description: "Go to the prompt templates of the project",
+        category: "Navigation",
+        icon: getIconComponent(Icon.PROMPT_TEMPLATE),
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/prompts", params: { projectId } });
+        },
+        keywords: ["prompt", "template", "llm", "assistant", "placeholder", "few-shot", "examples"],
+      },
+      {
         id: "annotation-view",
         title: "Annotation View",
         description: "Go to annotation view",

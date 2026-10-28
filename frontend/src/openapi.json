@@ -2243,110 +2243,6 @@
         }
       }
     },
-    "/llm_assistant/create_prompt_templates": {
-      "post": {
-        "tags": ["llm_assistant"],
-        "summary": "Returns the system and user prompt templates for the given LLM assistant task in all supported languages",
-        "operationId": "create_prompt_templates",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "approach_type",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/ApproachType" }
-          },
-          {
-            "name": "strategy_type",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/StrategyType" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_llm_assistant-create_prompt_templates" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
-                  "title": "Response Llm Assistant-Create Prompt Templates"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm_assistant/list_strategies": {
-      "post": {
-        "tags": ["llm_assistant"],
-        "summary": "Returns the available strategies for the given LLM assistant task",
-        "operationId": "list_strategies",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "task_type",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/TaskType" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/StrategyInfo" },
-                  "title": "Response Llm Assistant-List Strategies"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm_assistant/determine_approach": {
-      "post": {
-        "tags": ["llm_assistant"],
-        "summary": "Determines the appropriate approach based on the provided input",
-        "operationId": "determine_approach",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMAssistantJobParameters" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApproachRecommendation" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/llm_assistant/count_existing_assistant_annotations": {
       "post": {
         "tags": ["llm_assistant"],
@@ -3565,6 +3461,320 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template": {
+      "put": {
+        "tags": ["prompt_template"],
+        "summary": "Creates a prompt template with its first version",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/prompt_template/{prompt_template_id}/version": {
+      "put": {
+        "tags": ["prompt_template"],
+        "summary": "Saves a prompt with its selections as the next immutable version of the prompt template",
+        "operationId": "create_version",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateVersionCreate" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/examples": {
+      "post": {
+        "tags": ["prompt_template"],
+        "summary": "Turns span or sentence annotations into few-shot examples for a prompt template",
+        "operationId": "create_examples",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptExamplesCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "oneOf": [
+                      { "$ref": "#/components/schemas/SpanPromptExample" },
+                      { "$ref": "#/components/schemas/SentencePromptExample" }
+                    ],
+                    "discriminator": {
+                      "propertyName": "kind",
+                      "mapping": {
+                        "SPAN": "#/components/schemas/SpanPromptExample",
+                        "SENTENCE": "#/components/schemas/SentencePromptExample"
+                      }
+                    }
+                  },
+                  "type": "array",
+                  "title": "Response Prompt Template-Create Examples"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/prompt_template/refresh": {
+      "post": {
+        "tags": ["prompt_template"],
+        "summary": "Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project",
+        "operationId": "refresh",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRefresh" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateContent" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/prompt_template/preview": {
+      "post": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the rendered prompt of a stored version or an unsaved draft for one message of a document",
+        "operationId": "preview",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreviewRequest" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptPreview" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/prompt_template/task_info": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the blocks that the prompts of a task can use",
+        "operationId": "get_task_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/TaskType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTaskInfo" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/default": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the default prompt of an output format in a language",
+        "operationId": "get_default",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "output_format",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/OutputFormat" }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/PromptLanguage" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateContent" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/project/{project_id}": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the prompt templates of the project with all their versions",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PromptTemplateRead" },
+                  "title": "Response Prompt Template-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/version/{version_id}": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the prompt template version with the given ID",
+        "operationId": "get_version_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Version Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateVersionRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prompt_template/{prompt_template_id}": {
+      "get": {
+        "tags": ["prompt_template"],
+        "summary": "Returns the prompt template with the given ID and all its versions",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["prompt_template"],
+        "summary": "Renames or (un)archives the prompt template (does not create a version)",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "prompt_template_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Prompt Template Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8015,6 +8225,34 @@
         }
       }
     },
+    "PROMPT_TEMPLATE_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_prompt_template_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "PROMPT_TEMPLATE_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_prompt_template_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
     "JOB_UPDATED": {
       "post": {
         "summary": " Webhook Handler",
@@ -8116,37 +8354,6 @@
         "type": "object",
         "required": ["task_type", "results"],
         "title": "AnnotationLLMAssistantJobResult"
-      },
-      "AnnotationParams": {
-        "properties": {
-          "task_type": {
-            "type": "string",
-            "const": "ANNOTATION",
-            "title": "Task Type",
-            "description": "The type of the LLM Assistant task"
-          },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to analyse"
-          },
-          "code_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Code Ids",
-            "description": "IDs of the codes to use for the annotation"
-          },
-          "delete_existing_annotations": {
-            "type": "boolean",
-            "title": "Delete Existing Annotations",
-            "description": "Delete existing annotations before creating new ones",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["task_type", "sdoc_ids", "code_ids"],
-        "title": "AnnotationParams"
       },
       "AnnotationResult": {
         "properties": {
@@ -8250,25 +8457,6 @@
         "type": "object",
         "required": ["id", "name", "prefix", "expires_at", "created_at"],
         "title": "ApiKeyRead"
-      },
-      "ApproachRecommendation": {
-        "properties": {
-          "recommended_approach": {
-            "$ref": "#/components/schemas/ApproachType",
-            "description": "Recommended approach"
-          },
-          "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the recommendation" },
-          "available_approaches": {
-            "additionalProperties": { "type": "boolean" },
-            "propertyNames": { "$ref": "#/components/schemas/ApproachType" },
-            "type": "object",
-            "title": "Available Approaches",
-            "description": "Available approaches"
-          }
-        },
-        "type": "object",
-        "required": ["recommended_approach", "reasoning", "available_approaches"],
-        "title": "ApproachRecommendation"
       },
       "ApproachType": { "type": "string", "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT"], "title": "ApproachType" },
       "AspectCreate": {
@@ -9045,18 +9233,6 @@
         "type": "object",
         "required": ["sdoc_ids", "code_ids"],
         "title": "Body_llm_assistant-count_existing_assistant_annotations"
-      },
-      "Body_llm_assistant-create_prompt_templates": {
-        "properties": {
-          "job_params": { "$ref": "#/components/schemas/LLMAssistantJobParameters" },
-          "example_ids": {
-            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
-            "title": "Example Ids"
-          }
-        },
-        "type": "object",
-        "required": ["job_params"],
-        "title": "Body_llm_assistant-create_prompt_templates"
       },
       "Body_perspectives-accept_label": {
         "properties": {
@@ -11203,20 +11379,6 @@
         "enum": ["DATE_EQUALS", "DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],
         "title": "DateOperator"
       },
-      "DefaultStrategyParams": {
-        "properties": {
-          "strategy_type": {
-            "type": "string",
-            "enum": ["TAGGING_DEFAULT", "METADATA_DEFAULT", "SENTENCE_ANNOTATION_DEFAULT"],
-            "title": "Strategy Type",
-            "description": "The strategy to ground the LLM output in the document"
-          }
-        },
-        "type": "object",
-        "required": ["strategy_type"],
-        "title": "DefaultStrategyParams",
-        "description": "Params for single-strategy tasks (tagging, metadata, sentence annotation)."
-      },
       "DimensionalityReductionAlgorithm": {
         "type": "string",
         "enum": ["umap", "pca", "tsne"],
@@ -11272,6 +11434,26 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "DocumentEmbeddingParams"
+      },
+      "DocumentUnit": {
+        "type": "string",
+        "enum": ["whole", "sentences", "chunks"],
+        "title": "DocumentUnit",
+        "description": "How a document is split into LLM calls, chosen with <document:unit>."
+      },
+      "DocumentUnitInfo": {
+        "properties": {
+          "unit": { "$ref": "#/components/schemas/DocumentUnit", "description": "The document unit" },
+          "placeholder": {
+            "type": "string",
+            "title": "Placeholder",
+            "description": "The block, e.g. <document:whole>"
+          },
+          "description": { "type": "string", "title": "Description", "description": "How the document is split" }
+        },
+        "type": "object",
+        "required": ["unit", "placeholder", "description"],
+        "title": "DocumentUnitInfo"
       },
       "DuplicateFinderInput": {
         "properties": {
@@ -11657,26 +11839,6 @@
         "type": "object",
         "required": ["export_job_type", "whiteboard_ids"],
         "title": "ExportSelectedWhiteboardsParams"
-      },
-      "FewShotParams": {
-        "properties": {
-          "approach_type": {
-            "type": "string",
-            "const": "LLM_FEW_SHOT",
-            "title": "Approach Type",
-            "description": "The approach of the LLM Assistant job"
-          },
-          "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
-            "type": "array",
-            "title": "Prompts",
-            "description": "The prompt templates to use for the job"
-          },
-          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
-        },
-        "type": "object",
-        "required": ["approach_type", "prompts", "model"],
-        "title": "FewShotParams"
       },
       "FilterExpression_BBoxColumns_": {
         "properties": {
@@ -12381,55 +12543,6 @@
         "required": ["payload"],
         "title": "FolderUpdatedEvent"
       },
-      "FuzzyGroundingStrategyParams": {
-        "properties": {
-          "strategy_type": {
-            "type": "string",
-            "const": "CONTEXT_ANCHORED_FUZZY_MATCHING",
-            "title": "Strategy Type",
-            "description": "The strategy to ground the LLM output in the document"
-          },
-          "fuzzy_threshold": {
-            "type": "number",
-            "maximum": 1,
-            "minimum": 0,
-            "title": "Fuzzy Threshold",
-            "description": "Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes",
-            "default": 0.85
-          },
-          "context_before_chars": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Context Before Chars",
-            "description": "Number of context characters the LLM should provide before the quote",
-            "default": 64
-          },
-          "context_after_chars": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Context After Chars",
-            "description": "Number of context characters the LLM should provide after the quote",
-            "default": 64
-          },
-          "chunk_size_tokens": {
-            "type": "integer",
-            "exclusiveMinimum": 0,
-            "title": "Chunk Size Tokens",
-            "description": "Size of document chunks (in tokens) sent to the LLM",
-            "default": 650
-          },
-          "chunk_overlap_tokens": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Chunk Overlap Tokens",
-            "description": "Overlap (in tokens) between consecutive chunks",
-            "default": 100
-          }
-        },
-        "type": "object",
-        "required": ["strategy_type"],
-        "title": "FuzzyGroundingStrategyParams"
-      },
       "GroupConfig_BBoxColumns_": {
         "properties": {
           "field": { "$ref": "#/components/schemas/BBoxColumns", "description": "The column to group results by" },
@@ -12892,89 +13005,44 @@
             "title": "Project Id",
             "description": "Project ID associated with the job"
           },
-          "task_type": {
-            "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMAssistantJob (what to llm)"
+          "task_type": { "$ref": "#/components/schemas/TaskType", "description": "The task of the prompt" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to process"
           },
-          "specific_task_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/TaggingParams" },
-              { "$ref": "#/components/schemas/MetadataExtractionParams" },
-              { "$ref": "#/components/schemas/AnnotationParams" },
-              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
-            ],
-            "title": "Specific Task Parameters",
-            "description": "Specific parameters for the LLMAssistantJob w.r.t it's type",
-            "discriminator": {
-              "propertyName": "task_type",
-              "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
-                "TAGGING": "#/components/schemas/TaggingParams"
-              }
-            }
+          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" },
+          "prompt_template_version_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Prompt Template Version Id",
+            "description": "ID of the prompt template version to run. Exactly one of prompt_template_version_id and draft is set."
           },
-          "approach_type": {
-            "$ref": "#/components/schemas/ApproachType",
-            "description": "The approach to use for the LLMAssistantJob"
+          "draft": {
+            "anyOf": [{ "$ref": "#/components/schemas/PromptTemplateSnapshot" }, { "type": "null" }],
+            "description": "An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_template_version_id and draft is set."
           },
-          "specific_approach_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/ZeroShotParams" },
-              { "$ref": "#/components/schemas/FewShotParams" }
-            ],
-            "title": "Specific Approach Parameters",
-            "description": "Specific parameters for the approach w.r.t it's type",
-            "discriminator": {
-              "propertyName": "approach_type",
-              "mapping": {
-                "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
-                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams"
-              }
-            }
-          },
-          "strategy_type": {
-            "$ref": "#/components/schemas/StrategyType",
-            "description": "The strategy to use for the LLMAssistantJob"
-          },
-          "specific_strategy_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/DefaultStrategyParams" },
-              { "$ref": "#/components/schemas/NERInlineTagStrategyParams" },
-              { "$ref": "#/components/schemas/FuzzyGroundingStrategyParams" }
-            ],
-            "title": "Specific Strategy Parameters",
-            "description": "Specific parameters for the strategy w.r.t it's type",
-            "discriminator": {
-              "propertyName": "strategy_type",
-              "mapping": {
-                "CONTEXT_ANCHORED_FUZZY_MATCHING": "#/components/schemas/FuzzyGroundingStrategyParams",
-                "METADATA_DEFAULT": "#/components/schemas/DefaultStrategyParams",
-                "NER_INLINE_TAGS": "#/components/schemas/NERInlineTagStrategyParams",
-                "SENTENCE_ANNOTATION_DEFAULT": "#/components/schemas/DefaultStrategyParams",
-                "TAGGING_DEFAULT": "#/components/schemas/DefaultStrategyParams"
-              }
-            }
+          "delete_existing_annotations": {
+            "type": "boolean",
+            "title": "Delete Existing Annotations",
+            "description": "Delete the existing annotations of the assistant for the documents and codes of the prompt before creating new ones",
+            "default": false
           }
         },
         "type": "object",
-        "required": [
-          "project_id",
-          "task_type",
-          "specific_task_parameters",
-          "approach_type",
-          "specific_approach_parameters",
-          "strategy_type",
-          "specific_strategy_parameters"
-        ],
-        "title": "LLMAssistantJobInput"
+        "required": ["project_id", "task_type", "sdoc_ids", "model"],
+        "title": "LLMAssistantJobInput",
+        "description": "Runs a prompt on documents: a stored prompt template version or a draft.\n\nThe prompt decides everything but the documents and the model: the task, the\nselected codes, tags or metadata fields, the examples (few-shot if it shows\nany), how documents are split and the answer format."
       },
       "LLMAssistantJobOutput": {
         "properties": {
           "task_type": {
             "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMAssistantJob (what to llm)"
+          },
+          "approach_type": {
+            "$ref": "#/components/schemas/ApproachType",
+            "description": "Few-shot if the prompt showed examples, zero-shot otherwise"
           },
           "specific_task_result": {
             "oneOf": [
@@ -12997,61 +13065,8 @@
           }
         },
         "type": "object",
-        "required": ["task_type", "specific_task_result"],
+        "required": ["task_type", "approach_type", "specific_task_result"],
         "title": "LLMAssistantJobOutput"
-      },
-      "LLMAssistantJobParameters": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project ID associated with the job"
-          },
-          "task_type": {
-            "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMAssistantJob (what to llm)"
-          },
-          "specific_task_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/TaggingParams" },
-              { "$ref": "#/components/schemas/MetadataExtractionParams" },
-              { "$ref": "#/components/schemas/AnnotationParams" },
-              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
-            ],
-            "title": "Specific Task Parameters",
-            "description": "Specific parameters for the LLMAssistantJob w.r.t it's type",
-            "discriminator": {
-              "propertyName": "task_type",
-              "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
-                "TAGGING": "#/components/schemas/TaggingParams"
-              }
-            }
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "task_type", "specific_task_parameters"],
-        "title": "LLMAssistantJobParameters"
-      },
-      "LLMAssistantPromptTemplates": {
-        "properties": {
-          "language": { "type": "string", "title": "Language", "description": "The language of the prompt template" },
-          "system_prompt": {
-            "type": "string",
-            "title": "System Prompt",
-            "description": "The system prompt to use for the job"
-          },
-          "user_prompt": {
-            "type": "string",
-            "title": "User Prompt",
-            "description": "The user prompt to use for the job"
-          }
-        },
-        "type": "object",
-        "required": ["language", "system_prompt", "user_prompt"],
-        "title": "LLMAssistantPromptTemplates"
       },
       "Language": { "type": "string", "enum": ["auto", "de", "en", "it"], "title": "Language" },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
@@ -13562,31 +13577,6 @@
         "required": ["task_type", "results"],
         "title": "MetadataExtractionLLMAssistantJobResult"
       },
-      "MetadataExtractionParams": {
-        "properties": {
-          "task_type": {
-            "type": "string",
-            "const": "METADATA_EXTRACTION",
-            "title": "Task Type",
-            "description": "The type of the LLM Assistant task"
-          },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to analyse"
-          },
-          "project_metadata_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Project Metadata Ids",
-            "description": "IDs of the project metadata to use for the metadata extraction"
-          }
-        },
-        "type": "object",
-        "required": ["task_type", "sdoc_ids", "project_metadata_ids"],
-        "title": "MetadataExtractionParams"
-      },
       "MetadataExtractionResult": {
         "properties": {
           "status": {
@@ -13668,19 +13658,6 @@
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "MlJobRead"
       },
-      "NERInlineTagStrategyParams": {
-        "properties": {
-          "strategy_type": {
-            "type": "string",
-            "const": "NER_INLINE_TAGS",
-            "title": "Strategy Type",
-            "description": "The strategy to ground the LLM output in the document"
-          }
-        },
-        "type": "object",
-        "required": ["strategy_type"],
-        "title": "NERInlineTagStrategyParams"
-      },
       "NoteNodeData": {
         "properties": {
           "text": { "type": "string", "title": "Text", "description": "Text of the text" },
@@ -13733,6 +13710,35 @@
         "type": "string",
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
         "title": "NumberOperator"
+      },
+      "OutputFormat": {
+        "type": "string",
+        "enum": ["inline", "context", "sentences", "tags", "metadata"],
+        "title": "OutputFormat",
+        "description": "The answer format the LLM must follow, chosen with <output-format:format>.\n\nThe format decides the fixed answer instructions of the prompt, the structured\noutput schema and how the answers are parsed."
+      },
+      "OutputFormatInfo": {
+        "properties": {
+          "output_format": { "$ref": "#/components/schemas/OutputFormat", "description": "The output format" },
+          "placeholder": {
+            "type": "string",
+            "title": "Placeholder",
+            "description": "The block, e.g. <output-format:inline>"
+          },
+          "name": { "type": "string", "title": "Name", "description": "Human-readable name of the format" },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "How the LLM answers in this format"
+          },
+          "default_document_unit": {
+            "$ref": "#/components/schemas/DocumentUnit",
+            "description": "The document unit the format works best with"
+          }
+        },
+        "type": "object",
+        "required": ["output_format", "placeholder", "name", "description", "default_document_unit"],
+        "title": "OutputFormatInfo"
       },
       "Page_BBoxAnnotationRow_": {
         "properties": {
@@ -14426,6 +14432,698 @@
         "required": ["payload"],
         "title": "ProjectUsersLinkedEvent"
       },
+      "PromptBlock": {
+        "type": "string",
+        "enum": ["<codes>", "<code_names>", "<examples>", "<tags>", "<metadata_fields>"],
+        "title": "PromptBlock",
+        "description": "The blocks of a prompt besides the document and the output format.\n\nEach block is filled with a selection stored in the template version (codes,\nexamples, tags, metadata fields)."
+      },
+      "PromptBlockInfo": {
+        "properties": {
+          "block": { "$ref": "#/components/schemas/PromptBlock", "description": "The selection block" },
+          "description": { "type": "string", "title": "Description", "description": "What the block is replaced with" }
+        },
+        "type": "object",
+        "required": ["block", "description"],
+        "title": "PromptBlockInfo"
+      },
+      "PromptCode": {
+        "properties": {
+          "code_id": { "type": "integer", "title": "Code Id", "description": "ID of the code" },
+          "name": { "type": "string", "minLength": 1, "title": "Name", "description": "Name of the code" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the code" }
+        },
+        "type": "object",
+        "required": ["code_id", "name", "description"],
+        "title": "PromptCode",
+        "description": "A code selected in a prompt, as it was when the prompt was saved."
+      },
+      "PromptExampleKind": {
+        "type": "string",
+        "enum": ["SPAN", "SENTENCE"],
+        "title": "PromptExampleKind",
+        "description": "The kind of annotation a few-shot example of a prompt template shows."
+      },
+      "PromptExampleSpan": {
+        "properties": {
+          "code_id": { "type": "integer", "title": "Code Id", "description": "ID of the code of the span" },
+          "begin": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Begin",
+            "description": "Begin of the span within the text"
+          },
+          "end": { "type": "integer", "title": "End", "description": "End of the span within the text (exclusive)" }
+        },
+        "type": "object",
+        "required": ["code_id", "begin", "end"],
+        "title": "PromptExampleSpan",
+        "description": "An annotated span within the text of a span example."
+      },
+      "PromptExamplesCreate": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the annotations belong to"
+          },
+          "kind": { "$ref": "#/components/schemas/PromptExampleKind", "description": "The kind of the annotations" },
+          "annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "minItems": 1,
+            "title": "Annotation Ids",
+            "description": "IDs of the span or sentence annotations"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "kind", "annotation_ids"],
+        "title": "PromptExamplesCreate",
+        "description": "Selects annotations to turn into few-shot examples."
+      },
+      "PromptLanguage": {
+        "type": "string",
+        "enum": ["en", "de"],
+        "title": "PromptLanguage",
+        "description": "The language of a prompt template; it decides the text of the blocks."
+      },
+      "PromptMetadataField": {
+        "properties": {
+          "project_metadata_id": {
+            "type": "integer",
+            "title": "Project Metadata Id",
+            "description": "ID of the project metadata"
+          },
+          "key": { "type": "string", "minLength": 1, "title": "Key", "description": "Key of the metadata field" },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the metadata field"
+          },
+          "metatype": { "$ref": "#/components/schemas/MetaType", "description": "Type of the metadata field" }
+        },
+        "type": "object",
+        "required": ["project_metadata_id", "key", "description", "metatype"],
+        "title": "PromptMetadataField",
+        "description": "A metadata field selected in a prompt, as it was when the prompt was saved."
+      },
+      "PromptPreview": {
+        "properties": {
+          "sdoc_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Sdoc Id",
+            "description": "ID of the rendered source document"
+          },
+          "message_index": {
+            "type": "integer",
+            "title": "Message Index",
+            "description": "Index of the rendered message (sentence or chunk) of the document"
+          },
+          "num_messages": {
+            "type": "integer",
+            "title": "Num Messages",
+            "description": "Number of messages (LLM calls) the document is split into, 0 without a document"
+          },
+          "prompt": { "type": "string", "title": "Prompt", "description": "The rendered prompt" },
+          "blocks": {
+            "items": { "$ref": "#/components/schemas/RenderedPromptBlock" },
+            "type": "array",
+            "title": "Blocks",
+            "description": "The text of every block of the prompt except the document"
+          },
+          "is_fewshot": {
+            "type": "boolean",
+            "title": "Is Fewshot",
+            "description": "The prompt shows few-shot examples, so a run is few-shot"
+          },
+          "unknown_placeholders": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Unknown Placeholders",
+            "description": "Placeholder-like tags (e.g. <code>) that are sent to the LLM verbatim because no block fills them"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sdoc_id",
+          "message_index",
+          "num_messages",
+          "prompt",
+          "blocks",
+          "is_fewshot",
+          "unknown_placeholders"
+        ],
+        "title": "PromptPreview",
+        "description": "The rendered prompt of one message of one document."
+      },
+      "PromptPreviewRequest": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project of the prompt and the document"
+          },
+          "prompt_template_version_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Prompt Template Version Id",
+            "description": "ID of the stored prompt template version to render. Exactly one of prompt_template_version_id and draft is set."
+          },
+          "draft": {
+            "anyOf": [{ "$ref": "#/components/schemas/PromptTemplateSnapshot" }, { "type": "null" }],
+            "description": "An unsaved prompt to render. Exactly one of prompt_template_version_id and draft is set."
+          },
+          "sdoc_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Sdoc Id",
+            "description": "ID of the source document to render into <document:unit>; None keeps the block as it is"
+          },
+          "message_index": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Message Index",
+            "description": "Index of the message (sentence or chunk) within the document",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": ["project_id"],
+        "title": "PromptPreviewRequest",
+        "description": "Renders a stored version or an unsaved draft for one message of a document."
+      },
+      "PromptSettings": {
+        "properties": {
+          "chunk_size_tokens": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Chunk Size Tokens",
+            "description": "Size of the chunks of <document:chunks> in tokens",
+            "default": 650
+          },
+          "chunk_overlap_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Chunk Overlap Tokens",
+            "description": "Overlap of consecutive chunks of <document:chunks> in tokens",
+            "default": 100
+          },
+          "context_before_chars": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Context Before Chars",
+            "description": "Characters of context before a quote (<output-format:context>)",
+            "default": 64
+          },
+          "context_after_chars": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Context After Chars",
+            "description": "Characters of context after a quote (<output-format:context>)",
+            "default": 64
+          },
+          "fuzzy_threshold": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Fuzzy Threshold",
+            "description": "Minimum similarity (0-1) to locate a quote that is not found exactly (<output-format:context>)",
+            "default": 0.85
+          }
+        },
+        "type": "object",
+        "title": "PromptSettings",
+        "description": "Settings of the document and output format blocks."
+      },
+      "PromptTag": {
+        "properties": {
+          "tag_id": { "type": "integer", "title": "Tag Id", "description": "ID of the tag" },
+          "name": { "type": "string", "minLength": 1, "title": "Name", "description": "Name of the tag" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the tag" }
+        },
+        "type": "object",
+        "required": ["tag_id", "name", "description"],
+        "title": "PromptTag",
+        "description": "A tag selected in a prompt, as it was when the prompt was saved."
+      },
+      "PromptTaskInfo": {
+        "properties": {
+          "task_type": { "$ref": "#/components/schemas/TaskType", "description": "The task" },
+          "document_units": {
+            "items": { "$ref": "#/components/schemas/DocumentUnitInfo" },
+            "type": "array",
+            "title": "Document Units",
+            "description": "The document blocks; a prompt contains exactly one"
+          },
+          "output_formats": {
+            "items": { "$ref": "#/components/schemas/OutputFormatInfo" },
+            "type": "array",
+            "title": "Output Formats",
+            "description": "The output format blocks; a prompt contains exactly one"
+          },
+          "blocks": {
+            "items": { "$ref": "#/components/schemas/PromptBlockInfo" },
+            "type": "array",
+            "title": "Blocks",
+            "description": "The selection blocks"
+          },
+          "required_blocks": {
+            "items": { "$ref": "#/components/schemas/PromptBlock" },
+            "type": "array",
+            "title": "Required Blocks",
+            "description": "The prompt contains at least one of these blocks"
+          },
+          "example_kind": {
+            "anyOf": [{ "$ref": "#/components/schemas/PromptExampleKind" }, { "type": "null" }],
+            "description": "The kind of few-shot examples, None if the task supports none"
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "document_units", "output_formats", "blocks", "required_blocks", "example_kind"],
+        "title": "PromptTaskInfo",
+        "description": "Describes the blocks a prompt of a task can use."
+      },
+      "PromptTemplateContent": {
+        "properties": {
+          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
+          "settings": {
+            "$ref": "#/components/schemas/PromptSettings",
+            "description": "Settings of the document and output format blocks"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "examples": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/SpanPromptExample" },
+                { "$ref": "#/components/schemas/SentencePromptExample" }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "SENTENCE": "#/components/schemas/SentencePromptExample",
+                  "SPAN": "#/components/schemas/SpanPromptExample"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Examples",
+            "description": "The few-shot examples of <examples>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          }
+        },
+        "type": "object",
+        "required": ["prompt"],
+        "title": "PromptTemplateContent",
+        "description": "The content of a prompt template version: the prompt and its selections."
+      },
+      "PromptTemplateCreate": {
+        "properties": {
+          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
+          "settings": {
+            "$ref": "#/components/schemas/PromptSettings",
+            "description": "Settings of the document and output format blocks"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "examples": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/SpanPromptExample" },
+                { "$ref": "#/components/schemas/SentencePromptExample" }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "SENTENCE": "#/components/schemas/SentencePromptExample",
+                  "SPAN": "#/components/schemas/SpanPromptExample"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Examples",
+            "description": "The few-shot examples of <examples>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          },
+          "name": { "type": "string", "minLength": 1, "title": "Name", "description": "Name of the prompt template" },
+          "task_type": { "$ref": "#/components/schemas/TaskType", "description": "The task the template is for" },
+          "language": {
+            "$ref": "#/components/schemas/PromptLanguage",
+            "description": "The language of the template, it decides the text of the blocks"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the prompt template belongs to"
+          }
+        },
+        "type": "object",
+        "required": ["prompt", "name", "task_type", "language", "project_id"],
+        "title": "PromptTemplateCreate"
+      },
+      "PromptTemplateCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROMPT_TEMPLATE_CREATED",
+            "title": "Type",
+            "default": "PROMPT_TEMPLATE_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/PromptTemplateRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "PromptTemplateCreatedEvent"
+      },
+      "PromptTemplateRead": {
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "title": "Name", "description": "Name of the prompt template" },
+          "task_type": { "$ref": "#/components/schemas/TaskType", "description": "The task the template is for" },
+          "language": {
+            "$ref": "#/components/schemas/PromptLanguage",
+            "description": "The language of the template, it decides the text of the blocks"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the prompt template" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the prompt template belongs to"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "description": "Archived templates are no longer offered for new runs"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the prompt template"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the prompt template"
+          },
+          "versions": {
+            "items": { "$ref": "#/components/schemas/PromptTemplateVersionRead" },
+            "type": "array",
+            "title": "Versions",
+            "description": "All versions of the template, oldest first"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "task_type",
+          "language",
+          "id",
+          "project_id",
+          "is_archived",
+          "created",
+          "updated",
+          "versions"
+        ],
+        "title": "PromptTemplateRead"
+      },
+      "PromptTemplateRefresh": {
+        "properties": {
+          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
+          "settings": {
+            "$ref": "#/components/schemas/PromptSettings",
+            "description": "Settings of the document and output format blocks"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "examples": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/SpanPromptExample" },
+                { "$ref": "#/components/schemas/SentencePromptExample" }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "SENTENCE": "#/components/schemas/SentencePromptExample",
+                  "SPAN": "#/components/schemas/SpanPromptExample"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Examples",
+            "description": "The few-shot examples of <examples>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the selections belong to" }
+        },
+        "type": "object",
+        "required": ["prompt", "project_id"],
+        "title": "PromptTemplateRefresh",
+        "description": "Content whose selections are replaced with the current state of the project."
+      },
+      "PromptTemplateSnapshot": {
+        "properties": {
+          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
+          "settings": {
+            "$ref": "#/components/schemas/PromptSettings",
+            "description": "Settings of the document and output format blocks"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "examples": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/SpanPromptExample" },
+                { "$ref": "#/components/schemas/SentencePromptExample" }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "SENTENCE": "#/components/schemas/SentencePromptExample",
+                  "SPAN": "#/components/schemas/SpanPromptExample"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Examples",
+            "description": "The few-shot examples of <examples>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          },
+          "task_type": { "$ref": "#/components/schemas/TaskType", "description": "The task the prompt is for" },
+          "language": { "$ref": "#/components/schemas/PromptLanguage", "description": "The language of the prompt" }
+        },
+        "type": "object",
+        "required": ["prompt", "task_type", "language"],
+        "title": "PromptTemplateSnapshot",
+        "description": "Everything needed to render a prompt: a stored version or an unsaved draft."
+      },
+      "PromptTemplateUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the prompt template"
+          },
+          "is_archived": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Archived",
+            "description": "Archived templates are no longer offered for new runs"
+          }
+        },
+        "type": "object",
+        "title": "PromptTemplateUpdate"
+      },
+      "PromptTemplateUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROMPT_TEMPLATE_UPDATED",
+            "title": "Type",
+            "default": "PROMPT_TEMPLATE_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/PromptTemplateRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "PromptTemplateUpdatedEvent"
+      },
+      "PromptTemplateVersionCreate": {
+        "properties": {
+          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
+          "settings": {
+            "$ref": "#/components/schemas/PromptSettings",
+            "description": "Settings of the document and output format blocks"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "examples": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/SpanPromptExample" },
+                { "$ref": "#/components/schemas/SentencePromptExample" }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "SENTENCE": "#/components/schemas/SentencePromptExample",
+                  "SPAN": "#/components/schemas/SpanPromptExample"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Examples",
+            "description": "The few-shot examples of <examples>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          }
+        },
+        "type": "object",
+        "required": ["prompt"],
+        "title": "PromptTemplateVersionCreate"
+      },
+      "PromptTemplateVersionRead": {
+        "properties": {
+          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
+          "settings": {
+            "$ref": "#/components/schemas/PromptSettings",
+            "description": "Settings of the document and output format blocks"
+          },
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "examples": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/SpanPromptExample" },
+                { "$ref": "#/components/schemas/SentencePromptExample" }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "SENTENCE": "#/components/schemas/SentencePromptExample",
+                  "SPAN": "#/components/schemas/SpanPromptExample"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Examples",
+            "description": "The few-shot examples of <examples>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the prompt template version" },
+          "prompt_template_id": {
+            "type": "integer",
+            "title": "Prompt Template Id",
+            "description": "ID of the prompt template the version belongs to"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Number of the version within its template (1, 2, 3, ...)"
+          },
+          "user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "User Id",
+            "description": "ID of the user who saved the version"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the version"
+          }
+        },
+        "type": "object",
+        "required": ["prompt", "id", "prompt_template_id", "version", "user_id", "created"],
+        "title": "PromptTemplateVersionRead"
+      },
       "PublicUserRead": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "ID of the User" },
@@ -14687,6 +15385,15 @@
         "type": "object",
         "required": ["perspectives_job_type", "cluster_id"],
         "title": "RemoveClusterParams"
+      },
+      "RenderedPromptBlock": {
+        "properties": {
+          "placeholder": { "type": "string", "title": "Placeholder", "description": "The block, e.g. <codes>" },
+          "text": { "type": "string", "title": "Text", "description": "The text the block is replaced with" }
+        },
+        "type": "object",
+        "required": ["placeholder", "text"],
+        "title": "RenderedPromptBlock"
       },
       "ResetModelParams": {
         "properties": {
@@ -15258,37 +15965,6 @@
         "required": ["bgcolor", "bgalpha", "type", "sentenceAnnotationId"],
         "title": "SentenceAnnotationNodeData"
       },
-      "SentenceAnnotationParams": {
-        "properties": {
-          "task_type": {
-            "type": "string",
-            "const": "SENTENCE_ANNOTATION",
-            "title": "Task Type",
-            "description": "The type of the LLM Assistant task"
-          },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to analyse"
-          },
-          "code_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Code Ids",
-            "description": "IDs of the codes to use for the sentence annotation"
-          },
-          "delete_existing_annotations": {
-            "type": "boolean",
-            "title": "Delete Existing Annotations",
-            "description": "Delete existing annotations before creating new ones",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["task_type", "sdoc_ids", "code_ids"],
-        "title": "SentenceAnnotationParams"
-      },
       "SentenceAnnotationRead": {
         "properties": {
           "sentence_id_start": {
@@ -15554,6 +16230,33 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "SentenceEmbeddingParams"
+      },
+      "SentencePromptExample": {
+        "properties": {
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "ID of the source document the text comes from"
+          },
+          "source_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Source Annotation Ids",
+            "description": "IDs of the annotations the example was created from"
+          },
+          "text": { "type": "string", "minLength": 1, "title": "Text", "description": "The text of the example" },
+          "kind": {
+            "type": "string",
+            "const": "SENTENCE",
+            "title": "Kind",
+            "description": "The kind of annotation the example shows"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "ID of the code of the sentences" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "source_annotation_ids", "text", "kind", "code_id"],
+        "title": "SentencePromptExample",
+        "description": "The sentences of a sentence annotation and its code."
       },
       "SentenceSearchViewCreate": {
         "properties": {
@@ -16877,6 +17580,38 @@
         "required": ["name", "id", "user_id", "sdoc_id", "created", "updated", "span_annotations"],
         "title": "SpanGroupWithAnnotationsRead"
       },
+      "SpanPromptExample": {
+        "properties": {
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "ID of the source document the text comes from"
+          },
+          "source_annotation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Source Annotation Ids",
+            "description": "IDs of the annotations the example was created from"
+          },
+          "text": { "type": "string", "minLength": 1, "title": "Text", "description": "The text of the example" },
+          "kind": {
+            "type": "string",
+            "const": "SPAN",
+            "title": "Kind",
+            "description": "The kind of annotation the example shows"
+          },
+          "spans": {
+            "items": { "$ref": "#/components/schemas/PromptExampleSpan" },
+            "type": "array",
+            "title": "Spans",
+            "description": "All spans the annotator annotated in the text, sorted by begin"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "source_annotation_ids", "text", "kind", "spans"],
+        "title": "SpanPromptExample",
+        "description": "The sentences around selected span annotations with all spans of their annotator."
+      },
       "SpanSearchViewCreate": {
         "properties": {
           "entity_type": {
@@ -17045,47 +17780,6 @@
         "type": "object",
         "required": ["perspectives_job_type", "cluster_id", "split_into"],
         "title": "SplitClusterParams"
-      },
-      "StrategyInfo": {
-        "properties": {
-          "strategy_type": { "$ref": "#/components/schemas/StrategyType", "description": "The strategy type" },
-          "name": { "type": "string", "title": "Name", "description": "Human-readable name of the strategy" },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Explanation of what the strategy does"
-          },
-          "default_params": {
-            "anyOf": [
-              { "$ref": "#/components/schemas/DefaultStrategyParams" },
-              { "$ref": "#/components/schemas/NERInlineTagStrategyParams" },
-              { "$ref": "#/components/schemas/FuzzyGroundingStrategyParams" }
-            ],
-            "title": "Default Params",
-            "description": "Default strategy parameters"
-          },
-          "allowed_data_tags": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Allowed Data Tags",
-            "description": "Data tags (document content placeholders) this strategy supports"
-          }
-        },
-        "type": "object",
-        "required": ["strategy_type", "name", "description", "default_params", "allowed_data_tags"],
-        "title": "StrategyInfo",
-        "description": "Describes an available strategy for a task, for display in the frontend."
-      },
-      "StrategyType": {
-        "type": "string",
-        "enum": [
-          "TAGGING_DEFAULT",
-          "METADATA_DEFAULT",
-          "SENTENCE_ANNOTATION_DEFAULT",
-          "NER_INLINE_TAGS",
-          "CONTEXT_ANCHORED_FUZZY_MATCHING"
-        ],
-        "title": "StrategyType"
       },
       "StringOperator": {
         "type": "string",
@@ -17349,31 +18043,6 @@
         "required": ["task_type", "results"],
         "title": "TaggingLLMAssistantJobResult"
       },
-      "TaggingParams": {
-        "properties": {
-          "task_type": {
-            "type": "string",
-            "const": "TAGGING",
-            "title": "Task Type",
-            "description": "The type of the LLM Assistant task"
-          },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to analyse"
-          },
-          "tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Tag Ids",
-            "description": "IDs of the tags to use for the document tagging"
-          }
-        },
-        "type": "object",
-        "required": ["task_type", "sdoc_ids", "tag_ids"],
-        "title": "TaggingParams"
-      },
       "TaggingResult": {
         "properties": {
           "status": {
@@ -17409,7 +18078,8 @@
       "TaskType": {
         "type": "string",
         "enum": ["TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
-        "title": "TaskType"
+        "title": "TaskType",
+        "description": "What an LLM does with the documents (and what a prompt template is for)."
       },
       "TextNodeData": {
         "properties": {
@@ -18251,26 +18921,6 @@
         "type": "object",
         "required": ["x", "y"],
         "title": "XYPosition"
-      },
-      "ZeroShotParams": {
-        "properties": {
-          "approach_type": {
-            "type": "string",
-            "const": "LLM_ZERO_SHOT",
-            "title": "Approach Type",
-            "description": "The approach of the LLM Assistant job"
-          },
-          "prompts": {
-            "items": { "$ref": "#/components/schemas/LLMAssistantPromptTemplates" },
-            "type": "array",
-            "title": "Prompts",
-            "description": "The prompt templates to use for the job"
-          },
-          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
-        },
-        "type": "object",
-        "required": ["approach_type", "prompts", "model"],
-        "title": "ZeroShotParams"
       }
     },
     "securitySchemes": {

@@ -39,6 +39,8 @@ import type { ProjectMetadataDeletedEvent } from "./ProjectMetadataDeletedEvent"
 import type { ProjectMetadataUpdatedEvent } from "./ProjectMetadataUpdatedEvent";
 import type { ProjectUpdatedEvent } from "./ProjectUpdatedEvent";
 import type { ProjectUsersLinkedEvent } from "./ProjectUsersLinkedEvent";
+import type { PromptTemplateCreatedEvent } from "./PromptTemplateCreatedEvent";
+import type { PromptTemplateUpdatedEvent } from "./PromptTemplateUpdatedEvent";
 import type { SdocDeletedEvent } from "./SdocDeletedEvent";
 import type { SdocDeletedBatchEvent } from "./SdocDeletedBatchEvent";
 import type { SdocMetadataDeletedEvent } from "./SdocMetadataDeletedEvent";
@@ -117,6 +119,8 @@ export interface DATSEventMap {
   PROJECT_METADATA_UPDATED: ProjectMetadataUpdatedEvent["payload"];
   PROJECT_UPDATED: ProjectUpdatedEvent["payload"];
   PROJECT_USERS_LINKED: ProjectUsersLinkedEvent["payload"];
+  PROMPT_TEMPLATE_CREATED: PromptTemplateCreatedEvent["payload"];
+  PROMPT_TEMPLATE_UPDATED: PromptTemplateUpdatedEvent["payload"];
   SDOC_DELETED: SdocDeletedEvent["payload"];
   SDOC_DELETED_BATCH: SdocDeletedBatchEvent["payload"];
   SDOC_METADATA_DELETED: SdocMetadataDeletedEvent["payload"];
@@ -196,6 +200,8 @@ export type DATSEvent =
   | (Omit<ProjectMetadataUpdatedEvent, "type"> & { type: "PROJECT_METADATA_UPDATED" })
   | (Omit<ProjectUpdatedEvent, "type"> & { type: "PROJECT_UPDATED" })
   | (Omit<ProjectUsersLinkedEvent, "type"> & { type: "PROJECT_USERS_LINKED" })
+  | (Omit<PromptTemplateCreatedEvent, "type"> & { type: "PROMPT_TEMPLATE_CREATED" })
+  | (Omit<PromptTemplateUpdatedEvent, "type"> & { type: "PROMPT_TEMPLATE_UPDATED" })
   | (Omit<SdocDeletedEvent, "type"> & { type: "SDOC_DELETED" })
   | (Omit<SdocDeletedBatchEvent, "type"> & { type: "SDOC_DELETED_BATCH" })
   | (Omit<SdocMetadataDeletedEvent, "type"> & { type: "SDOC_METADATA_DELETED" })

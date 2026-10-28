@@ -2,45 +2,42 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnotationParams } from "./AnnotationParams";
-import type { ApproachType } from "./ApproachType";
-import type { DefaultStrategyParams } from "./DefaultStrategyParams";
-import type { FewShotParams } from "./FewShotParams";
-import type { FuzzyGroundingStrategyParams } from "./FuzzyGroundingStrategyParams";
-import type { MetadataExtractionParams } from "./MetadataExtractionParams";
-import type { NERInlineTagStrategyParams } from "./NERInlineTagStrategyParams";
-import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
-import type { StrategyType } from "./StrategyType";
-import type { TaggingParams } from "./TaggingParams";
+import type { PromptTemplateSnapshot } from "./PromptTemplateSnapshot";
 import type { TaskType } from "./TaskType";
-import type { ZeroShotParams } from "./ZeroShotParams";
+/**
+ * Runs a prompt on documents: a stored prompt template version or a draft.
+ *
+ * The prompt decides everything but the documents and the model: the task, the
+ * selected codes, tags or metadata fields, the examples (few-shot if it shows
+ * any), how documents are split and the answer format.
+ */
 export type LLMAssistantJobInput = {
   /**
    * Project ID associated with the job
    */
   project_id: number;
   /**
-   * The type of the LLMAssistantJob (what to llm)
+   * The task of the prompt
    */
   task_type: TaskType;
   /**
-   * Specific parameters for the LLMAssistantJob w.r.t it's type
+   * IDs of the source documents to process
    */
-  specific_task_parameters: TaggingParams | MetadataExtractionParams | AnnotationParams | SentenceAnnotationParams;
+  sdoc_ids: Array<number>;
   /**
-   * The approach to use for the LLMAssistantJob
+   * Large Language Model to use for the job
    */
-  approach_type: ApproachType;
+  model: string;
   /**
-   * Specific parameters for the approach w.r.t it's type
+   * ID of the prompt template version to run. Exactly one of prompt_template_version_id and draft is set.
    */
-  specific_approach_parameters: ZeroShotParams | FewShotParams;
+  prompt_template_version_id?: number | null;
   /**
-   * The strategy to use for the LLMAssistantJob
+   * An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_template_version_id and draft is set.
    */
-  strategy_type: StrategyType;
+  draft?: PromptTemplateSnapshot | null;
   /**
-   * Specific parameters for the strategy w.r.t it's type
+   * Delete the existing annotations of the assistant for the documents and codes of the prompt before creating new ones
    */
-  specific_strategy_parameters: DefaultStrategyParams | NERInlineTagStrategyParams | FuzzyGroundingStrategyParams;
+  delete_existing_annotations?: boolean;
 };
