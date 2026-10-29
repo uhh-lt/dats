@@ -6,8 +6,9 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Stack,
 } from "@mui/material";
-import { useCallback, useId } from "react";
+import { ReactNode, useCallback, useId } from "react";
 
 interface DescribedSelectProps<T extends string> extends Omit<FormControlProps, "onChange"> {
   label: string;
@@ -17,6 +18,8 @@ interface DescribedSelectProps<T extends string> extends Omit<FormControlProps, 
   getOptionLabel: (option: T) => string;
   /** Shown below the label of every option in the open menu. */
   getOptionDescription: (option: T) => string;
+  /** Shown next to the label of every option in the open menu, e.g. chips. */
+  getOptionAdornment?: (option: T) => ReactNode;
 }
 
 /** A select whose options explain themselves: every option shows a label and a description. */
@@ -27,6 +30,7 @@ export function DescribedSelect<T extends string>({
   onChange,
   getOptionLabel,
   getOptionDescription,
+  getOptionAdornment,
   ...props
 }: DescribedSelectProps<T>) {
   const labelId = useId();
@@ -46,7 +50,12 @@ export function DescribedSelect<T extends string>({
         {options.map((option) => (
           <MenuItem key={option} value={option}>
             <ListItemText
-              primary={getOptionLabel(option)}
+              primary={
+                <Stack direction="row" gap={1} alignItems="center">
+                  {getOptionLabel(option)}
+                  {getOptionAdornment?.(option)}
+                </Stack>
+              }
               secondary={getOptionDescription(option)}
               secondaryTypographyProps={{ sx: { whiteSpace: "normal", maxWidth: 400 } }}
             />
