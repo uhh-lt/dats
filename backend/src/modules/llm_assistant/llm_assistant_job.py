@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from common.job_type_enum import JobType
 from core.prompt_template.prompt_template_service import PromptTemplateService
 from modules.llm_assistant.llm_assistant_endpoint import router
@@ -5,6 +7,7 @@ from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
 )
+from modules.llm_assistant.llm_assistant_service import LLMAssistantService
 from modules.llm_assistant.strategies.strategy_factory import build_strategy
 from modules.llm_assistant.tasks.task_factory import build_task
 from repos.db.sql_repo import SQLRepo
@@ -14,6 +17,13 @@ from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
+
+
+def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> None:
+    """Reject documents of other projects before the job is enqueued."""
+    LLMAssistantService().assert_documents_in_project(
+        db=db, project_id=payload.project_id, sdoc_ids=payload.sdoc_ids
+    )
 
 
 @register_job(
@@ -26,6 +36,7 @@ sqlr = SQLRepo()
     device="api",
     result_ttl=JobTiming.NINETY_DAYS,
     timeout=JobTiming.ONE_DAY,
+    validate_input=validate_llm_assistant_input,
 )
 def llm_assistant(
     payload: LLMAssistantJobInput,

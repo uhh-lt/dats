@@ -45,6 +45,7 @@ Key decorator arguments:
 | `generate_endpoints` | `ALL` / `MINIMAL` / `NONE` — which REST endpoints are auto-generated.    |
 | `publish_updates`    | Whether state changes are pushed over websockets (see below).            |
 | `read_model`         | Optional custom `JobRead` subclass for the event/REST payload.           |
+| `validate_input`     | Optional check `(db, payload)` the generated start endpoint runs before enqueueing; it raises to reject the input (e.g. ids of another project). |
 
 ## Execution Lifecycle
 
