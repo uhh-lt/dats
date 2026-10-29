@@ -132,7 +132,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
 
         return [model.id for model in conn.models.list().data]
 
-    def _validate_llm_name(self, model: str) -> str:
+    def validate_llm_name(self, model: str) -> str:
         available_models = self._fetch_available_models(provider=ProviderType.LLM)
         if len(available_models) == 0:
             raise ValueError("No LLM models available.")
@@ -182,7 +182,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self._validate_llm_name(model)
+        model = self.validate_llm_name(model)
 
         if session_id is None:
             session_id = self._start_llm_chat_session()
@@ -256,7 +256,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self._validate_llm_name(model)
+        model = self.validate_llm_name(model)
 
         response = self.__llm_conn.chat.completions.create(
             model=model,
@@ -304,7 +304,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self._validate_llm_name(model)
+        model = self.validate_llm_name(model)
 
         # prepare batch messages
         batch_messages = [
@@ -425,7 +425,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self._validate_llm_name(model)
+        model = self.validate_llm_name(model)
 
         if session_id is None:
             session_id = self._start_vlm_chat_session()

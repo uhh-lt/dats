@@ -340,12 +340,14 @@ def create_app() -> FastAPI:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    from modules.agent.agent_service import AgentService
     from repos.filesystem_repo import FilesystemRepo
     from systems.websocket_system.websocket_service import WebsocketService
 
     logger.info(f"Worker {os.getpid()} starting Discourse Analysis Tool Suite API!")
     repos = connect_repos()
     init_services()
+    AgentService().initialize(app)
     websocket_service = WebsocketService()
     await websocket_service.startup()
 
