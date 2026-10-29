@@ -78,7 +78,7 @@ function PromptTemplateButton() {
     <Card elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "secondary.main" }}>
       <CardActionArea onClick={handleClick}>
         <CardContent style={{ textAlign: "center" }} sx={{ color: "info.contrastText", p: 3 }}>
-          <h3 style={{ marginTop: 0 }}>Prompt Template</h3>I will run one of your prompts!
+          <h3 style={{ marginTop: 0 }}>Prompt</h3>I will run one of your prompts!
         </CardContent>
       </CardActionArea>
     </Card>

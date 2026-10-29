@@ -136,7 +136,7 @@ function InputViewer({ llmAssistantJob }: { llmAssistantJob: LlmAssistantJobRead
   return (
     <Stack gap={3} sx={{ pt: 1, pr: 1, height: 400, overflowY: "auto" }}>
       <Typography variant="subtitle2">
-        Prompt template {template.name} ({LANGUAGE_LABELS[template.language]}), version {version.version}
+        Prompt {template.name} ({LANGUAGE_LABELS[template.language]}), version {version.version}
         {template.is_archived ? " (archived)" : ""}, model {model}
       </Typography>
       <TextField

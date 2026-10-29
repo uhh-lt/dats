@@ -2,8 +2,8 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FormMenu, FormText } from "@components/form-inputs";
 import {
+  DEFAULT_OUTPUT_FORMATS,
   LANGUAGE_LABELS,
-  OUTPUT_FORMAT_LABELS,
   PromptTemplateHooks,
   promptTemplateQueries,
   TASK_TYPE_LABELS,
@@ -11,7 +11,6 @@ import {
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
-import { OutputFormat } from "@models/OutputFormat";
 import { PromptLanguage } from "@models/PromptLanguage";
 import { PromptTemplateRead } from "@models/PromptTemplateRead";
 import { TaskType } from "@models/TaskType";
@@ -36,25 +35,19 @@ import { SubmitErrorHandler, SubmitHandler, useForm, useWatch } from "react-hook
 
 type PromptTemplateCreateValues = {
   name: string;
-  outputFormat: OutputFormat;
+  taskType: TaskType;
   language: PromptLanguage;
 };
 
-// the task of a new template follows from the output format of its default prompt
-const OUTPUT_FORMAT_TASK_TYPES: Record<OutputFormat, TaskType> = {
-  [OutputFormat.TAGS]: TaskType.TAGGING,
-  [OutputFormat.METADATA]: TaskType.METADATA_EXTRACTION,
-  [OutputFormat.INLINE]: TaskType.ANNOTATION,
-  [OutputFormat.CONTEXT]: TaskType.ANNOTATION,
-  [OutputFormat.SENTENCES]: TaskType.SENTENCE_ANNOTATION,
-};
+// the tasks in the order the LLM Assistant offers them
+const TASK_TYPES = [TaskType.ANNOTATION, TaskType.SENTENCE_ANNOTATION, TaskType.TAGGING, TaskType.METADATA_EXTRACTION];
 
 interface PromptTemplateCreateDialogProps {
   projectId: number;
   onCreated: (template: PromptTemplateRead) => void;
 }
 
-/** Creates a prompt template from the default prompt of an output format and language. */
+/** Creates a prompt from the default prompt of a task and language; the output format can be changed in the editor. */
 export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTemplateCreateDialogProps) {
   // dialog state
   const { isOpen, open: handleOpen, close: handleClose } = useDialog();
@@ -75,17 +68,17 @@ export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTempl
     if (isOpen) {
       reset({
         name: "",
-        outputFormat: OutputFormat.SENTENCES,
+        taskType: TaskType.ANNOTATION,
         language: PromptLanguage.EN,
       });
     }
   }, [isOpen, reset]);
 
-  // the default prompt a new template starts with
-  const outputFormat = useWatch({ control, name: "outputFormat" });
+  // the default prompt a new prompt starts with
+  const taskType = useWatch({ control, name: "taskType" });
   const language = useWatch({ control, name: "language" });
   const defaultPrompt = useQuery({
-    ...promptTemplateQueries.defaultPrompt(outputFormat, language),
+    ...promptTemplateQueries.defaultPrompt(DEFAULT_OUTPUT_FORMATS[taskType ?? TaskType.ANNOTATION], language),
     enabled: isOpen,
   });
 
@@ -100,7 +93,7 @@ export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTempl
           requestBody: {
             project_id: projectId,
             name: data.name,
-            task_type: OUTPUT_FORMAT_TASK_TYPES[data.outputFormat],
+            task_type: data.taskType,
             language: data.language,
             ...content,
           },
@@ -133,7 +126,7 @@ export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTempl
         onSubmit={handleSubmit(handlePromptTemplateCreation, handleError)}
       >
         <DATSDialogHeader
-          title="Create a new prompt template"
+          title="Create a new prompt"
           onClose={handleClose}
           isMaximized={isMaximized}
           onToggleMaximize={toggleMaximize}
@@ -141,16 +134,15 @@ export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTempl
         <DialogContent>
           <Stack spacing={3} pt={1}>
             <Typography variant="body2">
-              The template starts with the default prompt of its task, answer format and language, as version 1. It
-              selects nothing yet: choose the codes, tags or metadata fields in the editor. The language decides the
-              text of the answer instructions and examples.
+              The prompt starts with the default prompt of its task and language as version 1. Choose the output format
+              and the codes, tags or metadata fields in the editor.
             </Typography>
             <FormText
               name="name"
               control={control}
-              rules={{ required: "Template name is required" }}
+              rules={{ required: "Name is required" }}
               textFieldProps={{
-                label: "Template name",
+                label: "Name",
                 variant: "outlined",
                 fullWidth: true,
                 autoFocus: true,
@@ -159,13 +151,13 @@ export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTempl
               }}
             />
             <FormMenu
-              name="outputFormat"
+              name="taskType"
               control={control}
-              textFieldProps={{ label: "Task and answer format", variant: "outlined", fullWidth: true }}
+              textFieldProps={{ label: "Task", variant: "outlined", fullWidth: true }}
             >
-              {Object.values(OutputFormat).map((format) => (
-                <MenuItem key={format} value={format}>
-                  {TASK_TYPE_LABELS[OUTPUT_FORMAT_TASK_TYPES[format]]}: {OUTPUT_FORMAT_LABELS[format]}
+              {TASK_TYPES.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {TASK_TYPE_LABELS[type]}
                 </MenuItem>
               ))}
             </FormMenu>
@@ -194,7 +186,7 @@ export function PromptTemplateCreateDialog({ projectId, onCreated }: PromptTempl
             loadingPosition="start"
             disabled={!defaultPrompt.data}
           >
-            Create Prompt Template
+            Create Prompt
           </Button>
         </DialogActions>
       </Dialog>

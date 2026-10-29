@@ -14,12 +14,13 @@ import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { SpanColumns } from "@models/SpanColumns";
+import { PromptCode } from "@models/PromptCode";
 import { PromptExampleKind } from "@models/PromptExampleKind";
-import { Button, CircularProgress, Dialog, ListItemIcon, Menu, MenuItem } from "@mui/material";
+import { Button, CircularProgress, Dialog, ListItemIcon, Menu, MenuItem, Tooltip } from "@mui/material";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch } from "@store/storeHooks";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { closeOnEscape } from "@utils/dialogUtils";
 
 const filterNameSentAnno = "selectExampleSentenceAnnotationDialog";
@@ -28,13 +29,19 @@ const filterNameSpanAnno = "selectExampleSpanAnnotationDialog";
 interface ExampleSelectionProps {
   projectId: number;
   kind: PromptExampleKind;
+  // the codes selected for the prompt: examples show annotations of these codes
+  codes: PromptCode[];
   onConfirmSelection: (annotationIds: number[]) => void;
 }
 
-/** Selects span or sentence annotations of one code that become few-shot examples. */
-export function ExampleSelection({ projectId, kind, onConfirmSelection }: ExampleSelectionProps) {
-  // global server state
-  const codes = CodeHooks.useGetEnabledCodes();
+/** Selects span or sentence annotations of one of the selected codes that become few-shot examples. */
+export function ExampleSelection({ projectId, kind, codes, onConfirmSelection }: ExampleSelectionProps) {
+  // global server state: the colors of the codes
+  const projectCodes = CodeHooks.useGetEnabledCodes();
+  const colors = useMemo(
+    () => new Map((projectCodes.data ?? []).map((code) => [code.id, code.color])),
+    [projectCodes.data],
+  );
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -102,9 +109,13 @@ export function ExampleSelection({ projectId, kind, onConfirmSelection }: Exampl
 
   return (
     <>
-      <Button size="small" onClick={handleClick}>
-        Add examples
-      </Button>
+      <Tooltip title={codes.length === 0 ? "Select codes first" : "Add annotations of a selected code as examples"}>
+        <span style={{ flexShrink: 0 }}>
+          <Button size="small" onClick={handleClick} disabled={codes.length === 0} sx={{ whiteSpace: "nowrap" }}>
+            Add examples
+          </Button>
+        </span>
+      </Tooltip>
       <Menu
         anchorEl={anchorEl}
         anchorOrigin={{
@@ -118,9 +129,9 @@ export function ExampleSelection({ projectId, kind, onConfirmSelection }: Exampl
         open={open}
         onClose={handleClose}
       >
-        {codes.data?.map((code) => (
-          <MenuItem key={code.id} onClick={() => handleOpenDialog(code.id)}>
-            <ListItemIcon>{getIconComponent(Icon.CODE, { style: { color: code.color } })}</ListItemIcon>
+        {codes.map((code) => (
+          <MenuItem key={code.code_id} onClick={() => handleOpenDialog(code.code_id)}>
+            <ListItemIcon>{getIconComponent(Icon.CODE, { style: { color: colors.get(code.code_id) } })}</ListItemIcon>
             <ListItemText>{code.name}</ListItemText>
           </MenuItem>
         ))}

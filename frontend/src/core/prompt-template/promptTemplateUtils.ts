@@ -33,12 +33,8 @@ export const DOCUMENT_UNIT_LABELS: Record<DocumentUnit, string> = {
   [DocumentUnit.CHUNKS]: "Chunks",
 };
 
-// what one LLM message of a document shows
-export const DOCUMENT_UNIT_MESSAGES: Record<DocumentUnit, string> = {
-  [DocumentUnit.WHOLE]: "Document",
-  [DocumentUnit.SENTENCES]: "Sentence",
-  [DocumentUnit.CHUNKS]: "Chunk",
-};
+// the text of a prompt, written in the editor or rendered in the preview
+export const PROMPT_TEXT_STYLE = { fontFamily: "monospace", fontSize: "0.9rem", lineHeight: 1.6 };
 
 export const LANGUAGE_LABELS: Record<PromptLanguage, string> = {
   [PromptLanguage.EN]: "English",

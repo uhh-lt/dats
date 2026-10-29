@@ -108,7 +108,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
       {
         id: "prompts",
         title: "Open Prompts",
-        description: "Go to the prompt templates of the project",
+        description: "Go to the prompts of the project",
         category: "Navigation",
         icon: getIconComponent(Icon.PROMPT_TEMPLATE),
         action: () => {

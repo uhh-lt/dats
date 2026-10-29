@@ -525,7 +525,7 @@ def test_preview_rejects_a_version_of_another_project(
     version_id = project["foreign_template"].versions[0].id
     response = _post_preview(client, _request(project, version_id=version_id))
     assert response.status_code == 400, response.text
-    assert f"Prompt template version {version_id} cannot be used" in response.text
+    assert f"Prompt version {version_id} cannot be used" in response.text
 
 
 def test_preview_rejects_an_invalid_draft(

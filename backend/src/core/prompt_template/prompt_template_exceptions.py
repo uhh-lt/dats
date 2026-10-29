@@ -9,7 +9,7 @@ class InvalidPromptTemplateError(Exception):
     """Raised when a prompt template violates the block rules of its task."""
 
     def __init__(self, cause: str) -> None:
-        super().__init__(f"Invalid prompt template: {cause}")
+        super().__init__(f"Invalid prompt: {cause}")
 
 
 @exception_handler(status.HTTP_400_BAD_REQUEST)
@@ -26,7 +26,7 @@ class PromptTemplateMismatchError(Exception):
 
     def __init__(self, version_id: int, project_id: int, task_type: TaskType) -> None:
         super().__init__(
-            f"Prompt template version {version_id} cannot be used in project "
+            f"Prompt version {version_id} cannot be used in project "
             f"{project_id} for task {task_type.value}."
         )
 
