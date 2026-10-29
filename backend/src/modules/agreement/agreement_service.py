@@ -17,6 +17,7 @@ from modules.agreement.agreement_dto import (
     AgreementResult,
     AgreementScore,
     AgreementSegment,
+    AgreementTextRange,
 )
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
 from modules.agreement.agreement_exceptions import (
@@ -48,6 +49,31 @@ class _UnitCodes(NamedTuple):
     # code id -> ids of the annotations that assign the code to the unit
     reference: dict[int, set[int]]
     compared: dict[int, set[int]]
+
+
+class _Segment(NamedTuple):
+    """A segment before its character offsets are resolved (see AgreementSegment)."""
+
+    sdoc_id: int
+    unit_keys: list[_UnitKey]
+    reference_code_ids: list[int]
+    compared_code_ids: list[int]
+    reference_annotation_ids: list[int]
+    compared_annotation_ids: list[int]
+    # the token range of the first unit (span annotations only)
+    token_range: tuple[int, int] | None
+
+    @property
+    def true_positive_code_ids(self) -> list[int]:
+        return [c for c in self.reference_code_ids if c in self.compared_code_ids]
+
+    @property
+    def false_negative_code_ids(self) -> list[int]:
+        return [c for c in self.reference_code_ids if c not in self.compared_code_ids]
+
+    @property
+    def false_positive_code_ids(self) -> list[int]:
+        return [c for c in self.compared_code_ids if c not in self.reference_code_ids]
 
 
 class _Counts(NamedTuple):
@@ -85,8 +111,22 @@ class AgreementService(metaclass=SingletonMeta):
             db=db, sdoc_ids=sdoc_ids, code_ids=code_ids, params=params
         )
 
-        # 3) aggregate the segments to scores and the confusion matrix
-        return self._aggregate(params=params, code_ids=code_ids, segments=segments)
+        # 3) resolve the character offsets of the segments; only the token and
+        # sentence offsets are read, the texts are read on request (segment_texts)
+        offsets = crud_sdoc_data.read_offsets_by_ids(
+            db=db, ids=[segment.sdoc_id for segment in segments]
+        )
+        agreement_segments = [
+            self._to_agreement_segment(
+                params=params, segment=segment, offsets=offsets.get(segment.sdoc_id)
+            )
+            for segment in segments
+        ]
+
+        # 4) aggregate the segments to scores and the confusion matrix
+        return self._aggregate(
+            params=params, code_ids=code_ids, segments=agreement_segments
+        )
 
     def export_counts(
         self, *, db: Session, project_id: int, params: AgreementParams
@@ -109,7 +149,7 @@ class AgreementService(metaclass=SingletonMeta):
             db=db, project_id=project_id, params=params
         )
 
-        # 2) count per document and code
+        # 2) count per document and code, without reading the documents
         segments = self._compute_segments(
             db=db, sdoc_ids=sdoc_ids, code_ids=code_ids, params=params
         )
@@ -119,12 +159,13 @@ class AgreementService(metaclass=SingletonMeta):
             for code_id in code_ids
         }
         for segment in segments:
+            num_units = len(segment.unit_keys)
             for code_id in segment.true_positive_code_ids:
-                counts[(segment.sdoc_id, code_id)][0] += segment.num_units
+                counts[(segment.sdoc_id, code_id)][0] += num_units
             for code_id in segment.false_positive_code_ids:
-                counts[(segment.sdoc_id, code_id)][1] += segment.num_units
+                counts[(segment.sdoc_id, code_id)][1] += num_units
             for code_id in segment.false_negative_code_ids:
-                counts[(segment.sdoc_id, code_id)][2] += segment.num_units
+                counts[(segment.sdoc_id, code_id)][2] += num_units
 
         # 3) write the CSV
         df = pd.DataFrame(
@@ -166,6 +207,26 @@ class AgreementService(metaclass=SingletonMeta):
             df=df, fn=f"project_{project_id}_agreement_counts"
         )
         return self.fsr.get_temp_file_url(export_file.name, relative=True)
+
+    def read_segment_texts(
+        self, *, db: Session, project_id: int, ranges: list[AgreementTextRange]
+    ) -> list[str]:
+        """The texts of character ranges of documents, e.g. of the segments of an
+        agreement result, which carry no texts so that large comparisons stay small.
+
+        Returns:
+            The text of every range, in the order of `ranges`.
+        """
+        # 1) validate the input
+        sdoc_ids = list(dict.fromkeys(text_range.sdoc_id for text_range in ranges))
+        self._read_sdoc_names(db=db, project_id=project_id, sdoc_ids=sdoc_ids)
+
+        # 2) cut the ranges out of the documents' contents
+        contents = crud_sdoc_data.read_contents_by_ids(db=db, ids=sdoc_ids)
+        return [
+            contents.get(text_range.sdoc_id, "")[text_range.begin : text_range.end]
+            for text_range in ranges
+        ]
 
     def _read_sdoc_names(
         self, *, db: Session, project_id: int, sdoc_ids: list[int]
@@ -218,7 +279,7 @@ class AgreementService(metaclass=SingletonMeta):
         sdoc_ids: list[int],
         code_ids: list[int],
         params: AgreementParams,
-    ) -> list[AgreementSegment]:
+    ) -> list[_Segment]:
         if not sdoc_ids or not code_ids:
             return []
 
@@ -266,9 +327,8 @@ class AgreementService(metaclass=SingletonMeta):
                     )
 
         # 3) merge consecutive units with the same codes into segments
-        texts = self._read_sdoc_texts(db=db, sdoc_ids=list(units_by_sdoc.keys()))
         code_order = {code_id: index for index, code_id in enumerate(code_ids)}
-        segments: list[AgreementSegment] = []
+        segments: list[_Segment] = []
         for sdoc_id in sdoc_ids:
             units = units_by_sdoc.get(sdoc_id)
             if not units:
@@ -284,9 +344,7 @@ class AgreementService(metaclass=SingletonMeta):
                 ):
                     segments.append(
                         self._to_segment(
-                            params=params,
                             sdoc_id=sdoc_id,
-                            text=texts.get(sdoc_id),
                             group=group,
                             units=units,
                             token_ranges=token_ranges,
@@ -297,9 +355,7 @@ class AgreementService(metaclass=SingletonMeta):
                 group.append(unit_key)
             segments.append(
                 self._to_segment(
-                    params=params,
                     sdoc_id=sdoc_id,
-                    text=texts.get(sdoc_id),
                     group=group,
                     units=units,
                     token_ranges=token_ranges,
@@ -372,14 +428,6 @@ class AgreementService(metaclass=SingletonMeta):
             )
         ]
 
-    def _read_sdoc_texts(
-        self, *, db: Session, sdoc_ids: list[int]
-    ) -> dict[int, SourceDocumentDataORM]:
-        return {
-            sdoc_data.id: sdoc_data
-            for sdoc_data in crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
-        }
-
     def _continues_segment(
         self,
         *,
@@ -400,40 +448,14 @@ class AgreementService(metaclass=SingletonMeta):
     def _to_segment(
         self,
         *,
-        params: AgreementParams,
         sdoc_id: int,
-        text: SourceDocumentDataORM | None,
         group: list[_UnitKey],
         units: dict[_UnitKey, _UnitCodes],
         token_ranges: dict[tuple[int, _UnitKey], tuple[int, int]],
         code_order: dict[int, int],
-    ) -> AgreementSegment:
-        first, last = group[0], group[-1]
-        content = text.content if text is not None else ""
-        begin_token: int | None = None
-        end_token: int | None = None
-        sentence_id_start: int | None = None
-        sentence_id_end: int | None = None
-        match params.annotation_type, params.scoring:
-            case AgreementAnnotationType.SPAN, AgreementScoring.EXACT:
-                begin, end = first
-                begin_token, end_token = token_ranges[(sdoc_id, first)]
-            case AgreementAnnotationType.SPAN, AgreementScoring.CONSTITUENTS:
-                begin_token, end_token = first[0], last[1]
-                begin = _at(text.token_starts if text else [], begin_token)
-                end = _at(text.token_ends if text else [], end_token - 1)
-            case AgreementAnnotationType.SENTENCE, _:
-                # exact: one unit (first, last); constituents: (i, i) per sentence
-                sentence_id_start, sentence_id_end = first[0], last[1]
-                begin = _at(text.sentence_starts if text else [], sentence_id_start)
-                end = _at(text.sentence_ends if text else [], sentence_id_end)
-
+    ) -> _Segment:
         # every unit of the segment carries the same codes (see _continues_segment)
-        first_unit = units[first]
-        reference_codes = sorted(
-            first_unit.reference.keys(), key=code_order.__getitem__
-        )
-        compared_codes = sorted(first_unit.compared.keys(), key=code_order.__getitem__)
+        first_unit = units[group[0]]
         reference_annotation_ids: set[int] = set()
         compared_annotation_ids: set[int] = set()
         for unit_key in group:
@@ -442,27 +464,67 @@ class AgreementService(metaclass=SingletonMeta):
             for annotation_ids in units[unit_key].compared.values():
                 compared_annotation_ids.update(annotation_ids)
 
-        return AgreementSegment(
+        return _Segment(
             sdoc_id=sdoc_id,
+            unit_keys=group,
+            reference_code_ids=sorted(
+                first_unit.reference.keys(), key=code_order.__getitem__
+            ),
+            compared_code_ids=sorted(
+                first_unit.compared.keys(), key=code_order.__getitem__
+            ),
+            reference_annotation_ids=sorted(reference_annotation_ids),
+            compared_annotation_ids=sorted(compared_annotation_ids),
+            token_range=token_ranges.get((sdoc_id, group[0])),
+        )
+
+    def _to_agreement_segment(
+        self,
+        *,
+        params: AgreementParams,
+        segment: _Segment,
+        offsets: SourceDocumentDataORM | None,
+    ) -> AgreementSegment:
+        """Resolve the character offsets of a segment with the token and sentence
+        offsets of its document."""
+        first, last = segment.unit_keys[0], segment.unit_keys[-1]
+        begin_token: int | None = None
+        end_token: int | None = None
+        sentence_id_start: int | None = None
+        sentence_id_end: int | None = None
+        match params.annotation_type, params.scoring:
+            case AgreementAnnotationType.SPAN, AgreementScoring.EXACT:
+                begin, end = first
+                assert segment.token_range is not None
+                begin_token, end_token = segment.token_range
+            case AgreementAnnotationType.SPAN, AgreementScoring.CONSTITUENTS:
+                begin_token, end_token = first[0], last[1]
+                begin = _at(offsets.token_starts if offsets else [], begin_token)
+                end = _at(offsets.token_ends if offsets else [], end_token - 1)
+            case AgreementAnnotationType.SENTENCE, _:
+                # exact: one unit (first, last); constituents: (i, i) per sentence
+                sentence_id_start, sentence_id_end = first[0], last[1]
+                begin = _at(
+                    offsets.sentence_starts if offsets else [], sentence_id_start
+                )
+                end = _at(offsets.sentence_ends if offsets else [], sentence_id_end)
+
+        return AgreementSegment(
+            sdoc_id=segment.sdoc_id,
             begin=begin,
             end=end,
             begin_token=begin_token,
             end_token=end_token,
             sentence_id_start=sentence_id_start,
             sentence_id_end=sentence_id_end,
-            num_units=len(group),
-            text=content[begin:end],
-            reference_code_ids=reference_codes,
-            compared_code_ids=compared_codes,
-            true_positive_code_ids=[c for c in reference_codes if c in compared_codes],
-            false_negative_code_ids=[
-                c for c in reference_codes if c not in compared_codes
-            ],
-            false_positive_code_ids=[
-                c for c in compared_codes if c not in reference_codes
-            ],
-            reference_annotation_ids=sorted(reference_annotation_ids),
-            compared_annotation_ids=sorted(compared_annotation_ids),
+            num_units=len(segment.unit_keys),
+            reference_code_ids=segment.reference_code_ids,
+            compared_code_ids=segment.compared_code_ids,
+            true_positive_code_ids=segment.true_positive_code_ids,
+            false_negative_code_ids=segment.false_negative_code_ids,
+            false_positive_code_ids=segment.false_positive_code_ids,
+            reference_annotation_ids=segment.reference_annotation_ids,
+            compared_annotation_ids=segment.compared_annotation_ids,
         )
 
     def _aggregate(

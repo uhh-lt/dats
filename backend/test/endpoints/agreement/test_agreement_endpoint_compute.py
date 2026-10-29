@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from modules.agreement.agreement_dto import AgreementParams, AgreementResult
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
 
-from .conftest import AgreementProject
+from .conftest import DOCUMENT_A, AgreementProject, record_sql
 
 
 class Mode(NamedTuple):
@@ -58,7 +58,7 @@ EXPECTED_MATRIX: dict[Mode, list[list[int]]] = {
     ],
 }
 
-# Expected segments as (text, number of units), sorted by position.
+# Expected segments as (text at their offsets, number of units), sorted by position.
 EXPECTED_SEGMENTS: dict[Mode, list[tuple[str, int]]] = {
     SPAN_EXACT: [
         ("Anna", 1),
@@ -234,12 +234,34 @@ def test_compute_agreement_confusion_matrix_counts_every_code_combination(
 def test_compute_agreement_segments_are_sorted_by_position(
     client: TestClient, agreement_project: AgreementProject, mode: Mode
 ) -> None:
-    """Strict spans are never merged; consecutive words / sentences with equal codes are."""
+    """Strict spans are never merged; consecutive words / sentences with equal codes
+    are. The segments carry no texts, their character offsets locate them."""
     p = agreement_project
     result = _compute(client, p["project"].id, _params(p, mode))
 
-    assert [(s.text, s.num_units) for s in result.segments] == EXPECTED_SEGMENTS[mode]
+    assert [
+        (DOCUMENT_A[s.begin : s.end], s.num_units) for s in result.segments
+    ] == EXPECTED_SEGMENTS[mode]
     assert {s.sdoc_id for s in result.segments} == {p["sdoc_a"].id}
+
+
+@pytest.mark.parametrize("mode", ALL_MODES)
+def test_compute_agreement_reads_no_document_texts(
+    client: TestClient, agreement_project: AgreementProject, mode: Mode
+) -> None:
+    """Large comparisons stay small: only the token and sentence offsets of the
+    documents are read, never their content or html."""
+    p = agreement_project
+
+    with record_sql() as statements:
+        _compute(client, p["project"].id, _params(p, mode))
+
+    document_data_reads = [s for s in statements if "sourcedocumentdata" in s]
+    assert not [
+        s
+        for s in document_data_reads
+        if "sourcedocumentdata.content" in s or "sourcedocumentdata.html" in s
+    ]
 
 
 def test_compute_agreement_strict_segment_with_overlapping_codes(
@@ -305,7 +327,7 @@ def test_compute_agreement_word_level_merges_consecutive_words(
 
     talked = result.segments[4]
     assert (talked.begin_token, talked.end_token, talked.num_units) == (6, 8, 2)
-    assert talked.text == "talked about"
+    assert DOCUMENT_A[talked.begin : talked.end] == "talked about"
     assert talked.false_positive_code_ids == [p["code_org"].id]
     assert talked.compared_annotation_ids == [p["spans"]["cmp_talked"].id]
 

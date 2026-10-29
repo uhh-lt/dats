@@ -66,6 +66,52 @@
         }
       }
     },
+    "/agreement/segment_texts": {
+      "post": {
+        "tags": ["agreement"],
+        "summary": "Returns the texts of segments (character ranges of documents), in the order of the request.",
+        "operationId": "get_segment_texts",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/AgreementTextRange" },
+                "title": "Ranges"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "title": "Response Agreement-Get Segment Texts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/analysis/code_frequencies": {
       "post": {
         "tags": ["analysis"],
@@ -8569,7 +8615,6 @@
             "title": "Num Units",
             "description": "Number of units (annotations, words or sentences)"
           },
-          "text": { "type": "string", "title": "Text", "description": "Text of the segment" },
           "reference_code_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -8623,7 +8668,6 @@
           "sentence_id_start",
           "sentence_id_end",
           "num_units",
-          "text",
           "reference_code_ids",
           "compared_code_ids",
           "true_positive_code_ids",
@@ -8634,6 +8678,17 @@
         ],
         "title": "AgreementSegment",
         "description": "A stretch of consecutive units of one document with the same codes on both sides.\n\nWith exact scoring, every segment is exactly one annotation boundary pair (the\nsame first and last word or sentence). With constituent scoring, neighboring\nwords or sentences are merged as long as both annotators assign them the same\ncodes."
+      },
+      "AgreementTextRange": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the SourceDocument" },
+          "begin": { "type": "integer", "title": "Begin", "description": "Begin of the range in characters" },
+          "end": { "type": "integer", "title": "End", "description": "End of the range in characters (exclusive)" }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "begin", "end"],
+        "title": "AgreementTextRange",
+        "description": "A character range of a document, e.g. of an agreement segment."
       },
       "AnnoscalingConfirmSuggest": {
         "properties": {
