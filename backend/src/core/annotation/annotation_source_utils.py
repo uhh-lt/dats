@@ -25,16 +25,23 @@ class AnnotationCopyCreate(Protocol):
     def source_annotation_id(self) -> int | None: ...
 
 
+AnnotationCreate = TypeVar("AnnotationCreate", bound=AnnotationCopyCreate)
+
+
 def read_annotation_sources(
     db: Session,
     *,
     crud: SQLCRUDBase[AnnotationORM, Any, Any],
-    create_dtos: Sequence[AnnotationCopyCreate],
+    create_dtos: Sequence[AnnotationCreate],
     project_id_by_sdoc_id: dict[int, int],
-) -> list[AnnotationORM | None]:
+) -> list[tuple[AnnotationCreate, AnnotationORM | None]]:
     """
     Read the annotations the new ones are copied from with one query and check
     that each annotates the same source document of the same project.
+
+    A copy whose source annotation no longer exists (e.g. it was deleted after the
+    user opened the annotation comparison) is skipped silently, so the other
+    annotations of a batch are still created.
 
     Args:
         crud: The CRUD of the annotation type.
@@ -42,11 +49,10 @@ def read_annotation_sources(
         project_id_by_sdoc_id: The project of every source document of `create_dtos`.
 
     Returns:
-        The source annotation of every create DTO (None if it is no copy), in
-        the order of `create_dtos`.
+        The annotations to create, each with its source annotation (None if it is
+        no copy), in the order of `create_dtos`, without the skipped copies.
 
     Raises:
-        NoSuchElementError: If a source annotation does not exist.
         AnnotationSourceError: If a source annotation does not annotate the same
             source document of the same project.
     """
@@ -57,16 +63,16 @@ def read_annotation_sources(
             if create_dto.source_annotation_id is not None
         )
     )
-    source_by_id = {
-        db_obj.id: db_obj for db_obj in crud.read_by_ids(db=db, ids=source_ids)
-    }
+    source_by_id = crud.read_existing_by_ids(db=db, ids=source_ids)
 
-    sources: list[AnnotationORM | None] = []
+    annotations: list[tuple[AnnotationCreate, AnnotationORM | None]] = []
     for create_dto in create_dtos:
         if create_dto.source_annotation_id is None:
-            sources.append(None)
+            annotations.append((create_dto, None))
             continue
-        source = source_by_id[create_dto.source_annotation_id]
+        source = source_by_id.get(create_dto.source_annotation_id)
+        if source is None:
+            continue
         if (
             source.project_id != project_id_by_sdoc_id[create_dto.sdoc_id]
             or source.sdoc_id != create_dto.sdoc_id
@@ -74,8 +80,8 @@ def read_annotation_sources(
             raise AnnotationSourceError(
                 source_annotation_id=source.id, sdoc_id=create_dto.sdoc_id
             )
-        sources.append(source)
-    return sources
+        annotations.append((create_dto, source))
+    return annotations
 
 
 def copy_annotation_source_memos(
