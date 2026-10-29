@@ -57,6 +57,7 @@ from core.prompt_template.prompt_template_specs import (
     DOCUMENT_UNIT_DESCRIPTIONS,
     OUTPUT_FORMAT_SPECS,
     PROMPT_TASK_SPECS,
+    default_prompt_name,
     document_placeholder,
     output_format_placeholder,
 )
@@ -174,7 +175,7 @@ class PromptTemplateService(metaclass=SingletonMeta):
                 user_id=SYSTEM_USER_ID,
                 create_dto=PromptTemplateCreate(
                     project_id=project_id,
-                    name=f"default-{spec.default_name_slug}-{language.value}",
+                    name=default_prompt_name(output_format, language),
                     task_type=spec.task_type,
                     language=language,
                     **self.read_default_prompt(
@@ -289,6 +290,11 @@ class PromptTemplateService(metaclass=SingletonMeta):
                     placeholder=output_format_placeholder(output_format),
                     name=OUTPUT_FORMAT_SPECS[output_format].name,
                     description=OUTPUT_FORMAT_SPECS[output_format].description,
+                    details=OUTPUT_FORMAT_SPECS[output_format].details,
+                    default_prompt_names={
+                        language: default_prompt_name(output_format, language)
+                        for language in PromptLanguage
+                    },
                     default_document_unit=OUTPUT_FORMAT_SPECS[
                         output_format
                     ].default_document_unit,

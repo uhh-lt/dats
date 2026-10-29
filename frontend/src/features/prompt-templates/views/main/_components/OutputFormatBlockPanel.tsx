@@ -1,4 +1,4 @@
-import { OUTPUT_FORMAT_LABELS, promptTemplateQueries, setOutputFormat } from "@core/prompt-template";
+import { OUTPUT_FORMAT_LABELS, OutputFormatAbout, promptTemplateQueries, setOutputFormat } from "@core/prompt-template";
 import { useDebounce } from "@hooks/useDebounce";
 import { OutputFormat } from "@models/OutputFormat";
 import { PromptSettings } from "@models/PromptSettings";
@@ -54,7 +54,7 @@ export function OutputFormatBlockPanel({
         <TextField
           select
           size="small"
-          label="The LLM answers with"
+          label="Output format"
           value={outputFormat}
           onChange={handleChangeFormat}
           sx={{ flex: "1 1 100%" }}
@@ -115,6 +115,7 @@ export function OutputFormatBlockPanel({
           )}
         </>
       )}
+      {formatInfo && <OutputFormatAbout name={formatInfo.name} details={formatInfo.details} />}
     </Stack>
   );
 }

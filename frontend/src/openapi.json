@@ -13731,13 +13731,33 @@
             "title": "Description",
             "description": "How the LLM answers in this format"
           },
+          "details": {
+            "type": "string",
+            "title": "Details",
+            "description": "Markdown: how the format works, an example and when to use it"
+          },
           "default_document_unit": {
             "$ref": "#/components/schemas/DocumentUnit",
             "description": "The document unit the format works best with"
+          },
+          "default_prompt_names": {
+            "additionalProperties": { "type": "string" },
+            "propertyNames": { "$ref": "#/components/schemas/PromptLanguage" },
+            "type": "object",
+            "title": "Default Prompt Names",
+            "description": "Per language, the name of the format's default prompt that every project gets"
           }
         },
         "type": "object",
-        "required": ["output_format", "placeholder", "name", "description", "default_document_unit"],
+        "required": [
+          "output_format",
+          "placeholder",
+          "name",
+          "description",
+          "details",
+          "default_document_unit",
+          "default_prompt_names"
+        ],
         "title": "OutputFormatInfo"
       },
       "Page_BBoxAnnotationRow_": {

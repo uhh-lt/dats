@@ -129,7 +129,7 @@ export function PromptTemplateBlocksSidebar({ editor, projectId }: PromptTemplat
       </BlockSection>
       <BlockSection
         title="Output format"
-        description={`The fixed answer instructions of the answer format; the answers are read in this format. ${format.description}`}
+        description={`The fixed answer instructions of the output format; the answers are read in this format. ${format.description}`}
         chips={[
           {
             label: "<output-format>",

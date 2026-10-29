@@ -8,8 +8,8 @@ import {
   Alert,
   Box,
   Chip,
+  CircularProgress,
   IconButton,
-  LinearProgress,
   MenuItem,
   Stack,
   TextField,
@@ -36,7 +36,10 @@ interface PromptPreviewProps {
   variant?: "inline" | "page";
 }
 
-/** Shows the prompt the LLM receives for one document (or one of its sentences), rendered by the backend. */
+/**
+ * Shows the prompt the LLM receives for one document (or one of its sentences), rendered by the backend. The page
+ * variant also shows whether the prompt is zero- or few-shot.
+ */
 export function PromptPreview({ projectId, sdocIds, source, toolbarStart, variant = "inline" }: PromptPreviewProps) {
   // local state: the document and, sent sentence by sentence, the sentence to preview
   const [selectedSdocId, setSelectedSdocId] = useState<number | undefined>(undefined);
@@ -112,7 +115,7 @@ export function PromptPreview({ projectId, sdocIds, source, toolbarStart, varian
         </Stack>
       )}
       <Box sx={{ flexGrow: 1 }} />
-      {preview.data && !preview.isError && (
+      {variant === "page" && preview.data && !preview.isError && (
         <Tooltip
           title={
             preview.data.is_fewshot
@@ -126,22 +129,39 @@ export function PromptPreview({ projectId, sdocIds, source, toolbarStart, varian
     </>
   );
 
+  // while a new preview loads, the old one stays and a spinner covers it, so the layout does not jump
   const content = (
-    <Stack spacing={2}>
-      {preview.isFetching && <LinearProgress />}
-      {preview.isError && <Alert severity="error">{getErrorMessage(preview.error)}</Alert>}
-      {preview.data && !preview.isError && preview.data.unknown_placeholders.length > 0 && (
-        <Alert severity="warning">
-          No block fills {preview.data.unknown_placeholders.join(", ")}. The text is sent to the LLM as it is; check for
-          typos.
-        </Alert>
+    <Box sx={{ position: "relative", minHeight: 48 }}>
+      {preview.isFetching && (
+        <CircularProgress
+          size={32}
+          // centered, but never below the first screen of a long prompt
+          sx={{ position: "absolute", top: "min(50%, 240px)", left: "50%", mt: "-16px", ml: "-16px", zIndex: 1 }}
+        />
       )}
-      {preview.data && !preview.isError && (
-        <Typography component="div" sx={{ ...PROMPT_TEXT_STYLE, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
-          {preview.data.prompt}
-        </Typography>
-      )}
-    </Stack>
+      <Stack spacing={2}>
+        {preview.isError && <Alert severity="error">{getErrorMessage(preview.error)}</Alert>}
+        {preview.data && !preview.isError && preview.data.unknown_placeholders.length > 0 && (
+          <Alert severity="warning">
+            No block fills {preview.data.unknown_placeholders.join(", ")}. The text is sent to the LLM as it is; check
+            for typos.
+          </Alert>
+        )}
+        {preview.data && !preview.isError && (
+          <Typography
+            component="div"
+            sx={{
+              ...PROMPT_TEXT_STYLE,
+              whiteSpace: "pre-wrap",
+              overflowWrap: "anywhere",
+              opacity: preview.isFetching ? 0.5 : 1,
+            }}
+          >
+            {preview.data.prompt}
+          </Typography>
+        )}
+      </Stack>
+    </Box>
   );
 
   if (variant === "page") {

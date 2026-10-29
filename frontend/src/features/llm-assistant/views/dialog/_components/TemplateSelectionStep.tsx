@@ -61,8 +61,8 @@ export function TemplateSelectionStep() {
           <LLMAssistantUtterance>
             <Typography>
               Choose the prompt I should run on the {sdocIds.length} selected document(s). The prompt decides the task,
-              the codes, tags or metadata fields, the examples and the answer format. Prompts are written on the Prompts
-              page of the project.
+              the codes, tags or metadata fields, the examples and the input and output format. Prompts are written on
+              the Prompts page of the project.
             </Typography>
           </LLMAssistantUtterance>
           <Card variant="outlined">

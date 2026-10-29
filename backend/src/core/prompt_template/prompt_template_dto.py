@@ -351,8 +351,14 @@ class OutputFormatInfo(BaseModel):
     placeholder: str = Field(description="The block, e.g. <output-format:inline>")
     name: str = Field(description="Human-readable name of the format")
     description: str = Field(description="How the LLM answers in this format")
+    details: str = Field(
+        description="Markdown: how the format works, an example and when to use it"
+    )
     default_document_unit: DocumentUnit = Field(
         description="The document unit the format works best with"
+    )
+    default_prompt_names: dict[PromptLanguage, str] = Field(
+        description="Per language, the name of the format's default prompt that every project gets"
     )
 
 

@@ -4,6 +4,7 @@ import {
   DOCUMENT_UNIT_LABELS,
   LANGUAGE_LABELS,
   OUTPUT_FORMAT_LABELS,
+  OutputFormatAbout,
   promptTemplateQueries,
   withDefaultSettings,
 } from "@core/prompt-template";
@@ -46,7 +47,7 @@ const isValidSettings = (settings: Required<PromptSettings>) =>
   settings.chunk_overlap_tokens >= 0 &&
   settings.chunk_overlap_tokens < settings.chunk_size_tokens;
 
-/** Configures the model and, in guided mode, the language, answer format and document unit of the default prompt. */
+/** Configures the model and, in guided mode, the language, input and output format of the default prompt. */
 export const SettingsStep = memo(() => {
   const availableLLMs = useQuery(generalQueries.availableModels());
   const mode = useAppSelector((state) => state.llmAssistant.mode);
@@ -78,8 +79,8 @@ export const SettingsStep = memo(() => {
     setLanguage(event.target.value as PromptLanguage);
   }, []);
   const handleChangeOutputFormat = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // an input format the user chose stays; otherwise the default of the new output format applies
     setOutputFormat(event.target.value as OutputFormat);
-    setDocumentUnit(undefined);
   }, []);
   const handleChangeDocumentUnit = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setDocumentUnit(event.target.value as DocumentUnit);
@@ -173,7 +174,7 @@ export const SettingsStep = memo(() => {
           </SettingsSection>
           {mode === "guided" && (
             <SettingsSection title="Prompt">
-              {taskInfo.isError && <Alert severity="error">Could not load the answer formats of this task.</Alert>}
+              {taskInfo.isError && <Alert severity="error">Could not load the formats of this task.</Alert>}
               <FormItem title="Language" subtitle="The language of the prompt; documents can be in any language.">
                 <TextField
                   select
@@ -190,12 +191,36 @@ export const SettingsStep = memo(() => {
                   ))}
                 </TextField>
               </FormItem>
-              <FormItem title="Answer format" subtitle={formatInfo?.description ?? "How the LLM answers."}>
+              <FormItem
+                title="Input format"
+                subtitle={
+                  taskInfo.data?.document_units.find((info) => info.unit === unit)?.description ??
+                  "How the documents are sent to the LLM."
+                }
+              >
                 <TextField
                   select
                   fullWidth
                   variant="filled"
-                  label="Answer format"
+                  label="Input format"
+                  value={unit ?? ""}
+                  onChange={handleChangeDocumentUnit}
+                  disabled={!taskInfo.data}
+                >
+                  {(taskInfo.data?.document_units ?? []).map((info) => (
+                    <MenuItem key={info.unit} value={info.unit}>
+                      {DOCUMENT_UNIT_LABELS[info.unit]}
+                    </MenuItem>
+                  ))}
+                  {!taskInfo.data && unit && <MenuItem value={unit}>{DOCUMENT_UNIT_LABELS[unit]}</MenuItem>}
+                </TextField>
+              </FormItem>
+              <FormItem title="Output format" subtitle={formatInfo?.description ?? "How the LLM answers."}>
+                <TextField
+                  select
+                  fullWidth
+                  variant="filled"
+                  label="Output format"
                   value={outputFormat ?? ""}
                   onChange={handleChangeOutputFormat}
                   disabled={!taskInfo.data}
@@ -210,91 +235,71 @@ export const SettingsStep = memo(() => {
                   )}
                 </TextField>
               </FormItem>
-              <FormItem
-                title="Send the document"
-                subtitle={
-                  taskInfo.data?.document_units.find((info) => info.unit === unit)?.description ??
-                  "How documents are split into LLM calls."
-                }
-              >
-                <TextField
-                  select
-                  fullWidth
-                  variant="filled"
-                  label="Document"
-                  value={unit ?? ""}
-                  onChange={handleChangeDocumentUnit}
-                  disabled={!taskInfo.data}
-                >
-                  {(taskInfo.data?.document_units ?? []).map((info) => (
-                    <MenuItem key={info.unit} value={info.unit}>
-                      {DOCUMENT_UNIT_LABELS[info.unit]}
-                    </MenuItem>
-                  ))}
-                  {!taskInfo.data && unit && <MenuItem value={unit}>{DOCUMENT_UNIT_LABELS[unit]}</MenuItem>}
-                </TextField>
+              {formatInfo && <OutputFormatAbout name={formatInfo.name} details={formatInfo.details} />}
+            </SettingsSection>
+          )}
+          {mode === "guided" && unit === DocumentUnit.CHUNKS && (
+            <SettingsSection title="Input parameters">
+              <FormItem title="Chunk size" subtitle="Maximum number of tokens sent to the model in one chunk.">
+                <NumberField
+                  label="Tokens"
+                  value={settings.chunk_size_tokens}
+                  onChange={handleChangeSetting("chunk_size_tokens")}
+                  error={!Number.isInteger(settings.chunk_size_tokens) || settings.chunk_size_tokens <= 0}
+                  helperText="Enter a positive whole number."
+                />
               </FormItem>
-              {unit === DocumentUnit.CHUNKS && (
-                <>
-                  <FormItem title="Chunk size" subtitle="Maximum number of tokens sent to the model in one chunk.">
-                    <NumberField
-                      label="Tokens"
-                      value={settings.chunk_size_tokens}
-                      onChange={handleChangeSetting("chunk_size_tokens")}
-                      error={!Number.isInteger(settings.chunk_size_tokens) || settings.chunk_size_tokens <= 0}
-                      helperText="Enter a positive whole number."
-                    />
-                  </FormItem>
-                  <FormItem title="Chunk overlap" subtitle="Tokens repeated between adjacent chunks.">
-                    <NumberField
-                      label="Tokens"
-                      value={settings.chunk_overlap_tokens}
-                      onChange={handleChangeSetting("chunk_overlap_tokens")}
-                      error={
-                        !Number.isInteger(settings.chunk_overlap_tokens) ||
-                        settings.chunk_overlap_tokens < 0 ||
-                        settings.chunk_overlap_tokens >= settings.chunk_size_tokens
-                      }
-                      helperText="Must be a whole number smaller than the chunk size."
-                    />
-                  </FormItem>
-                </>
-              )}
-              {outputFormat === OutputFormat.CONTEXT && (
-                <>
-                  <FormItem title="Context before" subtitle="Characters of context requested before each quote.">
-                    <NumberField
-                      label="Characters"
-                      value={settings.context_before_chars}
-                      onChange={handleChangeSetting("context_before_chars")}
-                      error={!Number.isInteger(settings.context_before_chars) || settings.context_before_chars < 0}
-                      helperText="Enter a non-negative whole number."
-                    />
-                  </FormItem>
-                  <FormItem title="Context after" subtitle="Characters of context requested after each quote.">
-                    <NumberField
-                      label="Characters"
-                      value={settings.context_after_chars}
-                      onChange={handleChangeSetting("context_after_chars")}
-                      error={!Number.isInteger(settings.context_after_chars) || settings.context_after_chars < 0}
-                      helperText="Enter a non-negative whole number."
-                    />
-                  </FormItem>
-                  <FormItem
-                    title="Fuzzy threshold"
-                    subtitle="Minimum similarity to locate a quote that is not found exactly."
-                  >
-                    <NumberField
-                      label="Similarity"
-                      step={0.05}
-                      value={settings.fuzzy_threshold}
-                      onChange={handleChangeSetting("fuzzy_threshold")}
-                      error={settings.fuzzy_threshold < 0 || settings.fuzzy_threshold > 1}
-                      helperText="Enter a value between 0 and 1."
-                    />
-                  </FormItem>
-                </>
-              )}
+              <FormItem
+                title="Chunk overlap"
+                subtitle="Tokens repeated between adjacent chunks to preserve surrounding context."
+              >
+                <NumberField
+                  label="Tokens"
+                  step={10}
+                  value={settings.chunk_overlap_tokens}
+                  onChange={handleChangeSetting("chunk_overlap_tokens")}
+                  error={
+                    !Number.isInteger(settings.chunk_overlap_tokens) ||
+                    settings.chunk_overlap_tokens < 0 ||
+                    settings.chunk_overlap_tokens >= settings.chunk_size_tokens
+                  }
+                  helperText="Must be a whole number smaller than the chunk size."
+                />
+              </FormItem>
+            </SettingsSection>
+          )}
+          {mode === "guided" && outputFormat === OutputFormat.CONTEXT && (
+            <SettingsSection title="Output parameters">
+              <FormItem title="Fuzzy threshold" subtitle="Minimum similarity required to locate an extracted quote.">
+                <NumberField
+                  label="Similarity"
+                  step={0.05}
+                  value={settings.fuzzy_threshold}
+                  onChange={handleChangeSetting("fuzzy_threshold")}
+                  error={settings.fuzzy_threshold < 0 || settings.fuzzy_threshold > 1}
+                  helperText="Enter a value between 0 and 1."
+                />
+              </FormItem>
+              <FormItem title="Context before" subtitle="Characters of context requested before each extracted quote.">
+                <NumberField
+                  label="Characters"
+                  step={8}
+                  value={settings.context_before_chars}
+                  onChange={handleChangeSetting("context_before_chars")}
+                  error={!Number.isInteger(settings.context_before_chars) || settings.context_before_chars < 0}
+                  helperText="Enter a non-negative whole number."
+                />
+              </FormItem>
+              <FormItem title="Context after" subtitle="Characters of context requested after each extracted quote.">
+                <NumberField
+                  label="Characters"
+                  step={8}
+                  value={settings.context_after_chars}
+                  onChange={handleChangeSetting("context_after_chars")}
+                  error={!Number.isInteger(settings.context_after_chars) || settings.context_after_chars < 0}
+                  helperText="Enter a non-negative whole number."
+                />
+              </FormItem>
             </SettingsSection>
           )}
         </Stack>
@@ -331,7 +336,7 @@ function NumberField({ label, value, step = 1, error, helperText, onChange }: Nu
       onChange={onChange}
       slotProps={{ htmlInput: { step, min: 0 } }}
       error={error}
-      helperText={error ? helperText : undefined}
+      helperText={helperText}
     />
   );
 }

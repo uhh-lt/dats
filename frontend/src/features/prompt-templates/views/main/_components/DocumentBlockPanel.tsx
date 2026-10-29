@@ -37,7 +37,14 @@ export function DocumentBlockPanel({
 
   return (
     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-      <TextField select size="small" label="Send" value={unit} onChange={handleChangeUnit} sx={{ flex: "1 1 100%" }}>
+      <TextField
+        select
+        size="small"
+        label="Input format"
+        value={unit}
+        onChange={handleChangeUnit}
+        sx={{ flex: "1 1 100%" }}
+      >
         {units.length === 0 ? (
           <MenuItem value={unit}>{DOCUMENT_UNIT_LABELS[unit]}</MenuItem>
         ) : (
