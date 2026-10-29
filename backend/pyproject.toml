@@ -67,6 +67,7 @@ dependencies = [
     "yake>=0.7.3",
     "websockets>=17.0.1",
     "fastmcp>=3.4.5",
+    "pydantic-ai[ag-ui]>=2.8.0",
 ]
 
 [dependency-groups]

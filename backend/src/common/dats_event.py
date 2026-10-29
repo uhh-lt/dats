@@ -22,6 +22,7 @@ from core.project.project_dto import ProjectRead, ProjectUserLinks
 from core.prompt.prompt_dto import PromptRead
 from core.tag.tag_dto import SdocTagLinks, TagRead
 from core.user.user_dto import UserRead
+from modules.agent.agent_session_dto import AgentSessionRead
 from modules.classifier.classifier_dto import ClassifierRead
 from modules.concept_over_time_analysis.cota_dto import COTARead
 from modules.experiment.experiment_dto import ExperimentRead
@@ -129,6 +130,9 @@ class DATSEvent(StrEnum):
 
     API_KEY_CREATED = "API_KEY_CREATED"
     API_KEY_DELETED = "API_KEY_DELETED"
+
+    AGENT_SESSION_UPDATED = "AGENT_SESSION_UPDATED"
+    AGENT_SESSION_DELETED = "AGENT_SESSION_DELETED"
 
     TAG_RECOMMENDATION_REVIEWED_BATCH = "TAG_RECOMMENDATION_REVIEWED_BATCH"
 
@@ -239,6 +243,8 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.USER_DELETED: UserRead,
     DATSEvent.API_KEY_CREATED: ApiKeyRead,
     DATSEvent.API_KEY_DELETED: ApiKeyRead,
+    DATSEvent.AGENT_SESSION_UPDATED: AgentSessionRead,
+    DATSEvent.AGENT_SESSION_DELETED: AgentSessionRead,
     DATSEvent.TAG_RECOMMENDATION_REVIEWED_BATCH: list[TagRecommendationLinkRead],
     DATSEvent.SEARCH_VIEW_CREATED: SearchViewReadUnion,
     DATSEvent.SEARCH_VIEW_UPDATED: SearchViewReadUnion,
