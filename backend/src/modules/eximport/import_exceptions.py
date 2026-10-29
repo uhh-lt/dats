@@ -55,6 +55,14 @@ class ImportMemosError(Exception):
         self.errors = errors
 
 
+class ImportPromptTemplatesError(Exception):
+    """Exception raised when prompt template import fails."""
+
+    def __init__(self, errors: list[str]) -> None:
+        super().__init__(f"Errors occurred while importing prompt templates: {errors}")
+        self.errors = errors
+
+
 class ImportProjectMetadataError(Exception):
     def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing project metadata: {errors}")

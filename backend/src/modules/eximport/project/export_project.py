@@ -17,6 +17,9 @@ from modules.eximport.memos.export_memos import export_all_memos
 from modules.eximport.project_metadata.export_project_metadata import (
     export_all_project_metadatas,
 )
+from modules.eximport.prompt_templates.export_prompt_templates import (
+    export_all_prompt_templates,
+)
 from modules.eximport.sdocs.export_sdocs import export_all_sdocs
 from modules.eximport.sent_annotations.export_sentence_annotations import (
     export_all_sentence_annotations,
@@ -61,6 +64,7 @@ def __export_project(
         export_all_folders,
         export_all_memos,
         export_all_project_metadatas,
+        export_all_prompt_templates,
         export_all_sdocs,
         export_all_sentence_annotations,
         export_all_span_annotations,
