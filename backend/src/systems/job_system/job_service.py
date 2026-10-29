@@ -229,6 +229,7 @@ class JobService(metaclass=SingletonMeta):
             if (
                 job.meta.get("type") == job_type
                 and job.meta.get("project_id") == project_id
+                and self._matches_job_types(job, job_info)
             ):
                 jobs.append(Job(job))
 
@@ -240,6 +241,7 @@ class JobService(metaclass=SingletonMeta):
                     if (
                         job.meta.get("type") == job_type
                         and job.meta.get("project_id") == project_id
+                        and self._matches_job_types(job, job_info)
                     ):
                         jobs.append(Job(job))
                 except Exception:
@@ -247,6 +249,27 @@ class JobService(metaclass=SingletonMeta):
                     continue
 
         return jobs
+
+    def _matches_job_types(self, job: rq.job.Job, job_info: RegisteredJob) -> bool:
+        """
+        Whether the stored input and output of a job still match the job's types.
+
+        Redis keeps jobs with their pickled input and output for a long time
+        (failed jobs for a year). A job created before its input or output type
+        changed cannot be unpickled or lacks fields, so it cannot be read anymore.
+        """
+        try:
+            job_info["input_type"].model_validate(job.kwargs["payload"].model_dump())
+            output = job.return_value()
+            if output is not None and job_info["output_type"] is not None:
+                job_info["output_type"].model_validate(output.model_dump())
+        except Exception:
+            logger.debug(
+                f"Skipping job {job.id}: its stored input or output does not match "
+                "the current job types"
+            )
+            return False
+        return True
 
     def get_failed_jobs_by_project(
         self, project_id: int, job_types: list[JobType] | None
