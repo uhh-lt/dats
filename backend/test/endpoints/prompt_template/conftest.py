@@ -22,17 +22,22 @@ from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.project.project_service import ProjectService
 from core.prompt_template.prompt_template_dto import (
     PromptCode,
     PromptExample,
     PromptExamplesCreate,
+    PromptMetadataField,
+    PromptTag,
     PromptTemplateCreate,
     PromptTemplateRead,
+    PromptTemplateUpdate,
     PromptTemplateVersionCreate,
     SentencePromptExample,
     SpanPromptExample,
 )
 from core.prompt_template.prompt_template_enum import (
+    OutputFormat,
     PromptExampleKind,
     PromptLanguage,
     TaskType,
@@ -379,4 +384,189 @@ def prompt_template_project(
         "foreign_tag": foreign_tag,
         "foreign_span_annotation": foreign_span_annotation,
         "foreign_template": foreign_template,
+    }
+
+
+class PromptTemplateEximportProjects(TypedDict):
+    """This fixture sets up the following projects.
+
+    Project ``Simple Test Project`` (``source``) is ``prompt_template_project``
+    (see PromptTemplateProject) with these changes:
+
+    - Template ``Span tagging`` is archived.
+    - Template ``Tag selection`` (TAGGING, English) with one version saved by
+      ``testuser@dats.org``: the default tags prompt with tag ``Report``.
+    - Template ``Metadata selection`` (METADATA_EXTRACTION, English) with one
+      version saved by ``testuser@dats.org``: the default metadata prompt with
+      metadata field ``author``.
+    - Template ``Sentence examples`` (SENTENCE_ANNOTATION, English) with one
+      version saved by ``testuser@dats.org``: the default sentences prompt (which
+      shows ``<examples>``) with code ``Claim`` and the example
+      ``sentence_example``.
+
+    Project ``Import target`` (``target``) of ``testuser@dats.org`` was created by
+    the project service, so it has the system codes (incl. ``PERSON``) and the 10
+    untouched default templates. It also contains code ``Claim``
+    (``CLAIM_DESCRIPTION``), tag ``Report`` ("Documents about reports."), the text
+    metadata field ``author`` (string, "The author of the document.") and template
+    ``Span tagging`` (ANNOTATION, English) with one version saved by
+    ``testuser@dats.org``: ``SPAN_V1_PROMPT`` with code PERSON, i.e. version 1 of
+    the source's ``Span tagging``. It has no documents and no annotations.
+
+    Non-obvious derived behavior:
+
+    - Both projects have the same 10 default templates, with equal content.
+    - The examples of the source reference the document ``example.txt`` and its
+      annotations, which do not exist in the target.
+    """
+
+    source: PromptTemplateProject
+    tag_template: PromptTemplateRead
+    metadata_template: PromptTemplateRead
+    sentence_template: PromptTemplateRead
+    target: ProjectORM
+    target_person_code: CodeORM
+    target_claim_code: CodeORM
+    target_report_tag: TagORM
+    target_author_field: ProjectMetadataORM
+    target_span_template: PromptTemplateRead
+
+
+@pytest.fixture(scope="function")
+def prompt_template_eximport_projects(
+    db_session: Session,
+    prompt_template_project: PromptTemplateProject,
+    test_user: UserORM,
+) -> PromptTemplateEximportProjects:
+    """Create the projects described by PromptTemplateEximportProjects."""
+    service = PromptTemplateService()
+    source = prompt_template_project
+    source_id = source["project"].id
+
+    def default_prompt(output_format: OutputFormat) -> str:
+        return service.read_default_prompt(
+            output_format=output_format, language=PromptLanguage.EN
+        ).prompt
+
+    # 1) the changes of the source project
+    service.update_prompt_template(
+        db=db_session,
+        prompt_template_id=source["span_template"].id,
+        update_dto=PromptTemplateUpdate(is_archived=True),
+    )
+    tag_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=source_id,
+            name="Tag selection",
+            task_type=TaskType.TAGGING,
+            language=PromptLanguage.EN,
+            prompt=default_prompt(OutputFormat.TAGS),
+            tags=[
+                PromptTag(
+                    tag_id=source["report_tag"].id,
+                    name="Report",
+                    description="Documents about reports.",
+                )
+            ],
+        ),
+    )
+    metadata_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=source_id,
+            name="Metadata selection",
+            task_type=TaskType.METADATA_EXTRACTION,
+            language=PromptLanguage.EN,
+            prompt=default_prompt(OutputFormat.METADATA),
+            metadata_fields=[
+                PromptMetadataField(
+                    project_metadata_id=source["author_field"].id,
+                    key="author",
+                    description="The author of the document.",
+                    metatype=MetaType.STRING,
+                )
+            ],
+        ),
+    )
+    sentence_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=source_id,
+            name="Sentence examples",
+            task_type=TaskType.SENTENCE_ANNOTATION,
+            language=PromptLanguage.EN,
+            prompt=default_prompt(OutputFormat.SENTENCES),
+            codes=[prompt_code(source["claim_code"])],
+            examples=[source["sentence_example"]],
+        ),
+    )
+
+    # 2) the target project
+    target = crud_project.read(
+        db=db_session,
+        id=ProjectService()
+        .create_project(
+            db=db_session,
+            create_dto=ProjectCreate(
+                title="Import target", description="Prompt templates are imported here"
+            ),
+            creating_user_id=test_user.id,
+        )
+        .id,
+    )
+    target_person_code = crud_code.read_by_name_and_project(
+        db=db_session, code_name="PERSON", project_id=target.id
+    )
+    assert target_person_code is not None, "The default PERSON system code is missing"
+    target_claim_code = _create_code(
+        db_session, project_id=target.id, name="Claim", description=CLAIM_DESCRIPTION
+    )
+    target_report_tag = crud_tag.create(
+        db=db_session,
+        create_dto=TagCreate(
+            name="Report",
+            description="Documents about reports.",
+            project_id=target.id,
+        ),
+    )
+    target_author_field = crud_project_meta.create(
+        db=db_session,
+        create_dto=ProjectMetadataCreate(
+            project_id=target.id,
+            key="author",
+            metatype=MetaType.STRING,
+            read_only=False,
+            doctype=DocType.text,
+            description="The author of the document.",
+        ),
+    )
+    target_span_template = service.create_prompt_template(
+        db=db_session,
+        user_id=test_user.id,
+        create_dto=PromptTemplateCreate(
+            project_id=target.id,
+            name="Span tagging",
+            task_type=TaskType.ANNOTATION,
+            language=PromptLanguage.EN,
+            prompt=SPAN_V1_PROMPT,
+            codes=[prompt_code(target_person_code)],
+        ),
+    )
+    db_session.commit()
+
+    return {
+        "source": source,
+        "tag_template": tag_template,
+        "metadata_template": metadata_template,
+        "sentence_template": sentence_template,
+        "target": target,
+        "target_person_code": target_person_code,
+        "target_claim_code": target_claim_code,
+        "target_report_tag": target_report_tag,
+        "target_author_field": target_author_field,
+        "target_span_template": target_span_template,
     }
