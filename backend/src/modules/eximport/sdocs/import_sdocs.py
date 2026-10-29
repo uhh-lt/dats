@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -29,6 +28,7 @@ from core.tag.tag_crud import crud_tag
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
+from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
@@ -76,7 +76,7 @@ def import_sdocs_to_proj(
             errors=["No data file (.csv) found in the zip archive"]
         )
 
-    df = pd.read_csv(data_file)
+    df = read_import_csv(data_file)
 
     # Validate input data with our schema
     try:

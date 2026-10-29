@@ -29,7 +29,7 @@ class TagExportCollection(BaseModel):
     def from_dataframe(cls, df: pd.DataFrame) -> "TagExportCollection":
         """Convert a DataFrame to a TagExportCollection."""
         # Replace NaN values with None before converting to dict
-        df_cleaned = df.replace({pd.NA: None, float("nan"): None, "nan": None})
+        df_cleaned = df.replace({pd.NA: None, float("nan"): None})
         records = df_cleaned.to_dict("records")
         tags = [TagExportSchema(**record) for record in records]  # type: ignore
         return cls(tags=tags)

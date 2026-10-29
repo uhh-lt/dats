@@ -2,7 +2,6 @@ import zipfile
 from pathlib import Path
 from typing import Callable
 
-import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -14,6 +13,7 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
 from modules.eximport.folder.import_folders import import_folders_to_proj
+from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ImportJobType
 from modules.eximport.import_exceptions import (
     ImportJobPreparationError,
@@ -98,7 +98,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import codes to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_codes_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_folders_to_proj(
@@ -108,7 +108,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import folders to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_folders_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_tags_to_proj(
@@ -118,7 +118,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import tags to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_tags_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_bbox_annotations_to_proj(
@@ -128,7 +128,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import bbox annotations to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_bbox_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_span_annotations_to_proj(
@@ -138,7 +138,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import span annotations to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_span_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_sent_annotations_to_proj(
@@ -148,7 +148,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import sent annotations to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_span_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_whiteboards_to_proj(
@@ -158,7 +158,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import whiteboards to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_whiteboards_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_timeline_analyses_to_proj(
@@ -168,7 +168,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import timeline analyses to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_timeline_analysis_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_cota_to_proj(
@@ -178,7 +178,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import cota to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_cota_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_memos_to_proj(
@@ -188,7 +188,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import memos to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_memos_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_users_to_proj(
@@ -198,7 +198,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import users annotations to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_users_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_project_metadata_to_proj(
@@ -208,7 +208,7 @@ class ImportService(metaclass=SingletonMeta):
     ) -> None:
         """Import project metadata to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
-        df = pd.read_csv(path_to_file)
+        df = read_import_csv(path_to_file)
         import_project_metadata_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_source_documents_to_proj(

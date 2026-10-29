@@ -91,7 +91,7 @@ class COTAExportCollection(BaseModel):
     def from_dataframe(cls, df: pd.DataFrame) -> "COTAExportCollection":
         """Convert a DataFrame to a COTAExportCollection."""
         # Replace NaN values with None before converting to dict
-        df_cleaned = df.replace({pd.NA: None, float("nan"): None, "nan": None})
+        df_cleaned = df.replace({pd.NA: None, float("nan"): None})
         records = df_cleaned.to_dict("records")
         cota_analyses = [
             COTAExportSchema(**record)  # type: ignore

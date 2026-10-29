@@ -4,7 +4,6 @@ from os import listdir
 from os.path import isfile
 from pathlib import Path
 
-import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -14,6 +13,7 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
 from modules.eximport.folder.import_folders import import_folders_to_proj
+from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ExportEntity
 from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project_metadata.import_project_metadata import (
@@ -134,7 +134,7 @@ def import_project(
                 raise e
         else:
             # read csv
-            organized_data[entity] = pd.read_csv(file_path)
+            organized_data[entity] = read_import_csv(file_path)
 
     # import data
     for entity in IMPORT_ORDER:

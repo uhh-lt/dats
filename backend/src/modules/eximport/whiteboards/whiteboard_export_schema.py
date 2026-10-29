@@ -122,7 +122,7 @@ class WhiteboardExportCollection(BaseModel):
     def from_dataframe(cls, df: pd.DataFrame) -> "WhiteboardExportCollection":
         """Convert a DataFrame to a WhiteboardExportCollection."""
         # Replace NaN values with None before converting to dict
-        df_cleaned = df.replace({pd.NA: None, float("nan"): None, "nan": None})
+        df_cleaned = df.replace({pd.NA: None, float("nan"): None})
         records = df_cleaned.to_dict("records")
         whiteboards = [WhiteboardExportSchema(**record) for record in records]  # type: ignore
         return cls(whiteboards=whiteboards)
