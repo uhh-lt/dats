@@ -110,8 +110,32 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
         Raises:
             NoSuchElementError: If any id does not exist.
         """
+        id_map = self.read_existing_by_ids(db=db, ids=ids)
+
+        # Maintain the order of the input IDs
+        result: list[ORMModelType] = []
+        for id in ids:
+            if id not in id_map:
+                raise NoSuchElementError(self.model, **self._pk_kwargs(id))
+            result.append(id_map[id])
+
+        return result
+
+    def read_existing_by_ids(
+        self, db: Session, *, ids: list[IDType]
+    ) -> dict[IDType, ORMModelType]:
+        """
+        Read the rows with the given ids that exist, in batches of `BATCH_SIZE`.
+        Unlike `read_by_ids`, missing ids are no error.
+
+        Args:
+            ids: The ids to read. Duplicates are allowed.
+
+        Returns:
+            The existing objects by their id. Missing ids have no entry.
+        """
         if not ids:
-            return []
+            return {}
 
         db_objects: list[ORMModelType] = []
 
@@ -126,15 +150,7 @@ class SQLCRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType, IDType]):
                 .all()
             )
 
-        # Maintain the order of the input IDs
-        id_map = {self._pk_of(obj): obj for obj in db_objects}
-        result: list[ORMModelType] = []
-        for id in ids:
-            if id not in id_map:
-                raise NoSuchElementError(self.model, **self._pk_kwargs(id))
-            result.append(id_map[id])
-
-        return result
+        return {self._pk_of(obj): obj for obj in db_objects}
 
     def read_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
