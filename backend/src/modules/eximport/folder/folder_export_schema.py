@@ -27,7 +27,7 @@ class FolderExportCollection(BaseModel):
     def from_dataframe(cls, df: pd.DataFrame) -> "FolderExportCollection":
         """Convert a DataFrame to a folderExportCollection."""
         # Replace NaN values with None before converting to dict
-        df_cleaned = df.replace({pd.NA: None, float("nan"): None, "nan": None})
+        df_cleaned = df.replace({pd.NA: None, float("nan"): None})
         records = df_cleaned.to_dict("records")
         folders = [FolderExportSchema(**record) for record in records]  # type: ignore
         return cls(folders=folders)
