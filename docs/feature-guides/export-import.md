@@ -23,7 +23,7 @@ You can find this contextual export button in various places, including:
 
 ![Project Export](../assets/project-details-export.png)
 
-If you need to back up your entire project—including all documents, annotations, codes, tags, users, and memos—you can generate a complete project archive.
+If you need to back up your entire project—including all documents, annotations, codes, tags, users, memos, and prompts—you can generate a complete project archive.
 
 1. Click the **Settings icon** (the cog wheel) at the bottom of the main left navigation bar.
 2. Ensure you are on the **Details** tab.

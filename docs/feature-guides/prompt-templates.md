@@ -56,3 +56,9 @@ Every project starts with one default prompt per output format in English and Ge
 ## Creating prompts
 
 **Create new prompt** asks for a name, the task and the language and starts with the default prompt of the task; change its output format in the editor. **Duplicate** in the toolbar copies the prompt and selections shown in the editor into a new prompt; in the explorer's context menu it copies the latest version.
+
+## Export and import
+
+Prompts are part of the [full project export](export-import.md): the archive contains every prompt of the project with all its versions. There is no separate export or import for prompts alone.
+
+Importing a project archive merges the prompts into the target project by name, without losing or duplicating versions: versions the project already has are kept, missing versions are appended, and an untouched default prompt is replaced by the imported one. If both sides have versions the other lacks, the imported prompt is added as `<name> (imported)`. Selections that reference codes, tags, metadata fields or documents that do not exist in the target project are dropped.
