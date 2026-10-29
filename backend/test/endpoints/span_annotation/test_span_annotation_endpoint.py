@@ -102,6 +102,88 @@ def test_add_span_annotations_bulk_if_not_exists(
     assert resp.status_code == 403, resp.text
 
 
+# Character and token ends are exclusive, so a span covers begin..end - 1 and
+# begin_token..end_token - 1. A span that covers nothing is rejected.
+empty_span_positions = [
+    # the end token equals the begin token: no token is covered
+    pytest.param(
+        {"begin": 4, "end": 8, "begin_token": 2, "end_token": 2}, id="empty-tokens"
+    ),
+    # the end token lies before the begin token
+    pytest.param(
+        {"begin": 4, "end": 8, "begin_token": 3, "end_token": 2}, id="inverted-tokens"
+    ),
+    # the end character equals the begin character: no character is covered
+    pytest.param(
+        {"begin": 4, "end": 4, "begin_token": 1, "end_token": 2}, id="empty-characters"
+    ),
+]
+
+
+def _user_span_ids(client: TestClient, sdoc_id: int, user_id: int) -> set[int]:
+    resp = client.get(f"/span/sdoc/{sdoc_id}/user/{user_id}")
+    assert resp.status_code == 200, resp.text
+    return {span["id"] for span in resp.json()}
+
+
+@pytest.mark.parametrize("positions", empty_span_positions)
+def test_add_span_annotation_rejects_empty_span(
+    client: TestClient,
+    project_with_span_annotation,
+    test_user,
+    positions: dict[str, int],
+) -> None:
+    """A span annotation that covers no character or no token is rejected with 400
+    and not created."""
+    sdoc = project_with_span_annotation["source_document"]
+    code = project_with_span_annotation["code"]
+    payload = SpanAnnotationCreate(
+        sdoc_id=sdoc.id, code_id=code.id, span_text="Span", **positions
+    )
+
+    resp = client.put("/span", json=payload.model_dump(exclude_none=True))
+
+    assert resp.status_code == 400, resp.text
+    assert "must not be empty" in resp.text
+    assert _user_span_ids(client, sdoc.id, test_user.id) == {
+        project_with_span_annotation["span_annotation"].id
+    }
+
+
+@pytest.mark.parametrize("positions", empty_span_positions)
+def test_add_span_annotations_bulk_rejects_an_empty_span(
+    client: TestClient,
+    project_with_span_annotation,
+    test_user,
+    positions: dict[str, int],
+) -> None:
+    """One empty span rejects the whole bulk create with 400; the valid span of the
+    batch is not created either."""
+    sdoc = project_with_span_annotation["source_document"]
+    code = project_with_span_annotation["code"]
+    payload = [
+        SpanAnnotationCreate(
+            sdoc_id=sdoc.id,
+            code_id=code.id,
+            begin=10,
+            end=15,
+            begin_token=2,
+            end_token=3,
+            span_text="Span 3",
+        ).model_dump(exclude_none=True),
+        SpanAnnotationCreate(
+            sdoc_id=sdoc.id, code_id=code.id, span_text="Span", **positions
+        ).model_dump(exclude_none=True),
+    ]
+
+    resp = client.put("/span/bulk/create", json=payload)
+
+    assert resp.status_code == 400, resp.text
+    assert _user_span_ids(client, sdoc.id, test_user.id) == {
+        project_with_span_annotation["span_annotation"].id
+    }
+
+
 def test_get_by_id(
     client: TestClient,
     project_with_span_annotation,
