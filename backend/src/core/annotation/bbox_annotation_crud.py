@@ -79,6 +79,37 @@ class CRUDBBoxAnnotation(
         )
         return query.first()
 
+    def read_by_project_and_uuids(
+        self, db: Session, *, project_id: int, uuids: list[str]
+    ) -> list[BBoxAnnotationORM]:
+        """
+        Read the annotations of a project with the given uuids, in batches of
+        `BATCH_SIZE`.
+
+        Args:
+            project_id: The project of the annotations.
+            uuids: The uuids to read. Missing uuids are no error.
+
+        Returns:
+            The existing annotations, in no particular order.
+        """
+        if not uuids:
+            return []
+
+        db_objs: list[BBoxAnnotationORM] = []
+        for i in range(0, len(uuids), BATCH_SIZE):
+            batch_uuids = uuids[i : i + BATCH_SIZE]
+            db_objs.extend(
+                db.query(self.model)
+                .options(*self._load_options())
+                .filter(
+                    self.model.project_id == project_id,
+                    self.model.uuid.in_(batch_uuids),
+                )
+                .all()
+            )
+        return db_objs
+
     def read_by_user_and_sdoc(
         self,
         db: Session,
