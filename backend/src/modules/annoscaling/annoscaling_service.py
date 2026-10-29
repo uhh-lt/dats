@@ -58,7 +58,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
                 begin=begin_char,
                 end=end_char,
                 begin_token=sdoc.sentence_token_starts[sent],
-                end_token=sdoc.sentence_token_ends[sent],
+                # sentence_token_ends is inclusive, end_token exclusive
+                end_token=sdoc.sentence_token_ends[sent] + 1,
                 span_text=sdoc.content[begin_char:end_char],
             )
             to_create.append(span_anno)
@@ -73,7 +74,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
                 begin=begin_char,
                 end=end_char,
                 begin_token=sdoc.sentence_token_starts[sent],
-                end_token=sdoc.sentence_token_ends[sent],
+                # sentence_token_ends is inclusive, end_token exclusive
+                end_token=sdoc.sentence_token_ends[sent] + 1,
                 span_text=sdoc.content[begin_char:end_char],
             )
             to_create.append(span_anno)

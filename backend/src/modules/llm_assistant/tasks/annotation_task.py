@@ -94,6 +94,36 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         return kept, removed
 
     @staticmethod
+    def _to_span_annotation(
+        *,
+        sdoc_id: int,
+        code_id: int,
+        begin: int,
+        end: int,
+        text: str,
+        document_token_map: dict[int, int],
+    ) -> SpanAnnotationCreate | None:
+        """The span annotation of a suggested span, None if the span is blank, does
+        not map to tokens or covers no character or token (span annotations must not
+        be empty, so such a suggestion is skipped instead of failing the job)."""
+        if text.strip() == "" or begin >= end:
+            return None
+        begin_token = document_token_map.get(begin)
+        last_token = document_token_map.get(end - 1)
+        if begin_token is None or last_token is None or begin_token > last_token:
+            return None
+        return SpanAnnotationCreate(
+            sdoc_id=sdoc_id,
+            begin=begin,
+            end=end,
+            begin_token=begin_token,
+            # end_token is exclusive
+            end_token=last_token + 1,
+            span_text=text,
+            code_id=code_id,
+        )
+
+    @staticmethod
     def _annotation_key(annotation: SpanAnnotationCreate) -> tuple[int, int, int, int]:
         return (
             annotation.sdoc_id,
@@ -173,30 +203,18 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                 response_item.message_id,
             )
             for span in parsed_spans:
-                code_id = span["code_id"]
-                if code_id not in strategy.codeid2code:
+                if span["code_id"] not in strategy.codeid2code:
                     continue
-                if span["text"].strip() == "":
-                    continue
-
-                start = span["begin"]
-                end = span["end"]
-                begin_token = document_token_map.get(start)
-                end_token = document_token_map.get(end - 1)
-                if begin_token is None or end_token is None:
-                    continue
-
-                suggested_annotations.append(
-                    SpanAnnotationCreate(
-                        sdoc_id=sdoc_data.id,
-                        begin=start,
-                        end=end,
-                        begin_token=begin_token,
-                        end_token=end_token + 1,
-                        span_text=span["text"],
-                        code_id=code_id,
-                    )
+                annotation = self._to_span_annotation(
+                    sdoc_id=sdoc_data.id,
+                    code_id=span["code_id"],
+                    begin=span["begin"],
+                    end=span["end"],
+                    text=span["text"],
+                    document_token_map=document_token_map,
                 )
+                if annotation is not None:
+                    suggested_annotations.append(annotation)
 
         parsed_annotation_count = len(suggested_annotations)
         suggested_annotations, removed_annotations = self._dedupe_annotations(
