@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_crud import crud_adoc
-from core.annotation.annotation_exceptions import AnnotationSourceError
+from core.annotation.annotation_source_utils import (
+    copy_annotation_source_memos,
+    read_annotation_sources,
+)
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationCreate,
@@ -13,10 +16,8 @@ from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationUpdate,
     BBoxAnnotationUpdateBulk,
 )
-from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_enum import AttachedObjectType
-from core.memo.memo_service import MemoService
 
 
 class BBoxAnnotationService(metaclass=SingletonMeta):
@@ -63,8 +64,11 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         }
 
         # 2) read the annotations that are copied
-        sources = self._read_sources(
-            db=db, create_dtos=create_dtos, project_id_by_sdoc_id=project_id_by_sdoc_id
+        sources = read_annotation_sources(
+            db=db,
+            crud=crud_bbox_anno,
+            create_dtos=create_dtos,
+            project_id_by_sdoc_id=project_id_by_sdoc_id,
         )
 
         # 3) find or create the user's annotation document of every source document
@@ -94,16 +98,11 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         )
 
         # 5) copy the memos of the source annotations onto their copies
-        copies = [
-            (source.id, db_obj.id)
-            for source, db_obj in zip(sources, db_objs)
-            if source is not None
-        ]
-        MemoService().copy_to_attached_objects(
+        copy_annotation_source_memos(
             db=db,
             attached_object_type=AttachedObjectType.bbox_annotation,
-            source_object_ids=[source_id for source_id, _ in copies],
-            target_object_ids=[copy_id for _, copy_id in copies],
+            sources=sources,
+            copies=db_objs,
         )
 
         # 6) read them back with their relationships for the DTOs
@@ -152,49 +151,6 @@ class BBoxAnnotationService(metaclass=SingletonMeta):
         crud_bbox_anno.delete_multi(db=db, ids=ids)
 
         return deleted
-
-    def _read_sources(
-        self,
-        db: Session,
-        *,
-        create_dtos: list[BBoxAnnotationCreate],
-        project_id_by_sdoc_id: dict[int, int],
-    ) -> list[BBoxAnnotationORM | None]:
-        """
-        Read the annotations the new ones are copied from with one query and check
-        that each annotates the same source document of the same project.
-
-        Returns:
-            The source annotation of every create DTO (None if it is no copy), in
-            the order of `create_dtos`.
-        """
-        source_ids = list(
-            dict.fromkeys(
-                create_dto.source_annotation_id
-                for create_dto in create_dtos
-                if create_dto.source_annotation_id is not None
-            )
-        )
-        source_by_id = {
-            db_obj.id: db_obj
-            for db_obj in crud_bbox_anno.read_by_ids(db=db, ids=source_ids)
-        }
-
-        sources: list[BBoxAnnotationORM | None] = []
-        for create_dto in create_dtos:
-            if create_dto.source_annotation_id is None:
-                sources.append(None)
-                continue
-            source = source_by_id[create_dto.source_annotation_id]
-            if (
-                source.project_id != project_id_by_sdoc_id[create_dto.sdoc_id]
-                or source.sdoc_id != create_dto.sdoc_id
-            ):
-                raise AnnotationSourceError(
-                    source_annotation_id=source.id, sdoc_id=create_dto.sdoc_id
-                )
-            sources.append(source)
-        return sources
 
     def _to_read_dtos(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationRead]:
         """Read DTOs of the given annotations, re-read with eager loading."""
