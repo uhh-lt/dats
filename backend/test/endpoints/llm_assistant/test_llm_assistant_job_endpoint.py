@@ -579,6 +579,38 @@ def test_job_start_and_project_list_reject_foreign_project(
     assert list_response.status_code == 403, list_response.text
 
 
+@pytest.mark.parametrize(
+    "sdoc_key",
+    [
+        # a document of a project the user is not a member of
+        pytest.param("foreign_sdoc", id="document-of-another-project"),
+        # a document id that does not exist
+        pytest.param(None, id="nonexistent-document"),
+    ],
+)
+def test_job_start_rejects_documents_outside_the_project(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    sdoc_key: str | None,
+) -> None:
+    """A member of the job's project cannot run the assistant on documents that do
+    not belong to the project: the start returns HTTP 400 and no job is
+    enqueued."""
+    base = job_prompt_project["base"]
+    sdoc_id = base["foreign_sdoc"].id if sdoc_key else 999_999
+    payload = _tagging_payload(job_prompt_project).model_copy(
+        update={"sdoc_ids": [base["target_sdoc"].id, sdoc_id]}
+    )
+
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
+
+    assert response.status_code == 400, response.text
+    assert f"The source documents [{sdoc_id}] do not belong to project" in response.text
+    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{base['project'].id}")
+    assert list_response.status_code == 200, list_response.text
+    assert list_response.json() == []
+
+
 # ===========================================================================
 # JOB MANAGEMENT (/llm_assistant/llm_assistant/...) TESTS
 # ===========================================================================
