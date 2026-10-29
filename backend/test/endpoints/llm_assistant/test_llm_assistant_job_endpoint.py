@@ -436,7 +436,7 @@ def test_job_fails_with_a_version_of_another_project_or_task(
     )
     failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
     assert failed.output is None
-    assert f"Prompt template version {version_id} cannot be used" in (
+    assert f"Prompt version {version_id} cannot be used" in (
         failed.status_message or ""
     )
 

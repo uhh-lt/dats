@@ -60,13 +60,13 @@ export function TemplateSelectionStep() {
         <Stack spacing={2}>
           <LLMAssistantUtterance>
             <Typography>
-              Choose the prompt template I should run on the {sdocIds.length} selected document(s). The template decides
-              the task, the codes, tags or metadata fields, the examples and the answer format. Templates are written on
-              the Prompts page of the project.
+              Choose the prompt I should run on the {sdocIds.length} selected document(s). The prompt decides the task,
+              the codes, tags or metadata fields, the examples and the answer format. Prompts are written on the Prompts
+              page of the project.
             </Typography>
           </LLMAssistantUtterance>
           <Card variant="outlined">
-            <CardHeader title="Prompt template" slotProps={{ title: { variant: "h6" } }} sx={{ py: 1 }} />
+            <CardHeader title="Prompt" slotProps={{ title: { variant: "h6" } }} sx={{ py: 1 }} />
             <Divider />
             <CardContent>
               <PromptTemplateSelector projectId={projectId} versionId={versionId} onChange={handleChangeVersion} />

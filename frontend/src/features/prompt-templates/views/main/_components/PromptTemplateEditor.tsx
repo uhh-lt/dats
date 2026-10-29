@@ -1,7 +1,7 @@
-import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { EditableTypography } from "@components/EditableTypography";
 import { getIconComponent, Icon } from "@components/icons";
+import { PROMPT_TEXT_STYLE, PromptPage } from "@core/prompt-template";
 import EditIcon from "@mui/icons-material/Edit";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -11,13 +11,11 @@ import {
   Alert,
   Box,
   Button,
-  CardContent,
   Chip,
   Divider,
   IconButton,
   ListItemText,
   MenuItem,
-  Stack,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -65,7 +63,7 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
   );
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }} onKeyDown={handleKeyDown}>
+    <Box className="h100 myFlexContainer" onKeyDown={handleKeyDown}>
       <DATSToolbar variant="dense" sx={{ justifyContent: "flex-start" }}>
         <EditableTypography
           value={template.name}
@@ -75,7 +73,7 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
           noWrap
           title={template.name}
           sx={{ minWidth: 0 }}
-          stackProps={{ sx: { minWidth: 0, flexShrink: 1 } }}
+          stackProps={{ sx: { minWidth: 96, flexShrink: 1 } }}
         />
         <TextField
           select
@@ -107,18 +105,22 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
           </Tooltip>
         )}
         {template.is_archived && (
-          <Tooltip title="Archived templates are not offered in the LLM Assistant. Runs that used them keep their versions.">
+          <Tooltip title="Archived prompts are not offered in the LLM Assistant. Runs that used them keep their versions.">
             <Chip size="small" variant="outlined" color="warning" label="Archived" />
           </Tooltip>
         )}
         <Box sx={{ flexGrow: 1 }} />
         <ToggleButtonGroup size="small" exclusive value={editor.view} onChange={handleChangeView}>
-          <ToggleButton value="editor" sx={{ px: 1.5, py: 0.25, gap: 0.5 }}>
-            <EditIcon fontSize="small" /> Write
-          </ToggleButton>
-          <ToggleButton value="preview" sx={{ px: 1.5, py: 0.25, gap: 0.5 }}>
-            <VisibilityIcon fontSize="small" /> Preview
-          </ToggleButton>
+          <Tooltip title="Write the prompt">
+            <ToggleButton value="editor" aria-label="Write" sx={{ py: 0.25 }}>
+              <EditIcon fontSize="small" />
+            </ToggleButton>
+          </Tooltip>
+          <Tooltip title="Preview the prompt as the LLM receives it">
+            <ToggleButton value="preview" aria-label="Preview" sx={{ py: 0.25 }}>
+              <VisibilityIcon fontSize="small" />
+            </ToggleButton>
+          </Tooltip>
         </ToggleButtonGroup>
         <Divider orientation="vertical" flexItem variant="middle" />
         <Tooltip title="Refresh selections: replace the codes, examples, tags and metadata fields with their current state in the project">
@@ -128,14 +130,14 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title="Duplicate: copy the prompt and selections shown here into a new template">
+        <Tooltip title="Duplicate: copy the prompt and selections shown here into a new prompt">
           <span>
             <IconButton size="small" onClick={editor.onDuplicate} disabled={editor.isDuplicating}>
               {getIconComponent(Icon.DUPLICATE, { fontSize: "small" })}
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={template.is_archived ? "Unarchive" : "Archive: hide the template from the LLM Assistant"}>
+        <Tooltip title={template.is_archived ? "Unarchive" : "Archive: hide the prompt from the LLM Assistant"}>
           <IconButton size="small" onClick={editor.onToggleArchived}>
             {getIconComponent(template.is_archived ? Icon.UNARCHIVE : Icon.ARCHIVE, { fontSize: "small" })}
           </IconButton>
@@ -143,17 +145,17 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
         <Divider orientation="vertical" flexItem variant="middle" />
         {editor.isEdited ? (
           <>
-            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: "warning.main", flexShrink: 0 }}>
-              <FiberManualRecordIcon sx={{ fontSize: 10 }} />
-              <Typography variant="body2">Unsaved</Typography>
-            </Stack>
-            <Button size="small" onClick={editor.onDiscard} disabled={editor.isSaving}>
+            <Tooltip title="Unsaved changes">
+              <FiberManualRecordIcon sx={{ fontSize: 12, color: "warning.main", flexShrink: 0 }} />
+            </Tooltip>
+            <Button size="small" onClick={editor.onDiscard} disabled={editor.isSaving} sx={{ flexShrink: 0 }}>
               Discard
             </Button>
             <Tooltip title={`Save as version ${nextVersion} (Ctrl+S)`}>
               <Button
                 size="small"
                 variant="contained"
+                sx={{ flexShrink: 0 }}
                 color="success"
                 startIcon={<SaveIcon />}
                 loading={editor.isSaving}
@@ -170,23 +172,23 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
           </Typography>
         )}
       </DATSToolbar>
-      <CardContainer sx={{ flexGrow: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        {editor.numOutdated > 0 && (
-          <Alert
-            severity="warning"
-            sx={{ mx: 2, mt: 2 }}
-            action={
-              <Button color="inherit" size="small" onClick={editor.onRefresh} loading={editor.isRefreshing}>
-                Refresh
-              </Button>
-            }
-          >
-            {editor.numOutdated} selection(s) changed in the project since this version was saved. The prompt keeps the
-            saved state until you refresh it.
-          </Alert>
-        )}
-        {editor.view === "editor" ? (
-          <CardContent sx={{ flexGrow: 1, overflowY: "auto" }}>
+      {editor.numOutdated > 0 && (
+        <Alert
+          severity="warning"
+          sx={{ borderRadius: 0 }}
+          action={
+            <Button color="inherit" size="small" onClick={editor.onRefresh} loading={editor.isRefreshing}>
+              Refresh
+            </Button>
+          }
+        >
+          {editor.numOutdated} selection(s) changed in the project since this version was saved. The prompt keeps the
+          saved state until you refresh it.
+        </Alert>
+      )}
+      {editor.view === "editor" ? (
+        <Box className="myFlexFillAllContainer">
+          <PromptPage>
             <TextField
               fullWidth
               multiline
@@ -198,15 +200,13 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
               inputRef={(element: HTMLTextAreaElement | null) => {
                 inputRef.current = element;
               }}
-              slotProps={{ input: { disableUnderline: true }, htmlInput: { style: { fontFamily: "monospace" } } }}
+              slotProps={{ input: { disableUnderline: true, sx: { p: 0 } }, htmlInput: { style: PROMPT_TEXT_STYLE } }}
             />
-          </CardContent>
-        ) : (
-          <CardContent sx={{ flexGrow: 1, minHeight: 0 }}>
-            <PreviewPanel projectId={projectId} draft={editor.snapshot} />
-          </CardContent>
-        )}
-      </CardContainer>
+          </PromptPage>
+        </Box>
+      ) : (
+        <PreviewPanel projectId={projectId} draft={editor.snapshot} />
+      )}
     </Box>
   );
 }

@@ -110,7 +110,7 @@ export function ReviewStep() {
           <LLMAssistantUtterance>
             <Typography>
               {mode === "template"
-                ? "This is the prompt of the selected template, exactly as I will receive it for each document. Edit it on the Prompts page."
+                ? "This is the selected prompt, exactly as I will receive it for each document. Edit it on the Prompts page."
                 : "This is the prompt I will use with your selections, exactly as I will receive it for each document. For your own prompts, examples and versions, use the Prompts page."}
             </Typography>
           </LLMAssistantUtterance>

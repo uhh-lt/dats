@@ -46,14 +46,7 @@ const guidedSteps: Record<TaskType, string[]> = {
     "View results",
   ],
 };
-const templateSteps = [
-  "Select method",
-  "Select prompt template",
-  "Select model",
-  "Review prompt",
-  "Wait",
-  "View results",
-];
+const templateSteps = ["Select method", "Select prompt", "Select model", "Review prompt", "Wait", "View results"];
 
 // the step content per task; step 1 of a template run is the template selection
 const contentDict: Record<number, Record<TaskType, React.ReactNode>> = {

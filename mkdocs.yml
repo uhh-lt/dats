@@ -58,7 +58,7 @@ nav:
           - Timeline Analysis: feature-guides/analysis/timeline-analysis.md
           - Word Frequency: feature-guides/analysis/word-frequency-analysis.md
       - LLM Assistant: feature-guides/llm-assistant.md
-      - Prompt Templates: feature-guides/prompt-templates.md
+      - Prompts: feature-guides/prompt-templates.md
       - AI Tools via MCP: feature-guides/mcp-integration.md
       - Perspectives: feature-guides/perspectives.md
       - Classifier: feature-guides/classifier.md

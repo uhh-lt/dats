@@ -123,7 +123,7 @@ export const SettingsStep = memo(() => {
           <LLMAssistantUtterance>
             <Typography>
               {mode === "template"
-                ? "Choose the model that should run the prompt template. Next, you see the prompt as I will receive it."
+                ? "Choose the model that should run the prompt. Next, you see the prompt as I will receive it."
                 : "Configure how I should process the selected documents. Next, you see the prompt as I will receive it."}
             </Typography>
           </LLMAssistantUtterance>

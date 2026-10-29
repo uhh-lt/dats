@@ -59,7 +59,7 @@ const useCreatePromptTemplate = () =>
     mutationFn: PromptTemplateService.create,
     meta: {
       datsEvent: "PROMPT_TEMPLATE_CREATED",
-      successMessage: (template: PromptTemplateRead) => `Created prompt template ${template.name}`,
+      successMessage: (template: PromptTemplateRead) => `Created prompt ${template.name}`,
     },
   });
 
@@ -70,7 +70,7 @@ const useCreatePromptTemplateVersion = () =>
     meta: {
       datsEvent: "PROMPT_TEMPLATE_UPDATED",
       successMessage: (template: PromptTemplateRead) =>
-        `Saved version ${template.versions.length} of prompt template ${template.name}`,
+        `Saved version ${template.versions.length} of prompt ${template.name}`,
     },
   });
 
@@ -80,7 +80,7 @@ const useUpdatePromptTemplate = () =>
     mutationFn: PromptTemplateService.updateById,
     meta: {
       datsEvent: "PROMPT_TEMPLATE_UPDATED",
-      successMessage: (template: PromptTemplateRead) => `Updated prompt template ${template.name}`,
+      successMessage: (template: PromptTemplateRead) => `Updated prompt ${template.name}`,
     },
   });
 

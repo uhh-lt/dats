@@ -49,6 +49,10 @@ function ExplorerOptionsMenu({ showArchived, onToggleShowArchived }: ExplorerOpt
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleOpen = useCallback((event: MouseEvent<HTMLButtonElement>) => setAnchorEl(event.currentTarget), []);
   const handleClose = useCallback(() => setAnchorEl(null), []);
+  const handleToggleShowArchived = useCallback(() => {
+    setAnchorEl(null);
+    onToggleShowArchived();
+  }, [onToggleShowArchived]);
 
   return (
     <>
@@ -56,7 +60,7 @@ function ExplorerOptionsMenu({ showArchived, onToggleShowArchived }: ExplorerOpt
         <IconButton onClick={handleOpen}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
       </Tooltip>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-        <MenuItem onClick={onToggleShowArchived}>
+        <MenuItem onClick={handleToggleShowArchived}>
           <ListItemIcon>
             <Checkbox edge="start" size="small" checked={showArchived} disableRipple sx={{ p: 0 }} />
           </ListItemIcon>

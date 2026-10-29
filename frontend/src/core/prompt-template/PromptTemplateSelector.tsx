@@ -64,14 +64,14 @@ export function PromptTemplateSelector({ projectId, taskType, versionId, onChang
       <TextField
         select
         fullWidth
-        label="Prompt template"
+        label="Prompt"
         value={selectedTemplate?.id ?? ""}
         onChange={handleChangeTemplate}
         disabled={!templates.isSuccess}
       >
         {!templates.data && (
           <MenuItem value="" disabled>
-            Loading templates…
+            Loading prompts…
           </MenuItem>
         )}
         {templates.data?.map((template) => (
@@ -93,7 +93,7 @@ export function PromptTemplateSelector({ projectId, taskType, versionId, onChang
       >
         {!selectedTemplate && (
           <MenuItem value="" disabled>
-            Select a template first
+            Select a prompt first
           </MenuItem>
         )}
         {selectedTemplate?.versions

@@ -126,7 +126,7 @@ export function ExamplesPanel({ projectId, kind, examples, codes, onChange }: Ex
         </Stack>
       )}
       <Stack direction="row" spacing={1} alignItems="center">
-        <ExampleSelection projectId={projectId} kind={kind} onConfirmSelection={handleAddExamples} />
+        <ExampleSelection projectId={projectId} kind={kind} codes={codes} onConfirmSelection={handleAddExamples} />
         {examples.length > 0 && (
           <Button size="small" color="error" disabled={isPending} onClick={handleRemoveAll}>
             Remove all
