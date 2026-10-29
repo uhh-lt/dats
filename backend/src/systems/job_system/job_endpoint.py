@@ -1,6 +1,7 @@
-from typing import Type
+from typing import Any, Callable, Type
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user
 from common.job_type_enum import JobType
@@ -24,6 +25,7 @@ def register_job_endpoints(
     read_model: Type[JobRead],
     endpoint_generation: EndpointGeneration,
     router: APIRouter,
+    validate_input: Callable[[Session, Any], None] | None,
 ):
     if endpoint_generation == EndpointGeneration.NONE:
         return
@@ -40,6 +42,8 @@ def register_job_endpoints(
         authz_user: AuthzUser = Depends(),
     ):
         authz_user.assert_in_project(payload.project_id)
+        if validate_input is not None:
+            validate_input(authz_user.db, payload)
         job = job_service.start_job(job_type=job_type, payload=payload)
         return JobReadModel.from_rq_job(job)
 
@@ -126,4 +130,5 @@ for job_type, job_info in job_service.job_registry.items():
         read_model=job_info["read_model"],
         endpoint_generation=job_info["generate_endpoints"],
         router=job_info["router"] or router,
+        validate_input=job_info["validate_input"],
     )

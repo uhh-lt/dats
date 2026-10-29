@@ -1,6 +1,6 @@
 import inspect
 from datetime import UTC, datetime
-from typing import Callable, Dict, Literal, TypedDict, TypeVar
+from typing import Any, Callable, Dict, Literal, TypedDict, TypeVar
 
 import rq
 from fastapi import APIRouter
@@ -15,6 +15,7 @@ from rq.registry import (
     FinishedJobRegistry,
     StartedJobRegistry,
 )
+from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
@@ -43,6 +44,8 @@ class RegisteredJob(TypedDict):
     retry: tuple[int, int] | None
     timeout: int  # maximum runtime before the job is interrupted and marked as failed (in seconds)
     enricher: Callable | None
+    # checks the input when the generated endpoint starts a job (see register_job)
+    validate_input: Callable[[Session, Any], None] | None
 
 
 class JobService(metaclass=SingletonMeta):
@@ -93,6 +96,7 @@ class JobService(metaclass=SingletonMeta):
         timeout: int,
         enricher: Callable[[InputT], InputT] | None = None,
         read_model: type[JobRead] | None = None,
+        validate_input: Callable[[Session, InputT], None] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -141,6 +145,7 @@ class JobService(metaclass=SingletonMeta):
             "retry": retry,
             "timeout": timeout,
             "enricher": enricher,
+            "validate_input": validate_input,
         }
 
     def start_job(

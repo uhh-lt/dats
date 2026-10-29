@@ -1,6 +1,7 @@
 from typing import Callable, Literal, TypeVar
 
 from fastapi import APIRouter
+from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
@@ -28,7 +29,16 @@ def register_job(
     timeout: JobTiming = JobTiming.ONE_HOUR,  # (RQ default is 3 min [180])
     enricher: Callable[[InputT], InputT] | None = None,
     read_model: type[JobRead] | None = None,
+    validate_input: Callable[[Session, InputT], None] | None = None,
 ):
+    """
+    Register a job handler with the job system.
+
+    `validate_input` checks the input when the generated start endpoint starts a
+    job, after the project membership check and before the job is enqueued. It
+    raises an exception (e.g. a 400 or 403 error) to reject the input.
+    """
+
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
         from systems.job_system.job_service import JobService
 
@@ -47,6 +57,7 @@ def register_job(
             timeout=timeout,
             enricher=enricher,
             read_model=read_model,
+            validate_input=validate_input,
         )
         return func
 
