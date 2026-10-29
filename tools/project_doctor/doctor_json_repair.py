@@ -107,8 +107,8 @@ def _column_entity(column: Any) -> str | None:
 
 
 def _resolvable_id(value: Any) -> int | None:
-    """The id the export resolves for a single value: an int, or a str it
-    converts with int(); anything else fails."""
+    """The id a single value stands for: an int, or a str of digits (which the
+    export converts with int() for the list operators only); None otherwise."""
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -165,7 +165,12 @@ def _repair_filter(
         return None
 
     # a single value (the frontend stores single ids, -1 if none was picked)
-    if _resolvable_id(value) in valid_ids[entity]:
+    resolvable = _resolvable_id(value)
+    if resolvable in valid_ids[entity]:
+        # the export converts a str for the list operators only
+        if operator in _ID_OPERATORS and not isinstance(value, int):
+            node["value"] = resolvable
+            changes.append(f"converted the {entity} id {value!r} to a number")
         return node
     changes.append(f"removed the filter on the missing {entity} {value!r}")
     return None

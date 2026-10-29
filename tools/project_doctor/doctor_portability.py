@@ -365,23 +365,33 @@ class PortabilityChecker:
             pid=project_id,
         )
         names = {int(r.id): r.name for r in rows}
-        ids_by_name = {r.name: int(r.id) for r in rows}
+        all_names = set(names.values())
+        # user codes named like a system parent are renamed, so never move to them
+        system_ids_by_name = {r.name: int(r.id) for r in rows if r.is_system}
         renames: dict[int, str] = {}
         reparents: dict[int, int | None] = {}
+        orphans: list[int] = []
         for r in rows:
             if r.name not in self.stores.system_code_parents:
                 continue
             expected_parent = self.stores.system_code_parents[r.name]
             if not r.is_system:
                 new_name = f"{r.name} (custom)"
-                if new_name in ids_by_name:
+                if new_name in all_names:
                     new_name = f"{r.name} (custom {r.id})"
                 renames[int(r.id)] = new_name
-            elif names.get(r.parent_id) != expected_parent:
-                if expected_parent is None:
-                    reparents[int(r.id)] = None
-                elif expected_parent in ids_by_name:
-                    reparents[int(r.id)] = ids_by_name[expected_parent]
+                continue
+            if (
+                expected_parent is not None
+                and expected_parent not in system_ids_by_name
+            ):
+                orphans.append(int(r.id))
+                continue
+            parent = (
+                system_ids_by_name.get(expected_parent) if expected_parent else None
+            )
+            if r.parent_id != parent:
+                reparents[int(r.id)] = parent
         issues: list[Issue] = []
         if renames:
             issues.append(
@@ -407,6 +417,20 @@ class PortabilityChecker:
                     f"{', '.join(repr(names[i]) for i in list(reparents)[:10])}",
                     fix=SetParents(table="code", parents=reparents),
                     hint="Heal moves them back to their configured parent.",
+                )
+            )
+        if orphans:
+            issues.append(
+                Issue(
+                    key=f"{CheckName.SYSTEM_CODE_CONFLICT.value}:{project_id}:missing",
+                    check=CheckName.SYSTEM_CODE_CONFLICT,
+                    project_id=project_id,
+                    message=f"{len(orphans)} system codes lack the system code that "
+                    "is configured as their parent, which the import rejects: "
+                    f"{', '.join(repr(names[i]) for i in orphans[:10])}",
+                    fix=None,
+                    hint="The project misses system codes. Compare its codes with "
+                    "the system codes of a new project and decide manually.",
                 )
             )
         return issues
