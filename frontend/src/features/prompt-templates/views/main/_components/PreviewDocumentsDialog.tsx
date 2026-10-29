@@ -32,7 +32,7 @@ export function PreviewDocumentsDialog({ projectId, sdocIds, onChange }: Preview
 
   return (
     <>
-      <Button size="small" variant="outlined" onClick={handleOpen} sx={{ flexShrink: 0 }}>
+      <Button onClick={handleOpen} sx={{ flexShrink: 0 }}>
         Documents ({sdocIds.length})
       </Button>
       <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="lg" fullWidth fullScreen={isMaximized}>

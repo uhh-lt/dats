@@ -64,7 +64,7 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
 
   return (
     <Box className="h100 myFlexContainer" onKeyDown={handleKeyDown}>
-      <DATSToolbar variant="dense" sx={{ justifyContent: "flex-start" }}>
+      <DATSToolbar variant="dense" sx={{ justifyContent: "flex-start", px: 1.5, gap: 0.5 }}>
         <EditableTypography
           value={template.name}
           onChange={editor.onRename}
@@ -73,7 +73,7 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
           noWrap
           title={template.name}
           sx={{ minWidth: 0 }}
-          stackProps={{ sx: { minWidth: 96, flexShrink: 1 } }}
+          stackProps={{ sx: { minWidth: 80, flexShrink: 1 } }}
         />
         <TextField
           select
@@ -111,16 +111,12 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
         )}
         <Box sx={{ flexGrow: 1 }} />
         <ToggleButtonGroup size="small" exclusive value={editor.view} onChange={handleChangeView}>
-          <Tooltip title="Write the prompt">
-            <ToggleButton value="editor" aria-label="Write" sx={{ py: 0.25 }}>
-              <EditIcon fontSize="small" />
-            </ToggleButton>
-          </Tooltip>
-          <Tooltip title="Preview the prompt as the LLM receives it">
-            <ToggleButton value="preview" aria-label="Preview" sx={{ py: 0.25 }}>
-              <VisibilityIcon fontSize="small" />
-            </ToggleButton>
-          </Tooltip>
+          <ToggleButton value="editor" sx={{ px: 1, py: 0.25, gap: 0.5 }}>
+            <EditIcon fontSize="small" /> Write
+          </ToggleButton>
+          <ToggleButton value="preview" sx={{ px: 1, py: 0.25, gap: 0.5 }}>
+            <VisibilityIcon fontSize="small" /> Preview
+          </ToggleButton>
         </ToggleButtonGroup>
         <Divider orientation="vertical" flexItem variant="middle" />
         <Tooltip title="Refresh selections: replace the codes, examples, tags and metadata fields with their current state in the project">
