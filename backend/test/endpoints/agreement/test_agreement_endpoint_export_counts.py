@@ -7,7 +7,7 @@ from modules.agreement.agreement_dto import AgreementParams
 from modules.agreement.agreement_enum import AgreementAnnotationType, AgreementScoring
 from repos.filesystem_repo import FilesystemRepo
 
-from .conftest import AgreementProject
+from .conftest import AgreementProject, record_sql
 
 CSV_COLUMNS = [
     "annotation_type",
@@ -101,6 +101,18 @@ def test_export_agreement_counts_matches_the_computed_counts(
         (0, 0, 0),
         (0, 0, 0),
     ]
+
+
+def test_export_agreement_counts_reads_no_document_data(
+    client: TestClient, agreement_project: AgreementProject
+) -> None:
+    """The counts need no texts or offsets, so the document data is not read."""
+    p = agreement_project
+
+    with record_sql() as statements:
+        _export(client, p["project"].id, _params(p))
+
+    assert not [s for s in statements if "sourcedocumentdata" in s]
 
 
 def test_export_agreement_counts_rejects_project_of_other_users(

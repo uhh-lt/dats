@@ -1,7 +1,11 @@
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TypedDict
 
 import pytest
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 from common.doc_type_enum import DocType
 from core.annotation.sentence_annotation_dto import (
@@ -28,6 +32,22 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+
+
+@contextmanager
+def record_sql() -> Iterator[list[str]]:
+    """Record the SQL statements of all engines (the app's included) in the block."""
+    statements: list[str] = []
+
+    def on_execute(conn: object, cursor: object, statement: str, *args: object) -> None:
+        statements.append(statement)
+
+    event.listen(Engine, "before_cursor_execute", on_execute)
+    try:
+        yield statements
+    finally:
+        event.remove(Engine, "before_cursor_execute", on_execute)
+
 
 # Tokens are the words (\w+), sentences end with a period.
 #

@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { AgreementParams } from "@models/AgreementParams";
 import type { AgreementResult } from "@models/AgreementResult";
+import type { AgreementTextRange } from "@models/AgreementTextRange";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -48,6 +49,31 @@ export class AgreementService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/agreement/export_counts",
+      query: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the texts of segments (character ranges of documents), in the order of the request.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static getSegmentTexts({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: Array<AgreementTextRange>;
+  }): CancelablePromise<Array<string>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/agreement/segment_texts",
       query: {
         project_id: projectId,
       },
