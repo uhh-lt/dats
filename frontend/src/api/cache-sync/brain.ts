@@ -186,7 +186,6 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "PROMPT_TEMPLATE_UPDATED":
       upsertMapItem(promptTemplateQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
-      break;
 
     // ── Folders ─────────────────────────────────────────────────────────────
     case "FOLDER_CREATED":
