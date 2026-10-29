@@ -154,9 +154,10 @@ export interface SegmentsCsvContext {
 
 /**
  * Serializes segments to CSV, one row per segment, with the annotation type and scoring, both
- * annotators, the document name, code names and annotation IDs.
+ * annotators, the document name, the text (`texts`, parallel to `segments`), code names and
+ * annotation IDs.
  */
-export function segmentsToCsv(segments: AgreementSegment[], context: SegmentsCsvContext): string {
+export function segmentsToCsv(segments: AgreementSegment[], texts: string[], context: SegmentsCsvContext): string {
   const { annotationType, scoring, referenceUser, comparedUser, sdocNames, codeNames } = context;
   const names = (codeIds: number[]) => codeIds.map((codeId) => codeNames[codeId] ?? codeId).join("; ");
   const ids = (annotationIds: number[]) => annotationIds.join("; ");
@@ -185,7 +186,7 @@ export function segmentsToCsv(segments: AgreementSegment[], context: SegmentsCsv
     "reference_annotation_ids",
     "compared_annotation_ids",
   ];
-  const rows = segments.map((s) => [
+  const rows = segments.map((s, index) => [
     annotationType,
     scoring,
     referenceUser.id,
@@ -201,7 +202,7 @@ export function segmentsToCsv(segments: AgreementSegment[], context: SegmentsCsv
     s.sentence_id_start,
     s.sentence_id_end,
     s.num_units,
-    s.text,
+    texts[index] ?? "",
     names(s.reference_code_ids),
     names(s.compared_code_ids),
     names(s.true_positive_code_ids),

@@ -31,6 +31,7 @@ import { useQueries, UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { downloadFile } from "@utils/downloadUtils";
 import { useCallback, useMemo, useRef } from "react";
+import { AgreementHooks } from "../../../api/agreementHooks";
 import { AgreementAnalysisRouteAPI } from "../_hooks/agreementAnalysisRouteAPI";
 import { AgreementCell, filterSegments, NO_CODE, segmentsToCsv } from "../_utils/agreementUtils";
 import { SegmentErrorTypeSelector } from "./SegmentErrorTypeSelector";
@@ -66,6 +67,7 @@ interface AgreementSegmentListProps {
  */
 export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute }: AgreementSegmentListProps) {
   // global client state (URL)
+  const projectId = AgreementAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
   const navigate = AgreementAnalysisRouteAPI.useNavigate();
   const { cellReferenceCodeId, cellComparedCodeId } = AgreementAnalysisRouteAPI.useSearch();
   const [errorType, setErrorType] = useURLConnector(AgreementAnalysisRouteAPI, "errorType");
@@ -82,6 +84,7 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
   // global server state (react query)
   const codeMap = CodeHooks.useGetAllCodesMap();
   const projectUsers = UserHooks.useGetAllUsers();
+  const { mutate: getSegmentTexts, isPending: isExporting } = AgreementHooks.useGetSegmentTexts();
 
   // filtered segments, grouped by document
   const segments = useMemo(
@@ -146,17 +149,28 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
       const user = projectUsers.data?.find((u) => u.id === userId);
       return user ? `${user.first_name} ${user.last_name}` : "";
     };
-    const csv = segmentsToCsv(segments, {
-      annotationType: result.annotation_type,
-      scoring: result.scoring,
-      referenceUser: { id: result.reference_user_id, name: userName(result.reference_user_id) },
-      comparedUser: { id: result.compared_user_id, name: userName(result.compared_user_id) },
-      sdocNames,
-      codeNames: Object.fromEntries(Object.values(codeMap.data ?? {}).map((code) => [code.id, code.name])),
-    });
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    downloadFile(url, "agreement_segments.csv").finally(() => URL.revokeObjectURL(url));
-  }, [result, segments, projectUsers.data, sdocNames, codeMap.data]);
+    // the result carries no texts, so the texts of the listed segments are read for the export
+    getSegmentTexts(
+      {
+        projectId,
+        requestBody: segments.map((segment) => ({ sdoc_id: segment.sdoc_id, begin: segment.begin, end: segment.end })),
+      },
+      {
+        onSuccess: (texts) => {
+          const csv = segmentsToCsv(segments, texts, {
+            annotationType: result.annotation_type,
+            scoring: result.scoring,
+            referenceUser: { id: result.reference_user_id, name: userName(result.reference_user_id) },
+            comparedUser: { id: result.compared_user_id, name: userName(result.compared_user_id) },
+            sdocNames,
+            codeNames: Object.fromEntries(Object.values(codeMap.data ?? {}).map((code) => [code.id, code.name])),
+          });
+          const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+          downloadFile(url, "agreement_segments.csv").finally(() => URL.revokeObjectURL(url));
+        },
+      },
+    );
+  }, [result, segments, projectId, getSegmentTexts, projectUsers.data, sdocNames, codeMap.data]);
 
   return (
     <Stack spacing={2} p={2} className="h100">
@@ -174,7 +188,7 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
                 <IconButton
                   aria-label="Export the listed segments (CSV)"
                   onClick={handleExport}
-                  disabled={segments.length === 0}
+                  disabled={segments.length === 0 || isExporting}
                 >
                   {getIconComponent(Icon.EXPORT)}
                 </IconButton>

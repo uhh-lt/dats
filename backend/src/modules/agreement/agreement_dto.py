@@ -77,7 +77,6 @@ class AgreementSegment(BaseModel):
     num_units: int = Field(
         description="Number of units (annotations, words or sentences)"
     )
-    text: str = Field(description="Text of the segment")
     reference_code_ids: list[int] = Field(
         description="Codes the reference annotator assigned to the segment"
     )
@@ -133,3 +132,11 @@ class AgreementResult(BaseModel):
             "All segments, agreeing and disagreeing, sorted by document and position"
         )
     )
+
+
+class AgreementTextRange(BaseModel):
+    """A character range of a document, e.g. of an agreement segment."""
+
+    sdoc_id: int = Field(description="ID of the SourceDocument")
+    begin: int = Field(description="Begin of the range in characters")
+    end: int = Field(description="End of the range in characters (exclusive)")

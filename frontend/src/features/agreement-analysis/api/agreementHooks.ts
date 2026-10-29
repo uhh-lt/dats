@@ -11,6 +11,17 @@ const useExportAgreementCounts = () =>
     },
   });
 
+// the segments of an agreement result carry no texts; the CSV export reads them on request
+const useGetSegmentTexts = () =>
+  useMutation({
+    mutationKey: [...agreementQueries.all(), "getSegmentTexts"],
+    mutationFn: AgreementService.getSegmentTexts,
+    meta: {
+      errorMessage: "Failed to read the texts of the segments",
+    },
+  });
+
 export const AgreementHooks = {
   useExportAgreementCounts,
+  useGetSegmentTexts,
 };

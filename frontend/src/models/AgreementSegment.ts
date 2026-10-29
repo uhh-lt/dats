@@ -44,10 +44,6 @@ export type AgreementSegment = {
    */
   num_units: number;
   /**
-   * Text of the segment
-   */
-  text: string;
-  /**
    * Codes the reference annotator assigned to the segment
    */
   reference_code_ids: Array<number>;
