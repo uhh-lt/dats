@@ -199,8 +199,9 @@ def test_create_copy_ignores_client_sent_source_user_and_code(
 
 
 # --- B. invalid sources ---------------------------------------------------------------
-# A source must annotate the same document of the same project (HTTP 400); a source
-# that does not exist is not found (HTTP 404). Nothing is created in either case.
+# A source must annotate the same document of the same project (HTTP 400); a single
+# copy of a source that does not exist is not found (HTTP 404), because nothing is
+# left to create. Nothing is created in either case.
 
 
 @pytest.mark.parametrize("kind", ANNOTATION_KINDS)
@@ -247,7 +248,8 @@ def test_create_copy_of_invalid_source_is_rejected(
 def test_create_copy_of_nonexistent_source_is_not_found(
     client: TestClient, provenance_project, kind: AnnotationKind
 ) -> None:
-    """A copy of a source that does not exist fails with 404."""
+    """A single copy of a source that does not exist (e.g. deleted after the
+    comparison was opened) is skipped, so the request fails with 404."""
     annotations = provenance_project[kind]
     payload = create_payload(
         kind,
@@ -350,6 +352,48 @@ def test_create_bulk_copies_of_same_source_each_get_memo_copies(
     results = [READ_DTO[kind].model_validate(item) for item in response.json()]
     assert [len(result.memo_ids) for result in results] == [2, 2]
     assert not set(results[0].memo_ids) & set(results[1].memo_ids)
+
+
+@pytest.mark.parametrize("kind", BULK_KINDS)
+def test_create_bulk_skips_copies_of_nonexistent_sources(
+    client: TestClient, provenance_project, kind: AnnotationKind
+) -> None:
+    """ "Apply all" on a stale comparison: a copy whose source was deleted in the
+    meantime is skipped silently, the other copy and the own annotation of the batch
+    are still created."""
+    annotations = provenance_project[kind]
+    code_a_id = provenance_project["code_a"].id
+    payload = [
+        create_payload(
+            kind,
+            sdoc_id=annotations["sdoc_id"],
+            code_id=code_a_id,
+            position=0,
+            source_annotation_id=999_999,
+        ),
+        create_payload(
+            kind,
+            sdoc_id=annotations["sdoc_id"],
+            code_id=code_a_id,
+            position=1,
+            source_annotation_id=annotations["source_id"],
+        ),
+        create_payload(
+            kind, sdoc_id=annotations["sdoc_id"], code_id=code_a_id, position=0
+        ),
+    ]
+
+    response = client.put(f"/{kind}/bulk/create", json=payload)
+
+    assert response.status_code == 200, response.text
+    results = [READ_DTO[kind].model_validate(item) for item in response.json()]
+    assert [result.source_annotation_id for result in results] == [
+        annotations["source_id"],
+        None,
+    ]
+    assert get_user_annotation_ids(
+        client, kind, annotations["sdoc_id"], provenance_project["user"].id
+    ) == {result.id for result in results}
 
 
 @pytest.mark.parametrize("kind", BULK_KINDS)
