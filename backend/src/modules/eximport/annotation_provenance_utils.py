@@ -21,9 +21,9 @@ class AnnotationCRUD(Protocol):
         self, db: Session, *, ids: list[int]
     ) -> Sequence[AnnotationORM]: ...
 
-    def read_by_project_and_uuid(
-        self, db: Session, *, project_id: int, uuid: str
-    ) -> AnnotationORM | None: ...
+    def read_by_project_and_uuids(
+        self, db: Session, *, project_id: int, uuids: list[str]
+    ) -> Sequence[AnnotationORM]: ...
 
 
 class AnnotationProvenanceExportSchema(BaseModel):
@@ -153,16 +153,22 @@ def import_annotation_provenance(
 
     # 1) source annotations: imported together with their copies, or already there
     id_by_uuid = {annotation.uuid: annotation.id for annotation in annotations}
-    for uuid in dict.fromkeys(
-        provenance.source_annotation_uuid
-        for provenance in provenances
-        if provenance.source_annotation_uuid is not None
-    ):
-        if uuid in id_by_uuid:
-            continue
-        source = crud.read_by_project_and_uuid(db=db, project_id=project_id, uuid=uuid)
-        if source is not None:
-            id_by_uuid[uuid] = source.id
+    missing_source_uuids = list(
+        dict.fromkeys(
+            provenance.source_annotation_uuid
+            for provenance in provenances
+            if provenance.source_annotation_uuid is not None
+            and provenance.source_annotation_uuid not in id_by_uuid
+        )
+    )
+    id_by_uuid.update(
+        {
+            source.uuid: source.id
+            for source in crud.read_by_project_and_uuids(
+                db=db, project_id=project_id, uuids=missing_source_uuids
+            )
+        }
+    )
 
     # 2) source users by email, source codes by name
     user_id_by_email = {
