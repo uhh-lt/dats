@@ -5,6 +5,7 @@ from sqlalchemy.sql.base import ExecutableOption
 
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
+from core.annotation.annotation_exceptions import EmptySpanAnnotationError
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreateIntern,
     SpanAnnotationUpdate,
@@ -32,6 +33,15 @@ class CRUDSpanAnnotation(
     ) -> list[SpanAnnotationORM]:
         if not create_dtos:
             return []
+
+        # every write path creates span annotations here, so the check is here too
+        for create_dto in create_dtos:
+            self._assert_not_empty(
+                begin=create_dto.begin,
+                end=create_dto.end,
+                begin_token=create_dto.begin_token,
+                end_token=create_dto.end_token,
+            )
 
         # first create the SpanText
         span_texts_orm = crud_span_text.create_multi(
@@ -256,6 +266,21 @@ class CRUDSpanAnnotation(
         ids: list[int],
         update_dtos: list[SpanAnnotationUpdate],
     ) -> list[SpanAnnotationORM]:
+        # a resize sets all positions at once (see SpanAnnotationUpdate)
+        for update_dto in update_dtos:
+            if (
+                update_dto.begin is not None
+                and update_dto.end is not None
+                and update_dto.begin_token is not None
+                and update_dto.end_token is not None
+            ):
+                self._assert_not_empty(
+                    begin=update_dto.begin,
+                    end=update_dto.end,
+                    begin_token=update_dto.begin_token,
+                    end_token=update_dto.end_token,
+                )
+
         span_annos = super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
         # resized spans refer to the SpanText of their new text
@@ -416,6 +441,16 @@ class CRUDSpanAnnotation(
             for code_id, count in query.all():
                 results[code_id] = results.get(code_id, 0) + count
         return results
+
+    def _assert_not_empty(
+        self, *, begin: int, end: int, begin_token: int, end_token: int
+    ) -> None:
+        """Span annotations cover at least one character and one token (the ends
+        are exclusive)."""
+        if begin >= end or begin_token >= end_token:
+            raise EmptySpanAnnotationError(
+                begin=begin, end=end, begin_token=begin_token, end_token=end_token
+            )
 
     def _load_options(self) -> list[ExecutableOption]:
         # everything the Read DTO reads through ORM properties
