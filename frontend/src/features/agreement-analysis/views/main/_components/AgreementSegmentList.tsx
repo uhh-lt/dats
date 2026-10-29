@@ -9,6 +9,7 @@ import { AgreementSegment } from "@models/AgreementSegment";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import {
   Alert,
+  alpha,
   Box,
   Button,
   CardContent,
@@ -21,6 +22,8 @@ import {
   Select,
   SelectChangeEvent,
   Stack,
+  SxProps,
+  Theme,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -35,6 +38,13 @@ import { AgreementSnippet } from "./snippet/AgreementSnippet";
 
 const combineSdocNames = (results: UseQueryResult<SourceDocumentRead>[]): Record<number, string> =>
   Object.fromEntries(results.flatMap((result) => (result.data ? [[result.data.id, result.data.name]] : [])));
+
+// the document header rows are tinted, so that they stand out from the grey page background
+const sdocHeaderSx: SxProps<Theme> = {
+  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+  borderBottom: 1,
+  borderColor: "divider",
+};
 
 type ListRow = { type: "sdoc"; sdocId: number; count: number } | { type: "segment"; segment: AgreementSegment };
 
@@ -149,163 +159,151 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
   }, [result, segments, projectUsers.data, sdocNames, codeMap.data]);
 
   return (
-    <CardContainer className="h100 myFlexContainer">
-      <CardHeader
-        className="myFlexFitContentContainer"
-        title="Segments"
-        subheader={
-          result
-            ? `${segments.length} of ${result.segments.length} segment(s) in ${sdocIds.length} document(s)`
-            : "Select annotators, documents and codes to compare."
-        }
-        action={
-          <Tooltip title="Export the listed segments with their annotation IDs (CSV)">
-            <span>
-              <IconButton
-                aria-label="Export the listed segments (CSV)"
-                onClick={handleExport}
-                disabled={segments.length === 0}
-              >
-                {getIconComponent(Icon.EXPORT)}
-              </IconButton>
-            </span>
-          </Tooltip>
-        }
-      />
-      <Stack
-        direction="row"
-        gap={1}
-        px={2}
-        pb={2}
-        flexWrap="wrap"
-        alignItems="center"
-        className="myFlexFitContentContainer"
-      >
-        {cell && (
-          <Chip
-            label={
-              <Stack direction="row" gap={0.5} alignItems="center">
-                <CodeOrNone codeId={cell.referenceCodeId} /> → <CodeOrNone codeId={cell.comparedCodeId} />
-              </Stack>
-            }
-            onDelete={handleClearCell}
-          />
-        )}
-        <SegmentErrorTypeSelector errorType={errorType} onErrorTypeChange={setErrorType} sx={{ minWidth: 200 }} />
-        <CodeSelector
-          title="Code"
-          placeholder="Any code"
-          selectableCodeIds={codeIds}
-          value={filterCodeId}
-          onChange={setFilterCodeId}
-          size="small"
-          sx={{ minWidth: 220 }}
-        />
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel id="segment-sdoc-filter-label">Document</InputLabel>
-          <Select
-            labelId="segment-sdoc-filter-label"
-            label="Document"
-            value={filterSdocId ?? NO_CODE}
-            onChange={handleSdocChange}
-          >
-            <MenuItem value={NO_CODE}>Any document</MenuItem>
-            {sdocIds.map((sdocId) => (
-              <MenuItem key={sdocId} value={sdocId}>
-                <SdocRenderer sdoc={sdocId} renderName />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Stack>
-      {isOutdated && (
-        <Alert
-          severity="info"
-          className="myFlexFitContentContainer"
-          sx={{ mx: 2, mb: 1 }}
-          action={
-            <Button color="inherit" size="small" onClick={onRecompute}>
-              Recompute
-            </Button>
+    <Stack spacing={2} p={2} className="h100">
+      <CardContainer className="myFlexFitContentContainer">
+        <CardHeader
+          title="Segments"
+          subheader={
+            result
+              ? `${segments.length} of ${result.segments.length} segment(s) in ${sdocIds.length} document(s)`
+              : "Select annotators, documents and codes to compare."
           }
-        >
-          The annotations changed since the agreement was computed.
-        </Alert>
-      )}
-      {result && (
-        <Box
-          display="grid"
-          gridTemplateColumns="1fr 1fr"
-          columnGap={3}
-          px={2}
-          py={0.5}
-          className="myFlexFitContentContainer"
-          sx={{ borderTop: 1, borderColor: "divider", typography: "subtitle2" }}
-        >
-          <Stack direction="row" gap={0.5} alignItems="center">
-            Reference: <UserRenderer user={result.reference_user_id} />
-          </Stack>
-          <Stack direction="row" gap={0.5} alignItems="center">
-            Compared: <UserRenderer user={result.compared_user_id} />
-          </Stack>
-        </Box>
-      )}
-      <CardContent className="myFlexFillAllContainer" sx={{ p: 0 }}>
-        <Box ref={scrollRef} className="h100" sx={{ overflowY: "auto" }}>
-          {rows.length === 0 ? (
-            <Typography color="textSecondary" px={2}>
-              {emptyMessage}
-            </Typography>
-          ) : (
-            <Box sx={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
-              {virtualizer.getVirtualItems().map((item) => {
-                const row = rows[item.index];
-                return (
-                  <Box
-                    key={item.key}
-                    data-index={item.index}
-                    ref={virtualizer.measureElement}
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      transform: `translateY(${item.start}px)`,
-                    }}
-                  >
-                    {row.type === "sdoc" ? (
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        gap={1}
-                        px={2}
-                        py={1}
-                        sx={{ bgcolor: "action.hover", borderTop: 1, borderColor: "divider" }}
-                      >
-                        <SdocRenderer sdoc={row.sdocId} link renderName renderDoctypeIcon />
-                        <Typography variant="body2" color="textSecondary">
-                          ({row.count})
-                        </Typography>
-                      </Stack>
-                    ) : (
-                      result &&
-                      codeMap.data && (
-                        <AgreementSnippet
-                          segment={row.segment}
-                          annotationType={result.annotation_type}
-                          referenceUserId={result.reference_user_id}
-                          comparedUserId={result.compared_user_id}
-                          codeMap={codeMap.data}
-                        />
-                      )
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
+          action={
+            <Tooltip title="Export the listed segments with their annotation IDs (CSV)">
+              <span>
+                <IconButton
+                  aria-label="Export the listed segments (CSV)"
+                  onClick={handleExport}
+                  disabled={segments.length === 0}
+                >
+                  {getIconComponent(Icon.EXPORT)}
+                </IconButton>
+              </span>
+            </Tooltip>
+          }
+        />
+        <Stack direction="row" gap={1} px={2} pb={2} flexWrap="wrap" alignItems="center">
+          {cell && (
+            <Chip
+              label={
+                <Stack direction="row" gap={0.5} alignItems="center">
+                  <CodeOrNone codeId={cell.referenceCodeId} /> → <CodeOrNone codeId={cell.comparedCodeId} />
+                </Stack>
+              }
+              onDelete={handleClearCell}
+            />
           )}
-        </Box>
-      </CardContent>
-    </CardContainer>
+          <SegmentErrorTypeSelector errorType={errorType} onErrorTypeChange={setErrorType} sx={{ minWidth: 200 }} />
+          <CodeSelector
+            title="Code"
+            placeholder="Any code"
+            selectableCodeIds={codeIds}
+            value={filterCodeId}
+            onChange={setFilterCodeId}
+            size="small"
+            sx={{ minWidth: 220 }}
+          />
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel id="segment-sdoc-filter-label">Document</InputLabel>
+            <Select
+              labelId="segment-sdoc-filter-label"
+              label="Document"
+              value={filterSdocId ?? NO_CODE}
+              onChange={handleSdocChange}
+            >
+              <MenuItem value={NO_CODE}>Any document</MenuItem>
+              {sdocIds.map((sdocId) => (
+                <MenuItem key={sdocId} value={sdocId}>
+                  <SdocRenderer sdoc={sdocId} renderName />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+        {isOutdated && (
+          <Alert
+            severity="info"
+            sx={{ mx: 2, mb: 2 }}
+            action={
+              <Button color="inherit" size="small" onClick={onRecompute}>
+                Recompute
+              </Button>
+            }
+          >
+            The annotations changed since the agreement was computed.
+          </Alert>
+        )}
+      </CardContainer>
+      <CardContainer className="myFlexFillAllContainer myFlexContainer">
+        {result && (
+          <Box
+            display="grid"
+            gridTemplateColumns="1fr 1fr"
+            columnGap={4}
+            px={2}
+            py={1}
+            className="myFlexFitContentContainer"
+          >
+            <Stack direction="row" gap={1} alignItems="center">
+              <Typography fontWeight="medium">Reference:</Typography>
+              <UserRenderer user={result.reference_user_id} renderAvatar />
+            </Stack>
+            <Stack direction="row" gap={1} alignItems="center">
+              <Typography fontWeight="medium">Compared:</Typography>
+              <UserRenderer user={result.compared_user_id} renderAvatar />
+            </Stack>
+          </Box>
+        )}
+        <CardContent className="myFlexFillAllContainer" sx={{ p: 0 }}>
+          <Box ref={scrollRef} className="h100" sx={{ overflowY: "auto" }}>
+            {rows.length === 0 ? (
+              <Typography color="textSecondary" px={2}>
+                {emptyMessage}
+              </Typography>
+            ) : (
+              <Box sx={{ height: virtualizer.getTotalSize(), position: "relative", width: "100%" }}>
+                {virtualizer.getVirtualItems().map((item) => {
+                  const row = rows[item.index];
+                  return (
+                    <Box
+                      key={item.key}
+                      data-index={item.index}
+                      ref={virtualizer.measureElement}
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        transform: `translateY(${item.start}px)`,
+                      }}
+                    >
+                      {row.type === "sdoc" ? (
+                        <Stack direction="row" alignItems="center" gap={1} px={2} py={1} sx={sdocHeaderSx}>
+                          <SdocRenderer sdoc={row.sdocId} link renderName renderDoctypeIcon />
+                          <Typography variant="body2" color="textSecondary">
+                            ({row.count})
+                          </Typography>
+                        </Stack>
+                      ) : (
+                        result &&
+                        codeMap.data && (
+                          <AgreementSnippet
+                            segment={row.segment}
+                            annotationType={result.annotation_type}
+                            referenceUserId={result.reference_user_id}
+                            comparedUserId={result.compared_user_id}
+                            codeMap={codeMap.data}
+                          />
+                        )
+                      )}
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+      </CardContainer>
+    </Stack>
   );
 }
