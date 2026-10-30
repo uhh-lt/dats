@@ -6837,7 +6837,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/tag/bulk/update": {
@@ -7368,7 +7369,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "x-mcp-destructive": true
       }
     },
     "/user/all": {
@@ -7847,6 +7849,167 @@
               }
             }
           },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/agent/sessions": {
+      "get": {
+        "tags": ["agent"],
+        "summary": "Returns the current user's agent sessions, the most recently updated first.",
+        "operationId": "get_sessions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/AgentSessionRead" },
+                  "type": "array",
+                  "title": "Response Agent-Get Sessions"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/agent/sessions/{session_id}/history": {
+      "get": {
+        "tags": ["agent"],
+        "summary": "Returns the messages of the current user's agent session as AG-UI messages.",
+        "operationId": "get_session_history",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Session Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentSessionHistory" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/agent/sessions/{session_id}": {
+      "patch": {
+        "tags": ["agent"],
+        "summary": "Updates (renames) the current user's agent session.",
+        "operationId": "update_session",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Session Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentSessionUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentSessionRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["agent"],
+        "summary": "Deletes the current user's agent session.",
+        "operationId": "delete_session",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Session Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentSessionRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/agent/{agent_name}": {
+      "post": {
+        "tags": ["agent"],
+        "summary": "Answers a prompt with the agent, in a new or an existing session.",
+        "operationId": "ask_agent",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "agent_name",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AgentName" }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Model" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentQueryRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentQueryResponse" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/agent/agui/{agent_name}": {
+      "post": {
+        "tags": ["agent"],
+        "summary": "Runs the agent for an AG-UI request and streams its events.",
+        "operationId": "ask_agui_agent",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "agent_name",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AgentName" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -8914,6 +9077,30 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JobUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "AGENT_SESSION_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_agent_session_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentSessionUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "AGENT_SESSION_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_agent_session_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentSessionDeletedEvent" } } }
           }
         }
       }
@@ -20368,6 +20555,530 @@
         "type": "object",
         "required": ["x", "y"],
         "title": "XYPosition"
+      },
+      "ActivityMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "activity", "title": "Role", "default": "activity" },
+          "activityType": { "type": "string", "title": "Activitytype" },
+          "content": { "additionalProperties": true, "type": "object", "title": "Content" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "activityType", "content"],
+        "title": "ActivityMessage",
+        "description": "Structured progress that is not conversation content, materialised as a\nmessage so it keeps its place in the sequence. Stands alone rather than\ncomposing BaseMessage, because its content is an object rather than a\nstring."
+      },
+      "AgentName": { "type": "string", "enum": ["project", "source_document"], "title": "AgentName" },
+      "AgentQueryRequest": {
+        "properties": {
+          "session_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Session Id",
+            "description": "AgentSession to continue (a new one is started if omitted)"
+          },
+          "prompt": { "type": "string", "title": "Prompt", "description": "The user's prompt" }
+        },
+        "type": "object",
+        "required": ["prompt"],
+        "title": "AgentQueryRequest"
+      },
+      "AgentQueryResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "description": "AgentSession the prompt was answered in"
+          },
+          "response": { "type": "string", "title": "Response", "description": "The agent's answer" },
+          "tools_used": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Tools Used",
+            "description": "Names of the tools the agent called"
+          },
+          "approvals_required": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Approvals Required",
+            "description": "Names of the tools the agent wants to call, but which need the user's approval first (only possible via the AG-UI endpoint)"
+          }
+        },
+        "type": "object",
+        "required": ["session_id", "response", "tools_used", "approvals_required"],
+        "title": "AgentQueryResponse"
+      },
+      "AgentSessionDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "AGENT_SESSION_DELETED",
+            "title": "Type",
+            "default": "AGENT_SESSION_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/AgentSessionRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "AgentSessionDeletedEvent"
+      },
+      "AgentSessionHistory": {
+        "properties": {
+          "messages": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/components/schemas/DeveloperMessage" },
+                { "$ref": "#/components/schemas/SystemMessage" },
+                { "$ref": "#/components/schemas/AssistantMessage" },
+                { "$ref": "#/components/schemas/UserMessage" },
+                { "$ref": "#/components/schemas/ToolMessage" },
+                { "$ref": "#/components/schemas/ActivityMessage" },
+                { "$ref": "#/components/schemas/ReasoningMessage" }
+              ],
+              "discriminator": {
+                "propertyName": "role",
+                "mapping": {
+                  "activity": "#/components/schemas/ActivityMessage",
+                  "assistant": "#/components/schemas/AssistantMessage",
+                  "developer": "#/components/schemas/DeveloperMessage",
+                  "reasoning": "#/components/schemas/ReasoningMessage",
+                  "system": "#/components/schemas/SystemMessage",
+                  "tool": "#/components/schemas/ToolMessage",
+                  "user": "#/components/schemas/UserMessage"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Messages",
+            "description": "The messages of the AgentSession as AG-UI messages"
+          }
+        },
+        "type": "object",
+        "required": ["messages"],
+        "title": "AgentSessionHistory"
+      },
+      "AgentSessionRead": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "description": "Client-chosen ID of the AgentSession"
+          },
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title",
+            "description": "Title of the AgentSession"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the AgentSession" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the AgentSession belongs to" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the AgentSession"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the AgentSession"
+          }
+        },
+        "type": "object",
+        "required": ["session_id", "id", "user_id", "created", "updated"],
+        "title": "AgentSessionRead"
+      },
+      "AgentSessionUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title",
+            "description": "Title of the AgentSession"
+          }
+        },
+        "type": "object",
+        "title": "AgentSessionUpdate"
+      },
+      "AgentSessionUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "AGENT_SESSION_UPDATED",
+            "title": "Type",
+            "default": "AGENT_SESSION_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/AgentSessionRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "AgentSessionUpdatedEvent"
+      },
+      "AssistantMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "assistant", "title": "Role", "default": "assistant" },
+          "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Name" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          },
+          "content": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Content" },
+          "toolCalls": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/ToolCall" }, "type": "array" }, { "type": "null" }],
+            "title": "Toolcalls"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id"],
+        "title": "AssistantMessage",
+        "description": "A message from the agent. Content is optional because a turn may consist\nonly of tool calls."
+      },
+      "AudioPart": {
+        "properties": {
+          "type": { "type": "string", "const": "audio", "title": "Type", "default": "audio" },
+          "id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Id" },
+          "source": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DataSource" },
+              { "$ref": "#/components/schemas/UrlSource" },
+              { "$ref": "#/components/schemas/FileSource" }
+            ],
+            "title": "Source",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "data": "#/components/schemas/DataSource",
+                "file": "#/components/schemas/FileSource",
+                "url": "#/components/schemas/UrlSource"
+              }
+            }
+          },
+          "metadata": { "anyOf": [{}, { "type": "null" }], "title": "Metadata" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["source"],
+        "title": "AudioPart",
+        "description": "An audio part."
+      },
+      "DataSource": {
+        "properties": {
+          "type": { "type": "string", "const": "data", "title": "Type", "default": "data" },
+          "value": { "type": "string", "title": "Value" },
+          "mimeType": { "type": "string", "title": "Mimetype" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["value", "mimeType"],
+        "title": "DataSource",
+        "description": "Bytes carried inline."
+      },
+      "DeveloperMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "developer", "title": "Role", "default": "developer" },
+          "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Name" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          },
+          "content": { "type": "string", "title": "Content" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "content"],
+        "title": "DeveloperMessage",
+        "description": "Instructions from the application developer."
+      },
+      "DocumentPart": {
+        "properties": {
+          "type": { "type": "string", "const": "document", "title": "Type", "default": "document" },
+          "id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Id" },
+          "source": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DataSource" },
+              { "$ref": "#/components/schemas/UrlSource" },
+              { "$ref": "#/components/schemas/FileSource" }
+            ],
+            "title": "Source",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "data": "#/components/schemas/DataSource",
+                "file": "#/components/schemas/FileSource",
+                "url": "#/components/schemas/UrlSource"
+              }
+            }
+          },
+          "metadata": { "anyOf": [{}, { "type": "null" }], "title": "Metadata" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["source"],
+        "title": "DocumentPart",
+        "description": "A document part."
+      },
+      "FileSource": {
+        "properties": {
+          "type": { "type": "string", "const": "file", "title": "Type", "default": "file" },
+          "value": { "type": "string", "title": "Value" },
+          "provider": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Provider" },
+          "mimeType": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Mimetype" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["value"],
+        "title": "FileSource",
+        "description": "Bytes already at the provider, named by a handle the provider issued: an\nOpenAI or Anthropic file id, a Gemini file URI, a storage URL only that\nprovider can read. No bytes travel and nothing is fetched. Only the\nprovider that minted the handle can resolve it; a peer that cannot drops\nthe part as it drops any part it cannot use."
+      },
+      "FunctionCall": {
+        "properties": {
+          "name": { "type": "string", "title": "Name" },
+          "arguments": { "type": "string", "title": "Arguments" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["name", "arguments"],
+        "title": "FunctionCall",
+        "description": "The name and arguments of a tool call."
+      },
+      "ImagePart": {
+        "properties": {
+          "type": { "type": "string", "const": "image", "title": "Type", "default": "image" },
+          "id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Id" },
+          "source": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DataSource" },
+              { "$ref": "#/components/schemas/UrlSource" },
+              { "$ref": "#/components/schemas/FileSource" }
+            ],
+            "title": "Source",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "data": "#/components/schemas/DataSource",
+                "file": "#/components/schemas/FileSource",
+                "url": "#/components/schemas/UrlSource"
+              }
+            }
+          },
+          "metadata": { "anyOf": [{}, { "type": "null" }], "title": "Metadata" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["source"],
+        "title": "ImagePart",
+        "description": "An image part."
+      },
+      "ReasoningMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "reasoning", "title": "Role", "default": "reasoning" },
+          "content": { "type": "string", "title": "Content" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "content"],
+        "title": "ReasoningMessage",
+        "description": "A span of the agent's reasoning, materialised as a message. Stands alone\nrather than composing BaseMessage, because it carries no name."
+      },
+      "SystemMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "system", "title": "Role", "default": "system" },
+          "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Name" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          },
+          "content": { "type": "string", "title": "Content" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "content"],
+        "title": "SystemMessage",
+        "description": "Instructions from the system."
+      },
+      "TextPart": {
+        "properties": {
+          "type": { "type": "string", "const": "text", "title": "Type", "default": "text" },
+          "id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Id" },
+          "text": { "type": "string", "title": "Text" },
+          "metadata": { "anyOf": [{}, { "type": "null" }], "title": "Metadata" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["text"],
+        "title": "TextPart",
+        "description": "A text part."
+      },
+      "ToolCall": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "type": { "type": "string", "const": "function", "title": "Type", "default": "function" },
+          "function": { "$ref": "#/components/schemas/FunctionCall" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "function"],
+        "title": "ToolCall",
+        "description": "A call an assistant message made. Carries no subagent attribution of its\nown and inherits its containing message's, since several calls can share\none parent."
+      },
+      "ToolMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "tool", "title": "Role", "default": "tool" },
+          "content": {
+            "anyOf": [
+              { "type": "string" },
+              {
+                "items": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/TextPart" },
+                    { "$ref": "#/components/schemas/ImagePart" },
+                    { "$ref": "#/components/schemas/AudioPart" },
+                    { "$ref": "#/components/schemas/VideoPart" },
+                    { "$ref": "#/components/schemas/DocumentPart" }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "audio": "#/components/schemas/AudioPart",
+                      "document": "#/components/schemas/DocumentPart",
+                      "image": "#/components/schemas/ImagePart",
+                      "text": "#/components/schemas/TextPart",
+                      "video": "#/components/schemas/VideoPart"
+                    }
+                  }
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Content"
+          },
+          "toolCallId": { "type": "string", "title": "Toolcallid" },
+          "error": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Error" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "content", "toolCallId"],
+        "title": "ToolMessage",
+        "description": "What a tool returned, as a message in the conversation. Stands alone\nrather than composing BaseMessage, because it carries no name."
+      },
+      "UrlSource": {
+        "properties": {
+          "type": { "type": "string", "const": "url", "title": "Type", "default": "url" },
+          "value": { "type": "string", "title": "Value" },
+          "mimeType": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Mimetype" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["value"],
+        "title": "UrlSource",
+        "description": "Bytes referenced by URL, fetched by whoever needs them."
+      },
+      "UserMessage": {
+        "properties": {
+          "subagentRunId": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Subagentrunid" },
+          "id": { "type": "string", "title": "Id" },
+          "role": { "type": "string", "const": "user", "title": "Role", "default": "user" },
+          "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Name" },
+          "encryptedValue": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Encryptedvalue" },
+          "metadata": {
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+            "title": "Metadata"
+          },
+          "content": {
+            "anyOf": [
+              { "type": "string" },
+              {
+                "items": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/TextPart" },
+                    { "$ref": "#/components/schemas/ImagePart" },
+                    { "$ref": "#/components/schemas/AudioPart" },
+                    { "$ref": "#/components/schemas/VideoPart" },
+                    { "$ref": "#/components/schemas/DocumentPart" }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "audio": "#/components/schemas/AudioPart",
+                      "document": "#/components/schemas/DocumentPart",
+                      "image": "#/components/schemas/ImagePart",
+                      "text": "#/components/schemas/TextPart",
+                      "video": "#/components/schemas/VideoPart"
+                    }
+                  }
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Content"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["id", "content"],
+        "title": "UserMessage",
+        "description": "A message from the person using the application."
+      },
+      "VideoPart": {
+        "properties": {
+          "type": { "type": "string", "const": "video", "title": "Type", "default": "video" },
+          "id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Id" },
+          "source": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DataSource" },
+              { "$ref": "#/components/schemas/UrlSource" },
+              { "$ref": "#/components/schemas/FileSource" }
+            ],
+            "title": "Source",
+            "discriminator": {
+              "propertyName": "type",
+              "mapping": {
+                "data": "#/components/schemas/DataSource",
+                "file": "#/components/schemas/FileSource",
+                "url": "#/components/schemas/UrlSource"
+              }
+            }
+          },
+          "metadata": { "anyOf": [{}, { "type": "null" }], "title": "Metadata" }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["source"],
+        "title": "VideoPart",
+        "description": "A video part."
       }
     },
     "securitySchemes": {

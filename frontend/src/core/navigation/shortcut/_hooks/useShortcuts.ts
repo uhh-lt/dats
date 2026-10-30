@@ -124,6 +124,16 @@ export function useShortcuts() {
         },
       ),
       createShortcut(
+        "goToAgent",
+        "g",
+        "Go to Agent",
+        () => tabNavigate({ to: "/project/$projectId/agent", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
         "goToHealth",
         "h",
         "Go to Health",
