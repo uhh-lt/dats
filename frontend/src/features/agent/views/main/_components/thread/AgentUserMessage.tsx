@@ -1,7 +1,9 @@
 import { ActionBarPrimitive, ComposerPrimitive, MessagePrimitive } from "@assistant-ui/react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Button, Paper, Stack, styled } from "@mui/material";
+import { datsLinkFormatter, parseDatsLink } from "../../_utils/datsLinkUtils";
 import { AgentBranchPicker } from "./AgentBranchPicker";
+import { AgentEntityChip } from "./AgentEntityChip";
 import { AgentIconButton } from "./AgentIconButton";
 
 const EditInput = styled(ComposerPrimitive.Input)(({ theme }) => ({
@@ -13,6 +15,15 @@ const EditInput = styled(ComposerPrimitive.Input)(({ theme }) => ({
   background: "transparent",
   padding: theme.spacing(1.5, 2, 0.5),
 }));
+
+/** A prompt with its @-mentions (DATS links) as entity chips. */
+function PromptText({ text }: { text: string }) {
+  return datsLinkFormatter.parse(text).map((segment, index) => {
+    if (segment.kind === "text") return segment.text;
+    const entity = parseDatsLink(`dats:${segment.type}/${segment.id}`);
+    return entity ? <AgentEntityChip key={index} type={entity.type} id={entity.id} /> : segment.label;
+  });
+}
 
 /** A prompt of the user, right-aligned; hovering shows the edit button. */
 export function AgentUserMessage() {
@@ -36,7 +47,9 @@ export function AgentUserMessage() {
               overflowWrap: "anywhere",
             }}
           >
-            <MessagePrimitive.Parts>{({ part }) => (part.type === "text" ? part.text : null)}</MessagePrimitive.Parts>
+            <MessagePrimitive.Parts>
+              {({ part }) => (part.type === "text" ? <PromptText text={part.text} /> : null)}
+            </MessagePrimitive.Parts>
           </Paper>
         </Stack>
         <AgentBranchPicker />

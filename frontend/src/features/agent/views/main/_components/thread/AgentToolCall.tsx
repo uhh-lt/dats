@@ -8,7 +8,9 @@ import PanToolOutlinedIcon from "@mui/icons-material/PanToolOutlined";
 import { Box, Button, ButtonBase, Chip, CircularProgress, Collapse, Paper, Stack, Typography } from "@mui/material";
 import { memo, ReactNode, useState } from "react";
 import { AgentHooks } from "../../../../api/agentHooks";
+import { entityTypeOfTool, findReferencedEntities } from "../../_utils/datsLinkUtils";
 import { useAgentThread } from "./agentThreadContext";
+import { AgentEntityChip } from "./AgentEntityChip";
 import { AgentToolArguments } from "./AgentToolArguments";
 import { ShimmerText } from "./ShimmerText";
 
@@ -77,6 +79,34 @@ function CodeBlock({ title, text }: { title: string; text: string }) {
         sx={{ m: 0, p: 1, bgcolor: "grey.100", borderRadius: 1, fontSize: 12, overflow: "auto", maxHeight: 240 }}
       >
         {text}
+      </Box>
+    </Box>
+  );
+}
+
+const MAX_RESULT_ENTITIES = 12;
+
+// the entities a result references (by id keys), parsed from the result's JSON
+function ResultEntities({ toolName, result }: { toolName: string; result: unknown }) {
+  let value = result;
+  if (typeof result === "string") {
+    try {
+      value = JSON.parse(result);
+    } catch {
+      return null;
+    }
+  }
+  const entities = findReferencedEntities(value, MAX_RESULT_ENTITIES, entityTypeOfTool(toolName));
+  if (entities.length === 0) return null;
+  return (
+    <Box>
+      <Typography variant="caption" color="text.secondary">
+        Referenced
+      </Typography>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+        {entities.map((entity) => (
+          <AgentEntityChip key={`${entity.type}/${entity.id}`} type={entity.type} id={entity.id} />
+        ))}
       </Box>
     </Box>
   );
@@ -189,6 +219,7 @@ export const AgentToolCall = memo(({ toolCallId, toolName, argsText, result, isE
             {toolName}
           </Typography>
           <CodeBlock title="Arguments" text={formatValue(argsText || "{}")} />
+          {result !== undefined && <ResultEntities toolName={toolName} result={result} />}
           {result !== undefined && <CodeBlock title="Result" text={formatValue(result)} />}
           {error !== undefined && <CodeBlock title="Error" text={error} />}
         </Stack>

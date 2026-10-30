@@ -2,7 +2,8 @@ import { AuiIf, ComposerPrimitive } from "@assistant-ui/react";
 import { useAgUiInterrupts } from "@assistant-ui/react-ag-ui";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
-import { IconButton, Paper, styled, Typography } from "@mui/material";
+import { Box, IconButton, Paper, styled, Typography } from "@mui/material";
+import { AgentMentionPopover } from "./AgentMentionPopover";
 
 const ComposerInput = styled(ComposerPrimitive.Input)(({ theme }) => ({
   ...theme.typography.body1,
@@ -29,43 +30,50 @@ export function AgentComposer() {
   const hasPendingApprovals = useAgUiInterrupts().length > 0;
 
   return (
-    <ComposerPrimitive.Root>
-      <Paper
-        variant="outlined"
-        sx={{
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 1,
-          p: 1,
-          borderRadius: 4,
-          transition: "border-color 150ms",
-          "&:focus-within": { borderColor: "primary.main" },
-        }}
-      >
-        <ComposerInput
-          autoFocus
-          rows={1}
-          enterKeyHint="send"
-          aria-label="Message to the agent"
-          disabled={hasPendingApprovals}
-          placeholder={
-            hasPendingApprovals ? "Approve or deny the pending changes first" : "Ask the agent about this project..."
-          }
-        />
-        <AuiIf condition={(state) => !state.composer.canCancel}>
-          <ComposerPrimitive.Send render={<IconButton size="small" aria-label="Send" sx={roundButtonSx} />}>
-            <ArrowUpwardIcon fontSize="small" />
-          </ComposerPrimitive.Send>
-        </AuiIf>
-        <AuiIf condition={(state) => state.composer.canCancel}>
-          <ComposerPrimitive.Cancel render={<IconButton size="small" aria-label="Stop" sx={roundButtonSx} />}>
-            <StopRoundedIcon fontSize="small" />
-          </ComposerPrimitive.Cancel>
-        </AuiIf>
-      </Paper>
-      <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, textAlign: "center" }}>
-        Enter sends, Shift+Enter adds a line. The agent can make mistakes; check important results.
-      </Typography>
-    </ComposerPrimitive.Root>
+    <ComposerPrimitive.TriggerPopoverRoot>
+      <ComposerPrimitive.Root>
+        <Box sx={{ position: "relative" }}>
+          <AgentMentionPopover />
+          <Paper
+            variant="outlined"
+            sx={{
+              display: "flex",
+              alignItems: "flex-end",
+              gap: 1,
+              p: 1,
+              borderRadius: 4,
+              transition: "border-color 150ms",
+              "&:focus-within": { borderColor: "primary.main" },
+            }}
+          >
+            <ComposerInput
+              autoFocus
+              rows={1}
+              enterKeyHint="send"
+              aria-label="Message to the agent"
+              disabled={hasPendingApprovals}
+              placeholder={
+                hasPendingApprovals
+                  ? "Approve or deny the pending changes first"
+                  : "Ask the agent about this project... (@ mentions documents, codes and tags)"
+              }
+            />
+            <AuiIf condition={(state) => !state.composer.canCancel}>
+              <ComposerPrimitive.Send render={<IconButton size="small" aria-label="Send" sx={roundButtonSx} />}>
+                <ArrowUpwardIcon fontSize="small" />
+              </ComposerPrimitive.Send>
+            </AuiIf>
+            <AuiIf condition={(state) => state.composer.canCancel}>
+              <ComposerPrimitive.Cancel render={<IconButton size="small" aria-label="Stop" sx={roundButtonSx} />}>
+                <StopRoundedIcon fontSize="small" />
+              </ComposerPrimitive.Cancel>
+            </AuiIf>
+          </Paper>
+        </Box>
+        <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5, textAlign: "center" }}>
+          Enter sends, Shift+Enter adds a line. The agent can make mistakes; check important results.
+        </Typography>
+      </ComposerPrimitive.Root>
+    </ComposerPrimitive.TriggerPopoverRoot>
   );
 }
