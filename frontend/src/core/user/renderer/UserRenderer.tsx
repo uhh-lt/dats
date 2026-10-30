@@ -1,14 +1,14 @@
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
-import { getIconComponent, Icon } from "@components/icons";
 import { PublicUserRead } from "@models/PublicUserRead";
 import { UserKind } from "@models/UserKind";
 import { UserRead } from "@models/UserRead";
-import { Stack, Tooltip, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
 import { UserHooks } from "../api/userHooks";
 import { UserAvatar } from "../UserAvatar";
 
 export interface UserRendererSharedProps extends ExpandableRendererProps {
+  // the avatar: the initials of a human user, an icon for a virtual annotator (default: true)
   renderAvatar?: boolean;
 }
 
@@ -37,18 +37,13 @@ const UserRendererWithoutData = memo(({ userId, ...props }: { userId: number } &
 });
 
 const UserRendererWithData = memo(
-  ({ user, renderAvatar, ...expandProps }: { user: PublicUserRead } & UserRendererSharedProps) => {
+  ({ user, renderAvatar = true, ...expandProps }: { user: PublicUserRead } & UserRendererSharedProps) => {
     const fullName = `${user.first_name} ${user.last_name}`.trim();
 
     return (
       <ExpandableRenderer {...expandProps} expandedContent={<UserContext user={user} />}>
         <Stack direction="row" alignItems="center" spacing={1} minWidth={0} maxWidth="100%" overflow="hidden">
-          {renderAvatar && <UserAvatar user={user} sx={{ width: 24, height: 24, fontSize: 11 }} />}
-          {!renderAvatar && user.kind === UserKind.VIRTUAL && (
-            <Tooltip title="Virtual annotator">
-              {getIconComponent(Icon.VIRTUAL_ANNOTATOR, { fontSize: "small", color: "action" })}
-            </Tooltip>
-          )}
+          {renderAvatar && <UserAvatar user={user} sx={{ width: 24, height: 24, fontSize: 11, flexShrink: 0 }} />}
           <Typography component="span" noWrap minWidth={0}>
             {fullName}
           </Typography>

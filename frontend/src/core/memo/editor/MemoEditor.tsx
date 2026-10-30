@@ -99,7 +99,7 @@ export const MemoEditor = memo(
 
           <Stack spacing={1.25} mt={3}>
             <MetadataRow label="Author">
-              <UserRenderer user={authorId} renderAvatar />
+              <UserRenderer user={authorId} />
             </MetadataRow>
             <MetadataRow label="Last modified">{lastModified}</MetadataRow>
             <MetadataRow label="Attached to">
