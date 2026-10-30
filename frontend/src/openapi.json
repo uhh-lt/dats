@@ -2,26 +2,38 @@
   "openapi": "3.1.0",
   "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.12.1" },
   "paths": {
-    "/agent/sessions": {
+    "/agent/project/{project_id}/sessions": {
       "get": {
         "tags": ["agent"],
-        "summary": "Returns the current user's agent sessions, the most recently updated first.",
-        "operationId": "get_sessions",
+        "summary": "Returns the current user's agent sessions of the project, the most recently updated first.",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/AgentSessionRead" },
                   "type": "array",
-                  "title": "Response Agent-Get Sessions"
+                  "items": { "$ref": "#/components/schemas/AgentSessionRead" },
+                  "title": "Response Agent-Get By Project"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/agent/sessions/{session_id}/history": {
@@ -138,13 +150,19 @@
         }
       }
     },
-    "/agent/{agent_name}": {
+    "/agent/project/{project_id}/{agent_name}": {
       "post": {
         "tags": ["agent"],
-        "summary": "Answers a prompt with the agent, in a new or an existing session.",
+        "summary": "Answers a prompt with the agent, in a new or an existing session of the project.",
         "operationId": "ask_agent",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
           {
             "name": "agent_name",
             "in": "path",
@@ -167,29 +185,6 @@
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AgentQueryResponse" } } }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/agent/agui/{agent_name}": {
-      "post": {
-        "tags": ["agent"],
-        "summary": "Runs the agent for an AG-UI request and streams its events.",
-        "operationId": "ask_agui_agent",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "agent_name",
-            "in": "path",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/AgentName" }
-          }
-        ],
-        "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -853,7 +848,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/bbox/bulk/delete": {
@@ -1976,7 +1972,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/import/{project_id}/type/{import_job_type}": {
@@ -2931,7 +2928,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/memo/{memo_id}/recent": {
@@ -4775,7 +4773,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/sentence/bulk/delete": {
@@ -5339,7 +5338,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/span": {
@@ -5607,7 +5607,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/span/{span_id}/group/{group_id}": {
@@ -6350,7 +6351,8 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "x-mcp-destructive": true
       }
     },
     "/tag/bulk/unlink": {
@@ -8286,7 +8288,7 @@
       "AgentQueryRequest": {
         "properties": {
           "session_id": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "maxLength": 128 }, { "type": "null" }],
             "title": "Session Id",
             "description": "AgentSession to continue (a new one is started if omitted)"
           },
@@ -8315,10 +8317,14 @@
             "type": "array",
             "title": "Approvals Required",
             "description": "Names of the tools the agent wants to call, but which need the user's approval first (only possible via the AG-UI endpoint)"
+          },
+          "session": {
+            "$ref": "#/components/schemas/AgentSessionRead",
+            "description": "The AgentSession after the run"
           }
         },
         "type": "object",
-        "required": ["session_id", "response", "tools_used", "approvals_required"],
+        "required": ["session_id", "response", "tools_used", "approvals_required", "session"],
         "title": "AgentQueryResponse"
       },
       "AgentSessionDeletedEvent": {
@@ -8374,16 +8380,18 @@
         "properties": {
           "session_id": {
             "type": "string",
+            "maxLength": 128,
             "title": "Session Id",
             "description": "Client-chosen ID of the AgentSession"
           },
-          "title": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Title",
-            "description": "Title of the AgentSession"
-          },
+          "title": { "type": "string", "title": "Title", "description": "Title of the AgentSession" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the AgentSession" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the AgentSession belongs to" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the AgentSession belongs to"
+          },
           "agent_name": { "$ref": "#/components/schemas/AgentName", "description": "Agent the AgentSession talks to" },
           "created": {
             "type": "string",
@@ -8399,13 +8407,13 @@
           }
         },
         "type": "object",
-        "required": ["session_id", "id", "user_id", "agent_name", "created", "updated"],
+        "required": ["session_id", "title", "id", "user_id", "project_id", "agent_name", "created", "updated"],
         "title": "AgentSessionRead"
       },
       "AgentSessionUpdate": {
         "properties": {
           "title": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
             "title": "Title",
             "description": "Title of the AgentSession"
           }

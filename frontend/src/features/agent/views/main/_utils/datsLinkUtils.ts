@@ -25,6 +25,10 @@ export const parseDatsLink = (href: string | undefined): DatsEntity | undefined 
   return { type: match[1], id: Number(match[2]) };
 };
 
+/** The entity of a parsed mention (type and id as text), or undefined for an unknown type. */
+export const toDatsEntity = (type: string, id: string): DatsEntity | undefined =>
+  isEntityType(type) ? { type, id: Number(id) } : undefined;
+
 const MENTION_PATTERN = /\[([^\]]+)\]\(dats:([a-z_]+)\/(\d+)\)/g;
 
 /** Inserts @-mentions as DATS links and finds them again in a prompt. */

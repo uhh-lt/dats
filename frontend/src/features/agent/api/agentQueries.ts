@@ -5,19 +5,20 @@ import { queryOptions } from "@tanstack/react-query";
 /**
  * Query factory for the agent sessions of the logged-in user.
  *
- *   agentQueries.all()                ["agent"]
- *   agentQueries.sessions()           ["agent", "sessions"]
- *   agentQueries.history(sessionId)   ["agent", "history", sessionId]
- *   agentQueries.tools(agentName)     ["agent", "tools", agentName]
+ *   agentQueries.all()                       ["agent"]
+ *   agentQueries.byProject(projectId)        ["agent", "project", projectId]
+ *   agentQueries.history(sessionId)          ["agent", "history", sessionId]
+ *   agentQueries.tools(agentName)            ["agent", "tools", agentName]
  */
 export const agentQueries = {
   all: () => ["agent"] as const,
 
-  // the sessions of the logged-in user, most recently updated first
-  sessions: () =>
+  // the sessions of the logged-in user in a project, most recently updated first
+  byProjectScope: () => [...agentQueries.all(), "project"] as const,
+  byProject: (projectId: number) =>
     queryOptions({
-      queryKey: [...agentQueries.all(), "sessions"] as const,
-      queryFn: () => AgentService.getSessions(),
+      queryKey: [...agentQueries.byProjectScope(), projectId] as const,
+      queryFn: () => AgentService.getByProject({ projectId }),
     }),
 
   // the messages of one session as AG-UI messages; every run changes them,

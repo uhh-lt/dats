@@ -292,11 +292,17 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     // ── Agent sessions ──────────────────────────────────────────────────────
-    case "AGENT_SESSION_UPDATED":
-      replaceListItem(agentQueries.sessions().queryKey, event.payload);
+    case "AGENT_SESSION_UPDATED": {
+      // also announces new sessions (an agent run creates its session), and an
+      // updated session is the most recently updated one
+      const session = event.payload;
+      queryClient.setQueryData(agentQueries.byProject(session.project_id).queryKey, (sessions) =>
+        sessions ? [session, ...sessions.filter((s) => s.id !== session.id)] : sessions,
+      );
       break;
+    }
     case "AGENT_SESSION_DELETED":
-      removeListItem(agentQueries.sessions().queryKey, event.payload.id);
+      removeListItem(agentQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       queryClient.removeQueries({ queryKey: agentQueries.history(event.payload.session_id).queryKey });
       break;
 

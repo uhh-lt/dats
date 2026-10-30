@@ -23,30 +23,31 @@ import { groupSessionsByDate } from "../_utils/agentSessionUtils";
 import { AgentSessionListItem } from "./AgentSessionListItem";
 
 interface AgentSessionListProps {
+  projectId: number;
   activeSessionId: string;
   onSelectSession: (session: AgentSessionRead) => void;
   onNewSession: () => void;
 }
 
-/** The user's chats, newest first, grouped by date and searchable by title. */
-export function AgentSessionList({ activeSessionId, onSelectSession, onNewSession }: AgentSessionListProps) {
-  const sessions = useQuery(agentQueries.sessions());
-  const deleteSession = AgentHooks.useDeleteSession();
+/** The user's chats in the project, newest first, grouped by date and searchable by title. */
+export function AgentSessionList({ projectId, activeSessionId, onSelectSession, onNewSession }: AgentSessionListProps) {
+  const sessions = useQuery(agentQueries.byProject(projectId));
+  const { mutate: deleteSession } = AgentHooks.useDeleteAgentSession();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const [search, setSearch] = useState("");
 
   const groups = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const matching = (sessions.data ?? []).filter((session) => (session.title ?? "").toLowerCase().includes(query));
+    const matching = (sessions.data ?? []).filter((session) => session.title.toLowerCase().includes(query));
     return groupSessionsByDate(matching, new Date());
   }, [sessions.data, search]);
 
   const handleDelete = useCallback(
     (session: AgentSessionRead) =>
       openConfirmationDialog({
-        text: `Do you really want to delete the chat "${session.title || "New chat"}"?`,
+        text: `Do you really want to delete the chat "${session.title}"?`,
         onAccept: () =>
-          deleteSession.mutate(
+          deleteSession(
             { sessionId: session.session_id },
             {
               onSuccess: () => {

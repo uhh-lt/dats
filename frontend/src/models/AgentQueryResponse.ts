@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AgentSessionRead } from "./AgentSessionRead";
 export type AgentQueryResponse = {
   /**
    * AgentSession the prompt was answered in
@@ -19,4 +20,8 @@ export type AgentQueryResponse = {
    * Names of the tools the agent wants to call, but which need the user's approval first (only possible via the AG-UI endpoint)
    */
   approvals_required: Array<string>;
+  /**
+   * The AgentSession after the run
+   */
+  session: AgentSessionRead;
 };

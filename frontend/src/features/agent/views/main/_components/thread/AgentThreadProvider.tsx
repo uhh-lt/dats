@@ -5,6 +5,7 @@ import { ReactNode, useCallback, useMemo, useState } from "react";
 import { AgentThreadContext } from "./agentThreadContext";
 
 interface AgentThreadProviderProps {
+  projectId: number;
   agentName: AgentName;
   children: ReactNode;
 }
@@ -14,11 +15,19 @@ interface AgentThreadProviderProps {
  * the run only with an answer to every pending tool call, so the answers are
  * sent together once the last one is given.
  */
-export function AgentThreadProvider({ agentName, children }: AgentThreadProviderProps) {
+export function AgentThreadProvider({ projectId, agentName, children }: AgentThreadProviderProps) {
   const interrupts = useAgUiInterrupts();
   const submitInterruptResponses = useAgUiSubmitInterruptResponses();
   const openSnackbar = useOpenSnackbar();
-  const [decisions, setDecisions] = useState<Record<string, boolean>>({});
+  const [allDecisions, setDecisions] = useState<Record<string, boolean>>({});
+  // only the answers to the current interrupts count (another chat has others)
+  const decisions = useMemo(
+    () =>
+      Object.fromEntries(
+        interrupts.flatMap((i): [string, boolean][] => (i.id in allDecisions ? [[i.id, allDecisions[i.id]]] : [])),
+      ),
+    [interrupts, allDecisions],
+  );
 
   const decide = useCallback(
     (interruptIds: string[], approved: boolean) => {
@@ -43,8 +52,8 @@ export function AgentThreadProvider({ agentName, children }: AgentThreadProvider
   );
 
   const value = useMemo(
-    () => ({ agentName, interrupts, decisions, decide }),
-    [agentName, interrupts, decisions, decide],
+    () => ({ projectId, agentName, interrupts, decisions, decide }),
+    [projectId, agentName, interrupts, decisions, decide],
   );
 
   return <AgentThreadContext.Provider value={value}>{children}</AgentThreadContext.Provider>;

@@ -3,7 +3,7 @@ import { Autocomplete, MenuItem, Stack, TextField } from "@mui/material";
 import { AgentName } from "@models/AgentName";
 import { useQuery } from "@tanstack/react-query";
 import { ChangeEvent, useMemo } from "react";
-import { AGENT_LABELS } from "../../../_utils/agentLabelUtils";
+import { AGENT_LABELS } from "../_utils/agentLabelUtils";
 import { DEFAULT_MODEL } from "../../../_utils/agentModelUtils";
 
 interface AgentToolbarProps {

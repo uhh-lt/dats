@@ -11,7 +11,7 @@ export type AgentSessionRead = {
   /**
    * Title of the AgentSession
    */
-  title?: string | null;
+  title: string;
   /**
    * ID of the AgentSession
    */
@@ -20,6 +20,10 @@ export type AgentSessionRead = {
    * User the AgentSession belongs to
    */
   user_id: number;
+  /**
+   * Project the AgentSession belongs to
+   */
+  project_id: number;
   /**
    * Agent the AgentSession talks to
    */

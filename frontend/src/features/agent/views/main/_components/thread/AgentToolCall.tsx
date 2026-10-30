@@ -21,8 +21,9 @@ type AgentToolCallProps = Pick<
 
 type ToolCallState = "running" | "approval" | "done" | "denied" | "cancelled" | "failed";
 
-// the result pydantic-ai (ToolDenied) returns for a call the user denied
-const DENIED_RESULT = "The tool call was denied.";
+// the result the backend gives the agent for a call the user denied
+// (TOOL_DENIED_MESSAGE in backend/src/modules/agent/agui_adapter.py)
+const DENIED_RESULT = "The user denied this tool call.";
 
 const toolCallState = ({ status, isError, result }: Pick<AgentToolCallProps, "status" | "isError" | "result">) => {
   if (status.type === "running") return "running";

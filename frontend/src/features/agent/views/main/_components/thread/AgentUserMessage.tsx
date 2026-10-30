@@ -1,7 +1,7 @@
 import { ActionBarPrimitive, ComposerPrimitive, MessagePrimitive } from "@assistant-ui/react";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Button, Paper, Stack, styled } from "@mui/material";
-import { datsLinkFormatter, parseDatsLink } from "../../_utils/datsLinkUtils";
+import { datsLinkFormatter, toDatsEntity } from "../../_utils/datsLinkUtils";
 import { AgentBranchPicker } from "./AgentBranchPicker";
 import { AgentEntityChip } from "./AgentEntityChip";
 import { AgentIconButton } from "./AgentIconButton";
@@ -20,7 +20,7 @@ const EditInput = styled(ComposerPrimitive.Input)(({ theme }) => ({
 function PromptText({ text }: { text: string }) {
   return datsLinkFormatter.parse(text).map((segment, index) => {
     if (segment.kind === "text") return segment.text;
-    const entity = parseDatsLink(`dats:${segment.type}/${segment.id}`);
+    const entity = toDatsEntity(segment.type, segment.id);
     return entity ? <AgentEntityChip key={index} type={entity.type} id={entity.id} /> : segment.label;
   });
 }
