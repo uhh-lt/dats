@@ -260,11 +260,11 @@ export function AgreementSegmentList({ result, codeIds, isOutdated, onRecompute 
           >
             <Stack direction="row" gap={1} alignItems="center">
               <Typography fontWeight="medium">Reference:</Typography>
-              <UserRenderer user={result.reference_user_id} renderAvatar />
+              <UserRenderer user={result.reference_user_id} />
             </Stack>
             <Stack direction="row" gap={1} alignItems="center">
               <Typography fontWeight="medium">Compared:</Typography>
-              <UserRenderer user={result.compared_user_id} renderAvatar />
+              <UserRenderer user={result.compared_user_id} />
             </Stack>
           </Box>
         )}
