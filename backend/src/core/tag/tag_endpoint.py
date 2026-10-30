@@ -16,6 +16,7 @@ from core.tag.tag_dto import (
     TagRead,
     TagUpdate,
 )
+from systems.mcp_system.mcp_server import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -197,6 +198,8 @@ def link_multiple_tags(
 
 @router.patch(
     "/bulk/set",
+    # unlinks the tags that are not in the given set
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=SdocTagLinks,
     summary="Sets SourceDocuments' tags to the provided tags and returns the resulting tags per document",
 )

@@ -115,11 +115,6 @@ llm_assistant:
   request_batch_size: ${oc.env:LLM_ASSISTANT_REQUEST_BATCH_SIZE, 100}
   document_read_batch_size: ${oc.env:LLM_ASSISTANT_DOCUMENT_READ_BATCH_SIZE, 100}
 
-agent:
-  # LLM the agents use unless a request names another one; it must support tool calls
-  # ("default" = the provider's first model)
-  model: ${oc.env:AGENT_MODEL, "vllm/google/gemma-4-31B-it"}
-
 cota:
   model: ${oc.env:COTA_MODEL, "paraphrase-multilingual-mpnet-base-v2"}
   batch_size: ${oc.env:COTA_BATCH_SIZE, 16}

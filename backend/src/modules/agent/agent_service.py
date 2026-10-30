@@ -3,11 +3,10 @@ from collections.abc import AsyncIterator, Sequence
 from typing import Any, NamedTuple
 
 from fastapi import FastAPI
-from fastmcp import FastMCP
 from loguru import logger
 from pydantic import ValidationError
-from pydantic_ai import Agent
-from pydantic_ai.exceptions import ModelAPIError
+from pydantic_ai import Agent, PromptedOutput
+from pydantic_ai.exceptions import ModelAPIError, ModelHTTPError
 from pydantic_ai.mcp import MCPToolset
 from pydantic_ai.messages import (
     ModelMessage,
@@ -17,6 +16,7 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.profiles.openai import OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.run import AgentRunResult
 from pydantic_ai.tools import DeferredToolRequests, RunContext, ToolDefinition
@@ -51,9 +51,12 @@ from modules.agent.auth_context_utils import (
     forward_auth_header_hook,
 )
 from repos.llm_repo import LLMRepo
-from systems.mcp_system.mcp_server import create_route_mapper
+from systems.mcp_system.mcp_server import create_mcp_server, requires_approval
 
 AgentOutput = str | DeferredToolRequests
+
+# the provider's first LLM, unless a request names another one
+DEFAULT_MODEL = "default"
 
 TITLE_MAX_PROMPT_LENGTH = 50
 
@@ -87,12 +90,14 @@ _TITLE_SYSTEM_PROMPT = (
 )
 
 
-def _require_delete_approval(
+def _require_approval(
     ctx: RunContext[Any],
     tool_def: ToolDefinition,
     tool_args: dict[str, Any],
 ) -> bool:
-    return "delete" in tool_def.name.lower()
+    """Destructive tools need the user's approval (pydantic-ai passes the MCP
+    tool annotations in the metadata)."""
+    return requires_approval((tool_def.metadata or {}).get("annotations"))
 
 
 class AgentService(metaclass=SingletonMeta):
@@ -108,25 +113,25 @@ class AgentService(metaclass=SingletonMeta):
 
     def initialize(self, app: FastAPI) -> None:
         """Build the agents. Each agent gets an MCP toolset made of the app's
-        endpoints with the agent's tags. Called once by the app's lifespan."""
-        default_model = self._resolve_model(conf.agent.model)
+        MCP tools with the agent's tags. Called once by the app's lifespan."""
+        default_model = self._resolve_model(DEFAULT_MODEL)
         logger.info(f"Default LLM model for agents: {default_model.model_name}")
 
+        # a JSON answer instead of a forced tool call, which not every
+        # provider supports
         self.title_agent: Agent[None, AgentSessionTitle] = Agent(
             model=default_model,
-            output_type=AgentSessionTitle,
+            output_type=PromptedOutput(AgentSessionTitle),
             system_prompt=_TITLE_SYSTEM_PROMPT,
         )
         for agent_name, config in _AGENT_CONFIGS.items():
-            mcp_server = FastMCP.from_fastapi(
+            mcp_server = create_mcp_server(
                 app=app,
                 name=config.name,
-                route_map_fn=create_route_mapper(config.tags),
-                httpx_client_kwargs={
-                    "event_hooks": {"request": [forward_auth_header_hook]}
-                },
+                tags=config.tags,
+                auth_hook=forward_auth_header_hook,
             )
-            toolset = MCPToolset(mcp_server).approval_required(_require_delete_approval)
+            toolset = MCPToolset(mcp_server).approval_required(_require_approval)
             self.toolsets[agent_name] = toolset
             self.agents[agent_name] = Agent(
                 model=default_model,
@@ -169,7 +174,8 @@ class AgentService(metaclass=SingletonMeta):
                         query.prompt, message_history=history, model=selected_model
                     )
         except ModelAPIError as e:
-            raise AgentLLMError() from e
+            status_code = e.status_code if isinstance(e, ModelHTTPError) else None
+            raise AgentLLMError(e.model_name, status_code) from e
 
         # 3) store the history
         await self._save_session(
@@ -284,7 +290,14 @@ class AgentService(metaclass=SingletonMeta):
             model_name = self.llm.validate_llm_name(model)
         except ValueError as e:
             raise UnknownAgentModelError(model) from e
-        return OpenAIChatModel(model_name=model_name, provider=self.provider)
+        # Strict tool definitions make the provider force the tool schema, which
+        # not every provider supports (some answer with HTTP 500). Without them,
+        # pydantic-ai still validates the tool arguments and lets the LLM retry.
+        return OpenAIChatModel(
+            model_name=model_name,
+            provider=self.provider,
+            profile=OpenAIModelProfile(openai_supports_strict_tool_definition=False),
+        )
 
     def _parse_history(self, db_session: AgentSessionORM) -> list[ModelMessage]:
         try:

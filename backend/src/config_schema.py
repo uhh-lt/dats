@@ -320,12 +320,6 @@ class LlmAssistantConfig(BaseModel):
     document_read_batch_size: int = Field(gt=0)
 
 
-class AgentConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    model: str = Field(min_length=1)
-
-
 class CotaConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -448,7 +442,6 @@ class BackendConfigSchema(BaseModel):
     glitchtip: GlitchtipConfig
     rq: RqConfig
     llm_assistant: LlmAssistantConfig
-    agent: AgentConfig
     cota: CotaConfig
     classifier: ClassifierConfig
     promptembedder: PromptEmbedderConfig
