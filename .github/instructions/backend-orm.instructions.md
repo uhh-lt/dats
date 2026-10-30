@@ -122,7 +122,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 
 ### Behavior
 
-- **`get_project_id()`**: every project-scoped model overrides it. Return `self.project_id` when the column exists. Otherwise delegate to the parent, e.g. `return self.source_document.get_project_id()`. Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns `None`.
+- **`get_project_id()`**: every project-scoped model overrides it. Return `self.project_id` when the column exists. Otherwise delegate to the parent, e.g. `return self.source_document.get_project_id()`. Only user-scoped auth tables (`ApiKeyORM`, `RefreshTokenORM`), `SpanTextORM` and pure link tables skip it; `UserORM` returns its `project_id`, which is `None` for human users and the project of a virtual annotator.
 - **`get_user_id()`**: never override it. `ORMBase` reads the `user_id` attribute, so a model that is owned through its parent exposes `user_id` as a `@property` (see `SpanAnnotationORM.user_id`).
 - **`memo_ids`**: models that own an `object_handle` expose the same `memo_ids` property (copy it from `code_orm.py`).
 - **Derived values**: `@property` (or `hybrid_property` when the value must be usable in SQL queries) is used for convenience accessors that DTOs read through `from_attributes`. Keep them free of queries and side effects.

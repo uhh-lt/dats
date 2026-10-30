@@ -120,7 +120,7 @@ class FolderMoveCycleError(Exception):
 - Exempt, because they are no plain value sets: `DATSEvent` (`common/dats_event.py`), the enums of `systems/search_system/` (operators, sorting, grouping) and the search columns (`*_columns.py`).
 - Enums subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value; `IntEnum` only where the values are ints (`modules/ml/ml_enum.py`). Keep enum methods small and free of business logic (`DateGroupBy`, `MetaType` map members to columns or expressions).
 - `backend/lint/check_enums.py` enforces this (`enum-location`, `value-type`).
-- Constants are module-level `UPPER_SNAKE_CASE` in the module that owns them (`SYSTEM_USER_ID`, `ASSISTANT_ZEROSHOT_ID`, ... in `core/user/user_crud.py`).
+- Constants are module-level `UPPER_SNAKE_CASE` in the module that owns them (`SYSTEM_USER_ID`, `DEMO_USER_ID` in `core/user/user_crud.py`).
 - Tunables (batch sizes, limits, timeouts) come from the config, not literals: `BATCH_SIZE = conf.postgres.batch_size`.
 
 ## Configuration
