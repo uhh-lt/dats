@@ -15,6 +15,7 @@
     "@ag-ui/client": "^1.0.3",
     "@assistant-ui/react": "^0.15.32",
     "@assistant-ui/react-ag-ui": "^0.1.1",
+    "@assistant-ui/react-markdown": "^0.14.24",
     "@blocknote/core": "^0.47.1",
     "@blocknote/mantine": "^0.47.1",
     "@blocknote/react": "^0.47.1",
