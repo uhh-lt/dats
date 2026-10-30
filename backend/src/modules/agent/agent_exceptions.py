@@ -14,11 +14,13 @@ class UnknownAgentModelError(Exception):
 @exception_handler(status.HTTP_502_BAD_GATEWAY)
 class AgentLLMError(Exception):
     """Raised when the LLM provider fails while an agent runs (pydantic-ai wraps
-    the provider's errors in a ModelAPIError)."""
+    the provider's errors in a ModelAPIError). Names the LLM, so the user can
+    pick another one, but not the provider's message."""
 
-    def __init__(self) -> None:
+    def __init__(self, model: str, status_code: int | None) -> None:
+        reason = f" (HTTP {status_code})" if status_code is not None else ""
         super().__init__(
-            "The underlying LLM inference server encountered an internal error."
+            f"The LLM '{model}' failed to answer{reason}. Try another LLM."
         )
 
 
