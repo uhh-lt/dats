@@ -11,6 +11,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
+import { useAnnotateAs } from "../../../_hooks/useAnnotateAs";
 import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAnnotation";
 import { useSentenceAnnotationHighlight } from "../../../_hooks/useSentenceAnnotationHighlight";
 import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
@@ -52,8 +53,10 @@ export const SentenceAnnotationComparison = memo(
       selectedAnnotationId,
     } = AnnotationRouteAPI.useSearch();
 
-    const isAnnotationAllowedLeft = leftUserId === user?.id;
-    const isAnnotationAllowedRight = rightUserId === user?.id;
+    // annotations can be created as the current user or as a virtual annotator
+    const annotateAs = useAnnotateAs();
+    const isAnnotationAllowedLeft = annotateAs.canAnnotateAs(leftUserId);
+    const isAnnotationAllowedRight = annotateAs.canAnnotateAs(rightUserId);
 
     // resize controllers (left + right)
     const leftResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
@@ -72,6 +75,9 @@ export const SentenceAnnotationComparison = memo(
       [pendingAnnotations, draftAnnotation],
     );
     const editableSide: "left" | "right" = isAnnotationAllowedRight && !isAnnotationAllowedLeft ? "right" : "left";
+    // the user the new annotations belong to (the one of the editable side)
+    const editableUserId = editableSide === "left" ? leftUserId : rightUserId;
+    const annotateAsUserId = annotateAs.toAnnotateAsUserId(editableUserId);
 
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();
@@ -131,10 +137,10 @@ export const SentenceAnnotationComparison = memo(
       });
     };
     const startCreate = (requestBody: SentenceAnnotationCreate, onSuccess?: () => void) => {
-      const pending = toPendingSentenceAnnotation(requestBody, user?.id, sdocData.project_id);
+      const pending = toPendingSentenceAnnotation(requestBody, editableUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { requestBody },
+        { requestBody, annotateAsUserId },
         {
           onSuccess,
           onSettled: () => {
@@ -205,8 +211,8 @@ export const SentenceAnnotationComparison = memo(
     // batch processing events
     const handleClickApplyAll = () => {
       // find my and the other person's annotations
-      const otherAnnotator = leftUserId === user!.id ? annotatorRight : annotatorLeft;
-      const myAnnotator = leftUserId === user!.id ? annotatorLeft : annotatorRight;
+      const otherAnnotator = editableSide === "left" ? annotatorRight : annotatorLeft;
+      const myAnnotator = editableSide === "left" ? annotatorLeft : annotatorRight;
       if (myAnnotator.annotatorResult === undefined) return;
       if (otherAnnotator.annotatorResult === undefined) return;
 
@@ -238,14 +244,15 @@ export const SentenceAnnotationComparison = memo(
       }
 
       createBulkMutation.mutate({
+        annotateAsUserId,
         requestBody: newAnnotations.map(toCopyCreate),
       });
     };
 
     const handleClickRevertAll = () => {
       // find my and the other person's annotations
-      const otherAnnotator = leftUserId === user!.id ? annotatorRight : annotatorLeft;
-      const myAnnotator = leftUserId === user!.id ? annotatorLeft : annotatorRight;
+      const otherAnnotator = editableSide === "left" ? annotatorRight : annotatorLeft;
+      const myAnnotator = editableSide === "left" ? annotatorLeft : annotatorRight;
       if (myAnnotator.annotatorResult === undefined) return;
       if (otherAnnotator.annotatorResult === undefined) return;
 
@@ -282,6 +289,7 @@ export const SentenceAnnotationComparison = memo(
     // single processing events
     const handleApplyAnnotation = (annotation: SentenceAnnotationRead) => {
       createMutation.mutate({
+        annotateAsUserId,
         requestBody: toCopyCreate(annotation),
       });
     };
@@ -391,7 +399,7 @@ export const SentenceAnnotationComparison = memo(
         sentence_id_start: selectedSentences[0],
         sentence_id_end: selectedSentences[selectedSentences.length - 1],
       };
-      const draft = toPendingSentenceAnnotation(requestBody, user?.id, sdocData.project_id);
+      const draft = toPendingSentenceAnnotation(requestBody, editableUserId, sdocData.project_id);
       setDraftAnnotation(draft);
 
       // open annotation menu in add mode (code selector visible immediately)
