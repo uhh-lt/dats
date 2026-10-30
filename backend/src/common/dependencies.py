@@ -70,6 +70,10 @@ def resolve_user(request: Request | WebSocket, db: Session, token: str) -> UserO
         if db_key.expires_at and db_key.expires_at < datetime.now(UTC):
             raise HTTPException(status_code=401, detail="API Key has expired")
 
+        # Virtual annotators can never log in, so they can never use a key either
+        if db_key.user.is_virtual:
+            raise credentials_exception
+
         # Record the auth method so downstream code (e.g. sync-event actor
         # exclusion) can tell API-key mutations apart from human (JWT) ones.
         request.state.auth_method = "api_key"
@@ -87,7 +91,7 @@ def resolve_user(request: Request | WebSocket, db: Session, token: str) -> UserO
 
     user = crud_user.read_by_email(db=db, email=email)
 
-    if user is None:
+    if user is None or user.is_virtual:
         raise credentials_exception
     request.state.auth_method = "jwt"
     return user

@@ -14,6 +14,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
+from core.user.user_utils import get_user_key, read_users_by_keys
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
@@ -223,7 +224,7 @@ class SdocColumns(str, AbstractColumns):
                 return [folder.name for folder in folders]
             case SdocColumns.USER_ID_LIST:
                 users = crud_user.read_by_ids(db, ids=ids)
-                return [user.email for user in users]
+                return [get_user_key(user) for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
@@ -246,7 +247,7 @@ class SdocColumns(str, AbstractColumns):
                 )
                 return [folder.id for folder in result]
             case SdocColumns.USER_ID_LIST:
-                result = crud_user.read_by_emails(db, emails=names)
-                return [user.id for user in result]
+                result = read_users_by_keys(db, project_id=project_id, keys=names)
+                return [user.id for user in result.values()]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")
