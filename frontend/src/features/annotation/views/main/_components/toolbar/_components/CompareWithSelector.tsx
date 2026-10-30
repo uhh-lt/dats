@@ -1,6 +1,6 @@
 import { useAuth } from "@core/auth";
 import { sdocQueries } from "@core/source-document";
-import { UserRenderer } from "@core/user";
+import { UserHooks, UserRenderer } from "@core/user";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Divider, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +21,15 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
 
   // global server state (react query)
   const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
-  const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
+  // the virtual annotators of the project are listed even without annotations, to annotate as them
+  const virtualAnnotators = UserHooks.useGetVirtualAnnotators();
+  const userIds = Array.from(
+    new Set([
+      ...(user ? [user.id] : []),
+      ...(annotatorUserIds.data || []),
+      ...(virtualAnnotators.data || []).map((annotator) => annotator.id),
+    ]),
+  );
 
   // when no comparison is active, exclude the currently visible user (cannot compare with yourself)
   // when a comparison is active, keep all users to allow swapping

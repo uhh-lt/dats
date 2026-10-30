@@ -1,6 +1,5 @@
 import { queryClient } from "@api/queryClient";
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
-import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
 import { useMutation } from "@tanstack/react-query";
@@ -13,8 +12,7 @@ import { bboxAnnotationQueries } from "./bboxAnnotationQueries";
 const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationKey: [...bboxAnnotationQueries.all(), "createBBoxAnnotation"],
-    mutationFn: (variables: BBoxAnnotationCreate) =>
-      BboxAnnotationService.createBboxAnnotation({ requestBody: variables }),
+    mutationFn: BboxAnnotationService.createBboxAnnotation,
     meta: {
       datsEvent: "BBOX_ANNOTATION_CREATED",
       successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
