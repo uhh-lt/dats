@@ -7,13 +7,7 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate, ProjectRead
 from core.prompt_template.prompt_template_service import PromptTemplateService
-from core.user.user_crud import (
-    ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_TRAINED_ID,
-    ASSISTANT_ZEROSHOT_ID,
-    SYSTEM_USER_ID,
-    crud_user,
-)
+from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserRead
 from core.user.user_exceptions import VirtualUserNotAllowedError
 from repos.elastic.elastic_repo import ElasticSearchRepo
@@ -48,19 +42,12 @@ class ProjectService(metaclass=SingletonMeta):
         proj = crud_project.create(db=db, create_dto=create_dto)
         project_id = proj.id
 
-        # 2) associate the system users
+        # 2) associate the system user (LLM Assistant and classifier runs write
+        # into virtual annotators of the project, which are no members)
         self.associate_user(db=db, project_id=project_id, user_id=SYSTEM_USER_ID)
-        self.associate_user(db=db, project_id=project_id, user_id=ASSISTANT_ZEROSHOT_ID)
-        self.associate_user(db=db, project_id=project_id, user_id=ASSISTANT_FEWSHOT_ID)
-        self.associate_user(db=db, project_id=project_id, user_id=ASSISTANT_TRAINED_ID)
 
         # 3) associate the user that created the project
-        if creating_user_id not in [
-            SYSTEM_USER_ID,
-            ASSISTANT_ZEROSHOT_ID,
-            ASSISTANT_FEWSHOT_ID,
-            ASSISTANT_TRAINED_ID,
-        ]:
+        if creating_user_id != SYSTEM_USER_ID:
             self.associate_user(db=db, project_id=project_id, user_id=creating_user_id)
 
         # 4) create system codes

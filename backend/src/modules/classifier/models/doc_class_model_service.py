@@ -1044,7 +1044,6 @@ class DocClassificationModelService(TextClassificationModelService):
         if parameters.delete_existing_work:
             crud_tag.unlink_multiple_tags(
                 db=db,
-                # user_id=ASSISTANT_TRAINED_ID, # TODO, add user?
                 sdoc_ids=parameters.sdoc_ids,
                 tag_ids=classifier.class_ids,
             )
