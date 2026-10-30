@@ -17,7 +17,7 @@ from core.tag.tag_dto import (
     TagUpdate,
     TagUpdateBulk,
 )
-from systems.mcp_system.mcp_server import MCP_DESTRUCTIVE_EXTENSION
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -266,6 +266,8 @@ def set_tags_batch(
 
 @router.patch(
     "/bulk/update",
+    # overwrites many documents' tags at once
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=SdocTagLinks,
     summary="Updates SourceDocuments' tags and returns the resulting tags per document",
 )

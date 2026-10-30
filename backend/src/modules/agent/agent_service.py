@@ -3,7 +3,7 @@ import uuid
 from collections.abc import AsyncIterator, Sequence
 from typing import Any, NamedTuple
 
-from ag_ui.core import AssistantMessage
+from ag_ui.core import AssistantMessage, RunAgentInput
 from fastapi import FastAPI
 from fastmcp import FastMCP
 from loguru import logger
@@ -28,19 +28,17 @@ from pydantic_ai.run import AgentRunResult
 from pydantic_ai.tools import DeferredToolRequests, RunContext, ToolDefinition
 from pydantic_ai.toolsets import AbstractToolset
 from pydantic_ai.ui.ag_ui import AGUIAdapter
-
-# pydantic-ai's mapping of a pending approval to an AG-UI interrupt, so stored
-# approvals get the same ids as live ones (the client answers them by id)
-from pydantic_ai.ui.ag_ui._interrupt import approval_to_interrupt
 from sqlalchemy.orm import Session
-from starlette.requests import Request
-from starlette.responses import Response, StreamingResponse
+from starlette.concurrency import run_in_threadpool
 
 from common.singleton_meta import SingletonMeta
 from config import conf
+from core.memo.memo_enum import AttachedObjectType
+from core.project.project_crud import crud_project
 from modules.agent.agent_dto import (
     AgentQueryRequest,
     AgentQueryResponse,
+    AgentRunStream,
     AgentSessionHistory,
     AgentSessionTitle,
     AgentToolRead,
@@ -48,24 +46,30 @@ from modules.agent.agent_dto import (
 from modules.agent.agent_enum import AgentName
 from modules.agent.agent_exceptions import (
     AgentSessionHistoryInvalidError,
+    AgentSessionIdInvalidError,
+    AgentSessionNotInProjectError,
+    AgentSessionPendingApprovalError,
     UnknownAgentModelError,
 )
 from modules.agent.agent_session_crud import crud_agent_session
 from modules.agent.agent_session_dto import (
+    SESSION_ID_MAX_LENGTH,
     AgentSessionCreate,
+    AgentSessionRead,
     AgentSessionUpdateIntern,
 )
 from modules.agent.agent_session_orm import AgentSessionORM
-from modules.agent.agui_adapter_utils import (
+from modules.agent.agui_adapter import (
     AgentAGUIAdapter,
     AgentOutput,
-    context_instructions,
+    approval_interrupts,
     to_client_error,
 )
 from modules.agent.auth_context_utils import (
-    auth_header_context,
-    forward_auth_header_hook,
+    auth_headers_context,
+    forward_auth_headers_hook,
 )
+from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
 from systems.mcp_system.mcp_server import create_mcp_server, requires_approval
 
@@ -79,6 +83,14 @@ TITLE_MAX_PROMPT_LENGTH = 50
 # this many times per tool call.
 TOOL_MAX_RETRIES = 3
 
+# a DATS entity link in a prompt or answer: [label](dats:<type>/<id>)
+DATS_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\(dats:[a-z_]+/\d+\)")
+
+# the entity types a DATS link can name (the frontend renders them)
+_LINK_TYPES = ", ".join(
+    t.value for t in AttachedObjectType if t is not AttachedObjectType.span_group
+)
+
 
 class _AgentConfig(NamedTuple):
     tags: list[str]
@@ -91,14 +103,14 @@ _COMMON_PROMPT = (
     "search, annotate and analyze documents. Your tools are DATS endpoints; they "
     "act with the permissions of the user you talk to. Use them to look things "
     "up instead of guessing, and say so when a tool you would need is missing. "
-    "Tools that delete or remove data ask the user for approval: call them "
-    "directly when the user asks for such a change, do not ask in the chat first. "
+    "Tools that delete, share or overwrite data in bulk ask the user for "
+    "approval: call them directly when the user asks for such a change, do not "
+    "ask in the chat first. "
     "Answer in the language of the user, briefly, and format with Markdown. "
     "DATS entities appear as Markdown links with the dats: scheme, "
-    "[label](dats:<type>/<id>), where <type> is one of source_document, code, "
-    "tag, span_annotation, sentence_annotation, bbox_annotation or project and "
-    "<id> is the entity's id. The user mentions entities this way. When you "
-    "mention a DATS entity whose id you know, write it the same way, e.g. "
+    f"[label](dats:<type>/<id>), where <type> is one of {_LINK_TYPES} and <id> "
+    "is the entity's id. The user mentions entities this way. When you mention a "
+    "DATS entity whose id you know, write it the same way, e.g. "
     "[Interview 3](dats:source_document/12), so the user can open it."
 )
 
@@ -157,7 +169,7 @@ def _require_approval(
 
 
 def _first_prompt(messages: Sequence[ModelMessage]) -> str:
-    """The first prompt of the user, with DATS links ([label](dats:type/id)) as their label."""
+    """The first prompt of the user, with DATS links as their label."""
     prompt = next(
         (
             part.content
@@ -168,7 +180,12 @@ def _first_prompt(messages: Sequence[ModelMessage]) -> str:
         ),
         "",
     )
-    return re.sub(r"\[([^\]]+)\]\(dats:[a-z_]+/\d+\)", r"\1", prompt)
+    return DATS_LINK_PATTERN.sub(r"\1", prompt)
+
+
+def _prompt_title(prompt: str) -> str:
+    """The title of a new session until a generated one replaces it."""
+    return prompt[:TITLE_MAX_PROMPT_LENGTH].strip() or "New chat"
 
 
 def _pending_approvals(messages: Sequence[ModelMessage]) -> list[ToolCallPart]:
@@ -193,47 +210,44 @@ def _pending_approvals(messages: Sequence[ModelMessage]) -> list[ToolCallPart]:
 
 
 class AgentService(metaclass=SingletonMeta):
+    """Runs the DATS agents. A run streams for minutes and its tool calls are
+    requests of their own, so it holds no request session: the service reads and
+    writes in short transactions of its own (see the "Streaming services"
+    variation in the service instructions)."""
+
     def __new__(cls, *args, **kwargs):
         cls.llm: LLMRepo = LLMRepo()
+        cls.sqlr: SQLRepo = SQLRepo()
         cls.provider: OpenAIProvider = OpenAIProvider(
             base_url=f"http://{conf.llm_provider.host}:{conf.llm_provider.port}/v1",
             api_key=conf.llm_provider.api_key,
         )
-        cls.agents: dict[AgentName, Agent[None, AgentOutput]] = {}
-        cls.toolsets: dict[AgentName, AbstractToolset[None]] = {}
+        # the model and the tools are set per run
+        cls.agents: dict[AgentName, Agent[None, AgentOutput]] = {
+            agent_name: Agent(
+                system_prompt=config.system_prompt,
+                output_type=[str, DeferredToolRequests],
+            )
+            for agent_name, config in _AGENT_CONFIGS.items()
+        }
+        # a JSON answer instead of a forced tool call, which not every
+        # provider supports
+        cls.title_agent: Agent[None, AgentSessionTitle] = Agent(
+            output_type=PromptedOutput(AgentSessionTitle),
+            system_prompt=_TITLE_SYSTEM_PROMPT,
+        )
         cls.mcp_servers: dict[AgentName, FastMCP] = {}
         return super(AgentService, cls).__new__(cls)
 
     def initialize(self, app: FastAPI) -> None:
-        """Build the agents. Each agent gets an MCP toolset made of the app's
-        MCP tools with the agent's tags. Called once by the app's lifespan."""
-        default_model = self._resolve_model(DEFAULT_MODEL)
-        logger.info(f"Default LLM model for agents: {default_model.model_name}")
-
-        # a JSON answer instead of a forced tool call, which not every
-        # provider supports
-        self.title_agent: Agent[None, AgentSessionTitle] = Agent(
-            model=default_model,
-            output_type=PromptedOutput(AgentSessionTitle),
-            system_prompt=_TITLE_SYSTEM_PROMPT,
-        )
+        """Build the MCP server of each agent: the app's MCP tools with the
+        agent's tags. Called once by the app's lifespan."""
         for agent_name, config in _AGENT_CONFIGS.items():
-            mcp_server = create_mcp_server(
+            self.mcp_servers[agent_name] = create_mcp_server(
                 app=app,
                 name=config.name,
                 tags=config.tags,
-                auth_hook=forward_auth_header_hook,
-            )
-            toolset = MCPToolset(
-                mcp_server, max_retries=TOOL_MAX_RETRIES
-            ).approval_required(_require_approval)
-            self.mcp_servers[agent_name] = mcp_server
-            self.toolsets[agent_name] = toolset
-            self.agents[agent_name] = Agent(
-                model=default_model,
-                system_prompt=config.system_prompt,
-                toolsets=[toolset],
-                output_type=[str, DeferredToolRequests],
+                auth_hook=forward_auth_headers_hook,
             )
 
     async def list_tools(self, *, agent_name: AgentName) -> list[AgentToolRead]:
@@ -255,203 +269,225 @@ class AgentService(metaclass=SingletonMeta):
     async def run_agent(
         self,
         *,
-        db: Session,
         user_id: int,
+        project_id: int,
         agent_name: AgentName,
         query: AgentQueryRequest,
         model: str | None,
-        auth_header: str | None,
+        auth_headers: dict[str, str],
     ) -> AgentQueryResponse:
-        """Answer a prompt in a (new or existing) session; the history is stored
-        on the server."""
-        agent = self.agents[agent_name]
-        toolset = self.toolsets[agent_name]
-        selected_model = self._resolve_model(model) if model else None
+        """Answer a prompt in a (new or existing) session of the project; the
+        history is stored on the server."""
+        model_name = model or DEFAULT_MODEL
+        selected_model = await self._resolve_model(model_name)
+        session_id = (query.session_id or "").strip() or str(uuid.uuid4())
 
         # 1) read the history of the session
-        session_id = (query.session_id or "").strip() or str(uuid.uuid4())
-        db_session = crud_agent_session.read_by_user_and_session_id_if_exists(
-            db=db, user_id=user_id, session_id=session_id
+        history = await run_in_threadpool(
+            self._read_history,
+            user_id=user_id,
+            project_id=project_id,
+            session_id=session_id,
         )
-        history = self._parse_history(db_session) if db_session else []
+        if _pending_approvals(history):
+            raise AgentSessionPendingApprovalError(session_id)
+        instructions = await run_in_threadpool(self._project_instructions, project_id)
 
         # 2) run the agent with the user's credentials
         try:
-            with auth_header_context(auth_header):
-                async with toolset:
-                    result = await agent.run(
-                        query.prompt, message_history=history, model=selected_model
-                    )
+            with auth_headers_context(auth_headers):
+                result = await self.agents[agent_name].run(
+                    query.prompt,
+                    message_history=history,
+                    model=selected_model,
+                    toolsets=[self._toolset(agent_name)],
+                    instructions=instructions,
+                )
         except (ModelAPIError, UnexpectedModelBehavior) as e:
             raise to_client_error(e) from e
 
-        # 3) store the history
-        messages = result.all_messages()
-        self._save_session(
-            db=db,
+        # 3) store the history, title a new session
+        session, is_new = await run_in_threadpool(
+            self._store_messages,
             user_id=user_id,
+            project_id=project_id,
             agent_name=agent_name,
             session_id=session_id,
-            db_session=db_session,
-            messages=messages,
-            title=await self._generate_title(messages) if db_session is None else None,
+            messages=result.all_messages(),
         )
+        if is_new:
+            session = await self.title_session(
+                user_id=user_id, session_id=session_id, model_name=model_name
+            )
         logger.info(f"Agent [{agent_name.value}] answered in session [{session_id}].")
 
-        tools_used = [
-            part.tool_name
-            for message in result.new_messages()
-            for part in message.parts
-            if isinstance(part, ToolCallPart)
-        ]
-        if isinstance(result.output, DeferredToolRequests):
-            return AgentQueryResponse(
-                session_id=session_id,
-                response="",
-                tools_used=tools_used,
-                approvals_required=[c.tool_name for c in result.output.approvals],
-            )
+        # tool calls waiting for approval are not "used" yet
+        output = result.output
+        pending = (
+            {call.tool_call_id for call in output.approvals}
+            if isinstance(output, DeferredToolRequests)
+            else set()
+        )
         return AgentQueryResponse(
             session_id=session_id,
-            response=result.output,
-            tools_used=tools_used,
-            approvals_required=[],
+            response="" if isinstance(output, DeferredToolRequests) else output,
+            tools_used=[
+                part.tool_name
+                for message in result.new_messages()
+                for part in message.parts
+                if isinstance(part, ToolCallPart) and part.tool_call_id not in pending
+            ],
+            approvals_required=[
+                call.tool_name
+                for call in (
+                    output.approvals if isinstance(output, DeferredToolRequests) else []
+                )
+            ],
+            session=session,
         )
 
-    async def run_agui_agent(
+    async def start_agui_run(
         self,
         *,
-        db: Session,
         user_id: int,
+        project_id: int,
         agent_name: AgentName,
-        request: Request,
-        auth_header: str | None,
-    ) -> Response:
-        """Run an agent for an AG-UI request and stream its events. The client sends
-        the whole thread, so the stored history only serves to reload a session."""
-        agent = self.agents[agent_name]
-        toolset = self.toolsets[agent_name]
-
-        adapter = await AgentAGUIAdapter.from_request(request, agent=agent)
-        session_id = adapter.run_input.thread_id
-        forwarded_props = adapter.run_input.forwarded_props
+        run_input: RunAgentInput,
+        accept: str | None,
+        auth_headers: dict[str, str],
+    ) -> AgentRunStream:
+        """Start an AG-UI run: store the client's thread (with the new prompt) in
+        the session, and return the run's events, which run the agent while they
+        are read. The client sends the whole thread with every run."""
+        session_id = run_input.thread_id
+        if len(session_id) > SESSION_ID_MAX_LENGTH:
+            raise AgentSessionIdInvalidError(SESSION_ID_MAX_LENGTH)
+        forwarded_props = run_input.forwarded_props
         requested_model = (
             forwarded_props.get("modelName")
             if isinstance(forwarded_props, dict)
             else None
         )
-        selected_model = (
-            self._resolve_model(requested_model)
-            if isinstance(requested_model, str)
-            else None
+        model_name = (
+            requested_model if isinstance(requested_model, str) else DEFAULT_MODEL
         )
-        db_session = crud_agent_session.read_by_user_and_session_id_if_exists(
-            db=db, user_id=user_id, session_id=session_id
+        selected_model = await self._resolve_model(model_name)
+        adapter = AgentAGUIAdapter(
+            agent=self.agents[agent_name],
+            run_input=run_input,
+            accept=accept,
+            # the client sends no files; no URLs for the server to fetch
+            allowed_file_url_schemes=frozenset(),
         )
 
-        completed = False
+        # 1) store the thread first: a stopped or failed run keeps the prompt
+        session, is_new = await run_in_threadpool(
+            self._store_messages,
+            user_id=user_id,
+            project_id=project_id,
+            agent_name=agent_name,
+            session_id=session_id,
+            messages=adapter.messages,
+        )
+        instructions = await run_in_threadpool(self._project_instructions, project_id)
+        toolset = self._toolset(agent_name)
 
+        # 2) the run: store its messages when it completes
         async def on_complete(result: AgentRunResult[Any]) -> None:
-            nonlocal completed
-            completed = True
-            messages = result.all_messages()
-            self._save_session(
-                db=db,
+            await run_in_threadpool(
+                self._store_messages,
                 user_id=user_id,
+                project_id=project_id,
                 agent_name=agent_name,
                 session_id=session_id,
-                db_session=db_session,
-                messages=messages,
-                title=await self._generate_title(messages)
-                if db_session is None
-                else None,
+                messages=result.all_messages(),
             )
             logger.info(f"Agent [{agent_name.value}] finished session [{session_id}].")
 
-        with auth_header_context(auth_header):
-            async with toolset:
-                response = await AgentAGUIAdapter.dispatch_request(
-                    request,
-                    agent=agent,
-                    on_complete=on_complete,
+        async def events() -> AsyncIterator[str]:
+            # the toolset connects inside the run, so its MCP server task and
+            # every tool call inherit this run's credentials
+            with auth_headers_context(auth_headers):
+                stream = adapter.run_stream(
                     model=selected_model,
-                    instructions=context_instructions(adapter.run_input.context),
+                    toolsets=[toolset],
+                    instructions=instructions,
+                    on_complete=on_complete,
                 )
-        if not isinstance(response, StreamingResponse):
-            return response
+                async for chunk in adapter.encode_stream(stream):
+                    yield chunk
 
-        # the agent runs while the response streams, so keep the credentials
-        # and the toolset until the stream ends
-        body_iterator = response.body_iterator
+        return AgentRunStream(
+            events=events(),
+            content_type=adapter.build_event_stream().content_type,
+            session=session,
+            needs_title=is_new,
+            model_name=model_name,
+        )
 
-        async def stream_with_auth_context() -> AsyncIterator[Any]:
-            try:
-                with auth_header_context(auth_header):
-                    async with toolset:
-                        async for chunk in body_iterator:
-                            yield chunk
-            finally:
-                # A stopped (or failed) run never completes, so pydantic-ai has no
-                # result to store. Store the thread the client sent instead, so the
-                # prompt survives; the partial answer is lost. This runs while the
-                # stream is cancelled, so it must not await (no generated title).
-                if not completed:
-                    messages = adapter.messages
-                    self._save_session(
-                        db=db,
-                        user_id=user_id,
-                        agent_name=agent_name,
-                        session_id=session_id,
-                        db_session=db_session,
-                        messages=messages,
-                        title=_first_prompt(messages)[:TITLE_MAX_PROMPT_LENGTH]
-                        if db_session is None
-                        else None,
-                    )
-                    logger.info(
-                        f"Agent [{agent_name.value}] stopped in session [{session_id}]."
-                    )
+    async def title_session(
+        self, *, user_id: int, session_id: str, model_name: str
+    ) -> AgentSessionRead:
+        """Give a new session a title generated from its first prompt (until
+        then, the prompt itself is its title)."""
+        messages = await run_in_threadpool(
+            self._read_messages, user_id=user_id, session_id=session_id
+        )
+        title = await self._generate_title(_first_prompt(messages), model_name)
+        return await run_in_threadpool(
+            self._update_title, user_id=user_id, session_id=session_id, title=title
+        )
 
-        response.body_iterator = stream_with_auth_context()
-        return response
+    def read_session(self, *, user_id: int, session_id: str) -> AgentSessionRead:
+        """The user's session, read in a transaction of its own (after a run)."""
+        with self.sqlr.transaction() as db:
+            db_obj = crud_agent_session.read_by_user_and_session_id(
+                db=db, user_id=user_id, session_id=session_id
+            )
+            return AgentSessionRead.model_validate(db_obj)
 
     def read_session_history(
         self, *, db: Session, user_id: int, session_id: str
     ) -> AgentSessionHistory:
+        """The messages of the user's session as AG-UI messages. When its last run
+        stopped for the user's approval, the assistant message with those tool
+        calls carries the AG-UI interrupts, where the client restores them."""
         db_session = crud_agent_session.read_by_user_and_session_id(
             db=db, user_id=user_id, session_id=session_id
         )
         history = self._parse_history(db_session)
         messages = AGUIAdapter.dump_messages(history)
 
-        # the run stopped for the user's approval: attach the interrupts to the
-        # assistant message with these tool calls, where the client restores them
         pending = {call.tool_call_id: call for call in _pending_approvals(history)}
-        if pending:
-            for index in reversed(range(len(messages))):
-                message = messages[index]
-                if not isinstance(message, AssistantMessage) or not message.tool_calls:
-                    continue
-                calls = [pending[c.id] for c in message.tool_calls if c.id in pending]
-                if not calls:
-                    continue
-                interrupts = [
-                    approval_to_interrupt(call, {}).model_dump(
-                        by_alias=True, exclude_none=True
-                    )
-                    for call in calls
-                ]
-                messages[index] = message.model_copy(
-                    update={
-                        "metadata": {"custom": {"agui": {"interrupts": interrupts}}}
+        if not pending:
+            return AgentSessionHistory(messages=messages)
+        for index in reversed(range(len(messages))):
+            message = messages[index]
+            if not isinstance(message, AssistantMessage) or not message.tool_calls:
+                continue
+            calls = [pending[c.id] for c in message.tool_calls if c.id in pending]
+            if not calls:
+                continue
+            messages[index] = message.model_copy(
+                update={
+                    "metadata": {
+                        "custom": {"agui": {"interrupts": approval_interrupts(calls)}}
                     }
-                )
-                break
+                }
+            )
+            break
         return AgentSessionHistory(messages=messages)
 
-    def _resolve_model(self, model: str) -> OpenAIChatModel:
+    def _toolset(self, agent_name: AgentName) -> AbstractToolset[None]:
+        """A new MCP toolset for one run. Runs never share a toolset: it connects
+        once, with the credentials of the run that connects it."""
+        return MCPToolset(
+            self.mcp_servers[agent_name], max_retries=TOOL_MAX_RETRIES
+        ).approval_required(_require_approval)
+
+    async def _resolve_model(self, model: str) -> OpenAIChatModel:
         try:
-            model_name = self.llm.validate_llm_name(model)
+            model_name = await run_in_threadpool(self.llm.validate_llm_name, model)
         except ValueError as e:
             raise UnknownAgentModelError(model) from e
         # Strict tool definitions make the provider force the tool schema, which
@@ -463,6 +499,85 @@ class AgentService(metaclass=SingletonMeta):
             profile=OpenAIModelProfile(openai_supports_strict_tool_definition=False),
         )
 
+    def _project_instructions(self, project_id: int) -> str:
+        with self.sqlr.transaction() as db:
+            project = crud_project.read(db=db, id=project_id)
+            return (
+                f'The user works in the DATS project "{project.title}" '
+                f"(project id {project_id})."
+            )
+
+    def _read_history(
+        self, *, user_id: int, project_id: int, session_id: str
+    ) -> list[ModelMessage]:
+        """The messages of the session; none for a new session."""
+        with self.sqlr.transaction() as db:
+            db_obj = crud_agent_session.read_by_user_and_session_id_if_exists(
+                db=db, user_id=user_id, session_id=session_id
+            )
+            if db_obj is None:
+                return []
+            if db_obj.project_id != project_id:
+                raise AgentSessionNotInProjectError(session_id, project_id)
+            return self._parse_history(db_obj)
+
+    def _read_messages(self, *, user_id: int, session_id: str) -> list[ModelMessage]:
+        with self.sqlr.transaction() as db:
+            db_obj = crud_agent_session.read_by_user_and_session_id(
+                db=db, user_id=user_id, session_id=session_id
+            )
+            return self._parse_history(db_obj)
+
+    def _store_messages(
+        self,
+        *,
+        user_id: int,
+        project_id: int,
+        agent_name: AgentName,
+        session_id: str,
+        messages: Sequence[ModelMessage],
+    ) -> tuple[AgentSessionRead, bool]:
+        """Store the messages of the session; a new session gets the first prompt
+        as title. Returns the session and whether it is new."""
+        serialized = ModelMessagesTypeAdapter.dump_python(list(messages), mode="json")
+        with self.sqlr.transaction() as db:
+            db_obj = crud_agent_session.read_by_user_and_session_id_if_exists(
+                db=db, user_id=user_id, session_id=session_id
+            )
+            if db_obj is not None:
+                if db_obj.project_id != project_id:
+                    raise AgentSessionNotInProjectError(session_id, project_id)
+                db_obj = crud_agent_session.update(
+                    db=db,
+                    id=db_obj.id,
+                    update_dto=AgentSessionUpdateIntern(messages=serialized),
+                )
+                return AgentSessionRead.model_validate(db_obj), False
+            db_obj = crud_agent_session.create(
+                db=db,
+                create_dto=AgentSessionCreate(
+                    session_id=session_id,
+                    title=_prompt_title(_first_prompt(messages)),
+                    user_id=user_id,
+                    project_id=project_id,
+                    agent_name=agent_name,
+                    messages=serialized,
+                ),
+            )
+            return AgentSessionRead.model_validate(db_obj), True
+
+    def _update_title(
+        self, *, user_id: int, session_id: str, title: str
+    ) -> AgentSessionRead:
+        with self.sqlr.transaction() as db:
+            db_obj = crud_agent_session.read_by_user_and_session_id(
+                db=db, user_id=user_id, session_id=session_id
+            )
+            db_obj = crud_agent_session.update(
+                db=db, id=db_obj.id, update_dto=AgentSessionUpdateIntern(title=title)
+            )
+            return AgentSessionRead.model_validate(db_obj)
+
     def _parse_history(self, db_session: AgentSessionORM) -> list[ModelMessage]:
         try:
             return ModelMessagesTypeAdapter.validate_python(db_session.messages)
@@ -472,47 +587,16 @@ class AgentService(metaclass=SingletonMeta):
             )
             raise AgentSessionHistoryInvalidError(db_session.session_id) from e
 
-    def _save_session(
-        self,
-        *,
-        db: Session,
-        user_id: int,
-        agent_name: AgentName,
-        session_id: str,
-        db_session: AgentSessionORM | None,
-        messages: Sequence[ModelMessage],
-        title: str | None,
-    ) -> None:
-        """Store the messages of the session; a new session also gets `title`."""
-        serialized = ModelMessagesTypeAdapter.dump_python(list(messages), mode="json")
-        if db_session is not None:
-            crud_agent_session.update(
-                db=db,
-                id=db_session.id,
-                update_dto=AgentSessionUpdateIntern(messages=serialized),
-            )
-            return
-
-        crud_agent_session.create(
-            db=db,
-            create_dto=AgentSessionCreate(
-                session_id=session_id,
-                title=title,
-                user_id=user_id,
-                agent_name=agent_name,
-                messages=serialized,
-            ),
-        )
-
-    async def _generate_title(self, messages: Sequence[ModelMessage]) -> str:
-        """Generate a short title from the first user prompt. Falls back to the
-        prompt itself, because a missing title must not fail the agent run."""
-        prompt = _first_prompt(messages)
+    async def _generate_title(self, prompt: str, model_name: str) -> str:
+        """Generate a short title for a session from its first prompt. Falls back
+        to the prompt itself, because a missing title must not fail anything."""
         try:
+            model = await self._resolve_model(model_name)
             result = await self.title_agent.run(
-                f"Generate a title for a chat session starting with this prompt:\n\n{prompt}"
+                f"Generate a title for a chat session starting with this prompt:\n\n{prompt}",
+                model=model,
             )
             return result.output.title
         except Exception as e:
-            logger.warning(f"Failed to generate a session title: {e}")
-            return prompt[:TITLE_MAX_PROMPT_LENGTH]
+            logger.opt(exception=e).warning(f"Failed to generate a session title: {e}")
+            return _prompt_title(prompt)

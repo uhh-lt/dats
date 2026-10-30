@@ -34,10 +34,11 @@ def mcp_tools(app: FastAPI) -> dict[str, Tool]:
     - Only routes with the "mcp" tag are tools. Most routers carry it for all their
       routes; the user router sets it per route and leaves out `update_me` and
       `delete_me`, so MCP clients can never change or delete an account.
-    - GET and POST (search, counts) tools are read-only. PUT (create) and PATCH
-      (update) tools are not destructive, except the PATCH routes marked with
-      `MCP_DESTRUCTIVE_EXTENSION`: `tag_set_tags_batch` (unlinks tags) and
-      `user_associate_user_to_project` (shares the project). DELETE tools are
+    - Only GET tools are read-only; POST (search, counts, job starts), PUT
+      (create) and PATCH (update) tools are not destructive, except the PATCH
+      routes marked with `MCP_DESTRUCTIVE_EXTENSION`: `tag_set_tags_batch`
+      (unlinks tags), `user_associate_user_to_project` (shares the project) and
+      the bulk updates (`*_bulk`, `tag_update_tags_batch`). DELETE tools are
       destructive.
     """
     return list_mcp_tools(app)

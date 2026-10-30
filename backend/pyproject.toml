@@ -67,7 +67,8 @@ dependencies = [
     "yake>=0.7.3",
     "websockets>=17.0.1",
     "fastmcp>=3.4.5",
-    "pydantic-ai-slim[openai,mcp,ag-ui]>=2.8.0",
+    # pinned to the minor version: the agent module uses a private AG-UI helper
+    "pydantic-ai-slim[openai,mcp,ag-ui]>=2.31.1,<2.32",
 ]
 
 [dependency-groups]

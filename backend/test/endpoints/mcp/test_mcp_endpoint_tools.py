@@ -2,7 +2,8 @@ import pytest
 from fastapi import FastAPI
 from mcp_types import Tool
 
-from systems.mcp_system.mcp_server import MCP_TAG, requires_approval
+from systems.mcp_system.mcp_constants import MCP_TAG
+from systems.mcp_system.mcp_server import requires_approval
 
 from .conftest import list_mcp_tools
 
@@ -98,8 +99,8 @@ def test_mcp_tools_with_tags_are_the_mcp_tools_of_these_routers(
 def test_mcp_tools_needing_approval_are_the_deletes_and_the_marked_updates(
     mcp_tools: dict[str, Tool],
 ):
-    """All DELETE tools plus the two marked PATCH tools need approval; reading,
-    creating and other updates do not."""
+    """All DELETE tools plus the marked PATCH tools (bulk overwrites, sharing)
+    need approval; reading, computing, creating and single updates do not."""
     assert {name for name, tool in mcp_tools.items() if _needs_approval(tool)} == {
         "bboxAnnotation_delete_bbox_annotations_bulk",
         "bboxAnnotation_delete_by_id",
@@ -124,6 +125,13 @@ def test_mcp_tools_needing_approval_are_the_deletes_and_the_marked_updates(
         # PATCH routes marked with MCP_DESTRUCTIVE_EXTENSION
         "tag_set_tags_batch",
         "user_associate_user_to_project",
+        "spanAnnotation_update_span_annotations_bulk",
+        "sentenceAnnotation_update_sentence_annotations_bulk",
+        "bboxAnnotation_update_bbox_annotations_bulk",
+        "folder_update_folders_bulk",
+        "sdocMetadata_update_bulk",
+        "tag_update_tags_batch",
+        "memo_update_memos_bulk",
     }
 
 
@@ -132,13 +140,13 @@ def test_mcp_tools_needing_approval_are_the_deletes_and_the_marked_updates(
     [
         # GET reads.
         pytest.param("project_get_project", True, None, id="get"),
-        # POST computes (search) without changing data.
-        pytest.param("search_search_sdocs", True, None, id="post"),
+        # POST computes or starts a job: not read-only, not destructive.
+        pytest.param("search_search_sdocs", False, False, id="post"),
         # PUT creates: a change, but nothing is lost.
         pytest.param("code_create_code", False, False, id="put"),
         # PATCH updates.
         pytest.param("code_update_by_id", False, False, id="patch"),
-        # A marked PATCH removes data.
+        # A marked PATCH overwrites in bulk or removes data.
         pytest.param("tag_set_tags_batch", False, True, id="marked-patch"),
         # DELETE removes data.
         pytest.param("code_delete_by_id", False, True, id="delete"),

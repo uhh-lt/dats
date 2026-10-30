@@ -819,7 +819,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.3.0" },
     { name = "psycopg2", specifier = ">=2.9.12" },
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pydantic-ai-slim", extras = ["openai", "mcp", "ag-ui"], specifier = ">=2.8.0" },
+    { name = "pydantic-ai-slim", extras = ["openai", "mcp", "ag-ui"], specifier = ">=2.31.1,<2.32" },
     { name = "pyjwt", specifier = ">=2.13.0" },
     { name = "pymupdf", specifier = ">=1.28.0" },
     { name = "python-magic", specifier = ">=0.4.27" },

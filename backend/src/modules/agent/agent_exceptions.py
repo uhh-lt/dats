@@ -11,6 +11,36 @@ class UnknownAgentModelError(Exception):
         super().__init__(f"The LLM '{model}' is not available.")
 
 
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class AgentSessionIdInvalidError(Exception):
+    """Raised when an AG-UI run's thread id cannot be a session id (too long)."""
+
+    def __init__(self, max_length: int) -> None:
+        super().__init__(f"The thread id must have at most {max_length} characters.")
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class AgentSessionNotInProjectError(Exception):
+    """Raised when a run continues a session of another project."""
+
+    def __init__(self, session_id: str, project_id: int) -> None:
+        super().__init__(
+            f"The agent session {session_id} does not belong to project {project_id}."
+        )
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class AgentSessionPendingApprovalError(Exception):
+    """Raised when a prompt is sent to a session whose last run waits for the
+    user's approval of tool calls (answer them via the AG-UI endpoint first)."""
+
+    def __init__(self, session_id: str) -> None:
+        super().__init__(
+            f"The agent session {session_id} waits for the approval of tool calls; "
+            "answer them in the chat first."
+        )
+
+
 @exception_handler(status.HTTP_502_BAD_GATEWAY)
 class AgentLLMError(Exception):
     """Raised when the LLM provider fails while an agent runs (pydantic-ai wraps
@@ -24,13 +54,15 @@ class AgentLLMError(Exception):
         )
 
 
-@exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
-class AgentSessionHistoryInvalidError(Exception):
-    """Raised when the stored messages of an agent session cannot be parsed. The
-    run is aborted, so the stored history is never overwritten."""
+@exception_handler(status.HTTP_502_BAD_GATEWAY)
+class AgentToolUseError(Exception):
+    """Raised (or sent as an AG-UI run error) when the LLM keeps calling a tool
+    wrongly (pydantic-ai's UnexpectedModelBehavior), e.g. with invalid arguments."""
 
-    def __init__(self, session_id: str) -> None:
-        super().__init__(f"The history of agent session {session_id} is invalid.")
+    def __init__(self) -> None:
+        super().__init__(
+            "The LLM could not call a tool correctly. Rephrase the request or try another LLM."
+        )
 
 
 @exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -42,12 +74,10 @@ class AgentRunError(Exception):
         super().__init__("The agent failed to answer.")
 
 
-@exception_handler(status.HTTP_502_BAD_GATEWAY)
-class AgentToolUseError(Exception):
-    """Raised (or sent as an AG-UI run error) when the LLM keeps calling a tool
-    wrongly (pydantic-ai's UnexpectedModelBehavior), e.g. with invalid arguments."""
+@exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
+class AgentSessionHistoryInvalidError(Exception):
+    """Raised when the stored messages of an agent session cannot be parsed. The
+    run is aborted, so the stored history is never overwritten."""
 
-    def __init__(self) -> None:
-        super().__init__(
-            "The LLM could not call a tool correctly. Rephrase the request or try another LLM."
-        )
+    def __init__(self, session_id: str) -> None:
+        super().__init__(f"The history of agent session {session_id} is invalid.")
