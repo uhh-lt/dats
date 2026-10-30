@@ -10,6 +10,7 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.code.code_crud import crud_code
 from core.user.user_crud import crud_user
+from core.user.user_utils import get_user_key, read_users_by_keys
 
 AnnotationORM = SpanAnnotationORM | SentenceAnnotationORM | BBoxAnnotationORM
 
@@ -30,14 +31,17 @@ class AnnotationProvenanceExportSchema(BaseModel):
     """
     Provenance of an annotation copied from another annotation, for export/import.
     Ids differ between projects, so the source is referenced by uuid, its user by
-    email and its code by name.
+    key (email, or 'virtual:<name>' for a virtual annotator) and its code by name.
     """
 
     source_annotation_uuid: str | None = Field(
         description="UUID of the annotation this one was copied from", default=None
     )
     source_user_email: str | None = Field(
-        description="Email of the user of the annotation this one was copied from",
+        description=(
+            "Email of the user of the annotation this one was copied from, or "
+            "'virtual:<name>' for a virtual annotator"
+        ),
         default=None,
     )
     source_code_name: str | None = Field(
@@ -89,7 +93,8 @@ def export_annotation_provenance(
         )
     )
     email_by_user_id = {
-        user.id: user.email for user in crud_user.read_by_ids(db=db, ids=user_ids)
+        user.id: get_user_key(user)
+        for user in crud_user.read_by_ids(db=db, ids=user_ids)
     }
     code_ids = list(
         dict.fromkeys(
@@ -170,19 +175,20 @@ def import_annotation_provenance(
         }
     )
 
-    # 2) source users by email, source codes by name
+    # 2) source users by key, source codes by name
     user_id_by_email = {
-        user.email: user.id
-        for user in crud_user.read_by_emails(
-            db=db,
-            emails=list(
+        key: user.id
+        for key, user in read_users_by_keys(
+            db,
+            project_id=project_id,
+            keys=list(
                 dict.fromkeys(
                     provenance.source_user_email
                     for provenance in provenances
                     if provenance.source_user_email is not None
                 )
             ),
-        )
+        ).items()
     }
     code_id_by_name = {
         code.name: code.id

@@ -75,7 +75,7 @@ def register(
     db_user = crud_user.create(db=db, create_dto=user)
     background_tasks.add_task(
         MailRepo().send_welcome_mail,
-        email=db_user.email,
+        email=user.email,
         first_name=db_user.first_name,
         last_name=db_user.last_name,
     )

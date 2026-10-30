@@ -16,6 +16,7 @@ from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportSchema,
 )
 from modules.eximport.import_exceptions import ImportBBoxAnnotationsError
+from modules.eximport.user.user_import_utils import read_project_users_by_keys
 
 
 def import_bbox_annotations_to_proj(
@@ -70,12 +71,14 @@ def import_bbox_annotations_to_proj(
     project = crud_project.read(db=db, id=project_id)
 
     # 1. Check if the Users exists
-    project_user_emails = {user.email: user for user in project.users}
-    for email in user_emails:
-        if email not in project_user_emails:
-            error_messages.append(
-                f"User '{email}' is not part of the project {project_id}"
-            )
+    # members by email, virtual annotators by name (created if missing)
+    project_user_emails, user_errors = read_project_users_by_keys(
+        db,
+        project_id=project_id,
+        keys=user_emails,
+        create_virtual_annotators=not validate_only,
+    )
+    error_messages.extend(user_errors)
 
     # 2. Check if the SourceDocuments exists
     project_sdoc_names: dict[str, SourceDocumentORM] = {}

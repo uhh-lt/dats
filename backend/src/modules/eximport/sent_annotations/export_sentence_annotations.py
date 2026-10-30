@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.user.user_utils import get_user_key
 from modules.eximport.annotation_provenance_utils import (
     export_annotation_provenance,
 )
@@ -112,7 +113,7 @@ def __generate_export_df_for_sentence_annotations(
                 **provenance.model_dump(),
                 uuid=sent_annotation.uuid,
                 sdoc_name=sdoc.filename,
-                user_email=user.email,
+                user_email=get_user_key(user),
                 user_first_name=user.first_name,
                 user_last_name=user.last_name,
                 code_name=sent_annotation.code.name,

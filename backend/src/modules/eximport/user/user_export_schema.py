@@ -5,7 +5,12 @@ from pydantic import BaseModel, Field, field_validator
 class UserExportSchema(BaseModel):
     """Schema definition for user export/import operations."""
 
-    email: str = Field(description="Email of the user")
+    email: str = Field(
+        description=(
+            "Email of the user, or 'virtual:<name>' for a virtual annotator "
+            "of the project"
+        )
+    )
     first_name: str | None = Field(description="First name of the user", default=None)
     last_name: str | None = Field(description="Last name of the user", default=None)
 

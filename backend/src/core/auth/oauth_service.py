@@ -96,7 +96,7 @@ class OAuthService(metaclass=SingletonMeta):
                 )
 
                 await MailRepo().send_welcome_mail(
-                    email=user.email,
+                    email=create_dto.email,
                     first_name=user.first_name,
                     last_name=user.last_name,
                 )

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
@@ -8,13 +9,48 @@ from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectUserLinks
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
-from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
+from core.user.user_dto import (
+    ProjectAddUser,
+    PublicUserRead,
+    UserRead,
+    UserUpdate,
+    VirtualAnnotatorCreate,
+    VirtualAnnotatorUpdate,
+)
 from core.user.user_orm import UserORM
+from core.user.user_service import UserService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user", "mcp"]
 )
+
+
+# --- create operations
+
+
+@router.put(
+    "/{project_id}/virtual_annotator",
+    response_model=UserRead,
+    summary="Creates a virtual annotator (a user without login) in the Project",
+)
+def create_virtual_annotator(
+    *,
+    project_id: int,
+    virtual_annotator: VirtualAnnotatorCreate,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> UserRead:
+    authz_user.assert_in_project(project_id)
+
+    result = UserService().create_virtual_annotator(
+        db=db, project_id=project_id, name=virtual_annotator.name
+    )
+    ws.emit_to_project(
+        DATSEvent.VIRTUAL_ANNOTATOR_CREATED, result, project_id=project_id
+    )
+    return result
 
 
 # --- read operations
@@ -57,16 +93,57 @@ def get_by_project(
 
 
 @router.get(
+    "/{project_id}/annotator",
+    response_model=list[UserRead],
+    summary=(
+        "Returns all annotators of the Project with the given ID: its members, "
+        "followed by its virtual annotators"
+    ),
+)
+def get_annotators_by_project(
+    *,
+    project_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> list[UserRead]:
+    authz_user.assert_in_project(project_id)
+
+    return [
+        UserRead.model_validate(user)
+        for user in crud_user.read_annotators_by_project(db=db, project_id=project_id)
+    ]
+
+
+@router.get(
+    "/{project_id}/virtual_annotator",
+    response_model=list[UserRead],
+    summary="Returns the virtual annotators of the Project with the given ID",
+)
+def get_virtual_annotators_by_project(
+    *,
+    project_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> list[UserRead]:
+    authz_user.assert_in_project(project_id)
+
+    return UserService().read_virtual_annotators(db=db, project_id=project_id)
+
+
+@router.get(
     "/all",
     response_model=list[PublicUserRead],
-    summary="Returns all Users that exist in the system",
+    summary=(
+        "Returns all human Users that exist in the system "
+        "(virtual annotators belong to their project)"
+    ),
 )
 def get_all(
     *,
     db: Session = Depends(get_db_session),
     skip_limit: dict[str, int] = Depends(skip_limit_params),
 ) -> list[PublicUserRead]:
-    db_objs = crud_user.read_multi(db=db, **skip_limit)
+    db_objs = crud_user.read_humans(db=db, **skip_limit)
     return [PublicUserRead.model_validate(proj) for proj in db_objs]
 
 
@@ -90,6 +167,31 @@ def update_me(
     # Notify all collaborators across every project the user belongs to
     member_ids = {member.id for project in db_user.projects for member in project.users}
     ws.emit_to_users(DATSEvent.USER_UPDATED, result, user_ids=list(member_ids))
+    return result
+
+
+@router.patch(
+    "/virtual_annotator/{user_id}",
+    response_model=UserRead,
+    summary="Renames the virtual annotator with the given ID",
+)
+def update_virtual_annotator(
+    *,
+    user_id: int,
+    virtual_annotator: VirtualAnnotatorUpdate,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> UserRead:
+    authz_user.assert_in_same_project_as(Crud.USER, user_id)
+
+    result = UserService().update_virtual_annotator(
+        db=db, user_id=user_id, update_dto=virtual_annotator
+    )
+    assert result.project_id is not None
+    ws.emit_to_project(
+        DATSEvent.VIRTUAL_ANNOTATOR_UPDATED, result, project_id=result.project_id
+    )
     return result
 
 
@@ -147,6 +249,31 @@ def delete_me(
     db_user = crud_user.delete(db=db, id=authz_user.user.id)
     result = UserRead.model_validate(db_user)
     ws.emit_to_users(DATSEvent.USER_DELETED, result, user_ids=list(member_ids))
+    return result
+
+
+@router.delete(
+    "/virtual_annotator/{user_id}",
+    response_model=UserRead,
+    summary=(
+        "Removes the virtual annotator with the given ID together with all its "
+        "annotations and memos"
+    ),
+)
+def delete_virtual_annotator(
+    *,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> UserRead:
+    authz_user.assert_in_same_project_as(Crud.USER, user_id)
+
+    result = UserService().delete_virtual_annotator(db=db, user_id=user_id)
+    assert result.project_id is not None
+    ws.emit_to_project(
+        DATSEvent.VIRTUAL_ANNOTATOR_DELETED, result, project_id=result.project_id
+    )
     return result
 
 

@@ -37,7 +37,8 @@ from core.prompt_template.prompt_template_version_crud import (
     crud_prompt_template_version,
 )
 from core.tag.tag_crud import crud_tag
-from core.user.user_crud import SYSTEM_USER_ID, crud_user
+from core.user.user_crud import SYSTEM_USER_ID
+from core.user.user_utils import read_users_by_keys
 from modules.eximport.import_exceptions import ImportPromptTemplatesError
 from modules.eximport.prompt_templates.prompt_template_export_schema import (
     PromptExampleForExport,
@@ -409,8 +410,10 @@ class _Remapper:
                 )
             },
             user_id={
-                user.email: user.id
-                for user in crud_user.read_by_emails(db=db, emails=_unique(emails))
+                key: user.id
+                for key, user in read_users_by_keys(
+                    db, project_id=project_id, keys=_unique(emails)
+                ).items()
             },
         )
 
