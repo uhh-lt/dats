@@ -5,11 +5,6 @@ from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.doc.source_document_crud import crud_sdoc
 from core.prompt_template.prompt_template_enum import TaskType
-from core.user.user_crud import (
-    ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_ZEROSHOT_ID,
-)
-from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_exceptions import (
     LLMAssistantDocumentsNotInProjectError,
 )
@@ -54,13 +49,11 @@ class LLMAssistantService(metaclass=SingletonMeta):
         task_type: TaskType,
         code_ids: list[int],
         sdoc_ids: list[int],
-        approach_type: ApproachType,
+        annotator_id: int,
     ) -> dict[int, int]:
-        approachtype2userid = {
-            ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
-            ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
-        }
-        user_id = approachtype2userid[approach_type]
+        """Count the annotations of the virtual annotator per code, the ones a run
+        with `delete_existing_annotations` would delete."""
+        user_id = annotator_id
 
         match task_type:
             case TaskType.SENTENCE_ANNOTATION:

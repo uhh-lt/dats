@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
 from core.prompt_template.prompt_template_enum import TaskType
-from modules.llm_assistant.llm_assistant_enum import ApproachType
 
 from .conftest import LLMAssistantProject
 
@@ -16,52 +15,37 @@ COUNT_ANNOTATIONS_URL = "/llm_assistant/count_existing_assistant_annotations"
 
 
 @pytest.mark.parametrize(
-    "task_type,approach_type,code_key",
+    "task_type,annotator_key,code_key",
     [
-        # One zero-shot span annotation exists for PERSON.
+        # One span annotation of run A exists for PERSON.
+        pytest.param(TaskType.ANNOTATION, "run_a", "person_code", id="span-run-a"),
+        # One span annotation of run B exists for PERSON.
+        pytest.param(TaskType.ANNOTATION, "run_b", "person_code", id="span-run-b"),
+        # One sentence annotation of run A exists for FACT.
         pytest.param(
-            TaskType.ANNOTATION,
-            ApproachType.LLM_ZERO_SHOT,
-            "person_code",
-            id="span-zero-shot",
+            TaskType.SENTENCE_ANNOTATION, "run_a", "fact_code", id="sentence-run-a"
         ),
-        # One few-shot span annotation exists for PERSON.
+        # One sentence annotation of run B exists for FACT.
         pytest.param(
-            TaskType.ANNOTATION,
-            ApproachType.LLM_FEW_SHOT,
-            "person_code",
-            id="span-few-shot",
-        ),
-        # One zero-shot sentence annotation exists for FACT.
-        pytest.param(
-            TaskType.SENTENCE_ANNOTATION,
-            ApproachType.LLM_ZERO_SHOT,
-            "fact_code",
-            id="sentence-zero-shot",
-        ),
-        # One few-shot sentence annotation exists for FACT.
-        pytest.param(
-            TaskType.SENTENCE_ANNOTATION,
-            ApproachType.LLM_FEW_SHOT,
-            "fact_code",
-            id="sentence-few-shot",
+            TaskType.SENTENCE_ANNOTATION, "run_b", "fact_code", id="sentence-run-b"
         ),
     ],
 )
-def test_count_existing_assistant_annotations_separates_task_and_approach(
+def test_count_existing_assistant_annotations_separates_task_and_annotator(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
     task_type: TaskType,
-    approach_type: ApproachType,
+    annotator_key: str,
     code_key: str,
 ) -> None:
-    """Counts include only the selected task's assistant user and documents."""
+    """Counts include only the selected task's virtual annotator and documents."""
     code = llm_assistant_project[code_key]
+    annotator = llm_assistant_project[annotator_key]
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": task_type.value,
-            "approach_type": approach_type.value,
+            "annotator_id": annotator.id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
@@ -93,7 +77,7 @@ def test_count_existing_assistant_annotations_returns_empty_for_other_tasks(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": task_type.value,
-            "approach_type": ApproachType.LLM_ZERO_SHOT.value,
+            "annotator_id": llm_assistant_project["run_a"].id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
@@ -113,7 +97,7 @@ def test_count_existing_assistant_annotations_includes_explicit_zero_counts(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "approach_type": ApproachType.LLM_ZERO_SHOT.value,
+            "annotator_id": llm_assistant_project["run_a"].id,
         },
         json={
             "sdoc_ids": [
@@ -164,7 +148,7 @@ def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "approach_type": ApproachType.LLM_ZERO_SHOT.value,
+            "annotator_id": 1,
         },
         json=body,
     )
@@ -181,11 +165,30 @@ def test_count_existing_assistant_annotations_rejects_foreign_objects(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "approach_type": ApproachType.LLM_ZERO_SHOT.value,
+            "annotator_id": llm_assistant_project["foreign_run"].id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["foreign_sdoc"].id],
             "code_ids": [llm_assistant_project["foreign_code"].id],
+        },
+    )
+    assert response.status_code == 403, response.text
+
+
+def test_count_existing_assistant_annotations_rejects_foreign_annotator(
+    client: TestClient,
+    llm_assistant_project: LLMAssistantProject,
+) -> None:
+    """The counted virtual annotator must belong to one of the user's projects."""
+    response = client.post(
+        COUNT_ANNOTATIONS_URL,
+        params={
+            "task_type": TaskType.ANNOTATION.value,
+            "annotator_id": llm_assistant_project["foreign_run"].id,
+        },
+        json={
+            "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
+            "code_ids": [llm_assistant_project["person_code"].id],
         },
     )
     assert response.status_code == 403, response.text

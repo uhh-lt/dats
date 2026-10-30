@@ -7,10 +7,6 @@ from core.annotation.span_annotation_dto import (
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.prompt_template.prompt_template_enum import TaskType
-from core.user.user_crud import (
-    ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_ZEROSHOT_ID,
-)
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
     AnnotationResult,
@@ -154,9 +150,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
 
         deleted_ids = crud_span_anno.delete_by_user_sdocs_codes(
             db=context.db,
-            user_id=ASSISTANT_FEWSHOT_ID
-            if context.is_fewshot
-            else ASSISTANT_ZEROSHOT_ID,
+            user_id=context.annotator_id,
             sdoc_ids=context.payload.sdoc_ids,
             code_ids=list(context.strategy.codeid2code),
         )
@@ -247,9 +241,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         )
         created_annos_for_sdoc = SpanAnnotationService().create_multi(
             db=context.db,
-            user_id=ASSISTANT_FEWSHOT_ID
-            if context.is_fewshot
-            else ASSISTANT_ZEROSHOT_ID,
+            user_id=context.annotator_id,
             create_dtos=suggested_annotations,
         )
         logger.info(

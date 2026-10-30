@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from pydantic import Field
 
 from config import conf
+from core.user.user_orm import UserORM
 from modules.classifier.classifier_dto import (
     ClassifierEvaluationOutput,
     ClassifierEvaluationParams,
@@ -203,12 +204,15 @@ def _inference_payload(
     model_type: ClassifierModel,
     classifier_id: int,
     sdoc_ids: list[int],
+    annotator_id: int | None,
 ) -> ClassifierJobInput:
-    """Build a typed inference request that preserves existing annotations."""
+    """Build a typed inference request that preserves existing annotations and
+    writes span/sentence predictions into the virtual annotator."""
     inference_params = ClassifierInferenceParams(
         task_type=ClassifierTask.INFERENCE,
         classifier_id=classifier_id,
         sdoc_ids=sdoc_ids,
+        annotator_id=annotator_id,
         delete_existing_work=False,
     )
     return ClassifierJobInput(
@@ -534,6 +538,7 @@ def test_span_classifier_train_eval_infer(
     db_session,
     conll_span_dataset,
     test_user,
+    classifier_annotator: UserORM,
     payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for span classification on CoNLL-2003.
@@ -652,6 +657,7 @@ def test_span_classifier_train_eval_infer(
             ClassifierModel.SPAN,
             classifier_id,
             conll_span_dataset["subset2sdoc_ids"]["test"][:5],
+            classifier_annotator.id,
         ),
     )
     infer_finished = _wait_for_job(client, infer_job.job_id)
@@ -796,6 +802,7 @@ def test_document_classifier_train_eval_infer(
             ClassifierModel.DOCUMENT,
             classifier_id,
             news20_doc_dataset["subset2sdoc_ids"]["test"][:5],
+            None,
         ),
     )
     infer_finished = _wait_for_job(client, infer_job.job_id)
@@ -818,6 +825,7 @@ def test_sentence_classifier_train_eval_infer(
     db_session,
     csabstruct_sent_dataset,
     test_user,
+    classifier_annotator: UserORM,
     payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for sentence classification on CSAbstruct.
@@ -940,6 +948,7 @@ def test_sentence_classifier_train_eval_infer(
             ClassifierModel.SENTENCE,
             classifier_id,
             csabstruct_sent_dataset["subset2sdoc_ids"]["test"][:5],
+            classifier_annotator.id,
         ),
     )
     infer_finished = _wait_for_job(client, infer_job.job_id)
@@ -984,3 +993,35 @@ def test_train_job_invalid_base_model(client: TestClient, test_project):
         if time.monotonic() > deadline:
             pytest.fail("Job did not reach failed state in time")
         time.sleep(2)
+
+
+@pytest.mark.parametrize(
+    "model_type",
+    [
+        # span classifiers write span annotations
+        pytest.param(ClassifierModel.SPAN, id="span"),
+        # sentence classifiers write sentence annotations
+        pytest.param(ClassifierModel.SENTENCE, id="sentence"),
+    ],
+)
+def test_inference_job_requires_a_virtual_annotator(
+    client: TestClient,
+    test_project,
+    test_user: UserORM,
+    classifier_annotator: UserORM,
+    model_type: ClassifierModel,
+):
+    """Span and sentence inference only write into a virtual annotator of the
+    project: without one, or with a human user, the start returns HTTP 400 and
+    no job is enqueued."""
+    for annotator_id, expected_fragment in [
+        (None, "needs the virtual annotator to annotate as"),
+        (test_user.id, "is not a virtual annotator of project"),
+    ]:
+        payload = _inference_payload(test_project.id, model_type, 1, [], annotator_id)
+        response = client.post(CLASSIFIER_JOB_URL, json=payload.model_dump(mode="json"))
+        assert response.status_code == 400, response.text
+        assert expected_fragment in response.text
+    list_response = client.get(f"{CLASSIFIER_JOB_URL}/project/{test_project.id}")
+    assert list_response.status_code == 200, list_response.text
+    assert list_response.json() == []
