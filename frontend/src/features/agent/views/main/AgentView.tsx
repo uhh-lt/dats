@@ -1,13 +1,13 @@
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { projectQueries } from "@core/project";
-import { Alert, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import { AgentName } from "@models/AgentName";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { AgentSessionList } from "./_components/AgentSessionList";
-import { AgentThread } from "./_components/AgentThread";
+import { AgentThread } from "./_components/thread/AgentThread";
 import { AgentToolbar } from "./_components/AgentToolbar";
 import { useAgentRuntime } from "./_hooks/useAgentRuntime";
 import { DEFAULT_MODEL } from "./_utils/agentClientUtils";
@@ -23,7 +23,7 @@ export function AgentView() {
 
   const [agentName, setAgentName] = useState(AgentName.PROJECT);
   const [modelName, setModelName] = useState(DEFAULT_MODEL);
-  const { runtime, threadId, error, clearError } = useAgentRuntime({ agentName, modelName, projectId, projectTitle });
+  const { runtime, threadId } = useAgentRuntime({ agentName, modelName, projectId, projectTitle });
 
   const handleSelectSession = useCallback(
     (sessionId: string) => void runtime.threads.switchToThread(sessionId),
@@ -43,18 +43,13 @@ export function AgentView() {
           />
         }
         content={
-          <Stack height="100%">
+          <Stack height="100%" bgcolor="background.paper">
             <AgentToolbar
               agentName={agentName}
               modelName={modelName}
               onAgentNameChange={setAgentName}
               onModelNameChange={setModelName}
             />
-            {error && (
-              <Alert severity="warning" onClose={clearError} sx={{ mx: 2, mb: 1 }}>
-                {error}
-              </Alert>
-            )}
             <AgentThread />
           </Stack>
         }

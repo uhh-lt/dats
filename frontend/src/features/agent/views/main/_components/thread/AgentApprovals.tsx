@@ -36,7 +36,7 @@ export function AgentApprovals() {
   };
 
   return (
-    <Alert severity="warning" sx={{ mx: 2, mb: 1 }}>
+    <Alert severity="warning">
       <AlertTitle>
         The agent wants to make {interrupts.length === 1 ? "a change that needs" : "changes that need"} your approval
       </AlertTitle>

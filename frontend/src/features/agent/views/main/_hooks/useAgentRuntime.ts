@@ -5,6 +5,7 @@ import { AgentName } from "@models/AgentName";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { agentQueries } from "../../../api/agentQueries";
 import { AgentClient } from "../_utils/agentClientUtils";
+import { AGENT_SUGGESTIONS } from "../_utils/agentSuggestionUtils";
 
 interface UseAgentRuntimeProps {
   agentName: AgentName;
@@ -21,7 +22,6 @@ interface UseAgentRuntimeProps {
  */
 export function useAgentRuntime({ agentName, modelName, projectId, projectTitle }: UseAgentRuntimeProps) {
   const [threadId, setThreadId] = useState<string>(() => crypto.randomUUID());
-  const [error, setError] = useState<string | undefined>(undefined);
 
   // one AG-UI client for the page; the runtime reads the thread id from it
   const [agent] = useState(() => new AgentClient(agentName, threadId));
@@ -36,13 +36,11 @@ export function useAgentRuntime({ agentName, modelName, projectId, projectTitle 
         const newThreadId = crypto.randomUUID();
         agent.selectThread(newThreadId);
         setThreadId(newThreadId);
-        setError(undefined);
       },
       onSwitchToThread: async (sessionId: string) => {
         // select the thread before awaiting its history, as the runtime requires
         agent.selectThread(sessionId);
         setThreadId(sessionId);
-        setError(undefined);
         const history = await queryClient.fetchQuery(agentQueries.history(sessionId));
         const messages = fromAgUiMessages(history.messages).map((message, index) =>
           fromThreadMessageLike(message, `${sessionId}-${index}`, { type: "complete", reason: "unknown" }),
@@ -66,7 +64,10 @@ export function useAgentRuntime({ agentName, modelName, projectId, projectTitle 
   const runtime = useAgUiRuntime({
     agent,
     getRunContext,
-    onError: (e) => setError(e.message),
+    // the backend sends every step (reasoning, tool call, text) as its own
+    // message; joined, a turn renders as one answer
+    joinStrategy: "concat-content",
+    suggestions: AGENT_SUGGESTIONS[agentName],
     adapters: { threadList },
   });
 
@@ -88,7 +89,5 @@ export function useAgentRuntime({ agentName, modelName, projectId, projectTitle 
     });
   }, [runtime]);
 
-  const clearError = useCallback(() => setError(undefined), []);
-
-  return { runtime, threadId, error, clearError };
+  return { runtime, threadId };
 }
