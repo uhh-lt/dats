@@ -46,8 +46,8 @@ from core.prompt_template.prompt_template_service import PromptTemplateService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
-from core.user.user_crud import ASSISTANT_ZEROSHOT_ID
 from core.user.user_orm import UserORM
+from core.user.user_service import UserService
 
 EXAMPLE_SENTENCES = ["Alice wrote the report.", "The report is long.", "Bob read it."]
 EXAMPLE_CONTENT = " ".join(EXAMPLE_SENTENCES)
@@ -78,7 +78,8 @@ class PromptTemplateProject(TypedDict):
       field ``author`` (string, "The author of the document.").
     - Span annotations of ``testuser@dats.org``: ``Alice`` (PERSON, 0-5),
       ``the report`` (Claim, 12-22) and ``Bob`` (PERSON, 44-47).
-    - Span annotation ``wrote`` (Claim, 6-11) of the zero-shot assistant user
+    - Span annotation ``wrote`` (Claim, 6-11) of the virtual annotator
+      ``Assistant-Run1``
       (another annotator than ``testuser@dats.org``).
     - Sentence annotations of ``testuser@dats.org``: S0 (PERSON) and S1-S2
       (Claim).
@@ -241,7 +242,10 @@ def prompt_template_project(
     alice_annotation = span("Alice", person_code)
     report_annotation = span("the report", claim_code)
     bob_annotation = span("Bob", person_code)
-    assistant_annotation = span("wrote", claim_code, ASSISTANT_ZEROSHOT_ID)
+    assistant = UserService().create_virtual_annotator(
+        db=db_session, project_id=test_project.id, name="Assistant-Run1"
+    )
+    assistant_annotation = span("wrote", claim_code, assistant.id)
     person_sentence_annotation = _create_sentence_annotation(
         db_session,
         sdoc=sdoc,

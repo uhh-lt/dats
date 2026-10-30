@@ -220,9 +220,6 @@ def _data_store_repos(*, sql_echo: bool = False) -> list[RepoBase]:
 
 def _create_system_users(db: Session) -> None:
     from core.user.user_crud import (
-        ASSISTANT_FEWSHOT_ID,
-        ASSISTANT_TRAINED_ID,
-        ASSISTANT_ZEROSHOT_ID,
         DEMO_USER_ID,
         SYSTEM_USER_ID,
         crud_user,
@@ -246,26 +243,6 @@ def _create_system_users(db: Session) -> None:
                 last_name=user_conf.last_name,
                 password=user_conf.password.get_secret_value(),
             ),
-        )
-
-    domain = conf.assistant_user.email.split("@")[1]
-    for user_id, last_name in [
-        (ASSISTANT_ZEROSHOT_ID, "ZeroShot"),
-        (ASSISTANT_FEWSHOT_ID, "FewShot"),
-        (ASSISTANT_TRAINED_ID, "Trained"),
-    ]:
-        if crud_user.exists(db=db, id=user_id):
-            continue
-        logger.info(f"Creating Assistant User: {last_name}")
-        crud_user.create_with_id(
-            db=db,
-            create_dto=UserCreate(
-                email=f"assistant-{last_name.lower()}@{domain}",
-                first_name=conf.assistant_user.first_name,
-                last_name=last_name,
-                password=conf.assistant_user.password.get_secret_value(),
-            ),
-            id=user_id,
         )
 
 
