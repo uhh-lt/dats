@@ -6,9 +6,16 @@ from common.meta_type_enum import MetaType
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
+from core.code.code_crud import crud_code
+from core.code.code_dto import CodeRead, CodeUpdate
+from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.metadata.project_metadata_dto import ProjectMetadataUpdate
+from core.metadata.project_metadata_orm import ProjectMetadataORM
+from core.metadata.project_metadata_service import ProjectMetadataService
 from core.project.project_crud import crud_project
+from core.project.project_orm import ProjectORM
 from core.prompt_template.prompt_template_crud import crud_prompt_template
 from core.prompt_template.prompt_template_defaults import DEFAULT_PROMPTS
 from core.prompt_template.prompt_template_dto import (
@@ -22,6 +29,8 @@ from core.prompt_template.prompt_template_dto import (
     PromptMetadataField,
     PromptPreview,
     PromptPreviewRequest,
+    PromptSelections,
+    PromptSelectionsSync,
     PromptTag,
     PromptTaskInfo,
     PromptTemplateContent,
@@ -33,6 +42,7 @@ from core.prompt_template.prompt_template_dto import (
     PromptTemplateVersionCreate,
     PromptTemplateVersionCreateIntern,
     PromptTemplateVersionRead,
+    PushedPromptSelections,
     RenderedPromptBlock,
     SentencePromptExample,
     SpanPromptExample,
@@ -49,6 +59,7 @@ from core.prompt_template.prompt_template_exceptions import (
     InvalidPromptExampleError,
     InvalidPromptPreviewError,
     InvalidPromptTemplateError,
+    PromptSelectionNameConflictError,
     PromptTemplateMismatchError,
 )
 from core.prompt_template.prompt_template_renderer import PromptRenderer
@@ -64,6 +75,9 @@ from core.prompt_template.prompt_template_specs import (
 from core.prompt_template.prompt_template_version_crud import (
     crud_prompt_template_version,
 )
+from core.tag.tag_crud import crud_tag
+from core.tag.tag_dto import TagRead, TagUpdate
+from core.tag.tag_orm import TagORM
 from core.user.user_crud import SYSTEM_USER_ID
 
 # <document:unit> and <output-format:format>, also with a missing or unknown value
@@ -73,6 +87,25 @@ OUTPUT_FORMAT_PATTERN = re.compile(r"<output-format(?::([a-z_-]*))?>")
 PLACEHOLDER_LIKE_PATTERN = re.compile(r"<[a-z_-]+(?::[a-z_-]*)?>")
 # the fields of PromptTemplateContent, to split them from create DTOs
 _CONTENT_FIELDS = set(PromptTemplateContent.model_fields)
+
+
+def _prompt_code(code: CodeORM) -> PromptCode:
+    return PromptCode(
+        code_id=code.id, name=code.name, description=code.description or ""
+    )
+
+
+def _prompt_tag(tag: TagORM) -> PromptTag:
+    return PromptTag(tag_id=tag.id, name=tag.name, description=tag.description or "")
+
+
+def _prompt_metadata_field(field: ProjectMetadataORM) -> PromptMetadataField:
+    return PromptMetadataField(
+        project_metadata_id=field.id,
+        key=field.key,
+        description=field.description,
+        metatype=MetaType(field.metatype),
+    )
 
 
 class PromptTemplateService(metaclass=SingletonMeta):
@@ -309,79 +342,31 @@ class PromptTemplateService(metaclass=SingletonMeta):
             example_kind=spec.example_kind,
         )
 
-    def refresh_content(
-        self, *, db: Session, project_id: int, content: PromptTemplateContent
-    ) -> PromptTemplateContent:
-        """Replace the selections of a prompt with the current state of the project.
+    def pull_selections(
+        self, *, db: Session, sync: PromptSelectionsSync
+    ) -> PromptSelections:
+        """Return the project's definitions of the selected codes, tags and metadata fields.
 
-        Codes, tags and metadata fields get their current names and descriptions,
-        examples are created again from their annotations. Selections whose
-        project data was deleted are dropped.
+        Raises:
+            InvalidPromptTemplateError: If a selection does not belong to the project.
         """
-        # 1) codes, tags and metadata fields
-        project = crud_project.read(db=db, id=project_id)
+        project = crud_project.read(db=db, id=sync.project_id)
+        self._assert_selections_in_project(
+            project=project,
+            code_ids=[code.code_id for code in sync.codes],
+            tag_ids=[tag.tag_id for tag in sync.tags],
+            field_ids=[field.project_metadata_id for field in sync.metadata_fields],
+        )
         codes = {code.id: code for code in project.codes}
         tags = {tag.id: tag for tag in project.tags}
         fields = {field.id: field for field in project.metadata_}
-        refreshed_codes = [
-            PromptCode(
-                code_id=code.code_id,
-                name=codes[code.code_id].name,
-                description=codes[code.code_id].description or "",
-            )
-            for code in content.codes
-            if code.code_id in codes
-        ]
-        refreshed_tags = [
-            PromptTag(
-                tag_id=tag.tag_id,
-                name=tags[tag.tag_id].name,
-                description=tags[tag.tag_id].description or "",
-            )
-            for tag in content.tags
-            if tag.tag_id in tags
-        ]
-        refreshed_fields = [
-            PromptMetadataField(
-                project_metadata_id=field.project_metadata_id,
-                key=fields[field.project_metadata_id].key,
-                description=fields[field.project_metadata_id].description,
-                metatype=MetaType(fields[field.project_metadata_id].metatype),
-            )
-            for field in content.metadata_fields
-            if field.project_metadata_id in fields
-        ]
-
-        # 2) examples, from the annotations that still exist
-        refreshed_examples: list[PromptExample] = []
-        for kind, crud in (
-            (PromptExampleKind.SPAN, crud_span_anno),
-            (PromptExampleKind.SENTENCE, crud_sentence_anno),
-        ):
-            annotation_ids = [
-                annotation_id
-                for example in content.examples
-                if example.kind == kind
-                for annotation_id in example.source_annotation_ids
-                if crud.exists(db=db, id=annotation_id)
-            ]
-            if annotation_ids:
-                refreshed_examples += self.create_prompt_examples(
-                    db=db,
-                    create_dto=PromptExamplesCreate(
-                        project_id=project_id,
-                        kind=kind,
-                        annotation_ids=list(dict.fromkeys(annotation_ids)),
-                    ),
-                )
-
-        return PromptTemplateContent(
-            prompt=content.prompt,
-            settings=content.settings,
-            codes=refreshed_codes,
-            examples=refreshed_examples,
-            tags=refreshed_tags,
-            metadata_fields=refreshed_fields,
+        return PromptSelections(
+            codes=[_prompt_code(codes[code.code_id]) for code in sync.codes],
+            tags=[_prompt_tag(tags[tag.tag_id]) for tag in sync.tags],
+            metadata_fields=[
+                _prompt_metadata_field(fields[field.project_metadata_id])
+                for field in sync.metadata_fields
+            ],
         )
 
     def preview_prompt(
@@ -452,6 +437,93 @@ class PromptTemplateService(metaclass=SingletonMeta):
         """Rename or (un)archive a template. This does not create a version."""
         crud_prompt_template.update(db=db, id=prompt_template_id, update_dto=update_dto)
         return self.read_prompt_template(db=db, prompt_template_id=prompt_template_id)
+
+    def push_selections(
+        self, *, db: Session, sync: PromptSelectionsSync
+    ) -> PushedPromptSelections:
+        """Replace the names and descriptions of the project's codes, tags and
+        metadata fields with the prompt's definitions.
+
+        This changes them for every project member; template versions that
+        selected them keep their definitions.
+
+        Raises:
+            InvalidPromptTemplateError: If a selection does not belong to the project.
+            PromptSelectionNameConflictError: If a name is already taken.
+            ReadOnlyMetadataError: If a metadata field is read-only.
+        """
+        # 1) the selections belong to the project and their names stay unique
+        project = crud_project.read(db=db, id=sync.project_id)
+        self._assert_selections_in_project(
+            project=project,
+            code_ids=[code.code_id for code in sync.codes],
+            tag_ids=[tag.tag_id for tag in sync.tags],
+            field_ids=[field.project_metadata_id for field in sync.metadata_fields],
+        )
+        self._assert_unique_names(
+            kind="code",
+            names={code.id: code.name for code in project.codes},
+            pushed={code.code_id: code.name for code in sync.codes},
+        )
+        self._assert_unique_names(
+            kind="tag",
+            names={tag.id: tag.name for tag in project.tags},
+            pushed={tag.tag_id: tag.name for tag in sync.tags},
+        )
+        # metadata keys are unique per document type
+        doctypes = {field.id: field.doctype for field in project.metadata_}
+        for doctype in {doctypes[f.project_metadata_id] for f in sync.metadata_fields}:
+            self._assert_unique_names(
+                kind="metadata field",
+                names={
+                    field.id: field.key
+                    for field in project.metadata_
+                    if field.doctype == doctype
+                },
+                pushed={
+                    field.project_metadata_id: field.key
+                    for field in sync.metadata_fields
+                    if doctypes[field.project_metadata_id] == doctype
+                },
+            )
+
+        # 2) update the project's definitions
+        return PushedPromptSelections(
+            codes=[
+                CodeRead.model_validate(
+                    crud_code.update(
+                        db=db,
+                        id=code.code_id,
+                        update_dto=CodeUpdate(
+                            name=code.name, description=code.description
+                        ),
+                    )
+                )
+                for code in sync.codes
+            ],
+            tags=[
+                TagRead.model_validate(
+                    crud_tag.update(
+                        db=db,
+                        id=tag.tag_id,
+                        update_dto=TagUpdate(
+                            name=tag.name, description=tag.description
+                        ),
+                    )
+                )
+                for tag in sync.tags
+            ],
+            metadata_fields=[
+                ProjectMetadataService().update(
+                    db=db,
+                    id=field.project_metadata_id,
+                    update_dto=ProjectMetadataUpdate(
+                        key=field.key, description=field.description
+                    ),
+                )
+                for field in sync.metadata_fields
+            ],
+        )
 
     # VALIDATION AND RENDERING
 
@@ -582,8 +654,6 @@ class PromptTemplateService(metaclass=SingletonMeta):
         self, *, db: Session, project_id: int, prompt: PromptTemplateSnapshot
     ) -> None:
         # 1) the selections belong to the project
-        project = crud_project.read(db=db, id=project_id)
-        project_code_ids = {code.id for code in project.codes}
         example_code_ids = [
             code_id
             for example in prompt.examples
@@ -593,31 +663,12 @@ class PromptTemplateService(metaclass=SingletonMeta):
                 else [example.code_id]
             )
         ]
-        foreign = [
-            *(
-                f"code {code_id}"
-                for code_id in dict.fromkeys(
-                    [code.code_id for code in prompt.codes] + example_code_ids
-                )
-                if code_id not in project_code_ids
-            ),
-            *(
-                f"tag {tag.tag_id}"
-                for tag in prompt.tags
-                if tag.tag_id not in {tag.id for tag in project.tags}
-            ),
-            *(
-                f"metadata field {field.project_metadata_id}"
-                for field in prompt.metadata_fields
-                if field.project_metadata_id
-                not in {field.id for field in project.metadata_}
-            ),
-        ]
-        if foreign:
-            raise InvalidPromptTemplateError(
-                f"The prompt selects {', '.join(foreign)}, which do not belong to "
-                f"project {project_id}."
-            )
+        self._assert_selections_in_project(
+            project=crud_project.read(db=db, id=project_id),
+            code_ids=[code.code_id for code in prompt.codes] + example_code_ids,
+            tag_ids=[tag.tag_id for tag in prompt.tags],
+            field_ids=[field.project_metadata_id for field in prompt.metadata_fields],
+        )
 
         # 2) the examples fit the task and are shown
         if not prompt.examples:
@@ -635,6 +686,52 @@ class PromptTemplateService(metaclass=SingletonMeta):
             raise InvalidPromptExampleError(
                 f"Add {PromptBlock.EXAMPLES.value} to the prompt to show the examples."
             )
+
+    def _assert_selections_in_project(
+        self,
+        *,
+        project: ProjectORM,
+        code_ids: list[int],
+        tag_ids: list[int],
+        field_ids: list[int],
+    ) -> None:
+        project_code_ids = {code.id for code in project.codes}
+        project_tag_ids = {tag.id for tag in project.tags}
+        project_field_ids = {field.id for field in project.metadata_}
+        foreign = [
+            *(
+                f"code {code_id}"
+                for code_id in dict.fromkeys(code_ids)
+                if code_id not in project_code_ids
+            ),
+            *(
+                f"tag {tag_id}"
+                for tag_id in dict.fromkeys(tag_ids)
+                if tag_id not in project_tag_ids
+            ),
+            *(
+                f"metadata field {field_id}"
+                for field_id in dict.fromkeys(field_ids)
+                if field_id not in project_field_ids
+            ),
+        ]
+        if foreign:
+            raise InvalidPromptTemplateError(
+                f"The prompt selects {', '.join(foreign)}, which do not belong to "
+                f"project {project.id}."
+            )
+
+    def _assert_unique_names(
+        self, *, kind: str, names: dict[int, str], pushed: dict[int, str]
+    ) -> None:
+        """Check that every pushed name is unique among the names after the push."""
+        names_after_push = {**names, **pushed}
+        for item_id, name in pushed.items():
+            if any(
+                other_id != item_id and other_name == name
+                for other_id, other_name in names_after_push.items()
+            ):
+                raise PromptSelectionNameConflictError(kind=kind, name=name)
 
     def _create_span_examples(
         self, *, db: Session, project_id: int, annotation_ids: list[int]
