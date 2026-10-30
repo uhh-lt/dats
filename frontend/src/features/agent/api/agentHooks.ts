@@ -14,9 +14,9 @@ const useGetTool = (agentName: AgentName, toolName: string) =>
 
 // AGENT SESSION MUTATIONS
 
-const useRenameSession = () =>
+const useUpdateAgentSession = () =>
   useMutation({
-    mutationKey: [...agentQueries.all(), "renameSession"],
+    mutationKey: [...agentQueries.all(), "updateAgentSession"],
     mutationFn: ({ sessionId, title }: { sessionId: string; title: string }) =>
       AgentService.updateSession({ sessionId, requestBody: { title } }),
     meta: {
@@ -25,18 +25,18 @@ const useRenameSession = () =>
     },
   });
 
-const useDeleteSession = () =>
+const useDeleteAgentSession = () =>
   useMutation({
-    mutationKey: [...agentQueries.all(), "deleteSession"],
+    mutationKey: [...agentQueries.all(), "deleteAgentSession"],
     mutationFn: ({ sessionId }: { sessionId: string }) => AgentService.deleteSession({ sessionId }),
     meta: {
       datsEvent: "AGENT_SESSION_DELETED",
-      successMessage: (session: AgentSessionRead) => `Deleted chat ${session.title ?? ""}`,
+      successMessage: (session: AgentSessionRead) => `Deleted chat ${session.title}`,
     },
   });
 
 export const AgentHooks = {
   useGetTool,
-  useRenameSession,
-  useDeleteSession,
+  useUpdateAgentSession,
+  useDeleteAgentSession,
 };

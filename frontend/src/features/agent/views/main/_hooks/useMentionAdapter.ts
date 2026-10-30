@@ -7,7 +7,6 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { SdocColumns } from "@models/SdocColumns";
 import { StringOperator } from "@models/StringOperator";
-import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
@@ -26,8 +25,7 @@ const matches = (item: TriggerItem, query: string) => item.label.toLowerCase().i
  * Codes and tags are loaded completely; documents are searched by name with
  * the text typed after the "@".
  */
-export function useMentionAdapter() {
-  const projectId = useAppSelector((state) => state.project.projectId);
+export function useMentionAdapter(projectId: number) {
   // the text after the last "@" at the end of the prompt, while a mention is typed
   const mentionQuery = useAuiState((state) => /@(\S*)$/.exec(state.composer.text)?.[1]);
   const documentQuery = useDebounce(mentionQuery ?? "", 300);
@@ -36,7 +34,7 @@ export function useMentionAdapter() {
   const tags = TagHooks.useGetAllTags();
   const documents = useInfiniteQuery({
     ...sdocQueries.search({
-      projectId: projectId ?? 0,
+      projectId,
       searchQuery: "",
       expertMode: false,
       showFolders: false,
@@ -57,7 +55,7 @@ export function useMentionAdapter() {
         sorts: [],
       },
     }),
-    enabled: projectId !== undefined && mentionQuery !== undefined,
+    enabled: mentionQuery !== undefined,
   });
 
   const items = useMemo(() => {
@@ -102,5 +100,5 @@ export function useMentionAdapter() {
     [items],
   );
 
-  return { adapter, isLoading: documents.isFetching };
+  return { adapter, isFetching: documents.isFetching };
 }

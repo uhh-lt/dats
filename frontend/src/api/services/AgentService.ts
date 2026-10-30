@@ -14,14 +14,20 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class AgentService {
   /**
-   * Returns the current user's agent sessions, the most recently updated first.
+   * Returns the current user's agent sessions of the project, the most recently updated first.
    * @returns AgentSessionRead Successful Response
    * @throws ApiError
    */
-  public static getSessions(): CancelablePromise<Array<AgentSessionRead>> {
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<AgentSessionRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/agent/sessions",
+      url: "/agent/project/{project_id}/sessions",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**
@@ -101,23 +107,26 @@ export class AgentService {
     });
   }
   /**
-   * Answers a prompt with the agent, in a new or an existing session.
+   * Answers a prompt with the agent, in a new or an existing session of the project.
    * @returns AgentQueryResponse Successful Response
    * @throws ApiError
    */
   public static askAgent({
+    projectId,
     agentName,
     requestBody,
     model,
   }: {
+    projectId: number;
     agentName: AgentName;
     requestBody: AgentQueryRequest;
     model?: string | null;
   }): CancelablePromise<AgentQueryResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/agent/{agent_name}",
+      url: "/agent/project/{project_id}/{agent_name}",
       path: {
+        project_id: projectId,
         agent_name: agentName,
       },
       query: {
@@ -125,23 +134,6 @@ export class AgentService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Runs the agent for an AG-UI request and streams its events.
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static askAguiAgent({ agentName }: { agentName: AgentName }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/agent/agui/{agent_name}",
-      path: {
-        agent_name: agentName,
-      },
       errors: {
         422: `Validation Error`,
       },

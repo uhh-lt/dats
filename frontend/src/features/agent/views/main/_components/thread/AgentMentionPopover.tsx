@@ -4,6 +4,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { ButtonBase, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import { datsLinkFormatter } from "../../_utils/datsLinkUtils";
 import { useMentionAdapter } from "../../_hooks/useMentionAdapter";
+import { useAgentThread } from "./agentThreadContext";
 
 const rowSx = {
   display: "flex",
@@ -24,13 +25,14 @@ const rowSx = {
  * Arrow keys and Enter select, Escape closes.
  */
 export function AgentMentionPopover() {
-  const { adapter, isLoading } = useMentionAdapter();
+  const { projectId } = useAgentThread();
+  const { adapter, isFetching } = useMentionAdapter(projectId);
 
   return (
     <ComposerPrimitive.TriggerPopover
       char="@"
       adapter={adapter}
-      isLoading={isLoading}
+      isLoading={isFetching}
       render={
         <Paper
           elevation={6}
@@ -73,8 +75,8 @@ export function AgentMentionPopover() {
         {(items) =>
           items.length === 0 ? (
             <Stack direction="row" alignItems="center" gap={1} sx={{ px: 1.5, py: 1, color: "text.secondary" }}>
-              {isLoading && <CircularProgress size={14} />}
-              <Typography variant="body2">{isLoading ? "Searching…" : "Nothing found"}</Typography>
+              {isFetching && <CircularProgress size={14} />}
+              <Typography variant="body2">{isFetching ? "Searching…" : "Nothing found"}</Typography>
             </Stack>
           ) : (
             items.map((item) => (

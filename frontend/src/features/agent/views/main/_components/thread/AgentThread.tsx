@@ -92,13 +92,14 @@ function AgentHistorySkeleton() {
 }
 
 interface AgentThreadProps {
+  projectId: number;
   agentName: AgentName;
 }
 
 /** The current chat: its messages, the pending approvals and the prompt input. */
-export function AgentThread({ agentName }: AgentThreadProps) {
+export function AgentThread({ projectId, agentName }: AgentThreadProps) {
   return (
-    <AgentThreadProvider agentName={agentName}>
+    <AgentThreadProvider projectId={projectId} agentName={agentName}>
       <ThreadPrimitive.Root render={<Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }} />}>
         <ThreadPrimitive.Viewport
           turnAnchor="top"
