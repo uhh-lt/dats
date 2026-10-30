@@ -30,6 +30,7 @@ SENTENCES = ["Alpha beta gamma.", "Delta epsilon zeta."]
 class VirtualAnnotatorProject(TypedDict):
     project: ProjectORM
     other_project: ProjectORM
+    target_project: ProjectORM
     user: UserORM
     other_user: UserORM
     run1: UserORM
@@ -158,7 +159,32 @@ def virtual_annotator_project(
         sentences=SENTENCES,
     )
 
-    # 3) API keys, one of them for a virtual annotator (never issued by the API)
+    # 3) an empty project to import into
+    target_project_read = ProjectService().create_project(
+        db=db_session,
+        create_dto=ProjectCreate(title="Target Project", description=""),
+        creating_user_id=test_user.id,
+    )
+    target_project = crud_project.read(db=db_session, id=target_project_read.id)
+    crud_code.create(
+        db=db_session,
+        create_dto=CodeCreate(
+            name="Claim",
+            color="#ff0000",
+            description="",
+            project_id=target_project.id,
+            is_system=False,
+        ),
+    )
+    create_text_document(
+        db_session,
+        project=target_project,
+        filename="va_doc.txt",
+        name="va_doc",
+        sentences=SENTENCES,
+    )
+
+    # 4) API keys, one of them for a virtual annotator (never issued by the API)
     api_keys: dict[int, str] = {}
     for user_id in (test_user.id, run1.id):
         api_key = generate_api_key()
@@ -179,6 +205,7 @@ def virtual_annotator_project(
     return {
         "project": project,
         "other_project": other_project,
+        "target_project": target_project,
         "user": test_user,
         "other_user": other_user,
         "run1": crud_user.read(db=db_session, id=run1.id),
