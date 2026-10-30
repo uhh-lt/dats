@@ -19,12 +19,20 @@ export class SentenceAnnotationService {
    */
   public static createSentenceAnnotation({
     requestBody,
+    annotateAsUserId,
   }: {
     requestBody: SentenceAnnotationCreate;
+    /**
+     * Create the annotations as this virtual annotator of the project instead of the current user
+     */
+    annotateAsUserId?: number | null;
   }): CancelablePromise<SentenceAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/sentence",
+      query: {
+        annotate_as_user_id: annotateAsUserId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -39,12 +47,20 @@ export class SentenceAnnotationService {
    */
   public static createSentenceAnnotationsBulk({
     requestBody,
+    annotateAsUserId,
   }: {
     requestBody: Array<SentenceAnnotationCreate>;
+    /**
+     * Create the annotations as this virtual annotator of the project instead of the current user
+     */
+    annotateAsUserId?: number | null;
   }): CancelablePromise<Array<SentenceAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/sentence/bulk/create",
+      query: {
+        annotate_as_user_id: annotateAsUserId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

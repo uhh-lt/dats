@@ -1,20 +1,13 @@
 import { useLiveJob } from "@core/job";
 import { useTabNavigate } from "@core/navigation";
-import { ApproachType } from "@models/ApproachType";
 import { SentenceAnnotationLLMAssistantJobResult } from "@models/SentenceAnnotationLLMAssistantJobResult";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
 import { useCallback, useMemo } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { AnnotationResultSummary } from "./AnnotationResultSummary";
 import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
-
-const approach2AssistantID: Record<ApproachType, number> = {
-  [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
-  [ApproachType.LLM_FEW_SHOT]: ASSISTANT_FEWSHOT_ID,
-};
 
 export function SentenceAnnotationResultStep() {
   // get the job
@@ -25,7 +18,7 @@ export function SentenceAnnotationResultStep() {
     return (
       <SentenceAnnotationResultStepContent
         jobResult={llmAssistantJob.data.output.specific_task_result as SentenceAnnotationLLMAssistantJobResult}
-        approachType={llmAssistantJob.data.output.approach_type}
+        annotatorId={llmAssistantJob.data.input.annotator_id ?? undefined}
       />
     );
   } else if (llmAssistantJob.isLoading) {
@@ -43,10 +36,11 @@ export function SentenceAnnotationResultStep() {
 
 function SentenceAnnotationResultStepContent({
   jobResult,
-  approachType,
+  annotatorId,
 }: {
   jobResult: SentenceAnnotationLLMAssistantJobResult;
-  approachType: ApproachType;
+  // the virtual annotator the run wrote into
+  annotatorId: number | undefined;
 }) {
   // actions
   const dispatch = useAppDispatch();
@@ -71,7 +65,7 @@ function SentenceAnnotationResultStepContent({
       params: { projectId, sdocId: firstAnnotatedSdocId },
       to: "/project/$projectId/annotation/$sdocId",
       search: {
-        compareWithUserId: approach2AssistantID[approachType],
+        compareWithUserId: annotatorId,
         visibleUserId: undefined,
         selectedAnnotationId: undefined,
       },

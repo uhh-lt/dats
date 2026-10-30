@@ -4,9 +4,10 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 /**
  * Query factory for users.
  *
- *   userQueries.all()                      ["user"]
- *   userQueries.me(accessToken)            ["user", "me", accessToken]
- *   userQueries.byProject(projectId)       ["user", "project", projectId]
+ *   userQueries.all()                           ["user"]
+ *   userQueries.me(accessToken)                 ["user", "me", accessToken]
+ *   userQueries.byProject(projectId)            ["user", "project", projectId]
+ *   userQueries.annotatorsByProject(projectId)  ["user", "annotators", projectId]
  */
 export const userQueries = {
   all: () => ["user"] as const,
@@ -20,12 +21,21 @@ export const userQueries = {
       retry: false,
     }),
 
-  // all users of a project
+  // the members of a project (human users only)
   byProjectScope: () => [...userQueries.all(), "project"] as const,
   byProject: (projectId: number | undefined) =>
     queryOptions({
       queryKey: [...userQueries.byProjectScope(), projectId] as const,
       queryFn: projectId === undefined ? skipToken : () => UserService.getByProject({ projectId }),
+      staleTime: 1000 * 60 * 5,
+    }),
+
+  // everybody who can own annotations in a project: its members, then its virtual annotators
+  annotatorsByProjectScope: () => [...userQueries.all(), "annotators"] as const,
+  annotatorsByProject: (projectId: number | undefined) =>
+    queryOptions({
+      queryKey: [...userQueries.annotatorsByProjectScope(), projectId] as const,
+      queryFn: projectId === undefined ? skipToken : () => UserService.getAnnotatorsByProject({ projectId }),
       staleTime: 1000 * 60 * 5,
     }),
 };
