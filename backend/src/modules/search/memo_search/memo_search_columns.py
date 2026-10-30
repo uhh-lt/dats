@@ -12,6 +12,7 @@ from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from core.user.user_utils import get_user_key, read_users_by_keys
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 from systems.search_system.grouping import (
@@ -327,7 +328,7 @@ class MemoColumns(str, AbstractColumns):
                 ]
             case MemoColumns.USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
-                return [user.email for user in users]
+                return [get_user_key(user) for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
@@ -356,8 +357,8 @@ class MemoColumns(str, AbstractColumns):
                     for crud, name in zip(types, names)
                 ]
             case MemoColumns.USER_ID:
-                users = crud_user.read_by_emails(db, emails=names)
-                return [user.id for user in users]
+                users = read_users_by_keys(db, project_id=project_id, keys=names)
+                return [user.id for user in users.values()]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")
 

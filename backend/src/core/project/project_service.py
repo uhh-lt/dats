@@ -15,6 +15,7 @@ from core.user.user_crud import (
     crud_user,
 )
 from core.user.user_dto import UserRead
+from core.user.user_exceptions import VirtualUserNotAllowedError
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
@@ -34,6 +35,9 @@ class ProjectService(metaclass=SingletonMeta):
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserRead:
+        # virtual annotators belong to their project, but are never members
+        if crud_user.read(db=db, id=user_id).is_virtual:
+            raise VirtualUserNotAllowedError(user_id=user_id)
         crud_project.associate_user(db=db, project_id=project_id, user_id=user_id)
         return UserRead.model_validate(crud_user.read(db=db, id=user_id))
 

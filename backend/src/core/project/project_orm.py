@@ -146,6 +146,13 @@ class ProjectORM(ORMBase):
         passive_deletes=True,
     )
 
+    virtual_annotators: Mapped[list["UserORM"]] = relationship(
+        "UserORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     # many to many
     users: Mapped[list["UserORM"]] = relationship(
         "UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects"

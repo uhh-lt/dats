@@ -18,6 +18,7 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from core.user.user_utils import get_user_key, read_users_by_keys
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import (
@@ -223,13 +224,13 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.USER_ID:
                 return GroupExpressions(
                     key=cast(AnnotationDocumentORM.user_id, String),
-                    label=UserORM.email,
+                    label=func.coalesce(UserORM.email, UserORM.first_name),
                 )
             case BBoxColumns.SOURCE_USER_ID:
                 # copies are labeled with their source user, the others form
                 # their own group
                 source_user_email = (
-                    select(UserORM.email)
+                    select(func.coalesce(UserORM.email, UserORM.first_name))
                     .where(UserORM.id == BBoxAnnotationORM.source_user_id)
                     .scalar_subquery()
                 )
@@ -262,7 +263,7 @@ class BBoxColumns(str, AbstractColumns):
                 return [code.name for code in codes]
             case BBoxColumns.USER_ID | BBoxColumns.SOURCE_USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
-                return [user.email for user in users]
+                return [get_user_key(user) for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
@@ -285,7 +286,7 @@ class BBoxColumns(str, AbstractColumns):
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case BBoxColumns.USER_ID | BBoxColumns.SOURCE_USER_ID:
-                result = crud_user.read_by_emails(db, emails=names)
-                return [user.id for user in result]
+                result = read_users_by_keys(db, project_id=project_id, keys=names)
+                return [user.id for user in result.values()]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")

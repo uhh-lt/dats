@@ -19,6 +19,10 @@ class AuthService(metaclass=SingletonMeta):
             # to prevent email guessing attacks
             return None
 
+        # Virtual annotators have no password and can never log in
+        if user.is_virtual or user.password is None:
+            return None
+
         if not verify_password(
             plain_password=user_login.password, hashed_password=user.password
         ):
