@@ -1,7 +1,9 @@
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
+import { getIconComponent, Icon } from "@components/icons";
 import { PublicUserRead } from "@models/PublicUserRead";
+import { UserKind } from "@models/UserKind";
 import { UserRead } from "@models/UserRead";
-import { Stack, Typography } from "@mui/material";
+import { Stack, Tooltip, Typography } from "@mui/material";
 import { memo } from "react";
 import { UserHooks } from "../api/userHooks";
 import { UserAvatar } from "../UserAvatar";
@@ -42,6 +44,11 @@ const UserRendererWithData = memo(
       <ExpandableRenderer {...expandProps} expandedContent={<UserContext user={user} />}>
         <Stack direction="row" alignItems="center" spacing={1} minWidth={0} maxWidth="100%" overflow="hidden">
           {renderAvatar && <UserAvatar user={user} sx={{ width: 24, height: 24, fontSize: 11 }} />}
+          {!renderAvatar && user.kind === UserKind.VIRTUAL && (
+            <Tooltip title="Virtual annotator">
+              {getIconComponent(Icon.VIRTUAL_ANNOTATOR, { fontSize: "small", color: "action" })}
+            </Tooltip>
+          )}
           <Typography component="span" noWrap minWidth={0}>
             {fullName}
           </Typography>
@@ -52,5 +59,6 @@ const UserRendererWithData = memo(
 );
 
 function UserContext({ user }: { user: PublicUserRead }) {
-  return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{`User ID: ${user.id}`}</Typography>;
+  const kind = user.kind === UserKind.VIRTUAL ? "Virtual annotator" : "User";
+  return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{`${kind} ID: ${user.id}`}</Typography>;
 }
