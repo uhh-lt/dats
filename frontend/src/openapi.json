@@ -12086,6 +12086,7 @@
           "ALL_WHITEBOARDS",
           "ALL_TIMELINE_ANALYSES",
           "ALL_COTA",
+          "ALL_PROMPT_TEMPLATES",
           "SELECTED_SDOCS",
           "SELECTED_SPAN_ANNOTATIONS",
           "SELECTED_SENTENCE_ANNOTATIONS",
@@ -13338,6 +13339,7 @@
           "TIMELINE_ANALYSES",
           "COTA",
           "MEMOS",
+          "PROMPT_TEMPLATES",
           "DOCUMENTS"
         ],
         "title": "ImportJobType"

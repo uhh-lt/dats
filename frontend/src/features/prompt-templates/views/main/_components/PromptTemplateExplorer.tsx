@@ -1,6 +1,11 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
-import { LANGUAGE_LABELS, PromptTemplateHooks, TASK_TYPE_LABELS } from "@core/prompt-template";
+import {
+  LANGUAGE_LABELS,
+  PromptTemplateExportButton,
+  PromptTemplateHooks,
+  TASK_TYPE_LABELS,
+} from "@core/prompt-template";
 import { PromptTemplateRead } from "@models/PromptTemplateRead";
 import { TaskType } from "@models/TaskType";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
@@ -226,6 +231,7 @@ export function PromptTemplateExplorer({
       listActions={
         <>
           <PromptTemplateCreateDialog projectId={projectId} onCreated={handleCreated} />
+          <PromptTemplateExportButton />
           <ExplorerOptionsMenu showArchived={showArchived} onToggleShowArchived={handleToggleArchived} />
         </>
       }
