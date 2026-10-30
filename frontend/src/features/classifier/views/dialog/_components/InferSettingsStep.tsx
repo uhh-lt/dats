@@ -1,8 +1,10 @@
 import { FormSwitch } from "@components/form-inputs";
+import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import { SentenceAnnotationHooks } from "@core/sentence-annotation";
 import { SpanAnnotationHooks } from "@core/span-annotation";
 import { TagHooks, TagRenderer } from "@core/tag";
+import { AnnotateAsChoice, AnnotateAsSelector, suggestVirtualAnnotatorName, UserHooks } from "@core/user";
 import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {
@@ -19,8 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ASSISTANT_TRAINED_ID } from "@utils/GlobalConstants";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
 import { ClassifierHooks } from "../../../api/classifierHooks";
 import { ClassifierActions } from "../../../store/classifierSlice";
@@ -51,17 +52,34 @@ export function InferenceSettingsStep() {
   const keepExisting = useAppSelector((state) => state.classifier.drafts.inferenceKeepExisting);
   const dispatch = useAppDispatch();
 
+  // span and sentence classifiers write into a virtual annotator: an existing one or a new one (default: the next
+  // free Classifier-Run<n>); document classifiers assign tags, which belong to no user
+  const { user } = useAuth();
+  const isAnnotationModel = model !== ClassifierModel.DOCUMENT;
+  const virtualAnnotators = UserHooks.useGetVirtualAnnotators();
+  const [annotateAsChoice, setAnnotateAsChoice] = useState<AnnotateAsChoice | null | undefined>(undefined);
+  const annotateAs: AnnotateAsChoice | null =
+    annotateAsChoice !== undefined
+      ? annotateAsChoice
+      : virtualAnnotators.data
+        ? { newName: suggestVirtualAnnotatorName("Classifier", virtualAnnotators.data) }
+        : null;
+  const annotatorId = annotateAs && "userId" in annotateAs ? annotateAs.userId : undefined;
+  // a new virtual annotator has no annotations yet
+  const countUserId = isAnnotationModel ? annotatorId : user?.id;
+
   // count existing classes by that user
   const { mutate: countMutation, data: countData, isSuccess, isError, isPending } = useCountBySdocsAndUser(model!)();
   useEffect(() => {
+    if (countUserId === undefined) return;
     countMutation({
-      userId: ASSISTANT_TRAINED_ID,
+      userId: countUserId,
       requestBody: {
         sdoc_ids: sdocIds,
         class_ids: classIds,
       },
     });
-  }, [countMutation, sdocIds, classIds]);
+  }, [countMutation, countUserId, sdocIds, classIds]);
 
   // form state
   const { control, getValues, handleSubmit } = useForm<InferenceSettings>({
@@ -76,7 +94,8 @@ export function InferenceSettingsStep() {
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const { mutate: startClassifierJobMutation, isPending: isStartJobPending } = ClassifierHooks.useStartClassifierJob();
-  const onSubmit = (data: InferenceSettings) => {
+  const { mutate: createVirtualAnnotatorMutation, isPending: isCreatePending } = UserHooks.useCreateVirtualAnnotator();
+  const startJob = (data: InferenceSettings, annotatorId: number | null) => {
     if (model === undefined || task === undefined || classifierId === undefined || sdocIds.length === 0) return;
     dispatch(ClassifierActions.setInferenceKeepExisting(data.keepExisting));
 
@@ -85,6 +104,8 @@ export function InferenceSettingsStep() {
       task_type: task,
       classifier_id: classifierId,
       sdoc_ids: sdocIds,
+      // the virtual annotator span and sentence classifiers write into
+      annotator_id: annotatorId,
       // inference settings
       delete_existing_work: !data.keepExisting,
     };
@@ -106,6 +127,15 @@ export function InferenceSettingsStep() {
       },
     );
   };
+  const onSubmit = (data: InferenceSettings) => {
+    if (!isAnnotationModel) return startJob(data, null);
+    if (!annotateAs) return;
+    if ("userId" in annotateAs) return startJob(data, annotateAs.userId);
+    createVirtualAnnotatorMutation(
+      { projectId, requestBody: { name: annotateAs.newName } },
+      { onSuccess: (annotator) => startJob(data, annotator.id) },
+    );
+  };
   const onError: SubmitErrorHandler<InferenceSettings> = (data) => console.error(data);
 
   return (
@@ -116,8 +146,19 @@ export function InferenceSettingsStep() {
           documents (if there are any).
         </Alert>
         <Stack spacing={2}>
+          {isAnnotationModel && (
+            <FormBox title="Annotate as">
+              <Typography>
+                The classifier writes its annotations into a virtual annotator, never into your annotations. Choose a
+                new one to keep this run apart from earlier runs.
+              </Typography>
+              <AnnotateAsSelector value={annotateAs} onChange={setAnnotateAsChoice} />
+            </FormBox>
+          )}
           <FormBox title="Existing Annotations">
-            {isPending ? (
+            {countUserId === undefined ? (
+              <Typography>The new virtual annotator has no annotations yet.</Typography>
+            ) : isPending ? (
               <CircularProgress size={24} />
             ) : isError ? (
               <Alert severity="error">Failed to load existing annotations.</Alert>
@@ -127,7 +168,7 @@ export function InferenceSettingsStep() {
               <Stack>
                 <Typography mb={1.5}>
                   Some documents were already{" "}
-                  {model === ClassifierModel.DOCUMENT ? "tagged" : "annotated  by a classifier"}:
+                  {model === ClassifierModel.DOCUMENT ? "tagged" : "annotated by this virtual annotator"}:
                 </Typography>
                 <Stack spacing={1} pl={2} mb={4}>
                   {Object.entries(countData).map(([classId, count]) => (
@@ -161,7 +202,12 @@ export function InferenceSettingsStep() {
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handlePrev}>Back</Button>
-        <Button loading={isStartJobPending} loadingPosition="start" type="submit">
+        <Button
+          loading={isStartJobPending || isCreatePending}
+          loadingPosition="start"
+          type="submit"
+          disabled={isAnnotationModel && annotateAs === null}
+        >
           Next
         </Button>
       </DialogActions>

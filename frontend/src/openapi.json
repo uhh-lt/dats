@@ -594,9 +594,23 @@
         "tags": ["bboxAnnotation"],
         "summary": "Creates a BBoxAnnotation",
         "operationId": "create_bbox_annotation",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "annotate_as_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "description": "Create the annotations as this virtual annotator of the project instead of the current user",
+              "title": "Annotate As User Id"
+            },
+            "description": "Create the annotations as this virtual annotator of the project instead of the current user"
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } }
         },
         "responses": {
           "200": {
@@ -607,8 +621,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/bbox/{bbox_id}": {
@@ -2356,7 +2369,7 @@
     "/llm_assistant/count_existing_assistant_annotations": {
       "post": {
         "tags": ["llm_assistant"],
-        "summary": "Based on the approach, count the number of existing assistant annotations",
+        "summary": "Count the existing annotations of a virtual annotator per code, for the documents and codes of an LLM Assistant run",
         "operationId": "count_existing_assistant_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2367,10 +2380,10 @@
             "schema": { "$ref": "#/components/schemas/TaskType" }
           },
           {
-            "name": "approach_type",
+            "name": "annotator_id",
             "in": "query",
             "required": true,
-            "schema": { "$ref": "#/components/schemas/ApproachType" }
+            "schema": { "type": "integer", "title": "Annotator Id" }
           }
         ],
         "requestBody": {
@@ -4681,9 +4694,23 @@
         "tags": ["sentenceAnnotation"],
         "summary": "Creates a SentenceAnnotation",
         "operationId": "create_sentence_annotation",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "annotate_as_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "description": "Create the annotations as this virtual annotator of the project instead of the current user",
+              "title": "Annotate As User Id"
+            },
+            "description": "Create the annotations as this virtual annotator of the project instead of the current user"
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotationCreate" } } }
         },
         "responses": {
           "200": {
@@ -4694,8 +4721,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/sentence/bulk/create": {
@@ -4703,17 +4729,31 @@
         "tags": ["sentenceAnnotation"],
         "summary": "Creates SentenceAnnotations in Bulk",
         "operationId": "create_sentence_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "annotate_as_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "description": "Create the annotations as this virtual annotator of the project instead of the current user",
+              "title": "Annotate As User Id"
+            },
+            "description": "Create the annotations as this virtual annotator of the project instead of the current user"
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/SentenceAnnotationCreate" },
                 "type": "array",
+                "items": { "$ref": "#/components/schemas/SentenceAnnotationCreate" },
                 "title": "Sentence Annotations"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -4721,8 +4761,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SentenceAnnotationRead" },
                   "title": "Response Sentenceannotation-Create Sentence Annotations Bulk"
                 }
               }
@@ -4732,8 +4772,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/sentence/{sentence_anno_id}": {
@@ -5472,9 +5511,23 @@
         "tags": ["spanAnnotation"],
         "summary": "Creates a SpanAnnotation",
         "operationId": "create_span_annotation",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "annotate_as_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "description": "Create the annotations as this virtual annotator of the project instead of the current user",
+              "title": "Annotate As User Id"
+            },
+            "description": "Create the annotations as this virtual annotator of the project instead of the current user"
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } },
-          "required": true
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } }
         },
         "responses": {
           "200": {
@@ -5485,8 +5538,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/span/bulk/create": {
@@ -5494,17 +5546,31 @@
         "tags": ["spanAnnotation"],
         "summary": "Creates SpanAnnotations in Bulk",
         "operationId": "create_span_annotations_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "annotate_as_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "description": "Create the annotations as this virtual annotator of the project instead of the current user",
+              "title": "Annotate As User Id"
+            },
+            "description": "Create the annotations as this virtual annotator of the project instead of the current user"
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "items": { "$ref": "#/components/schemas/SpanAnnotationCreate" },
                 "type": "array",
+                "items": { "$ref": "#/components/schemas/SpanAnnotationCreate" },
                 "title": "Spans"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -5512,8 +5578,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Spanannotation-Create Span Annotations Bulk"
                 }
               }
@@ -5523,8 +5589,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/span/{span_id}": {
@@ -6857,6 +6922,68 @@
         }
       }
     },
+    "/user/{project_id}/virtual_annotator": {
+      "put": {
+        "tags": ["user"],
+        "summary": "Creates a virtual annotator (a user without login) in the Project",
+        "operationId": "create_virtual_annotator",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VirtualAnnotatorCreate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns the virtual annotators of the Project with the given ID",
+        "operationId": "get_virtual_annotators_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserRead" },
+                  "title": "Response User-Get Virtual Annotators By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/user/me": {
       "get": {
         "tags": ["user"],
@@ -6954,10 +7081,44 @@
         }
       }
     },
+    "/user/{project_id}/annotator": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns all annotators of the Project with the given ID: its members, followed by its virtual annotators",
+        "operationId": "get_annotators_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserRead" },
+                  "title": "Response User-Get Annotators By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/user/all": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns all Users that exist in the system",
+        "summary": "Returns all human Users that exist in the system (virtual annotators belong to their project)",
         "operationId": "get_all",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -7036,6 +7197,50 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/user/virtual_annotator/{user_id}": {
+      "patch": {
+        "tags": ["user"],
+        "summary": "Renames the virtual annotator with the given ID",
+        "operationId": "update_virtual_annotator",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VirtualAnnotatorUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["user"],
+        "summary": "Removes the virtual annotator with the given ID together with all its annotations and memos",
+        "operationId": "delete_virtual_annotator",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/user/{project_id}/user/{user_id}": {
@@ -8243,6 +8448,48 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserDeletedEvent" } } }
+          }
+        }
+      }
+    },
+    "VIRTUAL_ANNOTATOR_CREATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_virtual_annotator_created",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/VirtualAnnotatorCreatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "VIRTUAL_ANNOTATOR_UPDATED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_virtual_annotator_updated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/VirtualAnnotatorUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "VIRTUAL_ANNOTATOR_DELETED": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_virtual_annotator_deleted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/VirtualAnnotatorDeletedEvent" } }
+            }
           }
         }
       }
@@ -10527,10 +10774,15 @@
             "title": "Sdoc Ids",
             "description": "List of SourceDocument IDs to apply the classifier on"
           },
+          "annotator_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Annotator Id",
+            "description": "Virtual annotator of the project the span or sentence annotations are written into. Required for span and sentence classifiers, unused for document classifiers (they assign tags)."
+          },
           "delete_existing_work": {
             "type": "boolean",
             "title": "Delete Existing Work",
-            "description": "Delete existing span/sent annotations or tags before creating new ones"
+            "description": "Delete the existing span/sentence annotations of the virtual annotator or the tags before creating new ones"
           }
         },
         "type": "object",
@@ -13433,10 +13685,15 @@
             "anyOf": [{ "$ref": "#/components/schemas/PromptTemplateSnapshot" }, { "type": "null" }],
             "description": "An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_template_version_id and draft is set."
           },
+          "annotator_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Annotator Id",
+            "description": "Virtual annotator of the project the annotations are written into. Required for span and sentence annotation, unused otherwise."
+          },
           "delete_existing_annotations": {
             "type": "boolean",
             "title": "Delete Existing Annotations",
-            "description": "Delete the existing annotations of the assistant for the documents and codes of the prompt before creating new ones",
+            "description": "Delete the existing annotations of the virtual annotator for the documents and codes of the prompt before creating new ones",
             "default": false
           }
         },
@@ -15558,11 +15815,12 @@
       "PublicUserRead": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "ID of the User" },
+          "kind": { "$ref": "#/components/schemas/UserKind", "description": "Whether the User is a human or virtual" },
           "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
           "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" }
         },
         "type": "object",
-        "required": ["id", "first_name", "last_name"],
+        "required": ["id", "kind", "first_name", "last_name"],
         "title": "PublicUserRead",
         "description": "A user object with information that everybody may see."
       },
@@ -18835,13 +19093,13 @@
       },
       "UserCreate": {
         "properties": {
-          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
           "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
           "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" },
+          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
           "password": { "type": "string", "title": "Password", "description": "Hashed password of the User" }
         },
         "type": "object",
-        "required": ["email", "first_name", "last_name", "password"],
+        "required": ["first_name", "last_name", "email", "password"],
         "title": "UserCreate"
       },
       "UserDeletedEvent": {
@@ -18853,12 +19111,28 @@
         "required": ["payload"],
         "title": "UserDeletedEvent"
       },
+      "UserKind": {
+        "type": "string",
+        "enum": ["human", "virtual"],
+        "title": "UserKind",
+        "description": "Whether a user is a person with a login or a virtual annotator.\n\nVirtual annotators belong to exactly one project and only own annotations\n(e.g. the output of an LLM Assistant run). They have no email and no\npassword, can never log in and are no project members."
+      },
       "UserRead": {
         "properties": {
-          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
           "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
           "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the User" },
+          "kind": { "$ref": "#/components/schemas/UserKind", "description": "Whether the User is a human or virtual" },
+          "email": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Email",
+            "description": "E-Mail of the User (None for virtual annotators)"
+          },
+          "project_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Project Id",
+            "description": "Project of a virtual annotator (None for human users)"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -18873,7 +19147,7 @@
           }
         },
         "type": "object",
-        "required": ["email", "first_name", "last_name", "id", "created", "updated"],
+        "required": ["first_name", "last_name", "id", "kind", "email", "project_id", "created", "updated"],
         "title": "UserRead"
       },
       "UserUpdate": {
@@ -18928,6 +19202,73 @@
         "title": "ValidationError"
       },
       "VerticalAlign": { "type": "string", "enum": ["top", "center", "bottom"], "title": "VerticalAlign" },
+      "VirtualAnnotatorCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name",
+            "description": "Display name of the virtual annotator, unique per project"
+          }
+        },
+        "type": "object",
+        "required": ["name"],
+        "title": "VirtualAnnotatorCreate",
+        "description": "A virtual annotator: a project-scoped user without login that owns\nannotations, e.g. of an LLM Assistant run."
+      },
+      "VirtualAnnotatorCreatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "VIRTUAL_ANNOTATOR_CREATED",
+            "title": "Type",
+            "default": "VIRTUAL_ANNOTATOR_CREATED"
+          },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "VirtualAnnotatorCreatedEvent"
+      },
+      "VirtualAnnotatorDeletedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "VIRTUAL_ANNOTATOR_DELETED",
+            "title": "Type",
+            "default": "VIRTUAL_ANNOTATOR_DELETED"
+          },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "VirtualAnnotatorDeletedEvent"
+      },
+      "VirtualAnnotatorUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
+            "title": "Name",
+            "description": "Display name of the virtual annotator, unique per project"
+          }
+        },
+        "type": "object",
+        "title": "VirtualAnnotatorUpdate"
+      },
+      "VirtualAnnotatorUpdatedEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "VIRTUAL_ANNOTATOR_UPDATED",
+            "title": "Type",
+            "default": "VIRTUAL_ANNOTATOR_UPDATED"
+          },
+          "payload": { "$ref": "#/components/schemas/UserRead" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "VirtualAnnotatorUpdatedEvent"
+      },
       "WhiteboardContent": {
         "properties": {
           "nodes": {

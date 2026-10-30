@@ -294,16 +294,37 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
 
     // ── Users ───────────────────────────────────────────────────────────────
     case "USER_UPDATED":
-      sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
-        old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
-      );
+      for (const scope of [userQueries.byProjectScope(), userQueries.annotatorsByProjectScope()]) {
+        sweepPrefix<UserRead[]>(scope, (old) =>
+          old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
+        );
+      }
       queryClient.invalidateQueries({ queryKey: userQueries.meScope() });
       queryClient.invalidateQueries({ queryKey: sdocQueries.annotatorsScope() });
       break;
     case "USER_DELETED":
-      sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
-        old ? old.filter((user) => user.id !== event.payload.id) : old,
-      );
+      for (const scope of [userQueries.byProjectScope(), userQueries.annotatorsByProjectScope()]) {
+        sweepPrefix<UserRead[]>(scope, (old) => (old ? old.filter((user) => user.id !== event.payload.id) : old));
+      }
+      break;
+
+    // ── Virtual annotators ──────────────────────────────────────────────────
+    case "VIRTUAL_ANNOTATOR_CREATED":
+      appendListItem(userQueries.annotatorsByProject(event.payload.project_id ?? undefined).queryKey, event.payload);
+      break;
+    case "VIRTUAL_ANNOTATOR_UPDATED":
+      replaceListItem(userQueries.annotatorsByProject(event.payload.project_id ?? undefined).queryKey, event.payload);
+      break;
+    case "VIRTUAL_ANNOTATOR_DELETED":
+      // the virtual annotator is deleted with all its annotations; copies of them lose their source user
+      removeListItem(userQueries.annotatorsByProject(event.payload.project_id ?? undefined).queryKey, event.payload.id);
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.annotatorsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
+      queryClient.invalidateQueries({ queryKey: agreementQueries.computeScope(), refetchType: "none" });
+      invalidateMemoWorkspace();
       break;
 
     // ── API keys ────────────────────────────────────────────────────────────
@@ -577,6 +598,7 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     // directly into the project-keyed user list.
     case "PROJECT_USERS_LINKED":
       queryClient.setQueryData(userQueries.byProject(event.payload.project_id).queryKey, event.payload.users);
+      queryClient.invalidateQueries({ queryKey: userQueries.annotatorsByProject(event.payload.project_id).queryKey });
       break;
 
     default: {

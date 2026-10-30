@@ -76,6 +76,9 @@ import type { TimelineAnalysisDeletedEvent } from "./TimelineAnalysisDeletedEven
 import type { TimelineAnalysisUpdatedEvent } from "./TimelineAnalysisUpdatedEvent";
 import type { UserDeletedEvent } from "./UserDeletedEvent";
 import type { UserUpdatedEvent } from "./UserUpdatedEvent";
+import type { VirtualAnnotatorCreatedEvent } from "./VirtualAnnotatorCreatedEvent";
+import type { VirtualAnnotatorDeletedEvent } from "./VirtualAnnotatorDeletedEvent";
+import type { VirtualAnnotatorUpdatedEvent } from "./VirtualAnnotatorUpdatedEvent";
 import type { WhiteboardCreatedEvent } from "./WhiteboardCreatedEvent";
 import type { WhiteboardDeletedEvent } from "./WhiteboardDeletedEvent";
 import type { WhiteboardUpdatedEvent } from "./WhiteboardUpdatedEvent";
@@ -156,6 +159,9 @@ export interface DATSEventMap {
   TIMELINE_ANALYSIS_UPDATED: TimelineAnalysisUpdatedEvent["payload"];
   USER_DELETED: UserDeletedEvent["payload"];
   USER_UPDATED: UserUpdatedEvent["payload"];
+  VIRTUAL_ANNOTATOR_CREATED: VirtualAnnotatorCreatedEvent["payload"];
+  VIRTUAL_ANNOTATOR_DELETED: VirtualAnnotatorDeletedEvent["payload"];
+  VIRTUAL_ANNOTATOR_UPDATED: VirtualAnnotatorUpdatedEvent["payload"];
   WHITEBOARD_CREATED: WhiteboardCreatedEvent["payload"];
   WHITEBOARD_DELETED: WhiteboardDeletedEvent["payload"];
   WHITEBOARD_UPDATED: WhiteboardUpdatedEvent["payload"];
@@ -237,6 +243,9 @@ export type DATSEvent =
   | (Omit<TimelineAnalysisUpdatedEvent, "type"> & { type: "TIMELINE_ANALYSIS_UPDATED" })
   | (Omit<UserDeletedEvent, "type"> & { type: "USER_DELETED" })
   | (Omit<UserUpdatedEvent, "type"> & { type: "USER_UPDATED" })
+  | (Omit<VirtualAnnotatorCreatedEvent, "type"> & { type: "VIRTUAL_ANNOTATOR_CREATED" })
+  | (Omit<VirtualAnnotatorDeletedEvent, "type"> & { type: "VIRTUAL_ANNOTATOR_DELETED" })
+  | (Omit<VirtualAnnotatorUpdatedEvent, "type"> & { type: "VIRTUAL_ANNOTATOR_UPDATED" })
   | (Omit<WhiteboardCreatedEvent, "type"> & { type: "WHITEBOARD_CREATED" })
   | (Omit<WhiteboardDeletedEvent, "type"> & { type: "WHITEBOARD_DELETED" })
   | (Omit<WhiteboardUpdatedEvent, "type"> & { type: "WHITEBOARD_UPDATED" });

@@ -7,10 +7,58 @@ import type { ProjectUserLinks } from "@models/ProjectUserLinks";
 import type { PublicUserRead } from "@models/PublicUserRead";
 import type { UserRead } from "@models/UserRead";
 import type { UserUpdate } from "@models/UserUpdate";
+import type { VirtualAnnotatorCreate } from "@models/VirtualAnnotatorCreate";
+import type { VirtualAnnotatorUpdate } from "@models/VirtualAnnotatorUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class UserService {
+  /**
+   * Creates a virtual annotator (a user without login) in the Project
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static createVirtualAnnotator({
+    projectId,
+    requestBody,
+  }: {
+    projectId: number;
+    requestBody: VirtualAnnotatorCreate;
+  }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/user/{project_id}/virtual_annotator",
+      path: {
+        project_id: projectId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the virtual annotators of the Project with the given ID
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getVirtualAnnotatorsByProject({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<UserRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{project_id}/virtual_annotator",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
   /**
    * Returns the current (logged in) user
    * @returns UserRead Successful Response
@@ -82,7 +130,24 @@ export class UserService {
     });
   }
   /**
-   * Returns all Users that exist in the system
+   * Returns all annotators of the Project with the given ID: its members, followed by its virtual annotators
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getAnnotatorsByProject({ projectId }: { projectId: number }): CancelablePromise<Array<UserRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{project_id}/annotator",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all human Users that exist in the system (virtual annotators belong to their project)
    * @returns PublicUserRead Successful Response
    * @throws ApiError
    */
@@ -133,6 +198,48 @@ export class UserService {
       url: "/user/",
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Renames the virtual annotator with the given ID
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static updateVirtualAnnotator({
+    userId,
+    requestBody,
+  }: {
+    userId: number;
+    requestBody: VirtualAnnotatorUpdate;
+  }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/user/virtual_annotator/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the virtual annotator with the given ID together with all its annotations and memos
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteVirtualAnnotator({ userId }: { userId: number }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/user/virtual_annotator/{user_id}",
+      path: {
+        user_id: userId,
+      },
       errors: {
         422: `Validation Error`,
       },
