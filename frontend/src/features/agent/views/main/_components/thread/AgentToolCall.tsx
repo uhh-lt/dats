@@ -5,11 +5,17 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PanToolOutlinedIcon from "@mui/icons-material/PanToolOutlined";
-import { Box, ButtonBase, CircularProgress, Collapse, Stack, Typography } from "@mui/material";
+import { Box, Button, ButtonBase, Chip, CircularProgress, Collapse, Paper, Stack, Typography } from "@mui/material";
 import { memo, ReactNode, useState } from "react";
+import { AgentHooks } from "../../../../api/agentHooks";
+import { useAgentThread } from "./agentThreadContext";
+import { AgentToolArguments } from "./AgentToolArguments";
 import { ShimmerText } from "./ShimmerText";
 
-type AgentToolCallProps = Pick<ToolCallMessagePartProps, "toolName" | "argsText" | "result" | "isError" | "status">;
+type AgentToolCallProps = Pick<
+  ToolCallMessagePartProps,
+  "toolCallId" | "toolName" | "argsText" | "result" | "isError" | "status"
+>;
 
 type ToolCallState = "running" | "approval" | "done" | "denied" | "cancelled" | "failed";
 
@@ -34,10 +40,9 @@ const STATE_ICONS: Record<ToolCallState, ReactNode> = {
   failed: <ErrorOutlineIcon fontSize="small" color="error" />,
 };
 
-const STATE_LABELS: Record<ToolCallState, string> = {
-  running: "Calling",
-  approval: "Waiting for your approval:",
-  done: "Called",
+// prefix of the label for states other than running and done
+const STATE_PREFIXES: Partial<Record<ToolCallState, string>> = {
+  approval: "Needs your approval:",
   denied: "Denied:",
   cancelled: "Cancelled:",
   failed: "Failed:",
@@ -77,14 +82,51 @@ function CodeBlock({ title, text }: { title: string; text: string }) {
   );
 }
 
+function AgentToolApproval({ toolCallId, argsText }: Pick<AgentToolCallProps, "toolCallId" | "argsText">) {
+  const { interrupts, decisions, decide } = useAgentThread();
+  const interrupt = interrupts.find((candidate) => candidate.toolCallId === toolCallId);
+  if (interrupt === undefined) return null;
+
+  const decision = decisions[interrupt.id];
+  return (
+    <Paper variant="outlined" sx={{ mt: 0.5, mb: 1, ml: 3.5, p: 1.5, borderColor: "warning.main" }}>
+      <Stack spacing={1}>
+        <AgentToolArguments argsText={argsText} />
+        <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+          {decision !== undefined ? (
+            <Chip
+              size="small"
+              label={decision ? "Approved, waiting for the other answers" : "Denied, waiting for the other answers"}
+            />
+          ) : (
+            <>
+              <Button size="small" onClick={() => decide([interrupt.id], false)}>
+                Deny
+              </Button>
+              <Button size="small" variant="contained" color="error" onClick={() => decide([interrupt.id], true)}>
+                Approve
+              </Button>
+            </>
+          )}
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
 /**
- * A tool call of the agent (a DATS endpoint): its state, name and duration,
- * and on click its arguments, result and error.
+ * A tool call of the agent (a DATS endpoint), described by its endpoint's
+ * summary: its state and duration, the approval it waits for, and on click
+ * its arguments, result and error.
  */
-export const AgentToolCall = memo(({ toolName, argsText, result, isError, status }: AgentToolCallProps) => {
+export const AgentToolCall = memo(({ toolCallId, toolName, argsText, result, isError, status }: AgentToolCallProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { agentName } = useAgentThread();
+  const tool = AgentHooks.useGetTool(agentName, toolName).data;
   const elapsedMs = useToolCallElapsed();
   const state = toolCallState({ status, isError, result });
+  const label = tool?.description ?? toolName;
+  const prefix = STATE_PREFIXES[state];
   const error = status.type === "incomplete" && status.error !== undefined ? formatValue(status.error) : undefined;
 
   return (
@@ -92,27 +134,46 @@ export const AgentToolCall = memo(({ toolName, argsText, result, isError, status
       <ButtonBase
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        sx={{ gap: 0.75, borderRadius: 1, maxWidth: "100%", "&:hover .tool-name": { textDecoration: "underline" } }}
+        sx={{
+          gap: 0.75,
+          borderRadius: 1,
+          maxWidth: "100%",
+          textAlign: "left",
+          "&:hover .tool-label": { color: "text.primary" },
+        }}
       >
         {STATE_ICONS[state]}
-        {state === "running" ? (
-          <ShimmerText variant="body2">{STATE_LABELS[state]}</ShimmerText>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            {STATE_LABELS[state]}
+        {prefix && (
+          <Typography
+            variant="body2"
+            color={state === "approval" ? "warning.dark" : "text.secondary"}
+            noWrap
+            flexShrink={0}
+          >
+            {prefix}
           </Typography>
         )}
-        <Typography
-          variant="body2"
-          className="tool-name"
-          fontFamily="monospace"
-          noWrap
-          sx={{ textDecoration: state === "cancelled" ? "line-through" : "none" }}
-        >
-          {toolName}
-        </Typography>
+        {state === "running" ? (
+          <ShimmerText variant="body2" noWrap>
+            {label}
+          </ShimmerText>
+        ) : (
+          <Typography
+            variant="body2"
+            className="tool-label"
+            color="text.secondary"
+            noWrap
+            sx={{ textDecoration: state === "cancelled" ? "line-through" : "none" }}
+          >
+            {label}
+          </Typography>
+        )}
         {elapsedMs !== undefined && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0 }}
+          >
             {formatDuration(elapsedMs)}
           </Typography>
         )}
@@ -121,8 +182,12 @@ export const AgentToolCall = memo(({ toolName, argsText, result, isError, status
           sx={{ color: "text.secondary", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 150ms" }}
         />
       </ButtonBase>
+      {state === "approval" && <AgentToolApproval toolCallId={toolCallId} argsText={argsText} />}
       <Collapse in={isOpen} timeout={200} unmountOnExit>
         <Stack spacing={1} sx={{ mt: 0.5, mb: 1, pl: 3.5 }}>
+          <Typography variant="caption" color="text.secondary" fontFamily="monospace">
+            {toolName}
+          </Typography>
           <CodeBlock title="Arguments" text={formatValue(argsText || "{}")} />
           {result !== undefined && <CodeBlock title="Result" text={formatValue(result)} />}
           {error !== undefined && <CodeBlock title="Error" text={error} />}

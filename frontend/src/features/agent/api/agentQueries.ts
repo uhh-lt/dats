@@ -1,4 +1,5 @@
 import { AgentService } from "@api/services/AgentService";
+import { AgentName } from "@models/AgentName";
 import { queryOptions } from "@tanstack/react-query";
 
 /**
@@ -7,6 +8,7 @@ import { queryOptions } from "@tanstack/react-query";
  *   agentQueries.all()                ["agent"]
  *   agentQueries.sessions()           ["agent", "sessions"]
  *   agentQueries.history(sessionId)   ["agent", "history", sessionId]
+ *   agentQueries.tools(agentName)     ["agent", "tools", agentName]
  */
 export const agentQueries = {
   all: () => ["agent"] as const,
@@ -26,5 +28,15 @@ export const agentQueries = {
       queryKey: [...agentQueries.historyScope(), sessionId] as const,
       queryFn: () => AgentService.getSessionHistory({ sessionId }),
       staleTime: 0,
+    }),
+
+  // the tools of an agent and whether they need approval; they change only
+  // with a backend release
+  toolsScope: () => [...agentQueries.all(), "tools"] as const,
+  tools: (agentName: AgentName) =>
+    queryOptions({
+      queryKey: [...agentQueries.toolsScope(), agentName] as const,
+      queryFn: () => AgentService.getTools({ agentName }),
+      staleTime: Infinity,
     }),
 };

@@ -18,7 +18,7 @@ const EditInput = styled(ComposerPrimitive.Input)(({ theme }) => ({
 export function AgentUserMessage() {
   return (
     <MessagePrimitive.Root>
-      <Stack alignItems="flex-end">
+      <Stack alignItems="flex-end" sx={{ mt: 3 }}>
         <Stack direction="row" alignItems="center" spacing={0.5} maxWidth="85%">
           <ActionBarPrimitive.Root hideWhenRunning autohide="not-last">
             <ActionBarPrimitive.Edit render={<AgentIconButton tooltip="Edit" />}>

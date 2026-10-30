@@ -1,7 +1,16 @@
 import { AgentService } from "@api/services/AgentService";
+import { AgentName } from "@models/AgentName";
 import { AgentSessionRead } from "@models/AgentSessionRead";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { agentQueries } from "./agentQueries";
+
+// AGENT TOOL QUERIES
+
+const useGetTool = (agentName: AgentName, toolName: string) =>
+  useQuery({
+    ...agentQueries.tools(agentName),
+    select: (tools) => tools.find((tool) => tool.name === toolName),
+  });
 
 // AGENT SESSION MUTATIONS
 
@@ -27,6 +36,7 @@ const useDeleteSession = () =>
   });
 
 export const AgentHooks = {
+  useGetTool,
   useRenameSession,
   useDeleteSession,
 };

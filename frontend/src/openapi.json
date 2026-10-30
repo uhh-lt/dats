@@ -50,6 +50,40 @@
         }
       }
     },
+    "/agent/{agent_name}/tools": {
+      "get": {
+        "tags": ["agent"],
+        "summary": "Returns the tools (DATS endpoints) of the agent and whether they need the user's approval.",
+        "operationId": "get_tools",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "agent_name",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AgentName" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AgentToolRead" },
+                  "title": "Response Agent-Get Tools"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/agent/sessions/{session_id}": {
       "patch": {
         "tags": ["agent"],
@@ -8350,6 +8384,7 @@
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the AgentSession" },
           "user_id": { "type": "integer", "title": "User Id", "description": "User the AgentSession belongs to" },
+          "agent_name": { "$ref": "#/components/schemas/AgentName", "description": "Agent the AgentSession talks to" },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -8364,7 +8399,7 @@
           }
         },
         "type": "object",
-        "required": ["session_id", "id", "user_id", "created", "updated"],
+        "required": ["session_id", "id", "user_id", "agent_name", "created", "updated"],
         "title": "AgentSessionRead"
       },
       "AgentSessionUpdate": {
@@ -8391,6 +8426,28 @@
         "type": "object",
         "required": ["payload"],
         "title": "AgentSessionUpdatedEvent"
+      },
+      "AgentToolRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Name of the tool (the operation id of its endpoint)"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "What the tool does (the summary of its endpoint)"
+          },
+          "needs_approval": {
+            "type": "boolean",
+            "title": "Needs Approval",
+            "description": "Whether the agent asks the user before it calls the tool"
+          }
+        },
+        "type": "object",
+        "required": ["name", "description", "needs_approval"],
+        "title": "AgentToolRead"
       },
       "AnnoscalingConfirmSuggest": {
         "properties": {
