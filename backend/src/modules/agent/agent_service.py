@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from loguru import logger
 from pydantic import ValidationError
 from pydantic_ai import Agent, PromptedOutput
-from pydantic_ai.exceptions import ModelAPIError, ModelHTTPError
+from pydantic_ai.exceptions import ModelAPIError
 from pydantic_ai.mcp import MCPToolset
 from pydantic_ai.messages import (
     ModelMessage,
@@ -36,7 +36,6 @@ from modules.agent.agent_dto import (
 )
 from modules.agent.agent_enum import AgentName
 from modules.agent.agent_exceptions import (
-    AgentLLMError,
     AgentSessionHistoryInvalidError,
     UnknownAgentModelError,
 )
@@ -46,14 +45,18 @@ from modules.agent.agent_session_dto import (
     AgentSessionUpdateIntern,
 )
 from modules.agent.agent_session_orm import AgentSessionORM
+from modules.agent.agui_adapter_utils import (
+    AgentAGUIAdapter,
+    AgentOutput,
+    context_instructions,
+    to_client_error,
+)
 from modules.agent.auth_context_utils import (
     auth_header_context,
     forward_auth_header_hook,
 )
 from repos.llm_repo import LLMRepo
 from systems.mcp_system.mcp_server import create_mcp_server, requires_approval
-
-AgentOutput = str | DeferredToolRequests
 
 # the provider's first LLM, unless a request names another one
 DEFAULT_MODEL = "default"
@@ -140,9 +143,6 @@ class AgentService(metaclass=SingletonMeta):
                 output_type=[str, DeferredToolRequests],
             )
 
-    def list_models(self) -> list[str]:
-        return self.llm.get_available_llms()
-
     async def run_agent(
         self,
         *,
@@ -174,8 +174,7 @@ class AgentService(metaclass=SingletonMeta):
                         query.prompt, message_history=history, model=selected_model
                     )
         except ModelAPIError as e:
-            status_code = e.status_code if isinstance(e, ModelHTTPError) else None
-            raise AgentLLMError(e.model_name, status_code) from e
+            raise to_client_error(e) from e
 
         # 3) store the history
         await self._save_session(
@@ -221,9 +220,7 @@ class AgentService(metaclass=SingletonMeta):
         agent = self.agents[agent_name]
         toolset = self.toolsets[agent_name]
 
-        adapter = await AGUIAdapter[None, AgentOutput].from_request(
-            request, agent=agent
-        )
+        adapter = await AgentAGUIAdapter.from_request(request, agent=agent)
         session_id = adapter.run_input.thread_id
         forwarded_props = adapter.run_input.forwarded_props
         requested_model = (
@@ -252,11 +249,12 @@ class AgentService(metaclass=SingletonMeta):
 
         with auth_header_context(auth_header):
             async with toolset:
-                response = await AGUIAdapter.dispatch_request(
+                response = await AgentAGUIAdapter.dispatch_request(
                     request,
                     agent=agent,
                     on_complete=on_complete,
                     model=selected_model,
+                    instructions=context_instructions(adapter.run_input.context),
                 )
         if not isinstance(response, StreamingResponse):
             return response
@@ -281,9 +279,7 @@ class AgentService(metaclass=SingletonMeta):
             db=db, user_id=user_id, session_id=session_id
         )
         messages = AGUIAdapter.dump_messages(self._parse_history(db_session))
-        return AgentSessionHistory(
-            messages=[m.model_dump(mode="json", by_alias=True) for m in messages]
-        )
+        return AgentSessionHistory(messages=messages)
 
     def _resolve_model(self, model: str) -> OpenAIChatModel:
         try:
