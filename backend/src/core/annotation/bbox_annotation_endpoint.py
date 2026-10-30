@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
@@ -35,14 +35,29 @@ def create_bbox_annotation(
     *,
     db: Session = Depends(get_db_session),
     bbox: BBoxAnnotationCreate,
+    annotate_as_user_id: int | None = Query(
+        default=None,
+        description=(
+            "Create the annotations as this virtual annotator of the project "
+            "instead of the current user"
+        ),
+    ),
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> BBoxAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, bbox.sdoc_id)
     authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
+    if annotate_as_user_id is not None:
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.USER, annotate_as_user_id),
+                (Crud.SOURCE_DOCUMENT, bbox.sdoc_id),
+            ]
+        )
 
     result = BBoxAnnotationService().create(
-        db=db, user_id=authz_user.user.id, create_dto=bbox
+        db=db, user_id=annotate_as_user_id or authz_user.user.id, create_dto=bbox
     )
     ws.emit_to_project(
         DATSEvent.BBOX_ANNOTATION_CREATED,

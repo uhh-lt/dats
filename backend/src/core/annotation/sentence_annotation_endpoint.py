@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -38,16 +38,33 @@ def create_sentence_annotation(
     *,
     db: Session = Depends(get_db_session),
     sentence_annotation: SentenceAnnotationCreate,
+    annotate_as_user_id: int | None = Query(
+        default=None,
+        description=(
+            "Create the annotations as this virtual annotator of the project "
+            "instead of the current user"
+        ),
+    ),
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
     authz_user.assert_in_same_project_as(
         Crud.SOURCE_DOCUMENT, sentence_annotation.sdoc_id
     )
     authz_user.assert_in_same_project_as(Crud.CODE, sentence_annotation.code_id)
+    if annotate_as_user_id is not None:
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.USER, annotate_as_user_id),
+                (Crud.SOURCE_DOCUMENT, sentence_annotation.sdoc_id),
+            ]
+        )
 
     result = SentenceAnnotationService().create(
-        db=db, user_id=authz_user.user.id, create_dto=sentence_annotation
+        db=db,
+        user_id=annotate_as_user_id or authz_user.user.id,
+        create_dto=sentence_annotation,
     )
     ws.emit_to_project(
         DATSEvent.SENTENCE_ANNOTATION_CREATED,
@@ -66,6 +83,13 @@ def create_sentence_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sentence_annotations: list[SentenceAnnotationCreate],
+    annotate_as_user_id: int | None = Query(
+        default=None,
+        description=(
+            "Create the annotations as this virtual annotator of the project "
+            "instead of the current user"
+        ),
+    ),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -79,9 +103,18 @@ def create_sentence_annotations_bulk(
                 (Crud.SOURCE_DOCUMENT, sa.sdoc_id),
             ]
         )
+        if annotate_as_user_id is not None:
+            validate.validate_objects_in_same_project(
+                [
+                    (Crud.USER, annotate_as_user_id),
+                    (Crud.SOURCE_DOCUMENT, sa.sdoc_id),
+                ]
+            )
 
     results = SentenceAnnotationService().create_multi(
-        db=db, user_id=authz_user.user.id, create_dtos=sentence_annotations
+        db=db,
+        user_id=annotate_as_user_id or authz_user.user.id,
+        create_dtos=sentence_annotations,
     )
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH, results)
