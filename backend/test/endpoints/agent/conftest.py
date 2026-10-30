@@ -8,6 +8,7 @@ from pydantic_ai.messages import (
     ModelRequest,
     ModelResponse,
     TextPart,
+    ToolCallPart,
     UserPromptPart,
 )
 
@@ -15,6 +16,7 @@ import dats_test_utils
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from modules.agent.agent_enum import AgentName
 from modules.agent.agent_session_crud import crud_agent_session
 from modules.agent.agent_session_dto import AgentSessionCreate
 from modules.agent.agent_session_orm import AgentSessionORM
@@ -48,8 +50,8 @@ def agent_sessions(db_session, test_user) -> AgentSessionState:
 
     - The primary test user (from the root `test_user` fixture) owns three sessions:
       - "session-older", title "Older Session": prompt "Hello", answer "Hi there".
-      - "session-newer", title "Newer Session": prompt "How many projects?",
-        answer "You have no projects."
+      - "session-newer", title "Newer Session", with the source document agent:
+        prompt "How many projects?", answer "You have no projects."
       - "session-invalid", title "Broken Session": its stored messages are
         `[{"kind": "garbage"}]`, which pydantic-ai cannot parse.
     - A second user "Other User" (email "other@dats.org") owns two sessions:
@@ -57,7 +59,7 @@ def agent_sessions(db_session, test_user) -> AgentSessionState:
         test user's first session (session ids are unique per user only).
       - "session-other", title "Other Session".
 
-    The sessions are created in the order listed (the test user's first), each in
+    All other sessions talk to the project agent. The sessions are created in the order listed (the test user's first), each in
     its own transaction, so their `updated` timestamps follow that order.
 
     Non-obvious derived behavior:
@@ -79,7 +81,11 @@ def agent_sessions(db_session, test_user) -> AgentSessionState:
     db_session.commit()
 
     def _create(
-        user: UserORM, session_id: str, title: str, messages: list[dict[str, Any]]
+        user: UserORM,
+        session_id: str,
+        title: str,
+        messages: list[dict[str, Any]],
+        agent_name: AgentName = AgentName.PROJECT,
     ) -> AgentSessionORM:
         db_obj = crud_agent_session.create(
             db=db_session,
@@ -87,6 +93,7 @@ def agent_sessions(db_session, test_user) -> AgentSessionState:
                 session_id=session_id,
                 title=title,
                 user_id=user.id,
+                agent_name=agent_name,
                 messages=messages,
             ),
         )
@@ -109,6 +116,7 @@ def agent_sessions(db_session, test_user) -> AgentSessionState:
             "session-newer",
             "Newer Session",
             _conversation("How many projects?", "You have no projects."),
+            AgentName.SOURCE_DOCUMENT,
         ),
         "session_invalid": _create(
             test_user, "session-invalid", "Broken Session", [{"kind": "garbage"}]
@@ -124,6 +132,42 @@ def agent_sessions(db_session, test_user) -> AgentSessionState:
             other_user, "session-other", "Other Session", _conversation("Hey", "Hey")
         ),
     }
+
+
+@pytest.fixture(scope="function")
+def pending_approval_session(db_session, test_user) -> AgentSessionORM:
+    """The test user owns one session "session-approval" (title "Approval
+    Session", project agent) whose run stopped for the user's approval: the
+    prompt "Delete project 7" was answered with one tool call
+    `project_delete_project` (tool call id "call-delete", args
+    `{"project_id": 7}`) that has no result yet."""
+    db_obj = crud_agent_session.create(
+        db=db_session,
+        create_dto=AgentSessionCreate(
+            session_id="session-approval",
+            title="Approval Session",
+            user_id=test_user.id,
+            agent_name=AgentName.PROJECT,
+            messages=ModelMessagesTypeAdapter.dump_python(
+                [
+                    ModelRequest(parts=[UserPromptPart(content="Delete project 7")]),
+                    ModelResponse(
+                        parts=[
+                            ToolCallPart(
+                                tool_name="project_delete_project",
+                                args={"project_id": 7},
+                                tool_call_id="call-delete",
+                            )
+                        ]
+                    ),
+                ],
+                mode="json",
+            ),
+        ),
+    )
+    db_session.commit()
+    db_session.refresh(db_obj)
+    return db_obj
 
 
 @pytest.fixture(scope="function")

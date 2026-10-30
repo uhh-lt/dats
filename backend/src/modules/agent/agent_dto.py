@@ -26,6 +26,16 @@ class AgentSessionHistory(BaseModel):
     )
 
 
+class AgentToolRead(BaseModel):
+    name: str = Field(description="Name of the tool (the operation id of its endpoint)")
+    description: str | None = Field(
+        description="What the tool does (the summary of its endpoint)"
+    )
+    needs_approval: bool = Field(
+        description="Whether the agent asks the user before it calls the tool"
+    )
+
+
 class AgentSessionTitle(BaseModel):
     title: str = Field(
         description="A concise, 3 to 6 word descriptive title for the chat session.",

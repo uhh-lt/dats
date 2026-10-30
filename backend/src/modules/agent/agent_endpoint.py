@@ -9,6 +9,7 @@ from modules.agent.agent_dto import (
     AgentQueryRequest,
     AgentQueryResponse,
     AgentSessionHistory,
+    AgentToolRead,
 )
 from modules.agent.agent_enum import AgentName
 from modules.agent.agent_service import AgentService
@@ -58,6 +59,15 @@ def get_session_history(
     return AgentService().read_session_history(
         db=db, user_id=authz_user.user.id, session_id=session_id
     )
+
+
+@router.get(
+    "/{agent_name}/tools",
+    response_model=list[AgentToolRead],
+    summary="Returns the tools (DATS endpoints) of the agent and whether they need the user's approval.",
+)
+async def get_tools(*, agent_name: AgentName) -> list[AgentToolRead]:
+    return await AgentService().list_tools(agent_name=agent_name)
 
 
 # --- update operations

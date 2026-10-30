@@ -7,8 +7,11 @@ from modules.agent.agent_dto import (
     AgentQueryRequest,
     AgentQueryResponse,
     AgentSessionHistory,
+    AgentToolRead,
 )
+from modules.agent.agent_enum import AgentName
 from modules.agent.agent_session_dto import AgentSessionRead, AgentSessionUpdate
+from modules.agent.agent_session_orm import AgentSessionORM
 
 from .conftest import AgentSessionState
 
@@ -40,6 +43,11 @@ def test_get_sessions_returns_own_sessions_most_recently_updated_first(
         "Older Session",
     ]
     assert {s.user_id for s in sessions} == {agent_sessions["test_user"].id}
+    assert [s.agent_name for s in sessions] == [
+        AgentName.PROJECT,
+        AgentName.SOURCE_DOCUMENT,
+        AgentName.PROJECT,
+    ]
 
 
 def test_get_sessions_of_a_user_without_sessions_is_empty(client: TestClient):
@@ -95,6 +103,33 @@ def test_get_session_history_of_an_unknown_session_is_not_found(
     """Only the requester's own sessions can be read -> 404 otherwise."""
     response = client.get(f"/agent/sessions/{session_id}/history")
     assert response.status_code == 404, response.text
+
+
+def test_get_session_history_restores_a_pending_approval_as_interrupt(
+    client: TestClient, pending_approval_session: AgentSessionORM
+):
+    """A run that stopped for the user's approval: the assistant message with
+    the tool call carries the AG-UI interrupt in its metadata, where the client
+    restores it, with the id the backend expects in the resume."""
+    response = client.get("/agent/sessions/session-approval/history")
+    assert response.status_code == 200, response.text
+    messages = response.json()["messages"]
+
+    assistant = [m for m in messages if m["role"] == "assistant"][-1]
+    assert [c["id"] for c in assistant["toolCalls"]] == ["call-delete"]
+    interrupts = assistant["metadata"]["custom"]["agui"]["interrupts"]
+    assert [(i["id"], i["reason"], i["toolCallId"]) for i in interrupts] == [
+        ("int-call-delete", "tool_call", "call-delete")
+    ]
+
+
+def test_get_session_history_without_pending_approval_has_no_interrupts(
+    client: TestClient, agent_sessions: AgentSessionState
+):
+    """A finished conversation restores without interrupts."""
+    response = client.get("/agent/sessions/session-newer/history")
+    assert response.status_code == 200, response.text
+    assert all(m.get("metadata") is None for m in response.json()["messages"])
 
 
 def test_get_session_history_with_unparsable_messages_fails(
@@ -176,6 +211,59 @@ def test_delete_session_of_another_user_is_not_found(
     response = client.delete("/agent/sessions/session-other")
     assert response.status_code == 404, response.text
     assert "session-other" in {s.session_id for s in _get_sessions(other_client)}
+
+
+# ===========================================================================
+# GET TOOLS (GET /agent/{agent_name}/tools) TESTS
+# ===========================================================================
+
+
+def _get_tools(client: TestClient, agent_name: str) -> dict[str, AgentToolRead]:
+    response = client.get(f"/agent/{agent_name}/tools")
+    assert response.status_code == 200, response.text
+    tools = [AgentToolRead.model_validate(x) for x in response.json()]
+    return {tool.name: tool for tool in tools}
+
+
+@pytest.mark.parametrize(
+    "agent_name,has_tool,lacks_tool",
+    [
+        # The project agent manages the project, its codes, tags and members.
+        pytest.param(
+            "project", "code_create_code", "spanAnnotation_delete_by_id", id="project"
+        ),
+        # The document agent works on documents and their annotations.
+        pytest.param(
+            "source_document",
+            "spanAnnotation_delete_by_id",
+            "project_delete_project",
+            id="source-document",
+        ),
+    ],
+)
+def test_get_tools_lists_the_tools_of_the_agent(
+    client: TestClient, agent_name: str, has_tool: str, lacks_tool: str
+):
+    """Each agent has the MCP tools of its routers, and only those."""
+    tools = _get_tools(client, agent_name)
+    assert has_tool in tools
+    assert lacks_tool not in tools
+
+
+def test_get_tools_marks_the_tools_that_need_approval(client: TestClient):
+    """Deletes need the user's approval, reads and updates do not; each tool is
+    described by the summary of its endpoint."""
+    tools = _get_tools(client, "project")
+    assert tools["project_delete_project"].needs_approval
+    assert not tools["project_update_project"].needs_approval
+    assert not tools["project_get_project"].needs_approval
+    assert tools["project_get_project"].description
+
+
+def test_get_tools_of_an_unknown_agent_is_rejected(client: TestClient):
+    """Only the AgentName values are agents -> 422 otherwise."""
+    response = client.get("/agent/title_generator/tools")
+    assert response.status_code == 422, response.text
 
 
 # ===========================================================================

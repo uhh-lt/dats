@@ -5,6 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, 
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from modules.agent.agent_enum import AgentName
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -18,6 +19,10 @@ class AgentSessionORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     session_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
     title: Mapped[str | None] = mapped_column(String)
+    # the agent the session talks to (sessions before this column: the project agent)
+    agent_name: Mapped[AgentName] = mapped_column(
+        String, nullable=False, server_default=AgentName.PROJECT.value
+    )
     # pydantic-ai messages, serialized with ModelMessagesTypeAdapter (see AgentSessionCreate)
     messages: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
     created: Mapped[datetime] = mapped_column(
