@@ -36,11 +36,11 @@ Dependencies are declared in `frontend/package.json` and managed with npm. Use w
 - `routes/`: TanStack Router file routes; thin, they wire a feature's view to a URL. `routeTree.gen.ts` is generated.
 - `features/<feature>/`: one folder per page or feature. A feature never imports another feature.
 - `core/<domain>/`: domain code that several features share (code, tag, memo, folder, source document, annotations, metadata, filter, job, navigation, notification, ...). Each domain has an `api/` folder for its queries and hooks, its components in the domain root or in role folders (`dialog/`, `explorer/`, `table/`, `menu/`, `renderer/`), and an `index.ts` as its public entry.
-- `api/`: the generated client (`openapi/`, never edit by hand; regenerate with `just update-api`), the `queryClient`, the websocket cache-sync code (`cache-sync/`, see its README) and the queries no domain owns (`general/`, `statistics/`).
+- `api/`: the generated client (`core/` and `services/`, never edit by hand; regenerate with `just update-api`), the `queryClient`, the websocket cache-sync code (`cache-sync/`, see its README) and the queries no domain owns (`general/`, `statistics/`).
 - `components/`: generic UI without domain logic (`form-inputs/`, `icons/`, `DATSDialogHeader`, `ExpandableRenderer`, `tree-explorer/`, ...).
 - `hooks/`: generic hooks (`useDialog`, `useDebounce`, `useTableInfiniteScroll`, ...).
 - `store/`: the Redux store, the global slices (`global/`) and the reusable slice parts (`generic/`).
-- `models/`: TypeScript types generated from the OpenAPI spec.
+- `models/`: TypeScript types generated from the OpenAPI spec (`src/openapi.json`), incl. the DATS event map `datsEvents.ts`; never edit by hand.
 - `plugins/`: setup of third-party libraries (MUI theme, TanStack, websocket, Sentry); only `main.tsx` uses them.
 - `utils/`, `styles/`, `types/`: helpers without domain knowledge, global styles, global type declarations.
 
@@ -71,7 +71,7 @@ ESLint (`check-file`) enforces the casing.
 
 Choose the home of a piece of state by its kind; [frontend-slice.instructions.md](frontend-slice.instructions.md) has the full decision list.
 
-- **Server state** → TanStack Query, through the domain's query factory and hooks object ([frontend-api](frontend-api.instructions.md)). Never call `api/openapi` services from components.
+- **Server state** → TanStack Query, through the domain's query factory and hooks object ([frontend-api](frontend-api.instructions.md)). Never call `@api/services` from components.
 - **Shareable, URL-addressable state** (filters, sorting, selected tab) → route search params ([frontend-route](frontend-route.instructions.md)).
 - **Global client state** (selections, preferences, open dialogs) → Redux with `useAppSelector`/`useAppDispatch` from `@store/storeHooks`.
 - **Form state** → React Hook Form with the `@components/form-inputs` controls (`FormText`, `FormNumber`, `FormSwitch`, `FormColorPicker`, `FormMenu`, ...) and `ErrorMessage` from `@hookform/error-message`; forms in dialogs follow [frontend-dialog](frontend-dialog.instructions.md).
