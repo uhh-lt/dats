@@ -357,8 +357,19 @@ class ClassifierInferenceParams(BaseModel):
     sdoc_ids: list[int] = Field(
         description="List of SourceDocument IDs to apply the classifier on"
     )
+    annotator_id: int | None = Field(
+        description=(
+            "Virtual annotator of the project the span or sentence annotations are "
+            "written into. Required for span and sentence classifiers, unused for "
+            "document classifiers (they assign tags)."
+        ),
+        default=None,
+    )
     delete_existing_work: bool = Field(
-        description="Delete existing span/sent annotations or tags before creating new ones"
+        description=(
+            "Delete the existing span/sentence annotations of the virtual annotator "
+            "or the tags before creating new ones"
+        )
     )
 
 
