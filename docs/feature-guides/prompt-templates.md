@@ -23,16 +23,16 @@ A placeholder-like text that no block fills, e.g. a typo like `<code>`, is sent 
 
 ## The prompt's own definitions
 
-The codes, tags and metadata fields blocks show a selector and, below it, the selected items with their name (a field's key) and description **as the prompt defines them**. When you select an item, the prompt copies its definition from the project. Click the pen icon of an item to change the prompt's copy, e.g. to try a better code description: this never changes the project, and the copy is saved with the next version. A prompt cannot add new codes, tags or fields; every item is a copy of an existing one.
+The codes, tags and metadata fields blocks show a selector and, below it, the selected items with their name (a field's key) **as the prompt defines them**, like the code explorer lists codes. When you select an item, the prompt copies its name and description from the project. Click an item (or its pen icon) to change the prompt's copy, e.g. to try a better code description: this never changes the project, and the copy is saved with the next version. A prompt cannot add new codes, tags or fields; every item is a copy of an existing one.
 
 A version stores these definitions and the examples with their text, so it always sends the same prompt, even if somebody later renames a code or changes an annotation. To update an example, remove it and add it again.
 
 Items whose definition differs from the project's are marked _differs from project_; DATS does not know whether the prompt or the project changed, so you decide which side wins. Items that were deleted from the project are marked _deleted_; remove them from the prompt.
 
-- **Pull** (arrow down, upper right of the block) replaces the prompt's definitions with the project's.
-- **Push** (arrow up) replaces the project's names and descriptions with the prompt's. This changes them for every member of the project; other prompts keep their own definitions and then show them as differing. A push fails if a name is already taken in the project.
+**Synchronize** (upper right of the block; its badge counts the differing items) opens a dialog with one row per differing item: the project's definition on the left, the prompt's on the right, the differing fields highlighted. Uncheck the items you want to keep as they are and choose a direction:
 
-Both open a dialog with one row per differing item: the project's definition on the left, the prompt's on the right, the differing fields highlighted. Uncheck the items you want to keep as they are. After a pull, save to keep the result as a new version.
+- **Pull from the project** replaces the prompt's definitions with the project's. Save afterwards to keep the result as a new version.
+- **Push to the project** replaces the project's names and descriptions with the prompt's. This changes them for every member of the project; other prompts keep their own definitions and then show them as differing. A push fails if a name is already taken in the project.
 
 ## Few-shot examples
 
