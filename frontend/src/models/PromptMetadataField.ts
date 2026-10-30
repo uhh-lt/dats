@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { MetaType } from "./MetaType";
 /**
- * A metadata field selected in a prompt, as it was when the prompt was saved.
+ * A metadata field selected in a prompt, with the prompt's own key and description.
  */
 export type PromptMetadataField = {
   /**
