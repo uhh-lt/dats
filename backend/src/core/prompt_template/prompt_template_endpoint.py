@@ -10,14 +10,16 @@ from core.prompt_template.prompt_template_dto import (
     PromptExamplesCreate,
     PromptPreview,
     PromptPreviewRequest,
+    PromptSelections,
+    PromptSelectionsSync,
     PromptTaskInfo,
     PromptTemplateContent,
     PromptTemplateCreate,
     PromptTemplateRead,
-    PromptTemplateRefresh,
     PromptTemplateUpdate,
     PromptTemplateVersionCreate,
     PromptTemplateVersionRead,
+    PushedPromptSelections,
 )
 from core.prompt_template.prompt_template_enum import (
     OutputFormat,
@@ -106,25 +108,19 @@ def create_examples(
 
 
 @router.post(
-    "/refresh",
-    response_model=PromptTemplateContent,
-    summary="Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project",
+    "/pull",
+    response_model=PromptSelections,
+    summary="Returns the project's definitions (name, description) of the selected codes, tags and metadata fields",
 )
-def refresh(
+def pull_selections(
     *,
     db: Session = Depends(get_db_session),
-    content: PromptTemplateRefresh,
+    selections: PromptSelectionsSync,
     authz_user: AuthzUser = Depends(),
-) -> PromptTemplateContent:
-    authz_user.assert_in_project(content.project_id)
+) -> PromptSelections:
+    authz_user.assert_in_project(selections.project_id)
 
-    return pts.refresh_content(
-        db=db,
-        project_id=content.project_id,
-        content=PromptTemplateContent.model_validate(
-            content.model_dump(exclude={"project_id"})
-        ),
-    )
+    return pts.pull_selections(db=db, sync=selections)
 
 
 @router.post(
@@ -220,6 +216,32 @@ def get_by_id(
 
 
 # --- update operations
+
+
+@router.patch(
+    "/push",
+    response_model=PushedPromptSelections,
+    summary="Replaces the names and descriptions of the project's codes, tags and metadata fields with the prompt's definitions",
+)
+def push_selections(
+    *,
+    db: Session = Depends(get_db_session),
+    selections: PromptSelectionsSync,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> PushedPromptSelections:
+    authz_user.assert_in_project(selections.project_id)
+
+    result = pts.push_selections(db=db, sync=selections)
+    for code in result.codes:
+        ws.emit_to_project(DATSEvent.CODE_UPDATED, code, project_id=code.project_id)
+    for tag in result.tags:
+        ws.emit_to_project(DATSEvent.TAG_UPDATED, tag, project_id=tag.project_id)
+    for field in result.metadata_fields:
+        ws.emit_to_project(
+            DATSEvent.PROJECT_METADATA_UPDATED, field, project_id=field.project_id
+        )
+    return result
 
 
 @router.patch(

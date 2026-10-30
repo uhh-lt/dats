@@ -4,6 +4,8 @@ from typing import Annotated, ClassVar, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from common.meta_type_enum import MetaType
+from core.code.code_dto import CodeRead
+from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.prompt_template.prompt_template_enum import (
     DocumentUnit,
     OutputFormat,
@@ -12,15 +14,17 @@ from core.prompt_template.prompt_template_enum import (
     PromptLanguage,
     TaskType,
 )
+from core.tag.tag_dto import TagRead
 from repos.db.dto_base import UpdateDTOBase
 
 # --- PROMPT SELECTIONS ---
-# Snapshots of project data, so a version renders the same prompt forever.
-# "Refresh" replaces them with the current state of the project.
+# Copies of project data, so a version renders the same prompt forever. Names and
+# descriptions can be edited in the prompt; "pull" and "push" copy them from or to
+# the project.
 
 
 class PromptCode(BaseModel):
-    """A code selected in a prompt, as it was when the prompt was saved."""
+    """A code selected in a prompt, with the prompt's own name and description."""
 
     code_id: int = Field(description="ID of the code")
     name: str = Field(description="Name of the code", min_length=1)
@@ -28,7 +32,7 @@ class PromptCode(BaseModel):
 
 
 class PromptTag(BaseModel):
-    """A tag selected in a prompt, as it was when the prompt was saved."""
+    """A tag selected in a prompt, with the prompt's own name and description."""
 
     tag_id: int = Field(description="ID of the tag")
     name: str = Field(description="Name of the tag", min_length=1)
@@ -36,7 +40,7 @@ class PromptTag(BaseModel):
 
 
 class PromptMetadataField(BaseModel):
-    """A metadata field selected in a prompt, as it was when the prompt was saved."""
+    """A metadata field selected in a prompt, with the prompt's own key and description."""
 
     project_metadata_id: int = Field(description="ID of the project metadata")
     key: str = Field(description="Key of the metadata field", min_length=1)
@@ -248,10 +252,37 @@ class PromptTemplateRead(PromptTemplateBaseDTO):
     model_config = ConfigDict(from_attributes=True)
 
 
-class PromptTemplateRefresh(PromptTemplateContent):
-    """Content whose selections are replaced with the current state of the project."""
+# --- PULL AND PUSH ---
+
+
+class PromptSelections(BaseModel):
+    """Codes, tags and metadata fields of a prompt, defined as in a prompt or the project."""
+
+    codes: list[PromptCode] = Field(
+        description="The codes of <codes> and <code_names>", default_factory=list
+    )
+    tags: list[PromptTag] = Field(
+        description="The tags of <tags>", default_factory=list
+    )
+    metadata_fields: list[PromptMetadataField] = Field(
+        description="The metadata fields of <metadata_fields>", default_factory=list
+    )
+
+
+class PromptSelectionsSync(PromptSelections):
+    """Selections of a prompt to pull from or push to the project."""
 
     project_id: int = Field(description="Project the selections belong to")
+
+
+class PushedPromptSelections(BaseModel):
+    """The project's codes, tags and metadata fields after a push."""
+
+    codes: list[CodeRead] = Field(description="The updated codes")
+    tags: list[TagRead] = Field(description="The updated tags")
+    metadata_fields: list[ProjectMetadataRead] = Field(
+        description="The updated metadata fields"
+    )
 
 
 # --- RENDERING ---

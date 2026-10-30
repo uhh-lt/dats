@@ -37,3 +37,14 @@ class InvalidPromptPreviewError(Exception):
 
     def __init__(self, cause: str) -> None:
         super().__init__(f"Cannot preview the prompt: {cause}")
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class PromptSelectionNameConflictError(Exception):
+    """Raised when a push would give two codes, tags or metadata fields of a project the same name."""
+
+    def __init__(self, kind: str, name: str) -> None:
+        super().__init__(
+            f"Cannot push: the {kind} name '{name}' is already taken in the project. "
+            f"Rename the {kind} in the prompt first."
+        )

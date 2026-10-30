@@ -5,6 +5,7 @@ from pydantic import TypeAdapter
 from common.meta_type_enum import MetaType
 from core.prompt_template.prompt_template_defaults import DEFAULT_PROMPTS
 from core.prompt_template.prompt_template_dto import (
+    PromptCode,
     PromptMetadataField,
     PromptSettings,
     PromptTag,
@@ -29,6 +30,7 @@ from core.user.user_crud import SYSTEM_USER_ID
 from core.user.user_orm import UserORM
 
 from .conftest import (
+    CLAIM_DESCRIPTION,
     SPAN_V1_PROMPT,
     SPAN_V2_PROMPT,
     PromptTemplateProject,
@@ -706,6 +708,36 @@ def test_create_version_appends_the_next_version_and_keeps_older_ones(
     ]
     assert updated.versions[2].codes == new_version.codes
     assert updated.versions[2].user_id == test_user.id
+
+
+def test_create_version_stores_local_definitions_without_changing_the_project(
+    client: TestClient,
+    prompt_template_project: PromptTemplateProject,
+) -> None:
+    """A code edited in the prompt is saved with the version only; the project's
+    code Claim keeps its name and description."""
+    project = prompt_template_project
+    template = project["span_template"]
+    claim = project["claim_code"]
+    local_claim = PromptCode(
+        code_id=claim.id, name="Assertion", description="Something claimed as true."
+    )
+    response = client.put(
+        f"{PROMPT_TEMPLATE_URL}/{template.id}/version",
+        json=PromptTemplateVersionCreate(
+            prompt=SPAN_V1_PROMPT, codes=[local_claim]
+        ).model_dump(mode="json"),
+    )
+    assert response.status_code == 200, response.text
+    updated = PromptTemplateRead.model_validate(response.json())
+    assert updated.versions[-1].codes == [local_claim]
+
+    response = client.get(f"/code/{claim.id}")
+    assert response.status_code == 200, response.text
+    assert (response.json()["name"], response.json()["description"]) == (
+        "Claim",
+        CLAIM_DESCRIPTION,
+    )
 
 
 def test_create_version_validates_the_prompt_for_the_template_task(
