@@ -13,12 +13,18 @@ class ProjectMetadataExportSchema(BaseModel):
         description="Whether the metadata is read-only", default=False
     )
 
-    @field_validator("key", "metatype", "doctype", "description")
+    @field_validator("key", "metatype", "doctype")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":
             raise ValueError(f"{info.field_name} cannot be empty")
         return v
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def validate_description(cls, v: str | None) -> str:
+        # An empty description is exported as an empty cell, which is read as None
+        return v or ""
 
 
 class ProjectMetadataExportCollection(BaseModel):
