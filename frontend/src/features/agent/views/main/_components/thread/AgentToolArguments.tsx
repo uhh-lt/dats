@@ -1,5 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { memo } from "react";
+import { entityTypeOfKey } from "../../_utils/datsLinkUtils";
+import { AgentEntityChip } from "./AgentEntityChip";
 
 interface AgentToolArgumentsProps {
   argsText: string;
@@ -18,7 +20,17 @@ const parseArguments = (argsText: string): Record<string, unknown> | undefined =
 
 const formatValue = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value));
 
-/** The arguments of a tool call as "name: value" lines (the raw text while they stream). */
+function ArgumentValue({ name, value }: { name: string; value: unknown }) {
+  const type = entityTypeOfKey(name);
+  if (type !== undefined && typeof value === "number") return <AgentEntityChip type={type} id={value} />;
+  return (
+    <Typography variant="body2" fontFamily="monospace">
+      {formatValue(value)}
+    </Typography>
+  );
+}
+
+/** The arguments of a tool call as "name: value" lines, ids as their entity (the raw text while they stream). */
 export const AgentToolArguments = memo(({ argsText }: AgentToolArgumentsProps) => {
   const args = parseArguments(argsText);
   if (args === undefined) {
@@ -43,9 +55,7 @@ export const AgentToolArguments = memo(({ argsText }: AgentToolArgumentsProps) =
             {name}:
           </Typography>
           <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
-            <Typography variant="body2" fontFamily="monospace">
-              {formatValue(value)}
-            </Typography>
+            <ArgumentValue name={name} value={value} />
           </Box>
         </Stack>
       ))}

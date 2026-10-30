@@ -5,7 +5,10 @@ import CheckIcon from "@mui/icons-material/Check";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { Stack, styled, Typography } from "@mui/material";
 import { memo, useState } from "react";
+import { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { DATS_LINK_SCHEME, parseDatsLink } from "../../_utils/datsLinkUtils";
+import { AgentEntityChip } from "./AgentEntityChip";
 import { AgentIconButton } from "./AgentIconButton";
 
 function CodeHeader({ language, code }: CodeHeaderProps) {
@@ -38,8 +41,22 @@ function CodeHeader({ language, code }: CodeHeaderProps) {
 
 const markdownComponents = memoizeMarkdownComponents({
   CodeHeader,
-  a: (props) => <a target="_blank" rel="noopener noreferrer" {...props} />,
+  // a DATS entity ("dats:code/5") renders as the entity, any other link opens in a new tab
+  a: ({ href, children, ...props }) => {
+    const entity = parseDatsLink(href);
+    if (entity) return <AgentEntityChip type={entity.type} id={entity.id} />;
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+        {children}
+      </a>
+    );
+  },
+  // entity renderers are block elements, which a <p> may not contain
+  p: (props) => <div className="aui-md-p" {...props} />,
 });
+
+// react-markdown drops links with unknown schemes; DATS entity links are safe
+const urlTransform = (url: string) => (url.startsWith(DATS_LINK_SCHEME) ? url : defaultUrlTransform(url));
 
 const MarkdownRoot = styled(MarkdownTextPrimitive)(({ theme }) => ({
   ...theme.typography.body1,
@@ -47,7 +64,7 @@ const MarkdownRoot = styled(MarkdownTextPrimitive)(({ theme }) => ({
   overflowWrap: "anywhere",
   "& > :first-of-type": { marginTop: 0 },
   "& > :last-of-type": { marginBottom: 0 },
-  "& p": { margin: theme.spacing(1, 0) },
+  "& .aui-md-p": { margin: theme.spacing(1, 0) },
   "& ul, & ol": { margin: theme.spacing(1, 0), paddingLeft: theme.spacing(3) },
   "& li": { margin: theme.spacing(0.25, 0) },
   "& h1, & h2, & h3, & h4": { margin: theme.spacing(2, 0, 1), lineHeight: 1.3 },
@@ -87,5 +104,13 @@ const MarkdownRoot = styled(MarkdownTextPrimitive)(({ theme }) => ({
  * a header with a copy button.
  */
 export const AgentMarkdownText = memo(() => {
-  return <MarkdownRoot className="aui-md" remarkPlugins={[remarkGfm]} components={markdownComponents} defer />;
+  return (
+    <MarkdownRoot
+      className="aui-md"
+      remarkPlugins={[remarkGfm]}
+      components={markdownComponents}
+      urlTransform={urlTransform}
+      defer
+    />
+  );
 });
