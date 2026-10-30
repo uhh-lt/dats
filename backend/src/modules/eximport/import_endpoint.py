@@ -65,6 +65,7 @@ import_job_file_formats: dict[ImportJobType, FileFormat] = {
     ImportJobType.TIMELINE_ANALYSES: CSV_FILE_FORMAT,
     ImportJobType.COTA: CSV_FILE_FORMAT,
     ImportJobType.MEMOS: CSV_FILE_FORMAT,
+    ImportJobType.PROMPT_TEMPLATES: CSV_FILE_FORMAT,
 }
 
 

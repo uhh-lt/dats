@@ -4,6 +4,7 @@ import { exportQueries } from "@core/export-buttons/api/exportQueries";
 import { folderQueries } from "@core/folder/api/folderQueries";
 import { memoQueries } from "@core/memo/api/memoQueries";
 import { projectMetadataQueries } from "@core/project-metadata/api/projectMetadataQueries";
+import { promptTemplateQueries } from "@core/prompt-template/api/promptTemplateQueries";
 import { sentenceAnnotationQueries } from "@core/sentence-annotation/api/sentenceAnnotationQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
 import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQueries";
@@ -145,6 +146,9 @@ function handleImportJobFinished(job: ImportJobRead) {
     case ImportJobType.MEMOS:
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
       break;
+    case ImportJobType.PROMPT_TEMPLATES:
+      queryClient.invalidateQueries({ queryKey: promptTemplateQueries.byProject(projectId).queryKey });
+      break;
     case ImportJobType.PROJECT:
       queryClient.invalidateQueries({ queryKey: tagQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
@@ -155,6 +159,7 @@ function handleImportJobFinished(job: ImportJobRead) {
       queryClient.invalidateQueries({ queryKey: cotaQueries.byProject(projectId).queryKey });
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchOfProjectScope(projectId) });
       queryClient.invalidateQueries({ queryKey: memoQueries.all() });
+      queryClient.invalidateQueries({ queryKey: promptTemplateQueries.byProject(projectId).queryKey });
       break;
     case ImportJobType.BBOX_ANNOTATIONS:
     case ImportJobType.SPAN_ANNOTATIONS:
