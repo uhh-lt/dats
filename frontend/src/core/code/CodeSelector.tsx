@@ -1,3 +1,5 @@
+import { OneRowChips } from "@components/OneRowChips";
+import { oneRowChipsAutocompleteSx } from "@components/oneRowChipsSx";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { CodeRead } from "@models/CodeRead";
 import {
@@ -46,8 +48,8 @@ interface MultipleCodeSelectorProps extends CodeSelectorBaseProps {
   onChange: (codeIds: number[]) => void;
   /** Shows "Select all" and "Clear" buttons below the field. */
   showSelectAll?: boolean;
-  /** Shows no chips in the field, e.g. because the selected codes are listed elsewhere; the menu still checks them. */
-  hideChips?: boolean;
+  /** Keeps the field in one row: as many chips as fit its width, then "+N more" (instead of three chips). */
+  oneRow?: boolean;
 }
 
 export type CodeSelectorProps = SingleCodeSelectorProps | MultipleCodeSelectorProps;
@@ -165,9 +167,10 @@ const MultipleCodeSelector = memo(
     value,
     onChange,
     showSelectAll,
-    hideChips,
+    oneRow,
     disabled,
     fullWidth,
+    sx,
     ...props
   }: MultipleCodeSelectorProps) => {
     const { options, optionById, isLoading } = useCodeOptions(selectableCodeIds);
@@ -193,31 +196,27 @@ const MultipleCodeSelector = memo(
         filterOptions={filterCodeOptions}
         getOptionLabel={getOptionLabel}
         isOptionEqualToValue={isOptionEqualToValue}
-        limitTags={MAX_VISIBLE_CODES}
+        sx={oneRow && selected.length > 0 ? [oneRowChipsAutocompleteSx, ...(Array.isArray(sx) ? sx : [sx])] : sx}
+        limitTags={oneRow ? -1 : MAX_VISIBLE_CODES}
         getLimitTagsText={(more) => `+${more} more`}
         renderOption={(optionProps, option, state) => renderCodeOption(optionProps, option, state, true)}
-        renderTags={(tags, getTagProps) =>
-          hideChips
-            ? null
-            : tags.map((option, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
-                return (
-                  <Chip
-                    key={key}
-                    size="small"
-                    variant="outlined"
-                    label={<CodeRenderer code={option.data} />}
-                    {...tagProps}
-                  />
-                );
-              })
-        }
+        renderTags={(tags, getTagProps) => {
+          const chips = tags.map((option, index) => {
+            const { key, ...tagProps } = getTagProps({ index });
+            return (
+              <Chip
+                key={key}
+                size="small"
+                variant="outlined"
+                label={<CodeRenderer code={option.data} />}
+                {...tagProps}
+              />
+            );
+          });
+          return oneRow ? <OneRowChips>{chips}</OneRowChips> : chips;
+        }}
         renderInput={(params) => (
-          <TextField
-            {...params}
-            label={title}
-            placeholder={hideChips || selected.length === 0 ? placeholder : undefined}
-          />
+          <TextField {...params} label={title} placeholder={selected.length === 0 ? placeholder : undefined} />
         )}
       />
     );

@@ -218,8 +218,7 @@ export function PromptTemplateBlocksSidebar({ editor, projectId }: PromptTemplat
                 title="Codes"
                 size="small"
                 fullWidth
-                hideChips
-                placeholder="Add or remove codes"
+                oneRow
                 selectableCodeIds={editor.codes.map((code) => code.id)}
                 value={draft.codes.map((code) => code.code_id)}
                 onChange={editor.onChangeCodes}
