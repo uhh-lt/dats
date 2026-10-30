@@ -2,6 +2,8 @@
 // GENERATED FILE — do not edit. Regenerate with `just update-api`.
 // Derived from the backend's DATS sync events (OpenAPI `webhooks`).
 
+import type { AgentSessionDeletedEvent } from "./AgentSessionDeletedEvent";
+import type { AgentSessionUpdatedEvent } from "./AgentSessionUpdatedEvent";
 import type { ApiKeyCreatedEvent } from "./ApiKeyCreatedEvent";
 import type { ApiKeyDeletedEvent } from "./ApiKeyDeletedEvent";
 import type { AspectCreatedEvent } from "./AspectCreatedEvent";
@@ -80,6 +82,8 @@ import type { WhiteboardUpdatedEvent } from "./WhiteboardUpdatedEvent";
 
 /** Payload type for each DATS event type. */
 export interface DATSEventMap {
+  AGENT_SESSION_DELETED: AgentSessionDeletedEvent["payload"];
+  AGENT_SESSION_UPDATED: AgentSessionUpdatedEvent["payload"];
   API_KEY_CREATED: ApiKeyCreatedEvent["payload"];
   API_KEY_DELETED: ApiKeyDeletedEvent["payload"];
   ASPECT_CREATED: AspectCreatedEvent["payload"];
@@ -159,6 +163,8 @@ export interface DATSEventMap {
 
 /** Discriminated union of all DATS events, keyed by `type`. */
 export type DATSEvent =
+  | (Omit<AgentSessionDeletedEvent, "type"> & { type: "AGENT_SESSION_DELETED" })
+  | (Omit<AgentSessionUpdatedEvent, "type"> & { type: "AGENT_SESSION_UPDATED" })
   | (Omit<ApiKeyCreatedEvent, "type"> & { type: "API_KEY_CREATED" })
   | (Omit<ApiKeyDeletedEvent, "type"> & { type: "API_KEY_DELETED" })
   | (Omit<AspectCreatedEvent, "type"> & { type: "ASPECT_CREATED" })

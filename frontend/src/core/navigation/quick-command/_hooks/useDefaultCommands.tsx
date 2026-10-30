@@ -128,6 +128,17 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["log", "notes", "journal", "memo", "logbook"],
       },
       {
+        id: "agent",
+        title: "Open Agent",
+        description: "Chat with an AI agent that works with your project data",
+        category: "Navigation",
+        icon: getIconComponent(Icon.AGENT),
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/agent", params: { projectId } });
+        },
+        keywords: ["agent", "ai", "assistant", "chat", "llm"],
+      },
+      {
         id: "whiteboard",
         title: "Open Whiteboards",
         description: "Go to project whiteboards",

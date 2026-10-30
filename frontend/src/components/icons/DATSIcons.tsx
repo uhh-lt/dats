@@ -53,6 +53,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShortTextIcon from "@mui/icons-material/ShortText";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import SquareIcon from "@mui/icons-material/Square";
 import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import StarIcon from "@mui/icons-material/Star";
@@ -164,6 +165,9 @@ export enum Icon {
 
   // SDOC HEALTH STATUS
   CLASSIFIER = "classifier",
+
+  // AGENT
+  AGENT = "agent",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -303,6 +307,7 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // CLASSIFIER
   [Icon.CLASSIFIER]: (iconProps) => <SmartToyIcon {...iconProps} />,
+  [Icon.AGENT]: (iconProps) => <SupportAgentIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,

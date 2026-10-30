@@ -22,6 +22,7 @@ import { Route as AuthProjectProjectIdSearchRouteImport } from './routes/_auth/p
 import { Route as AuthProjectProjectIdMemoWorkspaceRouteImport } from './routes/_auth/project/$projectId/memo-workspace'
 import { Route as AuthProjectProjectIdImagesearchRouteImport } from './routes/_auth/project/$projectId/imagesearch'
 import { Route as AuthProjectProjectIdClassifierRouteImport } from './routes/_auth/project/$projectId/classifier'
+import { Route as AuthProjectProjectIdAgentRouteImport } from './routes/_auth/project/$projectId/agent'
 import { Route as AuthProjectProjectIdWhiteboardIndexRouteImport } from './routes/_auth/project/$projectId/whiteboard/index'
 import { Route as AuthProjectProjectIdPerspectivesIndexRouteImport } from './routes/_auth/project/$projectId/perspectives/index'
 import { Route as AuthProjectProjectIdAnnotationIndexRouteImport } from './routes/_auth/project/$projectId/annotation/index'
@@ -114,6 +115,12 @@ const AuthProjectProjectIdClassifierRoute =
   AuthProjectProjectIdClassifierRouteImport.update({
     id: '/classifier',
     path: '/classifier',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
+const AuthProjectProjectIdAgentRoute =
+  AuthProjectProjectIdAgentRouteImport.update({
+    id: '/agent',
+    path: '/agent',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
 const AuthProjectProjectIdWhiteboardIndexRoute =
@@ -268,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
   '/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
+  '/project/$projectId/agent': typeof AuthProjectProjectIdAgentRoute
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
   '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
@@ -305,6 +313,7 @@ export interface FileRoutesByTo {
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
   '/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
+  '/project/$projectId/agent': typeof AuthProjectProjectIdAgentRoute
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
   '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/_public/register': typeof PublicRegisterRoute
   '/_public/': typeof PublicIndexRoute
   '/_auth/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
+  '/_auth/project/$projectId/agent': typeof AuthProjectProjectIdAgentRoute
   '/_auth/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/_auth/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
   '/_auth/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/project/$projectId'
+    | '/project/$projectId/agent'
     | '/project/$projectId/classifier'
     | '/project/$projectId/imagesearch'
     | '/project/$projectId/memo-workspace'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/project/$projectId'
+    | '/project/$projectId/agent'
     | '/project/$projectId/classifier'
     | '/project/$projectId/imagesearch'
     | '/project/$projectId/memo-workspace'
@@ -458,6 +470,7 @@ export interface FileRouteTypes {
     | '/_public/register'
     | '/_public/'
     | '/_auth/project/$projectId'
+    | '/_auth/project/$projectId/agent'
     | '/_auth/project/$projectId/classifier'
     | '/_auth/project/$projectId/imagesearch'
     | '/_auth/project/$projectId/memo-workspace'
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/classifier'
       fullPath: '/project/$projectId/classifier'
       preLoaderRoute: typeof AuthProjectProjectIdClassifierRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
+    '/_auth/project/$projectId/agent': {
+      id: '/_auth/project/$projectId/agent'
+      path: '/agent'
+      fullPath: '/project/$projectId/agent'
+      preLoaderRoute: typeof AuthProjectProjectIdAgentRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
     '/_auth/project/$projectId/whiteboard/': {
@@ -777,6 +797,7 @@ const AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren =
   )
 
 interface AuthProjectProjectIdRouteRouteChildren {
+  AuthProjectProjectIdAgentRoute: typeof AuthProjectProjectIdAgentRoute
   AuthProjectProjectIdClassifierRoute: typeof AuthProjectProjectIdClassifierRoute
   AuthProjectProjectIdImagesearchRoute: typeof AuthProjectProjectIdImagesearchRoute
   AuthProjectProjectIdMemoWorkspaceRoute: typeof AuthProjectProjectIdMemoWorkspaceRoute
@@ -808,6 +829,7 @@ interface AuthProjectProjectIdRouteRouteChildren {
 
 const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChildren =
   {
+    AuthProjectProjectIdAgentRoute: AuthProjectProjectIdAgentRoute,
     AuthProjectProjectIdClassifierRoute: AuthProjectProjectIdClassifierRoute,
     AuthProjectProjectIdImagesearchRoute: AuthProjectProjectIdImagesearchRoute,
     AuthProjectProjectIdMemoWorkspaceRoute:

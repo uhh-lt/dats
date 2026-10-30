@@ -13,6 +13,7 @@ import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQ
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
+import { agentQueries } from "@features/agent/api/agentQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
 import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
@@ -288,6 +289,15 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
         old ? old.filter((user) => user.id !== event.payload.id) : old,
       );
+      break;
+
+    // ── Agent sessions ──────────────────────────────────────────────────────
+    case "AGENT_SESSION_UPDATED":
+      replaceListItem(agentQueries.sessions().queryKey, event.payload);
+      break;
+    case "AGENT_SESSION_DELETED":
+      removeListItem(agentQueries.sessions().queryKey, event.payload.id);
+      queryClient.removeQueries({ queryKey: agentQueries.history(event.payload.session_id).queryKey });
       break;
 
     // ── API keys ────────────────────────────────────────────────────────────
