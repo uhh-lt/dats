@@ -10,6 +10,7 @@ import {
 import { TagHooks } from "@core/tag";
 import { CodeRead } from "@models/CodeRead";
 import { DocType } from "@models/DocType";
+import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { PromptCode } from "@models/PromptCode";
 import { PromptMetadataField } from "@models/PromptMetadataField";
@@ -67,13 +68,15 @@ export interface SelectionDefinition {
   name: string;
   description: string;
   // the metatype of a metadata field; it is not edited in the prompt
-  type?: string;
+  type?: MetaType;
 }
 
 /** A selection of the draft with the project's current definition; project is undefined if it was deleted. */
 export interface SelectionItem {
   local: SelectionDefinition;
   project: SelectionDefinition | undefined;
+  // the color of the project's code or tag
+  color?: string;
 }
 
 export const isDifferent = ({ local, project }: SelectionItem): boolean =>
@@ -240,11 +243,17 @@ export function usePromptTemplateEditor(
     const projectFields = new Map(
       metadataFields.map((field) => [field.id, metadataFieldDefinition(toPromptMetadataField(field))]),
     );
-    const items = (locals: SelectionDefinition[], project: Map<number, SelectionDefinition>) =>
-      locals.map((local) => ({ local, project: project.get(local.id) }));
+    const codeColors = new Map((codes.data ?? []).map((code) => [code.id, code.color]));
+    const tagColors = new Map((tags.data ?? []).map((tag) => [tag.id, tag.color]));
+    const items = (
+      locals: SelectionDefinition[],
+      project: Map<number, SelectionDefinition>,
+      colors?: Map<number, string>,
+    ): SelectionItem[] =>
+      locals.map((local) => ({ local, project: project.get(local.id), color: colors?.get(local.id) }));
     return {
-      codes: items((draft?.codes ?? []).map(codeDefinition), projectCodes),
-      tags: items((draft?.tags ?? []).map(tagDefinition), projectTags),
+      codes: items((draft?.codes ?? []).map(codeDefinition), projectCodes, codeColors),
+      tags: items((draft?.tags ?? []).map(tagDefinition), projectTags, tagColors),
       metadataFields: items((draft?.metadata_fields ?? []).map(metadataFieldDefinition), projectFields),
     };
   }, [draft?.codes, draft?.tags, draft?.metadata_fields, codes.data, tags.data, metadataFields]);

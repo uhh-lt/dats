@@ -5,6 +5,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import SyncIcon from "@mui/icons-material/Sync";
 import {
   Alert,
   alpha,
@@ -24,34 +25,51 @@ import {
   TableHead,
   TableRow,
   Theme,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
 import { closeOnEscape } from "@utils/dialogUtils";
-import { useCallback, useMemo, useState } from "react";
+import { MouseEvent, ReactNode, useCallback, useMemo, useState } from "react";
 import { isDifferent, SelectionDefinition, SelectionItem } from "../_hooks/usePromptTemplateEditor";
 
-export type SyncMode = "pull" | "push";
+type SyncDirection = "pull" | "push";
 
 interface SelectionSyncDialogProps {
-  mode: SyncMode;
   // what a selection is, e.g. "code"
   noun: string;
   // the selections of the prompt with the project's definitions
   items: SelectionItem[];
-  onApply: (ids: number[], onSuccess: () => void) => void;
-  isPending: boolean;
+  // the icon of a selection, e.g. the colored square of a code
+  renderIcon: (item: SelectionItem) => ReactNode;
+  onPull: (ids: number[], onSuccess: () => void) => void;
+  isPulling: boolean;
+  onPush: (ids: number[], onSuccess: () => void) => void;
+  isPushing: boolean;
 }
 
 /**
- * Pull: replaces the prompt's definitions of the checked selections with the project's.
- * Push: replaces the project's definitions with the prompt's, for every project member.
- * It lists every selection whose definitions differ; the chosen side simply wins.
+ * Synchronizes the prompt's definitions of codes, tags or metadata fields with the project. It lists every selection
+ * whose definitions differ; the checked ones are pulled (the prompt gets the project's definitions) or pushed (the
+ * project gets the prompt's, for every member). The chosen side simply wins.
  */
-export function SelectionSyncDialog({ mode, noun, items, onApply, isPending }: SelectionSyncDialogProps) {
-  // all differing selections are checked when the dialog opens
+export function SelectionSyncDialog({
+  noun,
+  items,
+  renderIcon,
+  onPull,
+  isPulling,
+  onPush,
+  isPushing,
+}: SelectionSyncDialogProps) {
+  // all differing selections are checked and the direction is pull when the dialog opens
+  const [direction, setDirection] = useState<SyncDirection>("pull");
   const [uncheckedIds, setUncheckedIds] = useState<Set<number>>(new Set());
-  const handleOpenDialog = useCallback(() => setUncheckedIds(new Set()), []);
+  const handleOpenDialog = useCallback(() => {
+    setDirection("pull");
+    setUncheckedIds(new Set());
+  }, []);
   const { isOpen, open: handleOpen, close: handleClose } = useDialog({ onOpen: handleOpenDialog });
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
@@ -71,9 +89,15 @@ export function SelectionSyncDialog({ mode, noun, items, onApply, isPending }: S
       setUncheckedIds((current) => (current.size === 0 ? new Set(differing.map((item) => item.local.id)) : new Set())),
     [differing],
   );
-  const handleApply = useCallback(() => onApply(checkedIds, handleClose), [onApply, checkedIds, handleClose]);
+  const handleChangeDirection = useCallback((_: MouseEvent<HTMLElement>, value: SyncDirection | null) => {
+    if (value) setDirection(value);
+  }, []);
+  const handleApply = useCallback(
+    () => (direction === "pull" ? onPull : onPush)(checkedIds, handleClose),
+    [direction, onPull, onPush, checkedIds, handleClose],
+  );
 
-  const isPull = mode === "pull";
+  const isPull = direction === "pull";
   const DirectionIcon = isPull ? ArrowForwardIcon : ArrowBackIcon;
   return (
     <>
@@ -81,28 +105,34 @@ export function SelectionSyncDialog({ mode, noun, items, onApply, isPending }: S
         title={
           differing.length === 0
             ? `The prompt defines all ${noun}s as the project does`
-            : isPull
-              ? `Pull: replace the prompt's definitions of ${noun}s with the project's`
-              : `Push: replace the project's definitions of ${noun}s with the prompt's`
+            : `Synchronize the ${noun}s with the project by pulling or pushing their definitions`
         }
       >
         <span>
           <IconButton size="small" onClick={handleOpen} disabled={differing.length === 0}>
             <Badge badgeContent={differing.length} color="warning" max={99}>
-              {isPull ? <ArrowDownwardIcon fontSize="small" /> : <ArrowUpwardIcon fontSize="small" />}
+              <SyncIcon fontSize="small" />
             </Badge>
           </IconButton>
         </span>
       </Tooltip>
       <Dialog open={isOpen} onClose={closeOnEscape(handleClose)} maxWidth="md" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
-          title={isPull ? `Pull ${noun}s from the project` : `Push ${noun}s to the project`}
+          title={`Synchronize ${noun}s with the project`}
           onClose={handleClose}
           isMaximized={isMaximized}
           onToggleMaximize={toggleMaximize}
         />
         <DialogContent>
           <Stack spacing={2}>
+            <ToggleButtonGroup exclusive fullWidth size="small" value={direction} onChange={handleChangeDirection}>
+              <ToggleButton value="pull" sx={{ gap: 1 }}>
+                <ArrowDownwardIcon fontSize="small" /> Pull from the project
+              </ToggleButton>
+              <ToggleButton value="push" sx={{ gap: 1 }}>
+                <ArrowUpwardIcon fontSize="small" /> Push to the project
+              </ToggleButton>
+            </ToggleButtonGroup>
             {isPull ? (
               <Alert severity="info">
                 The prompt gets the project's definitions of the checked {noun}s. Save the prompt to keep them.
@@ -141,13 +171,17 @@ export function SelectionSyncDialog({ mode, noun, items, onApply, isPending }: S
                       <Checkbox size="small" checked={!uncheckedIds.has(item.local.id)} />
                     </TableCell>
                     <TableCell sx={{ verticalAlign: "top" }}>
-                      {item.project && <DefinitionCell definition={item.project} other={item.local} />}
+                      {item.project && (
+                        <DefinitionCell definition={item.project} other={item.local} icon={renderIcon(item)} />
+                      )}
                     </TableCell>
                     <TableCell padding="none">
-                      <DirectionIcon fontSize="small" color="action" />
+                      <DirectionIcon fontSize="small" color={isPull ? "success" : "warning"} />
                     </TableCell>
                     <TableCell sx={{ verticalAlign: "top" }}>
-                      {item.project && <DefinitionCell definition={item.local} other={item.project} />}
+                      {item.project && (
+                        <DefinitionCell definition={item.local} other={item.project} icon={renderIcon(item)} />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -162,7 +196,7 @@ export function SelectionSyncDialog({ mode, noun, items, onApply, isPending }: S
             startIcon={isPull ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
             fullWidth
             disabled={checkedIds.length === 0}
-            loading={isPending}
+            loading={isPull ? isPulling : isPushing}
             loadingPosition="start"
             onClick={handleApply}
           >
@@ -186,16 +220,20 @@ interface DefinitionCellProps {
   definition: SelectionDefinition;
   // the definition of the other side; the fields that differ from it are highlighted
   other: SelectionDefinition;
+  icon: ReactNode;
 }
 
-function DefinitionCell({ definition, other }: DefinitionCellProps) {
+function DefinitionCell({ definition, other, icon }: DefinitionCellProps) {
   return (
     <Stack spacing={0.5}>
-      <Box sx={highlightSx(definition.name !== other.name)}>
-        <Typography variant="body2" fontWeight="medium">
-          {definition.name}
-        </Typography>
-      </Box>
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        {icon}
+        <Box sx={highlightSx(definition.name !== other.name)}>
+          <Typography variant="body2" fontWeight="medium">
+            {definition.name}
+          </Typography>
+        </Box>
+      </Stack>
       {definition.type && (
         <Box sx={highlightSx(definition.type !== other.type)}>
           <Typography variant="caption" color="text.secondary">

@@ -46,6 +46,8 @@ interface MultipleCodeSelectorProps extends CodeSelectorBaseProps {
   onChange: (codeIds: number[]) => void;
   /** Shows "Select all" and "Clear" buttons below the field. */
   showSelectAll?: boolean;
+  /** Shows no chips in the field, e.g. because the selected codes are listed elsewhere; the menu still checks them. */
+  hideChips?: boolean;
 }
 
 export type CodeSelectorProps = SingleCodeSelectorProps | MultipleCodeSelectorProps;
@@ -163,6 +165,7 @@ const MultipleCodeSelector = memo(
     value,
     onChange,
     showSelectAll,
+    hideChips,
     disabled,
     fullWidth,
     ...props
@@ -194,21 +197,27 @@ const MultipleCodeSelector = memo(
         getLimitTagsText={(more) => `+${more} more`}
         renderOption={(optionProps, option, state) => renderCodeOption(optionProps, option, state, true)}
         renderTags={(tags, getTagProps) =>
-          tags.map((option, index) => {
-            const { key, ...tagProps } = getTagProps({ index });
-            return (
-              <Chip
-                key={key}
-                size="small"
-                variant="outlined"
-                label={<CodeRenderer code={option.data} />}
-                {...tagProps}
-              />
-            );
-          })
+          hideChips
+            ? null
+            : tags.map((option, index) => {
+                const { key, ...tagProps } = getTagProps({ index });
+                return (
+                  <Chip
+                    key={key}
+                    size="small"
+                    variant="outlined"
+                    label={<CodeRenderer code={option.data} />}
+                    {...tagProps}
+                  />
+                );
+              })
         }
         renderInput={(params) => (
-          <TextField {...params} label={title} placeholder={selected.length === 0 ? placeholder : undefined} />
+          <TextField
+            {...params}
+            label={title}
+            placeholder={hideChips || selected.length === 0 ? placeholder : undefined}
+          />
         )}
       />
     );
