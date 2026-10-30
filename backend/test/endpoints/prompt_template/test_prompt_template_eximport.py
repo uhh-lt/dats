@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pandas as pd
+import pytest
 from sqlalchemy.orm import Session
 
 from core.prompt_template.prompt_template_dto import (
@@ -9,13 +12,14 @@ from core.prompt_template.prompt_template_enum import OutputFormat, PromptLangua
 from core.prompt_template.prompt_template_service import PromptTemplateService
 from core.prompt_template.prompt_template_specs import default_prompt_name
 from core.user.user_orm import UserORM
+from modules.eximport.export_enum import ExportJobType
+from modules.eximport.export_job_dto import ExportJobInput
+from modules.eximport.export_service import ExportService
 from modules.eximport.import_csv_utils import read_import_csv
-from modules.eximport.prompt_templates.export_prompt_templates import (
-    export_all_prompt_templates,
-)
-from modules.eximport.prompt_templates.import_prompt_templates import (
-    import_prompt_templates_to_proj,
-)
+from modules.eximport.import_enum import ImportJobType
+from modules.eximport.import_exceptions import ImportPromptTemplatesError
+from modules.eximport.import_job_dto import ImportJobInput
+from modules.eximport.import_service import ImportService
 from modules.eximport.prompt_templates.prompt_template_export_schema import (
     PromptSelectionsForExport,
     SpanPromptExampleForExport,
@@ -36,14 +40,24 @@ DEFAULT_TAGS_TEMPLATE = default_prompt_name(OutputFormat.TAGS, PromptLanguage.EN
 # EXPORT / IMPORT OF PROMPT TEMPLATES (modules/eximport) TESTS
 # ===========================================================================
 # The export and import endpoints run as background jobs, so these tests call the
-# export and import functions of the project export/import directly.
+# handlers of the ALL_PROMPT_TEMPLATES export job and the PROMPT_TEMPLATES import
+# job directly.
 
 
 def _export(db: Session, project_id: int) -> pd.DataFrame:
-    """Export all prompt templates of a project and read the CSV as the import
-    does."""
+    """Run the export job of all prompt templates of a project and read the
+    exported CSV as the import does."""
+    output = ExportService().handle_export_job(
+        db=db,
+        payload=ExportJobInput(
+            project_id=project_id,
+            export_job_type=ExportJobType.ALL_PROMPT_TEMPLATES,
+            specific_export_job_parameters=None,
+        ),
+    )
+    assert output.results_url is not None
     return read_import_csv(
-        export_all_prompt_templates(db=db, fsr=FilesystemRepo(), project_id=project_id)
+        FilesystemRepo().get_dst_path_for_temp_file(Path(output.results_url).name)
     )
 
 
@@ -57,10 +71,21 @@ def _templates(db: Session, project_id: int) -> dict[str, PromptTemplateRead]:
     }
 
 
-def _import(db: Session, df: pd.DataFrame, project_id: int) -> list[int]:
-    changed_ids = import_prompt_templates_to_proj(db=db, df=df, project_id=project_id)
+def _import(db: Session, df: pd.DataFrame, project_id: int, user_id: int) -> None:
+    """Write the data to a CSV file and run the prompt template import job on it."""
+    path = FilesystemRepo().write_df_to_temp_file(
+        df=df, fn=f"project_{project_id}_prompt_template_import"
+    )
+    ImportService().handle_import_job(
+        db=db,
+        payload=ImportJobInput(
+            project_id=project_id,
+            import_job_type=ImportJobType.PROMPT_TEMPLATES,
+            user_id=user_id,
+            file_name=path.name,
+        ),
+    )
     db.commit()
-    return changed_ids
 
 
 # --- A. export ---------------------------------------------------------------------
@@ -119,7 +144,9 @@ def test_import_remaps_selections_and_merges_templates_by_name(
         if name not in CUSTOM_TEMPLATES
     }
 
-    _import(db_session, _export(db_session, source["project"].id), target_id)
+    _import(
+        db_session, _export(db_session, source["project"].id), target_id, test_user.id
+    )
 
     templates = _templates(db_session, target_id)
     assert set(templates) == CUSTOM_TEMPLATES | set(defaults_before)
@@ -158,21 +185,21 @@ def test_import_remaps_selections_and_merges_templates_by_name(
 def test_import_twice_changes_nothing_the_second_time(
     db_session: Session,
     prompt_template_eximport_projects: PromptTemplateEximportProjects,
+    test_user: UserORM,
 ) -> None:
     """Importing the same export again neither duplicates templates nor
     versions."""
     projects = prompt_template_eximport_projects
     target_id = projects["target"].id
     df = _export(db_session, projects["source"]["project"].id)
-    _import(db_session, df, target_id)
+    _import(db_session, df, target_id, test_user.id)
     versions_before = {
         name: [v.id for v in template.versions]
         for name, template in _templates(db_session, target_id).items()
     }
 
-    changed_ids = _import(db_session, df, target_id)
+    _import(db_session, df, target_id, test_user.id)
 
-    assert changed_ids == []
     assert {
         name: [v.id for v in template.versions]
         for name, template in _templates(db_session, target_id).items()
@@ -182,6 +209,7 @@ def test_import_twice_changes_nothing_the_second_time(
 def test_import_into_the_exported_project_changes_nothing(
     db_session: Session,
     prompt_template_eximport_projects: PromptTemplateEximportProjects,
+    test_user: UserORM,
 ) -> None:
     """Importing a project's export into the project itself resolves every
     reference (also of the examples) to the same objects, so every version equals
@@ -192,9 +220,8 @@ def test_import_into_the_exported_project_changes_nothing(
     span_v2 = templates_before["Span tagging"].versions[1]
     assert isinstance(span_v2.examples[0], SpanPromptExample)
 
-    changed_ids = _import(db_session, _export(db_session, project_id), project_id)
+    _import(db_session, _export(db_session, project_id), project_id, test_user.id)
 
-    assert changed_ids == []
     assert _templates(db_session, project_id) == templates_before
 
 
@@ -204,6 +231,7 @@ def test_import_into_the_exported_project_changes_nothing(
 def test_import_of_diverged_template_keeps_both_under_another_name(
     db_session: Session,
     prompt_template_eximport_projects: PromptTemplateEximportProjects,
+    test_user: UserORM,
 ) -> None:
     """A ``Span tagging`` whose version 1 differs from the target's is imported as
     ``Span tagging (imported)`` with both versions; the target's template stays as
@@ -215,8 +243,12 @@ def test_import_of_diverged_template_keeps_both_under_another_name(
     v1_row = (df["template_name"] == "Span tagging") & (df["version"] == 1)
     df.loc[v1_row, "prompt"] = "Changed: " + df.loc[v1_row, "prompt"]
 
-    _import(db_session, df, target_id)
-    second_changed_ids = _import(db_session, df, target_id)
+    _import(db_session, df, target_id, test_user.id)
+    imported_version_ids = [
+        v.id
+        for v in _templates(db_session, target_id)["Span tagging (imported)"].versions
+    ]
+    _import(db_session, df, target_id, test_user.id)
 
     templates = _templates(db_session, target_id)
     assert [v.id for v in templates["Span tagging"].versions] == [
@@ -227,13 +259,14 @@ def test_import_of_diverged_template_keeps_both_under_another_name(
         True,
         False,
     ]
+    assert [v.id for v in imported.versions] == imported_version_ids
     assert "Span tagging (imported 2)" not in templates
-    assert second_changed_ids == []
 
 
 def test_import_replaces_an_untouched_default_template(
     db_session: Session,
     prompt_template_eximport_projects: PromptTemplateEximportProjects,
+    test_user: UserORM,
 ) -> None:
     """A default template that differs from the target's untouched default (e.g.
     exported by an older release with another default prompt) replaces it: the
@@ -246,7 +279,7 @@ def test_import_replaces_an_untouched_default_template(
         "An older default prompt <tags> <output-format:tags> <document:whole>"
     )
 
-    _import(db_session, df, target_id)
+    _import(db_session, df, target_id, test_user.id)
 
     templates = _templates(db_session, target_id)
     default_after = templates[DEFAULT_TAGS_TEMPLATE]
@@ -260,6 +293,7 @@ def test_import_replaces_an_untouched_default_template(
 def test_import_drops_an_author_that_does_not_exist(
     db_session: Session,
     prompt_template_eximport_projects: PromptTemplateEximportProjects,
+    test_user: UserORM,
 ) -> None:
     """A version whose author does not exist (e.g. in another instance) is imported
     without author instead of failing the import."""
@@ -268,7 +302,29 @@ def test_import_drops_an_author_that_does_not_exist(
     df = _export(db_session, projects["source"]["project"].id)
     df.loc[df["template_name"] == "Tag selection", "user_email"] = "unknown@dats.org"
 
-    _import(db_session, df, target_id)
+    _import(db_session, df, target_id, test_user.id)
 
     [version] = _templates(db_session, target_id)["Tag selection"].versions
     assert version.user_id is None
+
+
+# --- D. invalid input ----------------------------------------------------------------
+
+
+def test_import_without_prompt_column_fails_and_changes_nothing(
+    db_session: Session,
+    prompt_template_eximport_projects: PromptTemplateEximportProjects,
+    test_user: UserORM,
+) -> None:
+    """A CSV file without the ``prompt`` column (e.g. a codes export) fails the
+    import with ``ImportPromptTemplatesError`` before any template is changed."""
+    projects = prompt_template_eximport_projects
+    target_id = projects["target"].id
+    templates_before = _templates(db_session, target_id)
+    df = _export(db_session, projects["source"]["project"].id).drop(columns="prompt")
+
+    with pytest.raises(ImportPromptTemplatesError, match="prompt"):
+        _import(db_session, df, target_id, test_user.id)
+
+    db_session.rollback()
+    assert _templates(db_session, target_id) == templates_before
