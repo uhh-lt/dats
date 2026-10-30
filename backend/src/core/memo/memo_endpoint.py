@@ -25,6 +25,7 @@ from core.memo.memo_utils import (
     get_object_memos,
 )
 from repos.db.sql_exceptions import NoSuchElementError
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -193,6 +194,8 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
+    # overwrites many memos at once
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=list[MemoRead],
     summary="Updates Memos in Bulk",
 )

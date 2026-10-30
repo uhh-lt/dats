@@ -28,7 +28,7 @@ from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 
 # The tests authenticate with this header instead of a JWT (see `_install_test_auth`)
-_TEST_USER_HEADER = "x-dats-test-user"
+TEST_USER_HEADER = "x-dats-test-user"
 
 
 # ==============================================================================
@@ -224,7 +224,7 @@ def create_test_app() -> FastAPI:
 # CLIENTS
 # ==============================================================================
 def _install_test_auth(app: FastAPI) -> None:
-    """Authenticate the requests by the email in the `_TEST_USER_HEADER` header
+    """Authenticate the requests by the email in the `TEST_USER_HEADER` header
     instead of a JWT.
 
     The user is resolved through a FRESH transaction per request (exactly like
@@ -238,7 +238,7 @@ def _install_test_auth(app: FastAPI) -> None:
     from repos.db.sql_repo import SQLRepo
 
     def _get_test_user(request: Request) -> Generator[UserORM, None, None]:
-        email = request.headers.get(_TEST_USER_HEADER)
+        email = request.headers.get(TEST_USER_HEADER)
         if email is None:
             raise HTTPException(status_code=401, detail="No test user header")
         with SQLRepo().transaction() as db:
@@ -259,7 +259,7 @@ def create_user_client(
     one process serves one app.
     """
     client = TestClient(
-        app_client.app, headers={_TEST_USER_HEADER: user.email}, **kwargs
+        app_client.app, headers={TEST_USER_HEADER: user.email}, **kwargs
     )
     client.portal = app_client.portal
     return client

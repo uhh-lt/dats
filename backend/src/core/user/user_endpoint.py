@@ -10,7 +10,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
 from core.user.user_orm import UserORM
-from systems.mcp_system.mcp_server import MCP_DESTRUCTIVE_EXTENSION
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 # The routes that change or delete the logged-in user are not MCP tools, so MCP

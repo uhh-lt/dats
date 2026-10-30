@@ -15,12 +15,7 @@ from fastmcp.utilities.lifespan import combine_lifespans
 from fastmcp.utilities.openapi import HTTPRoute
 from mcp_types import ToolAnnotations
 
-# Routes with this tag are MCP tools: MCP clients and the agents can call them.
-MCP_TAG = "mcp"
-# OpenAPI extension for update (PATCH) routes that remove or share data, so MCP
-# clients and the agents ask the user before calling them:
-# `@router.patch(..., openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True})`
-MCP_DESTRUCTIVE_EXTENSION = "x-mcp-destructive"
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION, MCP_TAG
 
 AuthHook = Callable[[httpx2.Request], Awaitable[None]]
 
@@ -47,23 +42,21 @@ def annotate_tool(
     component: OpenAPITool | OpenAPIResource | OpenAPIResourceTemplate,
 ) -> None:
     """Sets the MCP tool annotations from the HTTP method (see the endpoint
-    instructions): GET reads and POST computes, PUT creates, PATCH updates and
-    DELETE removes. Removing (DELETE or PATCH routes marked with
-    MCP_DESTRUCTIVE_EXTENSION) is destructive."""
+    instructions): only GET is read-only (a POST may also start a job or record
+    something). DELETE and the routes marked with MCP_DESTRUCTIVE_EXTENSION
+    (bulk overwrites, sharing) are destructive."""
     if not isinstance(component, OpenAPITool):
         return
-    match route.method:
-        case "GET" | "POST":
-            component.annotations = ToolAnnotations(read_only_hint=True)
-        case "DELETE":
-            component.annotations = ToolAnnotations(
-                read_only_hint=False, destructive_hint=True
-            )
-        case _:
-            destructive = route.extensions.get(MCP_DESTRUCTIVE_EXTENSION) is True
-            component.annotations = ToolAnnotations(
-                read_only_hint=False, destructive_hint=destructive
-            )
+    if route.method == "GET":
+        component.annotations = ToolAnnotations(read_only_hint=True)
+        return
+    destructive = (
+        route.method == "DELETE"
+        or route.extensions.get(MCP_DESTRUCTIVE_EXTENSION) is True
+    )
+    component.annotations = ToolAnnotations(
+        read_only_hint=False, destructive_hint=destructive
+    )
 
 
 def requires_approval(annotations: dict[str, Any] | None) -> bool:
@@ -73,7 +66,7 @@ def requires_approval(annotations: dict[str, Any] | None) -> bool:
     annotations = annotations or {}
     if annotations.get("readOnlyHint", False):
         return False
-    return annotations.get("destructiveHint", True)
+    return annotations.get("destructiveHint", True) is not False
 
 
 def create_mcp_server(

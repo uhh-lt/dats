@@ -59,11 +59,14 @@ class CRUDAgentSession(
             .first()
         )
 
-    def read_by_user(self, db: Session, *, user_id: int) -> list[AgentSessionORM]:
+    def read_by_project_and_user(
+        self, db: Session, *, project_id: int, user_id: int
+    ) -> list[AgentSessionORM]:
         """
-        Read all sessions of a user, the most recently updated first.
+        Read all sessions of a user in a project, the most recently updated first.
 
         Args:
+            project_id: The project of the sessions.
             user_id: The owner of the sessions.
 
         Returns:
@@ -71,7 +74,7 @@ class CRUDAgentSession(
         """
         return (
             db.query(self.model)
-            .filter(self.model.user_id == user_id)
+            .filter(self.model.project_id == project_id, self.model.user_id == user_id)
             .order_by(self.model.updated.desc(), self.model.id.desc())
             .all()
         )

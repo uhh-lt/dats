@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from core.metadata.project_metadata_orm import ProjectMetadataORM
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
+    from modules.agent.agent_session_orm import AgentSessionORM
     from modules.classifier.classifier_orm import ClassifierORM
     from modules.perspectives.aspect_orm import AspectORM
     from modules.search_view.search_view_orm import SearchViewORM
@@ -112,6 +113,13 @@ class ProjectORM(ORMBase):
 
     whiteboards: Mapped[list["WhiteboardORM"]] = relationship(
         "WhiteboardORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    agent_sessions: Mapped[list["AgentSessionORM"]] = relationship(
+        "AgentSessionORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

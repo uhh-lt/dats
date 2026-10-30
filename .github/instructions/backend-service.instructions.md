@@ -103,6 +103,7 @@ class ExampleService(metaclass=SingletonMeta):
 
 - **Systems singletons** (`JobService`, `WebsocketService`): hold per-process mutable state, so they set it in `__init__` and have explicit lifecycle methods (`initialize()`, `startup()`). Only use this for infrastructure in `systems/`.
 - **Per-job service** (`PerspectivesService(job)`): a plain class created by the job handler for one job run when state (the `Job`, a device) is bound to a single execution.
+- **Streaming service** (`AgentService`): an agent run streams for minutes, and every tool call it makes is a request of its own that needs a database connection. Holding the request's session for the whole stream would exhaust the connection pool, so the run endpoints close the request's session after the authorization check, and the service reads and writes in short `SQLRepo().transaction()` blocks of its own (run in the threadpool from async code). Its non-streaming methods still take `db` like any other service.
 - **Strategy hierarchy** (`classifier/models/*_class_model_service.py`): an `ABC` base (`TextClassificationModelService`) with `@abstractmethod` `train`/`eval`/`infer`; a singleton facade (`ClassifierService.get_model_service`) selects the implementation.
 
 ## Lint

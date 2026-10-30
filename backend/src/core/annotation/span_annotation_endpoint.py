@@ -16,6 +16,7 @@ from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -207,6 +208,8 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
+    # overwrites many SpanAnnotations at once
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=list[SpanAnnotationRead],
     summary="Updates SpanAnnotations in Bulk",
 )

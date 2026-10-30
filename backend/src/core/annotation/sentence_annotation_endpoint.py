@@ -17,6 +17,7 @@ from core.annotation.sentence_annotation_service import SentenceAnnotationServic
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 from core.doc.source_document_data_crud import crud_sdoc_data
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -215,6 +216,8 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
+    # overwrites many SentenceAnnotations at once
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=list[SentenceAnnotationRead],
     summary="Updates SentenceAnnotation in Bulk",
 )
