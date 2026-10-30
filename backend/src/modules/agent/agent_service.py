@@ -1,3 +1,4 @@
+import re
 import uuid
 from collections.abc import AsyncIterator, Sequence
 from typing import Any, NamedTuple
@@ -8,7 +9,7 @@ from fastmcp import FastMCP
 from loguru import logger
 from pydantic import ValidationError
 from pydantic_ai import Agent, PromptedOutput
-from pydantic_ai.exceptions import ModelAPIError
+from pydantic_ai.exceptions import ModelAPIError, UnexpectedModelBehavior
 from pydantic_ai.mcp import MCPToolset
 from pydantic_ai.messages import (
     ModelMessage,
@@ -73,6 +74,11 @@ DEFAULT_MODEL = "default"
 
 TITLE_MAX_PROMPT_LENGTH = 50
 
+# Without strict tool definitions (see _resolve_model), LLMs get complex tool
+# arguments (e.g. search filters) wrong more often; they may correct them
+# this many times per tool call.
+TOOL_MAX_RETRIES = 3
+
 
 class _AgentConfig(NamedTuple):
     tags: list[str]
@@ -87,7 +93,13 @@ _COMMON_PROMPT = (
     "up instead of guessing, and say so when a tool you would need is missing. "
     "Tools that delete or remove data ask the user for approval: call them "
     "directly when the user asks for such a change, do not ask in the chat first. "
-    "Answer in the language of the user, briefly, and format with Markdown."
+    "Answer in the language of the user, briefly, and format with Markdown. "
+    "DATS entities appear as Markdown links with the dats: scheme, "
+    "[label](dats:<type>/<id>), where <type> is one of source_document, code, "
+    "tag, span_annotation, sentence_annotation, bbox_annotation or project and "
+    "<id> is the entity's id. The user mentions entities this way. When you "
+    "mention a DATS entity whose id you know, write it the same way, e.g. "
+    "[Interview 3](dats:source_document/12), so the user can open it."
 )
 
 _AGENT_CONFIGS: dict[AgentName, _AgentConfig] = {
@@ -145,7 +157,8 @@ def _require_approval(
 
 
 def _first_prompt(messages: Sequence[ModelMessage]) -> str:
-    return next(
+    """The first prompt of the user, with DATS links ([label](dats:type/id)) as their label."""
+    prompt = next(
         (
             part.content
             for message in messages
@@ -155,6 +168,7 @@ def _first_prompt(messages: Sequence[ModelMessage]) -> str:
         ),
         "",
     )
+    return re.sub(r"\[([^\]]+)\]\(dats:[a-z_]+/\d+\)", r"\1", prompt)
 
 
 def _pending_approvals(messages: Sequence[ModelMessage]) -> list[ToolCallPart]:
@@ -210,7 +224,9 @@ class AgentService(metaclass=SingletonMeta):
                 tags=config.tags,
                 auth_hook=forward_auth_header_hook,
             )
-            toolset = MCPToolset(mcp_server).approval_required(_require_approval)
+            toolset = MCPToolset(
+                mcp_server, max_retries=TOOL_MAX_RETRIES
+            ).approval_required(_require_approval)
             self.mcp_servers[agent_name] = mcp_server
             self.toolsets[agent_name] = toolset
             self.agents[agent_name] = Agent(
@@ -266,7 +282,7 @@ class AgentService(metaclass=SingletonMeta):
                     result = await agent.run(
                         query.prompt, message_history=history, model=selected_model
                     )
-        except ModelAPIError as e:
+        except (ModelAPIError, UnexpectedModelBehavior) as e:
             raise to_client_error(e) from e
 
         # 3) store the history

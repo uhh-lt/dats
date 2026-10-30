@@ -2,12 +2,20 @@ from collections.abc import AsyncIterator, Sequence
 
 from ag_ui.core import BaseEvent, Context, RunAgentInput
 from loguru import logger
-from pydantic_ai.exceptions import ModelAPIError, ModelHTTPError
+from pydantic_ai.exceptions import (
+    ModelAPIError,
+    ModelHTTPError,
+    UnexpectedModelBehavior,
+)
 from pydantic_ai.tools import DeferredToolRequests
 from pydantic_ai.ui import UIEventStream
 from pydantic_ai.ui.ag_ui import AGUIAdapter, AGUIEventStream
 
-from modules.agent.agent_exceptions import AgentLLMError, AgentRunError
+from modules.agent.agent_exceptions import (
+    AgentLLMError,
+    AgentRunError,
+    AgentToolUseError,
+)
 
 AgentOutput = str | DeferredToolRequests
 
@@ -18,6 +26,8 @@ def to_client_error(error: Exception) -> Exception:
     if isinstance(error, ModelAPIError):
         status_code = error.status_code if isinstance(error, ModelHTTPError) else None
         return AgentLLMError(error.model_name, status_code)
+    if isinstance(error, UnexpectedModelBehavior):
+        return AgentToolUseError()
     return AgentRunError()
 
 

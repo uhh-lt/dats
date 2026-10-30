@@ -40,3 +40,14 @@ class AgentRunError(Exception):
 
     def __init__(self) -> None:
         super().__init__("The agent failed to answer.")
+
+
+@exception_handler(status.HTTP_502_BAD_GATEWAY)
+class AgentToolUseError(Exception):
+    """Raised (or sent as an AG-UI run error) when the LLM keeps calling a tool
+    wrongly (pydantic-ai's UnexpectedModelBehavior), e.g. with invalid arguments."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "The LLM could not call a tool correctly. Rephrase the request or try another LLM."
+        )
