@@ -144,6 +144,19 @@ def _require_approval(
     return requires_approval((tool_def.metadata or {}).get("annotations"))
 
 
+def _first_prompt(messages: Sequence[ModelMessage]) -> str:
+    return next(
+        (
+            part.content
+            for message in messages
+            if isinstance(message, ModelRequest)
+            for part in message.parts
+            if isinstance(part, UserPromptPart) and isinstance(part.content, str)
+        ),
+        "",
+    )
+
+
 def _pending_approvals(messages: Sequence[ModelMessage]) -> list[ToolCallPart]:
     """The tool calls of the last model response without a result: the run
     stopped there for the user's approval."""
@@ -257,13 +270,15 @@ class AgentService(metaclass=SingletonMeta):
             raise to_client_error(e) from e
 
         # 3) store the history
-        await self._save_session(
+        messages = result.all_messages()
+        self._save_session(
             db=db,
             user_id=user_id,
             agent_name=agent_name,
             session_id=session_id,
             db_session=db_session,
-            messages=result.all_messages(),
+            messages=messages,
+            title=await self._generate_title(messages) if db_session is None else None,
         )
         logger.info(f"Agent [{agent_name.value}] answered in session [{session_id}].")
 
@@ -318,14 +333,22 @@ class AgentService(metaclass=SingletonMeta):
             db=db, user_id=user_id, session_id=session_id
         )
 
+        completed = False
+
         async def on_complete(result: AgentRunResult[Any]) -> None:
-            await self._save_session(
+            nonlocal completed
+            completed = True
+            messages = result.all_messages()
+            self._save_session(
                 db=db,
                 user_id=user_id,
                 agent_name=agent_name,
                 session_id=session_id,
                 db_session=db_session,
-                messages=result.all_messages(),
+                messages=messages,
+                title=await self._generate_title(messages)
+                if db_session is None
+                else None,
             )
             logger.info(f"Agent [{agent_name.value}] finished session [{session_id}].")
 
@@ -346,10 +369,32 @@ class AgentService(metaclass=SingletonMeta):
         body_iterator = response.body_iterator
 
         async def stream_with_auth_context() -> AsyncIterator[Any]:
-            with auth_header_context(auth_header):
-                async with toolset:
-                    async for chunk in body_iterator:
-                        yield chunk
+            try:
+                with auth_header_context(auth_header):
+                    async with toolset:
+                        async for chunk in body_iterator:
+                            yield chunk
+            finally:
+                # A stopped (or failed) run never completes, so pydantic-ai has no
+                # result to store. Store the thread the client sent instead, so the
+                # prompt survives; the partial answer is lost. This runs while the
+                # stream is cancelled, so it must not await (no generated title).
+                if not completed:
+                    messages = adapter.messages
+                    self._save_session(
+                        db=db,
+                        user_id=user_id,
+                        agent_name=agent_name,
+                        session_id=session_id,
+                        db_session=db_session,
+                        messages=messages,
+                        title=_first_prompt(messages)[:TITLE_MAX_PROMPT_LENGTH]
+                        if db_session is None
+                        else None,
+                    )
+                    logger.info(
+                        f"Agent [{agent_name.value}] stopped in session [{session_id}]."
+                    )
 
         response.body_iterator = stream_with_auth_context()
         return response
@@ -411,7 +456,7 @@ class AgentService(metaclass=SingletonMeta):
             )
             raise AgentSessionHistoryInvalidError(db_session.session_id) from e
 
-    async def _save_session(
+    def _save_session(
         self,
         *,
         db: Session,
@@ -420,7 +465,9 @@ class AgentService(metaclass=SingletonMeta):
         session_id: str,
         db_session: AgentSessionORM | None,
         messages: Sequence[ModelMessage],
+        title: str | None,
     ) -> None:
+        """Store the messages of the session; a new session also gets `title`."""
         serialized = ModelMessagesTypeAdapter.dump_python(list(messages), mode="json")
         if db_session is not None:
             crud_agent_session.update(
@@ -434,7 +481,7 @@ class AgentService(metaclass=SingletonMeta):
             db=db,
             create_dto=AgentSessionCreate(
                 session_id=session_id,
-                title=await self._generate_title(messages),
+                title=title,
                 user_id=user_id,
                 agent_name=agent_name,
                 messages=serialized,
@@ -444,16 +491,7 @@ class AgentService(metaclass=SingletonMeta):
     async def _generate_title(self, messages: Sequence[ModelMessage]) -> str:
         """Generate a short title from the first user prompt. Falls back to the
         prompt itself, because a missing title must not fail the agent run."""
-        prompt = next(
-            (
-                part.content
-                for message in messages
-                if isinstance(message, ModelRequest)
-                for part in message.parts
-                if isinstance(part, UserPromptPart) and isinstance(part.content, str)
-            ),
-            "",
-        )
+        prompt = _first_prompt(messages)
         try:
             result = await self.title_agent.run(
                 f"Generate a title for a chat session starting with this prompt:\n\n{prompt}"
