@@ -2,7 +2,9 @@ import uuid
 from collections.abc import AsyncIterator, Sequence
 from typing import Any, NamedTuple
 
+from ag_ui.core import AssistantMessage
 from fastapi import FastAPI
+from fastmcp import FastMCP
 from loguru import logger
 from pydantic import ValidationError
 from pydantic_ai import Agent, PromptedOutput
@@ -12,7 +14,10 @@ from pydantic_ai.messages import (
     ModelMessage,
     ModelMessagesTypeAdapter,
     ModelRequest,
+    ModelResponse,
+    RetryPromptPart,
     ToolCallPart,
+    ToolReturnPart,
     UserPromptPart,
 )
 from pydantic_ai.models.openai import OpenAIChatModel
@@ -22,6 +27,10 @@ from pydantic_ai.run import AgentRunResult
 from pydantic_ai.tools import DeferredToolRequests, RunContext, ToolDefinition
 from pydantic_ai.toolsets import AbstractToolset
 from pydantic_ai.ui.ag_ui import AGUIAdapter
+
+# pydantic-ai's mapping of a pending approval to an AG-UI interrupt, so stored
+# approvals get the same ids as live ones (the client answers them by id)
+from pydantic_ai.ui.ag_ui._interrupt import approval_to_interrupt
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
@@ -33,6 +42,7 @@ from modules.agent.agent_dto import (
     AgentQueryResponse,
     AgentSessionHistory,
     AgentSessionTitle,
+    AgentToolRead,
 )
 from modules.agent.agent_enum import AgentName
 from modules.agent.agent_exceptions import (
@@ -70,20 +80,51 @@ class _AgentConfig(NamedTuple):
     system_prompt: str
 
 
-_PROJECT_TAGS = ["project"]
-_SOURCE_DOCUMENT_TAGS = ["sourceDocument"]
-_ANNOTATION_TAGS = ["spanAnnotation", "bboxAnnotation", "sentenceAnnotation"]
+_COMMON_PROMPT = (
+    "You work inside DATS, a web application in which research teams manage, "
+    "search, annotate and analyze documents. Your tools are DATS endpoints; they "
+    "act with the permissions of the user you talk to. Use them to look things "
+    "up instead of guessing, and say so when a tool you would need is missing. "
+    "Tools that delete or remove data ask the user for approval: call them "
+    "directly when the user asks for such a change, do not ask in the chat first. "
+    "Answer in the language of the user, briefly, and format with Markdown."
+)
 
 _AGENT_CONFIGS: dict[AgentName, _AgentConfig] = {
     AgentName.PROJECT: _AgentConfig(
-        tags=_PROJECT_TAGS,
-        name="ProjectManagerAgent",
-        system_prompt="You are an assistant specialized in project management.",
+        tags=[
+            "project",
+            "code",
+            "tag",
+            "projectMetadata",
+            "folder",
+            "memo",
+            "user",
+            "search",
+        ],
+        name="ProjectAgent",
+        system_prompt=(
+            "You help researchers manage their DATS project: its codes, tags, "
+            "folders, metadata, memos and members. " + _COMMON_PROMPT
+        ),
     ),
     AgentName.SOURCE_DOCUMENT: _AgentConfig(
-        tags=_SOURCE_DOCUMENT_TAGS + _ANNOTATION_TAGS,
+        tags=[
+            "sourceDocument",
+            "sdocMetadata",
+            "spanAnnotation",
+            "bboxAnnotation",
+            "sentenceAnnotation",
+            "code",
+            "tag",
+            "search",
+        ],
         name="SourceDocumentAgent",
-        system_prompt="You are an assistant specialized in managing source documents.",
+        system_prompt=(
+            "You help researchers work with the documents of their DATS project: "
+            "their content, metadata, tags and span, sentence and bounding box "
+            "annotations. " + _COMMON_PROMPT
+        ),
     ),
 }
 
@@ -103,6 +144,27 @@ def _require_approval(
     return requires_approval((tool_def.metadata or {}).get("annotations"))
 
 
+def _pending_approvals(messages: Sequence[ModelMessage]) -> list[ToolCallPart]:
+    """The tool calls of the last model response without a result: the run
+    stopped there for the user's approval."""
+    responses = [i for i, m in enumerate(messages) if isinstance(m, ModelResponse)]
+    if not responses:
+        return []
+    last = responses[-1]
+    answered = {
+        part.tool_call_id
+        for message in messages[last + 1 :]
+        if isinstance(message, ModelRequest)
+        for part in message.parts
+        if isinstance(part, (ToolReturnPart, RetryPromptPart))
+    }
+    return [
+        part
+        for part in messages[last].parts
+        if isinstance(part, ToolCallPart) and part.tool_call_id not in answered
+    ]
+
+
 class AgentService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.llm: LLMRepo = LLMRepo()
@@ -112,6 +174,7 @@ class AgentService(metaclass=SingletonMeta):
         )
         cls.agents: dict[AgentName, Agent[None, AgentOutput]] = {}
         cls.toolsets: dict[AgentName, AbstractToolset[None]] = {}
+        cls.mcp_servers: dict[AgentName, FastMCP] = {}
         return super(AgentService, cls).__new__(cls)
 
     def initialize(self, app: FastAPI) -> None:
@@ -135,6 +198,7 @@ class AgentService(metaclass=SingletonMeta):
                 auth_hook=forward_auth_header_hook,
             )
             toolset = MCPToolset(mcp_server).approval_required(_require_approval)
+            self.mcp_servers[agent_name] = mcp_server
             self.toolsets[agent_name] = toolset
             self.agents[agent_name] = Agent(
                 model=default_model,
@@ -142,6 +206,22 @@ class AgentService(metaclass=SingletonMeta):
                 toolsets=[toolset],
                 output_type=[str, DeferredToolRequests],
             )
+
+    async def list_tools(self, *, agent_name: AgentName) -> list[AgentToolRead]:
+        """The tools (DATS endpoints) of the agent and whether they need approval."""
+        tools = await self.mcp_servers[agent_name].list_tools(run_middleware=False)
+        return [
+            AgentToolRead(
+                name=tool.name,
+                description=tool.description,
+                needs_approval=requires_approval(
+                    tool.annotations.model_dump(by_alias=True)
+                    if tool.annotations
+                    else None
+                ),
+            )
+            for tool in tools
+        ]
 
     async def run_agent(
         self,
@@ -180,6 +260,7 @@ class AgentService(metaclass=SingletonMeta):
         await self._save_session(
             db=db,
             user_id=user_id,
+            agent_name=agent_name,
             session_id=session_id,
             db_session=db_session,
             messages=result.all_messages(),
@@ -241,6 +322,7 @@ class AgentService(metaclass=SingletonMeta):
             await self._save_session(
                 db=db,
                 user_id=user_id,
+                agent_name=agent_name,
                 session_id=session_id,
                 db_session=db_session,
                 messages=result.all_messages(),
@@ -278,7 +360,32 @@ class AgentService(metaclass=SingletonMeta):
         db_session = crud_agent_session.read_by_user_and_session_id(
             db=db, user_id=user_id, session_id=session_id
         )
-        messages = AGUIAdapter.dump_messages(self._parse_history(db_session))
+        history = self._parse_history(db_session)
+        messages = AGUIAdapter.dump_messages(history)
+
+        # the run stopped for the user's approval: attach the interrupts to the
+        # assistant message with these tool calls, where the client restores them
+        pending = {call.tool_call_id: call for call in _pending_approvals(history)}
+        if pending:
+            for index in reversed(range(len(messages))):
+                message = messages[index]
+                if not isinstance(message, AssistantMessage) or not message.tool_calls:
+                    continue
+                calls = [pending[c.id] for c in message.tool_calls if c.id in pending]
+                if not calls:
+                    continue
+                interrupts = [
+                    approval_to_interrupt(call, {}).model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                    for call in calls
+                ]
+                messages[index] = message.model_copy(
+                    update={
+                        "metadata": {"custom": {"agui": {"interrupts": interrupts}}}
+                    }
+                )
+                break
         return AgentSessionHistory(messages=messages)
 
     def _resolve_model(self, model: str) -> OpenAIChatModel:
@@ -309,6 +416,7 @@ class AgentService(metaclass=SingletonMeta):
         *,
         db: Session,
         user_id: int,
+        agent_name: AgentName,
         session_id: str,
         db_session: AgentSessionORM | None,
         messages: Sequence[ModelMessage],
@@ -328,6 +436,7 @@ class AgentService(metaclass=SingletonMeta):
                 session_id=session_id,
                 title=await self._generate_title(messages),
                 user_id=user_id,
+                agent_name=agent_name,
                 messages=serialized,
             ),
         )
