@@ -4,30 +4,15 @@
 /* eslint-disable */
 import type { PromptCode } from "./PromptCode";
 import type { PromptMetadataField } from "./PromptMetadataField";
-import type { PromptSettings } from "./PromptSettings";
 import type { PromptTag } from "./PromptTag";
-import type { SentencePromptExample } from "./SentencePromptExample";
-import type { SpanPromptExample } from "./SpanPromptExample";
 /**
- * Content whose selections are replaced with the current state of the project.
+ * Selections of a prompt to pull from or push to the project.
  */
-export type PromptTemplateRefresh = {
-  /**
-   * The prompt with its blocks
-   */
-  prompt: string;
-  /**
-   * Settings of the document and output format blocks
-   */
-  settings?: PromptSettings;
+export type PromptSelectionsSync = {
   /**
    * The codes of <codes> and <code_names>
    */
   codes?: Array<PromptCode>;
-  /**
-   * The few-shot examples of <examples>
-   */
-  examples?: Array<SpanPromptExample | SentencePromptExample>;
   /**
    * The tags of <tags>
    */

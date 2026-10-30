@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * A tag selected in a prompt, as it was when the prompt was saved.
+ * A tag selected in a prompt, with the prompt's own name and description.
  */
 export type PromptTag = {
   /**

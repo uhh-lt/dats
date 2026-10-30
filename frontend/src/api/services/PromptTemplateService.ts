@@ -7,14 +7,16 @@ import type { PromptExamplesCreate } from "@models/PromptExamplesCreate";
 import type { PromptLanguage } from "@models/PromptLanguage";
 import type { PromptPreview } from "@models/PromptPreview";
 import type { PromptPreviewRequest } from "@models/PromptPreviewRequest";
+import type { PromptSelections } from "@models/PromptSelections";
+import type { PromptSelectionsSync } from "@models/PromptSelectionsSync";
 import type { PromptTaskInfo } from "@models/PromptTaskInfo";
 import type { PromptTemplateContent } from "@models/PromptTemplateContent";
 import type { PromptTemplateCreate } from "@models/PromptTemplateCreate";
 import type { PromptTemplateRead } from "@models/PromptTemplateRead";
-import type { PromptTemplateRefresh } from "@models/PromptTemplateRefresh";
 import type { PromptTemplateUpdate } from "@models/PromptTemplateUpdate";
 import type { PromptTemplateVersionCreate } from "@models/PromptTemplateVersionCreate";
 import type { PromptTemplateVersionRead } from "@models/PromptTemplateVersionRead";
+import type { PushedPromptSelections } from "@models/PushedPromptSelections";
 import type { SentencePromptExample } from "@models/SentencePromptExample";
 import type { SpanPromptExample } from "@models/SpanPromptExample";
 import type { TaskType } from "@models/TaskType";
@@ -84,18 +86,18 @@ export class PromptTemplateService {
     });
   }
   /**
-   * Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project
-   * @returns PromptTemplateContent Successful Response
+   * Returns the project's definitions (name, description) of the selected codes, tags and metadata fields
+   * @returns PromptSelections Successful Response
    * @throws ApiError
    */
-  public static refresh({
+  public static pullSelections({
     requestBody,
   }: {
-    requestBody: PromptTemplateRefresh;
-  }): CancelablePromise<PromptTemplateContent> {
+    requestBody: PromptSelectionsSync;
+  }): CancelablePromise<PromptSelections> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/prompt_template/refresh",
+      url: "/prompt_template/pull",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -229,6 +231,26 @@ export class PromptTemplateService {
       path: {
         prompt_template_id: promptTemplateId,
       },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Replaces the names and descriptions of the project's codes, tags and metadata fields with the prompt's definitions
+   * @returns PushedPromptSelections Successful Response
+   * @throws ApiError
+   */
+  public static pushSelections({
+    requestBody,
+  }: {
+    requestBody: PromptSelectionsSync;
+  }): CancelablePromise<PushedPromptSelections> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/prompt_template/push",
       body: requestBody,
       mediaType: "application/json",
       errors: {

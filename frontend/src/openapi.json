@@ -3675,19 +3675,19 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/prompt_template/refresh": {
+    "/prompt_template/pull": {
       "post": {
         "tags": ["prompt_template"],
-        "summary": "Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project",
-        "operationId": "refresh",
+        "summary": "Returns the project's definitions (name, description) of the selected codes, tags and metadata fields",
+        "operationId": "pull_selections",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRefresh" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptSelectionsSync" } } },
           "required": true
         },
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateContent" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptSelections" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -3891,6 +3891,28 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/prompt_template/push": {
+      "patch": {
+        "tags": ["prompt_template"],
+        "summary": "Replaces the names and descriptions of the project's codes, tags and metadata fields with the prompt's definitions",
+        "operationId": "push_selections",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptSelectionsSync" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PushedPromptSelections" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/rag/rag_session": {
@@ -14887,7 +14909,7 @@
         "type": "object",
         "required": ["code_id", "name", "description"],
         "title": "PromptCode",
-        "description": "A code selected in a prompt, as it was when the prompt was saved."
+        "description": "A code selected in a prompt, with the prompt's own name and description."
       },
       "PromptExampleKind": {
         "type": "string",
@@ -14956,7 +14978,7 @@
         "type": "object",
         "required": ["project_metadata_id", "key", "description", "metatype"],
         "title": "PromptMetadataField",
-        "description": "A metadata field selected in a prompt, as it was when the prompt was saved."
+        "description": "A metadata field selected in a prompt, with the prompt's own key and description."
       },
       "PromptPreview": {
         "properties": {
@@ -15041,6 +15063,58 @@
         "title": "PromptPreviewRequest",
         "description": "Renders a stored version or an unsaved draft for one message of a document."
       },
+      "PromptSelections": {
+        "properties": {
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          }
+        },
+        "type": "object",
+        "title": "PromptSelections",
+        "description": "Codes, tags and metadata fields of a prompt, defined as in a prompt or the project."
+      },
+      "PromptSelectionsSync": {
+        "properties": {
+          "codes": {
+            "items": { "$ref": "#/components/schemas/PromptCode" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The codes of <codes> and <code_names>"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/PromptTag" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags of <tags>"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The metadata fields of <metadata_fields>"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the selections belong to" }
+        },
+        "type": "object",
+        "required": ["project_id"],
+        "title": "PromptSelectionsSync",
+        "description": "Selections of a prompt to pull from or push to the project."
+      },
       "PromptSettings": {
         "properties": {
           "chunk_size_tokens": {
@@ -15093,7 +15167,7 @@
         "type": "object",
         "required": ["tag_id", "name", "description"],
         "title": "PromptTag",
-        "description": "A tag selected in a prompt, as it was when the prompt was saved."
+        "description": "A tag selected in a prompt, with the prompt's own name and description."
       },
       "PromptTaskInfo": {
         "properties": {
@@ -15306,56 +15380,6 @@
         ],
         "title": "PromptTemplateRead"
       },
-      "PromptTemplateRefresh": {
-        "properties": {
-          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
-          "settings": {
-            "$ref": "#/components/schemas/PromptSettings",
-            "description": "Settings of the document and output format blocks"
-          },
-          "codes": {
-            "items": { "$ref": "#/components/schemas/PromptCode" },
-            "type": "array",
-            "title": "Codes",
-            "description": "The codes of <codes> and <code_names>"
-          },
-          "examples": {
-            "items": {
-              "oneOf": [
-                { "$ref": "#/components/schemas/SpanPromptExample" },
-                { "$ref": "#/components/schemas/SentencePromptExample" }
-              ],
-              "discriminator": {
-                "propertyName": "kind",
-                "mapping": {
-                  "SENTENCE": "#/components/schemas/SentencePromptExample",
-                  "SPAN": "#/components/schemas/SpanPromptExample"
-                }
-              }
-            },
-            "type": "array",
-            "title": "Examples",
-            "description": "The few-shot examples of <examples>"
-          },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/PromptTag" },
-            "type": "array",
-            "title": "Tags",
-            "description": "The tags of <tags>"
-          },
-          "metadata_fields": {
-            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
-            "type": "array",
-            "title": "Metadata Fields",
-            "description": "The metadata fields of <metadata_fields>"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the selections belong to" }
-        },
-        "type": "object",
-        "required": ["prompt", "project_id"],
-        "title": "PromptTemplateRefresh",
-        "description": "Content whose selections are replaced with the current state of the project."
-      },
       "PromptTemplateSnapshot": {
         "properties": {
           "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
@@ -15565,6 +15589,32 @@
         "required": ["id", "first_name", "last_name"],
         "title": "PublicUserRead",
         "description": "A user object with information that everybody may see."
+      },
+      "PushedPromptSelections": {
+        "properties": {
+          "codes": {
+            "items": { "$ref": "#/components/schemas/CodeRead" },
+            "type": "array",
+            "title": "Codes",
+            "description": "The updated codes"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/TagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The updated tags"
+          },
+          "metadata_fields": {
+            "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
+            "type": "array",
+            "title": "Metadata Fields",
+            "description": "The updated metadata fields"
+          }
+        },
+        "type": "object",
+        "required": ["codes", "tags", "metadata_fields"],
+        "title": "PushedPromptSelections",
+        "description": "The project's codes, tags and metadata fields after a push."
       },
       "QueryRequest_BBoxColumns_": {
         "properties": {
