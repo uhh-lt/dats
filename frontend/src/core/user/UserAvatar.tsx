@@ -39,7 +39,7 @@ const UserAvatarWithData = memo(
     return (
       <Tooltip title={isVirtual ? `${fullName} (virtual annotator)` : fullName} placement={tooltipPlacement} arrow>
         <Avatar {...props}>
-          {isVirtual ? getIconComponent(Icon.VIRTUAL_ANNOTATOR, { fontSize: "inherit" }) : getInitials(user)}
+          {isVirtual ? getIconComponent(Icon.VIRTUAL_ANNOTATOR, { sx: { fontSize: "1.5em" } }) : getInitials(user)}
         </Avatar>
       </Tooltip>
     );
