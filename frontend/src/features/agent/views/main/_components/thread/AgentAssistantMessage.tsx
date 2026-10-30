@@ -1,9 +1,16 @@
-import { ActionBarPrimitive, AuiIf, ErrorPrimitive, groupPartByType, MessagePrimitive } from "@assistant-ui/react";
+import {
+  ActionBarPrimitive,
+  AuiIf,
+  ErrorPrimitive,
+  groupPartByType,
+  MessagePrimitive,
+  useAuiState,
+} from "@assistant-ui/react";
 import CheckIcon from "@mui/icons-material/Check";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Alert, Box, Button, Stack } from "@mui/material";
+import { Alert, Box, Button, Stack, Typography } from "@mui/material";
 import { AgentBranchPicker } from "./AgentBranchPicker";
 import { AgentIconButton } from "./AgentIconButton";
 import { AgentMarkdownText } from "./AgentMarkdownText";
@@ -64,9 +71,18 @@ function AgentMessageError() {
  * retry button if the run failed, and the actions (copy, regenerate, download).
  */
 export function AgentAssistantMessage() {
+  // A turn can consist of several messages (e.g. a run resumed after an
+  // approval). They read as one answer: the first one keeps the gap to the
+  // prompt, the last one gets the actions.
+  const isFirstOfTurn = useAuiState((state) => state.thread.messages[state.message.index - 1]?.role !== "assistant");
+  const isLastOfTurn = useAuiState((state) => state.thread.messages[state.message.index + 1]?.role !== "assistant");
+  const isStopped = useAuiState(
+    (state) => state.message.status?.type === "incomplete" && state.message.status.reason === "cancelled",
+  );
+
   return (
     <MessagePrimitive.Root>
-      <Box>
+      <Box sx={{ mt: isFirstOfTurn ? 3 : 0 }}>
         <MessagePrimitive.GroupedParts groupBy={groupBy}>
           {({ part, children }) => {
             switch (part.type) {
@@ -108,10 +124,17 @@ export function AgentAssistantMessage() {
           }}
         </MessagePrimitive.GroupedParts>
         <AgentMessageError />
-        <Stack direction="row" alignItems="center" sx={{ minHeight: 34 }}>
-          <AgentBranchPicker />
-          <AgentActionBar />
-        </Stack>
+        {isStopped && (
+          <Typography variant="body2" color="text.secondary" fontStyle="italic" sx={{ my: 0.5 }}>
+            Stopped
+          </Typography>
+        )}
+        {isLastOfTurn && (
+          <Stack direction="row" alignItems="center" sx={{ minHeight: 34 }}>
+            <AgentBranchPicker />
+            <AgentActionBar />
+          </Stack>
+        )}
       </Box>
     </MessagePrimitive.Root>
   );

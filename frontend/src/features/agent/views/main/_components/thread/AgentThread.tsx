@@ -2,9 +2,11 @@ import { AssistantState, AuiIf, SuggestionPrimitive, ThreadPrimitive, useAuiStat
 import { getIconComponent, Icon } from "@components/icons";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { Box, ButtonBase, Fab, Skeleton, Stack, Typography } from "@mui/material";
+import { AgentName } from "@models/AgentName";
 import { AgentApprovals } from "./AgentApprovals";
 import { AgentAssistantMessage } from "./AgentAssistantMessage";
 import { AgentComposer } from "./AgentComposer";
+import { AgentThreadProvider } from "./AgentThreadProvider";
 import { AgentEditComposer, AgentUserMessage } from "./AgentUserMessage";
 
 const THREAD_MAX_WIDTH = 820;
@@ -89,77 +91,83 @@ function AgentHistorySkeleton() {
   );
 }
 
+interface AgentThreadProps {
+  agentName: AgentName;
+}
+
 /** The current chat: its messages, the pending approvals and the prompt input. */
-export function AgentThread() {
+export function AgentThread({ agentName }: AgentThreadProps) {
   return (
-    <ThreadPrimitive.Root render={<Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }} />}>
-      <ThreadPrimitive.Viewport
-        turnAnchor="top"
-        render={<Box sx={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }} />}
-      >
-        <Box
-          sx={{
-            flex: 1,
-            width: "100%",
-            maxWidth: THREAD_MAX_WIDTH,
-            mx: "auto",
-            px: 2,
-            display: "flex",
-            flexDirection: "column",
-          }}
+    <AgentThreadProvider agentName={agentName}>
+      <ThreadPrimitive.Root render={<Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }} />}>
+        <ThreadPrimitive.Viewport
+          turnAnchor="top"
+          render={<Box sx={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }} />}
         >
-          <AuiIf condition={isNewChat}>
-            <AgentWelcome />
-          </AuiIf>
-          <AuiIf condition={isLoadingHistory}>
-            <Box mt={3}>
-              <AgentHistorySkeleton />
-            </Box>
-          </AuiIf>
-          <Stack spacing={3} sx={{ pt: 3, pb: 2 }}>
-            <ThreadPrimitive.Messages>{() => <AgentThreadMessage />}</ThreadPrimitive.Messages>
-          </Stack>
-          <ThreadPrimitive.ViewportFooter
-            render={
-              <Box
-                sx={{
-                  position: "sticky",
-                  bottom: 0,
-                  mt: "auto",
-                  pb: 2,
-                  bgcolor: "background.paper",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1,
-                }}
-              />
-            }
+          <Box
+            sx={{
+              flex: 1,
+              width: "100%",
+              maxWidth: THREAD_MAX_WIDTH,
+              mx: "auto",
+              px: 2,
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
-            <ThreadPrimitive.ScrollToBottom
+            <AuiIf condition={isNewChat}>
+              <AgentWelcome />
+            </AuiIf>
+            <AuiIf condition={isLoadingHistory}>
+              <Box mt={3}>
+                <AgentHistorySkeleton />
+              </Box>
+            </AuiIf>
+            <Stack sx={{ pb: 2 }}>
+              <ThreadPrimitive.Messages>{() => <AgentThreadMessage />}</ThreadPrimitive.Messages>
+            </Stack>
+            <ThreadPrimitive.ViewportFooter
               render={
-                <Fab
-                  size="small"
-                  aria-label="Scroll to the end"
+                <Box
                   sx={{
-                    position: "absolute",
-                    top: -56,
-                    alignSelf: "center",
+                    position: "sticky",
+                    bottom: 0,
+                    mt: "auto",
+                    pb: 2,
                     bgcolor: "background.paper",
-                    "&:disabled": { visibility: "hidden" },
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
                   }}
                 />
               }
             >
-              <ArrowDownwardIcon fontSize="small" />
-            </ThreadPrimitive.ScrollToBottom>
-            <AgentApprovals />
-            <AgentComposer />
-            <AuiIf condition={(state) => isNewChat(state) && state.composer.isEmpty}>
-              <AgentSuggestions />
-            </AuiIf>
-          </ThreadPrimitive.ViewportFooter>
-        </Box>
-      </ThreadPrimitive.Viewport>
-    </ThreadPrimitive.Root>
+              <ThreadPrimitive.ScrollToBottom
+                render={
+                  <Fab
+                    size="small"
+                    aria-label="Scroll to the end"
+                    sx={{
+                      position: "absolute",
+                      top: -56,
+                      alignSelf: "center",
+                      bgcolor: "background.paper",
+                      "&:disabled": { visibility: "hidden" },
+                    }}
+                  />
+                }
+              >
+                <ArrowDownwardIcon fontSize="small" />
+              </ThreadPrimitive.ScrollToBottom>
+              <AgentApprovals />
+              <AgentComposer />
+              <AuiIf condition={(state) => isNewChat(state) && state.composer.isEmpty}>
+                <AgentSuggestions />
+              </AuiIf>
+            </ThreadPrimitive.ViewportFooter>
+          </Box>
+        </ThreadPrimitive.Viewport>
+      </ThreadPrimitive.Root>
+    </AgentThreadProvider>
   );
 }

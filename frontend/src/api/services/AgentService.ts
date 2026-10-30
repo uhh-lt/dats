@@ -8,6 +8,7 @@ import type { AgentQueryResponse } from "@models/AgentQueryResponse";
 import type { AgentSessionHistory } from "@models/AgentSessionHistory";
 import type { AgentSessionRead } from "@models/AgentSessionRead";
 import type { AgentSessionUpdate } from "@models/AgentSessionUpdate";
+import type { AgentToolRead } from "@models/AgentToolRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -34,6 +35,23 @@ export class AgentService {
       url: "/agent/sessions/{session_id}/history",
       path: {
         session_id: sessionId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the tools (DATS endpoints) of the agent and whether they need the user's approval.
+   * @returns AgentToolRead Successful Response
+   * @throws ApiError
+   */
+  public static getTools({ agentName }: { agentName: AgentName }): CancelablePromise<Array<AgentToolRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/agent/{agent_name}/tools",
+      path: {
+        agent_name: agentName,
       },
       errors: {
         422: `Validation Error`,

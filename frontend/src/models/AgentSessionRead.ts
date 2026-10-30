@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AgentName } from "./AgentName";
 export type AgentSessionRead = {
   /**
    * Client-chosen ID of the AgentSession
@@ -19,6 +20,10 @@ export type AgentSessionRead = {
    * User the AgentSession belongs to
    */
   user_id: number;
+  /**
+   * Agent the AgentSession talks to
+   */
+  agent_name: AgentName;
   /**
    * Created timestamp of the AgentSession
    */

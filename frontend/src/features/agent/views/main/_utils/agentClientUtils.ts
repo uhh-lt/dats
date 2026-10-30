@@ -2,9 +2,6 @@ import { HttpAgent } from "@ag-ui/client";
 import { OpenAPI } from "@api/core/OpenAPI";
 import { AgentName } from "@models/AgentName";
 
-// the backend's name for the provider's first LLM
-export const DEFAULT_MODEL = "default";
-
 const agentUrl = (agentName: AgentName) => `${OpenAPI.BASE}/agent/agui/${agentName}`;
 
 // The AG-UI client sends its requests itself, so it adds the current access
