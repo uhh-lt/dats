@@ -19,6 +19,12 @@ class TagExportSchema(BaseModel):
             raise ValueError("tag_name cannot be empty")
         return v
 
+    @field_validator("description", mode="before")
+    @classmethod
+    def validate_description(cls, v: str | None) -> str:
+        # An empty description is exported as an empty cell, which is read as None
+        return v or ""
+
 
 class TagExportCollection(BaseModel):
     """Collection of tags for export/import operations."""
