@@ -60,15 +60,6 @@ def get_session_history(
     )
 
 
-@router.get(
-    "/models",
-    response_model=list[str],
-    summary="Returns the LLMs the agents can use.",
-)
-def get_models() -> list[str]:
-    return AgentService().list_models()
-
-
 # --- update operations
 
 

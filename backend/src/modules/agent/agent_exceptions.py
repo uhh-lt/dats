@@ -31,3 +31,12 @@ class AgentSessionHistoryInvalidError(Exception):
 
     def __init__(self, session_id: str) -> None:
         super().__init__(f"The history of agent session {session_id} is invalid.")
+
+
+@exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
+class AgentRunError(Exception):
+    """Raised (or sent as an AG-UI run error) when an agent run fails for another
+    reason than the LLM provider. The cause is only logged."""
+
+    def __init__(self) -> None:
+        super().__init__("The agent failed to answer.")

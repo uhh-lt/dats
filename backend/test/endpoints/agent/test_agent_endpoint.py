@@ -60,7 +60,7 @@ def test_get_session_history_returns_the_messages_as_ag_ui_messages(
     assert response.status_code == 200, response.text
     history = AgentSessionHistory.model_validate(response.json())
 
-    assert [(m["role"], m["content"]) for m in history.messages] == [
+    assert [(m.role, m.content) for m in history.messages] == [
         ("user", "How many projects?"),
         ("assistant", "You have no projects."),
     ]
@@ -176,19 +176,6 @@ def test_delete_session_of_another_user_is_not_found(
     response = client.delete("/agent/sessions/session-other")
     assert response.status_code == 404, response.text
     assert "session-other" in {s.session_id for s in _get_sessions(other_client)}
-
-
-# ===========================================================================
-# GET MODELS (GET /agent/models) TESTS
-# ===========================================================================
-
-
-def test_get_models_lists_the_llms_of_the_provider(client: TestClient):
-    """The provider serves at least one LLM, the agents' default."""
-    response = client.get("/agent/models")
-    assert response.status_code == 200, response.text
-    models = response.json()
-    assert isinstance(models, list) and len(models) > 0
 
 
 # ===========================================================================

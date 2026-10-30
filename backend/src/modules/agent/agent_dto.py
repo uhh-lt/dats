@@ -1,5 +1,4 @@
-from typing import Any
-
+from ag_ui.core import Message
 from pydantic import BaseModel, Field
 
 
@@ -22,7 +21,7 @@ class AgentQueryResponse(BaseModel):
 
 
 class AgentSessionHistory(BaseModel):
-    messages: list[dict[str, Any]] = Field(
+    messages: list[Message] = Field(
         description="The messages of the AgentSession as AG-UI messages"
     )
 
