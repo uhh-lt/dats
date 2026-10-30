@@ -544,19 +544,20 @@ class TimelineAnalysisService(metaclass=SingletonMeta):
                 ]
 
                 # Create a mapping of span_anno_id to number of words
+                # (end_token is exclusive)
                 span_anno_ids = [
                     data_id for row in result for data_id in row["data_ids"]
                 ]
                 span_annos = crud_span_anno.read_by_ids(db=db, ids=span_anno_ids)
-                span_annos2num_sents = {
-                    span_anno.id: span_anno.end_token - span_anno.begin_token + 1
+                span_anno_num_words = {
+                    span_anno.id: span_anno.end_token - span_anno.begin_token
                     for span_anno in span_annos
                 }
 
                 # Update the count of the result
                 for res in result:
                     res["count"] = sum(
-                        span_annos2num_sents.get(span_anno_id, 0)
+                        span_anno_num_words.get(span_anno_id, 0)
                         for span_anno_id in res["data_ids"]
                     )
                 return result
