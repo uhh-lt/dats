@@ -58,7 +58,7 @@ def test_get_users_by_project(client: TestClient, project_with_user):
     resp = client.get(f"/user/{project.id}/user")
 
     assert resp.status_code == 200, resp.text
-    assert len(resp.json()) == 6  # system, 3x assistant, test, new
+    assert len(resp.json()) == 3  # system, test, new
 
 
 def test_get_users_by_project_not_exists(client: TestClient):
@@ -75,7 +75,7 @@ def test_get_all_users(client: TestClient, project_with_user, test_user: UserRea
 
     assert resp.status_code == 200, resp.text
     user_ids = [PublicUserRead.model_validate(x).id for x in resp.json()]
-    assert len(user_ids) == 7  # system, demo, 3x assistant, test, new
+    assert len(user_ids) == 4  # system, demo, test, new
     assert test_user.id in user_ids
     assert new_user.id in user_ids
 

@@ -36,12 +36,6 @@ demo_user:
   email: ${oc.env:DEMO_USER_EMAIL, "demo@example.org"}
   password: ${oc.env:DEMO_USER_PASSWORD, "demo"}
 
-assistant_user:
-  first_name: ${oc.env:ASSISTANT_USER_FIRST_NAME, "ASSISTANT"}
-  last_name: ${oc.env:ASSISTANT_USER_LAST_NAME, "USER"}
-  email: ${oc.env:ASSISTANT_USER_EMAIL, "assistant@dats.org"}
-  password: ${oc.env:ASSISTANT_USER_PASSWORD, "12ASSISTANT34"}
-
 filesystem:
   root_directory: ${oc.env:FILESYSTEM_ROOT_DIRECTORY, "docker/backend_repo"}
   content_server:

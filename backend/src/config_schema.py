@@ -427,7 +427,6 @@ class BackendConfigSchema(BaseModel):
     auth: AuthConfig
     system_user: PersonConfig
     demo_user: PersonConfig
-    assistant_user: PersonConfig
     ray: RayConfig
     filesystem: FilesystemConfig
     weaviate: WeaviateConfig
