@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
@@ -37,6 +37,13 @@ def create_span_annotation(
     *,
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreate,
+    annotate_as_user_id: int | None = Query(
+        default=None,
+        description=(
+            "Create the annotations as this virtual annotator of the project "
+            "instead of the current user"
+        ),
+    ),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -49,9 +56,16 @@ def create_span_annotation(
             (Crud.SOURCE_DOCUMENT, span.sdoc_id),
         ]
     )
+    if annotate_as_user_id is not None:
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.USER, annotate_as_user_id),
+                (Crud.SOURCE_DOCUMENT, span.sdoc_id),
+            ]
+        )
 
     result = SpanAnnotationService().create(
-        db=db, user_id=authz_user.user.id, create_dto=span
+        db=db, user_id=annotate_as_user_id or authz_user.user.id, create_dto=span
     )
     ws.emit_to_project(
         DATSEvent.SPAN_ANNOTATION_CREATED,
@@ -70,6 +84,13 @@ def create_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     spans: list[SpanAnnotationCreate],
+    annotate_as_user_id: int | None = Query(
+        default=None,
+        description=(
+            "Create the annotations as this virtual annotator of the project "
+            "instead of the current user"
+        ),
+    ),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -83,9 +104,16 @@ def create_span_annotations_bulk(
                 (Crud.SOURCE_DOCUMENT, span.sdoc_id),
             ]
         )
+        if annotate_as_user_id is not None:
+            validate.validate_objects_in_same_project(
+                [
+                    (Crud.USER, annotate_as_user_id),
+                    (Crud.SOURCE_DOCUMENT, span.sdoc_id),
+                ]
+            )
 
     results = SpanAnnotationService().create_multi(
-        db=db, user_id=authz_user.user.id, create_dtos=spans
+        db=db, user_id=annotate_as_user_id or authz_user.user.id, create_dtos=spans
     )
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_CREATED_BATCH, results)
