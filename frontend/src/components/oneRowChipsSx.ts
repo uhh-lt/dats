@@ -1,9 +1,14 @@
 import { SxProps, Theme } from "@mui/material";
 
-/** Keeps the chips and the input of an Autocomplete in one row; pass it as sx while values are selected. */
+/**
+ * Keeps a multiple Autocomplete in one row; combine it with limitTags={1}. The chip shrinks so that "+N more" stays
+ * visible, and while the field is focused for typing, its chips are hidden instead of wrapping.
+ */
 export const oneRowChipsAutocompleteSx: SxProps<Theme> = {
   "& .MuiAutocomplete-inputRoot": { flexWrap: "nowrap" },
-  // the input takes no room until the field is focused for typing
-  "& .MuiAutocomplete-inputRoot .MuiAutocomplete-input": { flex: "0 0 auto", width: 8, minWidth: 8 },
-  "&.Mui-focused .MuiAutocomplete-inputRoot .MuiAutocomplete-input": { width: 80, minWidth: 80 },
+  "& .MuiAutocomplete-tag": { flexShrink: 0 },
+  "& .MuiAutocomplete-tag.MuiChip-root": { flexShrink: 1, minWidth: 0 },
+  // the input takes room only while typing
+  "&:not(.Mui-focused) .MuiAutocomplete-inputRoot .MuiAutocomplete-input": { minWidth: 0, padding: 0 },
+  "&.Mui-focused .MuiAutocomplete-tag": { display: "none" },
 };
