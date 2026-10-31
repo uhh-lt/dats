@@ -5,7 +5,7 @@
 /**
  * The blocks of a prompt besides the document and the output format.
  *
- * Each block is filled with a selection stored in the template version (codes,
+ * Each block is filled with a selection stored in the prompt version (codes,
  * examples, tags, metadata fields).
  */
 export enum PromptBlock {

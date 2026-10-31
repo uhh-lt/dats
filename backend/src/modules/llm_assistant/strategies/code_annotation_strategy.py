@@ -1,5 +1,5 @@
-from core.prompt_template.prompt_template_dto import PromptCode
-from core.prompt_template.prompt_template_renderer import PromptRenderer
+from core.prompt.prompt_dto import PromptCode
+from core.prompt.prompt_renderer import PromptRenderer
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 

@@ -1,29 +1,29 @@
 import { Icon } from "@components/icons";
-import { promptTemplateQueries } from "@core/prompt-template";
-import { PromptTemplatesView } from "@features/prompt-templates";
+import { promptQueries } from "@core/prompt";
+import { PromptsView } from "@features/prompts";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
-const promptTemplatesSearchSchema = z.object({
-  // the template opened in the editor
-  templateId: z.coerce.number().optional(),
+const promptsSearchSchema = z.object({
+  // the prompt opened in the editor
+  promptId: z.coerce.number().optional(),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/prompts")({
   staticData: {
     tab: true,
-    icon: Icon.PROMPT_TEMPLATE,
+    icon: Icon.PROMPT,
     getTitle: () => "Prompts",
   },
-  validateSearch: zodValidator(promptTemplatesSearchSchema),
+  validateSearch: zodValidator(promptsSearchSchema),
   context: ({ params }) => ({
-    promptTemplatesByProjectOptions: promptTemplateQueries.byProject(params.projectId),
+    promptsByProjectOptions: promptQueries.byProject(params.projectId),
   }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(context.promptTemplatesByProjectOptions);
+    await context.queryClient.ensureQueryData(context.promptsByProjectOptions);
   },
   pendingComponent: () => <CircularProgress />,
-  component: PromptTemplatesView,
+  component: PromptsView,
 });

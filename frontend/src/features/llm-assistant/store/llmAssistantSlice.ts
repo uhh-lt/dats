@@ -12,9 +12,9 @@ import { LLMAssistantEvent } from "../_types/LLMAssistantEvent";
  * How the wizard gets its prompt:
  * - guided: the user selects codes, tags or metadata fields and settings; the wizard runs the default prompt of the
  *   task with these selections, without storing it
- * - template: the user runs a stored prompt template version, which decides everything but the documents and model
+ * - prompt: the user runs a stored prompt version, which decides everything but the documents and model
  */
-export type LLMAssistantMode = "guided" | "template";
+export type LLMAssistantMode = "guided" | "prompt";
 
 interface LLMAssistantState {
   // dialog
@@ -33,8 +33,8 @@ interface LLMAssistantState {
   outputFormat?: OutputFormat;
   documentUnit?: DocumentUnit;
   settings?: PromptSettings;
-  // template mode: the version to run
-  promptTemplateVersionId?: number;
+  // prompt mode: the version to run
+  promptVersionId?: number;
   deleteExistingAnnotations: boolean;
   jobId?: string;
   jobResult: LLMAssistantJobOutput | null | undefined;
@@ -55,7 +55,7 @@ const initialState: LLMAssistantState = {
   outputFormat: undefined,
   documentUnit: undefined,
   settings: undefined,
-  promptTemplateVersionId: undefined,
+  promptVersionId: undefined,
   deleteExistingAnnotations: false,
   jobId: undefined,
   jobResult: undefined,
@@ -80,9 +80,9 @@ const llmAssistantSlice = createSlice({
       state.method = action.payload.method;
       state.step = 1;
     },
-    // Step 1 (template): Run a prompt template -> Go to the template selection
-    goToTemplateSelection: (state) => {
-      state.mode = "template";
+    // Step 1 (prompt): Run a prompt -> Go to the prompt selection
+    goToPromptSelection: (state) => {
+      state.mode = "prompt";
       state.method = undefined;
       state.step = 1;
     },
@@ -100,10 +100,10 @@ const llmAssistantSlice = createSlice({
       state.projectMetadataIds = action.payload.projectMetadataIds;
       state.codeIds = action.payload.codeIds;
     },
-    // Step 2 (template): Select a prompt template version -> Go to the settings form
-    goToTemplateSettings: (state, action: PayloadAction<{ promptTemplateVersionId: number; method: TaskType }>) => {
+    // Step 2 (prompt): Select a prompt version -> Go to the settings form
+    goToPromptSettings: (state, action: PayloadAction<{ promptVersionId: number; method: TaskType }>) => {
       state.step = 2;
-      state.promptTemplateVersionId = action.payload.promptTemplateVersionId;
+      state.promptVersionId = action.payload.promptVersionId;
       state.method = action.payload.method;
     },
     // Step 3: Save all settings and go to the review of the prompt
@@ -139,8 +139,8 @@ const llmAssistantSlice = createSlice({
       state.projectId = action.payload.input.project_id;
       state.jobId = action.payload.job_id;
       state.method = action.payload.input.task_type;
-      state.mode = action.payload.input.prompt_template_version_id ? "template" : "guided";
-      state.promptTemplateVersionId = action.payload.input.prompt_template_version_id ?? undefined;
+      state.mode = action.payload.input.prompt_version_id ? "prompt" : "guided";
+      state.promptVersionId = action.payload.input.prompt_version_id ?? undefined;
     },
     // Step 5: Wait for the job to finish
     goToResult: (state, action: PayloadAction<{ result: LLMAssistantJobOutput }>) => {
@@ -155,9 +155,9 @@ const llmAssistantSlice = createSlice({
       if (state.step === 0) {
         state.method = initialState.method;
         state.mode = initialState.mode;
-        state.promptTemplateVersionId = initialState.promptTemplateVersionId;
+        state.promptVersionId = initialState.promptVersionId;
       }
-      // the data or template choice is kept for review; the settings are reset
+      // the data or prompt choice is kept for review; the settings are reset
       if (state.step <= 1) {
         state.modelId = initialState.modelId;
         state.outputFormat = initialState.outputFormat;

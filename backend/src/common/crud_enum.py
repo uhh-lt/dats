@@ -17,9 +17,9 @@ from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
-from core.prompt_template.prompt_template_crud import crud_prompt_template
-from core.prompt_template.prompt_template_version_crud import (
-    crud_prompt_template_version,
+from core.prompt.prompt_crud import crud_prompt
+from core.prompt.prompt_version_crud import (
+    crud_prompt_version,
 )
 from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
@@ -57,8 +57,8 @@ class Crud(Enum):
     OBJECT_HANDLE = crud_object_handle
     PROJECT = crud_project
     PROJECT_METADATA = crud_project_meta
-    PROMPT_TEMPLATE = crud_prompt_template
-    PROMPT_TEMPLATE_VERSION = crud_prompt_template_version
+    PROMPT = crud_prompt
+    PROMPT_VERSION = crud_prompt_version
     REFRESH_TOKEN = crud_refresh_token
     SENTENCE_ANNOTATION = crud_sentence_anno
     SOURCE_DOCUMENT_DATA = crud_sdoc_data

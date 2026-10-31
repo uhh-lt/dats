@@ -15,7 +15,7 @@ class ImportJobType(str, Enum):
     TIMELINE_ANALYSES = "TIMELINE_ANALYSES"
     COTA = "COTA"
     MEMOS = "MEMOS"
-    PROMPT_TEMPLATES = "PROMPT_TEMPLATES"
+    PROMPTS = "PROMPTS"
     DOCUMENTS = "DOCUMENTS"
 
 
@@ -26,7 +26,7 @@ class ExportEntity(str, Enum):
     FOLDER = "folder"
     MEMO = "memo"
     PROJECT_METADATA = "project_metadata"
-    PROMPT_TEMPLATE = "prompt_template"
+    PROMPT = "prompt"
     SDOC = "sdoc"
     SENT_ANNOTATION = "sent_annotation"
     SPAN_ANNOTATION = "span_annotation"
@@ -49,8 +49,8 @@ class ExportEntity(str, Enum):
                 return r"project_\d+_all_memos.csv"
             case ExportEntity.PROJECT_METADATA:
                 return r"project_\d+_all_project_metadatas.csv"
-            case ExportEntity.PROMPT_TEMPLATE:
-                return r"project_\d+_all_prompt_templates.csv"
+            case ExportEntity.PROMPT:
+                return r"project_\d+_all_prompts.csv"
             case ExportEntity.SDOC:
                 return r"project_\d+_all_docs.zip"
             case ExportEntity.SENT_ANNOTATION:

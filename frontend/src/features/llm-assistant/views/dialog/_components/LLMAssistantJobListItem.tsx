@@ -22,7 +22,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { formatDateTime } from "@utils/DateUtils";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
-import { LANGUAGE_LABELS, PromptTemplateHooks } from "@core/prompt-template";
+import { LANGUAGE_LABELS, PromptHooks } from "@core/prompt";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
 interface LLMAssistantJobListItemProps {
@@ -107,8 +107,8 @@ export const LLMAssistantJobListItem = memo(({ initialLLMAssistantJob }: LLMAssi
 });
 
 function InputViewer({ llmAssistantJob }: { llmAssistantJob: LlmAssistantJobRead }) {
-  const { draft, prompt_template_version_id: versionId, model } = llmAssistantJob.input;
-  const templateVersion = PromptTemplateHooks.useGetPromptTemplateVersion({
+  const { draft, prompt_version_id: versionId, model } = llmAssistantJob.input;
+  const promptVersion = PromptHooks.useGetPromptVersion({
     projectId: llmAssistantJob.project_id,
     versionId: versionId ?? undefined,
   });
@@ -123,26 +123,26 @@ function InputViewer({ llmAssistantJob }: { llmAssistantJob: LlmAssistantJobRead
         <TextField
           fullWidth
           label="Prompt"
-          value={draft.prompt}
+          value={draft.text}
           multiline
           slotProps={{ htmlInput: { readOnly: true, style: { fontFamily: "monospace" } } }}
         />
       </Stack>
     );
   }
-  if (templateVersion.isLoading) return <CircularProgress />;
-  if (!templateVersion.data) return <>The prompt template version {versionId} does not exist.</>;
-  const { template, version } = templateVersion.data;
+  if (promptVersion.isLoading) return <CircularProgress />;
+  if (!promptVersion.data) return <>The prompt version {versionId} does not exist.</>;
+  const { prompt, version } = promptVersion.data;
   return (
     <Stack gap={3} sx={{ pt: 1, pr: 1, height: 400, overflowY: "auto" }}>
       <Typography variant="subtitle2">
-        Prompt {template.name} ({LANGUAGE_LABELS[template.language]}), version {version.version}
-        {template.is_archived ? " (archived)" : ""}, model {model}
+        Prompt {prompt.name} ({LANGUAGE_LABELS[prompt.language]}), version {version.version}
+        {prompt.is_archived ? " (archived)" : ""}, model {model}
       </Typography>
       <TextField
         fullWidth
         label="Prompt"
-        value={version.prompt}
+        value={version.text}
         multiline
         slotProps={{ htmlInput: { readOnly: true, style: { fontFamily: "monospace" } } }}
       />

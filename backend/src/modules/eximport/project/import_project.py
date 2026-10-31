@@ -19,8 +19,8 @@ from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
 )
-from modules.eximport.prompt_templates.import_prompt_templates import (
-    import_prompt_templates_to_proj,
+from modules.eximport.prompts.import_prompts import (
+    import_prompts_to_proj,
 )
 from modules.eximport.sdocs.import_sdocs import import_sdocs_to_proj
 from modules.eximport.sent_annotations.import_sentence_annotations import (
@@ -51,8 +51,8 @@ IMPORT_ORDER = [
     ExportEntity.COTA,
     ExportEntity.TIMELINE_ANALYSIS,
     ExportEntity.WHITEBOARD,
-    # after everything the selections of the template versions reference
-    ExportEntity.PROMPT_TEMPLATE,
+    # after everything the selections of the prompt versions reference
+    ExportEntity.PROMPT,
 ]
 
 
@@ -70,8 +70,8 @@ def _import_entity(entity: ExportEntity, db: Session, data, project_id: int) -> 
             import_memos_to_proj(db=db, df=data, project_id=project_id)
         case ExportEntity.PROJECT_METADATA:
             import_project_metadata_to_proj(db=db, df=data, project_id=project_id)
-        case ExportEntity.PROMPT_TEMPLATE:
-            import_prompt_templates_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.PROMPT:
+            import_prompts_to_proj(db=db, df=data, project_id=project_id)
         case ExportEntity.SDOC:
             import_sdocs_to_proj(db=db, path_to_dir=data, project_id=project_id)
         case ExportEntity.SENT_ANNOTATION:

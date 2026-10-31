@@ -1,7 +1,7 @@
 from fastapi import status
 
 from common.exception_handler import exception_handler
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 
 
 class LLMAssistantJobPreparationError(Exception):
