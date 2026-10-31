@@ -6,6 +6,7 @@ from core.tag.tag_dto import (
     TagCreate,
     TagRead,
     TagUpdate,
+    TagUpdateBulk,
 )
 
 
@@ -447,3 +448,68 @@ def test_count_tags_not_exists(client: TestClient):
     resp = client.post(f"/tag/count_tags/{not_exists_id}", json=payload)
 
     assert resp.status_code == 403, resp.text
+
+
+# ===========================================================================
+# UPDATE TAGS BULK (/tag/bulk/update_tags) TESTS
+# ===========================================================================
+
+
+def test_update_tags_bulk_updates_each_tag(
+    client: TestClient, project_with_sdoc_and_multiple_tags
+):
+    """Every tag gets its own changes, and the results keep the request order."""
+    tag = project_with_sdoc_and_multiple_tags["tag"]
+    tag2 = project_with_sdoc_and_multiple_tags["tag2"]
+    request = [
+        TagUpdateBulk(tag_id=tag2.id, name="Renamed Tag 2", description="second"),
+        TagUpdateBulk(tag_id=tag.id, description="first"),
+    ]
+
+    response = client.patch(
+        "/tag/bulk/update_tags",
+        json=[update.model_dump(exclude_unset=True) for update in request],
+    )
+
+    assert response.status_code == 200, response.text
+    tags = [TagRead.model_validate(t) for t in response.json()]
+    assert [(t.id, t.name, t.description) for t in tags] == [
+        (tag2.id, "Renamed Tag 2", "second"),
+        (tag.id, "Test Tag", "first"),
+    ]
+
+
+def test_update_tags_bulk_rejects_a_taken_name_without_changes(
+    client: TestClient, project_with_sdoc_and_multiple_tags
+):
+    """Tag names are unique per project: a taken name fails the whole update with
+    409, and no tag of the request is changed."""
+    tag = project_with_sdoc_and_multiple_tags["tag"]
+    tag2 = project_with_sdoc_and_multiple_tags["tag2"]
+
+    response = client.patch(
+        "/tag/bulk/update_tags",
+        json=[
+            {"tag_id": tag2.id, "description": "changed"},
+            {"tag_id": tag.id, "name": "Test Tag 2"},
+        ],
+    )
+
+    assert response.status_code == 409, response.text
+    response = client.get(f"/tag/{tag2.id}")
+    assert response.status_code == 200, response.text
+    assert TagRead.model_validate(response.json()).description is None
+
+
+def test_update_tags_bulk_rejects_unknown_tags(
+    client: TestClient, project_with_sdoc_and_tag
+):
+    """A tag that does not exist (or belongs to a foreign project) is forbidden."""
+    tag = project_with_sdoc_and_tag["tag"]
+
+    response = client.patch(
+        "/tag/bulk/update_tags",
+        json=[{"tag_id": tag.id, "name": "A"}, {"tag_id": 999999, "name": "B"}],
+    )
+
+    assert response.status_code == 403, response.text

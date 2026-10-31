@@ -1,4 +1,3 @@
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -120,33 +119,24 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update_with_children(
-        self, db: Session, *, code_id: int, update_dto: CodeUpdate
-    ) -> CodeORM:
-        if update_dto.enabled is None:
-            return self.update(db=db, id=code_id, update_dto=update_dto)
-        codes = self.read_with_children(db=db, code_id=code_id)
-        obj_data = jsonable_encoder(codes[0].as_dict())
-        update_data = update_dto.model_dump(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(codes[0], field, update_data[field])
-        for code in codes:
-            code.enabled = update_dto.enabled
-        db.add_all(codes)
+    def update_multi(
+        self, db: Session, *, ids: list[int], update_dtos: list[CodeUpdate]
+    ) -> list[CodeORM]:
+        codes = super().update_multi(db=db, ids=ids, update_dtos=update_dtos)
 
-        # when enabling a code, all ancestors must be enabled as well,
-        # so that the code is reachable from the top of the hierarchy
-        if update_dto.enabled:
-            parent = codes[0].parent
+        # enabling or disabling a code applies to all its descendants; enabling
+        # also enables its ancestors, so the code is reachable from the top
+        for code, update_dto in zip(codes, update_dtos):
+            if update_dto.enabled is None:
+                continue
+            for descendant in self.read_with_children(db=db, code_id=code.id):
+                descendant.enabled = update_dto.enabled
+            parent = code.parent if update_dto.enabled else None
             while parent is not None:
-                if not parent.enabled:
-                    parent.enabled = True
-                    db.add(parent)
+                parent.enabled = True
                 parent = parent.parent
-
         db.flush()
-        return codes[0]
+        return codes
 
     ### OTHER OPERATIONS ###
 
