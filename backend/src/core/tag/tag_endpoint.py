@@ -15,6 +15,7 @@ from core.tag.tag_dto import (
     TagCreate,
     TagRead,
     TagUpdate,
+    TagUpdateBulk,
 )
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -153,6 +154,37 @@ def update_by_id(
         DATSEvent.TAG_UPDATED, result, project_id=db_obj.get_project_id()
     )
     return result
+
+
+# "/bulk/update" updates the tags of documents
+@router.patch(
+    "/bulk/update_tags",
+    response_model=list[TagRead],
+    summary="Updates the Tags with the given IDs.",
+)
+def update_tags_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    tags: list[TagUpdateBulk],
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> list[TagRead]:
+    authz_user.assert_in_same_project_as_many(Crud.TAG, [t.tag_id for t in tags])
+
+    db_objs = crud_tag.update_multi(
+        db=db,
+        ids=[t.tag_id for t in tags],
+        update_dtos=[
+            TagUpdate.model_validate(
+                t.model_dump(exclude_unset=True, exclude={"tag_id"})
+            )
+            for t in tags
+        ],
+    )
+    results = [TagRead.model_validate(db_obj) for db_obj in db_objs]
+    if results:
+        ws.emit_dtos_to_projects(DATSEvent.TAG_UPDATED_BATCH, results)
+    return results
 
 
 @router.patch(

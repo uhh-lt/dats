@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
+from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate, CodeUpdateBulk
 
 
 def test_create_new_code(client: TestClient, test_project):
@@ -274,3 +274,127 @@ def test_enable_child_code_keeps_enabled_ancestors(
     response = client.get(f"/code/{parent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is True
+
+
+# ===========================================================================
+# UPDATE CODES BULK (/code/bulk/update) TESTS
+# ===========================================================================
+
+
+def test_update_codes_bulk_updates_each_code(
+    client: TestClient, project_with_parent_and_child_code
+):
+    """Every code gets its own changes; the results keep the request order and the
+    fields that were not sent stay unchanged."""
+    parent = project_with_parent_and_child_code["parent_code"]
+    child = project_with_parent_and_child_code["code"]
+    request = [
+        CodeUpdateBulk(code_id=child.id, name="Renamed Child", description="new"),
+        CodeUpdateBulk(code_id=parent.id, description="new parent description"),
+    ]
+
+    response = client.patch(
+        "/code/bulk/update",
+        json=[update.model_dump(exclude_unset=True) for update in request],
+    )
+
+    assert response.status_code == 200, response.text
+    codes = [CodeRead.model_validate(code) for code in response.json()]
+    assert [code.id for code in codes] == [child.id, parent.id]
+    assert (codes[0].name, codes[0].description) == ("Renamed Child", "new")
+    assert (codes[1].name, codes[1].description) == (
+        "Parent Code",
+        "new parent description",
+    )
+    assert codes[0].color == "Green"
+    assert codes[0].parent_id == parent.id
+
+
+def test_update_codes_bulk_disabling_a_code_disables_its_descendants(
+    client: TestClient, project_with_code_hierarchy
+):
+    """A bulk update applies the same enabled cascade as the single update."""
+    grandparent = project_with_code_hierarchy["grandparent_code"]
+    child = project_with_code_hierarchy["child_code"]
+
+    response = client.patch(
+        "/code/bulk/update", json=[{"code_id": grandparent.id, "enabled": False}]
+    )
+
+    assert response.status_code == 200, response.text
+    response = client.get(f"/code/{child.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is False
+
+
+def test_update_codes_bulk_accepts_an_empty_list(client: TestClient):
+    """An empty bulk update changes nothing and returns no codes."""
+    response = client.patch("/code/bulk/update", json=[])
+
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+
+def test_update_codes_bulk_rejects_a_taken_name_without_changes(
+    client: TestClient, project_with_parent_and_child_code
+):
+    """Code names are unique per project: a taken name fails the whole update
+    with 409, and no code of the request is changed."""
+    parent = project_with_parent_and_child_code["parent_code"]
+    child = project_with_parent_and_child_code["code"]
+
+    response = client.patch(
+        "/code/bulk/update",
+        json=[
+            {"code_id": parent.id, "description": "changed"},
+            {"code_id": child.id, "name": "Parent Code"},
+        ],
+    )
+
+    assert response.status_code == 409, response.text
+    response = client.get(f"/code/{parent.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).description == (
+        "Parent code for testing"
+    )
+
+
+def test_update_codes_bulk_rejects_duplicate_ids(client: TestClient, project_with_code):
+    """A code may appear only once per bulk update."""
+    code = project_with_code["code"]
+
+    response = client.patch(
+        "/code/bulk/update",
+        json=[
+            {"code_id": code.id, "name": "A"},
+            {"code_id": code.id, "name": "B"},
+        ],
+    )
+
+    assert response.status_code == 400, response.text
+
+
+def test_update_codes_bulk_rejects_an_update_without_changes(
+    client: TestClient, project_with_code
+):
+    """Every item must change at least one field."""
+    code = project_with_code["code"]
+
+    response = client.patch("/code/bulk/update", json=[{"code_id": code.id}])
+
+    assert response.status_code == 422, response.text
+
+
+def test_update_codes_bulk_rejects_unknown_codes(client: TestClient, project_with_code):
+    """A code that does not exist (or belongs to a foreign project) is forbidden."""
+    code = project_with_code["code"]
+
+    response = client.patch(
+        "/code/bulk/update",
+        json=[
+            {"code_id": code.id, "name": "Renamed"},
+            {"code_id": 999999, "name": "Unknown"},
+        ],
+    )
+
+    assert response.status_code == 403, response.text
