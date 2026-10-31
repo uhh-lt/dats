@@ -47,6 +47,7 @@ MANDATORY: Instruct the subagent to work autonomously following <researchinstruc
 - Research the user's task comprehensively using read-only tools.
 - Start with high-level code searches before reading specific files.
 - Pay special attention to instructions and skills made available by the developers to understand best practices and intended usage.
+- List the existing code the task can reuse or extend (CRUD and service methods, endpoints, hooks, components, dialogs), so the plan builds on it instead of re-creating it.
 - Identify missing information, conflicting requirements, or technical unknowns.
 - DO NOT draft a full plan yet — focus on discovery and feasibility.
 </researchinstructions>
@@ -152,6 +153,7 @@ Date: [YYYY-MM-DD]
 - **CON-001**: Constraint 1
 - **GUD-001**: Guideline 1
 - **PAT-001**: Pattern to follow 1
+- **REU-001**: Existing code to reuse or extend ([file](path), `symbol`)
 
 ## 2. Implementation Steps
 

@@ -60,6 +60,7 @@ ESLint (`check-file`) enforces the casing.
 
 ## Components
 
+- Before creating a component or hook, check `@components`, `@hooks` and the domain's `@core/<domain>` (its components, role folders and `api/` hooks). Extend an existing one with a prop instead of building a variant.
 - Functional components only. Type props with an interface named `<Component>Props`; extend MUI props with `Omit<>` to avoid conflicts (see [EditableTypography.tsx](../../frontend/src/components/EditableTypography.tsx)).
 - Prefix event handlers with `handle` (`handleClick` for `onClick`); do not import React unless it is used directly.
 - Split large components into focused sub-components in a private `_components` folder. A component that needs data and is also rendered from data comes as `XWithData` / `XWithoutData` (see the renderer instructions).

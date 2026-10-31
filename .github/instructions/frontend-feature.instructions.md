@@ -72,7 +72,7 @@ export * from "./views/main/ClassifierView";
 
 - **Inside the feature**: relative imports only, never `@features/<self>/...` (lint: `local/no-alias-within-same-domain`).
 - **Other folders**: path aliases (`@core/tag`, `@components/...`, `@store/...`). Import `core` domains through their public entry `@core/<domain>`, never deeper (lint: `local/no-internal-modules-public-entry`).
-- **Other features**: never. A feature may not import another feature; routes compose features (lint: `boundaries/element-types`). If it is absolutely unavoidable, import the other feature's `index.ts` with `// eslint-disable-next-line boundaries/element-types`.
+- **Other features**: never. A feature may not import another feature; routes compose features (lint: `boundaries/element-types`). Code that two features need (components, hooks, types, helpers) moves to `core/<domain>` or to `components/`, `hooks/`, `utils/`; never copy it into the second feature. The one exception is embedding another feature's entry view, such as a button that opens it (`LLMAssistantButton` in `SearchDocumentTable.tsx`): import it from the feature's `index.ts` with `// eslint-disable-next-line boundaries/element-types`.
 - **Redux**: a feature reads and writes its own slices and the global slices in `store/global/`, never another feature's slice (lint: `local/no-cross-slice-access`).
 
 ### Page Views and the Route
