@@ -15,10 +15,8 @@ from core.user.user_dto import (
     UserRead,
     UserUpdate,
     VirtualUserCreate,
-    VirtualUserUpdate,
 )
 from core.user.user_orm import UserORM
-from core.user.user_service import UserService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -32,7 +30,7 @@ router = APIRouter(
 @router.put(
     "/{project_id}/virtual_user",
     response_model=UserRead,
-    summary="Creates a virtual user (a user without login) in the Project",
+    summary="Creates a virtual user (a user that cannot log in) in the Project",
 )
 def create_virtual_user(
     *,
@@ -44,9 +42,10 @@ def create_virtual_user(
 ) -> UserRead:
     authz_user.assert_in_project(project_id)
 
-    result = UserService().create_virtual_user(
+    db_user = crud_user.create_virtual_user(
         db=db, project_id=project_id, name=virtual_user.name
     )
+    result = UserRead.model_validate(db_user)
     ws.emit_to_project(DATSEvent.USER_CREATED, result, project_id=project_id)
     return result
 
@@ -133,22 +132,25 @@ def update_me(
 
 
 @router.patch(
-    "/virtual_user/{user_id}",
+    "/{user_id}",
     response_model=UserRead,
-    summary="Renames the virtual user with the given ID",
+    summary=(
+        "Updates the User with the given ID: a virtual user of one of your projects "
+        "(other users have no project)"
+    ),
 )
-def update_virtual_user(
+def update_by_id(
     *,
     user_id: int,
-    virtual_user: VirtualUserUpdate,
+    user: UserUpdate,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     authz_user.assert_in_same_project_as(Crud.USER, user_id)
 
-    result = UserService().update_virtual_user(
-        db=db, user_id=user_id, update_dto=virtual_user
+    result = UserRead.model_validate(
+        crud_user.update(db=db, id=user_id, update_dto=user)
     )
     assert result.project_id is not None
     ws.emit_to_project(DATSEvent.USER_UPDATED, result, project_id=result.project_id)
@@ -213,14 +215,14 @@ def delete_me(
 
 
 @router.delete(
-    "/virtual_user/{user_id}",
+    "/{user_id}",
     response_model=UserRead,
     summary=(
-        "Removes the virtual user with the given ID together with all its "
-        "annotations and memos"
+        "Removes the User with the given ID together with all its annotations and "
+        "memos: a virtual user of one of your projects (other users have no project)"
     ),
 )
-def delete_virtual_user(
+def delete_by_id(
     *,
     user_id: int,
     db: Session = Depends(get_db_session),
@@ -229,7 +231,8 @@ def delete_virtual_user(
 ) -> UserRead:
     authz_user.assert_in_same_project_as(Crud.USER, user_id)
 
-    result = UserService().delete_virtual_user(db=db, user_id=user_id)
+    result = UserRead.model_validate(crud_user.read(db=db, id=user_id))
+    crud_user.delete(db=db, id=user_id)
     assert result.project_id is not None
     ws.emit_to_project(DATSEvent.USER_DELETED, result, project_id=result.project_id)
     return result

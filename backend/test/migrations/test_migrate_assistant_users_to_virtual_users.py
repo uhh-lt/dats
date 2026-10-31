@@ -19,12 +19,12 @@ from .conftest import FEWSHOT_ID, TRAINED_ID, ZEROSHOT_ID, AssistantUsersDatabas
 MIGRATION = (
     Path(__file__).parents[2]
     / "src/migrations/alembic/versions"
-    / "0a88c0776a57_virtual_users.py"
+    / "2bbc904aa055_virtual_users.py"
 )
 
 
 def _load_migration() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("migration_0a88c0776a57", MIGRATION)
+    spec = importlib.util.spec_from_file_location("migration_2bbc904aa055", MIGRATION)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -36,7 +36,7 @@ def _virtual_users(client: TestClient, project_id: int) -> dict[str, int]:
     response = client.get(f"/user/{project_id}/user")
     assert response.status_code == 200, response.text
     users = [
-        UserRead.model_validate({**data, "password": None}) for data in response.json()
+        UserRead.model_validate({**data, "password": ""}) for data in response.json()
     ]
     return {user.first_name: user.id for user in users if user.is_virtual}
 
@@ -57,7 +57,7 @@ def migrated(
 
 
 # ===========================================================================
-# MIGRATE ASSISTANT USERS TO VIRTUAL USERS (0a88c0776a57) TESTS
+# MIGRATE ASSISTANT USERS TO VIRTUAL USERS (2bbc904aa055) TESTS
 # ===========================================================================
 
 

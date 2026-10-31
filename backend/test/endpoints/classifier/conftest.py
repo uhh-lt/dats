@@ -27,7 +27,6 @@ from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from core.user.user_service import UserService
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import ClassifierCreate
 from modules.classifier.classifier_enum import ClassifierModel
@@ -205,7 +204,7 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
 def classifier_virtual_user(db_session, test_project) -> UserORM:
     """The virtual user "Classifier-Run1" of the test project, which span and
     sentence classifier inference writes its annotations into."""
-    virtual_user = UserService().create_virtual_user(
+    virtual_user = crud_user.create_virtual_user(
         db=db_session, project_id=test_project.id, name="Classifier-Run1"
     )
     db_session.commit()

@@ -73,7 +73,7 @@ An **approach** is zero-shot or few-shot. It follows from the prompt: a prompt t
 
 ### Virtual users
 
-Annotation tasks write into the **virtual user** of the job input (`virtual_user_id`): a user without login that belongs to one project (see `core/user/user_service.py`). The job start rejects other users and virtual users of other projects, so the assistant never writes into a person's annotations. `delete_existing_annotations` deletes the annotations of this virtual user for the documents and codes of the prompt.
+Annotation tasks write into the **virtual user** of the job input (`virtual_user_id`): a user that belongs to one project and cannot log in (`user.project_id`). The job start rejects other users and virtual users of other projects, so the assistant never writes into a person's annotations. `delete_existing_annotations` deletes the annotations of this virtual user for the documents and codes of the prompt.
 
 ### Factories
 

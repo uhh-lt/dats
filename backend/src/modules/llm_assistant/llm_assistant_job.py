@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
+from core.auth.auth_exceptions import InvalidError
 from core.prompt_template.prompt_template_service import PromptTemplateService
-from core.user.user_service import UserService
+from core.user.user_crud import crud_user
 from modules.llm_assistant.llm_assistant_endpoint import router
 from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
@@ -27,9 +28,13 @@ def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> 
     LLMAssistantService().assert_documents_in_project(
         db=db, project_id=payload.project_id, sdoc_ids=payload.sdoc_ids
     )
-    if payload.virtual_user_id is not None:
-        UserService().assert_virtual_user(
-            db=db, user_id=payload.virtual_user_id, project_id=payload.project_id
+    user_id = payload.virtual_user_id
+    if (
+        user_id is not None
+        and crud_user.read(db=db, id=user_id).project_id != payload.project_id
+    ):
+        raise InvalidError(
+            f"User {user_id} is not a virtual user of project {payload.project_id}"
         )
 
 

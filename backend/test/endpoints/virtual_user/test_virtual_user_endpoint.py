@@ -10,7 +10,7 @@ from .conftest import VirtualUserProject
 
 
 def _user_read(data: dict[str, Any]) -> UserRead:
-    data["password"] = None  # excluded from serialization
+    data["password"] = ""  # excluded from serialization
     return UserRead.model_validate(data)
 
 
@@ -22,8 +22,8 @@ def _user_read(data: dict[str, Any]) -> UserRead:
 def test_create_virtual_user_returns_a_virtual_user_of_the_project(
     client: TestClient, virtual_user_project: VirtualUserProject
 ):
-    """A virtual user is a user of the project without email and password,
-    whose display name is its first name."""
+    """A virtual user is a user of the project with a generated email, whose
+    name is its first name."""
     project = virtual_user_project["project"]
 
     response = client.put(
@@ -34,7 +34,7 @@ def test_create_virtual_user_returns_a_virtual_user_of_the_project(
     created = _user_read(response.json())
     assert created.is_virtual
     assert created.project_id == project.id
-    assert created.email is None
+    assert created.email.endswith("@virtual.dats")
     assert (created.first_name, created.last_name) == ("ExperimentA-Run3", "")
     users = client.get(f"/user/{project.id}/user").json()
     assert [user["first_name"] for user in users if user["is_virtual"]] == [
@@ -131,19 +131,17 @@ def test_get_all_users_lists_no_virtual_users(
 
 
 # ===========================================================================
-# UPDATE VIRTUAL USER (PATCH /user/virtual_user/{user_id}) TESTS
+# UPDATE USER (PATCH /user/{user_id}) TESTS
 # ===========================================================================
 
 
 def test_update_virtual_user_renames_it(
     client: TestClient, virtual_user_project: VirtualUserProject
 ):
-    """Renaming changes the display name (the first name)."""
+    """Renaming a virtual user changes its name (the first name)."""
     run2 = virtual_user_project["run2"]
 
-    response = client.patch(
-        f"/user/virtual_user/{run2.id}", json={"name": "Gold standard"}
-    )
+    response = client.patch(f"/user/{run2.id}", json={"first_name": "Gold standard"})
 
     assert response.status_code == 200, response.text
     renamed = _user_read(response.json())
@@ -154,9 +152,9 @@ def test_update_virtual_user_renames_it(
     "payload,expected_status",
     [
         # the project already has a virtual user of that name
-        pytest.param({"name": "ExperimentA-Run1"}, 409, id="duplicate-name"),
+        pytest.param({"first_name": "ExperimentA-Run1"}, 409, id="duplicate-name"),
         # an explicit null for a NOT NULL column
-        pytest.param({"name": None}, 422, id="null-name"),
+        pytest.param({"first_name": None}, 422, id="null-name"),
         # nothing to update
         pytest.param({}, 422, id="empty-update"),
     ],
@@ -170,7 +168,7 @@ def test_update_virtual_user_rejects_invalid_updates(
     """Invalid renames are rejected."""
     run2 = virtual_user_project["run2"]
 
-    response = client.patch(f"/user/virtual_user/{run2.id}", json=payload)
+    response = client.patch(f"/user/{run2.id}", json=payload)
 
     assert response.status_code == expected_status, response.text
 
@@ -178,7 +176,7 @@ def test_update_virtual_user_rejects_invalid_updates(
 @pytest.mark.parametrize(
     "user_key",
     [
-        # human users have no project, so they are no virtual user of it
+        # other users have no project, so they are in no project of the user
         pytest.param("user", id="human-self"),
         pytest.param("other_user", id="human-other"),
         # virtual users of projects the user is no member of
@@ -190,16 +188,16 @@ def test_update_virtual_user_rejects_other_users_and_foreign_virtual_users(
     virtual_user_project: VirtualUserProject,
     user_key: str,
 ):
-    """Only virtual users of the user's projects can be renamed."""
+    """Only virtual users of the user's projects can be updated by id."""
     user = virtual_user_project[user_key]  # type: ignore[literal-required]
 
-    response = client.patch(f"/user/virtual_user/{user.id}", json={"name": "X"})
+    response = client.patch(f"/user/{user.id}", json={"first_name": "X"})
 
     assert response.status_code == 403, response.text
 
 
 # ===========================================================================
-# DELETE VIRTUAL USER (DELETE /user/virtual_user/{user_id}) TESTS
+# DELETE USER (DELETE /user/{user_id}) TESTS
 # ===========================================================================
 
 
@@ -215,7 +213,7 @@ def test_delete_virtual_user_deletes_its_annotations(
         virtual_user_project["run1_delta"].id,
     ]
 
-    response = client.delete(f"/user/virtual_user/{run1.id}")
+    response = client.delete(f"/user/{run1.id}")
 
     assert response.status_code == 200, response.text
     assert _user_read(response.json()).id == run1.id
@@ -237,7 +235,7 @@ def test_delete_virtual_user_keeps_provenance_of_copies(
     copy_id = virtual_user_project["user_alpha_copy"].id
     code_id = virtual_user_project["code"].id
 
-    response = client.delete(f"/user/virtual_user/{run1.id}")
+    response = client.delete(f"/user/{run1.id}")
 
     assert response.status_code == 200, response.text
     span_response = client.get(f"/span/{copy_id}")
@@ -251,7 +249,7 @@ def test_delete_virtual_user_keeps_provenance_of_copies(
 @pytest.mark.parametrize(
     "user_key",
     [
-        # human users can never be deleted through this endpoint
+        # other users have no project, so they are in no project of the user
         pytest.param("user", id="human-self"),
         pytest.param("other_user", id="human-other"),
         # virtual users of projects the user is no member of
@@ -266,7 +264,7 @@ def test_delete_virtual_user_rejects_other_users_and_foreign_virtual_users(
     """Only virtual users of the user's projects can be deleted."""
     user = virtual_user_project[user_key]  # type: ignore[literal-required]
 
-    response = client.delete(f"/user/virtual_user/{user.id}")
+    response = client.delete(f"/user/{user.id}")
 
     assert response.status_code == 403, response.text
     assert client.get(f"/user/by_id/{user.id}").status_code == 200
@@ -278,24 +276,49 @@ def test_delete_virtual_user_rejects_other_users_and_foreign_virtual_users(
 
 
 @pytest.mark.parametrize(
-    "username,password",
+    "password_key",
     [
-        # the display name is no login name
-        pytest.param("ExperimentA-Run1", "", id="name-empty-password"),
-        pytest.param("ExperimentA-Run1", "anything", id="name-any-password"),
+        # even the stored password (no valid hash) does not log in
+        pytest.param("stored", id="stored-password"),
+        pytest.param("other", id="other-password"),
     ],
 )
 def test_login_as_virtual_user_is_rejected(
-    client: TestClient,
-    virtual_user_project: VirtualUserProject,
-    username: str,
-    password: str,
+    client: TestClient, virtual_user_project: VirtualUserProject, password_key: str
 ):
-    """Virtual users have no email and no password, so no login matches
-    them."""
+    """Virtual users can never log in, whatever the password."""
+    run1 = virtual_user_project["run1"]
+    password = run1.password if password_key == "stored" else "anything"
+
     response = client.post(
-        "/authentication/login", data={"username": username, "password": password}
+        "/authentication/login", data={"username": run1.email, "password": password}
     )
 
-    assert response.status_code in (403, 422), response.text
+    assert response.status_code == 403, response.text
     assert "access_token" not in response.text
+
+
+@pytest.mark.parametrize(
+    "key_name,expected_status",
+    [
+        # a human user's key authenticates
+        pytest.param("user_api_key", 200, id="human-key"),
+        # a virtual user's key is rejected, even if it exists
+        pytest.param("run1_api_key", 403, id="virtual-user-key"),
+    ],
+)
+def test_content_auth_rejects_virtual_user_api_key(
+    client: TestClient,
+    virtual_user_project: VirtualUserProject,
+    key_name: str,
+    expected_status: int,
+):
+    """`/authentication/content` authenticates by the cookie with the real token
+    resolution (the test clients' header auth only replaces the bearer
+    dependency), which rejects every token of a virtual user."""
+    api_key: str = virtual_user_project[key_name]  # type: ignore[literal-required]
+    client.cookies.set("Authorization", api_key)
+
+    response = client.get("/authentication/content")
+
+    assert response.status_code == expected_status, response.text

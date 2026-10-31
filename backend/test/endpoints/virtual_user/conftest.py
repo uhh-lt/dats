@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import TypedDict
 
 import pytest
@@ -6,6 +7,9 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
+from core.auth.api_key_crud import crud_api_key
+from core.auth.api_key_dto import ApiKeyCreate
+from core.auth.security import generate_api_key, hash_api_key
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -17,7 +21,6 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
-from core.user.user_service import UserService
 from dats_test_utils import create_span_for_text, create_text_document
 
 SENTENCES = ["Alpha beta gamma.", "Delta epsilon zeta."]
@@ -26,7 +29,6 @@ SENTENCES = ["Alpha beta gamma.", "Delta epsilon zeta."]
 class VirtualUserProject(TypedDict):
     project: ProjectORM
     other_project: ProjectORM
-    target_project: ProjectORM
     user: UserORM
     other_user: UserORM
     run1: UserORM
@@ -38,6 +40,8 @@ class VirtualUserProject(TypedDict):
     run1_alpha: SpanAnnotationORM
     run1_delta: SpanAnnotationORM
     user_alpha_copy: SpanAnnotationORM
+    user_api_key: str
+    run1_api_key: str
 
 
 @pytest.fixture(scope="function")
@@ -50,7 +54,8 @@ def virtual_user_project(
     - `project` (the test project of the test user `user`):
       - members: the system user and `user` (the test user)
       - virtual users: `run1` ("ExperimentA-Run1") and `run2`
-        ("ExperimentA-Run2"), created through `UserService`
+        ("ExperimentA-Run2"), created through `crud_user.create_virtual_user`, so
+        they have a generated email (`<uuid>@virtual.dats`) and a random password
       - code `code` ("Claim")
       - document `sdoc` ("va_doc.txt") with the sentences "Alpha beta gamma." and
         "Delta epsilon zeta."
@@ -60,26 +65,28 @@ def virtual_user_project(
         a copy of `run1_alpha` (accepted in the comparison), so its provenance
         records `run1` as source user
       - `run2` has no annotations
+      - API keys `user_api_key` of `user` and `run1_api_key` of `run1`. The API
+        never issues keys to virtual users (they cannot log in); `run1_api_key`
+        is written to the database directly to prove that it is rejected anyway.
     - `other_project` ("Other Project") of `other_user` ("other@dats.org"), which
       `user` is no member of:
       - virtual user `other_run` ("ExperimentB-Run1")
       - document `other_sdoc` ("other_doc.txt")
-    - `target_project` ("Target Project") of `user`, to import into: code
-      "Claim" and document "va_doc.txt" with the same sentences, no annotations
 
     Non-obvious derived behavior:
 
     - Virtual users are no project members, but `/user/{project_id}/user` lists
       them after the members: the system user, `user`, `run1`, `run2`.
-    - Virtual users have no email and no password, so they can never log in.
+    - Virtual users can never log in: their password is no valid hash, and login,
+      tokens and API keys reject virtual users.
     """
     project = test_project
 
     # 1) virtual users, a code and a document with annotations
-    run1 = UserService().create_virtual_user(
+    run1 = crud_user.create_virtual_user(
         db=db_session, project_id=project.id, name="ExperimentA-Run1"
     )
-    run2 = UserService().create_virtual_user(
+    run2 = crud_user.create_virtual_user(
         db=db_session, project_id=project.id, name="ExperimentA-Run2"
     )
     code = crud_code.create(
@@ -140,7 +147,7 @@ def virtual_user_project(
         creating_user_id=other_user.id,
     )
     other_project = crud_project.read(db=db_session, id=other_project_read.id)
-    other_run = UserService().create_virtual_user(
+    other_run = crud_user.create_virtual_user(
         db=db_session, project_id=other_project.id, name="ExperimentB-Run1"
     )
     other_sdoc = create_text_document(
@@ -151,36 +158,27 @@ def virtual_user_project(
         sentences=SENTENCES,
     )
 
-    # 3) an empty project to import into
-    target_project_read = ProjectService().create_project(
-        db=db_session,
-        create_dto=ProjectCreate(title="Target Project", description=""),
-        creating_user_id=test_user.id,
-    )
-    target_project = crud_project.read(db=db_session, id=target_project_read.id)
-    crud_code.create(
-        db=db_session,
-        create_dto=CodeCreate(
-            name="Claim",
-            color="#ff0000",
-            description="",
-            project_id=target_project.id,
-            is_system=False,
-        ),
-    )
-    create_text_document(
-        db_session,
-        project=target_project,
-        filename="va_doc.txt",
-        name="va_doc",
-        sentences=SENTENCES,
-    )
+    # 3) API keys, one of them for a virtual user (never issued by the API)
+    api_keys: dict[int, str] = {}
+    for user_id in (test_user.id, run1.id):
+        api_key = generate_api_key()
+        crud_api_key.create(
+            db=db_session,
+            create_dto=ApiKeyCreate(
+                name="key",
+                prefix=api_key[:12],
+                hashed_key=hash_api_key(api_key),
+                expires_at=None,
+                created_at=datetime.now(UTC),
+                user_id=user_id,
+            ),
+        )
+        api_keys[user_id] = api_key
 
     db_session.commit()
     return {
         "project": project,
         "other_project": other_project,
-        "target_project": target_project,
         "user": test_user,
         "other_user": other_user,
         "run1": crud_user.read(db=db_session, id=run1.id),
@@ -192,4 +190,6 @@ def virtual_user_project(
         "run1_alpha": run1_alpha,
         "run1_delta": run1_delta,
         "user_alpha_copy": crud_span_anno.read(db=db_session, id=user_alpha_copy_id),
+        "user_api_key": api_keys[test_user.id],
+        "run1_api_key": api_keys[run1.id],
     }

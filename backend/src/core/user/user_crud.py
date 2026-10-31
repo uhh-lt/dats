@@ -1,3 +1,6 @@
+import secrets
+from uuid import uuid4
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -30,11 +33,20 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
         )
 
     def create_virtual_user(
-        self, db: Session, *, project_id: int, name: str
+        self, db: Session, *, project_id: int, name: str, email: str | None = None
     ) -> UserORM:
-        """Create a virtual user of the project: no email, no password, its name
-        is its first name."""
-        db_obj = self.model(project_id=project_id, first_name=name, last_name="")
+        """
+        Create a virtual user of the project. Its name is its first name; it gets
+        a unique email (unless given, e.g. on import) and a random password that is
+        no valid hash, so it can never log in.
+        """
+        db_obj = self.model(
+            project_id=project_id,
+            first_name=name,
+            last_name="",
+            email=email or f"{uuid4().hex}@virtual.dats",
+            password=secrets.token_hex(32),
+        )
         db.add(db_obj)
         db.flush()
         db.refresh(db_obj)
