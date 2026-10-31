@@ -1,4 +1,3 @@
-import { OneRowChips } from "@components/OneRowChips";
 import { oneRowChipsAutocompleteSx } from "@components/oneRowChipsSx";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { CodeRead } from "@models/CodeRead";
@@ -48,7 +47,7 @@ interface MultipleCodeSelectorProps extends CodeSelectorBaseProps {
   onChange: (codeIds: number[]) => void;
   /** Shows "Select all" and "Clear" buttons below the field. */
   showSelectAll?: boolean;
-  /** Keeps the field in one row: as many chips as fit its width, then "+N more" (instead of three chips). */
+  /** Keeps the field in one row: one chip and "+N more" (instead of three chips). */
   oneRow?: boolean;
 }
 
@@ -196,12 +195,12 @@ const MultipleCodeSelector = memo(
         filterOptions={filterCodeOptions}
         getOptionLabel={getOptionLabel}
         isOptionEqualToValue={isOptionEqualToValue}
-        sx={oneRow && selected.length > 0 ? [oneRowChipsAutocompleteSx, ...(Array.isArray(sx) ? sx : [sx])] : sx}
-        limitTags={oneRow ? -1 : MAX_VISIBLE_CODES}
+        sx={oneRow ? [oneRowChipsAutocompleteSx, ...(Array.isArray(sx) ? sx : [sx])] : sx}
+        limitTags={oneRow ? 1 : MAX_VISIBLE_CODES}
         getLimitTagsText={(more) => `+${more} more`}
         renderOption={(optionProps, option, state) => renderCodeOption(optionProps, option, state, true)}
-        renderTags={(tags, getTagProps) => {
-          const chips = tags.map((option, index) => {
+        renderTags={(tags, getTagProps) =>
+          tags.map((option, index) => {
             const { key, ...tagProps } = getTagProps({ index });
             return (
               <Chip
@@ -212,9 +211,8 @@ const MultipleCodeSelector = memo(
                 {...tagProps}
               />
             );
-          });
-          return oneRow ? <OneRowChips>{chips}</OneRowChips> : chips;
-        }}
+          })
+        }
         renderInput={(params) => (
           <TextField {...params} label={title} placeholder={selected.length === 0 ? placeholder : undefined} />
         )}
