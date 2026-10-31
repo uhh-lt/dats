@@ -1,5 +1,9 @@
 from fastapi.testclient import TestClient
 
+# ===========================================================================
+# CREATE PROJECT (/project) TESTS
+# ===========================================================================
+
 
 def test_create_new_project(client):
     payload = {
@@ -12,6 +16,11 @@ def test_create_new_project(client):
     project = response.json()
     assert project["title"] == payload["title"]
     assert project["description"] == payload["description"]
+
+
+# ===========================================================================
+# DELETE PROJECT (/project/{project_id}) TESTS
+# ===========================================================================
 
 
 def test_delete_existing_project(client: TestClient, test_project):
