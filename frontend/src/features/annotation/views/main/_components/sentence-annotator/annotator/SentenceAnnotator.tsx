@@ -9,7 +9,7 @@ import { memo, useMemo, useRef, useState } from "react";
 
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
-import { useAnnotateAs } from "../../../_hooks/useAnnotateAs";
+import { useCanAnnotateAs } from "../../../_hooks/useCanAnnotateAs";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
 import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAnnotation";
@@ -63,7 +63,7 @@ export const SentenceAnnotator = memo(
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
-    const annotateAs = useAnnotateAs();
+    const canAnnotateAs = useCanAnnotateAs();
     const openSnackbar = useOpenSnackbar();
     const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
@@ -116,7 +116,7 @@ export const SentenceAnnotator = memo(
       const pending = toPendingSentenceAnnotation(requestBody, visibleUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { requestBody, annotateAsUserId: annotateAs.toAnnotateAsUserId(visibleUserId) },
+        { requestBody, userId: visibleUserId },
         {
           onSuccess,
           onSettled: () => {
@@ -259,11 +259,11 @@ export const SentenceAnnotator = memo(
         return;
       }
 
-      // only allow annotation creation as the current user or as a virtual annotator (visibleUserId from URL search params)
-      if (!annotateAs.canAnnotateAs(visibleUserId)) {
+      // only allow annotation creation as the current user or as a virtual user (visibleUserId from URL search params)
+      if (!canAnnotateAs(visibleUserId)) {
         openSnackbar({
           severity: "warning",
-          text: "You cannot create annotations while viewing another user's annotation! Switch to your user or a virtual annotator in the Annotator Selector (top) to create annotations.",
+          text: "You cannot create annotations while viewing another user's annotation! Switch to your user or a virtual user in the Annotator Selector (top) to create annotations.",
         });
         setSelectedSentences([]);
         setLastClickedIndex(null);

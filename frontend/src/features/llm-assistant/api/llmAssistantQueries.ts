@@ -5,8 +5,8 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export interface ExistingAnnotationCountParams {
   taskType: TaskType | undefined;
-  // the virtual annotator the run writes into; a new one has no annotations yet
-  annotatorId: number | undefined;
+  // the virtual user the run writes into; a new one has no annotations yet
+  virtualUserId: number | undefined;
   sdocIds: number[];
   codeIds: number[];
 }
@@ -23,22 +23,22 @@ export const llmAssistantQueries = {
   all: () => ["llmAssistant"] as const,
 
   existingAnnotationCountScope: () => [...llmAssistantQueries.all(), "existingAnnotationCount"] as const,
-  existingAnnotationCount: ({ taskType, annotatorId, sdocIds, codeIds }: ExistingAnnotationCountParams) =>
+  existingAnnotationCount: ({ taskType, virtualUserId, sdocIds, codeIds }: ExistingAnnotationCountParams) =>
     queryOptions({
       queryKey: [
         ...llmAssistantQueries.existingAnnotationCountScope(),
         taskType,
-        annotatorId,
+        virtualUserId,
         sdocIds,
         codeIds,
       ] as const,
       queryFn:
-        !taskType || annotatorId === undefined
+        !taskType || virtualUserId === undefined
           ? skipToken
           : () =>
               LlmAssistantService.countExistingAssistantAnnotations({
                 taskType,
-                annotatorId,
+                virtualUserId,
                 requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
               }),
     }),

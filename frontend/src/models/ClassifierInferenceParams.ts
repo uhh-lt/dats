@@ -16,11 +16,11 @@ export type ClassifierInferenceParams = {
    */
   sdoc_ids: Array<number>;
   /**
-   * Virtual annotator of the project the span or sentence annotations are written into. Required for span and sentence classifiers, unused for document classifiers (they assign tags).
+   * Virtual user of the project the span or sentence annotations are written into. Required for span and sentence classifiers, unused for document classifiers (they assign tags).
    */
-  annotator_id?: number | null;
+  virtual_user_id?: number | null;
   /**
-   * Delete the existing span/sentence annotations of the virtual annotator or the tags before creating new ones
+   * Delete the existing span/sentence annotations of the virtual user or the tags before creating new ones
    */
   delete_existing_work: boolean;
 };

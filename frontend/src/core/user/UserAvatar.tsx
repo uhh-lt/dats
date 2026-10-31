@@ -1,6 +1,5 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { PublicUserRead } from "@models/PublicUserRead";
-import { UserKind } from "@models/UserKind";
 import { UserRead } from "@models/UserRead";
 import { Avatar, AvatarProps, Tooltip, TooltipProps } from "@mui/material";
 import { memo } from "react";
@@ -35,11 +34,10 @@ const UserAvatarWithData = memo(
   ({ user, tooltipPlacement, ...props }: Omit<UserAvatarProps, "user"> & { user: PublicUserRead }) => {
     const fullName = `${user.first_name} ${user.last_name}`.trim();
 
-    const isVirtual = user.kind === UserKind.VIRTUAL;
     return (
-      <Tooltip title={isVirtual ? `${fullName} (virtual annotator)` : fullName} placement={tooltipPlacement} arrow>
+      <Tooltip title={user.is_virtual ? `${fullName} (virtual user)` : fullName} placement={tooltipPlacement} arrow>
         <Avatar {...props}>
-          {isVirtual ? getIconComponent(Icon.VIRTUAL_ANNOTATOR, { sx: { fontSize: "1.5em" } }) : getInitials(user)}
+          {user.is_virtual ? getIconComponent(Icon.VIRTUAL_USER, { sx: { fontSize: "1.5em" } }) : getInitials(user)}
         </Avatar>
       </Tooltip>
     );

@@ -13,7 +13,7 @@ import { ProjectDangerZone } from "./_components/ProjectDangerZone";
 import { ProjectDetails } from "./_components/ProjectDetails";
 import { ProjectTags } from "./_components/ProjectTags";
 import { ProjectUsers } from "./_components/ProjectUsers";
-import { ProjectVirtualAnnotators } from "./_components/ProjectVirtualAnnotators";
+import { ProjectVirtualUsers } from "./_components/ProjectVirtualUsers";
 import { closeOnEscape } from "@utils/dialogUtils";
 
 interface ProjectSettingsDialogProps {
@@ -67,7 +67,7 @@ export function ProjectSettingsDialog({
           <Tabs value={tab} onChange={handleChangeTab} variant="scrollable" textColor="inherit">
             <Tab label="Details" value="1" />
             <Tab label="User" value="2" />
-            <Tab label="Virtual annotators" value="7" />
+            <Tab label="Virtual users" value="7" />
             <Tab label="Codes" value="3" />
             <Tab label="Tags" value="4" />
             <Tab label="Import" value="5" />
@@ -85,7 +85,7 @@ export function ProjectSettingsDialog({
               <ProjectUsers project={project.data} />
             </TabPanel>
             <TabPanel value="7" sx={{ p: 0 }} className="myFlexFillAllContainer">
-              <ProjectVirtualAnnotators project={project.data} />
+              <ProjectVirtualUsers project={project.data} />
             </TabPanel>
             <TabPanel value="3" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectCodes hiddenCodeIds={hiddenCodeIds} onToggleCodeVisibility={onToggleCodeVisibility} />

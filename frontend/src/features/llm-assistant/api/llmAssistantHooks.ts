@@ -19,7 +19,7 @@ const useGetExistingAnnotationCount = (params: ExistingAnnotationCountParams) =>
   useQuery({
     ...llmAssistantQueries.existingAnnotationCount(params),
     enabled:
-      params.annotatorId !== undefined &&
+      params.virtualUserId !== undefined &&
       (params.taskType === TaskType.SENTENCE_ANNOTATION || params.taskType === TaskType.ANNOTATION),
   });
 

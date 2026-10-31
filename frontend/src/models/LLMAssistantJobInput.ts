@@ -37,11 +37,11 @@ export type LLMAssistantJobInput = {
    */
   draft?: PromptTemplateSnapshot | null;
   /**
-   * Virtual annotator of the project the annotations are written into. Required for span and sentence annotation, unused otherwise.
+   * Virtual user of the project the annotations are written into. Required for span and sentence annotation, unused otherwise.
    */
-  annotator_id?: number | null;
+  virtual_user_id?: number | null;
   /**
-   * Delete the existing annotations of the virtual annotator for the documents and codes of the prompt before creating new ones
+   * Delete the existing annotations of the virtual user for the documents and codes of the prompt before creating new ones
    */
   delete_existing_annotations?: boolean;
 };

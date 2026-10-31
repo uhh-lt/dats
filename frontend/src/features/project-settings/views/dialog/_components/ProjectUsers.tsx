@@ -32,7 +32,7 @@ interface ProjectUsersProps {
 }
 
 export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
-  // query the members of the project (virtual annotators are no members)
+  // query the members of the project (virtual users are no members)
   const allUsers = UserHooks.useGetProjectMembers();
 
   const {

@@ -179,7 +179,7 @@ export enum Icon {
 
   // USER
   USER = "user",
-  VIRTUAL_ANNOTATOR = "virtual_annotator",
+  VIRTUAL_USER = "virtual_user",
   KEY = "key",
 
   // Metadata types
@@ -325,7 +325,7 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // USER
   [Icon.USER]: (iconProps) => <AccountCircleIcon {...iconProps} />,
-  [Icon.VIRTUAL_ANNOTATOR]: (iconProps) => <PersonOutlineIcon {...iconProps} />,
+  [Icon.VIRTUAL_USER]: (iconProps) => <PersonOutlineIcon {...iconProps} />,
   [Icon.KEY]: (iconProps) => <KeyIcon {...iconProps} />,
 
   // Metadata types

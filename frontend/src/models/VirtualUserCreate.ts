@@ -3,12 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * A virtual annotator: a project-scoped user without login that owns
+ * A virtual user: a user without login that belongs to one project and owns
  * annotations, e.g. of an LLM Assistant run.
  */
-export type VirtualAnnotatorCreate = {
+export type VirtualUserCreate = {
   /**
-   * Display name of the virtual annotator, unique per project
+   * Name of the virtual user, unique per project
    */
   name: string;
 };

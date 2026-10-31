@@ -1,5 +1,5 @@
 import { useBlockPartition, useTokenData } from "@core/annotation";
-import { useAnnotateAs } from "../../_hooks/useAnnotateAs";
+import { useCanAnnotateAs } from "../../_hooks/useCanAnnotateAs";
 import { useComputeTokenData } from "../../_hooks/useComputeTokenData";
 import { useAuth } from "@core/auth";
 import { CodeHooks } from "@core/code";
@@ -65,10 +65,10 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const effectiveLeftUserId = leftUserId ?? user?.id;
   const effectiveRightUserId = rightUserId;
 
-  // annotations can be created as the current user or as a virtual annotator
-  const annotateAs = useAnnotateAs();
-  const isAnnotationAllowedLeft = annotateAs.canAnnotateAs(effectiveLeftUserId);
-  const isAnnotationAllowedRight = annotateAs.canAnnotateAs(effectiveRightUserId);
+  // annotations can be created as the current user or as a virtual user
+  const canAnnotateAs = useCanAnnotateAs();
+  const isAnnotationAllowedLeft = canAnnotateAs(effectiveLeftUserId);
+  const isAnnotationAllowedRight = canAnnotateAs(effectiveRightUserId);
 
   // Redux state
   const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
@@ -112,7 +112,6 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const editableSide: "left" | "right" = isAnnotationAllowedRight && !isAnnotationAllowedLeft ? "right" : "left";
   // the user the new annotations belong to (the one of the editable side)
   const editableUserId = editableSide === "left" ? effectiveLeftUserId : effectiveRightUserId;
-  const annotateAsUserId = annotateAs.toAnnotateAsUserId(editableUserId);
   const leftPendingAnnotations = editableSide === "left" ? allPendingAnnotations : undefined;
   const rightPendingAnnotations = editableSide === "right" ? allPendingAnnotations : undefined;
 
@@ -190,10 +189,10 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
           // records the provenance of the copy
           source_annotation_id: annotation.id,
         },
-        annotateAsUserId,
+        userId: editableUserId,
       });
     },
-    [createMutation, annotateAsUserId],
+    [createMutation, editableUserId],
   );
 
   const handleRevertAnnotation = useCallback(
@@ -228,7 +227,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       source_annotation_id: anno.id,
     }));
 
-    createBulkMutation.mutate({ requestBody: toCreate, annotateAsUserId });
+    createBulkMutation.mutate({ requestBody: toCreate, userId: editableUserId });
   };
 
   const handleRevertAll = () => {
@@ -430,7 +429,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
     createMutation.mutate(
-      { requestBody, annotateAsUserId },
+      { requestBody, userId: editableUserId },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

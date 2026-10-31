@@ -8,7 +8,7 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MouseEvent, MouseEventHandler, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
-import { useAnnotateAs } from "../_hooks/useAnnotateAs";
+import { useCanAnnotateAs } from "../_hooks/useCanAnnotateAs";
 import { toPendingSpanAnnotation } from "../_hooks/pendingSpanAnnotation";
 import { useSpanAnnotationResize } from "../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
@@ -63,7 +63,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   });
 
   // mutations for create, update, delete
-  const annotateAs = useAnnotateAs();
+  const canAnnotateAs = useCanAnnotateAs();
   const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
   const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
@@ -125,12 +125,12 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     }
     // the selection is valid
 
-    // only allow annotation creation as the current user or as a virtual annotator (visibleUserId from URL search
+    // only allow annotation creation as the current user or as a virtual user (visibleUserId from URL search
     // params). warn and clear the selection when viewing another user's document.
-    if (!annotateAs.canAnnotateAs(visibleUserId)) {
+    if (!canAnnotateAs(visibleUserId)) {
       openSnackbar({
         severity: "warning",
-        text: "You cannot create annotations on another user's document. Switch to your user or a virtual annotator in the Annotator Selector (top) to create annotations.",
+        text: "You cannot create annotations on another user's document. Switch to your user or a virtual user in the Annotator Selector (top) to create annotations.",
       });
       selection.empty();
       return;
@@ -238,7 +238,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
     createMutation.mutate(
-      { requestBody, annotateAsUserId: annotateAs.toAnnotateAsUserId(visibleUserId) },
+      { requestBody, userId: visibleUserId },
       {
         onSuccess,
         // remove the pending preview once the real annotation is in the cache (or the request failed)

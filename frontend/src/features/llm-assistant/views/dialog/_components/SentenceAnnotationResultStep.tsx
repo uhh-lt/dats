@@ -18,7 +18,7 @@ export function SentenceAnnotationResultStep() {
     return (
       <SentenceAnnotationResultStepContent
         jobResult={llmAssistantJob.data.output.specific_task_result as SentenceAnnotationLLMAssistantJobResult}
-        annotatorId={llmAssistantJob.data.input.annotator_id ?? undefined}
+        virtualUserId={llmAssistantJob.data.input.virtual_user_id ?? undefined}
       />
     );
   } else if (llmAssistantJob.isLoading) {
@@ -36,11 +36,11 @@ export function SentenceAnnotationResultStep() {
 
 function SentenceAnnotationResultStepContent({
   jobResult,
-  annotatorId,
+  virtualUserId,
 }: {
   jobResult: SentenceAnnotationLLMAssistantJobResult;
-  // the virtual annotator the run wrote into
-  annotatorId: number | undefined;
+  // the virtual user the run wrote into
+  virtualUserId: number | undefined;
 }) {
   // actions
   const dispatch = useAppDispatch();
@@ -65,7 +65,7 @@ function SentenceAnnotationResultStepContent({
       params: { projectId, sdocId: firstAnnotatedSdocId },
       to: "/project/$projectId/annotation/$sdocId",
       search: {
-        compareWithUserId: annotatorId,
+        compareWithUserId: virtualUserId,
         visibleUserId: undefined,
         selectedAnnotationId: undefined,
       },

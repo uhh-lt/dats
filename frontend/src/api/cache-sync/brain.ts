@@ -293,31 +293,22 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     // ── Users ───────────────────────────────────────────────────────────────
+    // only virtual users are created in a project
+    case "USER_CREATED":
+      appendListItem(userQueries.byProject(event.payload.project_id ?? undefined).queryKey, event.payload);
+      break;
     case "USER_UPDATED":
-      for (const scope of [userQueries.byProjectScope(), userQueries.annotatorsByProjectScope()]) {
-        sweepPrefix<UserRead[]>(scope, (old) =>
-          old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
-        );
-      }
+      sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
+        old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
+      );
       queryClient.invalidateQueries({ queryKey: userQueries.meScope() });
       queryClient.invalidateQueries({ queryKey: sdocQueries.annotatorsScope() });
       break;
     case "USER_DELETED":
-      for (const scope of [userQueries.byProjectScope(), userQueries.annotatorsByProjectScope()]) {
-        sweepPrefix<UserRead[]>(scope, (old) => (old ? old.filter((user) => user.id !== event.payload.id) : old));
-      }
-      break;
-
-    // ── Virtual annotators ──────────────────────────────────────────────────
-    case "VIRTUAL_ANNOTATOR_CREATED":
-      appendListItem(userQueries.annotatorsByProject(event.payload.project_id ?? undefined).queryKey, event.payload);
-      break;
-    case "VIRTUAL_ANNOTATOR_UPDATED":
-      replaceListItem(userQueries.annotatorsByProject(event.payload.project_id ?? undefined).queryKey, event.payload);
-      break;
-    case "VIRTUAL_ANNOTATOR_DELETED":
-      // the virtual annotator is deleted with all its annotations; copies of them lose their source user
-      removeListItem(userQueries.annotatorsByProject(event.payload.project_id ?? undefined).queryKey, event.payload.id);
+      sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
+        old ? old.filter((user) => user.id !== event.payload.id) : old,
+      );
+      // the user is deleted with all its annotations; copies of them lose their source user
       queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.all() });
       queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.all() });
       queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.all() });
@@ -594,11 +585,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     }
 
     // ── Project membership ──────────────────────────────────────────────────
-    // The payload carries the complete resulting member list — write it
-    // directly into the project-keyed user list.
+    // The payload carries the complete resulting user list (members and virtual
+    // users) — write it directly into the project-keyed user list.
     case "PROJECT_USERS_LINKED":
       queryClient.setQueryData(userQueries.byProject(event.payload.project_id).queryKey, event.payload.users);
-      queryClient.invalidateQueries({ queryKey: userQueries.annotatorsByProject(event.payload.project_id).queryKey });
       break;
 
     default: {

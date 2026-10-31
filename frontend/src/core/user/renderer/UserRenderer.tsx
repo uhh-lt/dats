@@ -1,6 +1,5 @@
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { PublicUserRead } from "@models/PublicUserRead";
-import { UserKind } from "@models/UserKind";
 import { UserRead } from "@models/UserRead";
 import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
@@ -8,7 +7,7 @@ import { UserHooks } from "../api/userHooks";
 import { UserAvatar } from "../UserAvatar";
 
 export interface UserRendererSharedProps extends ExpandableRendererProps {
-  // the avatar: the initials of a human user, an icon for a virtual annotator (default: true)
+  // the avatar: the initials of the user, an icon for a virtual user (default: true)
   renderAvatar?: boolean;
 }
 
@@ -54,6 +53,6 @@ const UserRendererWithData = memo(
 );
 
 function UserContext({ user }: { user: PublicUserRead }) {
-  const kind = user.kind === UserKind.VIRTUAL ? "Virtual annotator" : "User";
+  const kind = user.is_virtual ? "Virtual user" : "User";
   return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{`${kind} ID: ${user.id}`}</Typography>;
 }
