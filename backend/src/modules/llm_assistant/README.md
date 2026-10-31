@@ -71,9 +71,9 @@ The mapping is defined in `strategies/strategy_factory.py`. Strategies do not re
 
 An **approach** is zero-shot or few-shot. It follows from the prompt: a prompt that shows examples is few-shot. The job output reports it.
 
-### Virtual annotators
+### Virtual users
 
-Annotation tasks write into the **virtual annotator** of the job input (`annotator_id`): a project-scoped user without login (see `core/user/user_service.py`). The job start rejects human users and virtual annotators of other projects, so the assistant never writes into a human user's annotations. `delete_existing_annotations` deletes the annotations of this virtual annotator for the documents and codes of the prompt.
+Annotation tasks write into the **virtual user** of the job input (`virtual_user_id`): a user without login that belongs to one project (see `core/user/user_service.py`). The job start rejects other users and virtual users of other projects, so the assistant never writes into a person's annotations. `delete_existing_annotations` deletes the annotations of this virtual user for the documents and codes of the prompt.
 
 ### Factories
 
@@ -86,11 +86,11 @@ Annotation tasks write into the **virtual annotator** of the job input (`annotat
 
 ### DTOs (`llm_assistant_job_dto.py`)
 
-The job input (task, documents, model, either a `prompt_template_version_id` or an unsaved `draft` prompt, e.g. of the wizard's guided path, and the virtual annotator of annotation tasks) and the job outputs per task.
+The job input (task, documents, model, either a `prompt_template_version_id` or an unsaved `draft` prompt, e.g. of the wizard's guided path, and the virtual user of annotation tasks) and the job outputs per task.
 
 ### Service (`llm_assistant_service.py`)
 
-- `count_existing_assistant_annotations` → counts the existing annotations of a virtual annotator per code
+- `count_existing_assistant_annotations` → counts the existing annotations of a virtual user per code
 
 ### Endpoints (`llm_assistant_endpoint.py`)
 
