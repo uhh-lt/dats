@@ -39,6 +39,18 @@ const useUpdateTag = () =>
     },
   });
 
+const useUpdateBulkTag = () =>
+  useMutation({
+    mutationKey: [...tagQueries.all(), "updateBulkTag"],
+    mutationFn: TagService.updateTagsBulk,
+    meta: {
+      datsEvent: "TAG_UPDATED_BATCH",
+      successMessage: (tags: TagRead[]) => `Updated ${tags.length} tag(s)`,
+      errorMessage: (error: { status: number }) =>
+        error.status === 409 ? "A tag name is already taken" : "Could not update the tags",
+    },
+  });
+
 const useDeleteTag = () =>
   useMutation({
     mutationKey: [...tagQueries.all(), "deleteTag"],
@@ -121,6 +133,7 @@ export const TagHooks = {
   useGetTag,
   useCreateTag,
   useUpdateTag,
+  useUpdateBulkTag,
   useDeleteTag,
   useBulkSetTags,
   useBulkLinkTags,

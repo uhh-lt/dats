@@ -5,6 +5,7 @@
 import type { CodeCreate } from "@models/CodeCreate";
 import type { CodeRead } from "@models/CodeRead";
 import type { CodeUpdate } from "@models/CodeUpdate";
+import type { CodeUpdateBulk } from "@models/CodeUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -96,6 +97,26 @@ export class CodeService {
       path: {
         project_id: projectId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Codes with the given IDs.
+   * @returns CodeRead Successful Response
+   * @throws ApiError
+   */
+  public static updateCodesBulk({
+    requestBody,
+  }: {
+    requestBody: Array<CodeUpdateBulk>;
+  }): CancelablePromise<Array<CodeRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/code/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

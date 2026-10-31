@@ -10,8 +10,6 @@ from core.prompt_template.prompt_template_dto import (
     PromptExamplesCreate,
     PromptPreview,
     PromptPreviewRequest,
-    PromptSelections,
-    PromptSelectionsSync,
     PromptTaskInfo,
     PromptTemplateContent,
     PromptTemplateCreate,
@@ -19,7 +17,6 @@ from core.prompt_template.prompt_template_dto import (
     PromptTemplateUpdate,
     PromptTemplateVersionCreate,
     PromptTemplateVersionRead,
-    PushedPromptSelections,
 )
 from core.prompt_template.prompt_template_enum import (
     OutputFormat,
@@ -105,22 +102,6 @@ def create_examples(
     authz_user.assert_in_project(examples.project_id)
 
     return pts.create_prompt_examples(db=db, create_dto=examples)
-
-
-@router.post(
-    "/pull",
-    response_model=PromptSelections,
-    summary="Returns the project's definitions (name, description) of the selected codes, tags and metadata fields",
-)
-def pull_selections(
-    *,
-    db: Session = Depends(get_db_session),
-    selections: PromptSelectionsSync,
-    authz_user: AuthzUser = Depends(),
-) -> PromptSelections:
-    authz_user.assert_in_project(selections.project_id)
-
-    return pts.pull_selections(db=db, sync=selections)
 
 
 @router.post(
@@ -216,32 +197,6 @@ def get_by_id(
 
 
 # --- update operations
-
-
-@router.patch(
-    "/push",
-    response_model=PushedPromptSelections,
-    summary="Replaces the names and descriptions of the project's codes, tags and metadata fields with the prompt's definitions",
-)
-def push_selections(
-    *,
-    db: Session = Depends(get_db_session),
-    selections: PromptSelectionsSync,
-    authz_user: AuthzUser = Depends(),
-    ws: WebsocketEmitter = Depends(),
-) -> PushedPromptSelections:
-    authz_user.assert_in_project(selections.project_id)
-
-    result = pts.push_selections(db=db, sync=selections)
-    for code in result.codes:
-        ws.emit_to_project(DATSEvent.CODE_UPDATED, code, project_id=code.project_id)
-    for tag in result.tags:
-        ws.emit_to_project(DATSEvent.TAG_UPDATED, tag, project_id=tag.project_id)
-    for field in result.metadata_fields:
-        ws.emit_to_project(
-            DATSEvent.PROJECT_METADATA_UPDATED, field, project_id=field.project_id
-        )
-    return result
 
 
 @router.patch(
