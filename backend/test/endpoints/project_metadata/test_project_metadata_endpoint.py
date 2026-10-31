@@ -7,6 +7,7 @@ from core.metadata.project_metadata_dto import (
     ProjectMetadataCreate,
     ProjectMetadataRead,
     ProjectMetadataUpdate,
+    ProjectMetadataUpdateBulk,
 )
 
 
@@ -230,3 +231,89 @@ def test_delete_by_id_if_not_exists(
     resp = client.delete(f"/projmeta/{non_exists_id}")
 
     assert resp.status_code == 403, resp.text
+
+
+# ===========================================================================
+# UPDATE PROJECT METADATA BULK (/projmeta/bulk/update) TESTS
+# ===========================================================================
+
+
+def test_update_project_metadata_bulk_updates_each_key(
+    client: TestClient, project_with_metadata
+):
+    """Every key gets its own changes; the results keep the request order and the
+    metatype stays unchanged when it is not sent."""
+    category, date = project_with_metadata["metadata"][:2]
+    request = [
+        ProjectMetadataUpdateBulk(project_metadata_id=date.id, key="published"),
+        ProjectMetadataUpdateBulk(
+            project_metadata_id=category.id, description="The genre"
+        ),
+    ]
+
+    response = client.patch(
+        "/projmeta/bulk/update",
+        json=[update.model_dump(exclude_unset=True) for update in request],
+    )
+
+    assert response.status_code == 200, response.text
+    results = [ProjectMetadataRead.model_validate(m) for m in response.json()]
+    assert [(m.id, m.key, m.description, m.metatype) for m in results] == [
+        (date.id, "published", "The date of the document", MetaType.DATE),
+        (category.id, "category", "The genre", MetaType.STRING),
+    ]
+
+
+def test_update_project_metadata_bulk_rejects_read_only_keys_without_changes(
+    client: TestClient, project_with_metadata
+):
+    """A read-only key fails the whole update with 400, and no key is changed."""
+    category = project_with_metadata["metadata"][0]
+    category_ro = project_with_metadata["metadata"][5]
+
+    response = client.patch(
+        "/projmeta/bulk/update",
+        json=[
+            {"project_metadata_id": category.id, "description": "changed"},
+            {"project_metadata_id": category_ro.id, "description": "changed"},
+        ],
+    )
+
+    assert response.status_code == 400, response.text
+    assert "category_ro" in response.text
+    response = client.get(f"/projmeta/{category.id}")
+    assert response.status_code == 200, response.text
+    assert ProjectMetadataRead.model_validate(response.json()).description == (
+        "The category of the document"
+    )
+
+
+def test_update_project_metadata_bulk_rejects_a_taken_key(
+    client: TestClient, project_with_metadata
+):
+    """Keys are unique per document type: a taken key fails the update with 409."""
+    category, date = project_with_metadata["metadata"][:2]
+
+    response = client.patch(
+        "/projmeta/bulk/update",
+        json=[{"project_metadata_id": date.id, "key": category.key}],
+    )
+
+    assert response.status_code == 409, response.text
+
+
+def test_update_project_metadata_bulk_rejects_unknown_keys(
+    client: TestClient, project_with_metadata
+):
+    """A key that does not exist (or belongs to a foreign project) is forbidden."""
+    category = project_with_metadata["metadata"][0]
+
+    response = client.patch(
+        "/projmeta/bulk/update",
+        json=[
+            {"project_metadata_id": category.id, "key": "a"},
+            {"project_metadata_id": 999999, "key": "b"},
+        ],
+    )
+
+    assert response.status_code == 403, response.text

@@ -41,6 +41,11 @@ class CodeUpdate(BaseModel, UpdateDTOBase):
     )
 
 
+# Properties to update in bulk
+class CodeUpdateBulk(CodeUpdate):
+    code_id: int = Field(description="ID of the Code to update")
+
+
 # Properties for reading (as in ORM)
 class CodeRead(CodeBaseDTO):
     id: int = Field(description="ID of the Code")

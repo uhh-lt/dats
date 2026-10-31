@@ -32,6 +32,11 @@ class TagUpdate(BaseModel, UpdateDTOBase):
     parent_id: int | None = Field(description="Parent of the Tag", default=None)
 
 
+# Properties to update in bulk
+class TagUpdateBulk(TagUpdate):
+    tag_id: int = Field(description="ID of the Tag to update")
+
+
 # Properties for reading (as in ORM)
 class TagRead(TagBaseDTO):
     id: int = Field(description="ID of the Tag")

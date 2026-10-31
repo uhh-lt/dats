@@ -45,6 +45,11 @@ class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
     )
 
 
+# Properties to update in bulk
+class ProjectMetadataUpdateBulk(ProjectMetadataUpdate):
+    project_metadata_id: int = Field(description="ID of the ProjectMetadata to update")
+
+
 # Properties for reading (as in ORM)
 class ProjectMetadataRead(ProjectMetadataBaseDTO):
     id: int = Field(description="ID of the ProjectMetadata")
