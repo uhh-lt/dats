@@ -83,8 +83,8 @@ Once you are satisfied with the EVAL scores, you can unleash your custom classif
 
 1. Find your model in the Top Panel and click **INFER**.
 2. A specialized Search View will open. Use the standard search bar and filters to isolate the exact documents you want the AI to analyze (e.g., filtering for documents from the year 2022 that have not been manually coded yet).
-3. **Annotate as:** Span and sentence classifiers write their annotations into a [virtual annotator](project-view.md#virtual-annotators-tab) of the project: choose an existing one or name a new one (proposed: the next free `Classifier-Run<n>`). The classifier never writes into your own annotations. Document classifiers assign tags, which belong to no annotator.
-4. **Handle Overlaps:** If the selected virtual annotator (or, for document classifiers, the documents) already has annotations or tags of the model's classes, DATS asks whether to keep or replace them.
+3. **Annotate as:** Span and sentence classifiers write their annotations into a [virtual user](project-view.md#virtual-users-tab) of the project: choose an existing one or name a new one (proposed: the next free `Classifier-Run<n>`). The classifier never writes into your own annotations. Document classifiers assign tags, which belong to no annotator.
+4. **Handle Overlaps:** If the selected virtual user (or, for document classifiers, the documents) already has annotations or tags of the model's classes, DATS asks whether to keep or replace them.
 5. Click **Start Inference**.
 
 The model will rapidly scan the selected documents and apply new annotations. You can review the general statistics of this job in the bottom progress panel, and then open the actual documents to read your newly automated, custom-coded text!

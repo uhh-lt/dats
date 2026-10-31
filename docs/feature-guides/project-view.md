@@ -51,13 +51,13 @@ DATS is built for collaborative research. Use this tab to manage who has access 
 - **Inviting Users:** Enter the email address of a colleague in the "Add user" field and click **Add**. _(Note: The user must have already registered a DATS account using that email address before you can add them)._
 - **Removing Users:** You can revoke access by finding the user in the list and clicking the remove icon.
 
-### Virtual Annotators Tab
+### Virtual Users Tab
 
-A **virtual annotator** is an annotator of this project that cannot log in and is not a project member. It only owns annotations, for example the annotations of an LLM Assistant or classifier run (`ExperimentA-Run1`) or a group standard your team agreed on (`Gold standard`). Virtual annotators appear wherever annotators are listed or filtered (annotator selectors, the compare view, search and analysis filters, the agreement evaluation), marked with a person outline icon. Nothing is hidden automatically: you decide in the filters whether to include them.
+A **virtual user** is a user of this project that cannot log in and is not a project member. It only owns annotations, for example the annotations of an LLM Assistant or classifier run (`ExperimentA-Run1`) or a group standard your team agreed on (`Gold standard`). Virtual users appear wherever annotators are listed or filtered (annotator selectors, the compare view, search and analysis filters, the agreement evaluation), marked with a person outline icon. Nothing is hidden automatically: you decide in the filters whether to include them.
 
 - **Creating:** Enter a name (unique in the project) and click **Add**.
 - **Renaming:** Click the pencil icon next to the name.
-- **Deleting:** Click the delete icon. This deletes the virtual annotator **together with all its annotations**. Annotations that someone accepted from it in the compare view stay; their provenance then shows a deleted user as the source.
+- **Deleting:** Click the delete icon. This deletes the virtual user **together with all its annotations**. Annotations that someone accepted from it in the compare view stay; their provenance then shows a deleted user as the source.
 
 ### Codes Tab
 
