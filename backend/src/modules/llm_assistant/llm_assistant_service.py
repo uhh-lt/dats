@@ -4,7 +4,7 @@ from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.doc.source_document_crud import crud_sdoc
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,

@@ -4,18 +4,18 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
-from core.prompt_template.prompt_template_defaults import DEFAULT_PROMPTS
-from core.prompt_template.prompt_template_dto import (
+from core.prompt.prompt_defaults import DEFAULT_PROMPTS
+from core.prompt.prompt_dto import (
     PromptSettings,
-    PromptTemplateSnapshot,
+    PromptSnapshot,
 )
-from core.prompt_template.prompt_template_enum import (
+from core.prompt.prompt_enum import (
     DocumentUnit,
     OutputFormat,
     PromptLanguage,
     TaskType,
 )
-from core.prompt_template.prompt_template_specs import OUTPUT_FORMAT_SPECS
+from core.prompt.prompt_specs import OUTPUT_FORMAT_SPECS
 from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
 from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_job_dto import (
@@ -100,14 +100,14 @@ def _version_payload(
     version_id: int,
     model: str = "default",
 ) -> LLMAssistantJobInput:
-    """A job on the target document that runs a stored prompt template version."""
+    """A job on the target document that runs a stored prompt version."""
     base = project["base"]
     return LLMAssistantJobInput(
         project_id=base["project"].id,
         task_type=task_type,
         sdoc_ids=[base["target_sdoc"].id],
         model=model,
-        prompt_template_version_id=version_id,
+        prompt_version_id=version_id,
         delete_existing_annotations=True,
     )
 
@@ -115,11 +115,11 @@ def _version_payload(
 def _tagging_payload(
     project: JobPromptProject, *, model: str = "default"
 ) -> LLMAssistantJobInput:
-    """A tagging job with the ``Tagging`` template (tags People and Other)."""
+    """A tagging job with the ``Tagging`` prompt (tags People and Other)."""
     return _version_payload(
         project,
         task_type=TaskType.TAGGING,
-        version_id=project["tagging_template"].versions[0].id,
+        version_id=project["tagging_prompt"].versions[0].id,
         model=model,
     )
 
@@ -130,7 +130,7 @@ def _draft(
     output_format: OutputFormat,
     unit: DocumentUnit,
     is_fewshot: bool,
-) -> PromptTemplateSnapshot:
+) -> PromptSnapshot:
     """The English default prompt of a format with another unit and the test codes.
 
     Span prompts select PERSON (few-shot: the PERSON examples), sentence prompts
@@ -140,10 +140,10 @@ def _draft(
     spec = OUTPUT_FORMAT_SPECS[output_format]
     is_sentence = output_format == OutputFormat.SENTENCES
     default_document = f"<document:{spec.default_document_unit.value}>"
-    return PromptTemplateSnapshot(
+    return PromptSnapshot(
         task_type=spec.task_type,
         language=PromptLanguage.EN,
-        prompt=DEFAULT_PROMPTS[output_format][PromptLanguage.EN].replace(
+        text=DEFAULT_PROMPTS[output_format][PromptLanguage.EN].replace(
             default_document, f"<document:{unit.value}>"
         ),
         settings=SMALL_CHUNKS,
@@ -157,7 +157,7 @@ def _draft(
 
 
 def _draft_payload(
-    project: JobPromptProject, draft: PromptTemplateSnapshot
+    project: JobPromptProject, draft: PromptSnapshot
 ) -> LLMAssistantJobInput:
     """A job on the target document that runs an unsaved prompt."""
     base = project["base"]
@@ -221,7 +221,7 @@ def test_metadata_job_extracts_all_supported_value_types(
     payload = _version_payload(
         job_prompt_project,
         task_type=TaskType.METADATA_EXTRACTION,
-        version_id=job_prompt_project["metadata_template"].versions[0].id,
+        version_id=job_prompt_project["metadata_prompt"].versions[0].id,
     )
     started = _start_job(client, payload)
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
@@ -386,7 +386,7 @@ def test_sentence_annotation_job_runs_a_stored_version(
     payload = _version_payload(
         job_prompt_project,
         task_type=TaskType.SENTENCE_ANNOTATION,
-        version_id=job_prompt_project["sentence_template"].versions[0].id,
+        version_id=job_prompt_project["sentence_prompt"].versions[0].id,
     )
     started = _start_job(client, payload)
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
@@ -411,23 +411,23 @@ def test_sentence_annotation_job_runs_a_stored_version(
 
 
 @pytest.mark.parametrize(
-    "template_key,task_type",
+    "prompt_key,task_type",
     [
         # A version of the unauthorized project cannot be used in the main project.
-        pytest.param("foreign_template", TaskType.ANNOTATION, id="other-project"),
+        pytest.param("foreign_prompt", TaskType.ANNOTATION, id="other-project"),
         # A tagging version cannot run a sentence annotation job.
-        pytest.param("tagging_template", TaskType.SENTENCE_ANNOTATION, id="other-task"),
+        pytest.param("tagging_prompt", TaskType.SENTENCE_ANNOTATION, id="other-task"),
     ],
 )
 def test_job_fails_with_a_version_of_another_project_or_task(
     client: TestClient,
     job_prompt_project: JobPromptProject,
-    template_key: str,
+    prompt_key: str,
     task_type: TaskType,
 ) -> None:
     """The job checks that the version belongs to its project and task."""
-    template = job_prompt_project[template_key]  # type: ignore[literal-required]
-    version_id = template.versions[0].id
+    prompt = job_prompt_project[prompt_key]  # type: ignore[literal-required]
+    version_id = prompt.versions[0].id
     started = _start_job(
         client,
         _version_payload(
@@ -461,7 +461,7 @@ def test_job_fails_with_a_default_version_that_selects_no_tags(
     client: TestClient,
     job_prompt_project: JobPromptProject,
 ) -> None:
-    """The default templates of a new project select nothing, so they cannot run."""
+    """The default prompts of a new project select nothing, so they cannot run."""
     started = _start_job(
         client,
         _version_payload(
@@ -478,7 +478,7 @@ def test_job_fails_with_a_draft_that_breaks_the_block_rules(
     client: TestClient,
     job_prompt_project: JobPromptProject,
 ) -> None:
-    """Drafts are validated by the job like saved templates."""
+    """Drafts are validated by the job like saved prompts."""
     draft = _draft(
         job_prompt_project,
         output_format=OutputFormat.INLINE,
@@ -486,7 +486,7 @@ def test_job_fails_with_a_draft_that_breaks_the_block_rules(
         is_fewshot=False,
     )
     draft = draft.model_copy(
-        update={"prompt": draft.prompt.replace("<document:whole>", "")}
+        update={"text": draft.text.replace("<document:whole>", "")}
     )
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
     failed = _wait_for_status(client, started.job_id, JobStatus.FAILED)
@@ -508,18 +508,18 @@ def test_job_fails_with_a_draft_that_breaks_the_block_rules(
         # Both prompt sources are contradictory.
         pytest.param(
             {"draft": "tagging-draft"},
-            "Exactly one of prompt_template_version_id and draft",
+            "Exactly one of prompt_version_id and draft",
             id="version-and-draft",
         ),
         # One prompt source is required.
         pytest.param(
-            {"prompt_template_version_id": None},
-            "Exactly one of prompt_template_version_id and draft",
+            {"prompt_version_id": None},
+            "Exactly one of prompt_version_id and draft",
             id="neither-version-nor-draft",
         ),
         # A draft must be a prompt of the job's task.
         pytest.param(
-            {"prompt_template_version_id": None, "draft": "span-draft"},
+            {"prompt_version_id": None, "draft": "span-draft"},
             "The draft must be a prompt of the job's task",
             id="draft-of-another-task",
         ),
@@ -537,10 +537,10 @@ def test_job_start_rejects_malformed_payloads(
     stand for a valid tagging and span annotation draft.
     """
     drafts = {
-        "tagging-draft": PromptTemplateSnapshot(
+        "tagging-draft": PromptSnapshot(
             task_type=TaskType.TAGGING,
             language=PromptLanguage.EN,
-            prompt=DEFAULT_PROMPTS[OutputFormat.TAGS][PromptLanguage.EN],
+            text=DEFAULT_PROMPTS[OutputFormat.TAGS][PromptLanguage.EN],
         ),
         "span-draft": _draft(
             job_prompt_project,

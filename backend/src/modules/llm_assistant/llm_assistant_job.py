@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
-from core.prompt_template.prompt_template_service import PromptTemplateService
+from core.prompt.prompt_service import PromptService
 from modules.llm_assistant.llm_assistant_endpoint import router
 from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
@@ -48,19 +48,19 @@ def llm_assistant(
         status_message="Started LLM Assistant!",
     )
 
-    pts = PromptTemplateService()
+    pts = PromptService()
     with sqlr.transaction() as db:
         # resolve the prompt, it decides everything but the documents and the model
         if payload.draft is not None:
             prompt = payload.draft
-            renderer = pts.validate_prompt_template(
+            renderer = pts.validate_prompt(
                 db=db, project_id=payload.project_id, prompt=prompt
             )
         else:
-            assert payload.prompt_template_version_id is not None
+            assert payload.prompt_version_id is not None
             prompt = pts.read_snapshot(
                 db=db,
-                version_id=payload.prompt_template_version_id,
+                version_id=payload.prompt_version_id,
                 project_id=payload.project_id,
                 task_type=payload.task_type,
             )

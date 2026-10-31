@@ -41,8 +41,8 @@ import type { ProjectMetadataUpdatedEvent } from "./ProjectMetadataUpdatedEvent"
 import type { ProjectMetadataUpdatedBatchEvent } from "./ProjectMetadataUpdatedBatchEvent";
 import type { ProjectUpdatedEvent } from "./ProjectUpdatedEvent";
 import type { ProjectUsersLinkedEvent } from "./ProjectUsersLinkedEvent";
-import type { PromptTemplateCreatedEvent } from "./PromptTemplateCreatedEvent";
-import type { PromptTemplateUpdatedEvent } from "./PromptTemplateUpdatedEvent";
+import type { PromptCreatedEvent } from "./PromptCreatedEvent";
+import type { PromptUpdatedEvent } from "./PromptUpdatedEvent";
 import type { SdocDeletedEvent } from "./SdocDeletedEvent";
 import type { SdocDeletedBatchEvent } from "./SdocDeletedBatchEvent";
 import type { SdocMetadataDeletedEvent } from "./SdocMetadataDeletedEvent";
@@ -124,8 +124,8 @@ export interface DATSEventMap {
   PROJECT_METADATA_UPDATED_BATCH: ProjectMetadataUpdatedBatchEvent["payload"];
   PROJECT_UPDATED: ProjectUpdatedEvent["payload"];
   PROJECT_USERS_LINKED: ProjectUsersLinkedEvent["payload"];
-  PROMPT_TEMPLATE_CREATED: PromptTemplateCreatedEvent["payload"];
-  PROMPT_TEMPLATE_UPDATED: PromptTemplateUpdatedEvent["payload"];
+  PROMPT_CREATED: PromptCreatedEvent["payload"];
+  PROMPT_UPDATED: PromptUpdatedEvent["payload"];
   SDOC_DELETED: SdocDeletedEvent["payload"];
   SDOC_DELETED_BATCH: SdocDeletedBatchEvent["payload"];
   SDOC_METADATA_DELETED: SdocMetadataDeletedEvent["payload"];
@@ -208,8 +208,8 @@ export type DATSEvent =
   | (Omit<ProjectMetadataUpdatedBatchEvent, "type"> & { type: "PROJECT_METADATA_UPDATED_BATCH" })
   | (Omit<ProjectUpdatedEvent, "type"> & { type: "PROJECT_UPDATED" })
   | (Omit<ProjectUsersLinkedEvent, "type"> & { type: "PROJECT_USERS_LINKED" })
-  | (Omit<PromptTemplateCreatedEvent, "type"> & { type: "PROMPT_TEMPLATE_CREATED" })
-  | (Omit<PromptTemplateUpdatedEvent, "type"> & { type: "PROMPT_TEMPLATE_UPDATED" })
+  | (Omit<PromptCreatedEvent, "type"> & { type: "PROMPT_CREATED" })
+  | (Omit<PromptUpdatedEvent, "type"> & { type: "PROMPT_UPDATED" })
   | (Omit<SdocDeletedEvent, "type"> & { type: "SDOC_DELETED" })
   | (Omit<SdocDeletedBatchEvent, "type"> & { type: "SDOC_DELETED_BATCH" })
   | (Omit<SdocMetadataDeletedEvent, "type"> & { type: "SDOC_METADATA_DELETED" })

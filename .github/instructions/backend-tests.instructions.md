@@ -44,7 +44,7 @@ Mark every new test that trains a model or calls the LLM provider. CI on pull re
 
 - Tests live under `backend/test/`. Endpoint tests live under `backend/test/endpoints/`.
 - **One folder per endpoint module** (e.g. `endpoints/memo/` for `memo_endpoint.py`).
-- **One test file per endpoint module**: all routes of `<name>_endpoint.py` are tested in `test_<name>_endpoint.py`, one block per route (see "Test File Organization"). Never split one endpoint module over several test files (`test_<name>_endpoint_<route>.py`). Tests that do not call an endpoint module (import/export round trips, e2e job runs) get their own file named after what they test (`test_prompt_template_eximport.py`).
+- **One test file per endpoint module**: all routes of `<name>_endpoint.py` are tested in `test_<name>_endpoint.py`, one block per route (see "Test File Organization"). Never split one endpoint module over several test files (`test_<name>_endpoint_<route>.py`). Tests that do not call an endpoint module (import/export round trips, e2e job runs) get their own file named after what they test (`test_prompt_eximport.py`).
 - **Each folder has its own `conftest.py`** with the fixtures its tests need.
 
 ## conftest.py Responsibilities
@@ -142,4 +142,4 @@ Organize each test file with comment blocks, from coarse to fine:
 
 Shared helpers (e.g. `_post_memo_query`) go directly after the block header of their route, before the sections. Shared constants (expected titles, mappings) go at the top of the file after imports.
 
-**Reference**: [test_search_endpoint_memo.py](backend/test/endpoints/search/test_search_endpoint_memo.py) for the organization of one route's tests (its folder still splits `search_endpoint.py` over several files, which predates the one-file rule), [test_prompt_template_endpoint.py](backend/test/endpoints/prompt_template/test_prompt_template_endpoint.py) for one file with all routes of its endpoint module.
+**Reference**: [test_search_endpoint_memo.py](backend/test/endpoints/search/test_search_endpoint_memo.py) for the organization of one route's tests (its folder still splits `search_endpoint.py` over several files, which predates the one-file rule), [test_prompt_endpoint.py](backend/test/endpoints/prompt/test_prompt_endpoint.py) for one file with all routes of its endpoint module.

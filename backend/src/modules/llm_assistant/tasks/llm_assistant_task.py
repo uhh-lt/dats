@@ -7,7 +7,7 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,

@@ -170,8 +170,8 @@ export enum Icon {
   // SDOC HEALTH STATUS
   CLASSIFIER = "classifier",
 
-  // PROMPT TEMPLATES
-  PROMPT_TEMPLATE = "prompt_template",
+  // PROMPTS
+  PROMPT = "prompt",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -315,8 +315,8 @@ const iconMap: Record<Icon, IconFactory> = {
   // CLASSIFIER
   [Icon.CLASSIFIER]: (iconProps) => <SmartToyIcon {...iconProps} />,
 
-  // PROMPT TEMPLATES
-  [Icon.PROMPT_TEMPLATE]: (iconProps) => <TextSnippetIcon {...iconProps} />,
+  // PROMPTS
+  [Icon.PROMPT]: (iconProps) => <TextSnippetIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,

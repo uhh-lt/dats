@@ -4,10 +4,10 @@ import {
   getErrorMessage,
   LANGUAGE_LABELS,
   PromptPreview,
-  PromptTemplateHooks,
-  promptTemplateQueries,
+  PromptHooks,
+  promptQueries,
   TASK_TYPE_LABELS,
-} from "@core/prompt-template";
+} from "@core/prompt";
 import { ApproachType } from "@models/ApproachType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import {
@@ -48,12 +48,12 @@ export function ReviewStep() {
   const modelId = useAppSelector((state) => state.llmAssistant.modelId);
   const language = useAppSelector((state) => state.llmAssistant.language);
   const outputFormat = useAppSelector((state) => state.llmAssistant.outputFormat);
-  const versionId = useAppSelector((state) => state.llmAssistant.promptTemplateVersionId);
+  const versionId = useAppSelector((state) => state.llmAssistant.promptVersionId);
   const dispatch = useAppDispatch();
 
   // the name of the prompt: the selected version, or the default prompt of the guided path and its copy in the project
-  const templateVersion = PromptTemplateHooks.useGetPromptTemplateVersion({ projectId, versionId });
-  const taskInfo = useQuery({ ...promptTemplateQueries.taskInfo(method), enabled: mode === "guided" });
+  const promptVersion = PromptHooks.useGetPromptVersion({ projectId, versionId });
+  const taskInfo = useQuery({ ...promptQueries.taskInfo(method), enabled: mode === "guided" });
   const format = outputFormat ?? (method ? DEFAULT_OUTPUT_FORMATS[method] : undefined);
   const formatInfo = taskInfo.data?.output_formats.find((info) => info.output_format === format);
   const defaultPromptName = formatInfo?.default_prompt_names[language];
@@ -61,11 +61,11 @@ export function ReviewStep() {
   // the prompt; a prompt that shows examples makes a few-shot run
   const { source, codeIds, isError } = useWizardPrompt();
   const rendered = useQuery(
-    promptTemplateQueries.preview(
+    promptQueries.preview(
       source
         ? {
             project_id: projectId,
-            ...("draft" in source ? { draft: source.draft } : { prompt_template_version_id: source.versionId }),
+            ...("draft" in source ? { draft: source.draft } : { prompt_version_id: source.versionId }),
             sdoc_id: null,
             message_index: 0,
           }
@@ -104,7 +104,7 @@ export function ReviewStep() {
           task_type: method,
           sdoc_ids: sdocIds,
           model: modelId,
-          ...("draft" in source ? { draft: source.draft } : { prompt_template_version_id: source.versionId }),
+          ...("draft" in source ? { draft: source.draft } : { prompt_version_id: source.versionId }),
           delete_existing_annotations: deleteExistingAnnotations,
         },
       },
@@ -125,10 +125,10 @@ export function ReviewStep() {
       <DialogContent sx={{ bgcolor: "grey.100" }}>
         <Stack spacing={2}>
           <LLMAssistantUtterance>
-            {mode === "template" ? (
+            {mode === "prompt" ? (
               <Typography>
-                This is the prompt <b>{templateVersion.data?.template.name ?? "…"}</b>
-                {templateVersion.data ? ` (version ${templateVersion.data.version.version})` : ""}, exactly as I will
+                This is the prompt <b>{promptVersion.data?.prompt.name ?? "…"}</b>
+                {promptVersion.data ? ` (version ${promptVersion.data.version.version})` : ""}, exactly as I will
                 receive it for each document. You can edit it on the Prompts page.
               </Typography>
             ) : (

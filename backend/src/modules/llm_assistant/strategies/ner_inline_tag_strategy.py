@@ -3,8 +3,8 @@ import re
 from pydantic import BaseModel
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.prompt_template.prompt_template_enum import OutputFormat
-from core.prompt_template.prompt_template_renderer import PromptRenderer
+from core.prompt.prompt_enum import OutputFormat
+from core.prompt.prompt_renderer import PromptRenderer
 from modules.llm_assistant.strategies.code_annotation_strategy import (
     CodeAnnotationStrategy,
 )

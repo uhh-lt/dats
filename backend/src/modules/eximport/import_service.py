@@ -25,8 +25,8 @@ from modules.eximport.project.import_project import import_project
 from modules.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
 )
-from modules.eximport.prompt_templates.import_prompt_templates import (
-    import_prompt_templates_to_proj,
+from modules.eximport.prompts.import_prompts import (
+    import_prompts_to_proj,
 )
 from modules.eximport.sdocs.import_sdocs import import_sdocs_to_proj
 from modules.eximport.span_annotations.import_span_annotations import (
@@ -58,7 +58,7 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.TIMELINE_ANALYSES: cls._import_timeline_analyses_to_proj,
             ImportJobType.COTA: cls._import_cota_to_proj,
             ImportJobType.MEMOS: cls._import_memos_to_proj,
-            ImportJobType.PROMPT_TEMPLATES: cls._import_prompt_templates_to_proj,
+            ImportJobType.PROMPTS: cls._import_prompts_to_proj,
             ImportJobType.DOCUMENTS: cls._import_source_documents_to_proj,
         }
         return super(ImportService, cls).__new__(cls)
@@ -195,15 +195,15 @@ class ImportService(metaclass=SingletonMeta):
         df = read_import_csv(path_to_file)
         import_memos_to_proj(db=db, df=df, project_id=payload.project_id)
 
-    def _import_prompt_templates_to_proj(
+    def _import_prompts_to_proj(
         self,
         db: Session,
         payload: ImportJobInput,
     ) -> None:
-        """Import prompt templates to a project"""
+        """Import prompts to a project"""
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = read_import_csv(path_to_file)
-        import_prompt_templates_to_proj(db=db, df=df, project_id=payload.project_id)
+        import_prompts_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_users_to_proj(
         self,

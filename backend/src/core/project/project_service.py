@@ -6,7 +6,7 @@ from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate, ProjectRead
-from core.prompt_template.prompt_template_service import PromptTemplateService
+from core.prompt.prompt_service import PromptService
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_TRAINED_ID,
@@ -30,7 +30,7 @@ class ProjectService(metaclass=SingletonMeta):
         cls.es_repo = ElasticSearchRepo()
         cls.weaviate = WeaviateRepo()
         cls.js = JobService()
-        cls.pts = PromptTemplateService()
+        cls.pts = PromptService()
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserRead:
@@ -67,8 +67,8 @@ class ProjectService(metaclass=SingletonMeta):
             db=db, project_id=project_id
         )
 
-        # 6) create the default prompt templates
-        self.pts.create_default_prompt_templates(db=db, project_id=project_id)
+        # 6) create the default prompts
+        self.pts.create_default_prompts(db=db, project_id=project_id)
 
         # 7) create filesystem directory structure
         self.fsr.create_directory_structure_for_project(project_id=project_id)

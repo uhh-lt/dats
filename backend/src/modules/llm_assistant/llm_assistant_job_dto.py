@@ -7,8 +7,8 @@ from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
-from core.prompt_template.prompt_template_dto import PromptTemplateSnapshot
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_dto import PromptSnapshot
+from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_enum import ApproachType
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
@@ -16,7 +16,7 @@ from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 
 class LLMAssistantJobInput(JobInputBase):
-    """Runs a prompt on documents: a stored prompt template version or a draft.
+    """Runs a prompt on documents: a stored prompt version or a draft.
 
     The prompt decides everything but the documents and the model: the task, the
     selected codes, tags or metadata fields, the examples (few-shot if it shows
@@ -26,17 +26,17 @@ class LLMAssistantJobInput(JobInputBase):
     task_type: TaskType = Field(description="The task of the prompt")
     sdoc_ids: list[int] = Field(description="IDs of the source documents to process")
     model: str = Field(description="Large Language Model to use for the job")
-    prompt_template_version_id: int | None = Field(
+    prompt_version_id: int | None = Field(
         description=(
-            "ID of the prompt template version to run. "
-            "Exactly one of prompt_template_version_id and draft is set."
+            "ID of the prompt version to run. "
+            "Exactly one of prompt_version_id and draft is set."
         ),
         default=None,
     )
-    draft: PromptTemplateSnapshot | None = Field(
+    draft: PromptSnapshot | None = Field(
         description=(
             "An unsaved prompt to run, e.g. the prompt of the wizard. "
-            "Exactly one of prompt_template_version_id and draft is set."
+            "Exactly one of prompt_version_id and draft is set."
         ),
         default=None,
     )
@@ -50,10 +50,8 @@ class LLMAssistantJobInput(JobInputBase):
 
     @model_validator(mode="after")
     def check_prompt_source(self) -> Self:
-        if (self.prompt_template_version_id is None) == (self.draft is None):
-            raise ValueError(
-                "Exactly one of prompt_template_version_id and draft must be set"
-            )
+        if (self.prompt_version_id is None) == (self.draft is None):
+            raise ValueError("Exactly one of prompt_version_id and draft must be set")
         if self.draft is not None and self.draft.task_type != self.task_type:
             raise ValueError("The draft must be a prompt of the job's task")
         return self

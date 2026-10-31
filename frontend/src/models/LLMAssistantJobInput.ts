@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { PromptTemplateSnapshot } from "./PromptTemplateSnapshot";
+import type { PromptSnapshot } from "./PromptSnapshot";
 import type { TaskType } from "./TaskType";
 /**
- * Runs a prompt on documents: a stored prompt template version or a draft.
+ * Runs a prompt on documents: a stored prompt version or a draft.
  *
  * The prompt decides everything but the documents and the model: the task, the
  * selected codes, tags or metadata fields, the examples (few-shot if it shows
@@ -29,13 +29,13 @@ export type LLMAssistantJobInput = {
    */
   model: string;
   /**
-   * ID of the prompt template version to run. Exactly one of prompt_template_version_id and draft is set.
+   * ID of the prompt version to run. Exactly one of prompt_version_id and draft is set.
    */
-  prompt_template_version_id?: number | null;
+  prompt_version_id?: number | null;
   /**
-   * An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_template_version_id and draft is set.
+   * An unsaved prompt to run, e.g. the prompt of the wizard. Exactly one of prompt_version_id and draft is set.
    */
-  draft?: PromptTemplateSnapshot | null;
+  draft?: PromptSnapshot | null;
   /**
    * Delete the existing annotations of the assistant for the documents and codes of the prompt before creating new ones
    */

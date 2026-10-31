@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from core.prompt_template.prompt_template_enum import OutputFormat
-from core.prompt_template.prompt_template_renderer import PromptRenderer
+from core.prompt.prompt_enum import OutputFormat
+from core.prompt.prompt_renderer import PromptRenderer
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from core.memo.memo_orm import MemoORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.metadata.project_metadata_orm import ProjectMetadataORM
-    from core.prompt_template.prompt_template_orm import PromptTemplateORM
+    from core.prompt.prompt_orm import PromptORM
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
     from modules.classifier.classifier_orm import ClassifierORM
@@ -118,8 +118,8 @@ class ProjectORM(ORMBase):
         passive_deletes=True,
     )
 
-    prompt_templates: Mapped[list["PromptTemplateORM"]] = relationship(
-        "PromptTemplateORM",
+    prompts: Mapped[list["PromptORM"]] = relationship(
+        "PromptORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

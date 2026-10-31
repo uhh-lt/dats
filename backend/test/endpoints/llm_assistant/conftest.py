@@ -22,23 +22,23 @@ from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
-from core.prompt_template.prompt_template_defaults import DEFAULT_PROMPTS
-from core.prompt_template.prompt_template_dto import (
+from core.prompt.prompt_defaults import DEFAULT_PROMPTS
+from core.prompt.prompt_dto import (
     PromptCode,
+    PromptCreate,
     PromptExample,
     PromptExamplesCreate,
     PromptMetadataField,
+    PromptRead,
     PromptTag,
-    PromptTemplateCreate,
-    PromptTemplateRead,
 )
-from core.prompt_template.prompt_template_enum import (
+from core.prompt.prompt_enum import (
     OutputFormat,
     PromptExampleKind,
     PromptLanguage,
     TaskType,
 )
-from core.prompt_template.prompt_template_service import PromptTemplateService
+from core.prompt.prompt_service import PromptService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
@@ -84,7 +84,7 @@ class LLMAssistantProject(TypedDict):
     Non-obvious derived behavior:
 
     - The project was created by the project service, so it has the 10 default
-      prompt templates (one per output format and language, e.g.
+      prompts (one per output format and language, e.g.
       ``default-document-tagging-en``), which select nothing; the unauthorized
       project has none.
     - Every main-project document has its read-only ``language`` metadata set to
@@ -420,29 +420,29 @@ class JobPromptProject(TypedDict):
       PERSON span "Anna" (one example per sentence, in name order).
     - ``sentence_examples``: the sentence examples of the four human FACT
       sentence annotations of ``Few-shot examples``.
-    - Template ``Tagging`` (TAGGING, English) with one version: the English
+    - Prompt ``Tagging`` (TAGGING, English) with one version: the English
       default tagging prompt with the tags People and Other.
-    - Template ``Metadata`` (METADATA_EXTRACTION, English) with one version: the
+    - Prompt ``Metadata`` (METADATA_EXTRACTION, English) with one version: the
       English default metadata prompt with the five metadata fields.
-    - Template ``Sentence classification`` (SENTENCE_ANNOTATION, English) with
+    - Prompt ``Sentence classification`` (SENTENCE_ANNOTATION, English) with
       one version: the English default sentence prompt with code FACT and
       without examples.
-    - ``empty_tagging_version_id``: version 1 of the default template
+    - ``empty_tagging_version_id``: version 1 of the default prompt
       ``default-document-tagging-en``, which selects no tags.
-    - Template ``Foreign tagging`` (ANNOTATION, English) of the unauthorized
+    - Prompt ``Foreign tagging`` (ANNOTATION, English) of the unauthorized
       project: the English default inline prompt with code FOREIGN.
 
-    All templates were saved by ``testuser@dats.org``.
+    All prompts were saved by ``testuser@dats.org``.
     """
 
     base: LLMAssistantProject
     span_examples: list[PromptExample]
     sentence_examples: list[PromptExample]
-    tagging_template: PromptTemplateRead
-    metadata_template: PromptTemplateRead
-    sentence_template: PromptTemplateRead
+    tagging_prompt: PromptRead
+    metadata_prompt: PromptRead
+    sentence_prompt: PromptRead
     empty_tagging_version_id: int
-    foreign_template: PromptTemplateRead
+    foreign_prompt: PromptRead
 
 
 @pytest.fixture(scope="function")
@@ -452,7 +452,7 @@ def job_prompt_project(
     test_user: UserORM,
 ) -> JobPromptProject:
     """Create the prompts described by JobPromptProject."""
-    service = PromptTemplateService()
+    service = PromptService()
     base = llm_assistant_project
     project_id = base["project"].id
 
@@ -466,24 +466,24 @@ def job_prompt_project(
             ),
         )
 
-    def template(
+    def prompt(
         *,
         project_id: int,
         name: str,
         task_type: TaskType,
         output_format: OutputFormat,
         **selections: object,
-    ) -> PromptTemplateRead:
-        return service.create_prompt_template(
+    ) -> PromptRead:
+        return service.create_prompt(
             db=db_session,
             user_id=test_user.id,
-            create_dto=PromptTemplateCreate.model_validate(
+            create_dto=PromptCreate.model_validate(
                 {
                     "project_id": project_id,
                     "name": name,
                     "task_type": task_type,
                     "language": PromptLanguage.EN,
-                    "prompt": DEFAULT_PROMPTS[output_format][PromptLanguage.EN],
+                    "text": DEFAULT_PROMPTS[output_format][PromptLanguage.EN],
                     **selections,
                 }
             ),
@@ -496,7 +496,7 @@ def job_prompt_project(
         PromptExampleKind.SENTENCE,
         [a.id for a in base["human_sentence_annotations"]],
     )
-    tagging_template = template(
+    tagging_prompt = prompt(
         project_id=project_id,
         name="Tagging",
         task_type=TaskType.TAGGING,
@@ -506,7 +506,7 @@ def job_prompt_project(
             for tag in [base["people_tag"], base["other_tag"]]
         ],
     )
-    metadata_template = template(
+    metadata_prompt = prompt(
         project_id=project_id,
         name="Metadata",
         task_type=TaskType.METADATA_EXTRACTION,
@@ -521,23 +521,23 @@ def job_prompt_project(
             for field in base["metadata_fields"]
         ],
     )
-    sentence_template = template(
+    sentence_prompt = prompt(
         project_id=project_id,
         name="Sentence classification",
         task_type=TaskType.SENTENCE_ANNOTATION,
         output_format=OutputFormat.SENTENCES,
         codes=[prompt_code(base["fact_code"])],
     )
-    foreign_template = template(
+    foreign_prompt = prompt(
         project_id=base["foreign_project"].id,
         name="Foreign tagging",
         task_type=TaskType.ANNOTATION,
         output_format=OutputFormat.INLINE,
         codes=[prompt_code(base["foreign_code"])],
     )
-    empty_tagging_template = next(
+    empty_tagging_prompt = next(
         default
-        for default in service.read_prompt_templates_by_project(
+        for default in service.read_prompts_by_project(
             db=db_session, project_id=project_id
         )
         if default.name == "default-document-tagging-en"
@@ -548,9 +548,9 @@ def job_prompt_project(
         "base": base,
         "span_examples": span_examples,
         "sentence_examples": sentence_examples,
-        "tagging_template": tagging_template,
-        "metadata_template": metadata_template,
-        "sentence_template": sentence_template,
-        "empty_tagging_version_id": empty_tagging_template.versions[0].id,
-        "foreign_template": foreign_template,
+        "tagging_prompt": tagging_prompt,
+        "metadata_prompt": metadata_prompt,
+        "sentence_prompt": sentence_prompt,
+        "empty_tagging_version_id": empty_tagging_prompt.versions[0].id,
+        "foreign_prompt": foreign_prompt,
     }
