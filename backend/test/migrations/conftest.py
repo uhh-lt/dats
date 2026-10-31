@@ -50,8 +50,8 @@ def _insert_assistant_user(db: Session, *, user_id: int, last_name: str) -> None
     """The global assistant users as bootstrap created them before the migration."""
     db.execute(
         sa.text(
-            'INSERT INTO "user" (id, kind, email, first_name, last_name, password) '
-            "VALUES (:id, 'human', :email, 'ASSISTANT', :last_name, 'hashed')"
+            'INSERT INTO "user" (id, email, first_name, last_name, password) '
+            "VALUES (:id, :email, 'ASSISTANT', :last_name, 'hashed')"
         ),
         {
             "id": user_id,
@@ -67,7 +67,7 @@ def assistant_users_database(
 ) -> AssistantUsersDatabase:
     """
     This fixture sets up a database as it was before the migration
-    `5aba4c95cf5f_migrate_assistant_users_to_virtual_` (global assistant users):
+    `0a88c0776a57_virtual_users` moved the global assistant users:
 
     - Global assistant users 9990 (zero-shot), 9991 (few-shot) and 9992 (trained),
       members of all three projects below.

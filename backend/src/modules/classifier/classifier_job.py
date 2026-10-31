@@ -8,8 +8,6 @@ from modules.classifier.classifier_dto import (
     ClassifierJobOutput,
 )
 from modules.classifier.classifier_endpoint import router
-from modules.classifier.classifier_enum import ClassifierModel
-from modules.classifier.classifier_exceptions import ClassifierAnnotatorMissingError
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -19,18 +17,16 @@ sqlr = SQLRepo()
 
 
 def validate_classifier_input(db: Session, payload: ClassifierJobInput) -> None:
-    """Span and sentence classifiers write their predictions into a virtual
-    annotator of the project, never into a human user's annotations."""
+    """Span and sentence classifiers write their predictions into a virtual user
+    of the project, never into another user's annotations."""
     parameters = payload.task_parameters
-    if not isinstance(parameters, ClassifierInferenceParams):
-        return
-    if payload.model_type == ClassifierModel.DOCUMENT:
-        return
-    if parameters.annotator_id is None:
-        raise ClassifierAnnotatorMissingError(model_type=payload.model_type)
-    UserService().assert_virtual_annotator(
-        db=db, user_id=parameters.annotator_id, project_id=payload.project_id
-    )
+    if (
+        isinstance(parameters, ClassifierInferenceParams)
+        and parameters.virtual_user_id is not None
+    ):
+        UserService().assert_virtual_user(
+            db=db, user_id=parameters.virtual_user_id, project_id=payload.project_id
+        )
 
 
 @register_job(

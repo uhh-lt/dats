@@ -49,18 +49,17 @@ class LLMAssistantService(metaclass=SingletonMeta):
         task_type: TaskType,
         code_ids: list[int],
         sdoc_ids: list[int],
-        annotator_id: int,
+        virtual_user_id: int,
     ) -> dict[int, int]:
-        """Count the annotations of the virtual annotator per code, the ones a run
-        with `delete_existing_annotations` would delete."""
-        user_id = annotator_id
+        """Count the annotations of the virtual user per code, the ones a run with
+        `delete_existing_annotations` would delete."""
 
         match task_type:
             case TaskType.SENTENCE_ANNOTATION:
                 # 1. Find existing annotations
                 existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                     db=db,
-                    user_id=user_id,
+                    user_id=virtual_user_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,
                 )
@@ -68,7 +67,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 # 1. Find existing annotations
                 existing_annotations = crud_span_anno.read_by_user_sdocs_codes(
                     db=db,
-                    user_id=user_id,
+                    user_id=virtual_user_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,
                 )

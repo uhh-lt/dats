@@ -91,7 +91,7 @@ class SentenceAnnotationTask(
 
         deleted_ids = crud_sentence_anno.delete_by_user_sdocs_codes(
             db=context.db,
-            user_id=context.annotator_id,
+            user_id=context.virtual_user_id,
             sdoc_ids=context.payload.sdoc_ids,
             code_ids=list(context.strategy.codeid2code),
         )
@@ -175,7 +175,7 @@ class SentenceAnnotationTask(
         )
         created_annos_for_sdoc = SentenceAnnotationService().create_multi(
             db=context.db,
-            user_id=context.annotator_id,
+            user_id=context.virtual_user_id,
             create_dtos=suggested_annotations,
         )
         logger.info(

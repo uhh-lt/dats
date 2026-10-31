@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from core.auth.security import generate_password_hash
 from core.project.project_orm import ProjectUserLinkTable
-from core.user.user_dto import UserCreate, UserUpdate, VirtualAnnotatorCreateIntern
-from core.user.user_enum import UserKind
+from core.user.user_dto import UserCreate, UserUpdate
 from core.user.user_orm import UserORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_exceptions import NoSuchElementError
@@ -30,27 +29,12 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             ],
         )
 
-    def create_virtual_annotator(
-        self, db: Session, *, create_dto: VirtualAnnotatorCreateIntern
+    def create_virtual_user(
+        self, db: Session, *, project_id: int, name: str
     ) -> UserORM:
-        """
-        Create a virtual annotator: a user of one project without email and
-        password, whose display name is its first name.
-
-        Args:
-            create_dto: The project and the display name.
-
-        Returns:
-            The created virtual annotator.
-        """
-        db_obj = self.model(
-            kind=UserKind.VIRTUAL,
-            project_id=create_dto.project_id,
-            first_name=create_dto.name,
-            last_name="",
-            email=None,
-            password=None,
-        )
+        """Create a virtual user of the project: no email, no password, its name
+        is its first name."""
+        db_obj = self.model(project_id=project_id, first_name=name, last_name="")
         db.add(db_obj)
         db.flush()
         db.refresh(db_obj)
@@ -58,64 +42,28 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
 
     ### READ OPERATIONS ###
 
-    def read_humans(
-        self, db: Session, *, skip: int = 0, limit: int = 100
+    def read_multi(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        include_virtual: bool = True,
     ) -> list[UserORM]:
-        """
-        Read the human users of the system, without the virtual annotators of the
-        projects.
+        query = db.query(self.model)
+        if not include_virtual:
+            query = query.filter(self.model.project_id.is_(None))
+        return query.order_by(self.model.id).offset(skip).limit(limit).all()
 
-        Args:
-            skip: The number of users to skip.
-            limit: The maximum number of users to read.
-
-        Returns:
-            The human users, ordered by id.
+    def read_by_project(self, db: Session, *, project_id: int) -> list[UserORM]:
         """
-        return (
-            db.query(self.model)
-            .filter(self.model.kind == UserKind.HUMAN)
-            .order_by(self.model.id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
-    def read_virtual_annotators_by_project(
-        self, db: Session, *, project_id: int
-    ) -> list[UserORM]:
-        """
-        Read the virtual annotators of a project.
+        Read the users of a project: its members, then its virtual users.
 
         Args:
             project_id: The project.
 
         Returns:
-            The virtual annotators of the project, ordered by id.
-        """
-        return (
-            db.query(self.model)
-            .filter(
-                self.model.kind == UserKind.VIRTUAL,
-                self.model.project_id == project_id,
-            )
-            .order_by(self.model.id)
-            .all()
-        )
-
-    def read_annotators_by_project(
-        self, db: Session, *, project_id: int
-    ) -> list[UserORM]:
-        """
-        Read everybody who can own annotations in a project: its members and its
-        virtual annotators.
-
-        Args:
-            project_id: The project.
-
-        Returns:
-            The members (ordered by id), followed by the virtual annotators
-            (ordered by id).
+            The members and the virtual users, each ordered by id.
         """
         member_ids = select(ProjectUserLinkTable.user_id).where(
             ProjectUserLinkTable.project_id == project_id
@@ -123,60 +71,10 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
         return (
             db.query(self.model)
             .filter(
-                (self.model.id.in_(member_ids)) | (self.model.project_id == project_id)
+                self.model.id.in_(member_ids) | (self.model.project_id == project_id)
             )
-            .order_by(self.model.kind, self.model.id)
+            .order_by(self.model.project_id.is_not(None), self.model.id)
             .all()
-        )
-
-    def read_virtual_annotators_by_names(
-        self, db: Session, *, project_id: int, names: list[str]
-    ) -> list[UserORM]:
-        """
-        Read the virtual annotators of a project by their display names.
-
-        Args:
-            project_id: The project.
-            names: The display names, unique per project.
-
-        Returns:
-            The existing virtual annotators, in no particular order.
-        """
-        if not names:
-            return []
-
-        db_objs: list[UserORM] = []
-        for i in range(0, len(names), BATCH_SIZE):
-            batch_names = names[i : i + BATCH_SIZE]
-            stmt = select(self.model).where(
-                self.model.kind == UserKind.VIRTUAL,
-                self.model.project_id == project_id,
-                self.model.first_name.in_(batch_names),
-            )
-            db_objs.extend(db.scalars(stmt).all())
-        return db_objs
-
-    def read_virtual_annotator_by_name(
-        self, db: Session, *, project_id: int, name: str
-    ) -> UserORM | None:
-        """
-        Read the virtual annotator of a project by its display name.
-
-        Args:
-            project_id: The project.
-            name: The display name, unique per project.
-
-        Returns:
-            The virtual annotator, or None if the project has none of that name.
-        """
-        return (
-            db.query(self.model)
-            .filter(
-                self.model.kind == UserKind.VIRTUAL,
-                self.model.project_id == project_id,
-                self.model.first_name == name,
-            )
-            .first()
         )
 
     def read_by_email(self, db: Session, *, email: str) -> UserORM:
