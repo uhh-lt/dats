@@ -1,17 +1,19 @@
 """Collect the scope of a review: changed files, matching instruction files and workflow hints.
 
 Usage (from the repository root):
-    python3 .github/skills/review-changes/scripts/review_scope.py [--base main] [--head REF] [paths ...]
+    python3 .github/skills/review-changes/scripts/review_scope.py [--base main] [--head REF | --pr N] [paths ...]
 
 Without --head, the review covers everything since the merge base with --base:
 commits, staged and unstaged changes and untracked files.
-With --head, it covers the commits of that ref since the merge base (e.g. a fetched PR branch).
+With --head, it covers the commits of that ref since the merge base.
+With --pr, it fetches the PR and its base branch (no checkout) and reviews the PR's commits.
 Paths limit the review to files below them.
 
-Stdlib only, so it runs without the backend or frontend dependencies installed.
+Stdlib only (plus the gh CLI for --pr), so it runs without the backend or frontend dependencies installed.
 """
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -48,6 +50,21 @@ def git(*args: str) -> str:
     if result.returncode != 0:
         sys.exit(f"git {' '.join(args)} failed: {result.stderr.strip()}")
     return result.stdout
+
+
+def fetch_pr(number: int) -> tuple[str, str, dict[str, str]]:
+    """Fetch a PR and its base branch without checking anything out. Returns base ref, head sha and PR info."""
+    result = subprocess.run(
+        ["gh", "pr", "view", str(number), "--json", "title,body,baseRefName"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        sys.exit(f"gh pr view {number} failed: {result.stderr.strip()}")
+    info = json.loads(result.stdout)
+    git("fetch", "--quiet", "origin", info["baseRefName"])
+    git("fetch", "--quiet", "origin", f"pull/{number}/head")
+    return f"origin/{info['baseRefName']}", git("rev-parse", "FETCH_HEAD").strip(), info
 
 
 def glob_to_regex(glob: str) -> re.Pattern[str]:
@@ -151,20 +168,22 @@ def stack_of(path: str) -> str:
     return "other"
 
 
-def workflow_hints(files: list[ChangedFile], generated: list[ChangedFile]) -> list[str]:
-    """Heuristic checks of the AGENTS.md workflows. Each one is a lead for a reviewer, not a finding."""
+def workflow_hints(
+    files: list[ChangedFile], generated: list[ChangedFile]
+) -> dict[str, list[str]]:
+    """Heuristic checks of the AGENTS.md workflows, by stack. Each one is a lead for a reviewer, not a finding."""
     paths = {f.path for f in files if f.status != "D"} | {f.path for f in generated}
-    hints: list[str] = []
+    hints: dict[str, list[str]] = {"backend": [], "frontend": [], "other": []}
 
     orms = sorted(p for p in paths if re.search(r"^backend/src/.*_orm\.py$", p))
     migrations = sorted(p for p in paths if p.startswith(MIGRATIONS_DIR))
     if orms and not migrations:
-        hints.append(
+        hints["backend"].append(
             f"ORM files changed ({', '.join(orms)}) but no migration was added in {MIGRATIONS_DIR}. "
             "Check whether the change alters the schema."
         )
     if migrations:
-        hints.append(
+        hints["backend"].append(
             f"Migrations added or changed ({', '.join(migrations)}). Check that they were generated with "
             "`just alembic revision`, match the ORM changes, and migrate existing production data where needed."
         )
@@ -173,7 +192,7 @@ def workflow_hints(files: list[ChangedFile], generated: list[ChangedFile]) -> li
         p for p in paths if re.search(r"^backend/src/.*_(dto|endpoint)\.py$", p)
     )
     if api_sources and OPENAPI_SPEC not in paths:
-        hints.append(
+        hints["backend"].append(
             f"DTOs or endpoints changed ({', '.join(api_sources)}) but {OPENAPI_SPEC} did not. "
             "If the API surface changed, the frontend client was not regenerated (`just update-api`)."
         )
@@ -183,7 +202,7 @@ def workflow_hints(files: list[ChangedFile], generated: list[ChangedFile]) -> li
         if f.path != OPENAPI_SPEC and not f.path.endswith(".gen.ts")
     )
     if generated_client and OPENAPI_SPEC not in paths:
-        hints.append(
+        hints["frontend"].append(
             f"Generated client files changed without {OPENAPI_SPEC} ({', '.join(generated_client)}). "
             "They may have been edited by hand."
         )
@@ -197,14 +216,13 @@ def workflow_hints(files: list[ChangedFile], generated: list[ChangedFile]) -> li
     ]
     backend_tests = [p for p in paths if p.startswith("backend/test/")]
     if backend_code and not backend_tests:
-        hints.append(
+        hints["backend"].append(
             "Backend code changed but no file in backend/test/ did. Check whether the changed behavior needs a test."
         )
 
-    dependencies = sorted(paths & DEPENDENCY_FILES)
-    if dependencies:
-        hints.append(
-            f"Dependency files changed ({', '.join(dependencies)}). AGENTS.md forbids new dependencies; "
+    for dependency in sorted(paths & DEPENDENCY_FILES):
+        hints[stack_of(dependency)].append(
+            f"Dependency file changed ({dependency}). AGENTS.md forbids new dependencies; "
             "check what was added or upgraded."
         )
 
@@ -212,18 +230,18 @@ def workflow_hints(files: list[ChangedFile], generated: list[ChangedFile]) -> li
         p for p in paths if re.search(r"^backend/src/(main|worker|setup)\.py$", p)
     )
     if entry_points:
-        hints.append(
+        hints["backend"].append(
             f"Entry points changed ({', '.join(entry_points)}). Startup changes belong in backend/src/bootstrap.py, "
             "not in an entry point."
         )
 
     if any(re.search(r"_endpoint\.py$", p) for p in paths):
-        hints.append(
+        hints["backend"].append(
             "Endpoints changed. `lint/check_endpoints.py` does not run in pre-commit; run it from backend/ "
             "(`uv run python lint/check_endpoints.py`) and report only violations in the changed files."
         )
     if any(re.search(r"^backend/src/repos/.*_repo\.py$", p) for p in paths):
-        hints.append(
+        hints["backend"].append(
             "Repos changed. `lint/check_repos.py` does not run in pre-commit; run it from backend/ "
             "(`uv run python lint/check_repos.py`) and report only violations in the changed files."
         )
@@ -232,7 +250,7 @@ def workflow_hints(files: list[ChangedFile], generated: list[ChangedFile]) -> li
         p for p in paths if p.startswith(".github/instructions/") or p == "AGENTS.md"
     )
     if instruction_changes:
-        hints.append(
+        hints["other"].append(
             f"Instruction files changed ({', '.join(instruction_changes)}). Review the code against the new "
             "version and check that `applyTo` and `paths` stay in sync."
         )
@@ -247,14 +265,24 @@ def main() -> None:
         "--base", default="main", help="Ref to compare against (default: main)"
     )
     parser.add_argument("--head", help="Review this ref instead of the working tree")
+    parser.add_argument("--pr", type=int, help="Review this PR against its base branch")
     parser.add_argument("paths", nargs="*", help="Only review files below these paths")
     args = parser.parse_args()
 
+    pr: dict[str, str] | None = None
+    if args.pr:
+        if args.head:
+            sys.exit("--pr and --head exclude each other")
+        args.base, args.head, pr = fetch_pr(args.pr)
+
     merge_base = git("merge-base", args.base, args.head or "HEAD").strip()
-    head_label = (
-        args.head
-        or f"working tree of {git('rev-parse', '--abbrev-ref', 'HEAD').strip()}"
-    )
+    if pr:
+        head_label = f"PR #{args.pr} `{args.head[:9]}`: {pr['title']}"
+    else:
+        head_label = (
+            args.head
+            or f"working tree of {git('rev-parse', '--abbrev-ref', 'HEAD').strip()}"
+        )
     files = collect_changes(merge_base, args.head)
     if args.paths:
         prefixes = [p.rstrip("/") for p in args.paths]
@@ -304,6 +332,12 @@ def main() -> None:
     print(commits or "- (none, only uncommitted changes)")
     print()
 
+    if pr:
+        print("## PR description\n")
+        print(pr["body"].strip() or "(empty)")
+        print()
+
+    hints = workflow_hints(files, generated)
     for stack in ("backend", "frontend", "other"):
         stack_files = [f for f in reviewable if stack_of(f.path) == stack]
         if not stack_files:
@@ -331,6 +365,8 @@ def main() -> None:
             print(
                 f"- [{f.status}] `{f.path}`{rename} +{f.added} −{f.deleted} · {applies}"
             )
+        print("\nWorkflow hints:\n")
+        print("\n".join(f"- {h}" for h in hints.pop(stack)) or "- none")
         print()
 
     if skipped:
@@ -339,9 +375,11 @@ def main() -> None:
             print(f"- [{f.status}] `{f.path}` +{f.added} −{f.deleted}")
         print()
 
-    hints = workflow_hints(files, generated)
-    print("## Workflow hints\n")
-    print("\n".join(f"- {h}" for h in hints) if hints else "- none")
+    # hints of a stack without reviewable files, e.g. only generated client files changed
+    leftover = [h for stack_hints in hints.values() for h in stack_hints]
+    if leftover:
+        print("## Workflow hints without a stack section\n")
+        print("\n".join(f"- {h}" for h in leftover))
 
 
 if __name__ == "__main__":
