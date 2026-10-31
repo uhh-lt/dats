@@ -4,6 +4,10 @@
 /* eslint-disable */
 export type UserRead = {
   /**
+   * E-Mail of the User
+   */
+  email: string;
+  /**
    * First name of the User
    */
   first_name: string;
@@ -16,13 +20,9 @@ export type UserRead = {
    */
   id: number;
   /**
-   * Whether the User is a virtual user (no login, one project)
+   * Whether the User is a virtual user (one project, no login)
    */
   is_virtual: boolean;
-  /**
-   * E-Mail of the User (None if virtual)
-   */
-  email: string | null;
   /**
    * Project of a virtual user (None for other users)
    */

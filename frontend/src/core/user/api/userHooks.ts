@@ -67,10 +67,11 @@ const useCreateVirtualUser = () =>
     },
   });
 
-const useUpdateVirtualUser = () =>
+// update or delete a user by id: only virtual users of the user's projects
+const useUpdateUser = () =>
   useMutation({
-    mutationKey: [...userQueries.all(), "updateVirtualUser"],
-    mutationFn: UserService.updateVirtualUser,
+    mutationKey: [...userQueries.all(), "updateUser"],
+    mutationFn: UserService.updateById,
     meta: {
       datsEvent: "USER_UPDATED",
       successMessage: (user: UserRead) => `Renamed virtual user to ${user.first_name}`,
@@ -78,10 +79,10 @@ const useUpdateVirtualUser = () =>
     },
   });
 
-const useDeleteVirtualUser = () =>
+const useDeleteUser = () =>
   useMutation({
-    mutationKey: [...userQueries.all(), "deleteVirtualUser"],
-    mutationFn: UserService.deleteVirtualUser,
+    mutationKey: [...userQueries.all(), "deleteUser"],
+    mutationFn: UserService.deleteById,
     meta: {
       datsEvent: "USER_DELETED",
       successMessage: (user: UserRead) => `Deleted virtual user ${user.first_name} and its annotations`,
@@ -117,8 +118,8 @@ export const UserHooks = {
   useGetProjectMembers,
   useGetVirtualUsers,
   useCreateVirtualUser,
-  useUpdateVirtualUser,
-  useDeleteVirtualUser,
+  useUpdateUser,
+  useDeleteUser,
   useUpdateMe,
   useAddUserToProject,
   useRemoveUserFromProject,

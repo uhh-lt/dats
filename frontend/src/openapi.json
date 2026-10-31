@@ -7013,7 +7013,7 @@
     "/user/{project_id}/virtual_user": {
       "put": {
         "tags": ["user"],
-        "summary": "Creates a virtual user (a user without login) in the Project",
+        "summary": "Creates a virtual user (a user that cannot log in) in the Project",
         "operationId": "create_virtual_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -7221,18 +7221,18 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/virtual_user/{user_id}": {
+    "/user/{user_id}": {
       "patch": {
         "tags": ["user"],
-        "summary": "Renames the virtual user with the given ID",
-        "operationId": "update_virtual_user",
+        "summary": "Updates the User with the given ID: a virtual user of one of your projects (other users have no project)",
+        "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VirtualUserUpdate" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } }
         },
         "responses": {
           "200": {
@@ -7247,8 +7247,8 @@
       },
       "delete": {
         "tags": ["user"],
-        "summary": "Removes the virtual user with the given ID together with all its annotations and memos",
-        "operationId": "delete_virtual_user",
+        "summary": "Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project)",
+        "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
@@ -15884,7 +15884,7 @@
           "is_virtual": {
             "type": "boolean",
             "title": "Is Virtual",
-            "description": "Whether the User is a virtual user (no login, one project)"
+            "description": "Whether the User is a virtual user (one project, no login)"
           },
           "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
           "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" }
@@ -19200,13 +19200,13 @@
       },
       "UserCreate": {
         "properties": {
+          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
           "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
           "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" },
-          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
           "password": { "type": "string", "title": "Password", "description": "Hashed password of the User" }
         },
         "type": "object",
-        "required": ["first_name", "last_name", "email", "password"],
+        "required": ["email", "first_name", "last_name", "password"],
         "title": "UserCreate"
       },
       "UserCreatedEvent": {
@@ -19229,18 +19229,14 @@
       },
       "UserRead": {
         "properties": {
+          "email": { "type": "string", "format": "email", "title": "Email", "description": "E-Mail of the User" },
           "first_name": { "type": "string", "title": "First Name", "description": "First name of the User" },
           "last_name": { "type": "string", "title": "Last Name", "description": "Last name of the User" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the User" },
           "is_virtual": {
             "type": "boolean",
             "title": "Is Virtual",
-            "description": "Whether the User is a virtual user (no login, one project)"
-          },
-          "email": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Email",
-            "description": "E-Mail of the User (None if virtual)"
+            "description": "Whether the User is a virtual user (one project, no login)"
           },
           "project_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
@@ -19261,7 +19257,7 @@
           }
         },
         "type": "object",
-        "required": ["first_name", "last_name", "id", "is_virtual", "email", "project_id", "created", "updated"],
+        "required": ["email", "first_name", "last_name", "id", "is_virtual", "project_id", "created", "updated"],
         "title": "UserRead"
       },
       "UserUpdate": {
@@ -19328,18 +19324,7 @@
         "type": "object",
         "required": ["name"],
         "title": "VirtualUserCreate",
-        "description": "A virtual user: a user without login that belongs to one project and owns\nannotations, e.g. of an LLM Assistant run."
-      },
-      "VirtualUserUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
-            "title": "Name",
-            "description": "Name of the virtual user, unique per project"
-          }
-        },
-        "type": "object",
-        "title": "VirtualUserUpdate"
+        "description": "A virtual user: a user that belongs to one project and cannot log in, e.g.\nthe annotator of an LLM Assistant run."
       },
       "WhiteboardContent": {
         "properties": {

@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * A virtual user: a user without login that belongs to one project and owns
- * annotations, e.g. of an LLM Assistant run.
+ * A virtual user: a user that belongs to one project and cannot log in, e.g.
+ * the annotator of an LLM Assistant run.
  */
 export type VirtualUserCreate = {
   /**
