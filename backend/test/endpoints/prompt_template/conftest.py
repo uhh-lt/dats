@@ -78,7 +78,7 @@ class PromptTemplateProject(TypedDict):
       field ``author`` (string, "The author of the document.").
     - Span annotations of ``testuser@dats.org``: ``Alice`` (PERSON, 0-5),
       ``the report`` (Claim, 12-22) and ``Bob`` (PERSON, 44-47).
-    - Span annotation ``wrote`` (Claim, 6-11) of the virtual annotator
+    - Span annotation ``wrote`` (Claim, 6-11) of the virtual user
       ``Assistant-Run1``
       (another annotator than ``testuser@dats.org``).
     - Sentence annotations of ``testuser@dats.org``: S0 (PERSON) and S1-S2
@@ -242,7 +242,7 @@ def prompt_template_project(
     alice_annotation = span("Alice", person_code)
     report_annotation = span("the report", claim_code)
     bob_annotation = span("Bob", person_code)
-    assistant = UserService().create_virtual_annotator(
+    assistant = UserService().create_virtual_user(
         db=db_session, project_id=test_project.id, name="Assistant-Run1"
     )
     assistant_annotation = span("wrote", claim_code, assistant.id)

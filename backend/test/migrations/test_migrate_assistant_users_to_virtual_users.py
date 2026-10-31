@@ -13,68 +13,67 @@ from sqlalchemy.orm import Session
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.user.user_dto import UserRead
-from core.user.user_enum import UserKind
 
 from .conftest import FEWSHOT_ID, TRAINED_ID, ZEROSHOT_ID, AssistantUsersDatabase
 
 MIGRATION = (
     Path(__file__).parents[2]
     / "src/migrations/alembic/versions"
-    / "5aba4c95cf5f_migrate_assistant_users_to_virtual_.py"
+    / "0a88c0776a57_virtual_users.py"
 )
 
 
 def _load_migration() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("migration_5aba4c95cf5f", MIGRATION)
+    spec = importlib.util.spec_from_file_location("migration_0a88c0776a57", MIGRATION)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-def _virtual_annotators(client: TestClient, project_id: int) -> dict[str, int]:
-    """The virtual annotators of a project by name."""
-    response = client.get(f"/user/{project_id}/virtual_annotator")
+def _virtual_users(client: TestClient, project_id: int) -> dict[str, int]:
+    """The virtual users of a project by name."""
+    response = client.get(f"/user/{project_id}/user")
     assert response.status_code == 200, response.text
-    annotators = [
+    users = [
         UserRead.model_validate({**data, "password": None}) for data in response.json()
     ]
-    assert {a.kind for a in annotators} <= {UserKind.VIRTUAL}
-    return {annotator.first_name: annotator.id for annotator in annotators}
+    return {user.first_name: user.id for user in users if user.is_virtual}
 
 
 @pytest.fixture(scope="function")
 def migrated(
     db_session: Session, assistant_users_database: AssistantUsersDatabase
 ) -> AssistantUsersDatabase:
-    """Run the upgrade of the data migration on the fixture database, as alembic
-    does: with the `op` proxy bound to the connection of the session."""
+    """Run the data part of the migration on the fixture database (the schema is
+    already migrated), as alembic does: with the `op` proxy bound to the
+    connection of the session."""
     migration = _load_migration()
     context = MigrationContext.configure(db_session.connection())
     with Operations.context(context):
-        migration.upgrade()
+        migration._migrate_assistant_users()
     db_session.commit()
     return assistant_users_database
 
 
 # ===========================================================================
-# MIGRATE ASSISTANT USERS TO VIRTUAL ANNOTATORS (5aba4c95cf5f) TESTS
+# MIGRATE ASSISTANT USERS TO VIRTUAL USERS (0a88c0776a57) TESTS
 # ===========================================================================
 
 
-def test_migration_creates_virtual_annotators_only_where_assistants_have_data(
+def test_migration_creates_virtual_users_only_where_assistants_have_data(
     client: TestClient, migrated: AssistantUsersDatabase
 ):
-    """Every project gets a virtual annotator per assistant user that has data in
+    """Every project gets a virtual user per assistant user that has data in
     it, and no other."""
-    assert _virtual_annotators(client, migrated["project"].id).keys() == {
+    assert _virtual_users(client, migrated["project"].id).keys() == {
         "Assistant (zero-shot)",
         "Assistant (few-shot)",
     }
-    assert _virtual_annotators(client, migrated["other_project"].id).keys() == {
+    assert _virtual_users(client, migrated["other_project"].id).keys() == {
         "Assistant (trained)"
     }
-    assert _virtual_annotators(client, migrated["empty_project"].id) == {}
+    assert _virtual_users(client, migrated["empty_project"].id) == {}
 
 
 @pytest.mark.parametrize("user_id", [ZEROSHOT_ID, FEWSHOT_ID, TRAINED_ID])
@@ -89,20 +88,20 @@ def test_migration_deletes_the_global_assistant_users(
         assert user_id not in {member["id"] for member in members}
 
 
-def test_migration_moves_annotations_to_the_virtual_annotators(
+def test_migration_moves_annotations_to_the_virtual_users(
     client: TestClient, migrated: AssistantUsersDatabase
 ):
-    """Annotations keep their ids and belong to the virtual annotator of their
+    """Annotations keep their ids and belong to the virtual user of their
     assistant in their project."""
-    project_annotators = _virtual_annotators(client, migrated["project"].id)
-    other_annotators = _virtual_annotators(client, migrated["other_project"].id)
+    project_virtual_users = _virtual_users(client, migrated["project"].id)
+    other_virtual_users = _virtual_users(client, migrated["other_project"].id)
     expected_span_users = {
         **{
-            span_id: project_annotators["Assistant (zero-shot)"]
+            span_id: project_virtual_users["Assistant (zero-shot)"]
             for span_id in migrated["zeroshot_span_ids"]
         },
-        migrated["fewshot_span_id"]: project_annotators["Assistant (few-shot)"],
-        migrated["trained_span_id"]: other_annotators["Assistant (trained)"],
+        migrated["fewshot_span_id"]: project_virtual_users["Assistant (few-shot)"],
+        migrated["trained_span_id"]: other_virtual_users["Assistant (trained)"],
         migrated["human_copy_id"]: migrated["user"].id,
     }
 
@@ -116,12 +115,12 @@ def test_migration_moves_annotations_to_the_virtual_annotators(
     assert response.status_code == 200, response.text
     assert (
         SentenceAnnotationRead.model_validate(response.json()).user_id
-        == (project_annotators["Assistant (zero-shot)"])
+        == (project_virtual_users["Assistant (zero-shot)"])
     )
     annotators = client.get(f"/sdoc/{migrated['sdoc'].id}/annotators").json()
     assert set(annotators) == {
-        project_annotators["Assistant (zero-shot)"],
-        project_annotators["Assistant (few-shot)"],
+        project_virtual_users["Assistant (zero-shot)"],
+        project_virtual_users["Assistant (few-shot)"],
         migrated["user"].id,
     }
 
@@ -129,11 +128,9 @@ def test_migration_moves_annotations_to_the_virtual_annotators(
 def test_migration_remaps_the_provenance_of_copies(
     client: TestClient, migrated: AssistantUsersDatabase
 ):
-    """A human copy of an assistant annotation records the virtual annotator as
+    """A human copy of an assistant annotation records the virtual user as
     its source user."""
-    zeroshot = _virtual_annotators(client, migrated["project"].id)[
-        "Assistant (zero-shot)"
-    ]
+    zeroshot = _virtual_users(client, migrated["project"].id)["Assistant (zero-shot)"]
 
     response = client.get(f"/span/{migrated['human_copy_id']}")
 
@@ -146,11 +143,9 @@ def test_migration_remaps_the_provenance_of_copies(
 def test_migration_moves_memos_by_and_about_the_assistant(
     client: TestClient, db_session: Session, migrated: AssistantUsersDatabase
 ):
-    """The memo the assistant wrote belongs to its virtual annotator; the memo
-    about the assistant user is attached to the virtual annotator."""
-    zeroshot = _virtual_annotators(client, migrated["project"].id)[
-        "Assistant (zero-shot)"
-    ]
+    """The memo the assistant wrote belongs to its virtual user; the memo
+    about the assistant user is attached to the virtual user."""
+    zeroshot = _virtual_users(client, migrated["project"].id)["Assistant (zero-shot)"]
 
     response = client.get(f"/memo/{migrated['zeroshot_memo_id']}")
 
@@ -170,10 +165,8 @@ def test_migration_remaps_saved_user_filters(
     client: TestClient, db_session: Session, migrated: AssistantUsersDatabase
 ):
     """Saved timeline analyses and search views that filter on the assistant
-    filter on its virtual annotator; other users in the filter stay."""
-    zeroshot = _virtual_annotators(client, migrated["project"].id)[
-        "Assistant (zero-shot)"
-    ]
+    filter on its virtual user; other users in the filter stay."""
+    zeroshot = _virtual_users(client, migrated["project"].id)["Assistant (zero-shot)"]
 
     concepts: list[dict[str, Any]] = db_session.execute(
         sa.text("SELECT concepts FROM timelineanalysis WHERE id = :id"),

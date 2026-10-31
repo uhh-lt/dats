@@ -12,7 +12,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.user.user_enum import UserKind
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -27,14 +26,12 @@ if TYPE_CHECKING:
 
 class UserORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    # human users or virtual annotators (no email, no password, one project)
-    kind: Mapped[UserKind] = mapped_column(
-        String, nullable=False, server_default=UserKind.HUMAN.value, index=True
-    )
+    # NULL for virtual users
     email: Mapped[str | None] = mapped_column(String, unique=True, index=True)
-    # a virtual annotator's display name is its first name, its last name is empty
+    # a virtual user's name is its first name, its last name is empty
     first_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     last_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    # NULL for virtual users
     password: Mapped[str | None] = mapped_column(String)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
@@ -46,14 +43,11 @@ class UserORM(ORMBase):
     )
 
     # many to one
-    # the project of a virtual annotator, always NULL for human users
+    # set for virtual users only: users without login that belong to one project
     project_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE", name="FK_user_project_id"),
         index=True,
-    )
-    project: Mapped["ProjectORM | None"] = relationship(
-        "ProjectORM", back_populates="virtual_annotators"
     )
 
     # one to one
@@ -117,21 +111,20 @@ class UserORM(ORMBase):
         UniqueConstraint(
             "project_id",
             "first_name",
-            name="UC_virtual_annotator_name_unique_per_project",
+            name="UC_virtual_user_name_unique_per_project",
         ),
+        # users log in with email and password, virtual users have a project instead
         CheckConstraint(
-            "(kind = 'human' AND project_id IS NULL AND email IS NOT NULL"
-            " AND password IS NOT NULL)"
-            " OR (kind = 'virtual' AND project_id IS NOT NULL AND email IS NULL"
-            " AND password IS NULL)",
-            name="CC_user_kind_fields",
+            "(project_id IS NULL AND email IS NOT NULL AND password IS NOT NULL)"
+            " OR (project_id IS NOT NULL AND email IS NULL AND password IS NULL)",
+            name="CC_user_virtual_fields",
         ),
     )
 
     @property
     def is_virtual(self) -> bool:
-        return self.kind == UserKind.VIRTUAL
+        return self.project_id is not None
 
-    # human users belong to no project, virtual annotators to exactly one
+    # users belong to no project, virtual users to exactly one
     def get_project_id(self) -> int | None:
         return self.project_id

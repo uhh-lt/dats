@@ -197,19 +197,19 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
 
 
 # ---------------------------------------------------------------------------
-# VIRTUAL ANNOTATOR FOR INFERENCE
+# VIRTUAL USER FOR INFERENCE
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="function")
-def classifier_annotator(db_session, test_project) -> UserORM:
-    """The virtual annotator "Classifier-Run1" of the test project, which span and
+def classifier_virtual_user(db_session, test_project) -> UserORM:
+    """The virtual user "Classifier-Run1" of the test project, which span and
     sentence classifier inference writes its annotations into."""
-    annotator = UserService().create_virtual_annotator(
+    virtual_user = UserService().create_virtual_user(
         db=db_session, project_id=test_project.id, name="Classifier-Run1"
     )
     db_session.commit()
-    return crud_user.read(db=db_session, id=annotator.id)
+    return crud_user.read(db=db_session, id=virtual_user.id)
 
 
 # ---------------------------------------------------------------------------

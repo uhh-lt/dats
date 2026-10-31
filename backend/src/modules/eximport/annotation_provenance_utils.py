@@ -31,7 +31,7 @@ class AnnotationProvenanceExportSchema(BaseModel):
     """
     Provenance of an annotation copied from another annotation, for export/import.
     Ids differ between projects, so the source is referenced by uuid, its user by
-    key (email, or 'virtual:<name>' for a virtual annotator) and its code by name.
+    key (email, or 'virtual:<name>' for a virtual user) and its code by name.
     """
 
     source_annotation_uuid: str | None = Field(
@@ -40,7 +40,7 @@ class AnnotationProvenanceExportSchema(BaseModel):
     source_user_email: str | None = Field(
         description=(
             "Email of the user of the annotation this one was copied from, or "
-            "'virtual:<name>' for a virtual annotator"
+            "'virtual:<name>' for a virtual user"
         ),
         default=None,
     )

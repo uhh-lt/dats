@@ -7,8 +7,7 @@ class UserExportSchema(BaseModel):
 
     email: str = Field(
         description=(
-            "Email of the user, or 'virtual:<name>' for a virtual annotator "
-            "of the project"
+            "Email of the user, or 'virtual:<name>' for a virtual user of the project"
         )
     )
     first_name: str | None = Field(description="First name of the user", default=None)

@@ -20,8 +20,8 @@ def export_all_users(
     fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
-    # the members and the virtual annotators of the project
-    users = crud_user.read_annotators_by_project(db=db, project_id=project_id)
+    # the members and the virtual users of the project
+    users = crud_user.read_by_project(db=db, project_id=project_id)
     return __export_users(
         db=db,
         fsr=fsr,

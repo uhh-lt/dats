@@ -74,7 +74,7 @@ def generate_password_hash(password: str, iterations: int = 600000) -> str:
 
 
 def generate_jwt(user: UserORM | UserRead) -> tuple[str, datetime]:
-    # virtual annotators have no email and can never log in
+    # virtual users have no email and can never log in
     if user.email is None:
         raise credentials_exception
 

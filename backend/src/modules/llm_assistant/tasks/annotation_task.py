@@ -150,7 +150,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
 
         deleted_ids = crud_span_anno.delete_by_user_sdocs_codes(
             db=context.db,
-            user_id=context.annotator_id,
+            user_id=context.virtual_user_id,
             sdoc_ids=context.payload.sdoc_ids,
             code_ids=list(context.strategy.codeid2code),
         )
@@ -241,7 +241,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         )
         created_annos_for_sdoc = SpanAnnotationService().create_multi(
             db=context.db,
-            user_id=context.annotator_id,
+            user_id=context.virtual_user_id,
             create_dtos=suggested_annotations,
         )
         logger.info(
