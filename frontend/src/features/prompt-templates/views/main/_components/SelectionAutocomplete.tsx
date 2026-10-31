@@ -1,4 +1,3 @@
-import { OneRowChips } from "@components/OneRowChips";
 import { oneRowChipsAutocompleteSx } from "@components/oneRowChipsSx";
 import { Autocomplete, Box, Checkbox, Chip, TextField } from "@mui/material";
 import { useCallback, useMemo } from "react";
@@ -38,15 +37,15 @@ export function SelectionAutocomplete({ label, options, selected, onChange }: Se
       value={selected}
       onChange={handleChange}
       isOptionEqualToValue={(option, value) => option.id === value.id}
-      sx={selected.length > 0 ? oneRowChipsAutocompleteSx : undefined}
-      renderTags={(value, getTagProps) => (
-        <OneRowChips>
-          {value.map((option, index) => {
-            const { key, ...tagProps } = getTagProps({ index });
-            return <Chip key={key} size="small" variant="outlined" label={option.label} {...tagProps} />;
-          })}
-        </OneRowChips>
-      )}
+      sx={oneRowChipsAutocompleteSx}
+      limitTags={1}
+      getLimitTagsText={(more) => `+${more} more`}
+      renderTags={(value, getTagProps) =>
+        value.map((option, index) => {
+          const { key, ...tagProps } = getTagProps({ index });
+          return <Chip key={key} size="small" variant="outlined" label={option.label} {...tagProps} />;
+        })
+      }
       renderOption={({ key, ...props }, option, { selected: isSelected }) => (
         <Box component="li" key={key} {...props}>
           <Checkbox size="small" checked={isSelected} sx={{ p: 0.5, mr: 0.5 }} />
