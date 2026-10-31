@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from typing import TypedDict
 
 import pytest
@@ -7,9 +6,6 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.auth.api_key_crud import crud_api_key
-from core.auth.api_key_dto import ApiKeyCreate
-from core.auth.security import generate_api_key, hash_api_key
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
@@ -27,7 +23,7 @@ from dats_test_utils import create_span_for_text, create_text_document
 SENTENCES = ["Alpha beta gamma.", "Delta epsilon zeta."]
 
 
-class VirtualAnnotatorProject(TypedDict):
+class VirtualUserProject(TypedDict):
     project: ProjectORM
     other_project: ProjectORM
     target_project: ProjectORM
@@ -42,20 +38,18 @@ class VirtualAnnotatorProject(TypedDict):
     run1_alpha: SpanAnnotationORM
     run1_delta: SpanAnnotationORM
     user_alpha_copy: SpanAnnotationORM
-    user_api_key: str
-    run1_api_key: str
 
 
 @pytest.fixture(scope="function")
-def virtual_annotator_project(
+def virtual_user_project(
     db_session, test_user: UserORM, test_project: ProjectORM
-) -> VirtualAnnotatorProject:
+) -> VirtualUserProject:
     """
     This fixture sets up the following projects:
 
     - `project` (the test project of the test user `user`):
       - members: the system user and `user` (the test user)
-      - virtual annotators: `run1` ("ExperimentA-Run1") and `run2`
+      - virtual users: `run1` ("ExperimentA-Run1") and `run2`
         ("ExperimentA-Run2"), created through `UserService`
       - code `code` ("Claim")
       - document `sdoc` ("va_doc.txt") with the sentences "Alpha beta gamma." and
@@ -66,28 +60,26 @@ def virtual_annotator_project(
         a copy of `run1_alpha` (accepted in the comparison), so its provenance
         records `run1` as source user
       - `run2` has no annotations
-      - API keys `user_api_key` of `user` and `run1_api_key` of `run1`. The API
-        never issues keys to virtual annotators; `run1_api_key` is written to the
-        database directly to prove that such a key is rejected anyway.
     - `other_project` ("Other Project") of `other_user` ("other@dats.org"), which
       `user` is no member of:
-      - virtual annotator `other_run` ("ExperimentB-Run1")
+      - virtual user `other_run` ("ExperimentB-Run1")
       - document `other_sdoc` ("other_doc.txt")
+    - `target_project` ("Target Project") of `user`, to import into: code
+      "Claim" and document "va_doc.txt" with the same sentences, no annotations
 
     Non-obvious derived behavior:
 
-    - Virtual annotators are no project members: `/user/{project_id}/user` lists
-      only the system user and `user`, the annotator listing additionally `run1`
-      and `run2` (members first, then virtual annotators, each by id).
-    - Virtual annotators have no email and no password, so they can never log in.
+    - Virtual users are no project members, but `/user/{project_id}/user` lists
+      them after the members: the system user, `user`, `run1`, `run2`.
+    - Virtual users have no email and no password, so they can never log in.
     """
     project = test_project
 
-    # 1) virtual annotators, a code and a document with annotations
-    run1 = UserService().create_virtual_annotator(
+    # 1) virtual users, a code and a document with annotations
+    run1 = UserService().create_virtual_user(
         db=db_session, project_id=project.id, name="ExperimentA-Run1"
     )
-    run2 = UserService().create_virtual_annotator(
+    run2 = UserService().create_virtual_user(
         db=db_session, project_id=project.id, name="ExperimentA-Run2"
     )
     code = crud_code.create(
@@ -132,7 +124,7 @@ def virtual_annotator_project(
         .id
     )
 
-    # 2) another project with its own virtual annotator
+    # 2) another project with its own virtual user
     other_user = crud_user.create(
         db=db_session,
         create_dto=UserCreate(
@@ -148,7 +140,7 @@ def virtual_annotator_project(
         creating_user_id=other_user.id,
     )
     other_project = crud_project.read(db=db_session, id=other_project_read.id)
-    other_run = UserService().create_virtual_annotator(
+    other_run = UserService().create_virtual_user(
         db=db_session, project_id=other_project.id, name="ExperimentB-Run1"
     )
     other_sdoc = create_text_document(
@@ -184,23 +176,6 @@ def virtual_annotator_project(
         sentences=SENTENCES,
     )
 
-    # 4) API keys, one of them for a virtual annotator (never issued by the API)
-    api_keys: dict[int, str] = {}
-    for user_id in (test_user.id, run1.id):
-        api_key = generate_api_key()
-        crud_api_key.create(
-            db=db_session,
-            create_dto=ApiKeyCreate(
-                name="key",
-                prefix=api_key[:12],
-                hashed_key=hash_api_key(api_key),
-                expires_at=None,
-                created_at=datetime.now(UTC),
-                user_id=user_id,
-            ),
-        )
-        api_keys[user_id] = api_key
-
     db_session.commit()
     return {
         "project": project,
@@ -217,6 +192,4 @@ def virtual_annotator_project(
         "run1_alpha": run1_alpha,
         "run1_delta": run1_delta,
         "user_alpha_copy": crud_span_anno.read(db=db_session, id=user_alpha_copy_id),
-        "user_api_key": api_keys[test_user.id],
-        "run1_api_key": api_keys[run1.id],
     }

@@ -31,21 +31,21 @@ COUNT_ANNOTATIONS_URL = "/llm_assistant/count_existing_assistant_annotations"
         ),
     ],
 )
-def test_count_existing_assistant_annotations_separates_task_and_annotator(
+def test_count_existing_assistant_annotations_separates_task_and_virtual_user(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
     task_type: TaskType,
     annotator_key: str,
     code_key: str,
 ) -> None:
-    """Counts include only the selected task's virtual annotator and documents."""
+    """Counts include only the selected task's virtual user and documents."""
     code = llm_assistant_project[code_key]
     annotator = llm_assistant_project[annotator_key]
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": task_type.value,
-            "annotator_id": annotator.id,
+            "virtual_user_id": annotator.id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
@@ -77,7 +77,7 @@ def test_count_existing_assistant_annotations_returns_empty_for_other_tasks(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": task_type.value,
-            "annotator_id": llm_assistant_project["run_a"].id,
+            "virtual_user_id": llm_assistant_project["run_a"].id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],
@@ -97,7 +97,7 @@ def test_count_existing_assistant_annotations_includes_explicit_zero_counts(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "annotator_id": llm_assistant_project["run_a"].id,
+            "virtual_user_id": llm_assistant_project["run_a"].id,
         },
         json={
             "sdoc_ids": [
@@ -148,7 +148,7 @@ def test_count_existing_assistant_annotations_rejects_malformed_id_lists(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "annotator_id": 1,
+            "virtual_user_id": 1,
         },
         json=body,
     )
@@ -165,7 +165,7 @@ def test_count_existing_assistant_annotations_rejects_foreign_objects(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "annotator_id": llm_assistant_project["foreign_run"].id,
+            "virtual_user_id": llm_assistant_project["foreign_run"].id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["foreign_sdoc"].id],
@@ -175,16 +175,16 @@ def test_count_existing_assistant_annotations_rejects_foreign_objects(
     assert response.status_code == 403, response.text
 
 
-def test_count_existing_assistant_annotations_rejects_foreign_annotator(
+def test_count_existing_assistant_annotations_rejects_foreign_virtual_user(
     client: TestClient,
     llm_assistant_project: LLMAssistantProject,
 ) -> None:
-    """The counted virtual annotator must belong to one of the user's projects."""
+    """The counted virtual user must belong to one of the user's projects."""
     response = client.post(
         COUNT_ANNOTATIONS_URL,
         params={
             "task_type": TaskType.ANNOTATION.value,
-            "annotator_id": llm_assistant_project["foreign_run"].id,
+            "virtual_user_id": llm_assistant_project["foreign_run"].id,
         },
         json={
             "sdoc_ids": [llm_assistant_project["target_sdoc"].id],

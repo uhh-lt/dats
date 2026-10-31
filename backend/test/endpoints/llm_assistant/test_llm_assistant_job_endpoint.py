@@ -109,7 +109,9 @@ def _version_payload(
         sdoc_ids=[base["target_sdoc"].id],
         model=model,
         prompt_template_version_id=version_id,
-        annotator_id=(base["run_a"].id if task_type in ANNOTATING_TASK_TYPES else None),
+        virtual_user_id=(
+            base["run_a"].id if task_type in ANNOTATING_TASK_TYPES else None
+        ),
         delete_existing_annotations=True,
     )
 
@@ -169,7 +171,7 @@ def _draft_payload(
         sdoc_ids=[base["target_sdoc"].id],
         model="default",
         draft=draft,
-        annotator_id=(
+        virtual_user_id=(
             base["run_a"].id if draft.task_type in ANNOTATING_TASK_TYPES else None
         ),
         delete_existing_annotations=True,
@@ -278,8 +280,8 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
 ) -> None:
     """Every span variant persists one deduplicated PERSON suggestion for Alice.
 
-    The existing annotations of the selected virtual annotator (run A) are
-    deleted first, the other virtual annotator's (run B) stay; the examples of
+    The existing annotations of the selected virtual user (run A) are
+    deleted first, the other virtual user's (run B) stay; the examples of
     the prompt decide the approach.
     """
     base = job_prompt_project["base"]
@@ -632,18 +634,18 @@ def test_job_start_rejects_documents_outside_the_project(
         pytest.param(TaskType.SENTENCE_ANNOTATION, id="sentence-annotation"),
     ],
 )
-def test_job_start_requires_an_annotator_for_annotation_tasks(
+def test_job_start_requires_a_virtual_user_for_annotation_tasks(
     client: TestClient,
     job_prompt_project: JobPromptProject,
     task_type: TaskType,
 ) -> None:
-    """Annotation tasks need the virtual annotator to annotate as (HTTP 422)."""
+    """Annotation tasks need the virtual user to annotate as (HTTP 422)."""
     payload = _version_payload(
         job_prompt_project,
         task_type=TaskType.SENTENCE_ANNOTATION,
         version_id=job_prompt_project["sentence_template"].versions[0].id,
     ).model_dump(mode="json")
-    payload.update({"task_type": task_type.value, "annotator_id": None})
+    payload.update({"task_type": task_type.value, "virtual_user_id": None})
     if task_type == TaskType.ANNOTATION:
         payload["prompt_template_version_id"] = None
         payload["draft"] = _draft(
@@ -656,7 +658,7 @@ def test_job_start_requires_an_annotator_for_annotation_tasks(
     response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
 
     assert response.status_code == 422, response.text
-    assert "need the virtual annotator to annotate as" in response.text
+    assert "need the virtual user to annotate as" in response.text
 
 
 @pytest.mark.parametrize(
@@ -664,22 +666,22 @@ def test_job_start_requires_an_annotator_for_annotation_tasks(
     [
         # the LLM Assistant never writes into a human user's annotations
         pytest.param("test_user", id="human-user"),
-        # a virtual annotator of another project
-        pytest.param("foreign_run", id="foreign-virtual-annotator"),
+        # a virtual user of another project
+        pytest.param("foreign_run", id="foreign-virtual-user"),
         # a user id that does not exist
         pytest.param(None, id="nonexistent-user"),
     ],
 )
-def test_job_start_rejects_annotators_that_are_no_virtual_annotator_of_the_project(
+def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
     client: TestClient,
     job_prompt_project: JobPromptProject,
     test_user: UserORM,
     annotator: str | None,
 ) -> None:
-    """The job only annotates as a virtual annotator of its project: other
-    annotators are rejected before the job is enqueued."""
+    """The job only annotates as a virtual user of its project: other
+    users are rejected before the job is enqueued."""
     base = job_prompt_project["base"]
-    annotator_id = {
+    virtual_user_id = {
         "test_user": test_user.id,
         "foreign_run": base["foreign_run"].id,
         None: 999_999,
@@ -688,7 +690,7 @@ def test_job_start_rejects_annotators_that_are_no_virtual_annotator_of_the_proje
         job_prompt_project,
         task_type=TaskType.SENTENCE_ANNOTATION,
         version_id=job_prompt_project["sentence_template"].versions[0].id,
-    ).model_copy(update={"annotator_id": annotator_id})
+    ).model_copy(update={"virtual_user_id": virtual_user_id})
 
     response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
 

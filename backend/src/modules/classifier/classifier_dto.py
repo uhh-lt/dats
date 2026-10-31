@@ -357,9 +357,9 @@ class ClassifierInferenceParams(BaseModel):
     sdoc_ids: list[int] = Field(
         description="List of SourceDocument IDs to apply the classifier on"
     )
-    annotator_id: int | None = Field(
+    virtual_user_id: int | None = Field(
         description=(
-            "Virtual annotator of the project the span or sentence annotations are "
+            "Virtual user of the project the span or sentence annotations are "
             "written into. Required for span and sentence classifiers, unused for "
             "document classifiers (they assign tags)."
         ),
@@ -367,8 +367,8 @@ class ClassifierInferenceParams(BaseModel):
     )
     delete_existing_work: bool = Field(
         description=(
-            "Delete the existing span/sentence annotations of the virtual annotator "
-            "or the tags before creating new ones"
+            "Delete the existing span/sentence annotations of the virtual user or "
+            "the tags before creating new ones"
         )
     )
 
@@ -384,6 +384,20 @@ class ClassifierJobInput(JobInputBase):
         description="Specific parameters for the ClassifierJob w.r.t it's type",
         discriminator="task_type",
     )
+
+    @model_validator(mode="after")
+    def check_virtual_user(self) -> Self:
+        parameters = self.task_parameters
+        if (
+            isinstance(parameters, ClassifierInferenceParams)
+            and self.model_type != ClassifierModel.DOCUMENT
+            and parameters.virtual_user_id is None
+        ):
+            raise ValueError(
+                "Span and sentence classifiers need the virtual user to annotate as "
+                "(virtual_user_id)"
+            )
+        return self
 
 
 class ClassifierTrainingOutput(BaseModel):

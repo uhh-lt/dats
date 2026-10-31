@@ -8,6 +8,7 @@ from core.annotation.sentence_annotation_dto import SentenceAnnotationCreateInte
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from core.user.user_utils import read_users_by_keys
 from modules.eximport.annotation_provenance_utils import (
     import_annotation_provenance,
 )
@@ -16,7 +17,6 @@ from modules.eximport.sent_annotations.sentence_annotations_export_schema import
     SentenceAnnotationExportCollection,
     SentenceAnnotationExportSchema,
 )
-from modules.eximport.user.user_import_utils import read_project_users_by_keys
 
 
 def import_sentence_annotations_to_proj(
@@ -69,14 +69,15 @@ def import_sentence_annotations_to_proj(
     project = crud_project.read(db=db, id=project_id)
 
     # 1. Check if the Users exists
-    # members by email, virtual annotators by name (created if missing)
-    project_user_emails, user_errors = read_project_users_by_keys(
+    # members by email, virtual users by name (created if missing)
+    project_user_emails = read_users_by_keys(
         db,
         project_id=project_id,
         keys=user_emails,
-        create_virtual_annotators=True,
+        create_virtual_users=True,
     )
-    error_messages.extend(user_errors)
+    for email in sorted(user_emails - project_user_emails.keys()):
+        error_messages.append(f"User '{email}' is not part of the project {project_id}")
 
     # 2. Check if the SourceDocuments exists
     project_sdoc_names: dict[str, SourceDocumentORM] = {}

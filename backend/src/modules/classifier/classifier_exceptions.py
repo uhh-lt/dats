@@ -1,6 +1,3 @@
-from fastapi import status
-
-from common.exception_handler import exception_handler
 from modules.classifier.classifier_enum import ClassifierModel, ClassifierTask
 
 
@@ -60,16 +57,4 @@ class InvalidChunkSizeError(Exception):
             f"chunk_size={chunk_size} exceeds the maximum input length "
             f"({max_chunk_size}) of base model '{base_model_name}'. Please choose "
             f"a chunk_size of at most {max_chunk_size}."
-        )
-
-
-@exception_handler(status.HTTP_400_BAD_REQUEST)
-class ClassifierAnnotatorMissingError(Exception):
-    """Raised when a span or sentence classifier inference has no virtual
-    annotator to write its annotations into."""
-
-    def __init__(self, model_type: ClassifierModel) -> None:
-        super().__init__(
-            f"Inference of a {model_type.value} classifier needs the virtual "
-            "annotator to annotate as (annotator_id)."
         )

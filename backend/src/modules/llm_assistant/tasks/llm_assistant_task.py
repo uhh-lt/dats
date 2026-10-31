@@ -46,11 +46,11 @@ class LLMAssistantTaskContext(Generic[StrategyT]):
     strategy: StrategyT
 
     @property
-    def annotator_id(self) -> int:
-        """The virtual annotator the annotation tasks write into; the job input
-        requires it for them and checks it before the job starts."""
-        assert self.payload.annotator_id is not None
-        return self.payload.annotator_id
+    def virtual_user_id(self) -> int:
+        """The virtual user the annotation tasks write into; the job input requires
+        it for them and checks it before the job starts."""
+        assert self.payload.virtual_user_id is not None
+        return self.payload.virtual_user_id
 
     @property
     def is_fewshot(self) -> bool:

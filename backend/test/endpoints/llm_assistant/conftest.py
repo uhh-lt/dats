@@ -77,12 +77,12 @@ class LLMAssistantProject(TypedDict):
       (date), ``reviewed`` (boolean), and ``topics`` (list). The target document has
       deliberately stale current values for all five fields, so extraction results
       can be distinguished from current metadata.
-    - Virtual annotators ``run_a`` ("Assistant-RunA") and ``run_b``
+    - Virtual users ``run_a`` ("Assistant-RunA") and ``run_b``
       ("Assistant-RunB"), the targets of LLM Assistant runs. Each has one PERSON
       span annotation of "Alice" and one FACT sentence annotation on the target
       (``run_a``: sentence 0, ``run_b``: sentence 1).
     - A separate, unauthorized project with one document, one ``FOREIGN`` code,
-      a virtual annotator ``foreign_run`` ("Foreign-Run") and one span
+      a virtual user ``foreign_run`` ("Foreign-Run") and one span
       annotation of it.
 
     Non-obvious derived behavior:
@@ -93,7 +93,7 @@ class LLMAssistantProject(TypedDict):
       project has none.
     - Every main-project document has its read-only ``language`` metadata set to
       ``en``, as after preprocessing; the LLM assistant does not read it.
-    - Existing assistant annotations are separated by virtual annotator, allowing
+    - Existing assistant annotations are separated by virtual user, allowing
       the count endpoint and ``delete_existing_annotations`` to distinguish runs.
     - The unauthorized project is intentionally not associated with the test user.
     """
@@ -296,10 +296,10 @@ def llm_assistant_project(
         ],
     )
 
-    run_a = UserService().create_virtual_annotator(
+    run_a = UserService().create_virtual_user(
         db=db_session, project_id=test_project.id, name="Assistant-RunA"
     )
-    run_b = UserService().create_virtual_annotator(
+    run_b = UserService().create_virtual_user(
         db=db_session, project_id=test_project.id, name="Assistant-RunB"
     )
     run_a_span_annotation = dats_test_utils.create_span_for_text(
@@ -371,7 +371,7 @@ def llm_assistant_project(
             is_system=False,
         ),
     )
-    foreign_run = UserService().create_virtual_annotator(
+    foreign_run = UserService().create_virtual_user(
         db=db_session, project_id=foreign_project.id, name="Foreign-Run"
     )
     foreign_span_annotation = dats_test_utils.create_span_for_text(

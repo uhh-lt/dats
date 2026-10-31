@@ -20,7 +20,7 @@ llmas: LLMAssistantService = LLMAssistantService()
     "/count_existing_assistant_annotations",
     response_model=dict[int, int],
     summary=(
-        "Count the existing annotations of a virtual annotator per code, for the "
+        "Count the existing annotations of a virtual user per code, for the "
         "documents and codes of an LLM Assistant run"
     ),
 )
@@ -30,16 +30,16 @@ def count_existing_assistant_annotations(
     sdoc_ids: list[int],
     code_ids: list[int],
     task_type: TaskType,
-    annotator_id: int,
+    virtual_user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     authz_user.assert_in_same_project_as_many(Crud.CODE, code_ids)
-    authz_user.assert_in_same_project_as(Crud.USER, annotator_id)
+    authz_user.assert_in_same_project_as(Crud.USER, virtual_user_id)
 
     return llmas.count_existing_assistant_annotations(
         db=db,
-        annotator_id=annotator_id,
+        virtual_user_id=virtual_user_id,
         task_type=task_type,
         sdoc_ids=sdoc_ids,
         code_ids=code_ids,

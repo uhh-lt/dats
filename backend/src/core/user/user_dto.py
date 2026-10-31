@@ -3,7 +3,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from core.user.user_enum import UserKind
 from repos.db.dto_base import UpdateDTOBase
 
 
@@ -37,12 +36,12 @@ class UserUpdate(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class UserRead(UserBaseDTO):
     id: int = Field(description="ID of the User")
-    kind: UserKind = Field(description="Whether the User is a human or virtual")
-    email: str | None = Field(
-        description="E-Mail of the User (None for virtual annotators)"
+    is_virtual: bool = Field(
+        description="Whether the User is a virtual user (no login, one project)"
     )
+    email: str | None = Field(description="E-Mail of the User (None if virtual)")
     project_id: int | None = Field(
-        description="Project of a virtual annotator (None for human users)"
+        description="Project of a virtual user (None for other users)"
     )
     # Flo: We actually never want to return the password hence we exclude it from serialization
     password: str | None = Field(
@@ -57,7 +56,9 @@ class PublicUserRead(BaseModel):
     """A user object with information that everybody may see."""
 
     id: int = Field(description="ID of the User")
-    kind: UserKind = Field(description="Whether the User is a human or virtual")
+    is_virtual: bool = Field(
+        description="Whether the User is a virtual user (no login, one project)"
+    )
     first_name: str = Field(description="First name of the User")
     last_name: str = Field(description="Last name of the User")
     model_config = ConfigDict(from_attributes=True)
@@ -84,26 +85,21 @@ class ProjectAddUser(BaseModel):
     email: EmailStr = Field(description="E-Mail of the User")
 
 
-class VirtualAnnotatorCreate(BaseModel):
-    """A virtual annotator: a project-scoped user without login that owns
+class VirtualUserCreate(BaseModel):
+    """A virtual user: a user without login that belongs to one project and owns
     annotations, e.g. of an LLM Assistant run."""
 
     name: str = Field(
-        description="Display name of the virtual annotator, unique per project",
-        min_length=1,
+        description="Name of the virtual user, unique per project", min_length=1
     )
 
 
-class VirtualAnnotatorCreateIntern(VirtualAnnotatorCreate):
-    project_id: int = Field(description="Project the virtual annotator belongs to")
-
-
-class VirtualAnnotatorUpdate(BaseModel, UpdateDTOBase):
+class VirtualUserUpdate(BaseModel, UpdateDTOBase):
     # NOT NULL column: omit to keep the name, an explicit null is rejected
     non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name"})
 
     name: str | None = Field(
-        description="Display name of the virtual annotator, unique per project",
+        description="Name of the virtual user, unique per project",
         default=None,
         min_length=1,
     )

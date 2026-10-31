@@ -9,7 +9,6 @@ from core.project.project_dto import ProjectCreate, ProjectRead
 from core.prompt_template.prompt_template_service import PromptTemplateService
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserRead
-from core.user.user_exceptions import VirtualUserNotAllowedError
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
@@ -29,9 +28,6 @@ class ProjectService(metaclass=SingletonMeta):
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserRead:
-        # virtual annotators belong to their project, but are never members
-        if crud_user.read(db=db, id=user_id).is_virtual:
-            raise VirtualUserNotAllowedError(user_id=user_id)
         crud_project.associate_user(db=db, project_id=project_id, user_id=user_id)
         return UserRead.model_validate(crud_user.read(db=db, id=user_id))
 
@@ -42,8 +38,7 @@ class ProjectService(metaclass=SingletonMeta):
         proj = crud_project.create(db=db, create_dto=create_dto)
         project_id = proj.id
 
-        # 2) associate the system user (LLM Assistant and classifier runs write
-        # into virtual annotators of the project, which are no members)
+        # 2) associate the system user
         self.associate_user(db=db, project_id=project_id, user_id=SYSTEM_USER_ID)
 
         # 3) associate the user that created the project

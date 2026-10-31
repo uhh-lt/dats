@@ -242,17 +242,15 @@ class AgreementService(metaclass=SingletonMeta):
     def _read_annotator_names(
         self, *, db: Session, project_id: int, params: AgreementParams
     ) -> dict[int, str]:
-        """Names of both annotators, who must be members or virtual annotators of
-        the project.
+        """Names of both annotators, who must be users of the project (members or
+        virtual users).
 
         Unknown users are reported like non-members, so that the error does not
         reveal which user IDs exist.
         """
         members = {
             user.id: f"{user.first_name} {user.last_name}".strip()
-            for user in crud_user.read_annotators_by_project(
-                db=db, project_id=project_id
-            )
+            for user in crud_user.read_by_project(db=db, project_id=project_id)
         }
         user_ids = list(
             dict.fromkeys([params.reference_user_id, params.compared_user_id])

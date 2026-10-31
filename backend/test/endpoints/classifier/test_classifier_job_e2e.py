@@ -204,15 +204,15 @@ def _inference_payload(
     model_type: ClassifierModel,
     classifier_id: int,
     sdoc_ids: list[int],
-    annotator_id: int | None,
+    virtual_user_id: int | None,
 ) -> ClassifierJobInput:
     """Build a typed inference request that preserves existing annotations and
-    writes span/sentence predictions into the virtual annotator."""
+    writes span/sentence predictions into the virtual user."""
     inference_params = ClassifierInferenceParams(
         task_type=ClassifierTask.INFERENCE,
         classifier_id=classifier_id,
         sdoc_ids=sdoc_ids,
-        annotator_id=annotator_id,
+        virtual_user_id=virtual_user_id,
         delete_existing_work=False,
     )
     return ClassifierJobInput(
@@ -538,7 +538,7 @@ def test_span_classifier_train_eval_infer(
     db_session,
     conll_span_dataset,
     test_user,
-    classifier_annotator: UserORM,
+    classifier_virtual_user: UserORM,
     payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for span classification on CoNLL-2003.
@@ -657,7 +657,7 @@ def test_span_classifier_train_eval_infer(
             ClassifierModel.SPAN,
             classifier_id,
             conll_span_dataset["subset2sdoc_ids"]["test"][:5],
-            classifier_annotator.id,
+            classifier_virtual_user.id,
         ),
     )
     infer_finished = _wait_for_job(client, infer_job.job_id)
@@ -825,7 +825,7 @@ def test_sentence_classifier_train_eval_infer(
     db_session,
     csabstruct_sent_dataset,
     test_user,
-    classifier_annotator: UserORM,
+    classifier_virtual_user: UserORM,
     payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for sentence classification on CSAbstruct.
@@ -948,7 +948,7 @@ def test_sentence_classifier_train_eval_infer(
             ClassifierModel.SENTENCE,
             classifier_id,
             csabstruct_sent_dataset["subset2sdoc_ids"]["test"][:5],
-            classifier_annotator.id,
+            classifier_virtual_user.id,
         ),
     )
     infer_finished = _wait_for_job(client, infer_job.job_id)
@@ -1004,24 +1004,29 @@ def test_train_job_invalid_base_model(client: TestClient, test_project):
         pytest.param(ClassifierModel.SENTENCE, id="sentence"),
     ],
 )
-def test_inference_job_requires_a_virtual_annotator(
+def test_inference_job_requires_a_virtual_user(
     client: TestClient,
     test_project,
     test_user: UserORM,
-    classifier_annotator: UserORM,
+    classifier_virtual_user: UserORM,
     model_type: ClassifierModel,
 ):
-    """Span and sentence inference only write into a virtual annotator of the
-    project: without one, or with a human user, the start returns HTTP 400 and
-    no job is enqueued."""
-    for annotator_id, expected_fragment in [
-        (None, "needs the virtual annotator to annotate as"),
-        (test_user.id, "is not a virtual annotator of project"),
-    ]:
-        payload = _inference_payload(test_project.id, model_type, 1, [], annotator_id)
-        response = client.post(CLASSIFIER_JOB_URL, json=payload.model_dump(mode="json"))
-        assert response.status_code == 400, response.text
-        assert expected_fragment in response.text
+    """Span and sentence inference only write into a virtual user of the
+    project: without one the request is invalid (HTTP 422), with another user the
+    start returns HTTP 400; no job is enqueued."""
+    payload = _inference_payload(
+        test_project.id, model_type, 1, [], classifier_virtual_user.id
+    ).model_dump(mode="json")
+    payload["task_parameters"]["virtual_user_id"] = None
+    response = client.post(CLASSIFIER_JOB_URL, json=payload)
+    assert response.status_code == 422, response.text
+    assert "need the virtual user to annotate as" in response.text
+
+    payload["task_parameters"]["virtual_user_id"] = test_user.id
+    response = client.post(CLASSIFIER_JOB_URL, json=payload)
+    assert response.status_code == 400, response.text
+    assert "is not a virtual user of project" in response.text
+
     list_response = client.get(f"{CLASSIFIER_JOB_URL}/project/{test_project.id}")
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

@@ -1158,15 +1158,15 @@ class SpanClassificationModelService(TextClassificationModelService):
         tokenizer.model_max_length = classifier.train_params["chunk_size"]
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
-        # the job start checked the virtual annotator to write into
-        assert parameters.annotator_id is not None
-        annotator_id = parameters.annotator_id
+        # the job input requires the virtual user to write into
+        assert parameters.virtual_user_id is not None
+        virtual_user_id = parameters.virtual_user_id
 
         # Delete existing annotations (if requested by the user)
         if parameters.delete_existing_work:
             crud_span_anno.delete_by_user_sdocs_codes(
                 db=db,
-                user_id=annotator_id,
+                user_id=virtual_user_id,
                 sdoc_ids=parameters.sdoc_ids,
                 code_ids=classifier.class_ids,
             )
@@ -1357,7 +1357,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # Write to db
         SpanAnnotationService().create_multi(
-            db=db, user_id=annotator_id, create_dtos=create_dtos
+            db=db, user_id=virtual_user_id, create_dtos=create_dtos
         )
 
         return ClassifierJobOutput(
