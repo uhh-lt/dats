@@ -54,6 +54,18 @@ const useUpdateProjectMetadata = () =>
     },
   });
 
+const useUpdateBulkProjectMetadata = () =>
+  useMutation({
+    mutationKey: [...projectMetadataQueries.all(), "updateBulkProjectMetadata"],
+    mutationFn: ProjectMetadataService.updateProjectMetadataBulk,
+    meta: {
+      datsEvent: "PROJECT_METADATA_UPDATED_BATCH",
+      successMessage: (metadata: ProjectMetadataRead[]) => `Updated ${metadata.length} metadata field(s)`,
+      errorMessage: (error: { status: number }) =>
+        error.status === 409 ? "A metadata key is already taken" : "Could not update the metadata fields",
+    },
+  });
+
 const useDeleteProjectMetadata = () =>
   useMutation({
     mutationKey: [...projectMetadataQueries.all(), "deleteProjectMetadata"],
@@ -69,5 +81,6 @@ export const ProjectMetadataHooks = {
   useGetAllProjectMetadata,
   useCreateProjectMetadata,
   useUpdateProjectMetadata,
+  useUpdateBulkProjectMetadata,
   useDeleteProjectMetadata,
 };

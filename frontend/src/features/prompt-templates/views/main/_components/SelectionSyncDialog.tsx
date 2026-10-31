@@ -43,8 +43,7 @@ interface SelectionSyncDialogProps {
   items: SelectionItem[];
   // the icon of a selection, e.g. the colored square of a code
   renderIcon: (item: SelectionItem) => ReactNode;
-  onPull: (ids: number[], onSuccess: () => void) => void;
-  isPulling: boolean;
+  onPull: (ids: number[]) => void;
   onPush: (ids: number[], onSuccess: () => void) => void;
   isPushing: boolean;
 }
@@ -54,48 +53,40 @@ interface SelectionSyncDialogProps {
  * whose definitions differ; the checked ones are pulled (the prompt gets the project's definitions) or pushed (the
  * project gets the prompt's, for every member). The chosen side simply wins.
  */
-export function SelectionSyncDialog({
-  noun,
-  items,
-  renderIcon,
-  onPull,
-  isPulling,
-  onPush,
-  isPushing,
-}: SelectionSyncDialogProps) {
+export function SelectionSyncDialog({ noun, items, renderIcon, onPull, onPush, isPushing }: SelectionSyncDialogProps) {
+  const differing = useMemo(() => items.filter(isDifferent), [items]);
+  const differingIds = useMemo(() => differing.map((item) => item.local.id), [differing]);
+
   // all differing selections are checked and the direction is pull when the dialog opens
   const [direction, setDirection] = useState<SyncDirection>("pull");
-  const [uncheckedIds, setUncheckedIds] = useState<Set<number>>(new Set());
+  const [checkedIds, setCheckedIds] = useState<number[]>([]);
   const handleOpenDialog = useCallback(() => {
     setDirection("pull");
-    setUncheckedIds(new Set());
-  }, []);
+    setCheckedIds(differingIds);
+  }, [differingIds]);
   const { isOpen, open: handleOpen, close: handleClose } = useDialog({ onOpen: handleOpenDialog });
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
-  const differing = useMemo(() => items.filter(isDifferent), [items]);
-  const checkedIds = differing.map((item) => item.local.id).filter((id) => !uncheckedIds.has(id));
   const handleToggle = useCallback(
     (id: number) =>
-      setUncheckedIds((current) => {
-        const next = new Set(current);
-        if (!next.delete(id)) next.add(id);
-        return next;
-      }),
+      setCheckedIds((current) => (current.includes(id) ? current.filter((other) => other !== id) : [...current, id])),
     [],
   );
   const handleToggleAll = useCallback(
-    () =>
-      setUncheckedIds((current) => (current.size === 0 ? new Set(differing.map((item) => item.local.id)) : new Set())),
-    [differing],
+    () => setCheckedIds((current) => (current.length === differingIds.length ? [] : differingIds)),
+    [differingIds],
   );
   const handleChangeDirection = useCallback((_: MouseEvent<HTMLElement>, value: SyncDirection | null) => {
     if (value) setDirection(value);
   }, []);
-  const handleApply = useCallback(
-    () => (direction === "pull" ? onPull : onPush)(checkedIds, handleClose),
-    [direction, onPull, onPush, checkedIds, handleClose],
-  );
+  const handleApply = useCallback(() => {
+    if (direction === "push") {
+      onPush(checkedIds, handleClose);
+      return;
+    }
+    onPull(checkedIds);
+    handleClose();
+  }, [direction, onPull, onPush, checkedIds, handleClose]);
 
   const isPull = direction === "pull";
   const DirectionIcon = isPull ? ArrowForwardIcon : ArrowBackIcon;
@@ -168,7 +159,7 @@ export function SelectionSyncDialog({
                     sx={{ cursor: "pointer" }}
                   >
                     <TableCell padding="checkbox">
-                      <Checkbox size="small" checked={!uncheckedIds.has(item.local.id)} />
+                      <Checkbox size="small" checked={checkedIds.includes(item.local.id)} />
                     </TableCell>
                     <TableCell sx={{ verticalAlign: "top" }}>
                       {item.project && (
@@ -196,7 +187,7 @@ export function SelectionSyncDialog({
             startIcon={isPull ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
             fullWidth
             disabled={checkedIds.length === 0}
-            loading={isPull ? isPulling : isPushing}
+            loading={!isPull && isPushing}
             loadingPosition="start"
             onClick={handleApply}
           >
@@ -234,13 +225,6 @@ function DefinitionCell({ definition, other, icon }: DefinitionCellProps) {
           </Typography>
         </Box>
       </Stack>
-      {definition.type && (
-        <Box sx={highlightSx(definition.type !== other.type)}>
-          <Typography variant="caption" color="text.secondary">
-            {definition.type}
-          </Typography>
-        </Box>
-      )}
       <Box sx={highlightSx(definition.description !== other.description)}>
         <Typography
           variant="body2"
