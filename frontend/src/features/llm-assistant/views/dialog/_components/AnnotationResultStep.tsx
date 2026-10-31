@@ -18,7 +18,7 @@ export const AnnotationResultStep = memo(() => {
     return (
       <AnnotationResultStepContent
         jobResult={llmAssistantJob.data.output.specific_task_result as AnnotationLLMAssistantJobResult}
-        annotatorId={llmAssistantJob.data.input.annotator_id ?? undefined}
+        virtualUserId={llmAssistantJob.data.input.virtual_user_id ?? undefined}
       />
     );
   } else if (llmAssistantJob.isLoading) {
@@ -36,11 +36,11 @@ export const AnnotationResultStep = memo(() => {
 
 interface AnnotationResultStepContentProps {
   jobResult: AnnotationLLMAssistantJobResult;
-  // the virtual annotator the run wrote into
-  annotatorId: number | undefined;
+  // the virtual user the run wrote into
+  virtualUserId: number | undefined;
 }
 
-const AnnotationResultStepContent = memo(({ jobResult, annotatorId }: AnnotationResultStepContentProps) => {
+const AnnotationResultStepContent = memo(({ jobResult, virtualUserId }: AnnotationResultStepContentProps) => {
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
@@ -64,7 +64,7 @@ const AnnotationResultStepContent = memo(({ jobResult, annotatorId }: Annotation
       params: { projectId, sdocId: firstAnnotatedSdocId },
       to: "/project/$projectId/annotation/$sdocId",
       search: {
-        compareWithUserId: annotatorId,
+        compareWithUserId: virtualUserId,
         visibleUserId: undefined,
         selectedAnnotationId: undefined,
       },

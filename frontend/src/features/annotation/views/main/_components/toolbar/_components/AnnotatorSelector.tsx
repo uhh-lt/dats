@@ -28,13 +28,13 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // global server state (react query)
   const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
-  // the virtual annotators of the project are listed even without annotations, to annotate as them
-  const virtualAnnotators = UserHooks.useGetVirtualAnnotators();
+  // the virtual users of the project are listed even without annotations, to annotate as them
+  const virtualUsers = UserHooks.useGetVirtualUsers();
   const userIds = Array.from(
     new Set([
       ...(user ? [user.id] : []),
       ...(annotatorUserIds.data || []),
-      ...(virtualAnnotators.data || []).map((annotator) => annotator.id),
+      ...(virtualUsers.data || []).map((user) => user.id),
     ]),
   );
 

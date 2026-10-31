@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { UserRead } from "./UserRead";
-export type VirtualAnnotatorDeletedEvent = {
+export type UserCreatedEvent = {
   type?: string;
   payload: UserRead;
 };

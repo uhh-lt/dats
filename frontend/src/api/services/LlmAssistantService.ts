@@ -11,17 +11,17 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class LlmAssistantService {
   /**
-   * Count the existing annotations of a virtual annotator per code, for the documents and codes of an LLM Assistant run
+   * Count the existing annotations of a virtual user per code, for the documents and codes of an LLM Assistant run
    * @returns number Successful Response
    * @throws ApiError
    */
   public static countExistingAssistantAnnotations({
     taskType,
-    annotatorId,
+    virtualUserId,
     requestBody,
   }: {
     taskType: TaskType;
-    annotatorId: number;
+    virtualUserId: number;
     requestBody: Body_llm_assistant_count_existing_assistant_annotations;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
@@ -29,7 +29,7 @@ export class LlmAssistantService {
       url: "/llm_assistant/count_existing_assistant_annotations",
       query: {
         task_type: taskType,
-        annotator_id: annotatorId,
+        virtual_user_id: virtualUserId,
       },
       body: requestBody,
       mediaType: "application/json",

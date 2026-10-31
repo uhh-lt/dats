@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UserKind } from "./UserKind";
 /**
  * A user object with information that everybody may see.
  */
@@ -12,9 +11,9 @@ export type PublicUserRead = {
    */
   id: number;
   /**
-   * Whether the User is a human or virtual
+   * Whether the User is a virtual user (no login, one project)
    */
-  kind: UserKind;
+  is_virtual: boolean;
   /**
    * First name of the User
    */

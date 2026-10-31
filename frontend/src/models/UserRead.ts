@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UserKind } from "./UserKind";
 export type UserRead = {
   /**
    * First name of the User
@@ -17,15 +16,15 @@ export type UserRead = {
    */
   id: number;
   /**
-   * Whether the User is a human or virtual
+   * Whether the User is a virtual user (no login, one project)
    */
-  kind: UserKind;
+  is_virtual: boolean;
   /**
-   * E-Mail of the User (None for virtual annotators)
+   * E-Mail of the User (None if virtual)
    */
   email: string | null;
   /**
-   * Project of a virtual annotator (None for human users)
+   * Project of a virtual user (None for other users)
    */
   project_id: number | null;
   /**

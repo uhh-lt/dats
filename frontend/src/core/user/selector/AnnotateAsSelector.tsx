@@ -12,21 +12,21 @@ interface AnnotateAsSelectorProps {
 }
 
 /**
- * Selects the virtual annotator a run (LLM Assistant, classifier) writes its annotations into: an existing virtual
- * annotator of the project, or a new one named here, which the caller creates before starting the run.
- * Runs never write into a human user's annotations.
+ * Selects the virtual user a run (LLM Assistant, classifier) writes its annotations into: an existing virtual user of
+ * the project, or a new one named here, which the caller creates before starting the run. Runs never write into the
+ * annotations of other users.
  */
 export const AnnotateAsSelector = memo(({ value, onChange, label = "Annotate as" }: AnnotateAsSelectorProps) => {
-  const virtualAnnotators = UserHooks.useGetVirtualAnnotators();
+  const virtualUsers = UserHooks.useGetVirtualUsers();
 
   const toChoice = useCallback(
     (name: string): AnnotateAsChoice | null => {
       const trimmed = name.trim();
       if (trimmed.length === 0) return null;
-      const existing = virtualAnnotators.data?.find((annotator) => annotator.first_name === trimmed);
+      const existing = virtualUsers.data?.find((user) => user.first_name === trimmed);
       return existing ? { userId: existing.id } : { newName: trimmed };
     },
-    [virtualAnnotators.data],
+    [virtualUsers.data],
   );
 
   const handleChange = useCallback(
@@ -46,21 +46,21 @@ export const AnnotateAsSelector = memo(({ value, onChange, label = "Annotate as"
   const selected = useMemo(() => {
     if (value === null) return null;
     if ("newName" in value) return value.newName;
-    return virtualAnnotators.data?.find((annotator) => annotator.id === value.userId) ?? null;
-  }, [value, virtualAnnotators.data]);
+    return virtualUsers.data?.find((user) => user.id === value.userId) ?? null;
+  }, [value, virtualUsers.data]);
 
   const helperText =
     value === null
-      ? "Select a virtual annotator or enter the name of a new one"
+      ? "Select a virtual user or enter the name of a new one"
       : "newName" in value
-        ? `Creates the new virtual annotator "${value.newName}"`
-        : "Writes into the annotations of this virtual annotator";
+        ? `Creates the new virtual user "${value.newName}"`
+        : "Writes into the annotations of this virtual user";
 
   return (
     <Autocomplete
       freeSolo
-      options={virtualAnnotators.data ?? []}
-      loading={virtualAnnotators.isLoading}
+      options={virtualUsers.data ?? []}
+      loading={virtualUsers.isLoading}
       value={selected}
       onChange={handleChange}
       onInputChange={handleInputChange}
@@ -68,7 +68,7 @@ export const AnnotateAsSelector = memo(({ value, onChange, label = "Annotate as"
       isOptionEqualToValue={(option, other) => typeof other !== "string" && option.id === other.id}
       renderOption={({ key, ...props }, option) => (
         <li key={key} {...props}>
-          <ListItemIcon>{getIconComponent(Icon.VIRTUAL_ANNOTATOR)}</ListItemIcon>
+          <ListItemIcon>{getIconComponent(Icon.VIRTUAL_USER)}</ListItemIcon>
           <ListItemText>{option.first_name}</ListItemText>
         </li>
       )}

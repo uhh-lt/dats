@@ -24,20 +24,20 @@ import {
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
-interface VirtualAnnotatorCreateFormValues {
+interface VirtualUserCreateFormValues {
   name: string;
 }
 
-interface ProjectVirtualAnnotatorsProps {
+interface ProjectVirtualUsersProps {
   project: ProjectRead;
 }
 
 /**
- * Lists the virtual annotators of the project: users without login that own annotations, e.g. of LLM Assistant runs.
+ * Lists the virtual users of the project: users without login that own annotations, e.g. of LLM Assistant runs.
  * They can be created, renamed and deleted (together with all their annotations).
  */
-export const ProjectVirtualAnnotators = memo(({ project }: ProjectVirtualAnnotatorsProps) => {
-  const virtualAnnotators = UserHooks.useGetVirtualAnnotators();
+export const ProjectVirtualUsers = memo(({ project }: ProjectVirtualUsersProps) => {
+  const virtualUsers = UserHooks.useGetVirtualUsers();
 
   // create
   const {
@@ -45,50 +45,50 @@ export const ProjectVirtualAnnotators = memo(({ project }: ProjectVirtualAnnotat
     formState: { errors },
     control,
     reset,
-  } = useForm<VirtualAnnotatorCreateFormValues>({ defaultValues: { name: "" } });
-  const { mutate: createVirtualAnnotatorMutation, isPending } = UserHooks.useCreateVirtualAnnotator();
-  const handleVirtualAnnotatorCreation = useCallback<SubmitHandler<VirtualAnnotatorCreateFormValues>>(
+  } = useForm<VirtualUserCreateFormValues>({ defaultValues: { name: "" } });
+  const { mutate: createVirtualUserMutation, isPending } = UserHooks.useCreateVirtualUser();
+  const handleVirtualUserCreation = useCallback<SubmitHandler<VirtualUserCreateFormValues>>(
     (data) => {
-      createVirtualAnnotatorMutation(
+      createVirtualUserMutation(
         { projectId: project.id, requestBody: { name: data.name.trim() } },
         { onSuccess: () => reset({ name: "" }) },
       );
     },
-    [createVirtualAnnotatorMutation, project.id, reset],
+    [createVirtualUserMutation, project.id, reset],
   );
-  const handleError: SubmitErrorHandler<VirtualAnnotatorCreateFormValues> = (data) => console.error(data);
+  const handleError: SubmitErrorHandler<VirtualUserCreateFormValues> = (data) => console.error(data);
 
   // rename
-  const { mutate: updateVirtualAnnotatorMutation } = UserHooks.useUpdateVirtualAnnotator();
+  const { mutate: updateVirtualUserMutation } = UserHooks.useUpdateVirtualUser();
   const handleRename = useCallback(
-    (annotator: UserRead, name: string) => {
+    (virtualUser: UserRead, name: string) => {
       const trimmed = name.trim();
-      if (trimmed.length === 0 || trimmed === annotator.first_name) return;
-      updateVirtualAnnotatorMutation({ userId: annotator.id, requestBody: { name: trimmed } });
+      if (trimmed.length === 0 || trimmed === virtualUser.first_name) return;
+      updateVirtualUserMutation({ userId: virtualUser.id, requestBody: { name: trimmed } });
     },
-    [updateVirtualAnnotatorMutation],
+    [updateVirtualUserMutation],
   );
 
   // delete
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const { mutate: deleteVirtualAnnotatorMutation } = UserHooks.useDeleteVirtualAnnotator();
+  const { mutate: deleteVirtualUserMutation } = UserHooks.useDeleteVirtualUser();
   const handleClickDelete = useCallback(
-    (annotator: UserRead) => {
+    (virtualUser: UserRead) => {
       openConfirmationDialog({
-        text: `Do you really want to delete the virtual annotator "${annotator.first_name}"? All its annotations are deleted as well. This cannot be undone.`,
-        onAccept: () => deleteVirtualAnnotatorMutation({ userId: annotator.id }),
+        text: `Do you really want to delete the virtual user "${virtualUser.first_name}"? All its annotations are deleted as well. This cannot be undone.`,
+        onAccept: () => deleteVirtualUserMutation({ userId: virtualUser.id }),
       });
     },
-    [deleteVirtualAnnotatorMutation, openConfirmationDialog],
+    [deleteVirtualUserMutation, openConfirmationDialog],
   );
 
   return (
     <Box display="flex" className="myFlexContainer h100">
-      <form onSubmit={handleSubmit(handleVirtualAnnotatorCreation, handleError)}>
+      <form onSubmit={handleSubmit(handleVirtualUserCreation, handleError)}>
         <Toolbar variant="dense" className="myFlexFitContentContainer">
           <Stack direction="row" spacing={2} sx={{ width: "100%", alignItems: "center" }}>
             <Typography variant="h6" component="div" flexShrink={0}>
-              Add virtual annotator
+              Add virtual user
             </Typography>
             <FormText
               name="name"
@@ -118,35 +118,35 @@ export const ProjectVirtualAnnotators = memo(({ project }: ProjectVirtualAnnotat
         </Toolbar>
       </form>
       <Typography variant="body2" color="textSecondary" sx={{ px: 3, pb: 1 }}>
-        Virtual annotators own annotations without being able to log in, e.g. the annotations of an LLM Assistant run or
-        an agreed group standard. You can annotate as a virtual annotator in the annotation view.
+        Virtual users own annotations without being able to log in, e.g. the annotations of an LLM Assistant run or an
+        agreed group standard. You can annotate as a virtual user in the annotation view.
       </Typography>
 
       <Divider />
-      {virtualAnnotators.isLoading && <CardContent>Loading virtual annotators...</CardContent>}
-      {virtualAnnotators.isError && (
-        <CardContent>An error occurred while loading the virtual annotators of project {project.id}...</CardContent>
+      {virtualUsers.isLoading && <CardContent>Loading virtual users...</CardContent>}
+      {virtualUsers.isError && (
+        <CardContent>An error occurred while loading the virtual users of project {project.id}...</CardContent>
       )}
-      {virtualAnnotators.isSuccess && virtualAnnotators.data.length === 0 && (
-        <CardContent>This project has no virtual annotators yet.</CardContent>
+      {virtualUsers.isSuccess && virtualUsers.data.length === 0 && (
+        <CardContent>This project has no virtual users yet.</CardContent>
       )}
-      {virtualAnnotators.isSuccess && (
+      {virtualUsers.isSuccess && (
         <List style={{ maxHeight: "100%", overflowY: "auto" }}>
-          {virtualAnnotators.data.map((annotator) => (
+          {virtualUsers.data.map((virtualUser) => (
             <ListItem
-              key={annotator.id}
+              key={virtualUser.id}
               secondaryAction={
-                <Tooltip title="Delete virtual annotator and its annotations">
-                  <IconButton onClick={() => handleClickDelete(annotator)}>
+                <Tooltip title="Delete virtual user and its annotations">
+                  <IconButton onClick={() => handleClickDelete(virtualUser)}>
                     <DeleteIcon />
                   </IconButton>
                 </Tooltip>
               }
             >
-              <ListItemIcon>{getIconComponent(Icon.VIRTUAL_ANNOTATOR)}</ListItemIcon>
+              <ListItemIcon>{getIconComponent(Icon.VIRTUAL_USER)}</ListItemIcon>
               <EditableTypography
-                value={annotator.first_name}
-                onChange={(name) => handleRename(annotator, name)}
+                value={virtualUser.first_name}
+                onChange={(name) => handleRename(virtualUser, name)}
                 whiteColor={false}
               />
             </ListItem>
