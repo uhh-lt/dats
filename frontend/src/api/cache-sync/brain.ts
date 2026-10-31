@@ -7,7 +7,7 @@ import { tableInfoQueries } from "@core/filter/api/tableInfoQueries";
 import { folderQueries } from "@core/folder/api/folderQueries";
 import { projectMetadataQueries } from "@core/project-metadata/api/projectMetadataQueries";
 import { projectQueries } from "@core/project/api/projectQueries";
-import { promptTemplateQueries } from "@core/prompt-template/api/promptTemplateQueries";
+import { promptQueries } from "@core/prompt/api/promptQueries";
 import { sdocMetadataQueries } from "@core/sdoc-metadata/api/sdocMetadataQueries";
 import { sentenceAnnotationQueries } from "@core/sentence-annotation/api/sentenceAnnotationQueries";
 import { sdocQueries } from "@core/source-document/api/sdocQueries";
@@ -199,11 +199,11 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       removeMapItem(cotaQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
-    // ── Prompt templates ────────────────────────────────────────────────────
-    // A new version is an update of its template, whose payload lists all versions.
-    case "PROMPT_TEMPLATE_CREATED":
-    case "PROMPT_TEMPLATE_UPDATED":
-      upsertMapItem(promptTemplateQueries.byProject(event.payload.project_id).queryKey, event.payload);
+    // ── Prompts ────────────────────────────────────────────────────
+    // A new version is an update of its prompt, whose payload lists all versions.
+    case "PROMPT_CREATED":
+    case "PROMPT_UPDATED":
+      upsertMapItem(promptQueries.byProject(event.payload.project_id).queryKey, event.payload);
       break;
 
     // ── Folders ─────────────────────────────────────────────────────────────

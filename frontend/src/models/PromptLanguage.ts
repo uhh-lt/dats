@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * The language of a prompt template; it decides the text of the blocks.
+ * The language of a prompt; it decides the text of the blocks.
  */
 export enum PromptLanguage {
   EN = "en",

@@ -4,8 +4,8 @@ from typing import ClassVar
 from pydantic import BaseModel
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.prompt_template.prompt_template_enum import OutputFormat
-from core.prompt_template.prompt_template_renderer import (
+from core.prompt.prompt_enum import OutputFormat
+from core.prompt.prompt_renderer import (
     PromptRenderer,
     PromptSegment,
 )
@@ -15,7 +15,7 @@ from repos.llm_repo import LLMMessage
 class LLMAssistantStrategy:
     """A strategy implements the output format of a prompt.
 
-    The prompt (see ``core.prompt_template``) decides what the LLM sees: the
+    The prompt (see ``core.prompt``) decides what the LLM sees: the
     renderer fills its blocks and splits documents into segments, one LLM message
     each. The strategy adds what the answers need:
     - the structured-output response model used for the LLM call

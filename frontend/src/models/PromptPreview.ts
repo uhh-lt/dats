@@ -20,9 +20,9 @@ export type PromptPreview = {
    */
   num_messages: number;
   /**
-   * The rendered prompt
+   * The rendered text of the prompt
    */
-  prompt: string;
+  text: string;
   /**
    * The text of every block of the prompt except the document
    */

@@ -110,7 +110,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         title: "Open Prompts",
         description: "Go to the prompts of the project",
         category: "Navigation",
-        icon: getIconComponent(Icon.PROMPT_TEMPLATE),
+        icon: getIconComponent(Icon.PROMPT),
         action: () => {
           tabNavigate({ to: "/project/$projectId/prompts", params: { projectId } });
         },

@@ -3,15 +3,15 @@ import { ProjectMetadataHooks } from "@core/project-metadata";
 import {
   DEFAULT_OUTPUT_FORMATS,
   PromptPreviewSource,
-  PromptTemplateHooks,
-  promptTemplateQueries,
+  PromptHooks,
+  promptQueries,
   setDocumentUnit,
   toPromptCode,
   toPromptMetadataField,
   toPromptTag,
-} from "@core/prompt-template";
+} from "@core/prompt";
 import { TagHooks } from "@core/tag";
-import { PromptTemplateSnapshot } from "@models/PromptTemplateSnapshot";
+import { PromptSnapshot } from "@models/PromptSnapshot";
 import { useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -26,7 +26,7 @@ export interface WizardPrompt {
 
 /**
  * The prompt of the wizard: in guided mode the default prompt of the task with the wizard's selections and settings
- * (unsaved, nothing is stored), in template mode the selected prompt template version.
+ * (unsaved, nothing is stored), in prompt mode the selected prompt version.
  */
 export function useWizardPrompt(): WizardPrompt {
   const projectId = useAppSelector((state) => state.llmAssistant.projectId);
@@ -39,15 +39,15 @@ export function useWizardPrompt(): WizardPrompt {
   const outputFormat = useAppSelector((state) => state.llmAssistant.outputFormat);
   const documentUnit = useAppSelector((state) => state.llmAssistant.documentUnit);
   const settings = useAppSelector((state) => state.llmAssistant.settings);
-  const versionId = useAppSelector((state) => state.llmAssistant.promptTemplateVersionId);
+  const versionId = useAppSelector((state) => state.llmAssistant.promptVersionId);
 
-  // template mode
-  const version = PromptTemplateHooks.useGetPromptTemplateVersion({ projectId, versionId });
+  // prompt mode
+  const version = PromptHooks.useGetPromptVersion({ projectId, versionId });
 
   // guided mode: the default prompt and the selected project data
   const format = outputFormat ?? (method ? DEFAULT_OUTPUT_FORMATS[method] : undefined);
   const defaultPrompt = useQuery({
-    ...promptTemplateQueries.defaultPrompt(format, language),
+    ...promptQueries.defaultPrompt(format, language),
     enabled: mode === "guided",
   });
   const codes = CodeHooks.useGetEnabledCodes();
@@ -55,10 +55,10 @@ export function useWizardPrompt(): WizardPrompt {
   const metadata = ProjectMetadataHooks.useGetAllProjectMetadata();
 
   return useMemo(() => {
-    if (mode === "template") {
+    if (mode === "prompt") {
       const selected = version.data;
       return {
-        source: selected ? { versionId: selected.version.id, prompt: selected.version.prompt } : undefined,
+        source: selected ? { versionId: selected.version.id, text: selected.version.text } : undefined,
         codeIds: (selected?.version.codes ?? []).map((code) => code.code_id),
         isError: version.isError,
       };
@@ -67,11 +67,11 @@ export function useWizardPrompt(): WizardPrompt {
     if (!method || !defaultPrompt.data || !codes.data || !tags.data || !metadata.data) {
       return { source: undefined, codeIds, isError: defaultPrompt.isError };
     }
-    const prompt = defaultPrompt.data.prompt;
-    const draft: PromptTemplateSnapshot = {
+    const prompt = defaultPrompt.data.text;
+    const draft: PromptSnapshot = {
       task_type: method,
       language,
-      prompt: documentUnit ? setDocumentUnit(prompt, documentUnit) : prompt,
+      text: documentUnit ? setDocumentUnit(prompt, documentUnit) : prompt,
       settings,
       codes: codes.data.filter((code) => codeIds.includes(code.id)).map(toPromptCode),
       tags: tags.data.filter((tag) => tagIds.includes(tag.id)).map(toPromptTag),

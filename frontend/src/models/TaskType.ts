@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * What an LLM does with the documents (and what a prompt template is for).
+ * What an LLM does with the documents (and what a prompt is for).
  */
 export enum TaskType {
   TAGGING = "TAGGING",

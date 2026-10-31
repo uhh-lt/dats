@@ -1,4 +1,4 @@
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.tasks.annotation_task import AnnotationTask
 from modules.llm_assistant.tasks.llm_assistant_task import LLMAssistantTask
 from modules.llm_assistant.tasks.metadata_extraction_task import (

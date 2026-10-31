@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * The kind of annotation a few-shot example of a prompt template shows.
+ * The kind of annotation a few-shot example of a prompt shows.
  */
 export enum PromptExampleKind {
   SPAN = "SPAN",

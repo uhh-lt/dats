@@ -16,7 +16,7 @@ import { ReviewStep } from "./_components/ReviewStep";
 import { SentenceAnnotationResultStep } from "./_components/SentenceAnnotationResultStep";
 import { SettingsStep } from "./_components/SettingsStep";
 import { StatusStep } from "./_components/StatusStep";
-import { TemplateSelectionStep } from "./_components/TemplateSelectionStep";
+import { PromptSelectionStep } from "./_components/PromptSelectionStep";
 import { closeOnEscape } from "@utils/dialogUtils";
 
 const title: Record<TaskType, string> = {
@@ -46,9 +46,9 @@ const guidedSteps: Record<TaskType, string[]> = {
     "View results",
   ],
 };
-const templateSteps = ["Select method", "Select prompt", "Select model", "Review prompt", "Wait", "View results"];
+const promptSteps = ["Select method", "Select prompt", "Select model", "Review prompt", "Wait", "View results"];
 
-// the step content per task; step 1 of a template run is the template selection
+// the step content per task; step 1 of a prompt run is the prompt selection
 const contentDict: Record<number, Record<TaskType, React.ReactNode>> = {
   0: {
     [TaskType.TAGGING]: <MethodSelectionStep />,
@@ -108,7 +108,7 @@ export function LLMAssistantDialog() {
   const dialogTitle = `LLM Assistant${method ? ` - ${title[method]}` : ""}`;
   const stepLabels = useMemo(
     () =>
-      (mode === "template" ? templateSteps : guidedSteps[method || TaskType.TAGGING]).map((label) => (
+      (mode === "prompt" ? promptSteps : guidedSteps[method || TaskType.TAGGING]).map((label) => (
         <Step key={label}>
           <StepLabel>{label}</StepLabel>
         </Step>
@@ -128,7 +128,7 @@ export function LLMAssistantDialog() {
         {stepLabels}
       </Stepper>
       <Divider />
-      {mode === "template" && step === 1 ? <TemplateSelectionStep /> : contentDict[step][method || TaskType.TAGGING]}
+      {mode === "prompt" && step === 1 ? <PromptSelectionStep /> : contentDict[step][method || TaskType.TAGGING]}
     </Dialog>
   );
 }
