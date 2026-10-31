@@ -18,7 +18,6 @@ from core.memo.object_handle_crud import crud_object_handle
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
 from core.user.user_orm import UserORM
-from core.user.user_utils import get_user_key
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.memos.memo_export_schema import (
     MemoExportCollection,
@@ -104,7 +103,7 @@ def __generate_export_df_for_memos(
             icon=memo_dto.icon,
             content=memo_dto.content,
             content_json=memo_dto.content_json,
-            user_email=get_user_key(user),
+            user_email=user.email,
             favorited_by=json.dumps(favorited_by_emails.get(memo.id, [])),
             attached_type=memo_dto.attached_object_type,
             attached_to="-1",

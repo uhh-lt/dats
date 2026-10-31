@@ -19,8 +19,8 @@ class AuthService(metaclass=SingletonMeta):
             # to prevent email guessing attacks
             return None
 
-        # virtual users have no password and can never log in
-        if user.password is None:
+        # virtual users can never log in
+        if user.is_virtual:
             return None
 
         if not verify_password(

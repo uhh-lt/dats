@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
-from core.user.user_service import UserService
+from core.auth.auth_exceptions import InvalidError
+from core.user.user_crud import crud_user
 from modules.classifier.classifier_dto import (
     ClassifierInferenceParams,
     ClassifierJobInput,
@@ -20,12 +21,15 @@ def validate_classifier_input(db: Session, payload: ClassifierJobInput) -> None:
     """Span and sentence classifiers write their predictions into a virtual user
     of the project, never into another user's annotations."""
     parameters = payload.task_parameters
+    if not isinstance(parameters, ClassifierInferenceParams):
+        return
+    user_id = parameters.virtual_user_id
     if (
-        isinstance(parameters, ClassifierInferenceParams)
-        and parameters.virtual_user_id is not None
+        user_id is not None
+        and crud_user.read(db=db, id=user_id).project_id != payload.project_id
     ):
-        UserService().assert_virtual_user(
-            db=db, user_id=parameters.virtual_user_id, project_id=payload.project_id
+        raise InvalidError(
+            f"User {user_id} is not a virtual user of project {payload.project_id}"
         )
 
 

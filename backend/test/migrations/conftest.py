@@ -67,7 +67,7 @@ def assistant_users_database(
 ) -> AssistantUsersDatabase:
     """
     This fixture sets up a database as it was before the migration
-    `0a88c0776a57_virtual_users` moved the global assistant users:
+    `2bbc904aa055_virtual_users` moved the global assistant users:
 
     - Global assistant users 9990 (zero-shot), 9991 (few-shot) and 9992 (trained),
       members of all three projects below.

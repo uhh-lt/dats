@@ -44,7 +44,6 @@ from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from core.user.user_service import UserService
 
 EXAMPLE_NAMES = ["Anna", "Ben", "Cara", "Dan"]
 TARGET_SENTENCES = [
@@ -296,10 +295,10 @@ def llm_assistant_project(
         ],
     )
 
-    run_a = UserService().create_virtual_user(
+    run_a = crud_user.create_virtual_user(
         db=db_session, project_id=test_project.id, name="Assistant-RunA"
     )
-    run_b = UserService().create_virtual_user(
+    run_b = crud_user.create_virtual_user(
         db=db_session, project_id=test_project.id, name="Assistant-RunB"
     )
     run_a_span_annotation = dats_test_utils.create_span_for_text(
@@ -371,7 +370,7 @@ def llm_assistant_project(
             is_system=False,
         ),
     )
-    foreign_run = UserService().create_virtual_user(
+    foreign_run = crud_user.create_virtual_user(
         db=db_session, project_id=foreign_project.id, name="Foreign-Run"
     )
     foreign_span_annotation = dats_test_utils.create_span_for_text(

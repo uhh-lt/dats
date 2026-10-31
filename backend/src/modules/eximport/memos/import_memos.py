@@ -15,7 +15,7 @@ from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
-from core.user.user_utils import read_users_by_keys
+from core.user.user_crud import crud_user
 from modules.eximport.import_exceptions import ImportMemosError
 from modules.eximport.memos.memo_export_schema import MemoExportCollection
 
@@ -65,15 +65,15 @@ def import_memos_to_proj(
     for memo in memo_collection.memos:
         user_emails.add(memo.user_email)
         user_emails.update(json.loads(memo.favorited_by))
-    # members by email, virtual users by name (created if missing)
-    project_user_emails = read_users_by_keys(
-        db,
-        project_id=project_id,
-        keys=user_emails,
-        create_virtual_users=True,
-    )
-    for email in sorted(user_emails - project_user_emails.keys()):
-        error_messages.append(f"User '{email}' is not part of the project {project_id}")
+    project_user_emails = {
+        user.email: user
+        for user in crud_user.read_by_project(db=db, project_id=project_id)
+    }
+    for user_email in user_emails:
+        if user_email not in project_user_emails:
+            error_messages.append(
+                f"User '{user_email}' is not part of the project {project_id}"
+            )
 
     # Check if the memo already exists
     for memo in memo_collection.memos:

@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from core.user.user_utils import get_user_key
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.user.user_export_schema import (
     UserExportCollection,
@@ -55,9 +54,10 @@ def __generate_export_df_for_users(
     for user_data in users:
         user_export_items.append(
             UserExportSchema(
-                email=get_user_key(user_data),
+                email=user_data.email,
                 first_name=user_data.first_name,
                 last_name=user_data.last_name,
+                is_virtual=user_data.is_virtual,
             )
         )
 

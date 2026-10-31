@@ -6,9 +6,11 @@ from core.project.project_crud import crud_project
 from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from core.user.user_utils import VIRTUAL_USER_KEY_PREFIX, read_users_by_keys
 from modules.eximport.import_exceptions import ImportUsersError
-from modules.eximport.user.user_export_schema import UserExportCollection
+from modules.eximport.user.user_export_schema import (
+    UserExportCollection,
+    UserExportSchema,
+)
 
 
 def import_users_to_proj(
@@ -20,7 +22,7 @@ def import_users_to_proj(
     """
     Import users from a DataFrame into a project.
     Validates input data and links existing users to the project. Virtual users
-    ('virtual:<name>') are created unless the project has them.
+    that do not exist yet are created in the project with their email.
 
     Args:
         db: Database session
@@ -47,12 +49,19 @@ def import_users_to_proj(
 
     # Check if the Users exists
     user_dict: dict[str, UserORM] = {}
-    virtual_user_keys: list[str] = []
+    new_virtual_users: list[UserExportSchema] = []
     for user_schema in user_collection.users:
-        if user_schema.email.startswith(VIRTUAL_USER_KEY_PREFIX):
-            virtual_user_keys.append(user_schema.email)
+        if user_schema.is_virtual:
+            # virtual users belong to one project: create them if they are missing
+            user = crud_user.read_by_email_if_exists(db=db, email=user_schema.email)
+            if user is None:
+                new_virtual_users.append(user_schema)
+            elif user.project_id != project_id:
+                error_messages.append(
+                    f"Virtual user '{user_schema.email}' belongs to another project."
+                )
             continue
-        user = crud_user.read_by_email_if_exists(db=db, email=user_schema.email)
+        user = crud_user.read_by_email(db=db, email=user_schema.email)
         if user is None:
             error_messages.append(f"User'{user_schema.email}' not found in the system.")
         else:
@@ -72,9 +81,13 @@ def import_users_to_proj(
         return []
 
     # Everything is fine, we can create the virtual users ...
-    read_users_by_keys(
-        db, project_id=project_id, keys=virtual_user_keys, create_virtual_users=True
-    )
+    for user_schema in new_virtual_users:
+        crud_user.create_virtual_user(
+            db=db,
+            project_id=project_id,
+            name=user_schema.first_name or user_schema.email,
+            email=user_schema.email,
+        )
 
     # ... and link the users to the project
     project_user_emails = {
