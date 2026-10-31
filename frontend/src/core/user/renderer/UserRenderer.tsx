@@ -7,6 +7,7 @@ import { UserHooks } from "../api/userHooks";
 import { UserAvatar } from "../UserAvatar";
 
 export interface UserRendererSharedProps extends ExpandableRendererProps {
+  // the avatar: the initials of the user, an icon for a virtual user (default: true)
   renderAvatar?: boolean;
 }
 
@@ -35,13 +36,13 @@ const UserRendererWithoutData = memo(({ userId, ...props }: { userId: number } &
 });
 
 const UserRendererWithData = memo(
-  ({ user, renderAvatar, ...expandProps }: { user: PublicUserRead } & UserRendererSharedProps) => {
+  ({ user, renderAvatar = true, ...expandProps }: { user: PublicUserRead } & UserRendererSharedProps) => {
     const fullName = `${user.first_name} ${user.last_name}`.trim();
 
     return (
       <ExpandableRenderer {...expandProps} expandedContent={<UserContext user={user} />}>
         <Stack direction="row" alignItems="center" spacing={1} minWidth={0} maxWidth="100%" overflow="hidden">
-          {renderAvatar && <UserAvatar user={user} sx={{ width: 24, height: 24, fontSize: 11 }} />}
+          {renderAvatar && <UserAvatar user={user} sx={{ width: 24, height: 24, fontSize: 11, flexShrink: 0 }} />}
           <Typography component="span" noWrap minWidth={0}>
             {fullName}
           </Typography>
@@ -52,5 +53,6 @@ const UserRendererWithData = memo(
 );
 
 function UserContext({ user }: { user: PublicUserRead }) {
-  return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{`User ID: ${user.id}`}</Typography>;
+  const kind = user.is_virtual ? "Virtual user" : "User";
+  return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{`${kind} ID: ${user.id}`}</Typography>;
 }

@@ -46,6 +46,13 @@ class LLMAssistantTaskContext(Generic[StrategyT]):
     strategy: StrategyT
 
     @property
+    def virtual_user_id(self) -> int:
+        """The virtual user the annotation tasks write into; the job input requires
+        it for them and checks it before the job starts."""
+        assert self.payload.virtual_user_id is not None
+        return self.payload.virtual_user_id
+
+    @property
     def is_fewshot(self) -> bool:
         """A prompt that shows examples makes a few-shot run."""
         return self.strategy.is_fewshot

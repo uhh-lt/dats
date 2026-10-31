@@ -4,10 +4,6 @@
 /* eslint-disable */
 export type UserRead = {
   /**
-   * E-Mail of the User
-   */
-  email: string;
-  /**
    * First name of the User
    */
   first_name: string;
@@ -19,6 +15,18 @@ export type UserRead = {
    * ID of the User
    */
   id: number;
+  /**
+   * Whether the User is a virtual user (no login, one project)
+   */
+  is_virtual: boolean;
+  /**
+   * E-Mail of the User (None if virtual)
+   */
+  email: string | null;
+  /**
+   * Project of a virtual user (None for other users)
+   */
+  project_id: number | null;
   /**
    * Created timestamp of the User
    */

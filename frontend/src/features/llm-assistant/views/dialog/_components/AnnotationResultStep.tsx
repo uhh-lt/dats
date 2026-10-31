@@ -1,20 +1,13 @@
 import { useLiveJob } from "@core/job";
 import { useTabNavigate } from "@core/navigation";
 import { AnnotationLLMAssistantJobResult } from "@models/AnnotationLLMAssistantJobResult";
-import { ApproachType } from "@models/ApproachType";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
 import { memo, useCallback, useMemo } from "react";
 import { llmAssistantQueries } from "../../../api/llmAssistantQueries";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { AnnotationResultSummary } from "./AnnotationResultSummary";
 import { LLMAssistantUtterance } from "./LLMAssistantUtterance";
-
-const approach2AssistantID: Record<ApproachType, number> = {
-  [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
-  [ApproachType.LLM_FEW_SHOT]: ASSISTANT_FEWSHOT_ID,
-};
 
 export const AnnotationResultStep = memo(() => {
   // get the job
@@ -25,7 +18,7 @@ export const AnnotationResultStep = memo(() => {
     return (
       <AnnotationResultStepContent
         jobResult={llmAssistantJob.data.output.specific_task_result as AnnotationLLMAssistantJobResult}
-        approachType={llmAssistantJob.data.output.approach_type}
+        virtualUserId={llmAssistantJob.data.input.virtual_user_id ?? undefined}
       />
     );
   } else if (llmAssistantJob.isLoading) {
@@ -43,10 +36,11 @@ export const AnnotationResultStep = memo(() => {
 
 interface AnnotationResultStepContentProps {
   jobResult: AnnotationLLMAssistantJobResult;
-  approachType: ApproachType;
+  // the virtual user the run wrote into
+  virtualUserId: number | undefined;
 }
 
-const AnnotationResultStepContent = memo(({ jobResult, approachType }: AnnotationResultStepContentProps) => {
+const AnnotationResultStepContent = memo(({ jobResult, virtualUserId }: AnnotationResultStepContentProps) => {
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
@@ -70,7 +64,7 @@ const AnnotationResultStepContent = memo(({ jobResult, approachType }: Annotatio
       params: { projectId, sdocId: firstAnnotatedSdocId },
       to: "/project/$projectId/annotation/$sdocId",
       search: {
-        compareWithUserId: approach2AssistantID[approachType],
+        compareWithUserId: virtualUserId,
         visibleUserId: undefined,
         selectedAnnotationId: undefined,
       },

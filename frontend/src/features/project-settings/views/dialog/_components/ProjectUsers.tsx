@@ -32,8 +32,8 @@ interface ProjectUsersProps {
 }
 
 export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
-  // query all users that belong to the project
-  const allUsers = UserHooks.useGetAllUsers();
+  // query the members of the project (virtual users are no members)
+  const allUsers = UserHooks.useGetProjectMembers();
 
   const {
     handleSubmit,

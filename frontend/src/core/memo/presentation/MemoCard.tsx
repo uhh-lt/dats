@@ -127,7 +127,7 @@ const MemoCardWithData = memo(
                 color="text.secondary"
                 sx={{ "& .MuiTypography-root": { fontSize: "0.75rem" } }}
               >
-                <UserRenderer user={memo.user_id} renderAvatar />
+                <UserRenderer user={memo.user_id} />
               </Box>
             ) : (
               <Box flex={1} />

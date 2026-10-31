@@ -10,7 +10,7 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.project.project_crud import crud_project
+from core.user.user_crud import crud_user
 from modules.agreement.agreement_dto import (
     AgreementCodeScore,
     AgreementParams,
@@ -242,14 +242,15 @@ class AgreementService(metaclass=SingletonMeta):
     def _read_annotator_names(
         self, *, db: Session, project_id: int, params: AgreementParams
     ) -> dict[int, str]:
-        """Names of both annotators, who must be members of the project.
+        """Names of both annotators, who must be users of the project (members or
+        virtual users).
 
         Unknown users are reported like non-members, so that the error does not
         reveal which user IDs exist.
         """
         members = {
-            user.id: f"{user.first_name} {user.last_name}"
-            for user in crud_project.read(db=db, id=project_id).users
+            user.id: f"{user.first_name} {user.last_name}".strip()
+            for user in crud_user.read_by_project(db=db, project_id=project_id)
         }
         user_ids = list(
             dict.fromkeys([params.reference_user_id, params.compared_user_id])

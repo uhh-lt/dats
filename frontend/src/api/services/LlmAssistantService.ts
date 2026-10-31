@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ApproachType } from "@models/ApproachType";
 import type { Body_llm_assistant_count_existing_assistant_annotations } from "@models/Body_llm_assistant_count_existing_assistant_annotations";
 import type { LLMAssistantJobInput } from "@models/LLMAssistantJobInput";
 import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
@@ -12,17 +11,17 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class LlmAssistantService {
   /**
-   * Based on the approach, count the number of existing assistant annotations
+   * Count the existing annotations of a virtual user per code, for the documents and codes of an LLM Assistant run
    * @returns number Successful Response
    * @throws ApiError
    */
   public static countExistingAssistantAnnotations({
     taskType,
-    approachType,
+    virtualUserId,
     requestBody,
   }: {
     taskType: TaskType;
-    approachType: ApproachType;
+    virtualUserId: number;
     requestBody: Body_llm_assistant_count_existing_assistant_annotations;
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
@@ -30,7 +29,7 @@ export class LlmAssistantService {
       url: "/llm_assistant/count_existing_assistant_annotations",
       query: {
         task_type: taskType,
-        approach_type: approachType,
+        virtual_user_id: virtualUserId,
       },
       body: requestBody,
       mediaType: "application/json",

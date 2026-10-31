@@ -7,9 +7,9 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 
-import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
+import { useCanAnnotateAs } from "../../../_hooks/useCanAnnotateAs";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
 import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAnnotation";
@@ -63,7 +63,7 @@ export const SentenceAnnotator = memo(
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
-    const { user } = useAuth();
+    const canAnnotateAs = useCanAnnotateAs();
     const openSnackbar = useOpenSnackbar();
     const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
@@ -113,10 +113,10 @@ export const SentenceAnnotator = memo(
       });
     };
     const startCreate = (requestBody: SentenceAnnotationCreate, onSuccess?: () => void) => {
-      const pending = toPendingSentenceAnnotation(requestBody, user?.id, sdocData.project_id);
+      const pending = toPendingSentenceAnnotation(requestBody, visibleUserId, sdocData.project_id);
       setPendingAnnotations((prev) => [...prev, pending]);
       createMutation.mutate(
-        { requestBody },
+        { requestBody, userId: visibleUserId },
         {
           onSuccess,
           onSettled: () => {
@@ -259,11 +259,11 @@ export const SentenceAnnotator = memo(
         return;
       }
 
-      // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
-      if (user?.id !== visibleUserId) {
+      // only allow annotation creation as the current user or as a virtual user (visibleUserId from URL search params)
+      if (!canAnnotateAs(visibleUserId)) {
         openSnackbar({
           severity: "warning",
-          text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+          text: "You cannot create annotations while viewing another user's annotation! Switch to your user or a virtual user in the Annotator Selector (top) to create annotations.",
         });
         setSelectedSentences([]);
         setLastClickedIndex(null);
@@ -288,7 +288,7 @@ export const SentenceAnnotator = memo(
         sentence_id_start: selectedSentences[0],
         sentence_id_end: selectedSentences[selectedSentences.length - 1],
       };
-      const draft = toPendingSentenceAnnotation(requestBody, user?.id, sdocData.project_id);
+      const draft = toPendingSentenceAnnotation(requestBody, visibleUserId, sdocData.project_id);
       setDraftAnnotation(draft);
 
       // open annotation menu in add mode (code selector visible immediately)

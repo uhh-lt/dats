@@ -1,6 +1,5 @@
 import { TagStyle, useTokenData } from "@core/annotation";
 import { useComputeTokenData } from "../_hooks/useComputeTokenData";
-import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SpanAnnotationHooks } from "@core/span-annotation";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
@@ -9,6 +8,7 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MouseEvent, MouseEventHandler, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { useCanAnnotateAs } from "../_hooks/useCanAnnotateAs";
 import { toPendingSpanAnnotation } from "../_hooks/pendingSpanAnnotation";
 import { useSpanAnnotationResize } from "../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
@@ -25,8 +25,6 @@ interface TextAnnotatorProps {
 }
 
 export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
-  const { user } = useAuth();
-
   // local state
   const spanMenuRef = useRef<AnnotationMenuHandle>(null);
   // the draft annotation whose code-selector menu is currently open (not yet sent to the server).
@@ -65,6 +63,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   });
 
   // mutations for create, update, delete
+  const canAnnotateAs = useCanAnnotateAs();
   const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
   const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
@@ -126,12 +125,12 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     }
     // the selection is valid
 
-    // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params).
-    // warn and clear the selection when viewing another user's document.
-    if (user?.id !== visibleUserId) {
+    // only allow annotation creation as the current user or as a virtual user (visibleUserId from URL search
+    // params). warn and clear the selection when viewing another user's document.
+    if (!canAnnotateAs(visibleUserId)) {
       openSnackbar({
         severity: "warning",
-        text: "You cannot create annotations on another user's document. Switch to your user in the Annotator Selector (top) to create annotations.",
+        text: "You cannot create annotations on another user's document. Switch to your user or a virtual user in the Annotator Selector (top) to create annotations.",
       });
       selection.empty();
       return;
@@ -186,7 +185,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     };
 
     // store the draft annotation in local state; it is rendered via the pendingAnnotations override
-    setDraftAnnotation(toPendingSpanAnnotation(requestBody, user?.id, sdocData.project_id));
+    setDraftAnnotation(toPendingSpanAnnotation(requestBody, visibleUserId, sdocData.project_id));
 
     // open code selector
     const target = selectionStartElement;
@@ -238,11 +237,14 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       span_text: pending.text,
     };
     setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
-    createMutation.mutate(requestBody, {
-      onSuccess,
-      // remove the pending preview once the real annotation is in the cache (or the request failed)
-      onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
-    });
+    createMutation.mutate(
+      { requestBody, userId: visibleUserId },
+      {
+        onSuccess,
+        // remove the pending preview once the real annotation is in the cache (or the request failed)
+        onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
+      },
+    );
   };
 
   const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
@@ -265,7 +267,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         sdoc_id: annotation.sdoc_id,
         code_id: codeId,
       };
-      const pending = toPendingSpanAnnotation(requestBody, user?.id, sdocData.project_id);
+      const pending = toPendingSpanAnnotation(requestBody, visibleUserId, sdocData.project_id);
       startCreate(pending, codeId, () => dispatch(AnnotationsActions.moveCodeToTop(codeId)));
     }
   };

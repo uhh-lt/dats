@@ -42,8 +42,9 @@ from core.prompt_template.prompt_template_service import PromptTemplateService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
-from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
+from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from core.user.user_service import UserService
 
 EXAMPLE_NAMES = ["Anna", "Ben", "Cara", "Dan"]
 TARGET_SENTENCES = [
@@ -76,10 +77,13 @@ class LLMAssistantProject(TypedDict):
       (date), ``reviewed`` (boolean), and ``topics`` (list). The target document has
       deliberately stale current values for all five fields, so extraction results
       can be distinguished from current metadata.
-    - One zero-shot and one few-shot assistant span annotation on the target, plus
-      one zero-shot and one few-shot assistant sentence annotation on the target.
+    - Virtual users ``run_a`` ("Assistant-RunA") and ``run_b``
+      ("Assistant-RunB"), the targets of LLM Assistant runs. Each has one PERSON
+      span annotation of "Alice" and one FACT sentence annotation on the target
+      (``run_a``: sentence 0, ``run_b``: sentence 1).
     - A separate, unauthorized project with one document, one ``FOREIGN`` code,
-      and one zero-shot assistant span annotation.
+      a virtual user ``foreign_run`` ("Foreign-Run") and one span
+      annotation of it.
 
     Non-obvious derived behavior:
 
@@ -89,8 +93,8 @@ class LLMAssistantProject(TypedDict):
       project has none.
     - Every main-project document has its read-only ``language`` metadata set to
       ``en``, as after preprocessing; the LLM assistant does not read it.
-    - Existing assistant annotations are separated by assistant user, allowing the
-      count endpoint and ``delete_existing_annotations`` to distinguish approaches.
+    - Existing assistant annotations are separated by virtual user, allowing
+      the count endpoint and ``delete_existing_annotations`` to distinguish runs.
     - The unauthorized project is intentionally not associated with the test user.
     """
 
@@ -105,13 +109,16 @@ class LLMAssistantProject(TypedDict):
     metadata_fields: list[ProjectMetadataORM]
     human_span_annotations: list[SpanAnnotationORM]
     human_sentence_annotations: list[SentenceAnnotationORM]
-    zero_span_annotation: SpanAnnotationORM
-    few_span_annotation: SpanAnnotationORM
-    zero_sentence_annotation: SentenceAnnotationORM
-    few_sentence_annotation: SentenceAnnotationORM
+    run_a: UserORM
+    run_b: UserORM
+    run_a_span_annotation: SpanAnnotationORM
+    run_b_span_annotation: SpanAnnotationORM
+    run_a_sentence_annotation: SentenceAnnotationORM
+    run_b_sentence_annotation: SentenceAnnotationORM
     foreign_project: ProjectORM
     foreign_sdoc: SourceDocumentORM
     foreign_code: CodeORM
+    foreign_run: UserORM
     foreign_span_annotation: SpanAnnotationORM
 
 
@@ -289,26 +296,32 @@ def llm_assistant_project(
         ],
     )
 
-    zero_span_annotation = dats_test_utils.create_span_for_text(
+    run_a = UserService().create_virtual_user(
+        db=db_session, project_id=test_project.id, name="Assistant-RunA"
+    )
+    run_b = UserService().create_virtual_user(
+        db=db_session, project_id=test_project.id, name="Assistant-RunB"
+    )
+    run_a_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
         sdoc=target_sdoc,
         text="Alice",
         code_id=person_code.id,
-        user_id=ASSISTANT_ZEROSHOT_ID,
+        user_id=run_a.id,
     )
-    few_span_annotation = dats_test_utils.create_span_for_text(
+    run_b_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
         sdoc=target_sdoc,
         text="Alice",
         code_id=person_code.id,
-        user_id=ASSISTANT_FEWSHOT_ID,
+        user_id=run_b.id,
     )
-    zero_sentence_annotation = crud_sentence_anno.read(
+    run_a_sentence_annotation = crud_sentence_anno.read(
         db=db_session,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
-            user_id=ASSISTANT_ZEROSHOT_ID,
+            user_id=run_a.id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=target_sdoc.id,
                 sentence_id_start=0,
@@ -318,12 +331,12 @@ def llm_assistant_project(
         )
         .id,
     )
-    few_sentence_annotation = crud_sentence_anno.read(
+    run_b_sentence_annotation = crud_sentence_anno.read(
         db=db_session,
         id=SentenceAnnotationService()
         .create(
             db=db_session,
-            user_id=ASSISTANT_FEWSHOT_ID,
+            user_id=run_b.id,
             create_dto=SentenceAnnotationCreate(
                 sdoc_id=target_sdoc.id,
                 sentence_id_start=1,
@@ -358,12 +371,15 @@ def llm_assistant_project(
             is_system=False,
         ),
     )
+    foreign_run = UserService().create_virtual_user(
+        db=db_session, project_id=foreign_project.id, name="Foreign-Run"
+    )
     foreign_span_annotation = dats_test_utils.create_span_for_text(
         db_session,
         sdoc=foreign_sdoc,
         text="Eve",
         code_id=foreign_code.id,
-        user_id=ASSISTANT_ZEROSHOT_ID,
+        user_id=foreign_run.id,
     )
 
     db_session.commit()
@@ -394,13 +410,16 @@ def llm_assistant_project(
         "metadata_fields": metadata_fields,
         "human_span_annotations": human_span_annotations,
         "human_sentence_annotations": human_sentence_annotations,
-        "zero_span_annotation": zero_span_annotation,
-        "few_span_annotation": few_span_annotation,
-        "zero_sentence_annotation": zero_sentence_annotation,
-        "few_sentence_annotation": few_sentence_annotation,
+        "run_a": crud_user.read(db=db_session, id=run_a.id),
+        "run_b": crud_user.read(db=db_session, id=run_b.id),
+        "run_a_span_annotation": run_a_span_annotation,
+        "run_b_span_annotation": run_b_span_annotation,
+        "run_a_sentence_annotation": run_a_sentence_annotation,
+        "run_b_sentence_annotation": run_b_sentence_annotation,
         "foreign_project": foreign_project,
         "foreign_sdoc": foreign_sdoc,
         "foreign_code": foreign_code,
+        "foreign_run": crud_user.read(db=db_session, id=foreign_run.id),
         "foreign_span_annotation": foreign_span_annotation,
     }
 

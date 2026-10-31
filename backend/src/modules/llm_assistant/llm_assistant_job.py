@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
 from core.prompt_template.prompt_template_service import PromptTemplateService
+from core.user.user_service import UserService
 from modules.llm_assistant.llm_assistant_endpoint import router
 from modules.llm_assistant.llm_assistant_job_dto import (
     LLMAssistantJobInput,
@@ -20,10 +21,16 @@ sqlr = SQLRepo()
 
 
 def validate_llm_assistant_input(db: Session, payload: LLMAssistantJobInput) -> None:
-    """Reject documents of other projects before the job is enqueued."""
+    """Reject documents of other projects and users that are no virtual user of
+    the project before the job is enqueued: the LLM Assistant never writes into
+    another user's annotations."""
     LLMAssistantService().assert_documents_in_project(
         db=db, project_id=payload.project_id, sdoc_ids=payload.sdoc_ids
     )
+    if payload.virtual_user_id is not None:
+        UserService().assert_virtual_user(
+            db=db, user_id=payload.virtual_user_id, project_id=payload.project_id
+        )
 
 
 @register_job(

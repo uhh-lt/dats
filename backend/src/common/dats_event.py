@@ -119,6 +119,7 @@ class DATSEvent(StrEnum):
 
     PROJECT_USERS_LINKED = "PROJECT_USERS_LINKED"
 
+    USER_CREATED = "USER_CREATED"
     USER_UPDATED = "USER_UPDATED"
     USER_DELETED = "USER_DELETED"
 
@@ -222,6 +223,7 @@ _DATS_EVENT_PAYLOADS: dict[DATSEvent, object] = {
     DATSEvent.CLASSIFIER_UPDATED: ClassifierRead,
     DATSEvent.CLASSIFIER_DELETED: ClassifierRead,
     DATSEvent.PROJECT_USERS_LINKED: ProjectUserLinks,
+    DATSEvent.USER_CREATED: UserRead,
     DATSEvent.USER_UPDATED: UserRead,
     DATSEvent.USER_DELETED: UserRead,
     DATSEvent.API_KEY_CREATED: ApiKeyRead,

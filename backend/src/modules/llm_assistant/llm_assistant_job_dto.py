@@ -14,6 +14,9 @@ from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # --- START INPUT ---
 
+# The tasks that write annotations, always into a virtual user
+ANNOTATING_TASK_TYPES = frozenset({TaskType.ANNOTATION, TaskType.SENTENCE_ANNOTATION})
+
 
 class LLMAssistantJobInput(JobInputBase):
     """Runs a prompt on documents: a stored prompt template version or a draft.
@@ -40,10 +43,17 @@ class LLMAssistantJobInput(JobInputBase):
         ),
         default=None,
     )
+    virtual_user_id: int | None = Field(
+        description=(
+            "Virtual user of the project the annotations are written into. "
+            "Required for span and sentence annotation, unused otherwise."
+        ),
+        default=None,
+    )
     delete_existing_annotations: bool = Field(
         description=(
-            "Delete the existing annotations of the assistant for the documents and "
-            "codes of the prompt before creating new ones"
+            "Delete the existing annotations of the virtual user for the "
+            "documents and codes of the prompt before creating new ones"
         ),
         default=False,
     )
@@ -56,6 +66,11 @@ class LLMAssistantJobInput(JobInputBase):
             )
         if self.draft is not None and self.draft.task_type != self.task_type:
             raise ValueError("The draft must be a prompt of the job's task")
+        if self.task_type in ANNOTATING_TASK_TYPES and self.virtual_user_id is None:
+            raise ValueError(
+                "Annotation tasks need the virtual user to annotate as "
+                "(virtual_user_id)"
+            )
         return self
 
 

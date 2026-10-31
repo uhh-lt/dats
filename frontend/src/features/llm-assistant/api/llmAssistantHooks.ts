@@ -18,7 +18,9 @@ const useStartLLMAssistantJob = () =>
 const useGetExistingAnnotationCount = (params: ExistingAnnotationCountParams) =>
   useQuery({
     ...llmAssistantQueries.existingAnnotationCount(params),
-    enabled: params.taskType === TaskType.SENTENCE_ANNOTATION || params.taskType === TaskType.ANNOTATION,
+    enabled:
+      params.virtualUserId !== undefined &&
+      (params.taskType === TaskType.SENTENCE_ANNOTATION || params.taskType === TaskType.ANNOTATION),
   });
 
 export const LlmAssistantHooks = {

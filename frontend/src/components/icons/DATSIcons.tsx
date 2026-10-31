@@ -47,6 +47,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import RecommendIcon from "@mui/icons-material/Recommend";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
@@ -178,6 +179,7 @@ export enum Icon {
 
   // USER
   USER = "user",
+  VIRTUAL_USER = "virtual_user",
   KEY = "key",
 
   // Metadata types
@@ -323,6 +325,7 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // USER
   [Icon.USER]: (iconProps) => <AccountCircleIcon {...iconProps} />,
+  [Icon.VIRTUAL_USER]: (iconProps) => <PersonOutlineIcon {...iconProps} />,
   [Icon.KEY]: (iconProps) => <KeyIcon {...iconProps} />,
 
   // Metadata types

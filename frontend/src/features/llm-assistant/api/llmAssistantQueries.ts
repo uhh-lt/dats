@@ -1,12 +1,12 @@
 import { createJobQueries } from "@core/job";
 import { LlmAssistantService } from "@api/services/LlmAssistantService";
-import { ApproachType } from "@models/ApproachType";
 import { TaskType } from "@models/TaskType";
 import { queryOptions, skipToken } from "@tanstack/react-query";
 
 export interface ExistingAnnotationCountParams {
   taskType: TaskType | undefined;
-  approachType: ApproachType;
+  // the virtual user the run writes into; a new one has no annotations yet
+  virtualUserId: number | undefined;
   sdocIds: number[];
   codeIds: number[];
 }
@@ -23,23 +23,24 @@ export const llmAssistantQueries = {
   all: () => ["llmAssistant"] as const,
 
   existingAnnotationCountScope: () => [...llmAssistantQueries.all(), "existingAnnotationCount"] as const,
-  existingAnnotationCount: ({ taskType, approachType, sdocIds, codeIds }: ExistingAnnotationCountParams) =>
+  existingAnnotationCount: ({ taskType, virtualUserId, sdocIds, codeIds }: ExistingAnnotationCountParams) =>
     queryOptions({
       queryKey: [
         ...llmAssistantQueries.existingAnnotationCountScope(),
         taskType,
-        approachType,
+        virtualUserId,
         sdocIds,
         codeIds,
       ] as const,
-      queryFn: !taskType
-        ? skipToken
-        : () =>
-            LlmAssistantService.countExistingAssistantAnnotations({
-              taskType,
-              approachType,
-              requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
-            }),
+      queryFn:
+        !taskType || virtualUserId === undefined
+          ? skipToken
+          : () =>
+              LlmAssistantService.countExistingAssistantAnnotations({
+                taskType,
+                virtualUserId,
+                requestBody: { sdoc_ids: sdocIds, code_ids: codeIds },
+              }),
     }),
 
   // the background job of the LLM assistant

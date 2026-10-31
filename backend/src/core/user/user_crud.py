@@ -1,8 +1,8 @@
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from core.auth.security import generate_password_hash
+from core.project.project_orm import ProjectUserLinkTable
 from core.user.user_dto import UserCreate, UserUpdate
 from core.user.user_orm import UserORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
@@ -10,15 +10,6 @@ from repos.db.sql_exceptions import NoSuchElementError
 
 SYSTEM_USER_ID: int = 1
 DEMO_USER_ID: int = 2
-ASSISTANT_ZEROSHOT_ID: int = 9990
-ASSISTANT_FEWSHOT_ID: int = 9991
-ASSISTANT_TRAINED_ID: int = 9992
-SYSTEM_USER_IDS = [
-    SYSTEM_USER_ID,
-    ASSISTANT_ZEROSHOT_ID,
-    ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_TRAINED_ID,
-]
 
 
 class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
@@ -38,21 +29,53 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             ],
         )
 
-    def create_with_id(
-        self, db: Session, *, create_dto: UserCreate, id: int
+    def create_virtual_user(
+        self, db: Session, *, project_id: int, name: str
     ) -> UserORM:
-        # hashes the PW before storing in DB
-        hashed_pwd = generate_password_hash(create_dto.password)
-        create_dto.password = hashed_pwd
-
-        dto_obj_data = jsonable_encoder(create_dto)
-        db_obj = self.model(id=id, **dto_obj_data)
+        """Create a virtual user of the project: no email, no password, its name
+        is its first name."""
+        db_obj = self.model(project_id=project_id, first_name=name, last_name="")
         db.add(db_obj)
         db.flush()
         db.refresh(db_obj)
         return db_obj
 
     ### READ OPERATIONS ###
+
+    def read_multi(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        include_virtual: bool = True,
+    ) -> list[UserORM]:
+        query = db.query(self.model)
+        if not include_virtual:
+            query = query.filter(self.model.project_id.is_(None))
+        return query.order_by(self.model.id).offset(skip).limit(limit).all()
+
+    def read_by_project(self, db: Session, *, project_id: int) -> list[UserORM]:
+        """
+        Read the users of a project: its members, then its virtual users.
+
+        Args:
+            project_id: The project.
+
+        Returns:
+            The members and the virtual users, each ordered by id.
+        """
+        member_ids = select(ProjectUserLinkTable.user_id).where(
+            ProjectUserLinkTable.project_id == project_id
+        )
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.id.in_(member_ids) | (self.model.project_id == project_id)
+            )
+            .order_by(self.model.project_id.is_not(None), self.model.id)
+            .all()
+        )
 
     def read_by_email(self, db: Session, *, email: str) -> UserORM:
         # Flo: email is unique so there can be only one, which is why we use first() here

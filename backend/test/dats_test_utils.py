@@ -261,6 +261,8 @@ def create_user_client(
     on another event loop would break them, exactly as in production, where
     one process serves one app.
     """
+    # virtual users have no email and can never send requests
+    assert user.email is not None, "Virtual users cannot have a client"
     client = TestClient(
         app_client.app, headers={_TEST_USER_HEADER: user.email}, **kwargs
     )

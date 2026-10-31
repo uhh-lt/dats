@@ -7,7 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { userQueries } from "./userQueries";
 
 // USER QUERIES
-// The queries themselves live in userQueries. The hook below only derives data from them.
+// The queries themselves live in userQueries. The hooks below only derive data from them.
 
 const useGetUser = (userId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
@@ -17,6 +17,13 @@ const useGetUser = (userId: number | null | undefined) => {
     enabled: !!userId,
   });
 };
+
+// the project's members or its virtual users
+const useGetProjectMembers = () => useGetAllUsers({ select: selectMembers });
+const useGetVirtualUsers = () => useGetAllUsers({ select: selectVirtualUsers });
+
+const selectMembers = (data: UserRead[]) => data.filter((user) => !user.is_virtual);
+const selectVirtualUsers = (data: UserRead[]) => data.filter((user) => user.is_virtual);
 
 // USER MUTATIONS
 const useUpdateMe = () =>
@@ -49,6 +56,38 @@ const useRemoveUserFromProject = () =>
     },
   });
 
+const useCreateVirtualUser = () =>
+  useMutation({
+    mutationKey: [...userQueries.all(), "createVirtualUser"],
+    mutationFn: UserService.createVirtualUser,
+    meta: {
+      datsEvent: "USER_CREATED",
+      successMessage: (user: UserRead) => `Created virtual user ${user.first_name}`,
+      errorMessage: "Could not create the virtual user. Is its name already used in this project?",
+    },
+  });
+
+const useUpdateVirtualUser = () =>
+  useMutation({
+    mutationKey: [...userQueries.all(), "updateVirtualUser"],
+    mutationFn: UserService.updateVirtualUser,
+    meta: {
+      datsEvent: "USER_UPDATED",
+      successMessage: (user: UserRead) => `Renamed virtual user to ${user.first_name}`,
+      errorMessage: "Could not rename the virtual user. Is the name already used in this project?",
+    },
+  });
+
+const useDeleteVirtualUser = () =>
+  useMutation({
+    mutationKey: [...userQueries.all(), "deleteVirtualUser"],
+    mutationFn: UserService.deleteVirtualUser,
+    meta: {
+      datsEvent: "USER_DELETED",
+      successMessage: (user: UserRead) => `Deleted virtual user ${user.first_name} and its annotations`,
+    },
+  });
+
 const useRegister = () =>
   useMutation({
     mutationKey: [...userQueries.all(), "register"],
@@ -63,6 +102,7 @@ interface UseProjectUsersQueryParams<T> {
   enabled?: boolean;
 }
 
+// all users of the project: its members, then its virtual users
 const useGetAllUsers = <T = UserRead[]>({ select, enabled }: UseProjectUsersQueryParams<T> = {}) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
@@ -74,6 +114,11 @@ const useGetAllUsers = <T = UserRead[]>({ select, enabled }: UseProjectUsersQuer
 
 export const UserHooks = {
   useGetUser,
+  useGetProjectMembers,
+  useGetVirtualUsers,
+  useCreateVirtualUser,
+  useUpdateVirtualUser,
+  useDeleteVirtualUser,
   useUpdateMe,
   useAddUserToProject,
   useRemoveUserFromProject,

@@ -8,7 +8,8 @@ import {
   promptTemplateQueries,
   TASK_TYPE_LABELS,
 } from "@core/prompt-template";
-import { ApproachType } from "@models/ApproachType";
+import { AnnotateAsChoice, AnnotateAsSelector, suggestVirtualUserName, UserHooks } from "@core/user";
+import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import {
   Alert,
@@ -58,7 +59,7 @@ export function ReviewStep() {
   const formatInfo = taskInfo.data?.output_formats.find((info) => info.output_format === format);
   const defaultPromptName = formatInfo?.default_prompt_names[language];
 
-  // the prompt; a prompt that shows examples makes a few-shot run
+  // the prompt
   const { source, codeIds, isError } = useWizardPrompt();
   const rendered = useQuery(
     promptTemplateQueries.preview(
@@ -72,9 +73,19 @@ export function ReviewStep() {
         : undefined,
     ),
   );
-  const approach = rendered.data?.is_fewshot ? ApproachType.LLM_FEW_SHOT : ApproachType.LLM_ZERO_SHOT;
 
-  // existing annotations of the assistant user the job writes into
+  // annotation tasks write into a virtual user: an existing one or a new one (default: the next free LLM-Run<n>)
+  const isAnnotationTask = method === TaskType.ANNOTATION || method === TaskType.SENTENCE_ANNOTATION;
+  const virtualUsers = UserHooks.useGetVirtualUsers();
+  const [annotateAsChoice, setAnnotateAsChoice] = useState<AnnotateAsChoice | null | undefined>(undefined);
+  const annotateAs = useMemo<AnnotateAsChoice | null>(() => {
+    if (annotateAsChoice !== undefined) return annotateAsChoice;
+    if (!virtualUsers.data) return null;
+    return { newName: suggestVirtualUserName("LLM", virtualUsers.data) };
+  }, [annotateAsChoice, virtualUsers.data]);
+  const virtualUserId = annotateAs && "userId" in annotateAs ? annotateAs.userId : undefined;
+
+  // existing annotations of the virtual user the job writes into
   const [deletionStrategy, setDeletionStrategy] = useState(DeletionStrategy.DELETE_EXISTING);
   const handleChangeDeletionStrategy = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = Object.values(DeletionStrategy).find((candidate) => candidate === event.target.value);
@@ -82,7 +93,7 @@ export function ReviewStep() {
   }, []);
   const existingAnnotations = LlmAssistantHooks.useGetExistingAnnotationCount({
     taskType: method,
-    approachType: approach,
+    virtualUserId,
     sdocIds,
     codeIds,
   });
@@ -93,28 +104,44 @@ export function ReviewStep() {
   const deleteExistingAnnotations =
     existingAnnotationCounts.length > 0 && deletionStrategy === DeletionStrategy.DELETE_EXISTING;
 
-  // start the job
-  const { mutate: startLLMAssistantJobMutation, isPending } = LlmAssistantHooks.useStartLLMAssistantJob();
+  // start the job, after creating the new virtual user to annotate as
+  const { mutate: startLLMAssistantJobMutation, isPending: isStartPending } =
+    LlmAssistantHooks.useStartLLMAssistantJob();
+  const { mutate: createVirtualUserMutation, isPending: isCreatePending } = UserHooks.useCreateVirtualUser();
+  const isPending = isStartPending || isCreatePending;
+  const startJob = useCallback(
+    (virtualUserId: number | null) => {
+      if (!method || !source) return;
+      startLLMAssistantJobMutation(
+        {
+          requestBody: {
+            project_id: projectId,
+            task_type: method,
+            sdoc_ids: sdocIds,
+            model: modelId,
+            ...("draft" in source ? { draft: source.draft } : { prompt_template_version_id: source.versionId }),
+            virtual_user_id: virtualUserId,
+            delete_existing_annotations: deleteExistingAnnotations,
+          },
+        },
+        {
+          onSuccess: (job) => {
+            dispatch(LLMAssistantActions.goToWaiting({ jobId: job.job_id, deleteExistingAnnotations }));
+          },
+        },
+      );
+    },
+    [method, source, projectId, sdocIds, modelId, deleteExistingAnnotations, startLLMAssistantJobMutation, dispatch],
+  );
   const handleStart = useCallback(() => {
-    if (!method || !source) return;
-    startLLMAssistantJobMutation(
-      {
-        requestBody: {
-          project_id: projectId,
-          task_type: method,
-          sdoc_ids: sdocIds,
-          model: modelId,
-          ...("draft" in source ? { draft: source.draft } : { prompt_template_version_id: source.versionId }),
-          delete_existing_annotations: deleteExistingAnnotations,
-        },
-      },
-      {
-        onSuccess: (job) => {
-          dispatch(LLMAssistantActions.goToWaiting({ jobId: job.job_id, deleteExistingAnnotations }));
-        },
-      },
+    if (!isAnnotationTask) return startJob(null);
+    if (!annotateAs) return;
+    if ("userId" in annotateAs) return startJob(annotateAs.userId);
+    createVirtualUserMutation(
+      { projectId, requestBody: { name: annotateAs.newName } },
+      { onSuccess: (virtualUser) => startJob(virtualUser.id) },
     );
-  }, [method, source, projectId, sdocIds, modelId, deleteExistingAnnotations, startLLMAssistantJobMutation, dispatch]);
+  }, [isAnnotationTask, annotateAs, projectId, startJob, createVirtualUserMutation]);
 
   const handleBack = useCallback(() => {
     dispatch(LLMAssistantActions.previousDialogStep());
@@ -142,15 +169,30 @@ export function ReviewStep() {
               </Typography>
             )}
           </LLMAssistantUtterance>
+          {isAnnotationTask && (
+            <Card variant="outlined">
+              <CardHeader title="Annotate as" slotProps={{ title: { variant: "h6" } }} sx={{ py: 1 }} />
+              <Divider />
+              <CardContent>
+                <Stack spacing={2}>
+                  <Typography>
+                    I write my annotations into a virtual user, never into your annotations. Choose a new one to keep
+                    this run apart from earlier runs, so you can compare them.
+                  </Typography>
+                  <AnnotateAsSelector value={annotateAs} onChange={setAnnotateAsChoice} />
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
           {isError && <Alert severity="error">Could not load the prompt.</Alert>}
           {rendered.isError && <Alert severity="error">{getErrorMessage(rendered.error)}</Alert>}
           {existingAnnotations.isError && (
-            <Alert severity="error">Could not check for existing assistant annotations.</Alert>
+            <Alert severity="error">Could not check for existing annotations of the virtual user.</Alert>
           )}
           {existingAnnotationCounts.length > 0 && (
             <Card variant="outlined" sx={{ borderColor: "error.main" }}>
               <CardHeader
-                title="Existing assistant annotations"
+                title="Existing annotations"
                 slotProps={{ title: { variant: "h6", color: "error.main" } }}
                 sx={{ py: 1 }}
               />
@@ -158,7 +200,7 @@ export function ReviewStep() {
               <CardContent>
                 <Stack spacing={2}>
                   <Typography>
-                    The assistant has already created annotations for some selected documents and codes:
+                    The virtual user already has annotations for some selected documents and codes:
                   </Typography>
                   <Stack spacing={1} pl={2}>
                     {existingAnnotationCounts.map(([codeId, count]) => (
@@ -204,7 +246,13 @@ export function ReviewStep() {
           startIcon={<PlayCircleIcon />}
           loading={isPending}
           loadingPosition="start"
-          disabled={!source || rendered.isError || !rendered.data || existingAnnotations.isLoading}
+          disabled={
+            !source ||
+            rendered.isError ||
+            !rendered.data ||
+            existingAnnotations.isLoading ||
+            (isAnnotationTask && annotateAs === null)
+          }
           onClick={handleStart}
         >
           Start

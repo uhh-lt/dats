@@ -8,6 +8,7 @@ import jwt
 from loguru import logger
 
 from config import conf
+from core.auth.auth_exceptions import credentials_exception
 from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
 
@@ -73,6 +74,10 @@ def generate_password_hash(password: str, iterations: int = 600000) -> str:
 
 
 def generate_jwt(user: UserORM | UserRead) -> tuple[str, datetime]:
+    # virtual users have no email and can never log in
+    if user.email is None:
+        raise credentials_exception
+
     expire = datetime.now(UTC) + timedelta(seconds=__access_ttl)
 
     payload = {

@@ -293,6 +293,10 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
 
     // ── Users ───────────────────────────────────────────────────────────────
+    // only virtual users are created in a project
+    case "USER_CREATED":
+      appendListItem(userQueries.byProject(event.payload.project_id ?? undefined).queryKey, event.payload);
+      break;
     case "USER_UPDATED":
       sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
         old ? old.map((user) => (user.id === event.payload.id ? event.payload : user)) : old,
@@ -304,6 +308,14 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       sweepPrefix<UserRead[]>(userQueries.byProjectScope(), (old) =>
         old ? old.filter((user) => user.id !== event.payload.id) : old,
       );
+      // the user is deleted with all its annotations; copies of them lose their source user
+      queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: sentenceAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: bboxAnnotationQueries.all() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.annotatorsScope() });
+      queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
+      queryClient.invalidateQueries({ queryKey: agreementQueries.computeScope(), refetchType: "none" });
+      invalidateMemoWorkspace();
       break;
 
     // ── API keys ────────────────────────────────────────────────────────────
@@ -573,8 +585,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     }
 
     // ── Project membership ──────────────────────────────────────────────────
-    // The payload carries the complete resulting member list — write it
-    // directly into the project-keyed user list.
+    // The payload carries the complete resulting user list (members and virtual
+    // users) — write it directly into the project-keyed user list.
     case "PROJECT_USERS_LINKED":
       queryClient.setQueryData(userQueries.byProject(event.payload.project_id).queryKey, event.payload.users);
       break;

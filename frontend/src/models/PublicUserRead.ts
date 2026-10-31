@@ -11,6 +11,10 @@ export type PublicUserRead = {
    */
   id: number;
   /**
+   * Whether the User is a virtual user (no login, one project)
+   */
+  is_virtual: boolean;
+  /**
    * First name of the User
    */
   first_name: string;

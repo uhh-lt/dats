@@ -25,6 +25,9 @@ from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import crud_user
+from core.user.user_orm import UserORM
+from core.user.user_service import UserService
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import ClassifierCreate
 from modules.classifier.classifier_enum import ClassifierModel
@@ -191,6 +194,22 @@ def persisted_classifier(db_session, test_project) -> PersistedClassifier:
     )
     db_session.commit()
     return {"classifier_id": clf.id, "model_dir": model_dir}
+
+
+# ---------------------------------------------------------------------------
+# VIRTUAL USER FOR INFERENCE
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="function")
+def classifier_virtual_user(db_session, test_project) -> UserORM:
+    """The virtual user "Classifier-Run1" of the test project, which span and
+    sentence classifier inference writes its annotations into."""
+    virtual_user = UserService().create_virtual_user(
+        db=db_session, project_id=test_project.id, name="Classifier-Run1"
+    )
+    db_session.commit()
+    return crud_user.read(db=db_session, id=virtual_user.id)
 
 
 # ---------------------------------------------------------------------------

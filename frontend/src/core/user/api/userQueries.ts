@@ -20,7 +20,7 @@ export const userQueries = {
       retry: false,
     }),
 
-  // all users of a project
+  // all users of a project: its members, then its virtual users
   byProjectScope: () => [...userQueries.all(), "project"] as const,
   byProject: (projectId: number | undefined) =>
     queryOptions({

@@ -20,12 +20,20 @@ export class SpanAnnotationService {
    */
   public static createSpanAnnotation({
     requestBody,
+    userId,
   }: {
     requestBody: SpanAnnotationCreate;
+    /**
+     * The current user (default) or a virtual user of the project
+     */
+    userId?: number | null;
   }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/span",
+      query: {
+        user_id: userId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -40,12 +48,20 @@ export class SpanAnnotationService {
    */
   public static createSpanAnnotationsBulk({
     requestBody,
+    userId,
   }: {
     requestBody: Array<SpanAnnotationCreate>;
+    /**
+     * The current user (default) or a virtual user of the project
+     */
+    userId?: number | null;
   }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/span/bulk/create",
+      query: {
+        user_id: userId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

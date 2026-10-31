@@ -44,6 +44,10 @@ When you take over an annotation (with the single arrow or "apply all"), DATS re
 
 Provenance is for transparency only: an accepted annotation counts as your own everywhere, and nothing is filtered or excluded automatically. The annotators therefore show accepted annotations like any other.
 
+### Annotating as a Virtual User
+
+The annotator selector also lists the project's [virtual users](project-view.md#virtual-users-tab), even before they have annotations. Select one to annotate as it: new annotations then belong to the virtual user instead of you. The annotations of other people stay read-only. Together with the compare view, this lets you build an agreed group standard: compare a virtual user (e.g. `Gold standard`) with each colleague or LLM run and take over the annotations you agree on; every copy records its source.
+
 ### Rendering Settings & LLM Assistant
 
 - **Rendering Settings:** Click the settings icon to change how annotations visually overlap the text (e.g., rendering code names inline with the text or stacked at the top of the highlighted span).

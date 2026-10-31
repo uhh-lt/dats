@@ -1,6 +1,6 @@
 import { useAuth } from "@core/auth";
 import { sdocQueries } from "@core/source-document";
-import { UserRenderer } from "@core/user";
+import { UserHooks, UserRenderer } from "@core/user";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +28,15 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // global server state (react query)
   const annotatorUserIds = useQuery(sdocQueries.annotators(sdocId));
-  const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
+  // the virtual users of the project are listed even without annotations, to annotate as them
+  const virtualUsers = UserHooks.useGetVirtualUsers();
+  const userIds = Array.from(
+    new Set([
+      ...(user ? [user.id] : []),
+      ...(annotatorUserIds.data || []),
+      ...(virtualUsers.data || []).map((user) => user.id),
+    ]),
+  );
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number>) => {

@@ -19,6 +19,7 @@ from core.prompt_template.prompt_template_dto import (
 from core.prompt_template.prompt_template_orm import PromptTemplateORM
 from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
+from core.user.user_utils import get_user_key
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.prompt_templates.prompt_template_export_schema import (
     PromptCodeForExport,
@@ -195,7 +196,7 @@ class _References:
                 ).items()
             },
             user_email={
-                id: user.email
+                id: get_user_key(user)
                 for id, user in crud_user.read_existing_by_ids(
                     db=db, ids=user_ids
                 ).items()

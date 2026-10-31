@@ -16,9 +16,10 @@ from core.prompt_template.prompt_template_enum import (
     TaskType,
 )
 from core.prompt_template.prompt_template_specs import OUTPUT_FORMAT_SPECS
-from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
+from core.user.user_orm import UserORM
 from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_job_dto import (
+    ANNOTATING_TASK_TYPES,
     AnnotationLLMAssistantJobResult,
     LLMAssistantJobInput,
     LLMAssistantJobOutput,
@@ -108,6 +109,9 @@ def _version_payload(
         sdoc_ids=[base["target_sdoc"].id],
         model=model,
         prompt_template_version_id=version_id,
+        virtual_user_id=(
+            base["run_a"].id if task_type in ANNOTATING_TASK_TYPES else None
+        ),
         delete_existing_annotations=True,
     )
 
@@ -167,15 +171,18 @@ def _draft_payload(
         sdoc_ids=[base["target_sdoc"].id],
         model="default",
         draft=draft,
+        virtual_user_id=(
+            base["run_a"].id if draft.task_type in ANNOTATING_TASK_TYPES else None
+        ),
         delete_existing_annotations=True,
     )
 
 
-def _expected_approach(is_fewshot: bool) -> tuple[ApproachType, int]:
-    """The approach of a run and the assistant user that stores its annotations."""
+def _expected_approach(is_fewshot: bool) -> ApproachType:
+    """The approach of a run, decided by the examples of its prompt."""
     if is_fewshot:
-        return ApproachType.LLM_FEW_SHOT, ASSISTANT_FEWSHOT_ID
-    return ApproachType.LLM_ZERO_SHOT, ASSISTANT_ZEROSHOT_ID
+        return ApproachType.LLM_FEW_SHOT
+    return ApproachType.LLM_ZERO_SHOT
 
 
 # ===========================================================================
@@ -273,8 +280,9 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
 ) -> None:
     """Every span variant persists one deduplicated PERSON suggestion for Alice.
 
-    The existing assistant annotations of Alice are deleted first, and the
-    examples of the prompt decide the approach and the assistant user.
+    The existing annotations of the selected virtual user (run A) are
+    deleted first, the other virtual user's (run B) stay; the examples of
+    the prompt decide the approach.
     """
     base = job_prompt_project["base"]
     draft = _draft(
@@ -286,7 +294,8 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
-    approach_type, assistant_user_id = _expected_approach(is_fewshot)
+    approach_type = _expected_approach(is_fewshot)
+    assistant_user_id = base["run_a"].id
     assert finished.output is not None
     assert finished.output.task_type == TaskType.ANNOTATION
     assert finished.output.approach_type == approach_type
@@ -302,6 +311,10 @@ def test_span_annotation_job_covers_all_formats_units_and_approaches(
         for annotation in result.suggested_annotations
     ]
     assert suggestions == [("Alice", base["person_code"].id, assistant_user_id)]
+    run_a_alice = client.get(f"/span/{base['run_a_span_annotation'].id}")
+    assert run_a_alice.status_code == 403, run_a_alice.text  # deleted
+    run_b_alice = client.get(f"/span/{base['run_b_span_annotation'].id}")
+    assert run_b_alice.status_code == 200, run_b_alice.text
 
 
 @pytest.mark.llm
@@ -338,7 +351,8 @@ def test_sentence_annotation_job_covers_all_units_and_approaches(
     started = _start_job(client, _draft_payload(job_prompt_project, draft))
     finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
 
-    approach_type, assistant_user_id = _expected_approach(is_fewshot)
+    approach_type = _expected_approach(is_fewshot)
+    assistant_user_id = base["run_a"].id
     assert finished.output is not None
     assert finished.output.task_type == TaskType.SENTENCE_ANNOTATION
     assert finished.output.approach_type == approach_type
@@ -400,7 +414,7 @@ def test_sentence_annotation_job_runs_a_stored_version(
     assert result.suggested_annotations
     assert all(
         annotation.code_id == base["fact_code"].id
-        and annotation.user_id == ASSISTANT_ZEROSHOT_ID
+        and annotation.user_id == base["run_a"].id
         for annotation in result.suggested_annotations
     )
 
@@ -606,6 +620,81 @@ def test_job_start_rejects_documents_outside_the_project(
 
     assert response.status_code == 400, response.text
     assert f"The source documents [{sdoc_id}] do not belong to project" in response.text
+    list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{base['project'].id}")
+    assert list_response.status_code == 200, list_response.text
+    assert list_response.json() == []
+
+
+@pytest.mark.parametrize(
+    "task_type",
+    [
+        # span annotation writes annotations
+        pytest.param(TaskType.ANNOTATION, id="span-annotation"),
+        # sentence annotation writes annotations
+        pytest.param(TaskType.SENTENCE_ANNOTATION, id="sentence-annotation"),
+    ],
+)
+def test_job_start_requires_a_virtual_user_for_annotation_tasks(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    task_type: TaskType,
+) -> None:
+    """Annotation tasks need the virtual user to annotate as (HTTP 422)."""
+    payload = _version_payload(
+        job_prompt_project,
+        task_type=TaskType.SENTENCE_ANNOTATION,
+        version_id=job_prompt_project["sentence_template"].versions[0].id,
+    ).model_dump(mode="json")
+    payload.update({"task_type": task_type.value, "virtual_user_id": None})
+    if task_type == TaskType.ANNOTATION:
+        payload["prompt_template_version_id"] = None
+        payload["draft"] = _draft(
+            job_prompt_project,
+            output_format=OutputFormat.INLINE,
+            unit=DocumentUnit.WHOLE,
+            is_fewshot=False,
+        ).model_dump(mode="json")
+
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload)
+
+    assert response.status_code == 422, response.text
+    assert "need the virtual user to annotate as" in response.text
+
+
+@pytest.mark.parametrize(
+    "annotator",
+    [
+        # the LLM Assistant never writes into a human user's annotations
+        pytest.param("test_user", id="human-user"),
+        # a virtual user of another project
+        pytest.param("foreign_run", id="foreign-virtual-user"),
+        # a user id that does not exist
+        pytest.param(None, id="nonexistent-user"),
+    ],
+)
+def test_job_start_rejects_users_that_are_no_virtual_user_of_the_project(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    test_user: UserORM,
+    annotator: str | None,
+) -> None:
+    """The job only annotates as a virtual user of its project: other
+    users are rejected before the job is enqueued."""
+    base = job_prompt_project["base"]
+    virtual_user_id = {
+        "test_user": test_user.id,
+        "foreign_run": base["foreign_run"].id,
+        None: 999_999,
+    }[annotator]
+    payload = _version_payload(
+        job_prompt_project,
+        task_type=TaskType.SENTENCE_ANNOTATION,
+        version_id=job_prompt_project["sentence_template"].versions[0].id,
+    ).model_copy(update={"virtual_user_id": virtual_user_id})
+
+    response = client.post(LLM_ASSISTANT_JOB_URL, json=payload.model_dump(mode="json"))
+
+    assert response.status_code in (400, 404), response.text
     list_response = client.get(f"{LLM_ASSISTANT_JOB_URL}/project/{base['project'].id}")
     assert list_response.status_code == 200, list_response.text
     assert list_response.json() == []

@@ -68,7 +68,9 @@ Choose the language model and how the assistant works:
 
 The **preview** shows exactly what the AI receives: the built-in default prompt of the task, output format and language with your selections. Built-in prompts cannot be edited; every project has a copy of each on the Prompts page (e.g. `default-span-annotation-inline-tagging-en`), which you can edit and run with **Prompt**. Pick one of the selected documents; a prompt sent sentence by sentence can step through its sentences. Guided runs are zero-shot; for few-shot examples and your own prompt texts, write a [prompt](prompt-templates.md) and run it with **Prompt**.
 
-If the assistant already annotated the selected documents with the selected codes, you choose here whether these annotations are replaced or kept.
+For span and sentence annotation you also choose whom the assistant **annotates as**: an existing [virtual user](project-view.md#virtual-users-tab) of the project, or a new one you name here (proposed: the next free `LLM-Run<n>`). The assistant never writes into your own annotations. Use a new virtual user per run to compare runs, models or prompts with each other and with your team in the compare view and the agreement evaluation.
+
+If the selected virtual user already annotated the selected documents with the selected codes, you choose here whether these annotations are replaced or kept.
 
 ### Step 5: Wait (Background Processing)
 
@@ -90,4 +92,4 @@ Because qualitative research requires human oversight, DATS **never** applies AI
 4. Once you are satisfied with the AI's work, click **Apply Annotations!**.
 
 ![LLM Assistant Result](../assets/annotation-compare-view.png)
-_(Note: AI-generated annotations are saved under a special ZERO/FEW-SHOT ASSISTANT user profile, ensuring they are always distinguishable from your own manual coding in the analysis views!)_
+_(Note: AI-generated annotations belong to the virtual user you chose, so they are always distinguishable from your own manual coding in the analysis views!)_

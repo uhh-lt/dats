@@ -74,6 +74,7 @@ import type { TagUpdatedEvent } from "./TagUpdatedEvent";
 import type { TimelineAnalysisCreatedEvent } from "./TimelineAnalysisCreatedEvent";
 import type { TimelineAnalysisDeletedEvent } from "./TimelineAnalysisDeletedEvent";
 import type { TimelineAnalysisUpdatedEvent } from "./TimelineAnalysisUpdatedEvent";
+import type { UserCreatedEvent } from "./UserCreatedEvent";
 import type { UserDeletedEvent } from "./UserDeletedEvent";
 import type { UserUpdatedEvent } from "./UserUpdatedEvent";
 import type { WhiteboardCreatedEvent } from "./WhiteboardCreatedEvent";
@@ -154,6 +155,7 @@ export interface DATSEventMap {
   TIMELINE_ANALYSIS_CREATED: TimelineAnalysisCreatedEvent["payload"];
   TIMELINE_ANALYSIS_DELETED: TimelineAnalysisDeletedEvent["payload"];
   TIMELINE_ANALYSIS_UPDATED: TimelineAnalysisUpdatedEvent["payload"];
+  USER_CREATED: UserCreatedEvent["payload"];
   USER_DELETED: UserDeletedEvent["payload"];
   USER_UPDATED: UserUpdatedEvent["payload"];
   WHITEBOARD_CREATED: WhiteboardCreatedEvent["payload"];
@@ -235,6 +237,7 @@ export type DATSEvent =
   | (Omit<TimelineAnalysisCreatedEvent, "type"> & { type: "TIMELINE_ANALYSIS_CREATED" })
   | (Omit<TimelineAnalysisDeletedEvent, "type"> & { type: "TIMELINE_ANALYSIS_DELETED" })
   | (Omit<TimelineAnalysisUpdatedEvent, "type"> & { type: "TIMELINE_ANALYSIS_UPDATED" })
+  | (Omit<UserCreatedEvent, "type"> & { type: "USER_CREATED" })
   | (Omit<UserDeletedEvent, "type"> & { type: "USER_DELETED" })
   | (Omit<UserUpdatedEvent, "type"> & { type: "USER_UPDATED" })
   | (Omit<WhiteboardCreatedEvent, "type"> & { type: "WHITEBOARD_CREATED" })

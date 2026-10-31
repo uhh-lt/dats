@@ -1,6 +1,5 @@
 import { queryClient } from "@api/queryClient";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
-import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
@@ -24,8 +23,7 @@ const useCreateBulkAnnotations = () =>
 const useCreateSpanAnnotation = () =>
   useMutation({
     mutationKey: [...spanAnnotationQueries.all(), "createSpanAnnotation"],
-    mutationFn: (variables: SpanAnnotationCreate) =>
-      SpanAnnotationService.createSpanAnnotation({ requestBody: variables }),
+    mutationFn: SpanAnnotationService.createSpanAnnotation,
     meta: {
       datsEvent: "SPAN_ANNOTATION_CREATED",
       successMessage: (data: SpanAnnotationRead) => `Created Span Annotation ${data.id}`,

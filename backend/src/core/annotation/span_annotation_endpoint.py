@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
@@ -37,6 +37,10 @@ def create_span_annotation(
     *,
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreate,
+    user_id: int | None = Query(
+        default=None,
+        description="The current user (default) or a virtual user of the project",
+    ),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -49,9 +53,10 @@ def create_span_annotation(
             (Crud.SOURCE_DOCUMENT, span.sdoc_id),
         ]
     )
+    annotation_user_id = authz_user.assert_can_annotate_as(user_id, [span.sdoc_id])
 
     result = SpanAnnotationService().create(
-        db=db, user_id=authz_user.user.id, create_dto=span
+        db=db, user_id=annotation_user_id, create_dto=span
     )
     ws.emit_to_project(
         DATSEvent.SPAN_ANNOTATION_CREATED,
@@ -70,6 +75,10 @@ def create_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     spans: list[SpanAnnotationCreate],
+    user_id: int | None = Query(
+        default=None,
+        description="The current user (default) or a virtual user of the project",
+    ),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -84,8 +93,12 @@ def create_span_annotations_bulk(
             ]
         )
 
+    annotation_user_id = authz_user.assert_can_annotate_as(
+        user_id, [span.sdoc_id for span in spans]
+    )
+
     results = SpanAnnotationService().create_multi(
-        db=db, user_id=authz_user.user.id, create_dtos=spans
+        db=db, user_id=annotation_user_id, create_dtos=spans
     )
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SPAN_ANNOTATION_CREATED_BATCH, results)

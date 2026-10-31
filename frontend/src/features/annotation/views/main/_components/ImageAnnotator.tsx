@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
@@ -13,6 +12,7 @@ import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { toPendingBboxAnnotation } from "../_hooks/pendingBboxAnnotation";
+import { useCanAnnotateAs } from "../_hooks/useCanAnnotateAs";
 import { useBboxAnnotationResize } from "../_hooks/useBboxAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnotationsActions } from "../../../store/annotationsSlice";
@@ -82,7 +82,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const [hoveredBboxId, setHoveredBboxId] = useState<number | null>(null);
 
   // mutations for create, update, delete
-  const { user } = useAuth();
+  const canAnnotateAs = useCanAnnotateAs();
   const openSnackbar = useOpenSnackbar();
   const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
   const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
@@ -167,11 +167,11 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
     // only open the code selector if the rect is big enough
     if (width > 10 && height > 10) {
-      // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
-      if (user?.id !== visibleUserId) {
+      // only allow annotation creation as the current user or as a virtual user (visibleUserId from URL search params)
+      if (!canAnnotateAs(visibleUserId)) {
         openSnackbar({
           severity: "warning",
-          text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+          text: "You cannot create annotations while viewing another user's annotation! Switch to your user or a virtual user in the Annotator Selector (top) to create annotations.",
         });
         resetRect();
         return;
@@ -237,13 +237,16 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // send a create request and keep the annotation visible (pending) until the real one is cached.
   const startCreate = (requestBody: BBoxAnnotationCreate, onSuccess?: () => void) => {
-    const pending = toPendingBboxAnnotation(requestBody, user?.id, sdocData.project_id);
+    const pending = toPendingBboxAnnotation(requestBody, visibleUserId, sdocData.project_id);
     setPendingAnnotations((prev) => [...prev, pending]);
-    createMutation.mutate(requestBody, {
-      onSuccess,
-      // remove the pending preview once the real annotation is in the cache (or the request failed)
-      onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
-    });
+    createMutation.mutate(
+      { requestBody, userId: visibleUserId },
+      {
+        onSuccess,
+        // remove the pending preview once the real annotation is in the cache (or the request failed)
+        onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
+      },
+    );
   };
 
   // code selector events

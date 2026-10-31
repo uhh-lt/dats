@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -38,6 +38,10 @@ def create_sentence_annotation(
     *,
     db: Session = Depends(get_db_session),
     sentence_annotation: SentenceAnnotationCreate,
+    user_id: int | None = Query(
+        default=None,
+        description="The current user (default) or a virtual user of the project",
+    ),
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> SentenceAnnotationRead:
@@ -45,9 +49,12 @@ def create_sentence_annotation(
         Crud.SOURCE_DOCUMENT, sentence_annotation.sdoc_id
     )
     authz_user.assert_in_same_project_as(Crud.CODE, sentence_annotation.code_id)
+    annotation_user_id = authz_user.assert_can_annotate_as(
+        user_id, [sentence_annotation.sdoc_id]
+    )
 
     result = SentenceAnnotationService().create(
-        db=db, user_id=authz_user.user.id, create_dto=sentence_annotation
+        db=db, user_id=annotation_user_id, create_dto=sentence_annotation
     )
     ws.emit_to_project(
         DATSEvent.SENTENCE_ANNOTATION_CREATED,
@@ -66,6 +73,10 @@ def create_sentence_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
     sentence_annotations: list[SentenceAnnotationCreate],
+    user_id: int | None = Query(
+        default=None,
+        description="The current user (default) or a virtual user of the project",
+    ),
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
     ws: WebsocketEmitter = Depends(),
@@ -80,8 +91,12 @@ def create_sentence_annotations_bulk(
             ]
         )
 
+    annotation_user_id = authz_user.assert_can_annotate_as(
+        user_id, [sa.sdoc_id for sa in sentence_annotations]
+    )
+
     results = SentenceAnnotationService().create_multi(
-        db=db, user_id=authz_user.user.id, create_dtos=sentence_annotations
+        db=db, user_id=annotation_user_id, create_dtos=sentence_annotations
     )
     if results:
         ws.emit_dtos_to_projects(DATSEvent.SENTENCE_ANNOTATION_CREATED_BATCH, results)

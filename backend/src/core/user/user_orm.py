@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from repos.db.orm_base import ORMBase
@@ -18,10 +26,13 @@ if TYPE_CHECKING:
 
 class UserORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    # NULL for virtual users
+    email: Mapped[str | None] = mapped_column(String, unique=True, index=True)
+    # a virtual user's name is its first name, its last name is empty
     first_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     last_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    password: Mapped[str] = mapped_column(String, nullable=False)
+    # NULL for virtual users
+    password: Mapped[str | None] = mapped_column(String)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
@@ -29,6 +40,14 @@ class UserORM(ORMBase):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.current_timestamp(),
+    )
+
+    # many to one
+    # set for virtual users only: users without login that belong to one project
+    project_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE", name="FK_user_project_id"),
+        index=True,
     )
 
     # one to one
@@ -88,5 +107,24 @@ class UserORM(ORMBase):
         passive_deletes=True,
     )
 
-    def get_project_id(self) -> None:
-        return None
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "first_name",
+            name="UC_virtual_user_name_unique_per_project",
+        ),
+        # users log in with email and password, virtual users have a project instead
+        CheckConstraint(
+            "(project_id IS NULL AND email IS NOT NULL AND password IS NOT NULL)"
+            " OR (project_id IS NOT NULL AND email IS NULL AND password IS NULL)",
+            name="CC_user_virtual_fields",
+        ),
+    )
+
+    @property
+    def is_virtual(self) -> bool:
+        return self.project_id is not None
+
+    # users belong to no project, virtual users to exactly one
+    def get_project_id(self) -> int | None:
+        return self.project_id

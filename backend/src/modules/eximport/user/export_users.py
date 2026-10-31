@@ -4,8 +4,9 @@ import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from core.project.project_crud import crud_project
+from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
+from core.user.user_utils import get_user_key
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.user.user_export_schema import (
     UserExportCollection,
@@ -19,7 +20,8 @@ def export_all_users(
     fsr: FilesystemRepo,
     project_id: int,
 ) -> Path:
-    users = crud_project.read(db=db, id=project_id).users
+    # the members and the virtual users of the project
+    users = crud_user.read_by_project(db=db, project_id=project_id)
     return __export_users(
         db=db,
         fsr=fsr,
@@ -53,7 +55,7 @@ def __generate_export_df_for_users(
     for user_data in users:
         user_export_items.append(
             UserExportSchema(
-                email=user_data.email,
+                email=get_user_key(user_data),
                 first_name=user_data.first_name,
                 last_name=user_data.last_name,
             )
