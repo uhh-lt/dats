@@ -87,6 +87,15 @@ We use the following terms throughout the project:
 - **Backend startup**: every entry point (API, worker, setup, migrations, tests) boots DATS with the functions in `backend/src/bootstrap.py`. Change startup there, never in an entry point.
 - **Testing**: Backend tests live in `backend/test/`; run them with `just test backend` after changing backend behavior. Tests require a running database and use a separate test database. Slow tests (classifier training, real LLM calls) are skipped by default; select them with `-m training`, `-m llm` or `-m ""`.
 
+## Reuse Before You Write
+
+Most of what a task needs already exists in some form. Code written without looking first duplicates it, and the copies drift apart.
+
+- Before adding a function, component, hook, CRUD or service method, endpoint or DTO, search for an existing one: grep for the entity name, look in its domain (`backend/src/core/<domain>/` or `modules/<module>/`, `frontend/src/core/<domain>/`), its CRUD and service, and the generic `frontend/src/components/` and `hooks/`.
+- Extend what exists (a parameter, a prop, an override) instead of writing a parallel version.
+- When a second place needs some code, move it to the shared layer instead of copying it: in the frontend from a feature to `core/<domain>` or to `components/`, `hooks/`, `utils/`; in the backend from a service query to a read method on the entity's CRUD.
+- When a near-duplicate is really needed, say why in the PR description.
+
 ## General Guidelines
 
 - Do not install new dependencies.

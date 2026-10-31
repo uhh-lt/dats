@@ -71,7 +71,7 @@ class ExampleService(metaclass=SingletonMeta):
 
 - **Session is a parameter**: Every method that touches SQL takes `db: Session` as an argument. Services never create sessions: endpoints inject one and job handlers open `sqlr.transaction()` and pass it in.
 - **No commits**: Services never call `db.commit()`, `db.rollback()` or `db.add()`. Writes go through CRUD methods, which only flush; the session owner (`SQLRepo.transaction()`, used by `get_db_session` and job handlers) commits or rolls back.
-- **Direct queries only for reads**: `db.query(...)` / `db.execute(select(...))` inside a service is allowed only for read/aggregate queries that no CRUD provides (statistics, health tables, timeline analysis).
+- **Direct queries only for reads**: `db.query(...)` / `db.execute(select(...))` inside a service is allowed only for read/aggregate queries that no CRUD provides (statistics, health tables, timeline analysis). Look for a CRUD read first; a query that other code could use too (an entity by a field, by project, with its relations) becomes a read method on the entity's CRUD.
 - **Keyword arguments**: Call CRUDs and other services with keyword arguments (`db=db, id=..., create_dto=...`). Multi-step methods number their steps in comments (`# 1) create the project`).
 - **Other stores via clients**: Get Weaviate/Elasticsearch clients from the repo (`client = self.weaviate.get_client()`) and pass them to the embedding/elastic CRUDs.
 
