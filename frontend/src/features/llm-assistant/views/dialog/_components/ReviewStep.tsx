@@ -8,7 +8,7 @@ import {
   promptTemplateQueries,
   TASK_TYPE_LABELS,
 } from "@core/prompt-template";
-import { AnnotateAsChoice, AnnotateAsSelector, suggestVirtualAnnotatorName, UserHooks } from "@core/user";
+import { AnnotateAsChoice, AnnotateAsSelector, suggestVirtualUserName, UserHooks } from "@core/user";
 import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import {
@@ -74,18 +74,18 @@ export function ReviewStep() {
     ),
   );
 
-  // annotation tasks write into a virtual annotator: an existing one or a new one (default: the next free LLM-Run<n>)
+  // annotation tasks write into a virtual user: an existing one or a new one (default: the next free LLM-Run<n>)
   const isAnnotationTask = method === TaskType.ANNOTATION || method === TaskType.SENTENCE_ANNOTATION;
-  const virtualAnnotators = UserHooks.useGetVirtualAnnotators();
+  const virtualUsers = UserHooks.useGetVirtualUsers();
   const [annotateAsChoice, setAnnotateAsChoice] = useState<AnnotateAsChoice | null | undefined>(undefined);
   const annotateAs = useMemo<AnnotateAsChoice | null>(() => {
     if (annotateAsChoice !== undefined) return annotateAsChoice;
-    if (!virtualAnnotators.data) return null;
-    return { newName: suggestVirtualAnnotatorName("LLM", virtualAnnotators.data) };
-  }, [annotateAsChoice, virtualAnnotators.data]);
-  const annotatorId = annotateAs && "userId" in annotateAs ? annotateAs.userId : undefined;
+    if (!virtualUsers.data) return null;
+    return { newName: suggestVirtualUserName("LLM", virtualUsers.data) };
+  }, [annotateAsChoice, virtualUsers.data]);
+  const virtualUserId = annotateAs && "userId" in annotateAs ? annotateAs.userId : undefined;
 
-  // existing annotations of the virtual annotator the job writes into
+  // existing annotations of the virtual user the job writes into
   const [deletionStrategy, setDeletionStrategy] = useState(DeletionStrategy.DELETE_EXISTING);
   const handleChangeDeletionStrategy = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = Object.values(DeletionStrategy).find((candidate) => candidate === event.target.value);
@@ -93,7 +93,7 @@ export function ReviewStep() {
   }, []);
   const existingAnnotations = LlmAssistantHooks.useGetExistingAnnotationCount({
     taskType: method,
-    annotatorId,
+    virtualUserId,
     sdocIds,
     codeIds,
   });
@@ -104,13 +104,13 @@ export function ReviewStep() {
   const deleteExistingAnnotations =
     existingAnnotationCounts.length > 0 && deletionStrategy === DeletionStrategy.DELETE_EXISTING;
 
-  // start the job, after creating the new virtual annotator to annotate as
+  // start the job, after creating the new virtual user to annotate as
   const { mutate: startLLMAssistantJobMutation, isPending: isStartPending } =
     LlmAssistantHooks.useStartLLMAssistantJob();
-  const { mutate: createVirtualAnnotatorMutation, isPending: isCreatePending } = UserHooks.useCreateVirtualAnnotator();
+  const { mutate: createVirtualUserMutation, isPending: isCreatePending } = UserHooks.useCreateVirtualUser();
   const isPending = isStartPending || isCreatePending;
   const startJob = useCallback(
-    (annotatorId: number | null) => {
+    (virtualUserId: number | null) => {
       if (!method || !source) return;
       startLLMAssistantJobMutation(
         {
@@ -120,7 +120,7 @@ export function ReviewStep() {
             sdoc_ids: sdocIds,
             model: modelId,
             ...("draft" in source ? { draft: source.draft } : { prompt_template_version_id: source.versionId }),
-            annotator_id: annotatorId,
+            virtual_user_id: virtualUserId,
             delete_existing_annotations: deleteExistingAnnotations,
           },
         },
@@ -137,11 +137,11 @@ export function ReviewStep() {
     if (!isAnnotationTask) return startJob(null);
     if (!annotateAs) return;
     if ("userId" in annotateAs) return startJob(annotateAs.userId);
-    createVirtualAnnotatorMutation(
+    createVirtualUserMutation(
       { projectId, requestBody: { name: annotateAs.newName } },
-      { onSuccess: (annotator) => startJob(annotator.id) },
+      { onSuccess: (virtualUser) => startJob(virtualUser.id) },
     );
-  }, [isAnnotationTask, annotateAs, projectId, startJob, createVirtualAnnotatorMutation]);
+  }, [isAnnotationTask, annotateAs, projectId, startJob, createVirtualUserMutation]);
 
   const handleBack = useCallback(() => {
     dispatch(LLMAssistantActions.previousDialogStep());
@@ -176,8 +176,8 @@ export function ReviewStep() {
               <CardContent>
                 <Stack spacing={2}>
                   <Typography>
-                    I write my annotations into a virtual annotator, never into your annotations. Choose a new one to
-                    keep this run apart from earlier runs, so you can compare them.
+                    I write my annotations into a virtual user, never into your annotations. Choose a new one to keep
+                    this run apart from earlier runs, so you can compare them.
                   </Typography>
                   <AnnotateAsSelector value={annotateAs} onChange={setAnnotateAsChoice} />
                 </Stack>
@@ -187,7 +187,7 @@ export function ReviewStep() {
           {isError && <Alert severity="error">Could not load the prompt.</Alert>}
           {rendered.isError && <Alert severity="error">{getErrorMessage(rendered.error)}</Alert>}
           {existingAnnotations.isError && (
-            <Alert severity="error">Could not check for existing annotations of the virtual annotator.</Alert>
+            <Alert severity="error">Could not check for existing annotations of the virtual user.</Alert>
           )}
           {existingAnnotationCounts.length > 0 && (
             <Card variant="outlined" sx={{ borderColor: "error.main" }}>
@@ -200,7 +200,7 @@ export function ReviewStep() {
               <CardContent>
                 <Stack spacing={2}>
                   <Typography>
-                    The virtual annotator already has annotations for some selected documents and codes:
+                    The virtual user already has annotations for some selected documents and codes:
                   </Typography>
                   <Stack spacing={1} pl={2}>
                     {existingAnnotationCounts.map(([codeId, count]) => (

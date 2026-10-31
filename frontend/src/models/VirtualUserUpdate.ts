@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type VirtualAnnotatorUpdate = {
+export type VirtualUserUpdate = {
   /**
-   * Display name of the virtual annotator, unique per project
+   * Name of the virtual user, unique per project
    */
   name?: string | null;
 };
