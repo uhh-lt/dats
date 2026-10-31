@@ -8,13 +8,12 @@ import type { PublicUserRead } from "@models/PublicUserRead";
 import type { UserRead } from "@models/UserRead";
 import type { UserUpdate } from "@models/UserUpdate";
 import type { VirtualUserCreate } from "@models/VirtualUserCreate";
-import type { VirtualUserUpdate } from "@models/VirtualUserUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class UserService {
   /**
-   * Creates a virtual user (a user without login) in the Project
+   * Creates a virtual user (a user that cannot log in) in the Project
    * @returns UserRead Successful Response
    * @throws ApiError
    */
@@ -166,20 +165,20 @@ export class UserService {
     });
   }
   /**
-   * Renames the virtual user with the given ID
+   * Updates the User with the given ID: a virtual user of one of your projects (other users have no project)
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static updateVirtualUser({
+  public static updateById({
     userId,
     requestBody,
   }: {
     userId: number;
-    requestBody: VirtualUserUpdate;
+    requestBody: UserUpdate;
   }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/user/virtual_user/{user_id}",
+      url: "/user/{user_id}",
       path: {
         user_id: userId,
       },
@@ -191,14 +190,14 @@ export class UserService {
     });
   }
   /**
-   * Removes the virtual user with the given ID together with all its annotations and memos
+   * Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project)
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static deleteVirtualUser({ userId }: { userId: number }): CancelablePromise<UserRead> {
+  public static deleteById({ userId }: { userId: number }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/user/virtual_user/{user_id}",
+      url: "/user/{user_id}",
       path: {
         user_id: userId,
       },

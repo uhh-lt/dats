@@ -33,7 +33,7 @@ interface ProjectVirtualUsersProps {
 }
 
 /**
- * Lists the virtual users of the project: users without login that own annotations, e.g. of LLM Assistant runs.
+ * Lists the virtual users of the project: users that cannot log in and own annotations, e.g. of LLM Assistant runs.
  * They can be created, renamed and deleted (together with all their annotations).
  */
 export const ProjectVirtualUsers = memo(({ project }: ProjectVirtualUsersProps) => {
@@ -59,19 +59,19 @@ export const ProjectVirtualUsers = memo(({ project }: ProjectVirtualUsersProps) 
   const handleError: SubmitErrorHandler<VirtualUserCreateFormValues> = (data) => console.error(data);
 
   // rename
-  const { mutate: updateVirtualUserMutation } = UserHooks.useUpdateVirtualUser();
+  const { mutate: updateVirtualUserMutation } = UserHooks.useUpdateUser();
   const handleRename = useCallback(
     (virtualUser: UserRead, name: string) => {
       const trimmed = name.trim();
       if (trimmed.length === 0 || trimmed === virtualUser.first_name) return;
-      updateVirtualUserMutation({ userId: virtualUser.id, requestBody: { name: trimmed } });
+      updateVirtualUserMutation({ userId: virtualUser.id, requestBody: { first_name: trimmed } });
     },
     [updateVirtualUserMutation],
   );
 
   // delete
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const { mutate: deleteVirtualUserMutation } = UserHooks.useDeleteVirtualUser();
+  const { mutate: deleteVirtualUserMutation } = UserHooks.useDeleteUser();
   const handleClickDelete = useCallback(
     (virtualUser: UserRead) => {
       openConfirmationDialog({
