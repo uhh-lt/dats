@@ -13,7 +13,7 @@ Backend tests use **pytest** with FastAPI's `TestClient`. Tests are endpoint tes
 ```bash
 just test backend               # all tests
 just test backend test/endpoints/search    # one folder
-just test backend test/endpoints/search/test_search_endpoint_memo.py  # one file
+just test backend test/endpoints/memo/test_memo_endpoint.py  # one file
 just test backend -k memo_info  # by test name
 ```
 
@@ -43,8 +43,8 @@ Mark every new test that trains a model or calls the LLM provider. CI on pull re
 ## Test Layout
 
 - Tests live under `backend/test/`. Endpoint tests live under `backend/test/endpoints/`.
-- **One folder per endpoint group** (e.g. `endpoints/search/`, `endpoints/memo/`).
-- **One test file per endpoint** (most of the time), named `test_<group>_endpoint_<name>.py` (e.g. `test_search_endpoint_memo.py`).
+- **One folder per endpoint module** (e.g. `endpoints/memo/` for `memo_endpoint.py`).
+- **One test file per endpoint module**: all routes of `<name>_endpoint.py` are tested in `test_<name>_endpoint.py`, one block per route (see "Test File Organization"). Never split one endpoint module over several test files (`test_<name>_endpoint_<route>.py`). Tests that do not call an endpoint module (import/export round trips, e2e job runs) get their own file named after what they test (`test_prompt_template_eximport.py`).
 - **Each folder has its own `conftest.py`** with the fixtures its tests need.
 
 ## conftest.py Responsibilities
@@ -123,7 +123,7 @@ Because the fixture data is deterministic, every one of these cases has a known 
 
 Organize each test file with comment blocks, from coarse to fine:
 
-1. **One big block per endpoint**:
+1. **One big block per route**:
 
 ```python
 # ===========================================================================
@@ -131,7 +131,7 @@ Organize each test file with comment blocks, from coarse to fine:
 # ===========================================================================
 ```
 
-2. **One small block per semantic section** within an endpoint (when there is more than one), with a short comment explaining the section:
+2. **One small block per semantic section** within a route (when there is more than one), with a short comment explaining the section:
 
 ```python
 # --- B. invalid filter input (HTTP 400 contracts) ----------------------------------
@@ -140,6 +140,6 @@ Organize each test file with comment blocks, from coarse to fine:
 
 3. **Per-test detail goes in the test's docstring**, not in standalone comments.
 
-Shared helpers (e.g. `_post_memo_query`) go directly after the endpoint block header, before the sections. Shared constants (expected titles, mappings) go at the top of the file after imports.
+Shared helpers (e.g. `_post_memo_query`) go directly after the block header of their route, before the sections. Shared constants (expected titles, mappings) go at the top of the file after imports.
 
-**Reference**: [test_search_endpoint_memo.py](backend/test/endpoints/search/test_search_endpoint_memo.py)
+**Reference**: [test_search_endpoint.py](backend/test/endpoints/search/test_search_endpoint.py) for the organization of one route's tests, [test_agreement_endpoint.py](backend/test/endpoints/agreement/test_agreement_endpoint.py) for one file with all routes of its endpoint module.
