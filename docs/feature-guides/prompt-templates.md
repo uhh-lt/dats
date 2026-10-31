@@ -2,7 +2,7 @@
 
 A **prompt** is written for one task (span annotation, sentence annotation, document tagging or metadata extraction), written in one language. It contains everything the language model sees except the document: the instructions you write, the codes, tags or metadata fields you select, few-shot examples and the answer format. The [LLM Assistant](llm-assistant.md) runs prompts on documents. Prompts belong to your project, so the whole team works with the same prompts and can see which prompt produced which results.
 
-Open the **Prompts** page from the project sidebar. On the left, the explorer shows one folder per task with its prompts: search them by name, create one with **Create new prompt**, and use a prompt's context menu to duplicate or archive it. In the center, the selected prompt: a toolbar with its name, version, **Write** / **Preview** (the pen and eye icons), refresh selections, duplicate, archive and, while the draft has unsaved changes, **Discard** and **Save** (also Ctrl+S); below it the prompt, shown as a page. On the right, the blocks of the task with their settings. Both sidebars can be resized.
+Open the **Prompts** page from the project sidebar. On the left, the explorer shows one folder per task with its prompts: search them by name, create one with **Create new prompt**, and use a prompt's context menu to duplicate or archive it. In the center, the selected prompt: a toolbar with its name, version, **Write** / **Preview** (the pen and eye icons), duplicate, archive and, while the draft has unsaved changes, **Discard** and **Save** (also Ctrl+S); below it the prompt, shown as a page. On the right, the blocks of the task with their settings. Both sidebars can be resized.
 
 ## Blocks
 
@@ -21,11 +21,18 @@ A block expands with its settings as soon as the prompt contains it: write `<cod
 
 A placeholder-like text that no block fills, e.g. a typo like `<code>`, is sent to the model as it is; the preview warns about it.
 
-## Selections are snapshots
+## The prompt's own definitions
 
-When you save, the prompt stores the selected codes, tags and metadata fields with their current names and descriptions, and the examples with their current text. A version therefore always sends the same prompt, even if you later rename a code or change an annotation.
+The codes, tags and metadata fields blocks show a selector and, below it, the selected items with their name (a field's key) **as the prompt defines them**, like the code explorer lists codes. When you select an item, the prompt copies its name and description from the project. Click an item (or its pen icon) to change the prompt's copy, e.g. to try a better code description: this never changes the project, and the copy is saved with the next version. A prompt cannot add new codes, tags or fields; every item is a copy of an existing one.
 
-If the project changed since a version was saved, the editor marks the affected selections as _outdated_. **Refresh selections** replaces them with the current state of the project (deleted codes, tags, fields and annotations are dropped); save afterwards to keep the result as a new version.
+A version stores these definitions and the examples with their text, so it always sends the same prompt, even if somebody later renames a code or changes an annotation. To update an example, remove it and add it again.
+
+Items whose definition differs from the project's are marked _differs from project_; DATS does not know whether the prompt or the project changed, so you decide which side wins. Items that were deleted from the project are marked _deleted_; remove them from the prompt.
+
+**Synchronize** (upper right of the block; its badge counts the differing items) opens a dialog with one row per differing item: the project's definition on the left, the prompt's on the right, the differing fields highlighted. Uncheck the items you want to keep as they are and choose a direction:
+
+- **Pull from the project** replaces the prompt's definitions with the project's. Save afterwards to keep the result as a new version.
+- **Push to the project** replaces the project's names and descriptions with the prompt's. This changes them for every member of the project; other prompts keep their own definitions and then show them as differing. A push fails if a name is already taken in the project.
 
 ## Few-shot examples
 

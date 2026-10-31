@@ -1187,6 +1187,44 @@
         }
       }
     },
+    "/code/bulk/update": {
+      "patch": {
+        "tags": ["code"],
+        "summary": "Updates the Codes with the given IDs.",
+        "operationId": "update_codes_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/CodeUpdateBulk" },
+                "type": "array",
+                "title": "Codes"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/CodeRead" },
+                  "type": "array",
+                  "title": "Response Code-Update Codes Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/cota": {
       "put": {
         "tags": ["conceptOverTimeAnalysis"],
@@ -3579,6 +3617,44 @@
         }
       }
     },
+    "/projmeta/bulk/update": {
+      "patch": {
+        "tags": ["projectMetadata"],
+        "summary": "Updates the Metadata with the given IDs.",
+        "operationId": "update_project_metadata_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/ProjectMetadataUpdateBulk" },
+                "type": "array",
+                "title": "Metadata"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
+                  "type": "array",
+                  "title": "Response Projectmetadata-Update Project Metadata Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/prompt_template": {
       "put": {
         "tags": ["prompt_template"],
@@ -3666,28 +3742,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/prompt_template/refresh": {
-      "post": {
-        "tags": ["prompt_template"],
-        "summary": "Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project",
-        "operationId": "refresh",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateRefresh" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromptTemplateContent" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6407,6 +6461,40 @@
         }
       }
     },
+    "/tag/bulk/update_tags": {
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Updates the Tags with the given IDs.",
+        "operationId": "update_tags_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "$ref": "#/components/schemas/TagUpdateBulk" }, "type": "array", "title": "Tags" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/TagRead" },
+                  "type": "array",
+                  "title": "Response Tag-Update Tags Bulk"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/tag/bulk/link": {
       "patch": {
         "tags": ["tag"],
@@ -7455,6 +7543,18 @@
         }
       }
     },
+    "CODE_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_code_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeUpdatedBatchEvent" } } }
+          }
+        }
+      }
+    },
     "CODE_DELETED": {
       "post": {
         "summary": " Webhook Handler",
@@ -7487,6 +7587,18 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagUpdatedEvent" } } }
+          }
+        }
+      }
+    },
+    "TAG_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_tag_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagUpdatedBatchEvent" } } }
           }
         }
       }
@@ -7932,6 +8044,20 @@
             "description": "Successful Response",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataUpdatedEvent" } }
+            }
+          }
+        }
+      }
+    },
+    "PROJECT_METADATA_UPDATED_BATCH": {
+      "post": {
+        "summary": " Webhook Handler",
+        "operationId": "ws_project_metadata_updated_batch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataUpdatedBatchEvent" } }
             }
           }
         }
@@ -11456,6 +11582,48 @@
         "type": "object",
         "title": "CodeUpdate"
       },
+      "CodeUpdateBulk": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the Code"
+          },
+          "color": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Color",
+            "description": "Color of the Code"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the Code"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Parent of the Code"
+          },
+          "enabled": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Enabled",
+            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)"
+          },
+          "code_id": { "type": "integer", "title": "Code Id", "description": "ID of the Code to update" }
+        },
+        "type": "object",
+        "required": ["code_id"],
+        "title": "CodeUpdateBulk"
+      },
+      "CodeUpdatedBatchEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "CODE_UPDATED_BATCH", "title": "Type", "default": "CODE_UPDATED_BATCH" },
+          "payload": { "items": { "$ref": "#/components/schemas/CodeRead" }, "type": "array", "title": "Payload" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "CodeUpdatedBatchEvent"
+      },
       "CodeUpdatedEvent": {
         "properties": {
           "type": { "type": "string", "const": "CODE_UPDATED", "title": "Type", "default": "CODE_UPDATED" },
@@ -14773,6 +14941,50 @@
         "type": "object",
         "title": "ProjectMetadataUpdate"
       },
+      "ProjectMetadataUpdateBulk": {
+        "properties": {
+          "key": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Key",
+            "description": "Key of the ProjectMetadata"
+          },
+          "metatype": {
+            "anyOf": [{ "$ref": "#/components/schemas/MetaType" }, { "type": "null" }],
+            "description": "Type of the ProjectMetadata"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the ProjectMetadata"
+          },
+          "project_metadata_id": {
+            "type": "integer",
+            "title": "Project Metadata Id",
+            "description": "ID of the ProjectMetadata to update"
+          }
+        },
+        "type": "object",
+        "required": ["project_metadata_id"],
+        "title": "ProjectMetadataUpdateBulk"
+      },
+      "ProjectMetadataUpdatedBatchEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "PROJECT_METADATA_UPDATED_BATCH",
+            "title": "Type",
+            "default": "PROJECT_METADATA_UPDATED_BATCH"
+          },
+          "payload": {
+            "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
+            "type": "array",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "ProjectMetadataUpdatedBatchEvent"
+      },
       "ProjectMetadataUpdatedEvent": {
         "properties": {
           "type": {
@@ -14887,7 +15099,7 @@
         "type": "object",
         "required": ["code_id", "name", "description"],
         "title": "PromptCode",
-        "description": "A code selected in a prompt, as it was when the prompt was saved."
+        "description": "A code selected in a prompt, with the prompt's own name and description."
       },
       "PromptExampleKind": {
         "type": "string",
@@ -14956,7 +15168,7 @@
         "type": "object",
         "required": ["project_metadata_id", "key", "description", "metatype"],
         "title": "PromptMetadataField",
-        "description": "A metadata field selected in a prompt, as it was when the prompt was saved."
+        "description": "A metadata field selected in a prompt, with the prompt's own key and description."
       },
       "PromptPreview": {
         "properties": {
@@ -15093,7 +15305,7 @@
         "type": "object",
         "required": ["tag_id", "name", "description"],
         "title": "PromptTag",
-        "description": "A tag selected in a prompt, as it was when the prompt was saved."
+        "description": "A tag selected in a prompt, with the prompt's own name and description."
       },
       "PromptTaskInfo": {
         "properties": {
@@ -15305,56 +15517,6 @@
           "versions"
         ],
         "title": "PromptTemplateRead"
-      },
-      "PromptTemplateRefresh": {
-        "properties": {
-          "prompt": { "type": "string", "title": "Prompt", "description": "The prompt with its blocks" },
-          "settings": {
-            "$ref": "#/components/schemas/PromptSettings",
-            "description": "Settings of the document and output format blocks"
-          },
-          "codes": {
-            "items": { "$ref": "#/components/schemas/PromptCode" },
-            "type": "array",
-            "title": "Codes",
-            "description": "The codes of <codes> and <code_names>"
-          },
-          "examples": {
-            "items": {
-              "oneOf": [
-                { "$ref": "#/components/schemas/SpanPromptExample" },
-                { "$ref": "#/components/schemas/SentencePromptExample" }
-              ],
-              "discriminator": {
-                "propertyName": "kind",
-                "mapping": {
-                  "SENTENCE": "#/components/schemas/SentencePromptExample",
-                  "SPAN": "#/components/schemas/SpanPromptExample"
-                }
-              }
-            },
-            "type": "array",
-            "title": "Examples",
-            "description": "The few-shot examples of <examples>"
-          },
-          "tags": {
-            "items": { "$ref": "#/components/schemas/PromptTag" },
-            "type": "array",
-            "title": "Tags",
-            "description": "The tags of <tags>"
-          },
-          "metadata_fields": {
-            "items": { "$ref": "#/components/schemas/PromptMetadataField" },
-            "type": "array",
-            "title": "Metadata Fields",
-            "description": "The metadata fields of <metadata_fields>"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the selections belong to" }
-        },
-        "type": "object",
-        "required": ["prompt", "project_id"],
-        "title": "PromptTemplateRefresh",
-        "description": "Content whose selections are replaced with the current state of the project."
       },
       "PromptTemplateSnapshot": {
         "properties": {
@@ -18445,6 +18607,43 @@
         },
         "type": "object",
         "title": "TagUpdate"
+      },
+      "TagUpdateBulk": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the Tag"
+          },
+          "color": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Color",
+            "description": "Color of the Tag"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the Tag"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Parent of the Tag"
+          },
+          "tag_id": { "type": "integer", "title": "Tag Id", "description": "ID of the Tag to update" }
+        },
+        "type": "object",
+        "required": ["tag_id"],
+        "title": "TagUpdateBulk"
+      },
+      "TagUpdatedBatchEvent": {
+        "properties": {
+          "type": { "type": "string", "const": "TAG_UPDATED_BATCH", "title": "Type", "default": "TAG_UPDATED_BATCH" },
+          "payload": { "items": { "$ref": "#/components/schemas/TagRead" }, "type": "array", "title": "Payload" }
+        },
+        "type": "object",
+        "required": ["payload"],
+        "title": "TagUpdatedBatchEvent"
       },
       "TagUpdatedEvent": {
         "properties": {

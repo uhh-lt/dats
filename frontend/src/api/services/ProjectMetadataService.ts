@@ -5,6 +5,7 @@
 import type { ProjectMetadataCreate } from "@models/ProjectMetadataCreate";
 import type { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import type { ProjectMetadataUpdate } from "@models/ProjectMetadataUpdate";
+import type { ProjectMetadataUpdateBulk } from "@models/ProjectMetadataUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -100,6 +101,26 @@ export class ProjectMetadataService {
       path: {
         project_id: projectId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Metadata with the given IDs.
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static updateProjectMetadataBulk({
+    requestBody,
+  }: {
+    requestBody: Array<ProjectMetadataUpdateBulk>;
+  }): CancelablePromise<Array<ProjectMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projmeta/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

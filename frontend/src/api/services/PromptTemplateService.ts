@@ -11,7 +11,6 @@ import type { PromptTaskInfo } from "@models/PromptTaskInfo";
 import type { PromptTemplateContent } from "@models/PromptTemplateContent";
 import type { PromptTemplateCreate } from "@models/PromptTemplateCreate";
 import type { PromptTemplateRead } from "@models/PromptTemplateRead";
-import type { PromptTemplateRefresh } from "@models/PromptTemplateRefresh";
 import type { PromptTemplateUpdate } from "@models/PromptTemplateUpdate";
 import type { PromptTemplateVersionCreate } from "@models/PromptTemplateVersionCreate";
 import type { PromptTemplateVersionRead } from "@models/PromptTemplateVersionRead";
@@ -76,26 +75,6 @@ export class PromptTemplateService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/prompt_template/examples",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project
-   * @returns PromptTemplateContent Successful Response
-   * @throws ApiError
-   */
-  public static refresh({
-    requestBody,
-  }: {
-    requestBody: PromptTemplateRefresh;
-  }): CancelablePromise<PromptTemplateContent> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/prompt_template/refresh",
       body: requestBody,
       mediaType: "application/json",
       errors: {

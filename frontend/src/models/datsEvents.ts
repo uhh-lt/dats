@@ -18,6 +18,7 @@ import type { ClusterUpdatedEvent } from "./ClusterUpdatedEvent";
 import type { CodeCreatedEvent } from "./CodeCreatedEvent";
 import type { CodeDeletedEvent } from "./CodeDeletedEvent";
 import type { CodeUpdatedEvent } from "./CodeUpdatedEvent";
+import type { CodeUpdatedBatchEvent } from "./CodeUpdatedBatchEvent";
 import type { CotaCreatedEvent } from "./CotaCreatedEvent";
 import type { CotaDeletedEvent } from "./CotaDeletedEvent";
 import type { CotaUpdatedEvent } from "./CotaUpdatedEvent";
@@ -37,6 +38,7 @@ import type { ProjectDeletedEvent } from "./ProjectDeletedEvent";
 import type { ProjectMetadataCreatedEvent } from "./ProjectMetadataCreatedEvent";
 import type { ProjectMetadataDeletedEvent } from "./ProjectMetadataDeletedEvent";
 import type { ProjectMetadataUpdatedEvent } from "./ProjectMetadataUpdatedEvent";
+import type { ProjectMetadataUpdatedBatchEvent } from "./ProjectMetadataUpdatedBatchEvent";
 import type { ProjectUpdatedEvent } from "./ProjectUpdatedEvent";
 import type { ProjectUsersLinkedEvent } from "./ProjectUsersLinkedEvent";
 import type { PromptTemplateCreatedEvent } from "./PromptTemplateCreatedEvent";
@@ -71,6 +73,7 @@ import type { TagCreatedEvent } from "./TagCreatedEvent";
 import type { TagDeletedEvent } from "./TagDeletedEvent";
 import type { TagRecommendationReviewedBatchEvent } from "./TagRecommendationReviewedBatchEvent";
 import type { TagUpdatedEvent } from "./TagUpdatedEvent";
+import type { TagUpdatedBatchEvent } from "./TagUpdatedBatchEvent";
 import type { TimelineAnalysisCreatedEvent } from "./TimelineAnalysisCreatedEvent";
 import type { TimelineAnalysisDeletedEvent } from "./TimelineAnalysisDeletedEvent";
 import type { TimelineAnalysisUpdatedEvent } from "./TimelineAnalysisUpdatedEvent";
@@ -98,6 +101,7 @@ export interface DATSEventMap {
   CODE_CREATED: CodeCreatedEvent["payload"];
   CODE_DELETED: CodeDeletedEvent["payload"];
   CODE_UPDATED: CodeUpdatedEvent["payload"];
+  CODE_UPDATED_BATCH: CodeUpdatedBatchEvent["payload"];
   COTA_CREATED: CotaCreatedEvent["payload"];
   COTA_DELETED: CotaDeletedEvent["payload"];
   COTA_UPDATED: CotaUpdatedEvent["payload"];
@@ -117,6 +121,7 @@ export interface DATSEventMap {
   PROJECT_METADATA_CREATED: ProjectMetadataCreatedEvent["payload"];
   PROJECT_METADATA_DELETED: ProjectMetadataDeletedEvent["payload"];
   PROJECT_METADATA_UPDATED: ProjectMetadataUpdatedEvent["payload"];
+  PROJECT_METADATA_UPDATED_BATCH: ProjectMetadataUpdatedBatchEvent["payload"];
   PROJECT_UPDATED: ProjectUpdatedEvent["payload"];
   PROJECT_USERS_LINKED: ProjectUsersLinkedEvent["payload"];
   PROMPT_TEMPLATE_CREATED: PromptTemplateCreatedEvent["payload"];
@@ -151,6 +156,7 @@ export interface DATSEventMap {
   TAG_DELETED: TagDeletedEvent["payload"];
   TAG_RECOMMENDATION_REVIEWED_BATCH: TagRecommendationReviewedBatchEvent["payload"];
   TAG_UPDATED: TagUpdatedEvent["payload"];
+  TAG_UPDATED_BATCH: TagUpdatedBatchEvent["payload"];
   TIMELINE_ANALYSIS_CREATED: TimelineAnalysisCreatedEvent["payload"];
   TIMELINE_ANALYSIS_DELETED: TimelineAnalysisDeletedEvent["payload"];
   TIMELINE_ANALYSIS_UPDATED: TimelineAnalysisUpdatedEvent["payload"];
@@ -179,6 +185,7 @@ export type DATSEvent =
   | (Omit<CodeCreatedEvent, "type"> & { type: "CODE_CREATED" })
   | (Omit<CodeDeletedEvent, "type"> & { type: "CODE_DELETED" })
   | (Omit<CodeUpdatedEvent, "type"> & { type: "CODE_UPDATED" })
+  | (Omit<CodeUpdatedBatchEvent, "type"> & { type: "CODE_UPDATED_BATCH" })
   | (Omit<CotaCreatedEvent, "type"> & { type: "COTA_CREATED" })
   | (Omit<CotaDeletedEvent, "type"> & { type: "COTA_DELETED" })
   | (Omit<CotaUpdatedEvent, "type"> & { type: "COTA_UPDATED" })
@@ -198,6 +205,7 @@ export type DATSEvent =
   | (Omit<ProjectMetadataCreatedEvent, "type"> & { type: "PROJECT_METADATA_CREATED" })
   | (Omit<ProjectMetadataDeletedEvent, "type"> & { type: "PROJECT_METADATA_DELETED" })
   | (Omit<ProjectMetadataUpdatedEvent, "type"> & { type: "PROJECT_METADATA_UPDATED" })
+  | (Omit<ProjectMetadataUpdatedBatchEvent, "type"> & { type: "PROJECT_METADATA_UPDATED_BATCH" })
   | (Omit<ProjectUpdatedEvent, "type"> & { type: "PROJECT_UPDATED" })
   | (Omit<ProjectUsersLinkedEvent, "type"> & { type: "PROJECT_USERS_LINKED" })
   | (Omit<PromptTemplateCreatedEvent, "type"> & { type: "PROMPT_TEMPLATE_CREATED" })
@@ -232,6 +240,7 @@ export type DATSEvent =
   | (Omit<TagDeletedEvent, "type"> & { type: "TAG_DELETED" })
   | (Omit<TagRecommendationReviewedBatchEvent, "type"> & { type: "TAG_RECOMMENDATION_REVIEWED_BATCH" })
   | (Omit<TagUpdatedEvent, "type"> & { type: "TAG_UPDATED" })
+  | (Omit<TagUpdatedBatchEvent, "type"> & { type: "TAG_UPDATED_BATCH" })
   | (Omit<TimelineAnalysisCreatedEvent, "type"> & { type: "TIMELINE_ANALYSIS_CREATED" })
   | (Omit<TimelineAnalysisDeletedEvent, "type"> & { type: "TIMELINE_ANALYSIS_DELETED" })
   | (Omit<TimelineAnalysisUpdatedEvent, "type"> & { type: "TIMELINE_ANALYSIS_UPDATED" })

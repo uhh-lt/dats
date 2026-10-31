@@ -14,7 +14,6 @@ from core.prompt_template.prompt_template_dto import (
     PromptTemplateContent,
     PromptTemplateCreate,
     PromptTemplateRead,
-    PromptTemplateRefresh,
     PromptTemplateUpdate,
     PromptTemplateVersionCreate,
     PromptTemplateVersionRead,
@@ -103,28 +102,6 @@ def create_examples(
     authz_user.assert_in_project(examples.project_id)
 
     return pts.create_prompt_examples(db=db, create_dto=examples)
-
-
-@router.post(
-    "/refresh",
-    response_model=PromptTemplateContent,
-    summary="Replaces the selections of a prompt (codes, examples, tags, metadata fields) with the current state of the project",
-)
-def refresh(
-    *,
-    db: Session = Depends(get_db_session),
-    content: PromptTemplateRefresh,
-    authz_user: AuthzUser = Depends(),
-) -> PromptTemplateContent:
-    authz_user.assert_in_project(content.project_id)
-
-    return pts.refresh_content(
-        db=db,
-        project_id=content.project_id,
-        content=PromptTemplateContent.model_validate(
-            content.model_dump(exclude={"project_id"})
-        ),
-    )
 
 
 @router.post(

@@ -15,12 +15,13 @@ from core.prompt_template.prompt_template_enum import (
 from repos.db.dto_base import UpdateDTOBase
 
 # --- PROMPT SELECTIONS ---
-# Snapshots of project data, so a version renders the same prompt forever.
-# "Refresh" replaces them with the current state of the project.
+# Copies of project data, so a version renders the same prompt forever. Names and
+# descriptions can be edited in the prompt; "pull" and "push" copy them from or to
+# the project.
 
 
 class PromptCode(BaseModel):
-    """A code selected in a prompt, as it was when the prompt was saved."""
+    """A code selected in a prompt, with the prompt's own name and description."""
 
     code_id: int = Field(description="ID of the code")
     name: str = Field(description="Name of the code", min_length=1)
@@ -28,7 +29,7 @@ class PromptCode(BaseModel):
 
 
 class PromptTag(BaseModel):
-    """A tag selected in a prompt, as it was when the prompt was saved."""
+    """A tag selected in a prompt, with the prompt's own name and description."""
 
     tag_id: int = Field(description="ID of the tag")
     name: str = Field(description="Name of the tag", min_length=1)
@@ -36,7 +37,7 @@ class PromptTag(BaseModel):
 
 
 class PromptMetadataField(BaseModel):
-    """A metadata field selected in a prompt, as it was when the prompt was saved."""
+    """A metadata field selected in a prompt, with the prompt's own key and description."""
 
     project_metadata_id: int = Field(description="ID of the project metadata")
     key: str = Field(description="Key of the metadata field", min_length=1)
@@ -246,12 +247,6 @@ class PromptTemplateRead(PromptTemplateBaseDTO):
         description="All versions of the template, oldest first"
     )
     model_config = ConfigDict(from_attributes=True)
-
-
-class PromptTemplateRefresh(PromptTemplateContent):
-    """Content whose selections are replaced with the current state of the project."""
-
-    project_id: int = Field(description="Project the selections belong to")
 
 
 # --- RENDERING ---

@@ -1,3 +1,5 @@
+import { getIconComponent, Icon, MetaTypeIcons } from "@components/icons";
+import { CodeSelector } from "@core/code";
 import {
   documentBlock,
   getDocumentUnit,
@@ -11,12 +13,14 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Alert, Box, Chip, CircularProgress, Divider, Stack, Tooltip, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { ReactNode } from "react";
-import { PromptTemplateEditorState } from "../_hooks/usePromptTemplateEditor";
+import { ReactNode, useCallback } from "react";
+import { PromptTemplateEditorState, SelectionItem, SelectionKind } from "../_hooks/usePromptTemplateEditor";
 import { DocumentBlockPanel } from "./DocumentBlockPanel";
 import { ExamplesPanel } from "./ExamplesPanel";
 import { OutputFormatBlockPanel } from "./OutputFormatBlockPanel";
+import { SelectionAutocomplete } from "./SelectionAutocomplete";
 import { SelectionPanel } from "./SelectionPanel";
+import { SelectionSyncDialog } from "./SelectionSyncDialog";
 
 interface BlockChip {
   // the chip's label
@@ -35,10 +39,12 @@ interface BlockSectionProps {
   onInsert: (block: string) => void;
   // the settings, shown while the prompt uses the block
   children: ReactNode;
+  // buttons in the upper right, shown while the prompt uses the block
+  actions?: ReactNode;
 }
 
 /** One block of the task: its chips insert it, its settings show while the prompt uses it. */
-function BlockSection({ title, description, chips, isRequired, onInsert, children }: BlockSectionProps) {
+function BlockSection({ title, description, chips, isRequired, onInsert, children, actions }: BlockSectionProps) {
   const isUsed = chips.some((chip) => chip.isUsed);
   const isMissing = isRequired && !isUsed;
   return (
@@ -48,6 +54,7 @@ function BlockSection({ title, description, chips, isRequired, onInsert, childre
           <Typography variant="subtitle2" sx={{ flexGrow: 1 }} color={isMissing ? "error" : undefined}>
             {title}
           </Typography>
+          {isUsed && actions}
           <Tooltip title={description}>
             <InfoOutlinedIcon fontSize="small" color="action" />
           </Tooltip>
@@ -74,6 +81,44 @@ function BlockSection({ title, description, chips, isRequired, onInsert, childre
   );
 }
 
+interface SelectionSyncActionProps {
+  editor: PromptTemplateEditorState;
+  kind: SelectionKind;
+  noun: string;
+}
+
+/** Synchronizes the codes, tags or metadata fields of a block with the project. */
+function SelectionSyncAction({ editor, kind, noun }: SelectionSyncActionProps) {
+  const { onPull, onPush } = editor;
+  const handlePull = useCallback((ids: number[]) => onPull(kind, ids), [onPull, kind]);
+  const handlePush = useCallback(
+    (ids: number[], onSuccess: () => void) => onPush(kind, ids, onSuccess),
+    [onPush, kind],
+  );
+  return (
+    <SelectionSyncDialog
+      noun={noun}
+      items={editor.selections[kind]}
+      renderIcon={SELECTION_ICONS[kind]}
+      onPull={handlePull}
+      onPush={handlePush}
+      isPushing={editor.isPushing}
+    />
+  );
+}
+
+// the icons of codes and tags in their color, as the explorers show them; deleted ones are grey
+const SELECTION_ICONS: Record<SelectionKind, (item: SelectionItem) => ReactNode> = {
+  codes: (item) =>
+    getIconComponent(Icon.CODE, { style: { color: item.color }, color: item.color ? undefined : "disabled" }),
+  tags: (item) =>
+    getIconComponent(Icon.TAG, { style: { color: item.color }, color: item.color ? undefined : "disabled" }),
+  metadataFields: (item) =>
+    getIconComponent(item.local.type ? MetaTypeIcons[item.local.type] : Icon.META_STRING, {
+      color: "action",
+    }),
+};
+
 interface PromptTemplateBlocksSidebarProps {
   editor: PromptTemplateEditorState;
   projectId: number;
@@ -81,7 +126,7 @@ interface PromptTemplateBlocksSidebarProps {
 
 /** The right of the Prompts page: every block of the task, expanded with its settings while the prompt uses it. */
 export function PromptTemplateBlocksSidebar({ editor, projectId }: PromptTemplateBlocksSidebarProps) {
-  const { template, draft, outdated, onInsert } = editor;
+  const { template, draft, onInsert, onEditSelection } = editor;
   const taskInfo = useQuery(promptTemplateQueries.taskInfo(template.task_type));
   if (taskInfo.isLoading) return <CircularProgress sx={{ m: 2 }} />;
   if (!taskInfo.data) return <Alert severity="error">Could not load the blocks of this task.</Alert>;
@@ -160,13 +205,28 @@ export function PromptTemplateBlocksSidebar({ editor, projectId }: PromptTemplat
           chips={[chip(PromptBlock._CODES_), chip(PromptBlock._CODE_NAMES_)]}
           isRequired={taskInfo.data.required_blocks.includes(PromptBlock._CODES_)}
           onInsert={onInsert}
+          actions={<SelectionSyncAction editor={editor} kind="codes" noun="code" />}
         >
           <SelectionPanel
-            label="Codes"
-            options={editor.codes.map((code) => ({ id: code.id, label: code.name }))}
-            selected={draft.codes.map((code) => ({ id: code.code_id, label: code.name }))}
-            outdatedIds={outdated.codes}
-            onChange={editor.onChangeCodes}
+            selector={
+              <CodeSelector
+                multiple
+                title="Codes"
+                size="small"
+                fullWidth
+                oneRow
+                selectableCodeIds={editor.codes.map((code) => code.id)}
+                value={draft.codes.map((code) => code.code_id)}
+                onChange={editor.onChangeCodes}
+              />
+            }
+            items={editor.selections.codes}
+            noun="code"
+            renderIcon={SELECTION_ICONS.codes}
+            onEdit={(definition) => onEditSelection("codes", definition)}
+            onRemove={(id) =>
+              editor.onChangeCodes(draft.codes.map((code) => code.code_id).filter((codeId) => codeId !== id))
+            }
           />
         </BlockSection>
       )}
@@ -200,13 +260,22 @@ export function PromptTemplateBlocksSidebar({ editor, projectId }: PromptTemplat
           chips={[chip(PromptBlock._TAGS_)]}
           isRequired={taskInfo.data.required_blocks.includes(PromptBlock._TAGS_)}
           onInsert={onInsert}
+          actions={<SelectionSyncAction editor={editor} kind="tags" noun="tag" />}
         >
           <SelectionPanel
-            label="Tags"
-            options={editor.tags.map((tag) => ({ id: tag.id, label: tag.name }))}
-            selected={draft.tags.map((tag) => ({ id: tag.tag_id, label: tag.name }))}
-            outdatedIds={outdated.tags}
-            onChange={editor.onChangeTags}
+            selector={
+              <SelectionAutocomplete
+                label="Tags"
+                options={editor.tags.map((tag) => ({ id: tag.id, label: tag.name }))}
+                selected={draft.tags.map((tag) => ({ id: tag.tag_id, label: tag.name }))}
+                onChange={editor.onChangeTags}
+              />
+            }
+            items={editor.selections.tags}
+            noun="tag"
+            renderIcon={SELECTION_ICONS.tags}
+            onEdit={(definition) => onEditSelection("tags", definition)}
+            onRemove={(id) => editor.onChangeTags(draft.tags.map((tag) => tag.tag_id).filter((tagId) => tagId !== id))}
           />
         </BlockSection>
       )}
@@ -217,13 +286,26 @@ export function PromptTemplateBlocksSidebar({ editor, projectId }: PromptTemplat
           chips={[chip(PromptBlock._METADATA_FIELDS_)]}
           isRequired={taskInfo.data.required_blocks.includes(PromptBlock._METADATA_FIELDS_)}
           onInsert={onInsert}
+          actions={<SelectionSyncAction editor={editor} kind="metadataFields" noun="metadata field" />}
         >
           <SelectionPanel
-            label="Metadata fields"
-            options={editor.metadataFields.map((field) => ({ id: field.id, label: field.key }))}
-            selected={draft.metadata_fields.map((field) => ({ id: field.project_metadata_id, label: field.key }))}
-            outdatedIds={outdated.metadataFields}
-            onChange={editor.onChangeMetadataFields}
+            selector={
+              <SelectionAutocomplete
+                label="Metadata fields"
+                options={editor.metadataFields.map((field) => ({ id: field.id, label: field.key }))}
+                selected={draft.metadata_fields.map((field) => ({ id: field.project_metadata_id, label: field.key }))}
+                onChange={editor.onChangeMetadataFields}
+              />
+            }
+            items={editor.selections.metadataFields}
+            noun="metadata field"
+            renderIcon={SELECTION_ICONS.metadataFields}
+            onEdit={(definition) => onEditSelection("metadataFields", definition)}
+            onRemove={(id) =>
+              editor.onChangeMetadataFields(
+                draft.metadata_fields.map((field) => field.project_metadata_id).filter((fieldId) => fieldId !== id),
+              )
+            }
           />
         </BlockSection>
       )}

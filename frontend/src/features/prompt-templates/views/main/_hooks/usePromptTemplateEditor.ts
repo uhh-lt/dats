@@ -10,6 +10,7 @@ import {
 import { TagHooks } from "@core/tag";
 import { CodeRead } from "@models/CodeRead";
 import { DocType } from "@models/DocType";
+import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { PromptCode } from "@models/PromptCode";
 import { PromptMetadataField } from "@models/PromptMetadataField";
@@ -58,8 +59,79 @@ function select<S, P>(
   });
 }
 
-const isOutdated = <S>(snapshot: S, current: S | undefined) =>
-  current === undefined || JSON.stringify(snapshot) !== JSON.stringify(current);
+export type SelectionKind = "codes" | "tags" | "metadataFields";
+
+/** A code, tag or metadata field as the prompt or the project defines it: name (a field's key) and description. */
+export interface SelectionDefinition {
+  id: number;
+  name: string;
+  description: string;
+  // the metatype of a metadata field; pull copies it, but it is neither edited in the prompt nor pushed
+  type?: MetaType;
+}
+
+/** A selection of the draft with the project's current definition; project is undefined if it was deleted. */
+export interface SelectionItem {
+  local: SelectionDefinition;
+  project: SelectionDefinition | undefined;
+  // the color of the project's code or tag
+  color?: string;
+}
+
+export const isDifferent = ({ local, project }: SelectionItem): boolean =>
+  project !== undefined && (local.name !== project.name || local.description !== project.description);
+
+const codeDefinition = (code: PromptCode): SelectionDefinition => ({
+  id: code.code_id,
+  name: code.name,
+  description: code.description,
+});
+
+const tagDefinition = (tag: PromptTag): SelectionDefinition => ({
+  id: tag.tag_id,
+  name: tag.name,
+  description: tag.description,
+});
+
+const metadataFieldDefinition = (field: PromptMetadataField): SelectionDefinition => ({
+  id: field.project_metadata_id,
+  name: field.key,
+  description: field.description,
+  type: field.metatype,
+});
+
+/** Replace the draft's selections of one kind with the definitions of the same id. */
+function replaceSelections(draft: PromptDraft, kind: SelectionKind, definitions: SelectionDefinition[]): PromptDraft {
+  const byId = new Map(definitions.map((definition) => [definition.id, definition]));
+  switch (kind) {
+    case "codes":
+      return {
+        ...draft,
+        codes: draft.codes.map((code) => {
+          const definition = byId.get(code.code_id);
+          return definition ? { ...code, name: definition.name, description: definition.description } : code;
+        }),
+      };
+    case "tags":
+      return {
+        ...draft,
+        tags: draft.tags.map((tag) => {
+          const definition = byId.get(tag.tag_id);
+          return definition ? { ...tag, name: definition.name, description: definition.description } : tag;
+        }),
+      };
+    case "metadataFields":
+      return {
+        ...draft,
+        metadata_fields: draft.metadata_fields.map((field) => {
+          const definition = byId.get(field.project_metadata_id);
+          if (!definition) return field;
+          const metatype = definition.type ?? field.metatype;
+          return { ...field, key: definition.name, description: definition.description, metatype };
+        }),
+      };
+  }
+}
 
 /** Everything the editor and the blocks sidebar of one template show and do. */
 export interface PromptTemplateEditorState {
@@ -71,12 +143,11 @@ export interface PromptTemplateEditorState {
   draft: PromptDraft;
   snapshot: PromptTemplateSnapshot;
   isEdited: boolean;
-  // the project data the selection blocks can show, and the selections that changed since they were saved
+  // the project data the selection blocks can show, and the draft's selections with the project's definitions
   codes: CodeRead[];
   tags: TagRead[];
   metadataFields: ProjectMetadataRead[];
-  outdated: { codes: Set<number>; tags: Set<number>; metadataFields: Set<number> };
-  numOutdated: number;
+  selections: Record<SelectionKind, SelectionItem[]>;
   // editing
   view: EditorView;
   onChangeView: (view: EditorView) => void;
@@ -88,12 +159,15 @@ export interface PromptTemplateEditorState {
   onChangeTags: (ids: number[]) => void;
   onChangeMetadataFields: (ids: number[]) => void;
   onChangeExamples: (examples: PromptExample[]) => void;
+  // the prompt's own definitions of its codes, tags and metadata fields
+  onEditSelection: (kind: SelectionKind, definition: SelectionDefinition) => void;
+  onPull: (kind: SelectionKind, ids: number[]) => void;
+  onPush: (kind: SelectionKind, ids: number[], onSuccess: () => void) => void;
+  isPushing: boolean;
   // actions
   onDiscard: () => void;
   onSave: () => void;
   isSaving: boolean;
-  onRefresh: () => void;
-  isRefreshing: boolean;
   onDuplicate: () => void;
   isDuplicating: boolean;
   onRename: (name: string) => void;
@@ -151,35 +225,26 @@ export function usePromptTemplateEditor(
     () => (metadata.data ?? []).filter((field) => field.doctype === DocType.TEXT && !field.read_only),
     [metadata.data],
   );
-  const outdated = useMemo(
-    () => ({
-      codes: new Set(
-        (draft?.codes ?? [])
-          .filter((code) => {
-            const current = codes.data?.find((candidate) => candidate.id === code.code_id);
-            return isOutdated<PromptCode>(code, current && toPromptCode(current));
-          })
-          .map((code) => code.code_id),
-      ),
-      tags: new Set(
-        (draft?.tags ?? [])
-          .filter((tag) => {
-            const current = tags.data?.find((candidate) => candidate.id === tag.tag_id);
-            return isOutdated<PromptTag>(tag, current && toPromptTag(current));
-          })
-          .map((tag) => tag.tag_id),
-      ),
-      metadataFields: new Set(
-        (draft?.metadata_fields ?? [])
-          .filter((field) => {
-            const current = metadataFields.find((candidate) => candidate.id === field.project_metadata_id);
-            return isOutdated<PromptMetadataField>(field, current && toPromptMetadataField(current));
-          })
-          .map((field) => field.project_metadata_id),
-      ),
-    }),
-    [draft?.codes, draft?.tags, draft?.metadata_fields, codes.data, tags.data, metadataFields],
-  );
+  const selections = useMemo(() => {
+    const projectCodes = new Map((codes.data ?? []).map((code) => [code.id, codeDefinition(toPromptCode(code))]));
+    const projectTags = new Map((tags.data ?? []).map((tag) => [tag.id, tagDefinition(toPromptTag(tag))]));
+    const projectFields = new Map(
+      metadataFields.map((field) => [field.id, metadataFieldDefinition(toPromptMetadataField(field))]),
+    );
+    const codeColors = new Map((codes.data ?? []).map((code) => [code.id, code.color]));
+    const tagColors = new Map((tags.data ?? []).map((tag) => [tag.id, tag.color]));
+    const items = (
+      locals: SelectionDefinition[],
+      project: Map<number, SelectionDefinition>,
+      colors?: Map<number, string>,
+    ): SelectionItem[] =>
+      locals.map((local) => ({ local, project: project.get(local.id), color: colors?.get(local.id) }));
+    return {
+      codes: items((draft?.codes ?? []).map(codeDefinition), projectCodes, codeColors),
+      tags: items((draft?.tags ?? []).map(tagDefinition), projectTags, tagColors),
+      metadataFields: items((draft?.metadata_fields ?? []).map(metadataFieldDefinition), projectFields),
+    };
+  }, [draft?.codes, draft?.tags, draft?.metadata_fields, codes.data, tags.data, metadataFields]);
 
   // edit the draft
   const [view, onChangeView] = useState<EditorView>("editor");
@@ -260,15 +325,58 @@ export function usePromptTemplateEditor(
     [draft, onChangePrompt],
   );
 
-  // update the selections to the current project state
-  const { mutate: refreshMutation, isPending: isRefreshing } = PromptTemplateHooks.useRefreshPromptContent();
-  const onRefresh = useCallback(() => {
-    if (!draft) return;
-    refreshMutation(
-      { requestBody: { ...draft, project_id: projectId } },
-      { onSuccess: (content) => setDraft(() => toDraft(content)) },
-    );
-  }, [refreshMutation, draft, projectId, setDraft]);
+  // edit the prompt's own definitions; they never change the project
+  const onEditSelection = useCallback(
+    (kind: SelectionKind, definition: SelectionDefinition) =>
+      setDraft((current) => replaceSelections(current, kind, [definition])),
+    [setDraft],
+  );
+
+  // pull copies the project's definitions into the draft
+  const onPull = useCallback(
+    (kind: SelectionKind, ids: number[]) => {
+      const pulled = selections[kind].flatMap((item) =>
+        item.project && ids.includes(item.local.id) ? [item.project] : [],
+      );
+      setDraft((current) => replaceSelections(current, kind, pulled));
+    },
+    [selections, setDraft],
+  );
+
+  // push writes the draft's definitions into the project's codes, tags or metadata fields
+  const { mutate: updateCodesMutation, isPending: isPushingCodes } = CodeHooks.useUpdateBulkCode();
+  const { mutate: updateTagsMutation, isPending: isPushingTags } = TagHooks.useUpdateBulkTag();
+  const { mutate: updateMetadataMutation, isPending: isPushingMetadata } =
+    ProjectMetadataHooks.useUpdateBulkProjectMetadata();
+  const onPush = useCallback(
+    (kind: SelectionKind, ids: number[], onSuccess: () => void) => {
+      const pushed = selections[kind].filter((item) => ids.includes(item.local.id)).map((item) => item.local);
+      switch (kind) {
+        case "codes":
+          return updateCodesMutation(
+            { requestBody: pushed.map(({ id, name, description }) => ({ code_id: id, name, description })) },
+            { onSuccess },
+          );
+        case "tags":
+          return updateTagsMutation(
+            { requestBody: pushed.map(({ id, name, description }) => ({ tag_id: id, name, description })) },
+            { onSuccess },
+          );
+        case "metadataFields":
+          return updateMetadataMutation(
+            {
+              requestBody: pushed.map(({ id, name, description }) => ({
+                project_metadata_id: id,
+                key: name,
+                description,
+              })),
+            },
+            { onSuccess },
+          );
+      }
+    },
+    [selections, updateCodesMutation, updateTagsMutation, updateMetadataMutation],
+  );
 
   // save the draft as the next version, which is shown afterwards
   const { mutate: createVersionMutation, isPending: isSaving } = PromptTemplateHooks.useCreatePromptTemplateVersion();
@@ -322,8 +430,7 @@ export function usePromptTemplateEditor(
     codes: codes.data ?? [],
     tags: tags.data ?? [],
     metadataFields,
-    outdated,
-    numOutdated: outdated.codes.size + outdated.tags.size + outdated.metadataFields.size,
+    selections,
     view,
     onChangeView,
     inputRef,
@@ -334,11 +441,13 @@ export function usePromptTemplateEditor(
     onChangeTags,
     onChangeMetadataFields,
     onChangeExamples,
+    onEditSelection,
+    onPull,
+    onPush,
+    isPushing: isPushingCodes || isPushingTags || isPushingMetadata,
     onDiscard,
     onSave,
     isSaving,
-    onRefresh,
-    isRefreshing,
     onDuplicate,
     isDuplicating,
     onRename,

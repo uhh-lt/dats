@@ -1,3 +1,4 @@
+import { oneRowChipsAutocompleteSx } from "@components/oneRowChipsSx";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { CodeRead } from "@models/CodeRead";
 import {
@@ -46,6 +47,8 @@ interface MultipleCodeSelectorProps extends CodeSelectorBaseProps {
   onChange: (codeIds: number[]) => void;
   /** Shows "Select all" and "Clear" buttons below the field. */
   showSelectAll?: boolean;
+  /** Keeps the field in one row: one chip and "+N more" (instead of three chips). */
+  oneRow?: boolean;
 }
 
 export type CodeSelectorProps = SingleCodeSelectorProps | MultipleCodeSelectorProps;
@@ -163,8 +166,10 @@ const MultipleCodeSelector = memo(
     value,
     onChange,
     showSelectAll,
+    oneRow,
     disabled,
     fullWidth,
+    sx,
     ...props
   }: MultipleCodeSelectorProps) => {
     const { options, optionById, isLoading } = useCodeOptions(selectableCodeIds);
@@ -190,7 +195,8 @@ const MultipleCodeSelector = memo(
         filterOptions={filterCodeOptions}
         getOptionLabel={getOptionLabel}
         isOptionEqualToValue={isOptionEqualToValue}
-        limitTags={MAX_VISIBLE_CODES}
+        sx={oneRow ? [oneRowChipsAutocompleteSx, ...(Array.isArray(sx) ? sx : [sx])] : sx}
+        limitTags={oneRow ? 1 : MAX_VISIBLE_CODES}
         getLimitTagsText={(more) => `+${more} more`}
         renderOption={(optionProps, option, state) => renderCodeOption(optionProps, option, state, true)}
         renderTags={(tags, getTagProps) =>

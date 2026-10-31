@@ -2,7 +2,6 @@ import re
 
 from sqlalchemy.orm import Session
 
-from common.meta_type_enum import MetaType
 from common.singleton_meta import SingletonMeta
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -15,14 +14,11 @@ from core.prompt_template.prompt_template_dto import (
     DocumentUnitInfo,
     OutputFormatInfo,
     PromptBlockInfo,
-    PromptCode,
     PromptExample,
     PromptExamplesCreate,
     PromptExampleSpan,
-    PromptMetadataField,
     PromptPreview,
     PromptPreviewRequest,
-    PromptTag,
     PromptTaskInfo,
     PromptTemplateContent,
     PromptTemplateCreate,
@@ -307,81 +303,6 @@ class PromptTemplateService(metaclass=SingletonMeta):
             ],
             required_blocks=list(spec.required_blocks),
             example_kind=spec.example_kind,
-        )
-
-    def refresh_content(
-        self, *, db: Session, project_id: int, content: PromptTemplateContent
-    ) -> PromptTemplateContent:
-        """Replace the selections of a prompt with the current state of the project.
-
-        Codes, tags and metadata fields get their current names and descriptions,
-        examples are created again from their annotations. Selections whose
-        project data was deleted are dropped.
-        """
-        # 1) codes, tags and metadata fields
-        project = crud_project.read(db=db, id=project_id)
-        codes = {code.id: code for code in project.codes}
-        tags = {tag.id: tag for tag in project.tags}
-        fields = {field.id: field for field in project.metadata_}
-        refreshed_codes = [
-            PromptCode(
-                code_id=code.code_id,
-                name=codes[code.code_id].name,
-                description=codes[code.code_id].description or "",
-            )
-            for code in content.codes
-            if code.code_id in codes
-        ]
-        refreshed_tags = [
-            PromptTag(
-                tag_id=tag.tag_id,
-                name=tags[tag.tag_id].name,
-                description=tags[tag.tag_id].description or "",
-            )
-            for tag in content.tags
-            if tag.tag_id in tags
-        ]
-        refreshed_fields = [
-            PromptMetadataField(
-                project_metadata_id=field.project_metadata_id,
-                key=fields[field.project_metadata_id].key,
-                description=fields[field.project_metadata_id].description,
-                metatype=MetaType(fields[field.project_metadata_id].metatype),
-            )
-            for field in content.metadata_fields
-            if field.project_metadata_id in fields
-        ]
-
-        # 2) examples, from the annotations that still exist
-        refreshed_examples: list[PromptExample] = []
-        for kind, crud in (
-            (PromptExampleKind.SPAN, crud_span_anno),
-            (PromptExampleKind.SENTENCE, crud_sentence_anno),
-        ):
-            annotation_ids = [
-                annotation_id
-                for example in content.examples
-                if example.kind == kind
-                for annotation_id in example.source_annotation_ids
-                if crud.exists(db=db, id=annotation_id)
-            ]
-            if annotation_ids:
-                refreshed_examples += self.create_prompt_examples(
-                    db=db,
-                    create_dto=PromptExamplesCreate(
-                        project_id=project_id,
-                        kind=kind,
-                        annotation_ids=list(dict.fromkeys(annotation_ids)),
-                    ),
-                )
-
-        return PromptTemplateContent(
-            prompt=content.prompt,
-            settings=content.settings,
-            codes=refreshed_codes,
-            examples=refreshed_examples,
-            tags=refreshed_tags,
-            metadata_fields=refreshed_fields,
         )
 
     def preview_prompt(

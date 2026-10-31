@@ -10,6 +10,7 @@ from core.metadata.project_metadata_dto import (
     ProjectMetadataCreate,
     ProjectMetadataRead,
     ProjectMetadataUpdate,
+    ProjectMetadataUpdateBulk,
 )
 from core.metadata.project_metadata_service import ProjectMetadataService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -109,6 +110,28 @@ def update_by_id(
         DATSEvent.PROJECT_METADATA_UPDATED, result, project_id=result.project_id
     )
     return result
+
+
+@router.patch(
+    "/bulk/update",
+    response_model=list[ProjectMetadataRead],
+    summary="Updates the Metadata with the given IDs.",
+)
+def update_project_metadata_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    metadata: list[ProjectMetadataUpdateBulk],
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> list[ProjectMetadataRead]:
+    authz_user.assert_in_same_project_as_many(
+        Crud.PROJECT_METADATA, [m.project_metadata_id for m in metadata]
+    )
+
+    results = ProjectMetadataService().update_multi(db=db, update_dtos=metadata)
+    if results:
+        ws.emit_dtos_to_projects(DATSEvent.PROJECT_METADATA_UPDATED_BATCH, results)
+    return results
 
 
 # --- delete operations

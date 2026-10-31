@@ -4,11 +4,9 @@ import { getIconComponent, Icon } from "@components/icons";
 import { PROMPT_TEXT_STYLE, PromptPage } from "@core/prompt-template";
 import EditIcon from "@mui/icons-material/Edit";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import SaveIcon from "@mui/icons-material/Save";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -119,13 +117,6 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
           </ToggleButton>
         </ToggleButtonGroup>
         <Divider orientation="vertical" flexItem variant="middle" />
-        <Tooltip title="Refresh selections: replace the codes, examples, tags and metadata fields with their current state in the project">
-          <span>
-            <IconButton size="small" onClick={editor.onRefresh} disabled={editor.isRefreshing}>
-              <RefreshIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
         <Tooltip title="Duplicate: copy the prompt and selections shown here into a new prompt">
           <span>
             <IconButton size="small" onClick={editor.onDuplicate} disabled={editor.isDuplicating}>
@@ -168,20 +159,6 @@ export function PromptTemplateEditor({ editor, projectId }: PromptTemplateEditor
           </Typography>
         )}
       </DATSToolbar>
-      {editor.numOutdated > 0 && (
-        <Alert
-          severity="warning"
-          sx={{ borderRadius: 0 }}
-          action={
-            <Button color="inherit" size="small" onClick={editor.onRefresh} loading={editor.isRefreshing}>
-              Refresh
-            </Button>
-          }
-        >
-          {editor.numOutdated} selection(s) changed in the project since this version was saved. The prompt keeps the
-          saved state until you refresh it.
-        </Alert>
-      )}
       {editor.view === "editor" ? (
         <Box className="myFlexFillAllContainer">
           <PromptPage>

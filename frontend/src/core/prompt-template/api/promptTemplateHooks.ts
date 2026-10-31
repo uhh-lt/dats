@@ -91,16 +91,6 @@ const useCreatePromptExamples = () =>
     mutationFn: PromptTemplateService.createExamples,
   });
 
-// replaces the selections of the editor's draft with the current state of the project
-const useRefreshPromptContent = () =>
-  useMutation({
-    mutationKey: [...promptTemplateQueries.all(), "refreshPromptContent"],
-    mutationFn: PromptTemplateService.refresh,
-    meta: {
-      successMessage: "Updated the codes, examples, tags and metadata fields to the current project state",
-    },
-  });
-
 export const PromptTemplateHooks = {
   useGetAllPromptTemplates,
   useGetPromptTemplate,
@@ -109,5 +99,4 @@ export const PromptTemplateHooks = {
   useCreatePromptTemplateVersion,
   useUpdatePromptTemplate,
   useCreatePromptExamples,
-  useRefreshPromptContent,
 };
