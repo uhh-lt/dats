@@ -1,8 +1,5 @@
-import { handleDATSEvent } from "@api/cache-sync";
 import { PromptTemplateService } from "@api/services/PromptTemplateService";
-import type { PromptSelections } from "@models/PromptSelections";
 import type { PromptTemplateRead } from "@models/PromptTemplateRead";
-import type { PushedPromptSelections } from "@models/PushedPromptSelections";
 import type { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { promptTemplateQueries } from "./promptTemplateQueries";
@@ -94,40 +91,6 @@ const useCreatePromptExamples = () =>
     mutationFn: PromptTemplateService.createExamples,
   });
 
-// returns the project's definitions of selections; the result only lives in the editor until it is saved
-const usePullSelections = () =>
-  useMutation({
-    mutationKey: [...promptTemplateQueries.all(), "pullSelections"],
-    mutationFn: PromptTemplateService.pullSelections,
-    meta: {
-      successMessage: (pulled: PromptSelections) =>
-        `Pulled ${countSelections(pulled)} definition(s) from the project into the prompt`,
-    },
-  });
-
-// writes the prompt's definitions into the project's codes, tags and metadata fields
-const usePushSelections = () =>
-  useMutation({
-    mutationKey: [...promptTemplateQueries.all(), "pushSelections"],
-    mutationFn: PromptTemplateService.pushSelections,
-    // a push updates several entities, so each one is forwarded like the result of its own update mutation
-    onSuccess: (pushed: PushedPromptSelections) => {
-      pushed.codes.forEach((payload) => handleDATSEvent({ type: "CODE_UPDATED", payload }, "mutation"));
-      pushed.tags.forEach((payload) => handleDATSEvent({ type: "TAG_UPDATED", payload }, "mutation"));
-      pushed.metadata_fields.forEach((payload) =>
-        handleDATSEvent({ type: "PROJECT_METADATA_UPDATED", payload }, "mutation"),
-      );
-    },
-    meta: {
-      successMessage: (pushed: PushedPromptSelections) =>
-        `Pushed ${countSelections(pushed)} definition(s) from the prompt to the project`,
-      errorMessage: "Could not push to the project",
-    },
-  });
-
-const countSelections = (selections: PromptSelections | PushedPromptSelections) =>
-  (selections.codes?.length ?? 0) + (selections.tags?.length ?? 0) + (selections.metadata_fields?.length ?? 0);
-
 export const PromptTemplateHooks = {
   useGetAllPromptTemplates,
   useGetPromptTemplate,
@@ -136,6 +99,4 @@ export const PromptTemplateHooks = {
   useCreatePromptTemplateVersion,
   useUpdatePromptTemplate,
   useCreatePromptExamples,
-  usePullSelections,
-  usePushSelections,
 };

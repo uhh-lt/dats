@@ -96,6 +96,22 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       }
       break;
     }
+    case "CODE_UPDATED_BATCH": {
+      // see CODE_UPDATED: an `enabled` flip cascades in the DB, so refetch all codes
+      let anyFlipped = false;
+      event.payload.forEach((code) => {
+        const queryKey = codeQueries.byProject(code.project_id).queryKey;
+        const previous = queryClient.getQueryData(queryKey)?.[code.id];
+        upsertMapItem(queryKey, code);
+        if (previous && previous.enabled !== code.enabled) {
+          anyFlipped = true;
+        }
+      });
+      if (anyFlipped) {
+        queryClient.invalidateQueries({ queryKey: codeQueries.byProjectScope() });
+      }
+      break;
+    }
     case "CODE_DELETED": {
       const code = event.payload;
       removeMapItem(codeQueries.byProject(code.project_id).queryKey, code.id);
@@ -116,6 +132,9 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
     case "TAG_UPDATED":
       replaceListItem(tagQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      break;
+    case "TAG_UPDATED_BATCH":
+      event.payload.forEach((tag) => replaceListItem(tagQueries.byProject(tag.project_id).queryKey, tag));
       break;
     case "TAG_DELETED": {
       const tag = event.payload;
@@ -234,6 +253,12 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
     case "PROJECT_METADATA_UPDATED":
       upsertMapItem(projectMetadataQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      queryClient.invalidateQueries({ queryKey: sdocMetadataQueries.bySdocScope() });
+      break;
+    case "PROJECT_METADATA_UPDATED_BATCH":
+      event.payload.forEach((metadata) =>
+        upsertMapItem(projectMetadataQueries.byProject(metadata.project_id).queryKey, metadata),
+      );
       queryClient.invalidateQueries({ queryKey: sdocMetadataQueries.bySdocScope() });
       break;
     case "PROJECT_METADATA_DELETED": {

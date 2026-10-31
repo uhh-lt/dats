@@ -90,10 +90,7 @@ interface SelectionSyncActionProps {
 /** Synchronizes the codes, tags or metadata fields of a block with the project. */
 function SelectionSyncAction({ editor, kind, noun }: SelectionSyncActionProps) {
   const { onPull, onPush } = editor;
-  const handlePull = useCallback(
-    (ids: number[], onSuccess: () => void) => onPull(kind, ids, onSuccess),
-    [onPull, kind],
-  );
+  const handlePull = useCallback((ids: number[]) => onPull(kind, ids), [onPull, kind]);
   const handlePush = useCallback(
     (ids: number[], onSuccess: () => void) => onPush(kind, ids, onSuccess),
     [onPush, kind],
@@ -104,7 +101,6 @@ function SelectionSyncAction({ editor, kind, noun }: SelectionSyncActionProps) {
       items={editor.selections[kind]}
       renderIcon={SELECTION_ICONS[kind]}
       onPull={handlePull}
-      isPulling={editor.isPulling}
       onPush={handlePush}
       isPushing={editor.isPushing}
     />

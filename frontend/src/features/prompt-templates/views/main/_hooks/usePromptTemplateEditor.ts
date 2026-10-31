@@ -14,7 +14,6 @@ import { MetaType } from "@models/MetaType";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { PromptCode } from "@models/PromptCode";
 import { PromptMetadataField } from "@models/PromptMetadataField";
-import { PromptSelections } from "@models/PromptSelections";
 import { PromptSettings } from "@models/PromptSettings";
 import { PromptTag } from "@models/PromptTag";
 import { PromptTemplateContent } from "@models/PromptTemplateContent";
@@ -62,12 +61,12 @@ function select<S, P>(
 
 export type SelectionKind = "codes" | "tags" | "metadataFields";
 
-/** What pull and push compare of a code, tag or metadata field: name (a field's key), description and type. */
+/** A code, tag or metadata field as the prompt or the project defines it: name (a field's key) and description. */
 export interface SelectionDefinition {
   id: number;
   name: string;
   description: string;
-  // the metatype of a metadata field; it is not edited in the prompt
+  // the metatype of a metadata field; pull copies it, but it is neither edited in the prompt nor pushed
   type?: MetaType;
 }
 
@@ -80,8 +79,7 @@ export interface SelectionItem {
 }
 
 export const isDifferent = ({ local, project }: SelectionItem): boolean =>
-  project !== undefined &&
-  (local.name !== project.name || local.description !== project.description || local.type !== project.type);
+  project !== undefined && (local.name !== project.name || local.description !== project.description);
 
 const codeDefinition = (code: PromptCode): SelectionDefinition => ({
   id: code.code_id,
@@ -102,44 +100,35 @@ const metadataFieldDefinition = (field: PromptMetadataField): SelectionDefinitio
   type: field.metatype,
 });
 
-/** The draft's selections of one kind with the given ids, as pull and push send them. */
-function selectionsOf(draft: PromptDraft, kind: SelectionKind, ids: number[]): PromptSelections {
-  const wanted = new Set(ids);
+/** Replace the draft's selections of one kind with the definitions of the same id. */
+function replaceSelections(draft: PromptDraft, kind: SelectionKind, definitions: SelectionDefinition[]): PromptDraft {
+  const byId = new Map(definitions.map((definition) => [definition.id, definition]));
   switch (kind) {
     case "codes":
-      return { codes: draft.codes.filter((code) => wanted.has(code.code_id)) };
+      return {
+        ...draft,
+        codes: draft.codes.map((code) => {
+          const definition = byId.get(code.code_id);
+          return definition ? { ...code, name: definition.name, description: definition.description } : code;
+        }),
+      };
     case "tags":
-      return { tags: draft.tags.filter((tag) => wanted.has(tag.tag_id)) };
-    case "metadataFields":
-      return { metadata_fields: draft.metadata_fields.filter((field) => wanted.has(field.project_metadata_id)) };
-  }
-}
-
-/** Replace the draft's selections that have the id of a replacement, keeping their order. */
-function replaceSelections(draft: PromptDraft, replacements: PromptSelections): PromptDraft {
-  const replace = <S>(current: S[], others: S[] | undefined, id: (selection: S) => number) =>
-    current.map((selection) => others?.find((other) => id(other) === id(selection)) ?? selection);
-  return {
-    ...draft,
-    codes: replace(draft.codes, replacements.codes, (code) => code.code_id),
-    tags: replace(draft.tags, replacements.tags, (tag) => tag.tag_id),
-    metadata_fields: replace(draft.metadata_fields, replacements.metadata_fields, (field) => field.project_metadata_id),
-  };
-}
-
-/** The draft's selection of one kind with a new name (key) and description. */
-function editedSelection(draft: PromptDraft, kind: SelectionKind, definition: SelectionDefinition): PromptSelections {
-  const { id, name, description } = definition;
-  switch (kind) {
-    case "codes":
-      return { codes: [{ code_id: id, name, description }] };
-    case "tags":
-      return { tags: [{ tag_id: id, name, description }] };
+      return {
+        ...draft,
+        tags: draft.tags.map((tag) => {
+          const definition = byId.get(tag.tag_id);
+          return definition ? { ...tag, name: definition.name, description: definition.description } : tag;
+        }),
+      };
     case "metadataFields":
       return {
-        metadata_fields: draft.metadata_fields
-          .filter((field) => field.project_metadata_id === id)
-          .map((field) => ({ ...field, key: name, description })),
+        ...draft,
+        metadata_fields: draft.metadata_fields.map((field) => {
+          const definition = byId.get(field.project_metadata_id);
+          if (!definition) return field;
+          const metatype = definition.type ?? field.metatype;
+          return { ...field, key: definition.name, description: definition.description, metatype };
+        }),
       };
   }
 }
@@ -172,8 +161,7 @@ export interface PromptTemplateEditorState {
   onChangeExamples: (examples: PromptExample[]) => void;
   // the prompt's own definitions of its codes, tags and metadata fields
   onEditSelection: (kind: SelectionKind, definition: SelectionDefinition) => void;
-  onPull: (kind: SelectionKind, ids: number[], onSuccess: () => void) => void;
-  isPulling: boolean;
+  onPull: (kind: SelectionKind, ids: number[]) => void;
   onPush: (kind: SelectionKind, ids: number[], onSuccess: () => void) => void;
   isPushing: boolean;
   // actions
@@ -340,34 +328,54 @@ export function usePromptTemplateEditor(
   // edit the prompt's own definitions; they never change the project
   const onEditSelection = useCallback(
     (kind: SelectionKind, definition: SelectionDefinition) =>
-      setDraft((current) => replaceSelections(current, editedSelection(current, kind, definition))),
+      setDraft((current) => replaceSelections(current, kind, [definition])),
     [setDraft],
   );
 
-  // pull replaces the prompt's definitions with the project's, push the project's with the prompt's
-  const { mutate: pullMutation, isPending: isPulling } = PromptTemplateHooks.usePullSelections();
+  // pull copies the project's definitions into the draft
   const onPull = useCallback(
-    (kind: SelectionKind, ids: number[], onSuccess: () => void) => {
-      if (!draft) return;
-      pullMutation(
-        { requestBody: { project_id: projectId, ...selectionsOf(draft, kind, ids) } },
-        {
-          onSuccess: (pulled) => {
-            setDraft((current) => replaceSelections(current, pulled));
-            onSuccess();
-          },
-        },
+    (kind: SelectionKind, ids: number[]) => {
+      const pulled = selections[kind].flatMap((item) =>
+        item.project && ids.includes(item.local.id) ? [item.project] : [],
       );
+      setDraft((current) => replaceSelections(current, kind, pulled));
     },
-    [pullMutation, draft, projectId, setDraft],
+    [selections, setDraft],
   );
-  const { mutate: pushMutation, isPending: isPushing } = PromptTemplateHooks.usePushSelections();
+
+  // push writes the draft's definitions into the project's codes, tags or metadata fields
+  const { mutate: updateCodesMutation, isPending: isPushingCodes } = CodeHooks.useUpdateBulkCode();
+  const { mutate: updateTagsMutation, isPending: isPushingTags } = TagHooks.useUpdateBulkTag();
+  const { mutate: updateMetadataMutation, isPending: isPushingMetadata } =
+    ProjectMetadataHooks.useUpdateBulkProjectMetadata();
   const onPush = useCallback(
     (kind: SelectionKind, ids: number[], onSuccess: () => void) => {
-      if (!draft) return;
-      pushMutation({ requestBody: { project_id: projectId, ...selectionsOf(draft, kind, ids) } }, { onSuccess });
+      const pushed = selections[kind].filter((item) => ids.includes(item.local.id)).map((item) => item.local);
+      switch (kind) {
+        case "codes":
+          return updateCodesMutation(
+            { requestBody: pushed.map(({ id, name, description }) => ({ code_id: id, name, description })) },
+            { onSuccess },
+          );
+        case "tags":
+          return updateTagsMutation(
+            { requestBody: pushed.map(({ id, name, description }) => ({ tag_id: id, name, description })) },
+            { onSuccess },
+          );
+        case "metadataFields":
+          return updateMetadataMutation(
+            {
+              requestBody: pushed.map(({ id, name, description }) => ({
+                project_metadata_id: id,
+                key: name,
+                description,
+              })),
+            },
+            { onSuccess },
+          );
+      }
     },
-    [pushMutation, draft, projectId],
+    [selections, updateCodesMutation, updateTagsMutation, updateMetadataMutation],
   );
 
   // save the draft as the next version, which is shown afterwards
@@ -435,9 +443,8 @@ export function usePromptTemplateEditor(
     onChangeExamples,
     onEditSelection,
     onPull,
-    isPulling,
     onPush,
-    isPushing,
+    isPushing: isPushingCodes || isPushingTags || isPushingMetadata,
     onDiscard,
     onSave,
     isSaving,

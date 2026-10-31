@@ -9,6 +9,7 @@ import type { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiL
 import type { TagCreate } from "@models/TagCreate";
 import type { TagRead } from "@models/TagRead";
 import type { TagUpdate } from "@models/TagUpdate";
+import type { TagUpdateBulk } from "@models/TagUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -134,6 +135,26 @@ export class TagService {
       path: {
         tag_id: tagId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Tags with the given IDs.
+   * @returns TagRead Successful Response
+   * @throws ApiError
+   */
+  public static updateTagsBulk({
+    requestBody,
+  }: {
+    requestBody: Array<TagUpdateBulk>;
+  }): CancelablePromise<Array<TagRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/tag/bulk/update_tags",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

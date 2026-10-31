@@ -55,6 +55,18 @@ const useUpdateCode = () =>
     },
   });
 
+const useUpdateBulkCode = () =>
+  useMutation({
+    mutationKey: [...codeQueries.all(), "updateBulkCode"],
+    mutationFn: CodeService.updateCodesBulk,
+    meta: {
+      datsEvent: "CODE_UPDATED_BATCH",
+      successMessage: (codes: CodeRead[]) => `Updated ${codes.length} code(s)`,
+      errorMessage: (error: { status: number }) =>
+        error.status === 409 ? "A code name is already taken" : "Could not update the codes",
+    },
+  });
+
 const useDeleteCode = () => {
   return useMutation({
     mutationKey: [...codeQueries.all(), "deleteCode"],
@@ -73,5 +85,6 @@ export const CodeHooks = {
   useGetEnabledCodes,
   useCreateCode,
   useUpdateCode,
+  useUpdateBulkCode,
   useDeleteCode,
 };
