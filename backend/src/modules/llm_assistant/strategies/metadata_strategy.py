@@ -5,8 +5,8 @@ from loguru import logger
 from pydantic import BaseModel, Field, create_model
 
 from common.meta_type_enum import MetaType
-from core.prompt_template.prompt_template_enum import OutputFormat
-from core.prompt_template.prompt_template_renderer import PromptRenderer
+from core.prompt.prompt_enum import OutputFormat
+from core.prompt.prompt_renderer import PromptRenderer
 from modules.llm_assistant.strategies.llm_assistant_strategy import LLMAssistantStrategy
 
 # the Python type of the answer of each metadata type

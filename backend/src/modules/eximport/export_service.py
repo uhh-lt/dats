@@ -20,8 +20,8 @@ from modules.eximport.project.export_project import export_project
 from modules.eximport.project_metadata.export_project_metadata import (
     export_all_project_metadatas,
 )
-from modules.eximport.prompt_templates.export_prompt_templates import (
-    export_all_prompt_templates,
+from modules.eximport.prompts.export_prompts import (
+    export_all_prompts,
 )
 from modules.eximport.sdocs.export_sdocs import export_all_sdocs, export_selected_sdocs
 from modules.eximport.sent_annotations.export_sentence_annotations import (
@@ -66,7 +66,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.ALL_WHITEBOARDS: export_all_whiteboards,
             ExportJobType.ALL_TIMELINE_ANALYSES: export_all_timeline_analyses,
             ExportJobType.ALL_COTA: export_all_cota,
-            ExportJobType.ALL_PROMPT_TEMPLATES: export_all_prompt_templates,
+            ExportJobType.ALL_PROMPTS: export_all_prompts,
             # selected
             ExportJobType.SELECTED_SDOCS: export_selected_sdocs,
             ExportJobType.SELECTED_SPAN_ANNOTATIONS: export_selected_span_annotations,

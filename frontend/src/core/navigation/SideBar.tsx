@@ -356,7 +356,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                       color: "primary.contrastText",
                     }}
                   >
-                    {getIconComponent(Icon.PROMPT_TEMPLATE)}
+                    {getIconComponent(Icon.PROMPT)}
                   </ListItemIcon>
                   {isExpanded && <ListItemText>Prompts</ListItemText>}
                 </LinkListItemButton>

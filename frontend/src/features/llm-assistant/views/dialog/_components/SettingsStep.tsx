@@ -5,9 +5,9 @@ import {
   LANGUAGE_LABELS,
   OUTPUT_FORMAT_LABELS,
   OutputFormatAbout,
-  promptTemplateQueries,
+  promptQueries,
   withDefaultSettings,
-} from "@core/prompt-template";
+} from "@core/prompt";
 import { DocumentUnit } from "@models/DocumentUnit";
 import { OutputFormat } from "@models/OutputFormat";
 import { PromptLanguage } from "@models/PromptLanguage";
@@ -58,7 +58,7 @@ export const SettingsStep = memo(() => {
   const savedDocumentUnit = useAppSelector((state) => state.llmAssistant.documentUnit);
   const savedSettings = useAppSelector((state) => state.llmAssistant.settings);
   const dispatch = useAppDispatch();
-  const taskInfo = useQuery({ ...promptTemplateQueries.taskInfo(method), enabled: mode === "guided" });
+  const taskInfo = useQuery({ ...promptQueries.taskInfo(method), enabled: mode === "guided" });
 
   // local state
   const [modelId, setModelId] = useState(savedModelId);
@@ -98,7 +98,7 @@ export const SettingsStep = memo(() => {
   }, [dispatch]);
   const handleSubmit = useCallback(() => {
     if (!modelId) return;
-    if (mode === "template") {
+    if (mode === "prompt") {
       dispatch(LLMAssistantActions.goToReview({ modelId }));
       return;
     }
@@ -123,7 +123,7 @@ export const SettingsStep = memo(() => {
         <Stack spacing={2}>
           <LLMAssistantUtterance>
             <Typography>
-              {mode === "template"
+              {mode === "prompt"
                 ? "Choose the model that should run the prompt. Next, you see the prompt as I will receive it."
                 : "Configure how I should process the selected documents. Next, you see the prompt as I will receive it."}
             </Typography>

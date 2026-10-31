@@ -442,7 +442,7 @@ jobs:
             /tmp/gh-aw/aw-prompts/prompt.txt
             /tmp/gh-aw/aw-prompts/system.txt
             /tmp/gh-aw/aw-prompts/user.txt
-            /tmp/gh-aw/aw-prompts/prompt-template.txt
+            /tmp/gh-aw/aw-prompts/prompt.txt
             /tmp/gh-aw/aw-prompts/prompt-import-tree.json
             /tmp/gh-aw/github_rate_limits.jsonl
             /tmp/gh-aw/base

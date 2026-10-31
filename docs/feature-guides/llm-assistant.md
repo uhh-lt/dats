@@ -42,7 +42,7 @@ When the dialog opens, the assistant will greet you and ask what kind of help yo
 - **Span Annotation:** The AI will highlight specific words or phrases and assign them to your qualitative Codes.
 - **Sentence Annotation:** The AI will classify entire, discrete sentences according to your Codebook.
 
-Or choose **Prompt** to run one of your [prompts](prompt-templates.md). A prompt decides everything except the documents and the model: the task, the codes, tags or metadata fields, the few-shot examples and the input and output format. You select the prompt and its version, then the model, review the prompt and start. Write prompts, versions and examples on the **Prompts** page.
+Or choose **Prompt** to run one of your [prompts](prompts.md). A prompt decides everything except the documents and the model: the task, the codes, tags or metadata fields, the few-shot examples and the input and output format. You select the prompt and its version, then the model, review the prompt and start. Write prompts, versions and examples on the **Prompts** page.
 
 ### Step 2: Select Targets (Codes, Tags, or Metadata)
 
@@ -66,7 +66,7 @@ Choose the language model and how the assistant works:
 
 ### Step 4: Review the Prompt
 
-The **preview** shows exactly what the AI receives: the built-in default prompt of the task, output format and language with your selections. Built-in prompts cannot be edited; every project has a copy of each on the Prompts page (e.g. `default-span-annotation-inline-tagging-en`), which you can edit and run with **Prompt**. Pick one of the selected documents; a prompt sent sentence by sentence can step through its sentences. Guided runs are zero-shot; for few-shot examples and your own prompt texts, write a [prompt](prompt-templates.md) and run it with **Prompt**.
+The **preview** shows exactly what the AI receives: the built-in default prompt of the task, output format and language with your selections. Built-in prompts cannot be edited; every project has a copy of each on the Prompts page (e.g. `default-span-annotation-inline-tagging-en`), which you can edit and run with **Prompt**. Pick one of the selected documents; a prompt sent sentence by sentence can step through its sentences. Guided runs are zero-shot; for few-shot examples and your own prompt texts, write a [prompt](prompts.md) and run it with **Prompt**.
 
 If the assistant already annotated the selected documents with the selected codes, you choose here whether these annotations are replaced or kept.
 

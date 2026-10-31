@@ -1,7 +1,7 @@
 from loguru import logger
 
 from core.doc.source_document_crud import crud_sdoc
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     TaggingLLMAssistantJobResult,
     TaggingResult,

@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_enum import ApproachType
 
 from .conftest import LLMAssistantProject

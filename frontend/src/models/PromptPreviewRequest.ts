@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { PromptTemplateSnapshot } from "./PromptTemplateSnapshot";
+import type { PromptSnapshot } from "./PromptSnapshot";
 /**
  * Renders a stored version or an unsaved draft for one message of a document.
  */
@@ -12,13 +12,13 @@ export type PromptPreviewRequest = {
    */
   project_id: number;
   /**
-   * ID of the stored prompt template version to render. Exactly one of prompt_template_version_id and draft is set.
+   * ID of the stored prompt version to render. Exactly one of prompt_version_id and draft is set.
    */
-  prompt_template_version_id?: number | null;
+  prompt_version_id?: number | null;
   /**
-   * An unsaved prompt to render. Exactly one of prompt_template_version_id and draft is set.
+   * An unsaved prompt to render. Exactly one of prompt_version_id and draft is set.
    */
-  draft?: PromptTemplateSnapshot | null;
+  draft?: PromptSnapshot | null;
   /**
    * ID of the source document to render into <document:unit>; None keeps the block as it is
    */

@@ -5,7 +5,7 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
 )
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,

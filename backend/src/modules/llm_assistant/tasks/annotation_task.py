@@ -6,7 +6,7 @@ from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
-from core.prompt_template.prompt_template_enum import TaskType
+from core.prompt.prompt_enum import TaskType
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
     ASSISTANT_ZEROSHOT_ID,

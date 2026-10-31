@@ -34,7 +34,7 @@ export function MethodSelectionStep() {
             headline="Sentence Annotation"
             description="I will annotate your documents!"
           />
-          <PromptTemplateButton />
+          <PromptButton />
         </Stack>
       </DialogContent>
       <Box className="myFlexContainer myFlexFillAllContainer" p={3} bgcolor={"grey.100"}>
@@ -68,10 +68,10 @@ function MethodButton({ method, headline, description }: MethodButtonProps) {
   );
 }
 
-function PromptTemplateButton() {
+function PromptButton() {
   const dispatch = useAppDispatch();
   const handleClick = useCallback(() => {
-    dispatch(LLMAssistantActions.goToTemplateSelection());
+    dispatch(LLMAssistantActions.goToPromptSelection());
   }, [dispatch]);
 
   return (
