@@ -315,7 +315,9 @@ def test_create_prompt_stores_the_content_as_version_one(
         task_type=TaskType.ANNOTATION,
         language=PromptLanguage.DE,
         text=SPAN_V2_PROMPT,
-        settings=PromptSettings(chunk_size_tokens=100, chunk_overlap_tokens=10),
+        settings=PromptSettings(
+            chunk_size_tokens=100, chunk_overlap_tokens=10, request_reasoning=True
+        ),
         codes=[prompt_code(project["claim_code"])],
         examples=[project["alice_example"]],
     )
@@ -852,6 +854,21 @@ def test_get_returns_a_prompt_and_a_version(
     assert read.examples == [project["alice_example"]]
 
 
+def test_get_version_without_a_stored_reasoning_setting_reads_it_as_off(
+    client: TestClient,
+    version_without_reasoning_setting: int,
+) -> None:
+    """A version saved before the ``request_reasoning`` setting existed has no such
+    key in its stored settings; it is read with the setting off, so existing
+    versions need no data migration."""
+    response = client.get(f"{PROMPT_URL}/version/{version_without_reasoning_setting}")
+    assert response.status_code == 200, response.text
+    read = PromptVersionRead.model_validate(response.json())
+
+    assert read.settings.request_reasoning is False
+    assert read.settings == PromptSettings()
+
+
 def test_get_rejects_foreign_prompts_and_versions(
     client: TestClient,
     prompt_project: PromptProject,
@@ -1193,6 +1210,38 @@ def _blocks(preview: PromptPreview) -> dict[str, str]:
     return {block.placeholder: block.text for block in preview.blocks}
 
 
+# the sentence instructions as they were before the request reasoning setting; the
+# setting off must keep them word for word
+SENTENCE_INSTRUCTIONS_WITHOUT_REASONING = {
+    PromptLanguage.EN: (
+        "Classify only sentences that clearly fit. Identify them by sentence number, "
+        "use only the provided categories, and do not provide reasoning.\n\n"
+        "e.g.\nSentence ID: 2\nCategory: Claim"
+    ),
+    PromptLanguage.DE: (
+        "Klassifiziere nur Sätze, auf die eine Kategorie eindeutig passt. "
+        "Identifiziere sie anhand der Satznummer, verwende nur die bereitgestellten "
+        "Kategorien und gib keine Begründung an.\n\n"
+        "e.g.\nSatz-ID: 2\nKategorie: Behauptung"
+    ),
+}
+
+
+def _instructions(
+    output_format: OutputFormat,
+    language: PromptLanguage = PromptLanguage.EN,
+    **values: int,
+) -> str:
+    """The answer instructions of an annotation format without requested reasoning:
+    the frozen sentence instructions, the inline and context instructions with
+    their reasoning parts left out."""
+    if output_format == OutputFormat.SENTENCES:
+        return SENTENCE_INSTRUCTIONS_WITHOUT_REASONING[language]
+    return OUTPUT_FORMAT_INSTRUCTIONS[output_format][language].format(
+        reasoning_rule="", reasoning_example="", **values
+    )
+
+
 # --- A. prompts without a document --------------------------------------------------
 
 
@@ -1209,7 +1258,7 @@ def test_preview_of_a_draft_without_document_keeps_the_document_block(
     )
     preview = _preview(client, _request(project, draft=draft))
 
-    instructions = OUTPUT_FORMAT_INSTRUCTIONS[OutputFormat.SENTENCES][PromptLanguage.EN]
+    instructions = _instructions(OutputFormat.SENTENCES)
     assert preview.sdoc_id is None
     assert preview.message_index == 0
     assert preview.num_messages == 0
@@ -1258,6 +1307,108 @@ def test_preview_lists_unknown_placeholders(
     assert preview.unknown_placeholders == ["<code>", "<sentence>"]
     assert preview.text.startswith(f"<code> CLAIM: {CLAIM_DESCRIPTION}\n")
     assert "\n<sentence> <code>\n<document:whole>" in preview.text
+
+
+@pytest.mark.parametrize(
+    "task_type,output_format,language,reasoning_request,no_reasoning_request",
+    [
+        # Inline tags: an extra rule and example, nothing without the setting.
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.INLINE,
+            PromptLanguage.EN,
+            "- For every tagged passage, in the order of the tags, also give the "
+            "passage and a short reasoning (one or two sentences) why it fits its "
+            "code\n",
+            None,
+            id="inline-en",
+        ),
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.INLINE,
+            PromptLanguage.DE,
+            "\n\nBegründungen:\nPassage: Umfrageergebnisse\nBegründung: ",
+            None,
+            id="inline-de",
+        ),
+        # Quotes with context: an extra rule and a reasoning in the example.
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.CONTEXT,
+            PromptLanguage.EN,
+            "- For every passage, give a short reasoning (one or two sentences) "
+            "why it fits its category.\n",
+            None,
+            id="context-en",
+        ),
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.CONTEXT,
+            PromptLanguage.DE,
+            "\nBegründung: Der Bericht stellt die gesenkten Emissionen als sein "
+            "Ergebnis dar.",
+            None,
+            id="context-de",
+        ),
+        # Sentences: the ban of reasoning becomes a request for it.
+        pytest.param(
+            TaskType.SENTENCE_ANNOTATION,
+            OutputFormat.SENTENCES,
+            PromptLanguage.EN,
+            "use only the provided categories, and briefly explain each "
+            "classification in one or two sentences.",
+            "use only the provided categories, and do not provide reasoning.",
+            id="sentences-en",
+        ),
+        pytest.param(
+            TaskType.SENTENCE_ANNOTATION,
+            OutputFormat.SENTENCES,
+            PromptLanguage.DE,
+            "verwende nur die bereitgestellten Kategorien und begründe jede "
+            "Klassifikation kurz in ein bis zwei Sätzen.",
+            "verwende nur die bereitgestellten Kategorien und gib keine Begründung an.",
+            id="sentences-de",
+        ),
+    ],
+)
+def test_preview_instructions_ask_for_reasoning_only_when_requested(
+    client: TestClient,
+    prompt_project: PromptProject,
+    task_type: TaskType,
+    output_format: OutputFormat,
+    language: PromptLanguage,
+    reasoning_request: str,
+    no_reasoning_request: str | None,
+) -> None:
+    """``request_reasoning`` switches the answer instructions of the annotation
+    formats; without it (the default) they stay as they were."""
+    project = prompt_project
+    placeholder = f"<output-format:{output_format.value}>"
+
+    def instructions(request_reasoning: bool) -> str:
+        draft = _draft(
+            task_type,
+            f"<codes>\n{placeholder}\n<document:whole>",
+            codes=[prompt_code(project["claim_code"])],
+            settings=PromptSettings(request_reasoning=request_reasoning),
+            language=language,
+        )
+        return _blocks(_preview(client, _request(project, draft=draft)))[placeholder]
+
+    with_reasoning = instructions(True)
+    without_reasoning = instructions(False)
+
+    assert reasoning_request in with_reasoning
+    assert reasoning_request not in without_reasoning
+    if no_reasoning_request is None:
+        assert "reason" not in without_reasoning.lower()
+        assert "begründ" not in without_reasoning.lower()
+    else:
+        assert no_reasoning_request in without_reasoning
+        assert no_reasoning_request not in with_reasoning
+    assert without_reasoning == _instructions(
+        output_format, language, context_before_chars=64, context_after_chars=64
+    )
 
 
 # --- B. documents and messages ------------------------------------------------------
@@ -1328,7 +1479,7 @@ def test_preview_splits_the_document_by_its_unit(
             message_index=message_index,
         ),
     )
-    instructions = OUTPUT_FORMAT_INSTRUCTIONS[OutputFormat.INLINE][PromptLanguage.EN]
+    instructions = _instructions(OutputFormat.INLINE)
     assert preview.sdoc_id == project["sdoc"].id
     assert preview.message_index == message_index
     assert preview.num_messages == expected_num_messages
@@ -1540,9 +1691,9 @@ def test_preview_context_examples_show_quotes_with_context(
 
     assert preview.is_fewshot
     assert _blocks(preview)["<examples>"] == expected_examples
-    assert _blocks(preview)["<output-format:context>"] == OUTPUT_FORMAT_INSTRUCTIONS[
-        OutputFormat.CONTEXT
-    ][language].format(context_before_chars=5, context_after_chars=5)
+    assert _blocks(preview)["<output-format:context>"] == _instructions(
+        OutputFormat.CONTEXT, language, context_before_chars=5, context_after_chars=5
+    )
 
 
 def test_preview_sentence_examples_are_grouped_by_code(
@@ -1564,6 +1715,85 @@ def test_preview_sentence_examples_are_grouped_by_code(
         "Examples of sentences for each category:\n"
         f"Claim:\n- {EXAMPLE_SENTENCES[1]} {EXAMPLE_SENTENCES[2]}"
     )
+
+
+@pytest.mark.parametrize(
+    "task_type,output_format,language,header,note",
+    [
+        pytest.param(
+            task_type,
+            output_format,
+            language,
+            header,
+            note,
+            id=f"{output_format.value}-{language.value}",
+        )
+        # Inline, context and sentence examples in both languages.
+        for task_type, output_format in (
+            (TaskType.ANNOTATION, OutputFormat.INLINE),
+            (TaskType.ANNOTATION, OutputFormat.CONTEXT),
+            (TaskType.SENTENCE_ANNOTATION, OutputFormat.SENTENCES),
+        )
+        for language, header, note in (
+            (
+                PromptLanguage.EN,
+                "Examples of sentences for each category:"
+                if output_format == OutputFormat.SENTENCES
+                else "Examples:",
+                "The examples omit the reasoning, but every answer must contain one.",
+            ),
+            (
+                PromptLanguage.DE,
+                "Beispielsätze für jede Kategorie:"
+                if output_format == OutputFormat.SENTENCES
+                else "Beispiele:",
+                "Die Beispiele lassen die Begründung weg, jede Antwort muss aber "
+                "eine enthalten.",
+            ),
+        )
+    ],
+)
+def test_preview_examples_note_that_they_omit_the_requested_reasoning(
+    client: TestClient,
+    prompt_project: PromptProject,
+    task_type: TaskType,
+    output_format: OutputFormat,
+    language: PromptLanguage,
+    header: str,
+    note: str,
+) -> None:
+    """With ``request_reasoning``, the examples header is followed by a note that
+    the examples show no reasoning but every answer must contain one; the examples
+    themselves stay the same (no invented reasonings)."""
+    project = prompt_project
+    is_sentence = output_format == OutputFormat.SENTENCES
+
+    def examples(request_reasoning: bool) -> str:
+        draft = _draft(
+            task_type,
+            f"<codes>\n<output-format:{output_format.value}>\n<examples>\n"
+            "<document:whole>",
+            codes=(
+                [prompt_code(project["claim_code"])]
+                if is_sentence
+                else [prompt_code(project["person_code"])]
+            ),
+            examples=(
+                [project["sentence_example"]]
+                if is_sentence
+                else [project["alice_example"]]
+            ),
+            settings=PromptSettings(request_reasoning=request_reasoning),
+            language=language,
+        )
+        return _blocks(_preview(client, _request(project, draft=draft)))["<examples>"]
+
+    with_reasoning = examples(True)
+    without_reasoning = examples(False)
+
+    assert without_reasoning.startswith(f"{header}\n")
+    assert note not in without_reasoning
+    assert with_reasoning == without_reasoning.replace(header, f"{header}\n{note}", 1)
 
 
 # --- D. invalid requests ------------------------------------------------------------

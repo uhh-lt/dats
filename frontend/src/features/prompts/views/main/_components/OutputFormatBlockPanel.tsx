@@ -3,10 +3,13 @@ import { useDebounce } from "@hooks/useDebounce";
 import { OutputFormat } from "@models/OutputFormat";
 import { PromptSettings } from "@models/PromptSettings";
 import { PromptSnapshot } from "@models/PromptSnapshot";
-import { Link, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Checkbox, FormControlLabel, Link, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { SettingField } from "./SettingField";
+
+// the formats that annotate, so they can ask for a reasoning per annotation
+const REASONING_FORMATS = new Set<OutputFormat>([OutputFormat.INLINE, OutputFormat.CONTEXT, OutputFormat.SENTENCES]);
 
 interface OutputFormatBlockPanelProps {
   projectId: number;
@@ -35,6 +38,12 @@ export function OutputFormatBlockPanel({
       if (value) onChangeText(setOutputFormat(draft.text, value.output_format));
     },
     [formats, draft.text, onChangeText],
+  );
+
+  const handleChangeRequestReasoning = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) =>
+      onChangeSettings({ ...settings, request_reasoning: event.target.checked }),
+    [settings, onChangeSettings],
   );
 
   // the fixed answer instructions, as the block renders them once the user stops typing
@@ -91,6 +100,16 @@ export function OutputFormatBlockPanel({
               onChangeSettings={onChangeSettings}
             />
           </>
+        )}
+        {REASONING_FORMATS.has(outputFormat) && (
+          <FormControlLabel
+            control={
+              <Checkbox size="small" checked={settings.request_reasoning} onChange={handleChangeRequestReasoning} />
+            }
+            label="Request reasoning"
+            title="Ask the LLM for a short reasoning per annotation, stored as a memo on the annotation"
+            sx={{ flex: "1 1 100%" }}
+          />
         )}
       </Stack>
       {instructions !== undefined && (

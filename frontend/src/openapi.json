@@ -15589,6 +15589,12 @@
             "title": "Fuzzy Threshold",
             "description": "Minimum similarity (0-1) to locate a quote that is not found exactly (<output-format:context>)",
             "default": 0.85
+          },
+          "request_reasoning": {
+            "type": "boolean",
+            "title": "Request Reasoning",
+            "description": "Ask the LLM for a short reasoning per annotation, stored as a memo on the annotation (<output-format:inline>, <output-format:context>, <output-format:sentences>)",
+            "default": false
           }
         },
         "type": "object",

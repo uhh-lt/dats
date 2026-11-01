@@ -15,14 +15,14 @@ Rules:
 - Do NOT change whitespace or punctuation
 - Codes must not overlap or nest
 - Wrap only the text passages that are relevant to an allowed code; do not include unrelated surrounding text
-- If no relevant text that fits the codes is present, return the text unchanged
+- If no relevant text that fits the codes is present, return the text unchanged{reasoning_rule}
 
 Example:
 Input:
 The survey results support the proposal.
 
 Output:
-The <EVIDENCE>survey results</EVIDENCE> support the proposal.
+The <EVIDENCE>survey results</EVIDENCE> support the proposal.{reasoning_example}
 """
 
 _DE_INLINE = """
@@ -33,14 +33,14 @@ Regeln:
 - Ändere keine Leerzeichen oder Satzzeichen
 - Annotationen dürfen sich nicht überlappen oder verschachtelt sein
 - Umschließe nur Textpassagen, die für einen erlaubten Code relevant sind; schließe keinen irrelevanten umgebenden Text ein
-- Wenn keine Textpassage passend zu den Codes ist, gib den Text unverändert zurück
+- Wenn keine Textpassage passend zu den Codes ist, gib den Text unverändert zurück{reasoning_rule}
 
 Beispiel:
 Eingabe:
 Die Umfrageergebnisse stützen den Vorschlag.
 
 Ausgabe:
-Die <BELEG>Umfrageergebnisse</BELEG> stützen den Vorschlag.
+Die <BELEG>Umfrageergebnisse</BELEG> stützen den Vorschlag.{reasoning_example}
 """
 
 _EN_CONTEXT = """
@@ -52,7 +52,7 @@ Rules:
 - Provide up to {context_before_chars} characters of context_before and {context_after_chars} characters of context_after to uniquely locate the quote.
 - The context fields must contain only verbatim text immediately before or after the exact quote.
 - Do NOT generate passages that are not present in the text.
-- If no relevant text fits the codes, return no passages.
+- If no relevant text fits the codes, return no passages.{reasoning_rule}
 
 Example text:
 The report concludes that the policy reduced emissions substantially.
@@ -71,7 +71,7 @@ Regeln:
 - Gib bis zu {context_before_chars} Zeichen context_before und {context_after_chars} Zeichen context_after an, um das Zitat eindeutig zu lokalisieren.
 - Die Kontextfelder dürfen nur den wörtlichen Text unmittelbar vor oder nach dem exakten Zitat enthalten.
 - Generiere KEINE Textpassagen, die nicht im Text vorhanden sind.
-- Wenn keine passende Textpassage zu den Codes vorhanden ist, gib keine Passagen zurück.
+- Wenn keine passende Textpassage zu den Codes vorhanden ist, gib keine Passagen zurück.{reasoning_rule}
 
 Beispieltext:
 Der Bericht zeigt, dass die Maßnahme die Emissionen deutlich senkte.
@@ -82,19 +82,19 @@ Exaktes Zitat: die Maßnahme die Emissionen deutlich senkte
 """
 
 _EN_SENTENCES = """
-Classify only sentences that clearly fit. Identify them by sentence number, use only the provided categories, and do not provide reasoning.
+Classify only sentences that clearly fit. Identify them by sentence number, use only the provided categories{reasoning_rule}.
 
 e.g.
 Sentence ID: 2
-Category: Claim
+Category: Claim{reasoning_example}
 """
 
 _DE_SENTENCES = """
-Klassifiziere nur Sätze, auf die eine Kategorie eindeutig passt. Identifiziere sie anhand der Satznummer, verwende nur die bereitgestellten Kategorien und gib keine Begründung an.
+Klassifiziere nur Sätze, auf die eine Kategorie eindeutig passt. Identifiziere sie anhand der Satznummer, verwende nur die bereitgestellten Kategorien{reasoning_rule}.
 
 e.g.
 Satz-ID: 2
-Kategorie: Behauptung
+Kategorie: Behauptung{reasoning_example}
 """
 
 _EN_TAGS = """
@@ -142,8 +142,14 @@ OUTPUT_FORMAT_INSTRUCTIONS: dict[OutputFormat, dict[PromptLanguage, str]] = {
         PromptLanguage.DE: _DE_INLINE.strip(),
     },
     OutputFormat.CONTEXT: {
-        PromptLanguage.EN: _EN_CONTEXT.strip() + "\n" + _EN_CONTEXT_EXAMPLE,
-        PromptLanguage.DE: _DE_CONTEXT.strip() + "\n" + _DE_CONTEXT_EXAMPLE,
+        PromptLanguage.EN: _EN_CONTEXT.strip()
+        + "\n"
+        + _EN_CONTEXT_EXAMPLE
+        + "{reasoning_example}",
+        PromptLanguage.DE: _DE_CONTEXT.strip()
+        + "\n"
+        + _DE_CONTEXT_EXAMPLE
+        + "{reasoning_example}",
     },
     OutputFormat.SENTENCES: {
         PromptLanguage.EN: _EN_SENTENCES.strip(),
@@ -157,6 +163,88 @@ OUTPUT_FORMAT_INSTRUCTIONS: dict[OutputFormat, dict[PromptLanguage, str]] = {
         PromptLanguage.EN: _EN_METADATA.strip(),
         PromptLanguage.DE: _DE_METADATA.strip(),
     },
+}
+
+# the reasoning parts ({reasoning_rule}, {reasoning_example}) of the annotation
+# formats' instructions, without and with PromptSettings.request_reasoning; the
+# renderer leaves the parts a format does not word here empty
+REASONING_NOT_REQUESTED: dict[tuple[OutputFormat, PromptLanguage], dict[str, str]] = {
+    (OutputFormat.SENTENCES, PromptLanguage.EN): {
+        "reasoning_rule": ", and do not provide reasoning",
+    },
+    (OutputFormat.SENTENCES, PromptLanguage.DE): {
+        "reasoning_rule": " und gib keine Begründung an",
+    },
+}
+REASONING_REQUESTED: dict[tuple[OutputFormat, PromptLanguage], dict[str, str]] = {
+    (OutputFormat.INLINE, PromptLanguage.EN): {
+        "reasoning_rule": (
+            "\n- For every tagged passage, in the order of the tags, also give "
+            "the passage and a short reasoning (one or two sentences) why it "
+            "fits its code"
+        ),
+        "reasoning_example": (
+            "\n\nReasonings:\nPassage: survey results\n"
+            "Reasoning: The survey results are presented as evidence for the "
+            "proposal."
+        ),
+    },
+    (OutputFormat.INLINE, PromptLanguage.DE): {
+        "reasoning_rule": (
+            "\n- Gib für jede umschlossene Passage, in der Reihenfolge der Tags, "
+            "zusätzlich die Passage und eine kurze Begründung (ein bis zwei "
+            "Sätze) an, warum sie zu ihrem Code passt"
+        ),
+        "reasoning_example": (
+            "\n\nBegründungen:\nPassage: Umfrageergebnisse\n"
+            "Begründung: Die Umfrageergebnisse werden als Beleg für den "
+            "Vorschlag angeführt."
+        ),
+    },
+    (OutputFormat.CONTEXT, PromptLanguage.EN): {
+        "reasoning_rule": (
+            "\n- For every passage, give a short reasoning (one or two "
+            "sentences) why it fits its category."
+        ),
+        "reasoning_example": (
+            "\nReasoning: The report presents the reduced emissions as its conclusion."
+        ),
+    },
+    (OutputFormat.CONTEXT, PromptLanguage.DE): {
+        "reasoning_rule": (
+            "\n- Gib für jede Passage eine kurze Begründung (ein bis zwei Sätze) "
+            "an, warum sie zu ihrer Kategorie passt."
+        ),
+        "reasoning_example": (
+            "\nBegründung: Der Bericht stellt die gesenkten Emissionen als sein "
+            "Ergebnis dar."
+        ),
+    },
+    (OutputFormat.SENTENCES, PromptLanguage.EN): {
+        "reasoning_rule": (
+            ", and briefly explain each classification in one or two sentences"
+        ),
+        "reasoning_example": (
+            "\nReasoning: The sentence asserts a position without evidence."
+        ),
+    },
+    (OutputFormat.SENTENCES, PromptLanguage.DE): {
+        "reasoning_rule": (
+            " und begründe jede Klassifikation kurz in ein bis zwei Sätzen"
+        ),
+        "reasoning_example": (
+            "\nBegründung: Der Satz vertritt eine Position ohne Beleg."
+        ),
+    },
+}
+# the few-shot examples show no reasoning; with requested reasoning, a note below
+# their header says that the answer still needs one
+REASONING_EXAMPLES_NOTES: dict[PromptLanguage, str] = {
+    PromptLanguage.EN: "The examples omit the reasoning, but every answer must contain one.",
+    PromptLanguage.DE: (
+        "Die Beispiele lassen die Begründung weg, jede Antwort muss aber eine "
+        "enthalten."
+    ),
 }
 
 # the expected value of a metadata field and an example value, per type

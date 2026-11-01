@@ -3,6 +3,7 @@ import {
   DEFAULT_OUTPUT_FORMATS,
   DOCUMENT_UNIT_LABELS,
   LANGUAGE_LABELS,
+  NumberSetting,
   OUTPUT_FORMAT_LABELS,
   OutputFormatAbout,
   promptQueries,
@@ -86,7 +87,7 @@ export const SettingsStep = memo(() => {
     setDocumentUnit(event.target.value as DocumentUnit);
   }, []);
   const handleChangeSetting = useCallback(
-    (field: keyof PromptSettings) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (field: NumberSetting) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const value = Number(event.target.value);
       setSettings((current) => ({ ...current, [field]: Number.isNaN(value) ? current[field] : value }));
     },

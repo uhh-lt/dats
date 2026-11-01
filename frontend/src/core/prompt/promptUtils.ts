@@ -109,6 +109,11 @@ export const toPromptMetadataField = (field: ProjectMetadataRead): PromptMetadat
   metatype: field.metatype as MetaType,
 });
 
+/** The settings with a number value, edited in number inputs. */
+export type NumberSetting = {
+  [K in keyof PromptSettings]-?: Required<PromptSettings>[K] extends number ? K : never;
+}[keyof PromptSettings];
+
 // the defaults of PromptSettings in the backend
 const DEFAULT_SETTINGS: Required<PromptSettings> = {
   chunk_size_tokens: 650,
@@ -116,6 +121,7 @@ const DEFAULT_SETTINGS: Required<PromptSettings> = {
   context_before_chars: 64,
   context_after_chars: 64,
   fuzzy_threshold: 0.85,
+  request_reasoning: false,
 };
 
 /** The settings of a prompt with every value set. */
