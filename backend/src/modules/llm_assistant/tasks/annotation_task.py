@@ -4,8 +4,10 @@ from pydantic import BaseModel
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
+    SpanAnnotationRead,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
+from core.memo.memo_enum import AttachedObjectType
 from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     AnnotationLLMAssistantJobResult,
@@ -24,6 +26,7 @@ from modules.llm_assistant.tasks.llm_assistant_task import (
     LLMAssistantTask,
     LLMAssistantTaskContext,
     aggregate_raw_responses,
+    create_reasoning_memos,
 )
 
 AnnotationStrategy = NERInlineTagStrategy | FuzzyGroundingStrategy
@@ -88,6 +91,25 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
             removed.append(annotation)
 
         return kept, removed
+
+    @staticmethod
+    def _reasonings_of(
+        annotation: SpanAnnotationCreate,
+        suggestions: list[tuple[SpanAnnotationCreate, str | None]],
+    ) -> list[str]:
+        """The reasonings of the suggestions a deduplicated annotation covers.
+
+        Deduplication merges overlapping suggestions of one code, so every
+        suggestion lies within exactly one annotation of its code.
+        """
+        return [
+            reasoning
+            for suggestion, reasoning in suggestions
+            if reasoning is not None
+            and suggestion.code_id == annotation.code_id
+            and annotation.begin <= suggestion.begin
+            and suggestion.end <= annotation.end
+        ]
 
     @staticmethod
     def _to_span_annotation(
@@ -168,6 +190,8 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
         strategy = context.strategy
         sdoc_data = document.sdoc_data
         suggested_annotations: list[SpanAnnotationCreate] = []
+        # every suggestion with its reasoning, None if the prompt requests none
+        suggestions: list[tuple[SpanAnnotationCreate, str | None]] = []
         raw_responses: list[str] = []
         errors: list[tuple[str, str | None]] = []
         document_token_map: dict[int, int] = {}
@@ -209,6 +233,7 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
                 )
                 if annotation is not None:
                     suggested_annotations.append(annotation)
+                    suggestions.append((annotation, span["reasoning"]))
 
         parsed_annotation_count = len(suggested_annotations)
         suggested_annotations, removed_annotations = self._dedupe_annotations(
@@ -249,6 +274,23 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
             len(created_annos_for_sdoc),
             sdoc_data.id,
         )
+        if create_reasoning_memos(
+            context,
+            attached_object_type=AttachedObjectType.span_annotation,
+            annotation_ids=[annotation.id for annotation in created_annos_for_sdoc],
+            reasonings=[
+                self._reasonings_of(annotation, suggestions)
+                for annotation in suggested_annotations
+            ],
+        ):
+            # the annotations were read before their memos existed
+            created_annos_for_sdoc = [
+                SpanAnnotationRead.model_validate(db_obj)
+                for db_obj in crud_span_anno.read_by_ids(
+                    db=context.db,
+                    ids=[annotation.id for annotation in created_annos_for_sdoc],
+                )
+            ]
 
         if errors:
             raw_response = aggregate_raw_responses(

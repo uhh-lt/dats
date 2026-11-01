@@ -1,10 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.prompt.prompt_enum import OutputFormat
 from modules.llm_assistant.strategies.code_annotation_strategy import (
     CodeAnnotationStrategy,
 )
+from modules.llm_assistant.strategies.types.parsed_sentence import ParsedSentence
 
 
 class LLMSentenceAnnotationResult(BaseModel):
@@ -12,8 +13,18 @@ class LLMSentenceAnnotationResult(BaseModel):
     category: str
 
 
+class LLMSentenceAnnotationResultWithReasoning(LLMSentenceAnnotationResult):
+    reasoning: str = Field(
+        description="A short reasoning (one or two sentences) why the sentence fits its category"
+    )
+
+
 class LLMSentenceAnnotationResults(BaseModel):
     data: list[LLMSentenceAnnotationResult]
+
+
+class LLMSentenceAnnotationResultsWithReasoning(BaseModel):
+    data: list[LLMSentenceAnnotationResultWithReasoning]
 
 
 class SentenceAnnotationStrategy(CodeAnnotationStrategy):
@@ -25,21 +36,42 @@ class SentenceAnnotationStrategy(CodeAnnotationStrategy):
 
     output_format = OutputFormat.SENTENCES
 
-    def get_response_model(self) -> type[BaseModel]:
+    def get_response_model(
+        self,
+    ) -> (
+        type[LLMSentenceAnnotationResults]
+        | type[LLMSentenceAnnotationResultsWithReasoning]
+    ):
+        """The classified sentences, each with a reasoning if the prompt requests it."""
+        if self.prompt.settings.request_reasoning:
+            return LLMSentenceAnnotationResultsWithReasoning
         return LLMSentenceAnnotationResults
 
     def parse_result(
         self,
-        result: LLMSentenceAnnotationResults,
+        result: LLMSentenceAnnotationResults
+        | LLMSentenceAnnotationResultsWithReasoning,
         sdoc_data: SourceDocumentDataORM,
         message_id: int,
-    ) -> list[tuple[int, int]]:
-        """Return the (sentence index, code id) pairs of the message's sentences."""
+    ) -> list[ParsedSentence]:
+        """Return the classified sentences of the message's sentences."""
         sentence_ids = set(self.segments(sdoc_data)[message_id].sentence_ids)
-        pairs: list[tuple[int, int]] = []
+        parsed: list[ParsedSentence] = []
         for annotation in result.data:
             code_id = self._code_id_for_name(annotation.category)
             if code_id is None or annotation.sent_id - 1 not in sentence_ids:
                 continue
-            pairs.append((annotation.sent_id - 1, code_id))
-        return pairs
+            parsed.append(
+                ParsedSentence(
+                    sentence_id=annotation.sent_id - 1,
+                    code_id=code_id,
+                    reasoning=(
+                        annotation.reasoning
+                        if isinstance(
+                            annotation, LLMSentenceAnnotationResultWithReasoning
+                        )
+                        else None
+                    ),
+                )
+            )
+        return parsed

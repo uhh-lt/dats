@@ -110,6 +110,7 @@ def sdoc_with_word_frequencies(
 
 
 class SdocWithSpanAnnotations(TypedDict):
+    project_id: int
     sdoc_id: int
     user_id: int
     code_id: int
@@ -164,6 +165,7 @@ def sdoc_with_span_annotations(
     db_session.commit()
 
     return {
+        "project_id": project.id,
         "sdoc_id": sdoc_id,
         "user_id": test_user.id,
         "code_id": code.id,
