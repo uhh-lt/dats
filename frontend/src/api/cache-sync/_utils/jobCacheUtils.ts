@@ -14,6 +14,7 @@ import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
 import { documentUploadQueries } from "@features/document-upload/api/documentUploadQueries";
 import { duplicateFinderQueries } from "@features/duplicate-finder/api/duplicateFinderQueries";
+import { experimentQueries } from "@features/experiment-studio/api/experimentQueries";
 import { llmAssistantQueries } from "@features/llm-assistant/api/llmAssistantQueries";
 import { mlAutomationQueries } from "@features/ml-automation/api/mlAutomationQueries";
 import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
@@ -28,10 +29,12 @@ import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
 import { CrawlerJobRead } from "@models/CrawlerJobRead";
 import type { DATSEventMap } from "@models/datsEvents";
 import { DuplicateFinderJobRead } from "@models/DuplicateFinderJobRead";
+import { ExperimentRunJobRead } from "@models/ExperimentRunJobRead";
 import { ExportJobRead } from "@models/ExportJobRead";
 import { ImportJobRead } from "@models/ImportJobRead";
 import { ImportJobType } from "@models/ImportJobType";
 import { JobStatus } from "@models/JobStatus";
+import type { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { MlJobRead } from "@models/MlJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
@@ -61,6 +64,9 @@ export function handleJobUpdate(job: JobRead): void {
     case LlmAssistantJobRead.job_type.LLM_ASSISTANT:
       upsertJob(job, llmAssistantQueries.job);
       if (job.status === JobStatus.FINISHED) handleLlmAssistantJobFinished(job);
+      break;
+    case ExperimentRunJobRead.job_type.EXPERIMENT_RUN:
+      handleExperimentRunJobUpdate(job);
       break;
     case MlJobRead.job_type.ML:
       upsertJob(job, mlAutomationQueries.job);
@@ -173,9 +179,27 @@ function handleImportJobFinished(job: ImportJobRead) {
 
 // A finished annotation LLM Assistant job stored its suggestions as annotations of the assistant user in the processed sdocs.
 function handleLlmAssistantJobFinished(job: LlmAssistantJobRead) {
-  if (!job.output) return;
-  const sdocIds = job.output.specific_task_result.results.map((result) => result.sdoc_id);
-  switch (job.input.task_type) {
+  if (job.output) invalidateAssistantAnnotations(job.output);
+}
+
+// The job of an experiment run stores its state, the run's status, and the scores in the experiment (the job has no
+// own cache). Refresh the experiments when the job's state differs from the run's stored status; a finished job also
+// wrote the annotations of the run's virtual user.
+const STORED_RUN_STATUSES = new Set([JobStatus.STARTED, JobStatus.FINISHED, JobStatus.FAILED]);
+function handleExperimentRunJobUpdate(job: ExperimentRunJobRead) {
+  const queryKey = experimentQueries.byProject(job.project_id).queryKey;
+  const run = Object.values(queryClient.getQueryData(queryKey) ?? {})
+    .flatMap((experiment) => experiment.runs)
+    .find((candidate) => candidate.id === job.input.run_id);
+  if (STORED_RUN_STATUSES.has(job.status) && run?.status !== job.status) {
+    queryClient.invalidateQueries({ queryKey });
+  }
+  if (job.status === JobStatus.FINISHED && job.output) invalidateAssistantAnnotations(job.output);
+}
+
+function invalidateAssistantAnnotations(output: LLMAssistantJobOutput) {
+  const sdocIds = output.specific_task_result.results.map((result) => result.sdoc_id);
+  switch (output.task_type) {
     case TaskType.ANNOTATION:
       sdocIds.forEach((sdocId) => {
         queryClient.invalidateQueries({ queryKey: spanAnnotationQueries.bySdocOfSdocScope(sdocId) });

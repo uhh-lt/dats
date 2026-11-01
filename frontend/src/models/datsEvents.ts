@@ -22,6 +22,9 @@ import type { CodeUpdatedBatchEvent } from "./CodeUpdatedBatchEvent";
 import type { CotaCreatedEvent } from "./CotaCreatedEvent";
 import type { CotaDeletedEvent } from "./CotaDeletedEvent";
 import type { CotaUpdatedEvent } from "./CotaUpdatedEvent";
+import type { ExperimentCreatedEvent } from "./ExperimentCreatedEvent";
+import type { ExperimentDeletedEvent } from "./ExperimentDeletedEvent";
+import type { ExperimentUpdatedEvent } from "./ExperimentUpdatedEvent";
 import type { FolderCreatedEvent } from "./FolderCreatedEvent";
 import type { FolderDeletedEvent } from "./FolderDeletedEvent";
 import type { FolderDeletedBatchEvent } from "./FolderDeletedBatchEvent";
@@ -106,6 +109,9 @@ export interface DATSEventMap {
   COTA_CREATED: CotaCreatedEvent["payload"];
   COTA_DELETED: CotaDeletedEvent["payload"];
   COTA_UPDATED: CotaUpdatedEvent["payload"];
+  EXPERIMENT_CREATED: ExperimentCreatedEvent["payload"];
+  EXPERIMENT_DELETED: ExperimentDeletedEvent["payload"];
+  EXPERIMENT_UPDATED: ExperimentUpdatedEvent["payload"];
   FOLDER_CREATED: FolderCreatedEvent["payload"];
   FOLDER_DELETED: FolderDeletedEvent["payload"];
   FOLDER_DELETED_BATCH: FolderDeletedBatchEvent["payload"];
@@ -191,6 +197,9 @@ export type DATSEvent =
   | (Omit<CotaCreatedEvent, "type"> & { type: "COTA_CREATED" })
   | (Omit<CotaDeletedEvent, "type"> & { type: "COTA_DELETED" })
   | (Omit<CotaUpdatedEvent, "type"> & { type: "COTA_UPDATED" })
+  | (Omit<ExperimentCreatedEvent, "type"> & { type: "EXPERIMENT_CREATED" })
+  | (Omit<ExperimentDeletedEvent, "type"> & { type: "EXPERIMENT_DELETED" })
+  | (Omit<ExperimentUpdatedEvent, "type"> & { type: "EXPERIMENT_UPDATED" })
   | (Omit<FolderCreatedEvent, "type"> & { type: "FOLDER_CREATED" })
   | (Omit<FolderDeletedEvent, "type"> & { type: "FOLDER_DELETED" })
   | (Omit<FolderDeletedBatchEvent, "type"> & { type: "FOLDER_DELETED_BATCH" })

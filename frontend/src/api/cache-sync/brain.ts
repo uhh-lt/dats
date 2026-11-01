@@ -17,6 +17,7 @@ import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
+import { experimentQueries } from "@features/experiment-studio/api/experimentQueries";
 import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
 import { apiKeyQueries } from "@features/profile/api/apiKeyQueries";
 import { tagRecommendationQueries } from "@features/tag-recommendations/api/tagRecommendationQueries";
@@ -204,6 +205,16 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
     case "PROMPT_CREATED":
     case "PROMPT_UPDATED":
       upsertMapItem(promptQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      break;
+
+    // ── Experiments ───────────────────────────────────────────────────────────
+    // Runs are part of their experiment: a new, deleted or re-scored run is an update of it.
+    case "EXPERIMENT_CREATED":
+    case "EXPERIMENT_UPDATED":
+      upsertMapItem(experimentQueries.byProject(event.payload.project_id).queryKey, event.payload);
+      break;
+    case "EXPERIMENT_DELETED":
+      removeMapItem(experimentQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
       break;
 
     // ── Folders ─────────────────────────────────────────────────────────────

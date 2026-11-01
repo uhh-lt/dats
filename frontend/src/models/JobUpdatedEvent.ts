@@ -6,6 +6,7 @@ import type { ClassifierJobRead } from "./ClassifierJobRead";
 import type { COTARefinementJobRead } from "./COTARefinementJobRead";
 import type { CrawlerJobRead } from "./CrawlerJobRead";
 import type { DuplicateFinderJobRead } from "./DuplicateFinderJobRead";
+import type { ExperimentRunJobRead } from "./ExperimentRunJobRead";
 import type { ExportJobRead } from "./ExportJobRead";
 import type { ImportJobRead } from "./ImportJobRead";
 import type { LlmAssistantJobRead } from "./LlmAssistantJobRead";
@@ -18,9 +19,10 @@ export type JobUpdatedEvent = {
     | COTARefinementJobRead
     | CrawlerJobRead
     | DuplicateFinderJobRead
+    | LlmAssistantJobRead
+    | ExperimentRunJobRead
     | ExportJobRead
     | ImportJobRead
-    | LlmAssistantJobRead
     | MlJobRead
     | PerspectivesJobRead;
 };
