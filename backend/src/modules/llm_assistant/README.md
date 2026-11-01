@@ -75,6 +75,8 @@ An **approach** is zero-shot or few-shot. It follows from the prompt: a prompt t
 
 Annotation tasks write into the **virtual user** of the job input (`virtual_user_id`): a user that belongs to one project and cannot log in (`user.project_id`). The job start rejects other users and virtual users of other projects, so the assistant never writes into a person's annotations. `delete_existing_annotations` deletes the annotations of this virtual user for the documents and codes of the prompt.
 
+If the prompt requests reasoning (`PromptSettings.request_reasoning`), each reasoning is stored as a normal memo ("LLM reasoning") on its annotation, authored by the virtual user and created in one batch per document (`create_reasoning_memos`). Suggestions merged into one annotation give one memo with a paragraph per distinct reasoning; the job output lists the memos in the annotations' `memo_ids`. The inline format matches each reasoning to its tag by the passage text, ignoring inline tags, whitespace and case.
+
 ### Factories
 
 - **`build_strategy()`** (`strategies/strategy_factory.py`) — instantiates the strategy of a prompt's output format.

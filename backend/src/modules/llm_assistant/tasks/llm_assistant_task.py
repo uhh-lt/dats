@@ -1,12 +1,17 @@
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
 from typing import ClassVar, Generic, TypeVar, final
+from uuid import uuid4
 
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from core.memo.memo_dto import MemoCreateIntern
+from core.memo.memo_enum import AttachedObjectType
+from core.memo.memo_service import MemoService
 from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_enum import ApproachType
 from modules.llm_assistant.llm_assistant_job_dto import (
@@ -29,6 +34,8 @@ from systems.job_system.job_dto import Job
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
 ResultT = TypeVar("ResultT", bound=LLMAssistantResultWithStatus)
 StrategyT = TypeVar("StrategyT", bound=LLMAssistantStrategy)
+# the title of the memos that store the LLM's reasoning of an annotation
+REASONING_MEMO_TITLE = "LLM reasoning"
 SpecificTaskResult = (
     TaggingLLMAssistantJobResult
     | MetadataExtractionLLMAssistantJobResult
@@ -66,6 +73,78 @@ def aggregate_raw_responses(raw_responses: list[str]) -> str:
         f"Response {i + 1} of {len(raw_responses)}:\n{raw}"
         for i, raw in enumerate(raw_responses)
     )
+
+
+def reasoning_paragraphs(reasonings: list[str]) -> list[str]:
+    """The paragraphs of the reasoning memo of an annotation: its reasonings
+    without blank and repeated ones, in order."""
+    return list(
+        dict.fromkeys(
+            reasoning.strip() for reasoning in reasonings if reasoning.strip()
+        )
+    )
+
+
+def create_reasoning_memos(
+    context: LLMAssistantTaskContext[StrategyT],
+    *,
+    attached_object_type: AttachedObjectType,
+    annotation_ids: list[int],
+    reasonings: list[list[str]],
+) -> bool:
+    """Store the LLM's reasonings of annotations as memos in one batch.
+
+    Each annotation with a reasoning gets one memo, authored by the virtual user
+    the annotations were created for; several reasonings (of merged suggestions)
+    become one paragraph each (`reasoning_paragraphs`).
+
+    Args:
+        attached_object_type: The type of the annotations.
+        annotation_ids: The annotations, parallel to `reasonings`.
+        reasonings: The reasonings of every annotation, possibly none.
+
+    Returns:
+        Whether any memo was created.
+    """
+    if not context.strategy.prompt.settings.request_reasoning:
+        return False
+
+    attached_object_ids: list[int] = []
+    create_dtos: list[MemoCreateIntern] = []
+    for annotation_id, annotation_reasonings in zip(
+        annotation_ids, reasonings, strict=True
+    ):
+        paragraphs = reasoning_paragraphs(annotation_reasonings)
+        if not paragraphs:
+            continue
+        attached_object_ids.append(annotation_id)
+        create_dtos.append(
+            MemoCreateIntern(
+                project_id=context.payload.project_id,
+                uuid=str(uuid4()),
+                user_id=context.virtual_user_id,
+                title=REASONING_MEMO_TITLE,
+                content="\n\n".join(paragraphs),
+                # the BlockNote document the memo editor shows
+                content_json=json.dumps(
+                    [
+                        {"type": "paragraph", "content": paragraph}
+                        for paragraph in paragraphs
+                    ]
+                ),
+            )
+        )
+    if not create_dtos:
+        return False
+
+    MemoService().create_multi_for_attached_objects(
+        db=context.db,
+        attached_object_type=attached_object_type,
+        attached_object_ids=attached_object_ids,
+        create_dtos=create_dtos,
+    )
+    logger.info("Created {} reasoning memo(s).", len(create_dtos))
+    return True
 
 
 class LLMAssistantTask(
