@@ -79,6 +79,46 @@ def test_import_users_rejects_virtual_users_of_another_project(
         )
 
 
+@pytest.mark.parametrize(
+    "email,is_virtual,expected_error",
+    [
+        # an unknown user is reported, not created
+        pytest.param("nobody@dats.org", False, "not found", id="unknown-user"),
+        # a virtual user with a person's email would claim that email
+        pytest.param("person@dats.org", True, "virtual.dats domain", id="claim-email"),
+    ],
+)
+def test_import_users_rejects_invalid_users(
+    db_session: Session,
+    virtual_user_project: VirtualUserProject,
+    email: str,
+    is_virtual: bool,
+    expected_error: str,
+) -> None:
+    """Invalid user rows are collected into an ImportUsersError."""
+    project = virtual_user_project["project"]
+    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    df = pd.read_csv(path)
+    df.loc[len(df)] = {**df.iloc[0].to_dict(), "email": email, "is_virtual": is_virtual}
+
+    with pytest.raises(ImportUsersError, match=expected_error):
+        import_users_to_proj(db=db_session, df=df, project_id=project.id)
+
+
+def test_import_users_does_not_make_virtual_users_members(
+    db_session: Session, virtual_user_project: VirtualUserProject
+) -> None:
+    """A row of a virtual user that is not marked as virtual is rejected instead
+    of adding the virtual user as a project member."""
+    project = virtual_user_project["project"]
+    path = export_all_users(db=db_session, fsr=FilesystemRepo(), project_id=project.id)
+    df = pd.read_csv(path)
+    df["is_virtual"] = False
+
+    with pytest.raises(ImportUsersError, match="is a virtual user"):
+        import_users_to_proj(db=db_session, df=df, project_id=project.id)
+
+
 def test_span_annotations_of_virtual_user_survive_export_import(
     db_session: Session, virtual_user_project: VirtualUserProject
 ) -> None:

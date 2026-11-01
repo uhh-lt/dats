@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
 from core.project.project_service import ProjectService
-from core.user.user_crud import crud_user
+from core.user.user_crud import VIRTUAL_USER_EMAIL_DOMAIN, crud_user
 from core.user.user_orm import UserORM
 from modules.eximport.import_exceptions import ImportUsersError
 from modules.eximport.user.user_export_schema import (
@@ -51,19 +51,28 @@ def import_users_to_proj(
     user_dict: dict[str, UserORM] = {}
     new_virtual_users: list[UserExportSchema] = []
     for user_schema in user_collection.users:
+        user = crud_user.read_by_email_if_exists(db=db, email=user_schema.email)
         if user_schema.is_virtual:
             # virtual users belong to one project: create them if they are missing
-            user = crud_user.read_by_email_if_exists(db=db, email=user_schema.email)
-            if user is None:
+            if not user_schema.email.endswith(f"@{VIRTUAL_USER_EMAIL_DOMAIN}"):
+                # only generated emails, so an import cannot claim a person's email
+                error_messages.append(
+                    f"Virtual user '{user_schema.email}' needs an email of the "
+                    f"{VIRTUAL_USER_EMAIL_DOMAIN} domain."
+                )
+            elif user is None:
                 new_virtual_users.append(user_schema)
             elif user.project_id != project_id:
                 error_messages.append(
                     f"Virtual user '{user_schema.email}' belongs to another project."
                 )
             continue
-        user = crud_user.read_by_email(db=db, email=user_schema.email)
         if user is None:
-            error_messages.append(f"User'{user_schema.email}' not found in the system.")
+            error_messages.append(
+                f"User '{user_schema.email}' not found in the system."
+            )
+        elif user.is_virtual:
+            error_messages.append(f"User '{user_schema.email}' is a virtual user.")
         else:
             user_dict[user_schema.email] = user
 

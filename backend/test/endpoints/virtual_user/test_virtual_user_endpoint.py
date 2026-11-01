@@ -157,6 +157,9 @@ def test_update_virtual_user_renames_it(
         pytest.param({"first_name": None}, 422, id="null-name"),
         # nothing to update
         pytest.param({}, 422, id="empty-update"),
+        # the email and password of a virtual user are generated, never chosen
+        pytest.param({"email": "claimed@dats.org"}, 400, id="email"),
+        pytest.param({"password": "MyPassword123"}, 400, id="password"),
     ],
 )
 def test_update_virtual_user_rejects_invalid_updates(
@@ -194,6 +197,25 @@ def test_update_virtual_user_rejects_other_users_and_foreign_virtual_users(
     response = client.patch(f"/user/{user.id}", json={"first_name": "X"})
 
     assert response.status_code == 403, response.text
+
+
+# ===========================================================================
+# ASSOCIATE USER (PATCH /user/{project_id}/user) TESTS
+# ===========================================================================
+
+
+def test_associate_virtual_user_to_project_is_rejected(
+    client: TestClient, virtual_user_project: VirtualUserProject
+):
+    """A virtual user belongs to its project without being a member, so it cannot
+    be added as a member by its email."""
+    project = virtual_user_project["project"]
+    run1 = virtual_user_project["run1"]
+
+    response = client.patch(f"/user/{project.id}/user", json={"email": run1.email})
+
+    assert response.status_code == 400, response.text
+    assert run1.id not in {member.id for member in project.users}
 
 
 # ===========================================================================
