@@ -10,7 +10,7 @@ The **Annotator Agreement** analysis compares the annotations of two annotators 
 4. **Scoring:** how the annotations are split into units that are compared:
    - **Per word / per sentence:** every word (span annotations) or sentence (sentence annotations) counts on its own and is correct if it carries the same code on both sides, wherever the annotations begin or end. 3 annotated words against 2 of them: 2 of 3 are correct.
    - **Exact boundaries:** every annotation counts as a whole and is correct only if the other annotator assigned the same code from exactly the same first to the same last word or sentence. 3 annotated words against 2 of them are a miss and an extra.
-5. **Documents with tag(s):** all documents that carry at least one of the selected tags are compared. To compare a search result or a folder, tag its documents first.
+5. **Documents:** select the compared documents in the document table with the usual filters and search, e.g. all documents with a tag or in a folder; the header checkbox selects all loaded documents (**Fetch all** loads all of them first). A run of the [Experiment Studio](../experiment-studio.md) opens the analysis with its documents selected.
 6. **Codes:** only annotations with these codes are compared. Type to search the codes; selecting a parent code does not select its children.
 7. **Hide codes without annotations** (optional): hides the codes that neither annotator used from the scores and the confusion matrix. Nothing is hidden unless you switch this on.
 
