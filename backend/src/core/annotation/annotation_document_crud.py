@@ -39,6 +39,36 @@ class CRUDAnnotationDocument(
 
         return db_obj
 
+    def read_by_user_and_sdocs(
+        self, db: Session, *, user_id: int, sdoc_ids: list[int]
+    ) -> list[AnnotationDocumentORM]:
+        """
+        Read the annotation documents of a user for the given documents. A document
+        has one if the user annotated it (the "Annotated by" filter).
+
+        Args:
+            user_id: The ID of the user.
+            sdoc_ids: The IDs of the documents.
+
+        Returns:
+            The existing annotation documents, in no particular order.
+        """
+        if not sdoc_ids:
+            return []
+
+        db_objs: list[AnnotationDocumentORM] = []
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
+            db_objs.extend(
+                db.query(self.model)
+                .filter(
+                    self.model.user_id == user_id,
+                    self.model.source_document_id.in_(batch_ids),
+                )
+                .all()
+            )
+        return db_objs
+
     ### UPDATE OPERATIONS ###
 
     def update_timestamp(
