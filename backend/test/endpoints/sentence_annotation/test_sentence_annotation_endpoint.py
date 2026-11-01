@@ -14,6 +14,7 @@ from provenance_test_utils import (
     get_memos,
     get_user_annotation_ids,
 )
+from virtual_user_test_utils import VirtualUserProject
 
 
 def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code):
@@ -691,6 +692,32 @@ def test_create_copy_of_nonexistent_source_is_not_found(
         )
         == set()
     )
+
+
+# ===========================================================================
+# CREATE SENTENCE ANNOTATION (/sentence) TESTS: VIRTUAL USERS
+# ===========================================================================
+
+
+def test_create_sentence_annotation_as_virtual_user(
+    client: TestClient, virtual_user_project: VirtualUserProject
+):
+    """A user creates a sentence annotation owned by a virtual user."""
+    run2 = virtual_user_project["run2"]
+
+    response = client.put(
+        "/sentence",
+        params={"user_id": run2.id},
+        json=SentenceAnnotationCreate(
+            sdoc_id=virtual_user_project["sdoc"].id,
+            code_id=virtual_user_project["code"].id,
+            sentence_id_start=1,
+            sentence_id_end=1,
+        ).model_dump(),
+    )
+
+    assert response.status_code == 200, response.text
+    assert SentenceAnnotationRead.model_validate(response.json()).user_id == run2.id
 
 
 # ===========================================================================

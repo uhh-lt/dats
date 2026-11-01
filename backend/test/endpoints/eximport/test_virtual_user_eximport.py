@@ -14,8 +14,7 @@ from modules.eximport.span_annotations.import_span_annotations import (
 from modules.eximport.user.export_users import export_all_users
 from modules.eximport.user.import_users import import_users_to_proj
 from repos.filesystem_repo import FilesystemRepo
-
-from .conftest import VirtualUserProject
+from virtual_user_test_utils import VirtualUserProject
 
 # ===========================================================================
 # EXPORT / IMPORT OF VIRTUAL USERS (modules/eximport) TESTS

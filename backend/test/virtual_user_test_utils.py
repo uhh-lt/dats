@@ -1,7 +1,14 @@
+"""The virtual user project of the virtual user tests.
+
+The tests live with the endpoints they call (user, auth, span, sentence) and
+with the export/import tests; each folder declares its own fixture from
+`create_virtual_user_project`.
+"""
+
 from datetime import UTC, datetime
 from typing import TypedDict
 
-import pytest
+from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -27,29 +34,8 @@ SENTENCES = ["Alpha beta gamma.", "Delta epsilon zeta."]
 
 
 class VirtualUserProject(TypedDict):
-    project: ProjectORM
-    other_project: ProjectORM
-    user: UserORM
-    other_user: UserORM
-    run1: UserORM
-    run2: UserORM
-    other_run: UserORM
-    code: CodeORM
-    sdoc: SourceDocumentORM
-    other_sdoc: SourceDocumentORM
-    run1_alpha: SpanAnnotationORM
-    run1_delta: SpanAnnotationORM
-    user_alpha_copy: SpanAnnotationORM
-    user_api_key: str
-    run1_api_key: str
-
-
-@pytest.fixture(scope="function")
-def virtual_user_project(
-    db_session, test_user: UserORM, test_project: ProjectORM
-) -> VirtualUserProject:
     """
-    This fixture sets up the following projects:
+    `create_virtual_user_project` sets up the following projects:
 
     - `project` (the test project of the test user `user`):
       - members: the system user and `user` (the test user)
@@ -80,6 +66,28 @@ def virtual_user_project(
     - Virtual users can never log in: their password is no valid hash, and login,
       tokens and API keys reject virtual users.
     """
+
+    project: ProjectORM
+    other_project: ProjectORM
+    user: UserORM
+    other_user: UserORM
+    run1: UserORM
+    run2: UserORM
+    other_run: UserORM
+    code: CodeORM
+    sdoc: SourceDocumentORM
+    other_sdoc: SourceDocumentORM
+    run1_alpha: SpanAnnotationORM
+    run1_delta: SpanAnnotationORM
+    user_alpha_copy: SpanAnnotationORM
+    user_api_key: str
+    run1_api_key: str
+
+
+def create_virtual_user_project(
+    db_session: Session, test_user: UserORM, test_project: ProjectORM
+) -> VirtualUserProject:
+    """Create the projects described in `VirtualUserProject`."""
     project = test_project
 
     # 1) virtual users, a code and a document with annotations
