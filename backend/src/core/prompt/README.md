@@ -1,6 +1,6 @@
 # Prompts
 
-A prompt is the complete instruction to the LLM for one task (span annotation, sentence annotation, tagging, metadata extraction), written in one language. It contains everything the LLM sees except the document. Prompts belong to a project and are managed on the project's Prompts page; the LLM Assistant (and later the Prompt Studio) only runs them.
+A prompt is the complete instruction to the LLM for one task (span annotation, sentence annotation, tagging, metadata extraction), written in one language. It contains everything the LLM sees except the document. Prompts belong to a project and are managed on the project's Prompts page; the LLM Assistant (and later the Experiment Studio) only runs them.
 
 ## Model
 
