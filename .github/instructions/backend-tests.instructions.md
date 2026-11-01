@@ -68,6 +68,7 @@ Clients authenticate by a test header instead of a JWT. For a client acting as a
 - Builds a **deterministic test project** (users, documents, codes, annotations, memos, ...) with fixed names and contents, so every test has a known expected result.
 - Returns the created objects (e.g. as a `TypedDict`) so tests can read ids and attributes.
 - A project fixture **may be shared** by many tests in the folder. If a test needs a special setup, define **another project fixture** in the same conftest — even one fixture per test is fine.
+- A project that several folders need is built by one function in a `backend/test/<feature>_test_utils.py` module (like [provenance_test_utils.py](backend/test/provenance_test_utils.py)), and each folder's conftest declares its own fixture from it.
 - The `TypedDict` (or fixture) docstring must contain a **complete description of the project**: every object in it (project, users, codes, tags, folders, documents, annotations, memos, ...) with its fixed names/values, which user authored it, and how objects are linked (e.g. "Document A is linked to tag a", "Document B is in folder X"). Structure it as a readable inventory ("This fixture sets up the following project: ..."), followed by a short list of **non-obvious derived behavior** (things a test cannot see from the setup code alone, e.g. NULL columns that match no operator). A reader must be able to predict every expected test result from the docstring alone, without reading the fixture body.
 
 **Never do project setup inside a test function.** All data setup belongs in conftest fixtures.
@@ -85,7 +86,7 @@ Each test function:
 
 1. Has a **speaking name** that states exactly what is tested, e.g. `test_memo_search_title_column_supports_string_filter_operators`.
 2. Has a **short docstring**: what is tested, plus any non-obvious detail. Longer rationale belongs here, not in comments.
-3. **Tests one endpoint at a time.**
+3. **Tests one endpoint at a time** and lives in the test file of that endpoint module, also when it tests a feature that spans several endpoints (the annotation provenance tests live in the span, sentence, bbox, code, user and search test files).
 4. Follows this shape:
    - Extract what you need from the fixture (ids, dates, ...).
    - Build the request, **using the real DTOs** where possible (e.g. `QueryRequest[MemoColumns](...)`).
