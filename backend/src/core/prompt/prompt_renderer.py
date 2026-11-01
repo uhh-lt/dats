@@ -14,6 +14,9 @@ from core.prompt.prompt_blocks import (
     METADATA_ANSWER_TEMPLATES,
     METADATA_EXAMPLE_VALUES,
     OUTPUT_FORMAT_INSTRUCTIONS,
+    REASONING_EXAMPLES_NOTES,
+    REASONING_NOT_REQUESTED,
+    REASONING_REQUESTED,
     SENTENCE_EXAMPLES_HEADERS,
 )
 from core.prompt.prompt_dto import (
@@ -133,9 +136,20 @@ class PromptRenderer:
     def _render_instructions(self) -> str:
         settings = self.prompt.settings
         fields = self.prompt.metadata_fields
+        reasoning = (
+            REASONING_REQUESTED
+            if settings.request_reasoning
+            else REASONING_NOT_REQUESTED
+        )
+        reasoning_parts = {
+            "reasoning_rule": "",
+            "reasoning_example": "",
+            **reasoning.get((self.output_format, self.prompt.language), {}),
+        }
         return OUTPUT_FORMAT_INSTRUCTIONS[self.output_format][
             self.prompt.language
         ].format(
+            **reasoning_parts,
             context_before_chars=settings.context_before_chars,
             context_after_chars=settings.context_after_chars,
             metadata_answer_template="\n".join(
@@ -159,6 +173,13 @@ class PromptRenderer:
                 return self._render_sentence_examples()
             case _:
                 return ""
+
+    def _examples_header(self, header: str) -> str:
+        """The header of the examples, with a note that they show no reasoning if
+        the prompt requests one."""
+        if not self.prompt.settings.request_reasoning:
+            return header
+        return f"{header}\n{REASONING_EXAMPLES_NOTES[self.prompt.language]}"
 
     def _selected_spans(
         self, example: SpanPromptExample
@@ -203,7 +224,8 @@ class PromptRenderer:
             )
         if not rendered:
             return ""
-        return f"{labels['header']}\n" + "\n\n".join(rendered)
+        header = self._examples_header(labels["header"])
+        return f"{header}\n" + "\n\n".join(rendered)
 
     def _render_context_examples(self) -> str:
         labels = CONTEXT_EXAMPLE_LABELS[self.prompt.language]
@@ -229,7 +251,8 @@ class PromptRenderer:
             )
         if not rendered:
             return ""
-        return f"{labels['header']}\n\n" + "\n\n---\n\n".join(rendered)
+        header = self._examples_header(labels["header"])
+        return f"{header}\n\n" + "\n\n---\n\n".join(rendered)
 
     def _render_sentence_examples(self) -> str:
         examples_by_code: dict[int, list[str]] = {
@@ -249,9 +272,8 @@ class PromptRenderer:
         ]
         if not rendered:
             return ""
-        return f"{SENTENCE_EXAMPLES_HEADERS[self.prompt.language]}\n" + "\n\n".join(
-            rendered
-        )
+        header = self._examples_header(SENTENCE_EXAMPLES_HEADERS[self.prompt.language])
+        return f"{header}\n" + "\n\n".join(rendered)
 
     # DOCUMENTS
 

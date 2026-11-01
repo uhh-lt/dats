@@ -1,10 +1,11 @@
+import { NumberSetting } from "@core/prompt";
 import { PromptSettings } from "@models/PromptSettings";
 import { TextField } from "@mui/material";
 import { ChangeEvent, useCallback } from "react";
 
 interface SettingFieldProps {
   label: string;
-  field: keyof PromptSettings;
+  field: NumberSetting;
   settings: Required<PromptSettings>;
   step?: number;
   onChangeSettings: (settings: Required<PromptSettings>) => void;

@@ -77,6 +77,14 @@ class PromptSettings(BaseModel):
         ge=0,
         le=1,
     )
+    request_reasoning: bool = Field(
+        description=(
+            "Ask the LLM for a short reasoning per annotation, stored as a memo on "
+            "the annotation (<output-format:inline>, <output-format:context>, "
+            "<output-format:sentences>)"
+        ),
+        default=False,
+    )
 
     @model_validator(mode="after")
     def check_chunk_overlap(self) -> Self:

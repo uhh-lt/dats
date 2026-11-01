@@ -6,7 +6,7 @@ A prompt is the complete instruction to the LLM for one task (span annotation, s
 
 - `PromptORM`: project, name (unique per project), task, language (`en` / `de`) and an archive flag. Archived prompts are not offered for new runs; runs that used them keep their versions. There is no delete.
 - `PromptVersionORM`: version number (1, 2, 3, ... per prompt), the prompt text, its selections and the author. Every save appends a version; versions are never changed, so runs that reference a version id can always be reproduced. Renaming or archiving does not create a version.
-- The selections are copies of project data (`prompt_dto.py`): `codes` (`PromptCode`: id, name, description), `tags`, `metadata_fields`, `examples` and the `settings` of the blocks (chunk size and overlap, context length, fuzzy threshold). Later changes in the project do not change a version.
+- The selections are copies of project data (`prompt_dto.py`): `codes` (`PromptCode`: id, name, description), `tags`, `metadata_fields`, `examples` and the `settings` of the blocks (chunk size and overlap, context length, fuzzy threshold, request reasoning). Later changes in the project do not change a version.
 - Few-shot examples: a `SpanPromptExample` is the text of the sentences around a span annotation with all spans its annotator annotated in that text (annotations of the same text share one example); a `SentencePromptExample` is the text of a sentence annotation with its code. `POST /prompt/examples` builds them from annotation ids.
 
 ## Local definitions, pull and push
@@ -20,7 +20,7 @@ Pull and push need no endpoint of their own. The prompt builder pulls by copying
 `prompt_specs.py` defines per task which blocks a prompt may use (`PROMPT_TASK_SPECS`, described by `GET /prompt/task_info?task_type=...` for the editor):
 
 - exactly one document block `<document:whole|sentences|chunks>`: it decides how a document is split into LLM calls (tagging and metadata extraction only support `whole`, because their answers describe the whole document);
-- exactly one output format block `<output-format:inline|context|sentences|tags|metadata>` of the task: it renders the fixed answer instructions (`prompt_blocks.py`), which the parser of the format relies on;
+- exactly one output format block `<output-format:inline|context|sentences|tags|metadata>` of the task: it renders the fixed answer instructions (`prompt_blocks.py`), which the parser of the format relies on. With the `request_reasoning` setting, the annotation formats (inline, context, sentences) ask for a short reasoning per annotation, their schema has a `reasoning` field per annotation and the few-shot examples (which show none) note that every answer still needs one;
 - the selection blocks of the task: `<codes>` / `<code_names>` (at least one for annotation tasks), `<examples>`, `<tags>`, `<metadata_fields>`.
 
 `PromptService.validate_prompt()` rejects prompts that break these rules, selections of another project and examples that do not fit the task or are not shown through `<examples>` (HTTP 400). Selections may be empty when saving; a run requires them (`assert_runnable`). Placeholder-like tags that no block fills (e.g. a typo like `<code>`) are reported by the preview but not rejected, since prompts may contain XML-like markup.

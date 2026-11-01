@@ -26,4 +26,8 @@ export type PromptSettings = {
    * Minimum similarity (0-1) to locate a quote that is not found exactly (<output-format:context>)
    */
   fuzzy_threshold?: number;
+  /**
+   * Ask the LLM for a short reasoning per annotation, stored as a memo on the annotation (<output-format:inline>, <output-format:context>, <output-format:sentences>)
+   */
+  request_reasoning?: boolean;
 };
