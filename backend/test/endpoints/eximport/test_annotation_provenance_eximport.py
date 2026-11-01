@@ -26,9 +26,8 @@ from modules.eximport.span_annotations.export_span_annotations import (
 from modules.eximport.span_annotations.import_span_annotations import (
     import_span_annotations_to_proj,
 )
+from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind
 from repos.filesystem_repo import FilesystemRepo
-
-from .provenance_utils import ANNOTATION_KINDS, AnnotationKind
 
 CRUD = {
     "span": crud_span_anno,

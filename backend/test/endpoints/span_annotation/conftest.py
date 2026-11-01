@@ -15,6 +15,12 @@ from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
+from provenance_test_utils import (
+    ProvenanceProject,
+    ProvenanceProjectWithCopies,
+    create_provenance_copies,
+    create_provenance_project,
+)
 
 
 class ProjectWithSpanAnnotation(TypedDict):
@@ -274,3 +280,17 @@ def project_with_span_annotations_and_linked_group(
         "span_annotation": span_annotation,
         "span_group": span_group,
     }
+
+
+@pytest.fixture(scope="function")
+def provenance_project(db_session, test_user, project_with_sdoc) -> ProvenanceProject:
+    """The projects described in `ProvenanceProject`."""
+    return create_provenance_project(db_session, test_user, project_with_sdoc)
+
+
+@pytest.fixture(scope="function")
+def provenance_project_with_copies(
+    db_session, provenance_project
+) -> ProvenanceProjectWithCopies:
+    """The project described in `ProvenanceProjectWithCopies`."""
+    return create_provenance_copies(db_session, provenance_project)

@@ -16,6 +16,11 @@ from core.project.project_service import ProjectService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.user.user_orm import UserORM
+from provenance_test_utils import (
+    ProvenanceProjectWithCopies,
+    create_provenance_copies,
+    create_provenance_project,
+)
 
 
 class MissingValueNamedCodes(TypedDict):
@@ -156,3 +161,13 @@ def empty_description_projects(
     db_session.refresh(test_project)
 
     return {"project": test_project, "target_project": target_project}
+
+
+@pytest.fixture(scope="function")
+def provenance_project_with_copies(
+    db_session, test_user, project_with_sdoc
+) -> ProvenanceProjectWithCopies:
+    """The project described in `ProvenanceProjectWithCopies`."""
+    return create_provenance_copies(
+        db_session, create_provenance_project(db_session, test_user, project_with_sdoc)
+    )

@@ -9,6 +9,8 @@ from core.user.user_dto import (
     UserCreate,
     UserRead,
 )
+from dats_test_utils import create_user_client
+from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind, get_annotation
 
 
 def _model_validate_user_read(data: dict) -> UserRead:
@@ -186,3 +188,32 @@ def test_dissociate_user_from_project(
     assert new_user.id not in project_user_ids
     # the payload reflects the full member list
     assert len(data.users) == len(project_user_ids)
+
+
+# ===========================================================================
+# DELETE USER (/user) TESTS: PROVENANCE
+# ===========================================================================
+# The provenance columns are ON DELETE SET NULL: deleting the source annotation, its
+# user or its code clears only that column of the copy and keeps the rest.
+
+
+@pytest.mark.parametrize("kind", ANNOTATION_KINDS)
+def test_delete_source_user_keeps_source_code_of_copy(
+    client: TestClient,
+    app_client: TestClient,
+    provenance_project_with_copies,
+    kind: AnnotationKind,
+) -> None:
+    """The assistant deleting their account deletes their annotations and clears the
+    copy's `source_annotation_id` and `source_user_id`; the source code stays."""
+    project = provenance_project_with_copies
+    copy_id = project[f"{kind}_copies"]["copy_id"]
+    assistant_client = create_user_client(app_client, project["assistant"])
+
+    response = assistant_client.delete("/user/")
+
+    assert response.status_code == 200, response.text
+    copy = get_annotation(client, kind, copy_id)
+    assert copy.source_annotation_id is None
+    assert copy.source_user_id is None
+    assert copy.source_code_id == project["code_a"].id

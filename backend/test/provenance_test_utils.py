@@ -1,14 +1,24 @@
-from typing import TypedDict
+"""The provenance project of the annotation provenance tests and its request helpers.
+
+The tests live with the endpoints they call (span, sentence, bbox, code, user,
+search, eximport); each folder declares its own fixtures from these functions.
+"""
+
+from typing import Any, Literal, TypedDict
 from uuid import uuid4
 
-import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
+from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate, BBoxAnnotationRead
 from core.annotation.bbox_annotation_service import BBoxAnnotationService
-from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
+from core.annotation.sentence_annotation_dto import (
+    SentenceAnnotationCreate,
+    SentenceAnnotationRead,
+)
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
-from core.annotation.span_annotation_dto import SpanAnnotationCreate
+from core.annotation.span_annotation_dto import SpanAnnotationCreate, SpanAnnotationRead
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
@@ -19,7 +29,8 @@ from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import MemoCreateIntern
+from core.memo.memo_dto import MemoCreateIntern, MemoRead
+from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
@@ -28,9 +39,100 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from dats_test_utils import ProjectWithSdoc
 from repos.filesystem_repo import FilesystemRepo
 
-from .provenance_utils import ANNOTATION_KINDS, ATTACHED_OBJECT_TYPE, AnnotationKind
+AnnotationKind = Literal["span", "sentence", "bbox"]
+ANNOTATION_KINDS: list[AnnotationKind] = ["span", "sentence", "bbox"]
+
+ATTACHED_OBJECT_TYPE: dict[AnnotationKind, AttachedObjectType] = {
+    "span": AttachedObjectType.span_annotation,
+    "sentence": AttachedObjectType.sentence_annotation,
+    "bbox": AttachedObjectType.bbox_annotation,
+}
+
+
+AnnotationRead = SpanAnnotationRead | SentenceAnnotationRead | BBoxAnnotationRead
+
+READ_DTO: dict[AnnotationKind, type[AnnotationRead]] = {
+    "span": SpanAnnotationRead,
+    "sentence": SentenceAnnotationRead,
+    "bbox": BBoxAnnotationRead,
+}
+
+
+def create_payload(
+    kind: AnnotationKind,
+    *,
+    sdoc_id: int,
+    code_id: int,
+    position: int,
+    source_annotation_id: int | None = None,
+) -> dict[str, Any]:
+    """The create body of an annotation at a position, as in `ProvenanceProject`."""
+    match kind:
+        case "span":
+            return SpanAnnotationCreate(
+                span_text=f"span {position}",
+                begin=10 * position,
+                end=10 * position + 4,
+                begin_token=2 * position,
+                end_token=2 * position + 1,
+                code_id=code_id,
+                sdoc_id=sdoc_id,
+                source_annotation_id=source_annotation_id,
+            ).model_dump()
+        case "sentence":
+            return SentenceAnnotationCreate(
+                sentence_id_start=position,
+                sentence_id_end=position,
+                code_id=code_id,
+                sdoc_id=sdoc_id,
+                source_annotation_id=source_annotation_id,
+            ).model_dump()
+        case "bbox":
+            return BBoxAnnotationCreate(
+                x_min=10 * position,
+                x_max=10 * position + 5,
+                y_min=10 * position,
+                y_max=10 * position + 5,
+                code_id=code_id,
+                sdoc_id=sdoc_id,
+                source_annotation_id=source_annotation_id,
+            ).model_dump()
+
+
+def get_annotation(
+    client: TestClient, kind: AnnotationKind, annotation_id: int
+) -> AnnotationRead:
+    response = client.get(f"/{kind}/{annotation_id}")
+    assert response.status_code == 200, response.text
+    return READ_DTO[kind].model_validate(response.json())
+
+
+def get_memos(
+    client: TestClient, kind: AnnotationKind, annotation_id: int
+) -> list[MemoRead]:
+    response = client.get(
+        f"/memo/attached_obj/{ATTACHED_OBJECT_TYPE[kind].value}/to/{annotation_id}"
+    )
+    assert response.status_code == 200, response.text
+    return [MemoRead.model_validate(memo) for memo in response.json()]
+
+
+def get_user_annotation_ids(
+    client: TestClient, kind: AnnotationKind, sdoc_id: int, user_id: int
+) -> set[int]:
+    response = client.get(f"/{kind}/sdoc/{sdoc_id}/user/{user_id}")
+    assert response.status_code == 200, response.text
+    if kind == "sentence":
+        # sentence annotations come grouped by sentence
+        return {
+            annotation["id"]
+            for annotations in response.json()["sentence_annotations"].values()
+            for annotation in annotations
+        }
+    return {annotation["id"] for annotation in response.json()}
 
 
 class KindAnnotations(TypedDict):
@@ -44,6 +146,50 @@ class KindAnnotations(TypedDict):
 
 
 class ProvenanceProject(TypedDict):
+    """
+    `create_provenance_project` sets up the following projects:
+
+    - Project "Simple Test Project" (`project`) of the test user (`user`,
+      testuser@dats.org), who copies annotations in the tests. Its second member is
+      the user "Assistant User" (`assistant`, assistant@dats.org), whose
+      annotations are copied.
+    - Codes "Code A" (`code_a`) and "Code B" (`code_b`) in `project`.
+    - Documents of `project`:
+      - "test_document.txt" (text, from `project_with_sdoc`): the document of the
+        span and sentence annotations,
+      - "other_document.txt" (text): the other document of span and sentence,
+        with the same text (and sentences) as "test_document.txt",
+      - "image.jpg" (image): the document of the bbox annotations,
+      - "other_image.jpg" (image): the other document of bbox.
+      An empty file stands in for the webp version of both images on the
+      filesystem.
+    - Project "Other Project" (`other_project`) of the test user, with code
+      "Other Code" and the documents "other_project_document.txt" (text) and
+      "other_project_image.jpg" (image).
+
+    For each annotation kind ("span", "sentence", "bbox"), `project[kind]`
+    holds the ids of these annotations, all with code "Code A" unless noted:
+
+    - `source_id`: the assistant's annotation at position 0 of the kind's document
+      (`sdoc_id`). It has two memos (`source_memos`, in creation order):
+      "Assistant rationale" by the assistant and "User remark" by the test user.
+    - `source_plain_id`: the assistant's annotation at position 1 of the same
+      document, without memos.
+    - `other_sdoc_source_id`: the assistant's annotation on the kind's other
+      document (`other_sdoc_id`).
+    - `other_project_source_id`: the test user's annotation in "Other Project"
+      (code "Other Code").
+
+    Position p of a span is characters 10p..10p+4 / tokens 2p..2p+1, of a sentence
+    annotation sentence p, of a bbox the square (10p, 10p)..(10p+5, 10p+5).
+
+    Non-obvious derived behavior:
+
+    - The test user has no annotations in `project` yet, so every annotation the
+      tests create is the first one of the test user.
+    - None of the fixture annotations is a copy: they have no provenance.
+    """
+
     project: ProjectORM
     other_project: ProjectORM
     user: UserORM
@@ -152,51 +298,10 @@ def _create_code(db_session, *, project_id: int, name: str) -> CodeORM:
     )
 
 
-@pytest.fixture(scope="function")
-def provenance_project(db_session, test_user, project_with_sdoc) -> ProvenanceProject:
-    """
-    This fixture sets up the following projects:
-
-    - Project "Simple Test Project" (`project`) of the test user (`user`,
-      testuser@dats.org), who copies annotations in the tests. Its second member is
-      the user "Assistant User" (`assistant`, assistant@dats.org), whose
-      annotations are copied.
-    - Codes "Code A" (`code_a`) and "Code B" (`code_b`) in `project`.
-    - Documents of `project`:
-      - "test_document.txt" (text, from `project_with_sdoc`): the document of the
-        span and sentence annotations,
-      - "other_document.txt" (text): the other document of span and sentence,
-        with the same text (and sentences) as "test_document.txt",
-      - "image.jpg" (image): the document of the bbox annotations,
-      - "other_image.jpg" (image): the other document of bbox.
-      An empty file stands in for the webp version of both images on the
-      filesystem.
-    - Project "Other Project" (`other_project`) of the test user, with code
-      "Other Code" and the documents "other_project_document.txt" (text) and
-      "other_project_image.jpg" (image).
-
-    For each annotation kind ("span", "sentence", "bbox"), `provenance_project[kind]`
-    holds the ids of these annotations, all with code "Code A" unless noted:
-
-    - `source_id`: the assistant's annotation at position 0 of the kind's document
-      (`sdoc_id`). It has two memos (`source_memos`, in creation order):
-      "Assistant rationale" by the assistant and "User remark" by the test user.
-    - `source_plain_id`: the assistant's annotation at position 1 of the same
-      document, without memos.
-    - `other_sdoc_source_id`: the assistant's annotation on the kind's other
-      document (`other_sdoc_id`).
-    - `other_project_source_id`: the test user's annotation in "Other Project"
-      (code "Other Code").
-
-    Position p of a span is characters 10p..10p+4 / tokens 2p..2p+1, of a sentence
-    annotation sentence p, of a bbox the square (10p, 10p)..(10p+5, 10p+5).
-
-    Non-obvious derived behavior:
-
-    - The test user has no annotations in `project` yet, so every annotation the
-      tests create is the first one of the test user.
-    - None of the fixture annotations is a copy: they have no provenance.
-    """
+def create_provenance_project(
+    db_session: Session, test_user: UserORM, project_with_sdoc: ProjectWithSdoc
+) -> ProvenanceProject:
+    """Create the projects described in `ProvenanceProject`."""
     project = project_with_sdoc["project"]
     text_sdoc = project_with_sdoc["source_document"]
 
@@ -377,19 +482,9 @@ class KindCopies(TypedDict):
 
 
 class ProvenanceProjectWithCopies(ProvenanceProject):
-    span_copies: KindCopies
-    sentence_copies: KindCopies
-    bbox_copies: KindCopies
-
-
-@pytest.fixture(scope="function")
-def provenance_project_with_copies(
-    db_session, provenance_project
-) -> ProvenanceProjectWithCopies:
     """
-    This fixture sets up the project of `provenance_project` (see there), in which
-    the test user has, for each annotation kind, `provenance_project_with_copies[
-    f"{kind}_copies"]`:
+    `create_provenance_copies` extends the project of `ProvenanceProject` (see
+    there): the test user has, for each annotation kind, `project[f"{kind}_copies"]`:
 
     - `copy_id`: a copy of the assistant's `source_id` annotation (position 0 of the
       kind's document) with code "Code B": the test user accepted it and changed
@@ -403,6 +498,16 @@ def provenance_project_with_copies(
     - Deleting "Code A" deletes all of the assistant's annotations (they have Code
       A), but neither of the test user's annotations.
     """
+
+    span_copies: KindCopies
+    sentence_copies: KindCopies
+    bbox_copies: KindCopies
+
+
+def create_provenance_copies(
+    db_session: Session, provenance_project: ProvenanceProject
+) -> ProvenanceProjectWithCopies:
+    """Create the copies described in `ProvenanceProjectWithCopies`."""
     user = provenance_project["user"]
     code_b = provenance_project["code_b"]
 

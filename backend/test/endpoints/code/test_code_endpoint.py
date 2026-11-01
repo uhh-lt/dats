@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
+from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind, get_annotation
 
 
 def test_create_new_code(client: TestClient, test_project):
@@ -274,3 +275,30 @@ def test_enable_child_code_keeps_enabled_ancestors(
     response = client.get(f"/code/{parent.id}")
     assert response.status_code == 200, response.text
     assert CodeRead.model_validate(response.json()).enabled is True
+
+
+# ===========================================================================
+# DELETE CODE (/code/{code_id}) TESTS: PROVENANCE
+# ===========================================================================
+# The provenance columns are ON DELETE SET NULL: deleting the source annotation, its
+# user or its code clears only that column of the copy and keeps the rest.
+
+
+@pytest.mark.parametrize("kind", ANNOTATION_KINDS)
+def test_delete_source_code_keeps_source_user_of_copy(
+    client: TestClient, provenance_project_with_copies, kind: AnnotationKind
+) -> None:
+    """Deleting "Code A" deletes the source annotation (it has Code A) and clears
+    both the copy's `source_annotation_id` and `source_code_id`; the copy (Code B)
+    and its source user stay."""
+    project = provenance_project_with_copies
+    copy_id = project[f"{kind}_copies"]["copy_id"]
+
+    response = client.delete(f"/code/{project['code_a'].id}")
+
+    assert response.status_code == 200, response.text
+    copy = get_annotation(client, kind, copy_id)
+    assert copy.code_id == project["code_b"].id
+    assert copy.source_annotation_id is None
+    assert copy.source_user_id == project["assistant"].id
+    assert copy.source_code_id is None
