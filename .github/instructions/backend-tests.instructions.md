@@ -44,7 +44,7 @@ Mark every new test that trains a model or calls the LLM provider. CI on pull re
 
 - Tests live under `backend/test/`. Endpoint tests live under `backend/test/endpoints/`.
 - **One folder per endpoint module** (e.g. `endpoints/memo/` for `memo_endpoint.py`).
-- **One test file per endpoint module**: all routes of `<name>_endpoint.py` are tested in `test_<name>_endpoint.py`, one block per route (see "Test File Organization"). Never split one endpoint module over several test files (`test_<name>_endpoint_<route>.py`). Tests that do not call an endpoint module (import/export round trips, e2e job runs) get their own file named after what they test (`test_prompt_eximport.py`).
+- **One test file per endpoint module**: all routes of `<name>_endpoint.py` are tested in `test_<name>_endpoint.py`, one block per route (see "Test File Organization"). Never split one endpoint module over several test files (`test_<name>_endpoint_<route>.py`). Tests that do not call an endpoint module get their own file named after what they test: import/export round trips in `endpoints/eximport/` (`test_prompt_eximport.py`), e2e job runs in the folder of their module (`classifier/test_classifier_job_e2e.py`).
 - **Each folder has its own `conftest.py`** with the fixtures its tests need.
 
 ## conftest.py Responsibilities
