@@ -15,12 +15,14 @@ from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
+from core.user.user_orm import UserORM
 from provenance_test_utils import (
     ProvenanceProject,
     ProvenanceProjectWithCopies,
     create_provenance_copies,
     create_provenance_project,
 )
+from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
 
 
 class ProjectWithSpanAnnotation(TypedDict):
@@ -294,3 +296,11 @@ def provenance_project_with_copies(
 ) -> ProvenanceProjectWithCopies:
     """The project described in `ProvenanceProjectWithCopies`."""
     return create_provenance_copies(db_session, provenance_project)
+
+
+@pytest.fixture(scope="function")
+def virtual_user_project(
+    db_session, test_user: UserORM, test_project: ProjectORM
+) -> VirtualUserProject:
+    """The projects described in `VirtualUserProject`."""
+    return create_virtual_user_project(db_session, test_user, test_project)

@@ -21,6 +21,7 @@ from provenance_test_utils import (
     create_provenance_copies,
     create_provenance_project,
 )
+from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
 
 
 class MissingValueNamedCodes(TypedDict):
@@ -171,3 +172,11 @@ def provenance_project_with_copies(
     return create_provenance_copies(
         db_session, create_provenance_project(db_session, test_user, project_with_sdoc)
     )
+
+
+@pytest.fixture(scope="function")
+def virtual_user_project(
+    db_session, test_user: UserORM, test_project: ProjectORM
+) -> VirtualUserProject:
+    """The projects described in `VirtualUserProject`."""
+    return create_virtual_user_project(db_session, test_user, test_project)
