@@ -364,6 +364,33 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title="Experiment Studio" placement="right" arrow disableHoverListener={isExpanded}>
+                <LinkListItemButton
+                  to="/project/$projectId/experiments"
+                  params={{ projectId }}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: isExpanded ? "initial" : "center",
+                    px: 2.5,
+                    bgcolor: isActive("/experiments") ? selectedColor : "transparent",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: isExpanded ? 3 : "auto",
+                      justifyContent: "center",
+                      color: "primary.contrastText",
+                    }}
+                  >
+                    {getIconComponent(Icon.EXPERIMENT)}
+                  </ListItemIcon>
+                  {isExpanded && <ListItemText>Experiments</ListItemText>}
+                </LinkListItemButton>
+              </Tooltip>
+            </ListItem>
+
+            <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Whiteboard (⌘⇧B)" placement="right" arrow disableHoverListener={isExpanded}>
                 <LinkListItemButton
                   to="/project/$projectId/whiteboard"

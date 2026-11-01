@@ -65,6 +65,7 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
+import ScienceIcon from "@mui/icons-material/Science";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import TuneIcon from "@mui/icons-material/Tune";
@@ -173,6 +174,9 @@ export enum Icon {
 
   // PROMPTS
   PROMPT = "prompt",
+
+  // EXPERIMENT STUDIO
+  EXPERIMENT = "experiment",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -319,6 +323,9 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // PROMPTS
   [Icon.PROMPT]: (iconProps) => <TextSnippetIcon {...iconProps} />,
+
+  // EXPERIMENT STUDIO
+  [Icon.EXPERIMENT]: (iconProps) => <ScienceIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,

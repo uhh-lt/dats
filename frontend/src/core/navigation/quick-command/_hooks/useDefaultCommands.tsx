@@ -117,6 +117,17 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["prompt", "template", "llm", "assistant", "placeholder", "few-shot", "examples"],
       },
       {
+        id: "experiments",
+        title: "Open Experiment Studio",
+        description: "Go to the experiments of the project: compare prompt versions and models",
+        category: "Navigation",
+        icon: getIconComponent(Icon.EXPERIMENT),
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/experiments", params: { projectId } });
+        },
+        keywords: ["experiment", "run", "prompt", "model", "llm", "evaluation", "gold", "f1"],
+      },
+      {
         id: "annotation-view",
         title: "Annotation View",
         description: "Go to annotation view",
