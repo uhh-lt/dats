@@ -11,6 +11,8 @@ from core.user.user_orm import UserORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_exceptions import NoSuchElementError
 
+VIRTUAL_USER_EMAIL_DOMAIN = "virtual.dats"
+
 SYSTEM_USER_ID: int = 1
 DEMO_USER_ID: int = 2
 
@@ -44,7 +46,7 @@ class CRUDUser(SQLCRUDBase[UserORM, UserCreate, UserUpdate]):
             project_id=project_id,
             first_name=name,
             last_name="",
-            email=email or f"{uuid4().hex}@virtual.dats",
+            email=email or f"{uuid4().hex}@{VIRTUAL_USER_EMAIL_DOMAIN}",
             password=secrets.token_hex(32),
         )
         db.add(db_obj)

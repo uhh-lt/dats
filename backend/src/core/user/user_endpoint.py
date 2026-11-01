@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
+from core.auth.auth_exceptions import InvalidError
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectUserLinks
@@ -148,6 +149,9 @@ def update_by_id(
     ws: WebsocketEmitter = Depends(),
 ) -> UserRead:
     authz_user.assert_in_same_project_as(Crud.USER, user_id)
+    # the email and password of a virtual user are generated, never chosen
+    if user.email is not None or user.password is not None:
+        raise InvalidError("The email and password of a virtual user cannot be changed")
 
     result = UserRead.model_validate(
         crud_user.update(db=db, id=user_id, update_dto=user)
@@ -173,6 +177,9 @@ def associate_user_to_project(
     authz_user.assert_in_project(project_id)
 
     user_db_obj = crud_user.read_by_email(db=db, email=user.email)
+    # virtual users belong to their project without being members
+    if user_db_obj.is_virtual:
+        raise InvalidError("Virtual users cannot become project members")
     ProjectService().associate_user(
         db=db, project_id=project_id, user_id=user_db_obj.id
     )
