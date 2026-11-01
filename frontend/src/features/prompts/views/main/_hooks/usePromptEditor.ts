@@ -177,14 +177,17 @@ export function usePromptEditor(
   projectId: number,
   prompt: PromptRead | undefined,
   onSelectPrompt: (promptId: number) => void,
+  requestedVersionId?: number,
 ): PromptEditorState | undefined {
-  // the shown version: the selected one of this prompt, the latest by default
+  // the shown version: the selected one of this prompt, else the requested one (URL), the latest by default
   const [selectedVersion, setSelectedVersion] = useState<{ promptId: number; versionId: number }>();
   const latest = prompt?.versions[prompt.versions.length - 1];
   const version =
     prompt?.versions.find(
       (candidate) => selectedVersion?.promptId === prompt.id && candidate.id === selectedVersion.versionId,
-    ) ?? latest;
+    ) ??
+    prompt?.versions.find((candidate) => candidate.id === requestedVersionId) ??
+    latest;
   const onChangeVersion = useCallback(
     (versionId: number) => {
       if (prompt) setSelectedVersion({ promptId: prompt.id, versionId });
