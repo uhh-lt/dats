@@ -60,6 +60,7 @@ nav:
           - Word Frequency: feature-guides/analysis/word-frequency-analysis.md
       - LLM Assistant: feature-guides/llm-assistant.md
       - Prompts: feature-guides/prompts.md
+      - Experiment Studio: feature-guides/experiment-studio.md
       - AI Tools via MCP: feature-guides/mcp-integration.md
       - Perspectives: feature-guides/perspectives.md
       - Classifier: feature-guides/classifier.md
