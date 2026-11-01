@@ -12,7 +12,8 @@ const agreementSearchSchema = z.object({
   comparedUserId: z.coerce.number().optional(),
   annotationType: z.nativeEnum(AgreementAnnotationType).default(AgreementAnnotationType.SPAN),
   scoring: z.nativeEnum(AgreementScoring).default(AgreementScoring.CONSTITUENTS),
-  tagIds: z.array(z.coerce.number()).default([]),
+  // the compared documents, e.g. the documents of an experiment run
+  sdocIds: z.array(z.coerce.number()).default([]),
   codeIds: z.array(z.coerce.number()).default([]),
   // opt-in: hide the codes that no annotator used from scores and confusion matrix
   hideUnusedCodes: searchParamBooleanValidator({ default: false }),
