@@ -46,6 +46,7 @@ class JobType(str, Enum):
     ML = "ml"
     CLASSIFIER = "classifier"
     LLM_ASSISTANT = "llm_assistant"
+    EXPERIMENT_RUN = "experiment_run"
     CRAWLER = "crawler"
     COTA_REFINEMENT = "cota_refinement"
     PERSPECTIVES = "perspectives"

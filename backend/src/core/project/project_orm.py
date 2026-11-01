@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
     from modules.classifier.classifier_orm import ClassifierORM
+    from modules.experiment.experiment_orm import ExperimentORM
     from modules.perspectives.aspect_orm import AspectORM
     from modules.search_view.search_view_orm import SearchViewORM
     from modules.whiteboard.whiteboard_orm import WhiteboardORM
@@ -141,6 +142,13 @@ class ProjectORM(ORMBase):
 
     classifiers: Mapped[list["ClassifierORM"]] = relationship(
         "ClassifierORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    experiments: Mapped[list["ExperimentORM"]] = relationship(
+        "ExperimentORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

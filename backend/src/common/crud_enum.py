@@ -27,6 +27,8 @@ from modules.classifier.classifier_crud import crud_classifier
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
+from modules.experiment.experiment_crud import crud_experiment
+from modules.experiment.experiment_run_crud import crud_experiment_run
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
@@ -50,6 +52,8 @@ class Crud(Enum):
     CODE = crud_code
     COTA_ANALYSIS = crud_cota
     DOCUMENT_ASPECT = crud_document_aspect
+    EXPERIMENT = crud_experiment
+    EXPERIMENT_RUN = crud_experiment_run
     TAG = crud_tag
     TAG_RECOMMENDATION = crud_tag_recommendation_link
     FOLDER = crud_folder
