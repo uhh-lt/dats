@@ -9,11 +9,12 @@ import { userQueries } from "./userQueries";
 // USER QUERIES
 // The queries themselves live in userQueries. The hooks below only derive data from them.
 
+// one user of the project; undefined while the project's users do not contain it (yet), e.g. a just created virtual user
 const useGetUser = (userId: number | null | undefined) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
     ...userQueries.byProject(projectId),
-    select: (data) => data.find((user) => user.id === userId)!,
+    select: (data) => data.find((user) => user.id === userId),
     enabled: !!userId,
   });
 };

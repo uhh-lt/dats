@@ -26,10 +26,12 @@ export const UserRenderer = memo(({ user, ...props }: UserRendererProps) => {
 const UserRendererWithoutData = memo(({ userId, ...props }: { userId: number } & UserRendererSharedProps) => {
   const user = UserHooks.useGetUser(userId);
 
-  if (user.isSuccess) {
+  if (user.data) {
     return <UserRendererWithData user={user.data} {...props} />;
   } else if (user.isError) {
     return <div>{user.error.message}</div>;
+  } else if (user.isSuccess) {
+    return <div>User {userId}</div>;
   } else {
     return <div>Loading...</div>;
   }
