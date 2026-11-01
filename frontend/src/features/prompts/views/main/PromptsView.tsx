@@ -14,7 +14,7 @@ const routeApi = getRouteApi("/_auth/project/$projectId/prompts");
 /** The prompts of a project: explorer, editor with versions and preview, blocks and their settings. */
 export function PromptsView() {
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
-  const promptId = routeApi.useSearch({ select: (search) => search.promptId });
+  const { promptId, versionId } = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { promptsByProjectOptions } = routeApi.useRouteContext();
   const { data: promptMap } = useSuspenseQuery(promptsByProjectOptions);
@@ -27,7 +27,7 @@ export function PromptsView() {
     },
     [navigate],
   );
-  const editor = usePromptEditor(projectId, prompt, handleSelect);
+  const editor = usePromptEditor(projectId, prompt, handleSelect, versionId);
 
   return (
     <SidebarContentSidebarLayout

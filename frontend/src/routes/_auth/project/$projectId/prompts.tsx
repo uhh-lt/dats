@@ -9,6 +9,8 @@ import { z } from "zod";
 const promptsSearchSchema = z.object({
   // the prompt opened in the editor
   promptId: z.coerce.number().optional(),
+  // the version shown in the editor (e.g. the version of an experiment run); the latest by default
+  versionId: z.coerce.number().optional(),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/prompts")({
