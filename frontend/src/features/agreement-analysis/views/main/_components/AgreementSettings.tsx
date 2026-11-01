@@ -1,6 +1,6 @@
 import { AgreementScoringSelector } from "@components/AgreementScoringSelector";
 import { CodeSelector } from "@core/code";
-import { TagSelector } from "@core/tag";
+import { SdocSelectionDialog } from "@core/source-document";
 import { useURLConnector } from "@hooks/useURLConnector";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import {
@@ -21,18 +21,18 @@ import { AnnotatorSelector } from "./AnnotatorSelector";
 import { AgreementParams } from "@models/AgreementParams";
 
 interface AgreementSettingsProps {
-  numSdocs: number | undefined;
   params: AgreementParams | undefined;
 }
 
-export function AgreementSettings({ numSdocs, params }: AgreementSettingsProps) {
+export function AgreementSettings({ params }: AgreementSettingsProps) {
   // global client state (URL)
+  const projectId = AgreementAnalysisRouteAPI.useParams({ select: (urlParams) => urlParams.projectId });
   const navigate = AgreementAnalysisRouteAPI.useNavigate();
   const [referenceUserId, setReferenceUserId] = useURLConnector(AgreementAnalysisRouteAPI, "referenceUserId");
   const [comparedUserId, setComparedUserId] = useURLConnector(AgreementAnalysisRouteAPI, "comparedUserId");
   const [annotationType, setAnnotationType] = useURLConnector(AgreementAnalysisRouteAPI, "annotationType");
   const [scoring, setScoring] = useURLConnector(AgreementAnalysisRouteAPI, "scoring");
-  const [tagIds, setTagIds] = useURLConnector(AgreementAnalysisRouteAPI, "tagIds");
+  const [sdocIds, setSdocIds] = useURLConnector(AgreementAnalysisRouteAPI, "sdocIds");
   const [codeIds, setCodeIds] = useURLConnector(AgreementAnalysisRouteAPI, "codeIds");
   const [hideUnusedCodes, setHideUnusedCodes] = useURLConnector(AgreementAnalysisRouteAPI, "hideUnusedCodes");
 
@@ -91,20 +91,19 @@ export function AgreementSettings({ numSdocs, params }: AgreementSettingsProps) 
               fullWidth
             />
           </Stack>
-          <Stack spacing={0.5}>
-            <TagSelector
-              multiple
-              title="Documents with tag(s)"
-              tagIds={tagIds}
-              onTagIdChange={setTagIds}
-              size="small"
+          <Stack direction="row" alignItems="center" gap={1}>
+            <SdocSelectionDialog
+              projectId={projectId}
+              filterName="agreementDocuments"
+              title="Select the documents to compare"
+              sdocIds={sdocIds}
+              onChange={setSdocIds}
+              buttonProps={{ variant: "outlined" }}
             />
-            <Typography variant="caption" color="textSecondary">
-              {tagIds.length === 0
-                ? "Select the tags of the documents to compare."
-                : numSdocs === undefined
-                  ? "Loading documents..."
-                  : `${numSdocs} document(s) carry at least one of the tags.`}
+            <Typography variant="body2" color="textSecondary">
+              {sdocIds.length === 0
+                ? "Select the documents to compare."
+                : `The annotators are compared on ${sdocIds.length} document(s).`}
             </Typography>
           </Stack>
           <CodeSelector

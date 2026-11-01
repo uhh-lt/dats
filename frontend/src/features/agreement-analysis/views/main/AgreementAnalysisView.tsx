@@ -9,7 +9,6 @@ import { AgreementConfusionMatrix } from "./_components/AgreementConfusionMatrix
 import { AgreementScoreTable } from "./_components/AgreementScoreTable";
 import { AgreementSegmentList } from "./_components/AgreementSegmentList";
 import { AgreementSettings } from "./_components/AgreementSettings";
-import { useAgreementSdocIds } from "./_hooks/useAgreementSdocIds";
 import { AgreementAnalysisRouteAPI } from "./_hooks/agreementAnalysisRouteAPI";
 import { withoutUnusedCodes } from "./_utils/agreementResultUtils";
 import { AgreementCell } from "./_utils/agreementUtils";
@@ -23,20 +22,17 @@ export function AgreementAnalysisView() {
     comparedUserId,
     annotationType,
     scoring,
-    tagIds,
+    sdocIds,
     codeIds,
     hideUnusedCodes,
     cellReferenceCodeId,
     cellComparedCodeId,
   } = AgreementAnalysisRouteAPI.useSearch();
 
-  // the documents to compare
-  const { sdocIds, isError: isSdocsError } = useAgreementSdocIds(tagIds);
-
   // global server state (react query)
   const params: AgreementParams | undefined = useMemo(() => {
     if (referenceUserId === undefined || comparedUserId === undefined) return undefined;
-    if (!sdocIds || sdocIds.length === 0 || codeIds.length === 0) return undefined;
+    if (sdocIds.length === 0 || codeIds.length === 0) return undefined;
     return {
       sdoc_ids: sdocIds,
       code_ids: codeIds,
@@ -51,10 +47,9 @@ export function AgreementAnalysisView() {
   // what is missing before the agreement can be computed
   const missingSelection = [
     ...(referenceUserId === undefined || comparedUserId === undefined ? ["two annotators"] : []),
-    ...(tagIds.length === 0 ? ["the tags of the documents"] : []),
+    ...(sdocIds.length === 0 ? ["documents"] : []),
     ...(codeIds.length === 0 ? ["codes"] : []),
   ];
-  const hasNoDocuments = tagIds.length > 0 && sdocIds !== undefined && sdocIds.length === 0;
 
   // opt-in: hide the codes that no annotator used
   const displayResult = useMemo(
@@ -97,15 +92,10 @@ export function AgreementAnalysisView() {
     <ContentContentLayout
       leftContent={
         <Stack spacing={2} p={2}>
-          <AgreementSettings numSdocs={sdocIds?.length} params={params} />
-          {isSdocsError && <Alert severity="error">Could not load the documents of the selected tags.</Alert>}
+          <AgreementSettings params={params} />
           {missingSelection.length > 0 ? (
             <CardContainer>
               <CardHeader title={`Select ${missingSelection.join(", ")} above!`} />
-            </CardContainer>
-          ) : hasNoDocuments ? (
-            <CardContainer>
-              <CardHeader title="The selected tags contain no documents." />
             </CardContainer>
           ) : agreement.isError ? (
             <Alert severity="error">{agreement.error.message}</Alert>
