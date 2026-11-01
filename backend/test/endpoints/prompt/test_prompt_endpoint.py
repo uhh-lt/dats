@@ -3,7 +3,10 @@ from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
 from common.meta_type_enum import MetaType
-from core.prompt.prompt_blocks import OUTPUT_FORMAT_INSTRUCTIONS
+from core.prompt.prompt_blocks import (
+    OUTPUT_FORMAT_INSTRUCTIONS,
+    REASONING_NOT_REQUESTED,
+)
 from core.prompt.prompt_defaults import DEFAULT_PROMPTS
 from core.prompt.prompt_dto import (
     PromptCode,
@@ -315,7 +318,9 @@ def test_create_prompt_stores_the_content_as_version_one(
         task_type=TaskType.ANNOTATION,
         language=PromptLanguage.DE,
         text=SPAN_V2_PROMPT,
-        settings=PromptSettings(chunk_size_tokens=100, chunk_overlap_tokens=10),
+        settings=PromptSettings(
+            chunk_size_tokens=100, chunk_overlap_tokens=10, request_reasoning=True
+        ),
         codes=[prompt_code(project["claim_code"])],
         examples=[project["alice_example"]],
     )
@@ -1193,6 +1198,17 @@ def _blocks(preview: PromptPreview) -> dict[str, str]:
     return {block.placeholder: block.text for block in preview.blocks}
 
 
+def _instructions(
+    output_format: OutputFormat,
+    language: PromptLanguage = PromptLanguage.EN,
+    **values: int,
+) -> str:
+    """The answer instructions of an annotation format without requested reasoning."""
+    return OUTPUT_FORMAT_INSTRUCTIONS[output_format][language].format(
+        **REASONING_NOT_REQUESTED[output_format][language], **values
+    )
+
+
 # --- A. prompts without a document --------------------------------------------------
 
 
@@ -1209,7 +1225,7 @@ def test_preview_of_a_draft_without_document_keeps_the_document_block(
     )
     preview = _preview(client, _request(project, draft=draft))
 
-    instructions = OUTPUT_FORMAT_INSTRUCTIONS[OutputFormat.SENTENCES][PromptLanguage.EN]
+    instructions = _instructions(OutputFormat.SENTENCES)
     assert preview.sdoc_id is None
     assert preview.message_index == 0
     assert preview.num_messages == 0
@@ -1258,6 +1274,108 @@ def test_preview_lists_unknown_placeholders(
     assert preview.unknown_placeholders == ["<code>", "<sentence>"]
     assert preview.text.startswith(f"<code> CLAIM: {CLAIM_DESCRIPTION}\n")
     assert "\n<sentence> <code>\n<document:whole>" in preview.text
+
+
+@pytest.mark.parametrize(
+    "task_type,output_format,language,reasoning_request,no_reasoning_request",
+    [
+        # Inline tags: an extra rule and example, nothing without the setting.
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.INLINE,
+            PromptLanguage.EN,
+            "- For every tagged passage, in the order of the tags, also give the "
+            "passage and a short reasoning (one or two sentences) why it fits its "
+            "code\n",
+            None,
+            id="inline-en",
+        ),
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.INLINE,
+            PromptLanguage.DE,
+            "\n\nBegründungen:\nPassage: Umfrageergebnisse\nBegründung: ",
+            None,
+            id="inline-de",
+        ),
+        # Quotes with context: an extra rule and a reasoning in the example.
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.CONTEXT,
+            PromptLanguage.EN,
+            "- For every passage, give a short reasoning (one or two sentences) "
+            "why it fits its category.\n",
+            None,
+            id="context-en",
+        ),
+        pytest.param(
+            TaskType.ANNOTATION,
+            OutputFormat.CONTEXT,
+            PromptLanguage.DE,
+            "\nBegründung: Der Bericht stellt die gesenkten Emissionen als sein "
+            "Ergebnis dar.",
+            None,
+            id="context-de",
+        ),
+        # Sentences: the ban of reasoning becomes a request for it.
+        pytest.param(
+            TaskType.SENTENCE_ANNOTATION,
+            OutputFormat.SENTENCES,
+            PromptLanguage.EN,
+            "use only the provided categories, and briefly explain each "
+            "classification in one or two sentences.",
+            "use only the provided categories, and do not provide reasoning.",
+            id="sentences-en",
+        ),
+        pytest.param(
+            TaskType.SENTENCE_ANNOTATION,
+            OutputFormat.SENTENCES,
+            PromptLanguage.DE,
+            "verwende nur die bereitgestellten Kategorien und begründe jede "
+            "Klassifikation kurz in ein bis zwei Sätzen.",
+            "verwende nur die bereitgestellten Kategorien und gib keine Begründung an.",
+            id="sentences-de",
+        ),
+    ],
+)
+def test_preview_instructions_ask_for_reasoning_only_when_requested(
+    client: TestClient,
+    prompt_project: PromptProject,
+    task_type: TaskType,
+    output_format: OutputFormat,
+    language: PromptLanguage,
+    reasoning_request: str,
+    no_reasoning_request: str | None,
+) -> None:
+    """``request_reasoning`` switches the answer instructions of the annotation
+    formats; without it (the default) they stay as they were."""
+    project = prompt_project
+    placeholder = f"<output-format:{output_format.value}>"
+
+    def instructions(request_reasoning: bool) -> str:
+        draft = _draft(
+            task_type,
+            f"<codes>\n{placeholder}\n<document:whole>",
+            codes=[prompt_code(project["claim_code"])],
+            settings=PromptSettings(request_reasoning=request_reasoning),
+            language=language,
+        )
+        return _blocks(_preview(client, _request(project, draft=draft)))[placeholder]
+
+    with_reasoning = instructions(True)
+    without_reasoning = instructions(False)
+
+    assert reasoning_request in with_reasoning
+    assert reasoning_request not in without_reasoning
+    if no_reasoning_request is None:
+        assert "reason" not in without_reasoning.lower()
+        assert "begründ" not in without_reasoning.lower()
+    else:
+        assert no_reasoning_request in without_reasoning
+        assert no_reasoning_request not in with_reasoning
+    assert without_reasoning == _instructions(
+        output_format, language, context_before_chars=64, context_after_chars=64
+    )
 
 
 # --- B. documents and messages ------------------------------------------------------
@@ -1328,7 +1446,7 @@ def test_preview_splits_the_document_by_its_unit(
             message_index=message_index,
         ),
     )
-    instructions = OUTPUT_FORMAT_INSTRUCTIONS[OutputFormat.INLINE][PromptLanguage.EN]
+    instructions = _instructions(OutputFormat.INLINE)
     assert preview.sdoc_id == project["sdoc"].id
     assert preview.message_index == message_index
     assert preview.num_messages == expected_num_messages
@@ -1540,9 +1658,9 @@ def test_preview_context_examples_show_quotes_with_context(
 
     assert preview.is_fewshot
     assert _blocks(preview)["<examples>"] == expected_examples
-    assert _blocks(preview)["<output-format:context>"] == OUTPUT_FORMAT_INSTRUCTIONS[
-        OutputFormat.CONTEXT
-    ][language].format(context_before_chars=5, context_after_chars=5)
+    assert _blocks(preview)["<output-format:context>"] == _instructions(
+        OutputFormat.CONTEXT, language, context_before_chars=5, context_after_chars=5
+    )
 
 
 def test_preview_sentence_examples_are_grouped_by_code(

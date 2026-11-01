@@ -14,6 +14,8 @@ from core.prompt.prompt_blocks import (
     METADATA_ANSWER_TEMPLATES,
     METADATA_EXAMPLE_VALUES,
     OUTPUT_FORMAT_INSTRUCTIONS,
+    REASONING_NOT_REQUESTED,
+    REASONING_REQUESTED,
     SENTENCE_EXAMPLES_HEADERS,
 )
 from core.prompt.prompt_dto import (
@@ -133,9 +135,15 @@ class PromptRenderer:
     def _render_instructions(self) -> str:
         settings = self.prompt.settings
         fields = self.prompt.metadata_fields
+        reasoning = (
+            REASONING_REQUESTED
+            if settings.request_reasoning
+            else REASONING_NOT_REQUESTED
+        )
         return OUTPUT_FORMAT_INSTRUCTIONS[self.output_format][
             self.prompt.language
         ].format(
+            **reasoning.get(self.output_format, {}).get(self.prompt.language, {}),
             context_before_chars=settings.context_before_chars,
             context_after_chars=settings.context_after_chars,
             metadata_answer_template="\n".join(
