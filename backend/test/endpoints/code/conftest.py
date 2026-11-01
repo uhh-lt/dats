@@ -6,6 +6,11 @@ from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
 from core.project.project_orm import ProjectORM
+from provenance_test_utils import (
+    ProvenanceProjectWithCopies,
+    create_provenance_copies,
+    create_provenance_project,
+)
 
 
 class ProjectWithCode(TypedDict):
@@ -151,3 +156,13 @@ def project_with_code_hierarchy(db_session, test_project) -> ProjectWithCodeHier
         "parent_code": parent_code,
         "child_code": child_code,
     }
+
+
+@pytest.fixture(scope="function")
+def provenance_project_with_copies(
+    db_session, test_user, project_with_sdoc
+) -> ProvenanceProjectWithCopies:
+    """The project described in `ProvenanceProjectWithCopies`."""
+    return create_provenance_copies(
+        db_session, create_provenance_project(db_session, test_user, project_with_sdoc)
+    )

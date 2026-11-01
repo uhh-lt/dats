@@ -31,13 +31,21 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_orm import MemoORM
+from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.project.project_service import ProjectService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from provenance_test_utils import (
+    ProvenanceProjectWithCopies,
+    create_provenance_copies,
+    create_provenance_project,
+)
 
 
 class SearchProjectState(TypedDict):
@@ -642,3 +650,32 @@ def search_project(
         "subfolder": subfolder,
         "memos": memos,
     }
+
+
+@pytest.fixture(scope="session")
+def provenance_project_with_copies(
+    seed_db_session, test_user
+) -> ProvenanceProjectWithCopies:
+    """The project described in `ProvenanceProjectWithCopies`, built once next to
+    `search_project`. It is a project of its own, titled "Provenance Project"
+    (project titles are unique), so it changes no result of the `search_project`
+    tests."""
+    project = crud_project.read(
+        db=seed_db_session,
+        id=ProjectService()
+        .create_project(
+            db=seed_db_session,
+            create_dto=ProjectCreate(
+                title="Provenance Project", description="Annotation provenance"
+            ),
+            creating_user_id=test_user.id,
+        )
+        .id,
+    )
+    project_with_sdoc = dats_test_utils.create_project_with_sdoc(
+        seed_db_session, project
+    )
+    return create_provenance_copies(
+        seed_db_session,
+        create_provenance_project(seed_db_session, test_user, project_with_sdoc),
+    )

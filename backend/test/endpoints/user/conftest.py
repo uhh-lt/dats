@@ -7,6 +7,11 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from provenance_test_utils import (
+    ProvenanceProjectWithCopies,
+    create_provenance_copies,
+    create_provenance_project,
+)
 
 
 class ProjectWithUser(TypedDict):
@@ -42,3 +47,13 @@ def project_with_user(db_session, test_project) -> ProjectWithUser:
         "project": test_project,
         "user": user,
     }
+
+
+@pytest.fixture(scope="function")
+def provenance_project_with_copies(
+    db_session, test_user, project_with_sdoc
+) -> ProvenanceProjectWithCopies:
+    """The project described in `ProvenanceProjectWithCopies`."""
+    return create_provenance_copies(
+        db_session, create_provenance_project(db_session, test_user, project_with_sdoc)
+    )

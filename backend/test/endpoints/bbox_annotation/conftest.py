@@ -14,6 +14,12 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
+from provenance_test_utils import (
+    ProvenanceProject,
+    ProvenanceProjectWithCopies,
+    create_provenance_copies,
+    create_provenance_project,
+)
 
 
 class ProjectWithBBoxAnnotation(TypedDict):
@@ -102,3 +108,17 @@ def project_with_bbox_annotation(
         "code2": code2,
         "bbox_annotation": bbox_annotation,
     }
+
+
+@pytest.fixture(scope="function")
+def provenance_project(db_session, test_user, project_with_sdoc) -> ProvenanceProject:
+    """The projects described in `ProvenanceProject`."""
+    return create_provenance_project(db_session, test_user, project_with_sdoc)
+
+
+@pytest.fixture(scope="function")
+def provenance_project_with_copies(
+    db_session, provenance_project
+) -> ProvenanceProjectWithCopies:
+    """The project described in `ProvenanceProjectWithCopies`."""
+    return create_provenance_copies(db_session, provenance_project)
