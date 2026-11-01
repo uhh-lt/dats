@@ -19,6 +19,8 @@ A prompt is text with **blocks**, which are replaced when the prompt is sent. Th
 
 A block expands with its settings as soon as the prompt contains it: write `<codes>` and the code selection appears, write `<examples>` and the example selection appears. `<document>` and `<output-format>` are written with their setting after a colon, e.g. `<document:chunks>`; the **Input format** setting of the Document block and the **Output format** setting change it for you. **About ...** in the Output format block explains the selected format with an example.
 
+The Output format block of the annotation formats (inline, context and sentences) has a **Request reasoning** setting. With it on, the answer instructions ask the model for a short reasoning per annotation, and the [LLM Assistant](llm-assistant.md) stores each reasoning as a memo titled _LLM reasoning_ on its annotation, authored by the run's virtual user. Suggestions merged into one annotation (overlapping spans, consecutive sentences) share one memo with a paragraph per reasoning.
+
 A placeholder-like text that no block fills, e.g. a typo like `<code>`, is sent to the model as it is; the preview warns about it.
 
 ## The prompt's own definitions
