@@ -24,9 +24,22 @@ class LLMExtractedPassage(BaseModel):
     )
 
 
+class LLMExtractedPassageWithReasoning(LLMExtractedPassage):
+    reasoning: str = Field(
+        description="A short reasoning (one or two sentences) why the passage fits its category"
+    )
+
+
 class LLMExtractionResult(BaseModel):
     passages: list[LLMExtractedPassage] = Field(
         default_factory=list, description="The extracted relevant text passages"
+    )
+
+
+class LLMExtractionResultWithReasoning(BaseModel):
+    passages: list[LLMExtractedPassageWithReasoning] = Field(
+        default_factory=list,
+        description="The extracted relevant text passages with their reasoning",
     )
 
 
@@ -50,15 +63,20 @@ class FuzzyGroundingStrategy(CodeAnnotationStrategy):
 
     output_format = OutputFormat.CONTEXT
 
-    def get_response_model(self) -> type[LLMExtractionResult]:
-        """Return the structured schema for extracted text passages."""
+    def get_response_model(
+        self,
+    ) -> type[LLMExtractionResult] | type[LLMExtractionResultWithReasoning]:
+        """Return the structured schema for extracted text passages, with a
+        reasoning per passage if the prompt requests it."""
+        if self.prompt.settings.request_reasoning:
+            return LLMExtractionResultWithReasoning
         return LLMExtractionResult
 
     # --- PARSING + GROUNDING ---
 
     def parse_result(
         self,
-        result: LLMExtractionResult,
+        result: LLMExtractionResult | LLMExtractionResultWithReasoning,
         sdoc_data: SourceDocumentDataORM,
         message_id: int,
     ) -> list[ParsedSpan]:
@@ -106,6 +124,11 @@ class FuzzyGroundingStrategy(CodeAnnotationStrategy):
                     text=sdoc_data.content[begin:end],
                     begin=begin,
                     end=end,
+                    reasoning=(
+                        passage.reasoning
+                        if isinstance(passage, LLMExtractedPassageWithReasoning)
+                        else None
+                    ),
                 )
             )
 

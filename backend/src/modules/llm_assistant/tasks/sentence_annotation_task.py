@@ -5,6 +5,7 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
 )
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
+from core.memo.memo_enum import AttachedObjectType
 from core.prompt.prompt_enum import TaskType
 from modules.llm_assistant.llm_assistant_job_dto import (
     SentenceAnnotationLLMAssistantJobResult,
@@ -12,8 +13,10 @@ from modules.llm_assistant.llm_assistant_job_dto import (
 )
 from modules.llm_assistant.strategies.sentence_annotation_strategy import (
     LLMSentenceAnnotationResults,
+    LLMSentenceAnnotationResultsWithReasoning,
     SentenceAnnotationStrategy,
 )
+from modules.llm_assistant.strategies.types.parsed_sentence import ParsedSentence
 from modules.llm_assistant.tasks.llm_assistant_document_processor import (
     LLMAssistantDocumentResponse,
 )
@@ -21,13 +24,14 @@ from modules.llm_assistant.tasks.llm_assistant_task import (
     LLMAssistantTask,
     LLMAssistantTaskContext,
     aggregate_raw_responses,
+    create_reasoning_memos,
 )
 
 
 class SentenceAnnotationTask(
     LLMAssistantTask[
         SentenceAnnotationStrategy,
-        LLMSentenceAnnotationResults,
+        LLMSentenceAnnotationResults | LLMSentenceAnnotationResultsWithReasoning,
         SentenceAnnotationResult,
     ]
 ):
@@ -97,22 +101,42 @@ class SentenceAnnotationTask(
         )
         logger.info("Deleted {} previous sentence annotations.", len(deleted_ids))
 
+    @staticmethod
+    def _reasonings_of(
+        annotation: SentenceAnnotationCreate, parsed_sentences: list[ParsedSentence]
+    ) -> list[str]:
+        """The reasonings of the classified sentences an annotation covers."""
+        return [
+            parsed["reasoning"]
+            for parsed in parsed_sentences
+            if parsed["reasoning"] is not None
+            and parsed["code_id"] == annotation.code_id
+            and annotation.sentence_id_start
+            <= parsed["sentence_id"]
+            <= annotation.sentence_id_end
+        ]
+
     def _get_response_model(
         self, strategy: SentenceAnnotationStrategy
-    ) -> type[LLMSentenceAnnotationResults]:
+    ) -> (
+        type[LLMSentenceAnnotationResults]
+        | type[LLMSentenceAnnotationResultsWithReasoning]
+    ):
         """Return the structured response model for sentence annotation."""
-        return LLMSentenceAnnotationResults
+        return strategy.get_response_model()
 
     def _process_document(
         self,
         *,
         context: LLMAssistantTaskContext[SentenceAnnotationStrategy],
-        document: LLMAssistantDocumentResponse[LLMSentenceAnnotationResults],
+        document: LLMAssistantDocumentResponse[
+            LLMSentenceAnnotationResults | LLMSentenceAnnotationResultsWithReasoning
+        ],
     ) -> SentenceAnnotationResult:
         strategy = context.strategy
         sdoc_data = document.sdoc_data
-        # (sentence_id, code_id) pairs of all responses, merged into ranges below
-        parsed_items: list[tuple[int, int]] = []
+        # the classified sentences of all responses, merged into ranges below
+        parsed_sentences: list[ParsedSentence] = []
         raw_responses: list[str] = []
         errors: list[tuple[str, str | None]] = []
         for response_item in document.responses:
@@ -129,7 +153,7 @@ class SentenceAnnotationTask(
             if response.raw is not None:
                 raw_responses.append(response.raw)
 
-            parsed_items.extend(
+            parsed_sentences.extend(
                 strategy.parse_result(
                     result=response.parsed,
                     sdoc_data=sdoc_data,
@@ -145,7 +169,10 @@ class SentenceAnnotationTask(
                 code_id=code_id,
             )
             for sentence_id_start, sentence_id_end, code_id in self._group_into_ranges(
-                parsed_items
+                [
+                    (parsed["sentence_id"], parsed["code_id"])
+                    for parsed in parsed_sentences
+                ]
             )
         ]
 
@@ -182,6 +209,15 @@ class SentenceAnnotationTask(
             "Created {} sentence annotation(s) for document {}.",
             len(created_annos_for_sdoc),
             sdoc_data.id,
+        )
+        create_reasoning_memos(
+            context,
+            attached_object_type=AttachedObjectType.sentence_annotation,
+            annotation_ids=[annotation.id for annotation in created_annos_for_sdoc],
+            reasonings=[
+                self._reasonings_of(annotation, parsed_sentences)
+                for annotation in suggested_annotations
+            ],
         )
 
         if errors:

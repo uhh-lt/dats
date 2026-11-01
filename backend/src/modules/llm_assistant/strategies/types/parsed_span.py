@@ -8,3 +8,5 @@ class ParsedSpan(TypedDict):
     text: str
     begin: int
     end: int
+    # the LLM's reasoning for the span, None if the prompt requests none
+    reasoning: str | None

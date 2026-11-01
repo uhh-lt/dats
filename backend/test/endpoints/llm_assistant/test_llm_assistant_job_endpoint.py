@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
+from core.memo.memo_dto import MemoRead
+from core.memo.memo_enum import AttachedObjectType
 from core.prompt.prompt_defaults import DEFAULT_PROMPTS
 from core.prompt.prompt_dto import (
     PromptSettings,
@@ -388,6 +390,64 @@ def test_sentence_annotation_job_covers_all_units_and_approaches(
     assert len(covered_sentence_ids) == len(set(covered_sentence_ids))
     for (_, previous_end), (next_start, _) in zip(ranges, ranges[1:]):
         assert next_start > previous_end + 1, f"FACT ranges not merged: {ranges}"
+
+
+@pytest.mark.llm
+@pytest.mark.parametrize(
+    "output_format,attached_object_type",
+    [
+        # Span formats: a reasoning per tagged passage or quote.
+        pytest.param(
+            OutputFormat.INLINE, AttachedObjectType.span_annotation, id="inline"
+        ),
+        pytest.param(
+            OutputFormat.CONTEXT, AttachedObjectType.span_annotation, id="context"
+        ),
+        # Sentences: a reasoning per classified sentence.
+        pytest.param(
+            OutputFormat.SENTENCES,
+            AttachedObjectType.sentence_annotation,
+            id="sentences",
+        ),
+    ],
+)
+def test_annotation_job_with_requested_reasoning_stores_one_memo_per_annotation(
+    client: TestClient,
+    job_prompt_project: JobPromptProject,
+    output_format: OutputFormat,
+    attached_object_type: AttachedObjectType,
+) -> None:
+    """With ``request_reasoning``, every suggested annotation has exactly one
+    non-empty reasoning memo, authored by the virtual user of the run (run A)."""
+    base = job_prompt_project["base"]
+    draft = _draft(
+        job_prompt_project,
+        output_format=output_format,
+        unit=DocumentUnit.WHOLE,
+        is_fewshot=False,
+    )
+    draft.settings = PromptSettings(request_reasoning=True)
+    started = _start_job(client, _draft_payload(job_prompt_project, draft))
+    finished = _wait_for_status(client, started.job_id, JobStatus.FINISHED)
+
+    assert finished.output is not None
+    task_result = finished.output.specific_task_result
+    assert isinstance(
+        task_result,
+        AnnotationLLMAssistantJobResult | SentenceAnnotationLLMAssistantJobResult,
+    )
+    result = task_result.results[0]
+    assert result.status == "finished", result.model_dump_json(indent=2)
+    assert result.suggested_annotations, result.model_dump_json(indent=2)
+    for annotation in result.suggested_annotations:
+        response = client.get(
+            f"/memo/attached_obj/{attached_object_type.value}/to/{annotation.id}"
+        )
+        assert response.status_code == 200, response.text
+        memos = [MemoRead.model_validate(memo) for memo in response.json()]
+        assert len(memos) == 1
+        assert memos[0].user_id == base["run_a"].id
+        assert memos[0].content.strip()
 
 
 @pytest.mark.llm

@@ -1,6 +1,6 @@
 import re
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.prompt.prompt_enum import OutputFormat
@@ -13,11 +13,19 @@ from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 
 class LLMHighlightedAnnotationResult(BaseModel):
     text: str
-    reasoning: str | None = None
 
 
-class LLMAnnotationResults(BaseModel):
-    data: list[LLMHighlightedAnnotationResult]
+class LLMPassageReasoning(BaseModel):
+    passage: str = Field(description="The text of a tagged passage")
+    reasoning: str = Field(
+        description="A short reasoning (one or two sentences) why the passage fits its code"
+    )
+
+
+class LLMHighlightedAnnotationResultWithReasoning(LLMHighlightedAnnotationResult):
+    reasonings: list[LLMPassageReasoning] = Field(
+        description="One reasoning per tagged passage, in the order of the tags"
+    )
 
 
 def _compile_code_pattern(code_names: list[str]) -> re.Pattern[str]:
@@ -52,6 +60,10 @@ class NERInlineTagStrategy(CodeAnnotationStrategy):
         self.code_pattern = _compile_code_pattern(list(self.codename2id))
 
     def get_response_model(self) -> type[LLMHighlightedAnnotationResult]:
+        """The tagged text, with a reasoning per tagged passage if the prompt
+        requests it."""
+        if self.prompt.settings.request_reasoning:
+            return LLMHighlightedAnnotationResultWithReasoning
         return LLMHighlightedAnnotationResult
 
     def parse_result(
@@ -62,6 +74,14 @@ class NERInlineTagStrategy(CodeAnnotationStrategy):
     ) -> list[ParsedSpan]:
         # the answer repeats the text of the message's segment
         start_offset = self.segments(sdoc_data)[message_id].begin
+        # the reasonings of each passage text, in answer order; matched by text, so
+        # a missing or extra reasoning does not shift the others
+        reasonings_by_passage: dict[str, list[str]] = {}
+        if isinstance(result, LLMHighlightedAnnotationResultWithReasoning):
+            for item in result.reasonings:
+                reasonings_by_passage.setdefault(item.passage.strip(), []).append(
+                    item.reasoning
+                )
 
         clean_text = ""
         spans: list[ParsedSpan] = []
@@ -82,6 +102,8 @@ class NERInlineTagStrategy(CodeAnnotationStrategy):
             end = begin + len(passage_text)
 
             # 3. Only append to spans if the code is recognized
+            reasonings = reasonings_by_passage.get(passage_text.strip())
+            reasoning = reasonings.pop(0) if reasonings else None
             source_begin = begin + start_offset
             source_end = end + start_offset
             source_text = sdoc_data.content[source_begin:source_end]
@@ -93,6 +115,7 @@ class NERInlineTagStrategy(CodeAnnotationStrategy):
                         text=passage_text,
                         begin=source_begin,
                         end=source_end,
+                        reasoning=reasoning,
                     )
                 )
 
