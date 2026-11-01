@@ -37,8 +37,7 @@ from core.prompt.prompt_enum import (
 from core.prompt.prompt_specs import OUTPUT_FORMAT_SPECS
 from core.user.user_crud import SYSTEM_USER_ID
 from core.user.user_orm import UserORM
-
-from .conftest import (
+from prompt_test_utils import (
     CLAIM_DESCRIPTION,
     EXAMPLE_CONTENT,
     EXAMPLE_SENTENCES,

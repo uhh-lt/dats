@@ -24,9 +24,8 @@ from modules.eximport.prompts.prompt_export_schema import (
     PromptSelectionsForExport,
     SpanPromptExampleForExport,
 )
+from prompt_test_utils import PromptEximportProjects
 from repos.filesystem_repo import FilesystemRepo
-
-from .conftest import PromptEximportProjects
 
 CUSTOM_PROMPTS = {
     "Span tagging",

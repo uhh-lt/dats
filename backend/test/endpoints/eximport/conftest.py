@@ -16,6 +16,11 @@ from core.project.project_service import ProjectService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.user.user_orm import UserORM
+from prompt_test_utils import (
+    PromptEximportProjects,
+    create_prompt_eximport_projects,
+    create_prompt_project,
+)
 from provenance_test_utils import (
     ProvenanceProjectWithCopies,
     create_provenance_copies,
@@ -180,3 +185,15 @@ def virtual_user_project(
 ) -> VirtualUserProject:
     """The projects described in `VirtualUserProject`."""
     return create_virtual_user_project(db_session, test_user, test_project)
+
+
+@pytest.fixture(scope="function")
+def prompt_eximport_projects(
+    db_session, test_project: ProjectORM, test_user: UserORM
+) -> PromptEximportProjects:
+    """The projects described in `PromptEximportProjects`."""
+    return create_prompt_eximport_projects(
+        db_session,
+        create_prompt_project(db_session, test_project, test_user),
+        test_user,
+    )
