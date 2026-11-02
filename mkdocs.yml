@@ -58,6 +58,7 @@ nav:
           - Concept Over Time Analysis: feature-guides/analysis/concept-over-time-analysis.md
           - Timeline Analysis: feature-guides/analysis/timeline-analysis.md
           - Word Frequency: feature-guides/analysis/word-frequency-analysis.md
+      - Agent View: feature-guides/agent-view.md
       - LLM Assistant: feature-guides/llm-assistant.md
       - Prompts: feature-guides/prompts.md
       - Experiment Studio: feature-guides/experiment-studio.md
