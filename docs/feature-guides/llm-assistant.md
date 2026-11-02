@@ -91,5 +91,7 @@ Because qualitative research requires human oversight, DATS **never** applies AI
 3. **Human-in-the-Loop:** You can click on any AI suggestion to modify it. You can delete an incorrect suggestion or change its assigned code.
 4. Once you are satisfied with the AI's work, click **Apply Annotations!**.
 
+_(If the run's prompt had **Request reasoning** turned on, every suggested annotation also carries a memo titled "LLM reasoning", authored by the virtual user: the model's short explanation of why it assigned the code. Suggestions that were merged into one annotation share one memo with a paragraph per suggestion.)_
+
 ![LLM Assistant Result](../assets/annotation-compare-view.png)
 _(Note: AI-generated annotations belong to the virtual user you chose, so they are always distinguishable from your own manual coding in the analysis views!)_
