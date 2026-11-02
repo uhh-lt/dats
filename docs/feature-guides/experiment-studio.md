@@ -45,3 +45,12 @@ The actions of a run:
 Click a run to expand its documents; **Compare** opens the comparison view of the gold annotator and the run for one document.
 
 Virtual users of runs are ordinary annotators: they appear in the annotator filters, the comparison view and the agreement analysis like any other annotator.
+
+## Export and import
+
+The full project export ([Data Export & Import](export-import.md)) contains the experiments with their runs, and the project import restores them, so that a moved or restored project keeps its experiments, their runs and the stored scores without running them again. The export references documents by filename, codes by name, users (incl. the gold annotator and the virtual users of the runs) by email and the prompt version of a run by prompt name and version number. The import:
+
+- runs after the users, codes, documents, annotations and prompts; a run uses the version of its number of the prompt of its name, or of the prompt the prompt import imported it as because it differs from the project's prompt of that name ("<name> (imported)"): the one whose version selects exactly the experiment's codes. A run for which several of these prompts fit is skipped with a warning;
+- skips an experiment whose documents, codes or gold annotator do not exist in the project, and a run whose prompt version, documents or virtual user do not exist, each with a warning in the import log;
+- adds the runs an experiment of the same name (with the same task, documents, codes and gold annotator) lacks and keeps its runs as they are, so importing the same export twice changes nothing;
+- imports a run that was queued or running at the export as failed, because its job does not exist in the project.
