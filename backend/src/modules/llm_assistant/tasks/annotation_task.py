@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
-    SpanAnnotationRead,
 )
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.memo.memo_enum import AttachedObjectType
@@ -274,23 +273,15 @@ class AnnotationTask(LLMAssistantTask[AnnotationStrategy, BaseModel, AnnotationR
             len(created_annos_for_sdoc),
             sdoc_data.id,
         )
-        if create_reasoning_memos(
+        created_annos_for_sdoc = create_reasoning_memos(
             context,
             attached_object_type=AttachedObjectType.span_annotation,
-            annotation_ids=[annotation.id for annotation in created_annos_for_sdoc],
+            annotations=created_annos_for_sdoc,
             reasonings=[
                 self._reasonings_of(annotation, suggestions)
                 for annotation in suggested_annotations
             ],
-        ):
-            # the annotations were read before their memos existed
-            created_annos_for_sdoc = [
-                SpanAnnotationRead.model_validate(db_obj)
-                for db_obj in crud_span_anno.read_by_ids(
-                    db=context.db,
-                    ids=[annotation.id for annotation in created_annos_for_sdoc],
-                )
-            ]
+        )
 
         if errors:
             raw_response = aggregate_raw_responses(
