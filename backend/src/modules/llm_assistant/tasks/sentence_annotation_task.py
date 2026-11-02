@@ -3,7 +3,6 @@ from loguru import logger
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
-    SentenceAnnotationRead,
 )
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.memo.memo_enum import AttachedObjectType
@@ -211,23 +210,15 @@ class SentenceAnnotationTask(
             len(created_annos_for_sdoc),
             sdoc_data.id,
         )
-        if create_reasoning_memos(
+        created_annos_for_sdoc = create_reasoning_memos(
             context,
             attached_object_type=AttachedObjectType.sentence_annotation,
-            annotation_ids=[annotation.id for annotation in created_annos_for_sdoc],
+            annotations=created_annos_for_sdoc,
             reasonings=[
                 self._reasonings_of(annotation, parsed_sentences)
                 for annotation in suggested_annotations
             ],
-        ):
-            # the annotations were read before their memos existed
-            created_annos_for_sdoc = [
-                SentenceAnnotationRead.model_validate(db_obj)
-                for db_obj in crud_sentence_anno.read_by_ids(
-                    db=context.db,
-                    ids=[annotation.id for annotation in created_annos_for_sdoc],
-                )
-            ]
+        )
 
         if errors:
             raw_response = aggregate_raw_responses(

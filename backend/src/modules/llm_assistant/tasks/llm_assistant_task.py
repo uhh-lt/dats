@@ -9,6 +9,8 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
+from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.memo_service import MemoService
@@ -34,6 +36,7 @@ from systems.job_system.job_dto import Job
 ResponseT = TypeVar("ResponseT", bound=BaseModel)
 ResultT = TypeVar("ResultT", bound=LLMAssistantResultWithStatus)
 StrategyT = TypeVar("StrategyT", bound=LLMAssistantStrategy)
+AnnotationReadT = TypeVar("AnnotationReadT", SpanAnnotationRead, SentenceAnnotationRead)
 # the title of the memos that store the LLM's reasoning of an annotation
 REASONING_MEMO_TITLE = "LLM reasoning"
 SpecificTaskResult = (
@@ -89,9 +92,9 @@ def create_reasoning_memos(
     context: LLMAssistantTaskContext[StrategyT],
     *,
     attached_object_type: AttachedObjectType,
-    annotation_ids: list[int],
+    annotations: list[AnnotationReadT],
     reasonings: list[list[str]],
-) -> bool:
+) -> list[AnnotationReadT]:
     """Store the LLM's reasonings of annotations as memos in one batch.
 
     Each annotation with a reasoning gets one memo, authored by the virtual user
@@ -100,24 +103,22 @@ def create_reasoning_memos(
 
     Args:
         attached_object_type: The type of the annotations.
-        annotation_ids: The annotations, parallel to `reasonings`.
+        annotations: The created annotations, parallel to `reasonings`.
         reasonings: The reasonings of every annotation, possibly none.
 
     Returns:
-        Whether any memo was created.
+        The annotations, with their reasoning memo in `memo_ids`.
     """
     if not context.strategy.prompt.settings.request_reasoning:
-        return False
+        return annotations
 
     attached_object_ids: list[int] = []
     create_dtos: list[MemoCreateIntern] = []
-    for annotation_id, annotation_reasonings in zip(
-        annotation_ids, reasonings, strict=True
-    ):
+    for annotation, annotation_reasonings in zip(annotations, reasonings, strict=True):
         paragraphs = reasoning_paragraphs(annotation_reasonings)
         if not paragraphs:
             continue
-        attached_object_ids.append(annotation_id)
+        attached_object_ids.append(annotation.id)
         create_dtos.append(
             MemoCreateIntern(
                 project_id=context.payload.project_id,
@@ -135,16 +136,35 @@ def create_reasoning_memos(
             )
         )
     if not create_dtos:
-        return False
+        return annotations
 
-    MemoService().create_multi_for_attached_objects(
+    memos = MemoService().create_multi_for_attached_objects(
         db=context.db,
         attached_object_type=attached_object_type,
         attached_object_ids=attached_object_ids,
         create_dtos=create_dtos,
     )
-    logger.info("Created {} reasoning memo(s).", len(create_dtos))
-    return True
+    logger.info("Created {} reasoning memo(s).", len(memos))
+
+    # the annotations were read before their memos existed, and a re-read in the
+    # same session would return their loaded object handles unchanged
+    memo_id_by_annotation_id = {
+        annotation_id: memo.id
+        for annotation_id, memo in zip(attached_object_ids, memos, strict=True)
+    }
+    return [
+        annotation.model_copy(
+            update={
+                "memo_ids": [
+                    *annotation.memo_ids,
+                    memo_id_by_annotation_id[annotation.id],
+                ]
+            }
+        )
+        if annotation.id in memo_id_by_annotation_id
+        else annotation
+        for annotation in annotations
+    ]
 
 
 class LLMAssistantTask(
