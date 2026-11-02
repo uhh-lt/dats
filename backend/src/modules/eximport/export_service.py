@@ -11,6 +11,7 @@ from modules.eximport.bbox_annotations.export_bbox_annotations import (
 )
 from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.cota.export_cota import export_all_cota, export_selected_cota
+from modules.eximport.experiments.export_experiments import export_all_experiments
 from modules.eximport.export_enum import ExportJobType
 from modules.eximport.export_exceptions import UnsupportedExportJobTypeError
 from modules.eximport.export_job_dto import ExportJobInput, ExportJobOutput
@@ -67,6 +68,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.ALL_TIMELINE_ANALYSES: export_all_timeline_analyses,
             ExportJobType.ALL_COTA: export_all_cota,
             ExportJobType.ALL_PROMPTS: export_all_prompts,
+            ExportJobType.ALL_EXPERIMENTS: export_all_experiments,
             # selected
             ExportJobType.SELECTED_SDOCS: export_selected_sdocs,
             ExportJobType.SELECTED_SPAN_ANNOTATIONS: export_selected_span_annotations,

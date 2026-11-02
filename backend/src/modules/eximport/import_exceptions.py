@@ -39,6 +39,14 @@ class ImportCOTAError(Exception):
         self.errors = errors
 
 
+class ImportExperimentsError(Exception):
+    """Exception raised when experiment import fails."""
+
+    def __init__(self, errors: list[str]) -> None:
+        super().__init__(f"Errors occurred while importing experiments: {errors}")
+        self.errors = errors
+
+
 class ImportFoldersError(Exception):
     """Exception raised when folder import fails."""
 

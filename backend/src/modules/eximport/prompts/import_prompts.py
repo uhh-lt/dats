@@ -1,4 +1,5 @@
-from collections.abc import Hashable, Sequence
+from collections.abc import Hashable, Iterator, Sequence
+from itertools import count
 from typing import TypeVar
 
 import pandas as pd
@@ -141,6 +142,16 @@ def import_prompts_to_proj(
     return changed_ids
 
 
+def imported_prompt_names(name: str) -> Iterator[str]:
+    """The names an exported prompt is imported under, in the order the import tries
+    them: its own name, then "<name> (imported)", "<name> (imported 2)", ... while
+    the prompts of these names diverged from it."""
+    yield name
+    yield f"{name} (imported)"
+    for num_imports in count(2):
+        yield f"{name} (imported {num_imports})"
+
+
 class _ImportedPrompt:
     """An exported prompt with its versions remapped to the target project."""
 
@@ -171,9 +182,9 @@ def _merge_prompt(
 
     # 1) merge into the prompt of the same name, or into the one of an earlier
     # import of a diverged prompt
-    name = prompt.name
+    names = imported_prompt_names(prompt.name)
+    name = next(names)
     existing = existing_by_name.get(name)
-    num_imports = 0
     while existing is not None:
         current = [
             _dump(PromptVersionRead.model_validate(version))
@@ -215,12 +226,7 @@ def _merge_prompt(
                 return existing.id
 
         # 1d) diverged: try the name of the next import
-        num_imports += 1
-        name = (
-            f"{prompt.name} (imported)"
-            if num_imports == 1
-            else f"{prompt.name} (imported {num_imports})"
-        )
+        name = next(names)
         existing = existing_by_name.get(name)
 
     # 2) a new prompt
