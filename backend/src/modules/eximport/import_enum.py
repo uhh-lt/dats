@@ -16,6 +16,7 @@ class ImportJobType(str, Enum):
     COTA = "COTA"
     MEMOS = "MEMOS"
     PROMPTS = "PROMPTS"
+    EXPERIMENTS = "EXPERIMENTS"
     DOCUMENTS = "DOCUMENTS"
 
 
@@ -23,6 +24,7 @@ class ExportEntity(str, Enum):
     BBOX_ANNOTATION = "bbox_annotation"
     CODE = "code"
     COTA = "cota"
+    EXPERIMENT = "experiment"
     FOLDER = "folder"
     MEMO = "memo"
     PROJECT_METADATA = "project_metadata"
@@ -43,6 +45,8 @@ class ExportEntity(str, Enum):
                 return r"project_\d+_all_codes.csv"
             case ExportEntity.COTA:
                 return r"project_\d+_all_cota.csv"
+            case ExportEntity.EXPERIMENT:
+                return r"project_\d+_all_experiments.csv"
             case ExportEntity.FOLDER:
                 return r"project_\d+_all_folders.csv"
             case ExportEntity.MEMO:

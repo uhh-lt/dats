@@ -58,7 +58,9 @@ class ExperimentRunCreateIntern(ExperimentRunCreate):
     virtual_user_id: int = Field(
         description="ID of the virtual user the run writes its annotations into"
     )
-    user_id: int = Field(description="ID of the user who started the run")
+    user_id: int | None = Field(
+        description="ID of the user who started the run, None if unknown (import)"
+    )
     status: JobStatus = Field(description="State of the run")
 
 

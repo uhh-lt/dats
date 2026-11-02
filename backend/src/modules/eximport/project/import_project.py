@@ -12,6 +12,9 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 )
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
+from modules.eximport.experiments.import_experiments import (
+    import_experiments_to_proj,
+)
 from modules.eximport.folder.import_folders import import_folders_to_proj
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ExportEntity
@@ -53,6 +56,8 @@ IMPORT_ORDER = [
     ExportEntity.WHITEBOARD,
     # after everything the selections of the prompt versions reference
     ExportEntity.PROMPT,
+    # after everything the experiments and their runs reference
+    ExportEntity.EXPERIMENT,
 ]
 
 
@@ -64,6 +69,8 @@ def _import_entity(entity: ExportEntity, db: Session, data, project_id: int) -> 
             import_codes_to_proj(db=db, df=data, project_id=project_id)
         case ExportEntity.COTA:
             import_cota_to_proj(db=db, df=data, project_id=project_id)
+        case ExportEntity.EXPERIMENT:
+            import_experiments_to_proj(db=db, df=data, project_id=project_id)
         case ExportEntity.FOLDER:
             import_folders_to_proj(db=db, df=data, project_id=project_id)
         case ExportEntity.MEMO:

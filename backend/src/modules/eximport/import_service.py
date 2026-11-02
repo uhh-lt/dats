@@ -12,6 +12,9 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 )
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
+from modules.eximport.experiments.import_experiments import (
+    import_experiments_to_proj,
+)
 from modules.eximport.folder.import_folders import import_folders_to_proj
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ImportJobType
@@ -59,6 +62,7 @@ class ImportService(metaclass=SingletonMeta):
             ImportJobType.COTA: cls._import_cota_to_proj,
             ImportJobType.MEMOS: cls._import_memos_to_proj,
             ImportJobType.PROMPTS: cls._import_prompts_to_proj,
+            ImportJobType.EXPERIMENTS: cls._import_experiments_to_proj,
             ImportJobType.DOCUMENTS: cls._import_source_documents_to_proj,
         }
         return super(ImportService, cls).__new__(cls)
@@ -204,6 +208,16 @@ class ImportService(metaclass=SingletonMeta):
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = read_import_csv(path_to_file)
         import_prompts_to_proj(db=db, df=df, project_id=payload.project_id)
+
+    def _import_experiments_to_proj(
+        self,
+        db: Session,
+        payload: ImportJobInput,
+    ) -> None:
+        """Import experiments to a project"""
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        df = read_import_csv(path_to_file)
+        import_experiments_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_users_to_proj(
         self,
