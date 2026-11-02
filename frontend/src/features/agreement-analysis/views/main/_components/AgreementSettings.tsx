@@ -1,3 +1,4 @@
+import { AgreementScoringSelector } from "@components/AgreementScoringSelector";
 import { CodeSelector } from "@core/code";
 import { TagSelector } from "@core/tag";
 import { useURLConnector } from "@hooks/useURLConnector";
@@ -16,7 +17,6 @@ import { CardContainer } from "@components/CardContainer";
 import { AgreementAnalysisRouteAPI } from "../_hooks/agreementAnalysisRouteAPI";
 import { AgreementAnnotationTypeSelector } from "./AgreementAnnotationTypeSelector";
 import { AgreementCountsExportButton } from "./AgreementCountsExportButton";
-import { AgreementScoringSelector } from "./AgreementScoringSelector";
 import { AnnotatorSelector } from "./AnnotatorSelector";
 import { AgreementParams } from "@models/AgreementParams";
 
