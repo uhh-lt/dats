@@ -358,14 +358,15 @@ def _register_library_exception_handlers() -> None:
 
     from common.exception_handler import exception_handler
 
-    def _is_violation(exc: Exception, violation: type[Exception]) -> bool:
+    def _is_violation(
+        exc: Exception, violation: type[Exception] | tuple[type[Exception], ...]
+    ) -> bool:
         return isinstance(exc, IntegrityError) and isinstance(exc.orig, violation)
 
     def _integrity_error_status(exc: Exception) -> int:
-        if _is_violation(exc, UniqueViolation):
-            return 409
-        # e.g. deleting the virtual user of an experiment run (ON DELETE NO ACTION)
-        if _is_violation(exc, ForeignKeyViolation):
+        # a duplicate, or e.g. deleting the virtual user of an experiment run
+        # (ON DELETE NO ACTION)
+        if _is_violation(exc, (UniqueViolation, ForeignKeyViolation)):
             return 409
         return 500
 
