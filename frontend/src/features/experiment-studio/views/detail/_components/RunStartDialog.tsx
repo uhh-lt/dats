@@ -7,7 +7,7 @@ import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ExperimentRead } from "@models/ExperimentRead";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, Tooltip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { formatDateTime } from "@utils/DateUtils";
@@ -85,9 +85,19 @@ export function RunStartDialog({ projectId, experiment, onRunStarted }: RunStart
 
   return (
     <>
-      <Button startIcon={<PlayArrowIcon />} onClick={handleOpen} sx={{ flexShrink: 0 }}>
-        Start new run
-      </Button>
+      {/* without a gold annotator (it was deleted), a new run could not be scored */}
+      <Tooltip title={experiment.gold_user_id === null ? "The gold annotator was deleted" : ""}>
+        <span>
+          <Button
+            startIcon={<PlayArrowIcon />}
+            onClick={handleOpen}
+            disabled={experiment.gold_user_id === null}
+            sx={{ flexShrink: 0 }}
+          >
+            Start new run
+          </Button>
+        </span>
+      </Tooltip>
       <Dialog
         open={isOpen}
         onClose={closeOnEscape(handleClose)}

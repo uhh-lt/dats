@@ -33,6 +33,7 @@ import {
   shortModelName,
 } from "../../../_utils/experimentUtils";
 import { ExperimentRouteAPI } from "../_hooks/experimentRouteAPI";
+import { RefreshAllRunsButton } from "./RefreshAllRunsButton";
 import { RunActions } from "./RunActions";
 import { RunDetails } from "./RunDetails";
 import { RunStartDialog } from "./RunStartDialog";
@@ -312,6 +313,7 @@ export function RunTable({ projectId, experiment, scoring, expandedRunId, onExpa
     renderTopToolbarCustomActions: () => (
       <Stack direction="row" spacing={2} alignItems="center">
         <RunStartDialog projectId={projectId} experiment={experiment} onRunStarted={onExpandRun} />
+        <RefreshAllRunsButton experiment={experiment} />
         <AgreementScoringSelector
           annotationType={
             experiment.task_type === TaskType.ANNOTATION

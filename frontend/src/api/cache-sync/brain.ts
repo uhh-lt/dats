@@ -351,6 +351,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       queryClient.invalidateQueries({ queryKey: sdocQueries.annotatorsScope() });
       queryClient.invalidateQueries({ queryKey: sdocQueries.searchScope() });
       queryClient.invalidateQueries({ queryKey: agreementQueries.computeScope(), refetchType: "none" });
+      // the deleted user may be the gold annotator of experiments, which keep running without one
+      queryClient.invalidateQueries({ queryKey: experimentQueries.byProjectScope() });
       invalidateMemoWorkspace();
       break;
 
