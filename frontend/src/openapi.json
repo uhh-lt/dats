@@ -12643,12 +12643,12 @@
             "type": "string",
             "minLength": 1,
             "title": "Name",
-            "description": "Name of the run, unique per experiment; the run writes into the new virtual user <experiment name>-<run name>"
+            "description": "Name of the run, unique per experiment; the run writes into the virtual user <experiment name>-<run name>"
           },
           "prompt_version_id": {
             "type": "integer",
             "title": "Prompt Version Id",
-            "description": "ID of the prompt version to run: a version of the experiment's task whose codes equal the experiment's codes"
+            "description": "ID of the prompt version of the run: a version of the experiment's task whose codes equal the experiment's codes"
           },
           "model": { "type": "string", "title": "Model", "description": "Large Language Model to run the prompt with" }
         },
@@ -12730,19 +12730,24 @@
       },
       "ExperimentRunRead": {
         "properties": {
-          "id": { "type": "integer", "title": "Id", "description": "ID of the run" },
           "experiment_id": {
             "type": "integer",
             "title": "Experiment Id",
             "description": "ID of the experiment of the run"
           },
-          "name": { "type": "string", "title": "Name", "description": "Name of the run, unique per experiment" },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the run, unique per experiment; the run writes into the virtual user <experiment name>-<run name>"
+          },
           "prompt_version_id": {
             "type": "integer",
             "title": "Prompt Version Id",
-            "description": "ID of the prompt version of the run"
+            "description": "ID of the prompt version of the run: a version of the experiment's task whose codes equal the experiment's codes"
           },
-          "model": { "type": "string", "title": "Model", "description": "Large Language Model of the run" },
+          "model": { "type": "string", "title": "Model", "description": "Large Language Model to run the prompt with" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the run" },
           "sdoc_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -12801,11 +12806,11 @@
         },
         "type": "object",
         "required": [
-          "id",
           "experiment_id",
           "name",
           "prompt_version_id",
           "model",
+          "id",
           "sdoc_ids",
           "virtual_user_id",
           "user_id",

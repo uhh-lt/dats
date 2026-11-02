@@ -29,30 +29,31 @@ class ExperimentRunScores(BaseModel):
     )
 
 
-# Properties for creation
-class ExperimentRunCreate(BaseModel):
+# Properties shared across all DTOs
+class ExperimentRunBaseDTO(BaseModel):
     experiment_id: int = Field(description="ID of the experiment of the run")
     name: str = Field(
         description=(
-            "Name of the run, unique per experiment; the run writes into the new "
+            "Name of the run, unique per experiment; the run writes into the "
             "virtual user <experiment name>-<run name>"
         ),
         min_length=1,
     )
     prompt_version_id: int = Field(
         description=(
-            "ID of the prompt version to run: a version of the experiment's task "
+            "ID of the prompt version of the run: a version of the experiment's task "
             "whose codes equal the experiment's codes"
         )
     )
     model: str = Field(description="Large Language Model to run the prompt with")
 
 
-class ExperimentRunCreateIntern(BaseModel):
-    experiment_id: int = Field(description="ID of the experiment of the run")
-    name: str = Field(description="Name of the run, unique per experiment")
-    prompt_version_id: int = Field(description="ID of the prompt version of the run")
-    model: str = Field(description="Large Language Model of the run")
+# Properties for creation
+class ExperimentRunCreate(ExperimentRunBaseDTO):
+    pass
+
+
+class ExperimentRunCreateIntern(ExperimentRunCreate):
     sdoc_ids: list[int] = Field(description="IDs of the documents the run runs on")
     virtual_user_id: int = Field(
         description="ID of the virtual user the run writes its annotations into"
@@ -82,12 +83,8 @@ class ExperimentRunUpdateIntern(BaseModel, UpdateDTOBase):
 
 
 # Properties for reading (as in ORM)
-class ExperimentRunRead(BaseModel):
+class ExperimentRunRead(ExperimentRunBaseDTO):
     id: int = Field(description="ID of the run")
-    experiment_id: int = Field(description="ID of the experiment of the run")
-    name: str = Field(description="Name of the run, unique per experiment")
-    prompt_version_id: int = Field(description="ID of the prompt version of the run")
-    model: str = Field(description="Large Language Model of the run")
     sdoc_ids: list[int] = Field(description="IDs of the documents the run ran on")
     virtual_user_id: int = Field(
         description="ID of the virtual user the run writes its annotations into"
