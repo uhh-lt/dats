@@ -6,7 +6,7 @@ paths:
 
 # Backend Service Pattern
 
-Services hold the business logic of a module: endpoints and job handlers stay thin and delegate to them. A service orchestrates CRUDs (SQL, Weaviate, Elasticsearch), repos (filesystem, LLM, Ray, ...), other services and the job system. Services are built the same way everywhere, so endpoints, jobs and other services can all access them the same way, and reviewers can see where the DB session, side effects and errors come from.
+Services hold the business logic of a module: endpoints stay thin and delegate to them, job handlers delegate the logic they share with endpoints or other jobs. A service orchestrates CRUDs (SQL, Weaviate, Elasticsearch), repos (filesystem, LLM, Ray, ...), other services and the job system. Services are built the same way everywhere, so endpoints, jobs and other services can all access them the same way, and reviewers can see where the DB session, side effects and errors come from.
 
 ## File Structure
 
@@ -86,7 +86,7 @@ class ExampleService(metaclass=SingletonMeta):
 ### Jobs and Events
 
 - **Starting jobs**: Start background work with `self.js.start_job(JobType.X, <X>JobInput(...))` and return the `Job` (or `list[Job]`) to the caller.
-- **Running jobs**: Job-side entry points are named `handle_<x>_job(self, db, [job,] payload)` and return the job's `<X>JobOutput`. Report progress with `job.update(current_step=..., status_message=...)`; dispatch on the payload's enum with `match` or a dispatch table from `__new__`.
+- **Running jobs**: Job-side entry points (when a job delegates all its work) are named `handle_<x>_job(self, db, [job,] payload)` and return the job's `<X>JobOutput`. Report progress with `job.update(current_step=..., status_message=...)`; dispatch on the payload's enum with `match` or a dispatch table from `__new__`.
 - **No websocket events**: Services do not emit `DATSEvent`s or call the `WebsocketService`; the endpoint emits after the service call returns.
 
 ### Return Types

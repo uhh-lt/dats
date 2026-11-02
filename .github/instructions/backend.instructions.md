@@ -137,7 +137,7 @@ Use Loguru: `from loguru import logger`, never the stdlib `logging` module. Mess
 
 ## Background Jobs
 
-Jobs are functions in `*_job.py` files, registered with the decorator from `systems/job_system`. The job opens its own transaction and delegates to a service:
+Jobs are functions in `*_job.py` files, registered with the decorator from `systems/job_system`. The job opens its own transactions; it may call CRUDs directly for its own steps (e.g. status updates, see `experiment_run_job.py`) and delegates logic that endpoints or other jobs share to a service:
 
 ```python
 from common.job_type_enum import JobType
