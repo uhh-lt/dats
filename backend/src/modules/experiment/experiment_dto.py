@@ -41,6 +41,13 @@ class ExperimentCreate(ExperimentBaseDTO):
         return self
 
 
+class ExperimentCreateIntern(ExperimentBaseDTO):
+    project_id: int = Field(description="Project the experiment belongs to")
+    gold_user_id: int | None = Field(
+        description="ID of the gold annotator, None if it was deleted (import)"
+    )
+
+
 # Properties for updating: only the name, the documents, codes, task and gold
 # annotator of an experiment are fixed when it is created
 class ExperimentUpdate(BaseModel, UpdateDTOBase):

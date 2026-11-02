@@ -24,7 +24,7 @@ from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from dats_test_utils import create_span_for_text, create_text_document
 from modules.experiment.experiment_crud import crud_experiment
-from modules.experiment.experiment_dto import ExperimentCreate
+from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
 from modules.experiment.experiment_run_crud import crud_experiment_run
 from modules.experiment.experiment_run_dto import ExperimentRunCreateIntern
@@ -109,7 +109,7 @@ def _create_experiment(
 ) -> ExperimentORM:
     return crud_experiment.create(
         db=db,
-        create_dto=ExperimentCreate(
+        create_dto=ExperimentCreateIntern(
             name=name,
             project_id=project.id,
             task_type=TaskType.ANNOTATION,

@@ -1,12 +1,17 @@
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
-from modules.experiment.experiment_dto import ExperimentCreate, ExperimentUpdate
+from modules.experiment.experiment_dto import (
+    ExperimentCreateIntern,
+    ExperimentUpdate,
+)
 from modules.experiment.experiment_orm import ExperimentORM
 from repos.db.crud_base import SQLCRUDBase
 
 
-class CRUDExperiment(SQLCRUDBase[ExperimentORM, ExperimentCreate, ExperimentUpdate]):
+class CRUDExperiment(
+    SQLCRUDBase[ExperimentORM, ExperimentCreateIntern, ExperimentUpdate]
+):
     ### READ OPERATIONS ###
 
     def read_by_project(self, db: Session, *, project_id: int) -> list[ExperimentORM]:
