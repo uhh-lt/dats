@@ -22,9 +22,9 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         """
         Delete the projects with all their data (ON DELETE CASCADE).
 
-        The cascades delete the users of a project and the rows that reference them
-        (e.g. the experiment runs of its virtual users) in any order, so the deferrable
-        references (ON DELETE NO ACTION) are checked at the commit.
+        The cascades delete the virtual users of a project and the experiment runs that
+        reference them (ON DELETE NO ACTION) in any order, so only that reference
+        (`experimentrun_virtual_user_id_fkey`) is checked at the commit.
 
         Args:
             ids: The ids to delete. Duplicates and missing ids are ignored.
@@ -32,7 +32,7 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         Returns:
             The number of deleted projects.
         """
-        db.execute(text("SET CONSTRAINTS ALL DEFERRED"))
+        db.execute(text("SET CONSTRAINTS experimentrun_virtual_user_id_fkey DEFERRED"))
         return super().delete_multi(db=db, ids=ids)
 
     ### OTHER OPERATIONS ###
