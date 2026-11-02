@@ -13,7 +13,9 @@ Client (Claude, Copilot, ...) ──MCP──► FastMCP ──► FastAPI route
 Key files:
 
 - `backend/src/bootstrap.py` — `create_app()` assembles the FastAPI app and mounts the MCP server (last, since it wraps the lifespan)
-- `backend/src/systems/mcp_system/mcp_server.py` — MCP server setup, route mapping, and auth forwarding
+- `backend/src/systems/mcp_system/mcp_server.py` — MCP server setup (`create_mcp_server`), route mapping, tool annotations, and auth forwarding
+- `backend/src/systems/mcp_system/mcp_constants.py` — the `MCP_TAG` route tag and the `MCP_DESTRUCTIVE_EXTENSION` OpenAPI extension
+- `backend/src/modules/agent/` — the in-app agents, whose tools are an in-process MCP server (see below)
 - `backend/src/core/auth/api_key_endpoint.py` — API key CRUD endpoints
 - `backend/src/core/auth/api_key_orm.py` — API key database model
 - `backend/src/core/auth/security.py` — Key generation and hashing
@@ -30,7 +32,37 @@ router = APIRouter(
 )
 ```
 
-The `_custom_route_mapper` in `mcp_server.py` includes only routes tagged with `"mcp"` and excludes everything else.
+The `create_route_mapper` in `mcp_server.py` includes only routes tagged with `MCP_TAG` (`"mcp"`, from `mcp_constants.py`) and excludes everything else. Given extra tags, it further restricts the mapping to routes that also carry one of them — the in-app agents use this to give each agent only the tools of its domain.
+
+## Tool Annotations and Destructive Routes
+
+`create_mcp_server` annotates every tool from its HTTP method (`annotate_tool` in `mcp_server.py`):
+
+- **GET** routes are marked read-only.
+- **DELETE** routes are marked destructive.
+- **Other mutations** (POST, PUT, PATCH) are neither read-only nor destructive — except routes that remove, overwrite in bulk or share data, which endpoint authors mark destructive by hand with the `x-mcp-destructive` OpenAPI extension:
+
+```python
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
+
+@router.patch(
+    "/bulk/set",
+    # unlinks the tags that are not in the given set
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
+    ...
+)
+```
+
+MCP clients read these annotations (`readOnlyHint` / `destructiveHint`) to decide when to ask the user before running a tool. `requires_approval` in `mcp_server.py` is the DATS side of that rule: destructive tools — and, like the MCP spec, tools without annotations — need the user's approval.
+
+## The In-App Agents
+
+The agent module (`backend/src/modules/agent/`) runs the agents behind the Agent View in the frontend. `AgentService` builds each agent with [pydantic-ai](https://ai.pydantic.dev/) and gives it its tools through an **in-process MCP server**: `create_mcp_server` with the agent's route tags (e.g. the project agent gets the `project`, `code`, `tag`, `projectMetadata`, `folder`, `memo`, `user` and `search` routes). Every run uses the calling user's credentials, so a tool call can only do what that user may do.
+
+- Tools and models are created **per run**, so startup does not depend on the LLM provider.
+- Destructive tools (see above) become **approval interrupts** in the AG-UI stream: the run pauses until the user approves or denies the call in the chat.
+- Chats are stored per user and project in the `agentsession` table; the endpoints live under `/agent` (`agent_endpoint.py`), including the AG-UI streaming endpoint the chat page talks to.
+- A run streams for minutes and every tool call is a request of its own, so the run endpoints close the request's DB session after the authorization check and the service works in short transactions of its own (the "streaming service" variation in the service instructions).
 
 ## API Key Authentication
 
