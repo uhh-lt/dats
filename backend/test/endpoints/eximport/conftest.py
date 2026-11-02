@@ -30,7 +30,7 @@ from dats_test_utils import create_text_document
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
 from modules.experiment.experiment_crud import crud_experiment
-from modules.experiment.experiment_dto import ExperimentCreate
+from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
 from modules.experiment.experiment_run_crud import crud_experiment_run
 from modules.experiment.experiment_run_dto import (
@@ -405,7 +405,7 @@ def experiment_eximport_projects(
     stage1, stage2 = crud_experiment.create_multi(
         db=db,
         create_dtos=[
-            ExperimentCreate(
+            ExperimentCreateIntern(
                 name="Stage1",
                 project_id=project.id,
                 task_type=TaskType.ANNOTATION,
@@ -413,7 +413,7 @@ def experiment_eximport_projects(
                 code_ids=[code_claim.id, code_evidence.id],
                 gold_user_id=test_user.id,
             ),
-            ExperimentCreate(
+            ExperimentCreateIntern(
                 name="Stage2",
                 project_id=project.id,
                 task_type=TaskType.SENTENCE_ANNOTATION,
@@ -490,6 +490,20 @@ def experiment_eximport_projects(
         "run1": run1,
         "run2": run2,
     }
+
+
+@pytest.fixture(scope="function")
+def experiment_eximport_projects_without_gold(
+    db_session: Session, experiment_eximport_projects: ExperimentEximportProjects
+) -> ExperimentEximportProjects:
+    """The projects of `experiment_eximport_projects` after the virtual user
+    `group_user`, the gold annotator of "Stage2", was deleted: "Stage2" keeps its
+    documents and codes, but has no gold annotator (`gold_user_id` NULL)."""
+    projects = experiment_eximport_projects
+    crud_user.delete(db=db_session, id=projects["group_user"].id)
+    db_session.commit()
+    db_session.refresh(projects["stage2"])
+    return projects
 
 
 @pytest.fixture(scope="function")

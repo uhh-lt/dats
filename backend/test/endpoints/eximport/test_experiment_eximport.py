@@ -366,6 +366,27 @@ def test_import_twice_changes_nothing_the_second_time(
     }
 
 
+def test_import_restores_experiment_whose_gold_annotator_was_deleted(
+    db_session: Session,
+    experiment_eximport_projects_without_gold: ExperimentEximportProjects,
+    test_user: UserORM,
+) -> None:
+    """An experiment whose gold annotator was deleted is exported without a gold
+    annotator email and imported without a gold annotator, not skipped; a second
+    import of the same data changes nothing."""
+    project_id = experiment_eximport_projects_without_gold["project"].id
+    df = _export_and_delete_experiments(db_session, project_id)
+    assert df.loc[_experiment_row(df, "Stage2"), "gold_user_email"].isna().all()
+
+    _import_experiments(db_session, df, project_id, test_user.id)
+    experiments = _experiments(db_session, project_id)
+    _import_experiments(db_session, df, project_id, test_user.id)
+
+    assert set(experiments) == {"Stage1", "Stage2"}
+    assert experiments["Stage2"].gold_user_id is None
+    assert _experiments(db_session, project_id) == experiments
+
+
 @pytest.mark.parametrize(
     "column,value,expected_warning",
     [

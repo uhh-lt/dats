@@ -23,6 +23,7 @@ from modules.agreement.agreement_service import AgreementService
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import (
     ExperimentCreate,
+    ExperimentCreateIntern,
     ExperimentDeleted,
     ExperimentRead,
     ExperimentRunCreated,
@@ -89,11 +90,10 @@ class ExperimentService(metaclass=SingletonMeta):
         )
         db_obj = crud_experiment.create(
             db=db,
-            create_dto=create_dto.model_copy(
-                update={
-                    "sdoc_ids": list(dict.fromkeys(create_dto.sdoc_ids)),
-                    "code_ids": list(dict.fromkeys(create_dto.code_ids)),
-                }
+            create_dto=ExperimentCreateIntern(
+                **create_dto.model_dump(exclude={"sdoc_ids", "code_ids"}),
+                sdoc_ids=list(dict.fromkeys(create_dto.sdoc_ids)),
+                code_ids=list(dict.fromkeys(create_dto.code_ids)),
             ),
         )
         return self._read_experiment(db=db, experiment_id=db_obj.id)

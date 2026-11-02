@@ -23,7 +23,7 @@ from modules.eximport.experiments.experiment_export_schema import (
 from modules.eximport.import_exceptions import ImportExperimentsError
 from modules.eximport.prompts.import_prompts import imported_prompt_names
 from modules.experiment.experiment_crud import crud_experiment
-from modules.experiment.experiment_dto import ExperimentCreate
+from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM
 from modules.experiment.experiment_run_crud import crud_experiment_run
 from modules.experiment.experiment_run_dto import (
@@ -77,7 +77,8 @@ def import_experiments_to_proj(
     with exactly its codes. If several fit, the run is skipped with a warning.
 
     - An experiment whose documents, codes or gold annotator cannot be resolved is
-      skipped with all its runs, with a warning.
+      skipped with all its runs, with a warning. An experiment whose gold annotator
+      was deleted is imported without one.
     - A run whose prompt version, documents, virtual user or scored codes cannot be
       resolved, or whose virtual user belongs to another run, is skipped with a
       warning. A user who started a run that cannot be resolved is dropped.
@@ -318,7 +319,7 @@ class _Remapper:
 
     def experiment(
         self, row: ExperimentExportSchema, *, project_id: int
-    ) -> ExperimentCreate | None:
+    ) -> ExperimentCreateIntern | None:
         """The experiment of a row in the project, None (skipped with a warning) if
         a reference cannot be resolved."""
         missing: list[str] = []
@@ -331,14 +332,18 @@ class _Remapper:
         code_ids = self._resolve_all(
             self._code_id, REFERENCES.validate_json(row.code_names), "code", missing
         )
-        # an experiment needs a gold annotator, so one without cannot be imported
-        gold_user_id = self._resolve(
-            self._annotator_id, row.gold_user_email, "gold annotator", missing
+        # an experiment whose gold annotator was deleted is imported without one
+        gold_user_id = (
+            None
+            if row.gold_user_email is None
+            else self._resolve(
+                self._annotator_id, row.gold_user_email, "gold annotator", missing
+            )
         )
-        if missing or gold_user_id is None:
+        if missing:
             self._skip(f"experiment '{row.experiment_name}' with its runs", missing)
             return None
-        return ExperimentCreate(
+        return ExperimentCreateIntern(
             name=row.experiment_name,
             project_id=project_id,
             task_type=row.task_type,
