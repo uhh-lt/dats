@@ -1,8 +1,8 @@
 import { PromptPreview, PromptPreviewSource } from "@core/prompt";
+import { SdocSelectionDialog } from "@core/source-document";
 import { useDebounce } from "@hooks/useDebounce";
 import { PromptSnapshot } from "@models/PromptSnapshot";
 import { useMemo, useState } from "react";
-import { PreviewDocumentsDialog } from "./PreviewDocumentsDialog";
 
 interface PreviewPanelProps {
   projectId: number;
@@ -29,7 +29,15 @@ export function PreviewPanel({ projectId, draft }: PreviewPanelProps) {
       projectId={projectId}
       sdocIds={sdocIds}
       source={source}
-      toolbarStart={<PreviewDocumentsDialog projectId={projectId} sdocIds={sdocIds} onChange={setSelectedSdocIds} />}
+      toolbarStart={
+        <SdocSelectionDialog
+          projectId={projectId}
+          filterName="promptPreviewDocuments"
+          title="Select documents to preview the prompt"
+          sdocIds={sdocIds}
+          onChange={setSelectedSdocIds}
+        />
+      }
     />
   );
 }
