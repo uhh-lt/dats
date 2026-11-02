@@ -108,7 +108,7 @@ class ExperimentService(metaclass=SingletonMeta):
         """
         # 1) check that the experiment has a gold annotator and the prompt version fits
         experiment = crud_experiment.read(db=db, id=create_dto.experiment_id)
-        self._gold_user_id(experiment=experiment)
+        self._assert_gold_annotator(experiment=experiment)
         self._assert_eligible_prompt_version(
             db=db, experiment=experiment, prompt_version_id=create_dto.prompt_version_id
         )
@@ -242,7 +242,7 @@ class ExperimentService(metaclass=SingletonMeta):
         """Recompute the stored agreement of a run, e.g. after the gold annotator
         changed annotations. Refused if the gold annotator was deleted."""
         run = crud_experiment_run.read(db=db, id=run_id)
-        gold_user_id = self._gold_user_id(experiment=run.experiment)
+        gold_user_id = self._assert_gold_annotator(experiment=run.experiment)
         self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
         return self._read_experiment(db=db, experiment_id=run.experiment_id)
 
@@ -253,7 +253,7 @@ class ExperimentService(metaclass=SingletonMeta):
         once, so that all runs are scored against the same state of the gold
         annotator. Refused if the gold annotator was deleted."""
         experiment = crud_experiment.read(db=db, id=experiment_id)
-        gold_user_id = self._gold_user_id(experiment=experiment)
+        gold_user_id = self._assert_gold_annotator(experiment=experiment)
         for run in experiment.runs:
             if run.status == JobStatus.FINISHED:
                 self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
@@ -430,8 +430,8 @@ class ExperimentService(metaclass=SingletonMeta):
                 ),
             )
 
-    def _gold_user_id(self, *, experiment: ExperimentORM) -> int:
-        """The gold annotator of the experiment; raises if it was deleted."""
+    def _assert_gold_annotator(self, *, experiment: ExperimentORM) -> int:
+        """Raise if the gold annotator of the experiment was deleted; returns its id."""
         if experiment.gold_user_id is None:
             raise ExperimentGoldAnnotatorDeletedError(experiment_id=experiment.id)
         return experiment.gold_user_id
