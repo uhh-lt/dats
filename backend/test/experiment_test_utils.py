@@ -72,7 +72,9 @@ class RunUserProject(TypedDict):
       (exact and per word), with 2 units: total and Claim TP 1 / FP 0 / FN 1
       ("Anna" agrees, "Bob." is missed).
     - Scored now, "Second" agrees completely: TP 2 / FP 0 / FN 0.
-    - The project has 5 run users and 1 free virtual user (`group_standard`).
+    - The project has 4 run users (HumanGold-Baseline, VirtualGold-Baseline,
+      VirtualGold-Second, VirtualGold-Broken) and 1 free virtual user
+      (`group_standard`), so 5 virtual users.
     """
 
     project: ProjectORM
