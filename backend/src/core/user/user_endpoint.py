@@ -227,7 +227,8 @@ def delete_me(
     summary=(
         "Removes the User with the given ID together with all its annotations and "
         "memos: a virtual user of one of your projects (other users have no project). "
-        "The virtual user of an experiment run is deleted with its run (HTTP 409)."
+        "The virtual user of an experiment run cannot be deleted here (HTTP 409); "
+        "delete its run in the Experiment Studio."
     ),
 )
 def delete_by_id(
