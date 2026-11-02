@@ -28,6 +28,8 @@
 
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
+
 if [ "${1:-}" = "" ]; then
 	echo "Please provide a version parameter, e.g. release.sh 0.0.3"
 	exit 1
@@ -59,7 +61,25 @@ sed -i "s/DATS_FRONTEND_DOCKER_VERSION=.*/DATS_FRONTEND_DOCKER_VERSION=$1/" .env
 # update backend version
 cd ../backend
 uv run update_version.py --version $1
-read -p "Please restart the backend to make sure its OpenAPI spec is up to date. Afterwards, press any key to continue. " -n 1 -r
+
+# update-api downloads the OpenAPI spec from the running backend, so wait until it serves the new version.
+# uvicorn --reload does not watch configs/version.yaml, so the backend has to be restarted.
+dats_load_env frontend
+: "${FRONTEND_API_URL:?FRONTEND_API_URL is not set in frontend/.env}"
+echo "Please restart the backend now. Waiting until ${FRONTEND_API_URL}/openapi.json serves version $1 ..."
+served_version=""
+for _ in $(seq 1 120); do
+	served_version=$(curl -sf --max-time 10 "${FRONTEND_API_URL}/openapi.json" | jq -r '.info.version' || true)
+	if [ "$served_version" = "$1" ]; then
+		break
+	fi
+	sleep 5
+done
+if [ "$served_version" != "$1" ]; then
+	echo "The backend did not serve version $1 within 10 minutes (last seen: ${served_version:-none}). Nothing was committed or pushed."
+	exit 1
+fi
+echo "The backend serves version $1."
 
 # update ray version
 cd ../ray
@@ -67,7 +87,8 @@ uv run update_version.py --version $1
 
 # update frontend version
 cd ../frontend
-npm run update-api && npm run update-version
+npm run update-api
+npm run update-version
 
 cd ..
 git add backend/configs/version.yaml backend/pyproject.toml backend/uv.lock ray/pyproject.toml ray/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/core/OpenAPI.ts
