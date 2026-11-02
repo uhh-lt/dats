@@ -35,9 +35,7 @@ def _virtual_users(client: TestClient, project_id: int) -> dict[str, int]:
     """The virtual users of a project by name."""
     response = client.get(f"/user/{project_id}/user")
     assert response.status_code == 200, response.text
-    users = [
-        UserRead.model_validate({**data, "password": ""}) for data in response.json()
-    ]
+    users = [UserRead.model_validate(data) for data in response.json()]
     return {user.first_name: user.id for user in users if user.is_virtual}
 
 

@@ -17,22 +17,11 @@ from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind, get_annotati
 from virtual_user_test_utils import VirtualUserProject
 
 
-def _model_validate_user_read(data: dict) -> UserRead:
-    data["password"] = "hidden"  # because of exclude=True
-    return UserRead.model_validate(data)
-
-
-def _model_validate_project_user_links(data: dict) -> ProjectUserLinks:
-    for user in data["users"]:
-        user["password"] = "hidden"  # because of exclude=True
-    return ProjectUserLinks.model_validate(data)
-
-
 def test_get_me(client: TestClient, test_user: UserRead):
     resp = client.get("/user/me")
 
     assert resp.status_code == 200, resp.text
-    me = _model_validate_user_read(resp.json())
+    me = UserRead.model_validate(resp.json())
     assert me.id == test_user.id
     assert me.email == test_user.email
     assert me.first_name == test_user.first_name
@@ -104,7 +93,7 @@ def test_update_me(
     resp = client.patch("/user/", json=payload)
 
     assert resp.status_code == 200, resp.text
-    user = _model_validate_user_read(resp.json())
+    user = UserRead.model_validate(resp.json())
     assert user.first_name == payload.get("first_name", test_user.first_name)
     assert user.last_name == payload.get("last_name", test_user.last_name)
     assert user.email == payload.get("email", test_user.email)
@@ -118,7 +107,7 @@ def test_delete_me(
     resp = client.delete("/user/")
 
     assert resp.status_code == 200, resp.text
-    deleted_user = _model_validate_user_read(resp.json())
+    deleted_user = UserRead.model_validate(resp.json())
     assert deleted_user.id == test_user.id
 
 
@@ -157,7 +146,7 @@ def test_associate_user_to_project(client: TestClient, db_session, test_project)
     # 3. Validate: check response and DB state
     # 3.1 check response - the payload is the complete resulting member list
     assert resp.status_code == 200, resp.text
-    data = _model_validate_project_user_links(resp.json())
+    data = ProjectUserLinks.model_validate(resp.json())
     assert data.project_id == test_project.id
     assert new_user.id in [u.id for u in data.users]
 
@@ -182,7 +171,7 @@ def test_dissociate_user_from_project(
     # 3. Validate: check response and DB state
     assert resp.status_code == 200, resp.text
     # 3.1 check response - the payload is the complete resulting member list
-    data = _model_validate_project_user_links(resp.json())
+    data = ProjectUserLinks.model_validate(resp.json())
     assert data.project_id == project.id
     assert new_user.id not in [u.id for u in data.users]
 
@@ -211,7 +200,7 @@ def test_create_virtual_user_returns_a_virtual_user_of_the_project(
     )
 
     assert response.status_code == 200, response.text
-    created = _model_validate_user_read(response.json())
+    created = UserRead.model_validate(response.json())
     assert created.is_virtual
     assert created.project_id == project.id
     assert created.email.endswith("@virtual.dats")
@@ -234,7 +223,7 @@ def test_create_virtual_user_allows_a_name_of_another_project(
     response = client.put(f"/user/{project.id}/virtual_user", json={"name": other_name})
 
     assert response.status_code == 200, response.text
-    assert _model_validate_user_read(response.json()).project_id == project.id
+    assert UserRead.model_validate(response.json()).project_id == project.id
 
 
 @pytest.mark.parametrize(
@@ -288,7 +277,7 @@ def test_get_users_by_project_lists_members_then_virtual_users(
     response = client.get(f"/user/{project.id}/user")
 
     assert response.status_code == 200, response.text
-    users = [_model_validate_user_read(data) for data in response.json()]
+    users = [UserRead.model_validate(data) for data in response.json()]
     assert [(u.is_virtual, u.first_name) for u in users][-2:] == [
         (True, "ExperimentA-Run1"),
         (True, "ExperimentA-Run2"),
@@ -324,7 +313,7 @@ def test_update_virtual_user_renames_it(
     response = client.patch(f"/user/{run2.id}", json={"first_name": "Gold standard"})
 
     assert response.status_code == 200, response.text
-    renamed = _model_validate_user_read(response.json())
+    renamed = UserRead.model_validate(response.json())
     assert (renamed.id, renamed.first_name) == (run2.id, "Gold standard")
 
 
@@ -418,7 +407,7 @@ def test_delete_virtual_user_deletes_its_annotations(
     response = client.delete(f"/user/{run1.id}")
 
     assert response.status_code == 200, response.text
-    assert _model_validate_user_read(response.json()).id == run1.id
+    assert UserRead.model_validate(response.json()).id == run1.id
     for span_id in span_ids:
         # deleted objects are indistinguishable from unauthorized ones
         assert client.get(f"/span/{span_id}").status_code == 403
