@@ -13038,6 +13038,7 @@
           "ALL_TIMELINE_ANALYSES",
           "ALL_COTA",
           "ALL_PROMPTS",
+          "ALL_EXPERIMENTS",
           "SELECTED_SDOCS",
           "SELECTED_SPAN_ANNOTATIONS",
           "SELECTED_SENTENCE_ANNOTATIONS",
@@ -14291,6 +14292,7 @@
           "COTA",
           "MEMOS",
           "PROMPTS",
+          "EXPERIMENTS",
           "DOCUMENTS"
         ],
         "title": "ImportJobType"

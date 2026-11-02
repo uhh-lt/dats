@@ -32,6 +32,8 @@ const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.COTA]: "Import Concept Over Time Analyses from a COTA export file",
   [ImportJobType.MEMOS]: "Import memos from a memos export file",
   [ImportJobType.PROMPTS]: "Import prompts with all their versions from a prompts export file",
+  [ImportJobType.EXPERIMENTS]:
+    "Import experiments with all their runs from an experiments export file (import the users, codes, documents and prompts first)",
   [ImportJobType.DOCUMENTS]: "Import documents from a documents export file",
 };
 
