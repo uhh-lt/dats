@@ -58,6 +58,7 @@ A **virtual user** is a user of this project that cannot log in and is not a pro
 - **Creating:** Enter a name (unique in the project) and click **Add**.
 - **Renaming:** Click the pencil icon next to the name.
 - **Deleting:** Click the delete icon. This deletes the virtual user **together with all its annotations**. Annotations that someone accepted from it in the compare view stay; their provenance then shows a deleted user as the source.
+- **Run users:** The virtual user of an [Experiment Studio](experiment-studio.md) run shows its run and experiment. Its experiment renames and deletes it, so renaming and deleting are disabled here; the link opens the experiment.
 
 ### Codes Tab
 
