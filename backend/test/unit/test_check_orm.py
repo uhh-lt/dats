@@ -165,6 +165,20 @@ def test_check_orm_accepts_valid_orm() -> None:
             'ForeignKey("project.id", ondelete="SET NULL")',
             id="fk-ondelete-set-null-required",
         ),
+        # NO ACTION without deferrable: deleting the project would fail
+        pytest.param(
+            "fk-ondelete",
+            'ForeignKey("project.id", ondelete="CASCADE")',
+            'ForeignKey("project.id", ondelete="NO ACTION")',
+            id="fk-ondelete-no-action-not-deferrable",
+        ),
+        # NO ACTION deferrable, but checked at the commit
+        pytest.param(
+            "fk-ondelete",
+            'ForeignKey("project.id", ondelete="CASCADE")',
+            'ForeignKey("project.id", ondelete="NO ACTION", deferrable=True, initially="DEFERRED")',
+            id="fk-ondelete-no-action-initially-deferred",
+        ),
         # foreign key column without index
         pytest.param(
             "fk-index",
@@ -251,6 +265,17 @@ def test_check_orm_reports_exactly_the_violated_rule(
     assert old in VALID_ORM
     source = VALID_ORM.replace(old, new, 1)
     assert rules(source) == {rule}
+
+
+def test_check_orm_accepts_deferrable_no_action() -> None:
+    """`ondelete="NO ACTION"` passes with `deferrable=True, initially="IMMEDIATE"`."""
+    source = VALID_ORM.replace(
+        'ForeignKey("project.id", ondelete="CASCADE")',
+        'ForeignKey(\n            "project.id", ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE"\n        )',
+        1,
+    )
+    assert source != VALID_ORM
+    assert rules(source) == set()
 
 
 # --- C. output and CLI ----------------------------------------------------------
