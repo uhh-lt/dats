@@ -13,6 +13,8 @@ from core.user.user_dto import (
     UserRead,
 )
 from dats_test_utils import create_user_client
+from experiment_test_utils import RunUserProject
+from modules.experiment.experiment_dto import ExperimentRead
 from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind, get_annotation
 from virtual_user_test_utils import VirtualUserProject
 
@@ -499,3 +501,131 @@ def test_delete_source_user_keeps_source_code_of_copy(
     assert copy.source_annotation_id is None
     assert copy.source_user_id is None
     assert copy.source_code_id == project["code_a"].id
+
+
+# ===========================================================================
+# DELETE USER (DELETE /user/{user_id}, DELETE /user) TESTS: EXPERIMENTS
+# ===========================================================================
+# A run user is deleted with its run only (ON DELETE NO ACTION); deleting the gold
+# annotator keeps its experiments without one (ON DELETE SET NULL).
+
+
+def _get_experiment(client: TestClient, experiment_id: int) -> ExperimentRead:
+    response = client.get(f"/experiment/{experiment_id}")
+    assert response.status_code == 200, response.text
+    return ExperimentRead.model_validate(response.json())
+
+
+@pytest.mark.parametrize(
+    "experiment_key,run_key,user_key",
+    [
+        # the run user of the finished run with stored scores
+        pytest.param(
+            "virtual_gold_experiment",
+            "virtual_gold_run",
+            "virtual_gold_run_user",
+            id="finished-run",
+        ),
+        # the run user of the failed run without annotations
+        pytest.param(
+            "virtual_gold_experiment", "failed_run", "failed_run_user", id="failed-run"
+        ),
+        # the run user of the experiment of a human gold annotator
+        pytest.param(
+            "human_gold_experiment",
+            "human_gold_run",
+            "human_gold_run_user",
+            id="human-gold-run",
+        ),
+    ],
+)
+def test_delete_virtual_user_of_an_experiment_run_is_a_conflict(
+    client: TestClient,
+    run_user_project: RunUserProject,
+    experiment_key: str,
+    run_key: str,
+    user_key: str,
+):
+    """A run user cannot be deleted directly (HTTP 409, without internals): the
+    user, its run and the run's stored scores stay."""
+    experiment_id = run_user_project[experiment_key].id  # type: ignore[literal-required]
+    run_id = run_user_project[run_key].id  # type: ignore[literal-required]
+    user_id = run_user_project[user_key].id  # type: ignore[literal-required]
+    runs_before = _get_experiment(client, experiment_id).runs
+
+    response = client.delete(f"/user/{user_id}")
+
+    assert response.status_code == 409, response.text
+    assert "still in use" in response.text
+    assert "experimentrun" not in response.text
+    assert client.get(f"/user/by_id/{user_id}").status_code == 200
+    runs_after = _get_experiment(client, experiment_id).runs
+    assert runs_after == runs_before
+    assert run_id in {run.id for run in runs_after}
+
+
+def test_delete_virtual_user_of_an_experiment_run_keeps_its_annotations(
+    client: TestClient, run_user_project: RunUserProject
+):
+    """The refused deletion of a run user deletes none of its annotations."""
+    user_id = run_user_project["virtual_gold_run_user"].id
+    span_id = run_user_project["virtual_gold_anna"].id
+
+    response = client.delete(f"/user/{user_id}")
+
+    assert response.status_code == 409, response.text
+    assert client.get(f"/span/{span_id}").status_code == 200
+
+
+def test_delete_virtual_gold_annotator_keeps_experiment_runs_and_scores(
+    client: TestClient, run_user_project: RunUserProject
+):
+    """Deleting the free virtual user "Group Standard", the gold annotator of
+    VirtualGold, keeps the experiment without a gold annotator, with all its runs,
+    their run users and their stored scores."""
+    p = run_user_project
+    experiment_id = p["virtual_gold_experiment"].id
+    group_standard_id = p["group_standard"].id
+    run_user_ids = [
+        p[key].id  # type: ignore[literal-required]
+        for key in ("virtual_gold_run_user", "second_run_user", "failed_run_user")
+    ]
+    before = _get_experiment(client, experiment_id)
+    assert before.gold_user_id == group_standard_id
+
+    response = client.delete(f"/user/{group_standard_id}")
+
+    assert response.status_code == 200, response.text
+    after = _get_experiment(client, experiment_id)
+    assert after.gold_user_id is None
+    assert after.runs == before.runs
+    baseline = next(run for run in after.runs if run.id == p["virtual_gold_run"].id)
+    assert len(baseline.scores) > 0
+    for user_id in run_user_ids:
+        assert client.get(f"/user/by_id/{user_id}").status_code == 200
+    # the experiment of the human gold annotator is unaffected
+    human_gold = _get_experiment(client, p["human_gold_experiment"].id)
+    assert human_gold.gold_user_id == p["gold_annotator"].id
+
+
+def test_delete_me_as_gold_annotator_keeps_experiment_runs_and_scores(
+    client: TestClient, app_client: TestClient, run_user_project: RunUserProject
+):
+    """The human gold annotator of HumanGold deleting their account keeps the
+    experiment without a gold annotator, with its run, its run user and its stored
+    scores."""
+    p = run_user_project
+    experiment_id = p["human_gold_experiment"].id
+    run_user_id = p["human_gold_run_user"].id
+    before = _get_experiment(client, experiment_id)
+    assert before.gold_user_id == p["gold_annotator"].id
+    gold_client = create_user_client(app_client, p["gold_annotator"])
+
+    response = gold_client.delete("/user/")
+
+    assert response.status_code == 200, response.text
+    after = _get_experiment(client, experiment_id)
+    assert after.gold_user_id is None
+    assert after.runs == before.runs
+    assert len(after.runs[0].scores) > 0
+    assert client.get(f"/user/by_id/{run_user_id}").status_code == 200

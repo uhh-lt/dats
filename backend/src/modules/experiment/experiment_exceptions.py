@@ -31,3 +31,14 @@ class ExperimentPromptVersionNotEligibleError(Exception):
         super().__init__(
             f"Prompt version {prompt_version_id} cannot run in this experiment: {cause}"
         )
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class ExperimentGoldAnnotatorDeletedError(Exception):
+    """Raised when an experiment whose gold annotator was deleted starts or scores a run."""
+
+    def __init__(self, experiment_id: int) -> None:
+        super().__init__(
+            f"The gold annotator of experiment {experiment_id} was deleted: the "
+            f"experiment cannot start runs or compute scores anymore."
+        )

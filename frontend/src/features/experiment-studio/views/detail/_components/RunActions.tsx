@@ -34,7 +34,7 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
       to: "/project/$projectId/analysis/agreement",
       params: { projectId },
       search: {
-        referenceUserId: experiment.gold_user_id,
+        referenceUserId: experiment.gold_user_id ?? undefined,
         comparedUserId: run.virtual_user_id,
         annotationType:
           experiment.task_type === TaskType.ANNOTATION

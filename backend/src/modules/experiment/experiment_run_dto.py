@@ -119,8 +119,12 @@ class ExperimentRunLog(BaseModel):
     experiment_name: str = Field(description="Name of the experiment")
     task_type: TaskType = Field(description="Task of the experiment")
     code_ids: list[int] = Field(description="IDs of the codes of the experiment")
-    gold_user_id: int = Field(description="ID of the gold annotator")
-    gold_user_name: str = Field(description="Name of the gold annotator")
+    gold_user_id: int | None = Field(
+        description="ID of the gold annotator, null if it was deleted"
+    )
+    gold_user_name: str | None = Field(
+        description="Name of the gold annotator, null if it was deleted"
+    )
     run_id: int = Field(description="ID of the run")
     run_name: str = Field(description="Name of the run")
     virtual_user_id: int = Field(description="ID of the virtual user of the run")

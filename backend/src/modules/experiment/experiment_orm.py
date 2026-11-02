@@ -55,11 +55,12 @@ class ExperimentORM(ORMBase):
         "ProjectORM", back_populates="experiments"
     )
 
-    # the annotator whose annotations are the gold standard (a human or a virtual user)
-    gold_user_id: Mapped[int] = mapped_column(
+    # the annotator whose annotations are the gold standard (a human or a virtual user);
+    # NULL once the gold annotator is deleted: the experiment keeps its runs and their
+    # stored scores, but cannot start or score runs anymore
+    gold_user_id: Mapped[int | None] = mapped_column(
         Integer,
-        ForeignKey("user.id", ondelete="CASCADE"),
-        nullable=False,
+        ForeignKey("user.id", ondelete="SET NULL"),
         index=True,
     )
 
@@ -145,10 +146,15 @@ class ExperimentRunORM(ORMBase):
         index=True,
     )
 
-    # the virtual user the run writes its annotations into; deleting the run deletes it
+    # the virtual user the run writes its annotations into. ExperimentService deletes it
+    # after the run; NO ACTION refuses to delete it before. Deleting the project defers
+    # the check to the commit (crud_project): its cascades delete the users and the
+    # experiments in any order, so the runs may still exist when the users are deleted
     virtual_user_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("user.id", ondelete="CASCADE"),
+        ForeignKey(
+            "user.id", ondelete="NO ACTION", deferrable=True, initially="IMMEDIATE"
+        ),
         nullable=False,
         index=True,
     )

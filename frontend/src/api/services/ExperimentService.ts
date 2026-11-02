@@ -137,6 +137,23 @@ export class ExperimentService {
     });
   }
   /**
+   * Recomputes and stores the agreement of all finished runs of the experiment with the gold annotator, so that all runs are scored against the same state of the gold annotator. Returns the experiment.
+   * @returns ExperimentRead Successful Response
+   * @throws ApiError
+   */
+  public static refreshAllRunScores({ experimentId }: { experimentId: number }): CancelablePromise<ExperimentRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/experiment/{experiment_id}/scores",
+      path: {
+        experiment_id: experimentId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Removes the run with its virtual user and its annotations. Returns the experiment.
    * @returns ExperimentRead Successful Response
    * @throws ApiError

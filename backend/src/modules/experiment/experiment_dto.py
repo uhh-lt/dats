@@ -22,17 +22,17 @@ class ExperimentBaseDTO(BaseModel):
     code_ids: list[int] = Field(
         description="IDs of the codes of the experiment", min_length=1
     )
+
+
+# Properties for creation
+class ExperimentCreate(ExperimentBaseDTO):
+    project_id: int = Field(description="Project the experiment belongs to")
     gold_user_id: int = Field(
         description=(
             "ID of the gold annotator, who must have annotated every document "
             "(filter 'Annotated by')"
         )
     )
-
-
-# Properties for creation
-class ExperimentCreate(ExperimentBaseDTO):
-    project_id: int = Field(description="Project the experiment belongs to")
 
     @model_validator(mode="after")
     def check_task_type(self) -> Self:
@@ -56,6 +56,13 @@ class ExperimentUpdate(BaseModel, UpdateDTOBase):
 class ExperimentRead(ExperimentBaseDTO):
     id: int = Field(description="ID of the experiment")
     project_id: int = Field(description="Project the experiment belongs to")
+    gold_user_id: int | None = Field(
+        description=(
+            "ID of the gold annotator; null if the gold annotator was deleted, then "
+            "the experiment keeps its runs and their scores, but cannot start runs or "
+            "refresh scores"
+        )
+    )
     created: datetime = Field(description="Created timestamp of the experiment")
     updated: datetime = Field(description="Updated timestamp of the experiment")
     runs: list[ExperimentRunRead] = Field(

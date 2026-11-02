@@ -33,6 +33,7 @@ from modules.experiment.experiment_dto import (
 from modules.experiment.experiment_enum import ExperimentRunLogFormat
 from modules.experiment.experiment_exceptions import (
     ExperimentGoldAnnotationsMissingError,
+    ExperimentGoldAnnotatorDeletedError,
     ExperimentInvalidSelectionError,
     ExperimentPromptVersionNotEligibleError,
 )
@@ -105,8 +106,9 @@ class ExperimentService(metaclass=SingletonMeta):
         The job starts once the transaction is committed, because the worker reads
         the run and writes into its virtual user.
         """
-        # 1) check that the prompt version fits the experiment
+        # 1) check that the experiment has a gold annotator and the prompt version fits
         experiment = crud_experiment.read(db=db, id=create_dto.experiment_id)
+        self._gold_user_id(experiment=experiment)
         self._assert_eligible_prompt_version(
             db=db, experiment=experiment, prompt_version_id=create_dto.prompt_version_id
         )
@@ -161,9 +163,11 @@ class ExperimentService(metaclass=SingletonMeta):
         run = crud_experiment_run.read(db=db, id=run_id)
         experiment = run.experiment
         version = crud_prompt_version.read(db=db, id=run.prompt_version_id)
-        user_ids = [experiment.gold_user_id, run.virtual_user_id]
-        if run.user_id is not None:
-            user_ids.append(run.user_id)
+        user_ids = [
+            user_id
+            for user_id in (experiment.gold_user_id, run.virtual_user_id, run.user_id)
+            if user_id is not None
+        ]
         users = {user.id: user for user in crud_user.read_by_ids(db=db, ids=user_ids)}
         return ExperimentRunLog(
             experiment_id=experiment.id,
@@ -171,7 +175,11 @@ class ExperimentService(metaclass=SingletonMeta):
             task_type=experiment.task_type,
             code_ids=experiment.code_ids,
             gold_user_id=experiment.gold_user_id,
-            gold_user_name=self._user_name(users[experiment.gold_user_id]),
+            gold_user_name=(
+                self._user_name(users[experiment.gold_user_id])
+                if experiment.gold_user_id is not None
+                else None
+            ),
             run_id=run.id,
             run_name=run.name,
             virtual_user_id=run.virtual_user_id,
@@ -232,32 +240,47 @@ class ExperimentService(metaclass=SingletonMeta):
 
     def refresh_run_scores(self, *, db: Session, run_id: int) -> ExperimentRead:
         """Recompute the stored agreement of a run, e.g. after the gold annotator
-        changed annotations."""
-        run = self.store_run_scores(db=db, run_id=run_id)
+        changed annotations. Refused if the gold annotator was deleted."""
+        run = crud_experiment_run.read(db=db, id=run_id)
+        gold_user_id = self._gold_user_id(experiment=run.experiment)
+        self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
         return self._read_experiment(db=db, experiment_id=run.experiment_id)
+
+    def refresh_all_run_scores(
+        self, *, db: Session, experiment_id: int
+    ) -> ExperimentRead:
+        """Recompute the stored agreement of all finished runs of an experiment at
+        once, so that all runs are scored against the same state of the gold
+        annotator. Refused if the gold annotator was deleted."""
+        experiment = crud_experiment.read(db=db, id=experiment_id)
+        gold_user_id = self._gold_user_id(experiment=experiment)
+        for run in experiment.runs:
+            if run.status == JobStatus.FINISHED:
+                self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
+        return self._read_experiment(db=db, experiment_id=experiment_id)
 
     # DELETE
 
     def delete_experiment(
         self, *, db: Session, experiment_id: int
     ) -> ExperimentDeleted:
-        """Delete an experiment with all its runs and their virtual users."""
+        """Delete an experiment with all its runs and their virtual users, including
+        their annotations."""
         experiment = crud_experiment.read(db=db, id=experiment_id)
+        virtual_user_ids = [run.virtual_user_id for run in experiment.runs]
         result = ExperimentDeleted(
             experiment=ExperimentRead.model_validate(experiment),
             virtual_users=[
                 UserRead.model_validate(user)
-                for user in crud_user.read_by_ids(
-                    db=db, ids=[run.virtual_user_id for run in experiment.runs]
-                )
+                for user in crud_user.read_by_ids(db=db, ids=virtual_user_ids)
             ],
         )
         for run in experiment.runs:
             self._stop_job(run=run)
-        crud_user.delete_multi(
-            db=db, ids=[run.virtual_user_id for run in experiment.runs]
-        )
+        # 1) delete the experiment with its runs (cascade), which release their users
         crud_experiment.delete(db=db, id=experiment_id)
+        # 2) delete the virtual users of the runs with all their annotations
+        crud_user.delete_multi(db=db, ids=virtual_user_ids)
         return result
 
     def delete_run(self, *, db: Session, run_id: int) -> ExperimentRunDeleted:
@@ -269,8 +292,10 @@ class ExperimentService(metaclass=SingletonMeta):
         )
         experiment = run.experiment
         self._stop_job(run=run)
-        # the run is deleted with its virtual user (cascade)
-        crud_user.delete(db=db, id=run.virtual_user_id)
+        # 1) delete the run, which releases its virtual user
+        crud_experiment_run.delete(db=db, id=run_id)
+        # 2) delete the virtual user of the run with all its annotations
+        crud_user.delete(db=db, id=virtual_user.id)
         db.expire(experiment, ["runs"])
         return ExperimentRunDeleted(
             experiment=self._read_experiment(db=db, experiment_id=experiment.id),
@@ -281,41 +306,16 @@ class ExperimentService(metaclass=SingletonMeta):
     # JOB
 
     def store_run_scores(self, *, db: Session, run_id: int) -> ExperimentRunRead:
-        """Compute and store the agreement between the gold annotator and the run's
-        virtual user on the run's documents and the experiment's codes, for every
-        scoring. Called when the run's job finished and to refresh the scores."""
+        """Compute and store the agreement of a run with the gold annotator, called
+        when the run's job finished. If the gold annotator was deleted during the
+        run, the run keeps no scores."""
         run = crud_experiment_run.read(db=db, id=run_id)
-        experiment = run.experiment
-        scores: list[ExperimentRunScores] = []
-        for scoring in AgreementScoring:
-            result = self.ags.compute_agreement(
-                db=db,
-                project_id=experiment.project_id,
-                params=AgreementParams(
-                    sdoc_ids=run.sdoc_ids,
-                    code_ids=experiment.code_ids,
-                    reference_user_id=experiment.gold_user_id,
-                    compared_user_id=run.virtual_user_id,
-                    annotation_type=_ANNOTATION_TYPES[TaskType(experiment.task_type)],
-                    scoring=scoring,
-                ),
-            )
-            scores.append(
-                ExperimentRunScores(
-                    scoring=scoring,
-                    num_units=result.num_units,
-                    total=result.total,
-                    code_scores=result.code_scores,
-                )
-            )
-        run = crud_experiment_run.update(
-            db=db,
-            id=run.id,
-            update_dto=ExperimentRunUpdateIntern(
-                scores=scores, scores_computed=datetime.now(UTC)
-            ),
+        gold_user_id = run.experiment.gold_user_id
+        if gold_user_id is None:
+            return ExperimentRunRead.model_validate(run)
+        return ExperimentRunRead.model_validate(
+            self._store_scores(db=db, run=run, gold_user_id=gold_user_id)
         )
-        return ExperimentRunRead.model_validate(run)
 
     # EXPORT
 
@@ -429,6 +429,49 @@ class ExperimentService(metaclass=SingletonMeta):
                     f"codes {sorted(experiment.code_ids)}"
                 ),
             )
+
+    def _gold_user_id(self, *, experiment: ExperimentORM) -> int:
+        """The gold annotator of the experiment; raises if it was deleted."""
+        if experiment.gold_user_id is None:
+            raise ExperimentGoldAnnotatorDeletedError(experiment_id=experiment.id)
+        return experiment.gold_user_id
+
+    def _store_scores(
+        self, *, db: Session, run: ExperimentRunORM, gold_user_id: int
+    ) -> ExperimentRunORM:
+        """Compute and store the agreement between the gold annotator and the run's
+        virtual user on the run's documents and the experiment's codes, for every
+        scoring."""
+        experiment = run.experiment
+        scores: list[ExperimentRunScores] = []
+        for scoring in AgreementScoring:
+            result = self.ags.compute_agreement(
+                db=db,
+                project_id=experiment.project_id,
+                params=AgreementParams(
+                    sdoc_ids=run.sdoc_ids,
+                    code_ids=experiment.code_ids,
+                    reference_user_id=gold_user_id,
+                    compared_user_id=run.virtual_user_id,
+                    annotation_type=_ANNOTATION_TYPES[TaskType(experiment.task_type)],
+                    scoring=scoring,
+                ),
+            )
+            scores.append(
+                ExperimentRunScores(
+                    scoring=scoring,
+                    num_units=result.num_units,
+                    total=result.total,
+                    code_scores=result.code_scores,
+                )
+            )
+        return crud_experiment_run.update(
+            db=db,
+            id=run.id,
+            update_dto=ExperimentRunUpdateIntern(
+                scores=scores, scores_computed=datetime.now(UTC)
+            ),
+        )
 
     def _stop_job(self, *, run: ExperimentRunORM) -> None:
         if run.job_id is not None and run.status in _ACTIVE_RUN_STATUSES:

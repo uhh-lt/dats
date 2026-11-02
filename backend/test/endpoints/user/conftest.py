@@ -7,6 +7,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from experiment_test_utils import RunUserProject, create_run_user_project
 from provenance_test_utils import (
     ProvenanceProjectWithCopies,
     create_provenance_copies,
@@ -66,3 +67,11 @@ def virtual_user_project(
 ) -> VirtualUserProject:
     """The projects described in `VirtualUserProject`."""
     return create_virtual_user_project(db_session, test_user, test_project)
+
+
+@pytest.fixture(scope="function")
+def run_user_project(
+    db_session, test_user: UserORM, test_project: ProjectORM
+) -> RunUserProject:
+    """The project described in `RunUserProject`."""
+    return create_run_user_project(db_session, test_user, test_project)

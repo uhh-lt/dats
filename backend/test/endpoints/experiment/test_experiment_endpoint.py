@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
 
 from core.prompt.prompt_enum import TaskType
+from experiment_test_utils import RunUserProject
 from modules.agreement.agreement_dto import AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
 from modules.experiment.experiment_dto import ExperimentCreate, ExperimentRead
@@ -26,6 +27,9 @@ from .conftest import INVALID_MODEL, ExperimentProject
 RUN_TOTAL_COUNTS = (1, 1, 2)
 RUN_CLAIM_COUNTS = (1, 0, 1)
 RUN_EVIDENCE_COUNTS = (0, 1, 1)
+# (TP, FP, FN) of the runs of VirtualGold, see the `RunUserProject` docstring
+BASELINE_COUNTS = (1, 0, 1)
+SECOND_COUNTS = (2, 0, 0)
 
 
 def _create_dto(p: ExperimentProject, **changes: object) -> ExperimentCreate:
@@ -50,6 +54,13 @@ def _get_experiment(client: TestClient, experiment_id: int) -> ExperimentRead:
 
 def _counts(score: AgreementScore) -> tuple[int, int, int]:
     return (score.true_positives, score.false_positives, score.false_negatives)
+
+
+def _virtual_user_names(client: TestClient, project_id: int) -> set[str]:
+    """The names of all virtual users of the project."""
+    response = client.get(f"/user/{project_id}/user")
+    assert response.status_code == 200, response.text
+    return {user["first_name"] for user in response.json() if user["is_virtual"]}
 
 
 def _wait_for_run(
@@ -369,6 +380,30 @@ def test_create_run_rejects_nonexistent_prompt_versions_and_foreign_experiments(
     assert response.status_code == 403, response.text
 
 
+def test_create_run_is_refused_without_a_gold_annotator(
+    client: TestClient, gold_deleted_project: RunUserProject
+) -> None:
+    """An experiment whose gold annotator was deleted starts no run (HTTP 409),
+    even with an eligible prompt version: no run and no virtual user is created."""
+    p = gold_deleted_project
+    experiment_id = p["virtual_gold_experiment"].id
+    runs_before = _get_experiment(client, experiment_id).runs
+    users_before = _virtual_user_names(client, p["project"].id)
+    dto = ExperimentRunCreate(
+        experiment_id=experiment_id,
+        name="Late",
+        prompt_version_id=p["prompt"].versions[0].id,
+        model=INVALID_MODEL,
+    )
+
+    response = client.put("/experiment/run", json=dto.model_dump(mode="json"))
+
+    assert response.status_code == 409, response.text
+    assert "gold annotator" in response.text
+    assert _get_experiment(client, experiment_id).runs == runs_before
+    assert _virtual_user_names(client, p["project"].id) == users_before
+
+
 @pytest.mark.llm
 def test_create_run_stores_the_agreement_when_the_run_finished(
     client: TestClient, experiment_project: ExperimentProject
@@ -572,11 +607,112 @@ def test_refresh_run_scores_stores_the_agreement_with_the_gold_annotator(
     assert log.scores_computed == stored.scores_computed
 
 
+def test_refresh_run_scores_is_refused_without_a_gold_annotator(
+    client: TestClient, gold_deleted_project: RunUserProject
+) -> None:
+    """The run of an experiment whose gold annotator was deleted keeps its stored
+    scores: the refresh is refused (HTTP 409)."""
+    p = gold_deleted_project
+    experiment_id = p["virtual_gold_experiment"].id
+    runs_before = _get_experiment(client, experiment_id).runs
+
+    response = client.patch(f"/experiment/run/{p['virtual_gold_run'].id}/scores")
+
+    assert response.status_code == 409, response.text
+    assert "gold annotator" in response.text
+    assert _get_experiment(client, experiment_id).runs == runs_before
+
+
 def test_refresh_run_scores_rejects_unknown_runs(
     client: TestClient, experiment_project: ExperimentProject
 ) -> None:
     """An unknown run is forbidden, like every object the user cannot see."""
     response = client.patch("/experiment/run/999999/scores")
+    assert response.status_code == 403, response.text
+
+
+# ===========================================================================
+# REFRESH ALL RUN SCORES (PATCH /experiment/{experiment_id}/scores) TESTS
+# ===========================================================================
+
+
+def test_refresh_all_run_scores_recomputes_every_finished_run(
+    client: TestClient, run_user_project: RunUserProject
+) -> None:
+    """Both finished runs of VirtualGold are scored at once for every scoring:
+    "Baseline" again (a newer time, the same counts), "Second" for the first time;
+    the failed run "Broken" stays without scores."""
+    p = run_user_project
+    experiment_id = p["virtual_gold_experiment"].id
+    baseline_id = p["virtual_gold_run"].id
+    second_id = p["second_run"].id
+    failed_id = p["failed_run"].id
+    before = {run.id: run for run in _get_experiment(client, experiment_id).runs}
+    baseline_computed = before[baseline_id].scores_computed
+    assert baseline_computed is not None
+
+    response = client.patch(f"/experiment/{experiment_id}/scores")
+
+    assert response.status_code == 200, response.text
+    result = ExperimentRead.model_validate(response.json())
+    runs = {run.id: run for run in result.runs}
+    for run_id, counts in [(baseline_id, BASELINE_COUNTS), (second_id, SECOND_COUNTS)]:
+        run = runs[run_id]
+        assert run.scores_computed is not None
+        assert [scores.scoring for scores in run.scores] == list(AgreementScoring)
+        for scores in run.scores:
+            assert scores.num_units == 2
+            assert _counts(scores.total) == counts
+            assert [(s.code_id, _counts(s)) for s in scores.code_scores] == [
+                (p["code_claim"].id, counts)
+            ]
+    baseline = runs[baseline_id]
+    assert baseline.scores_computed is not None
+    assert baseline.scores_computed > baseline_computed
+    assert runs[failed_id].scores == []
+    assert runs[failed_id].scores_computed is None
+    assert _get_experiment(client, experiment_id).runs == result.runs
+
+
+def test_refresh_all_run_scores_is_refused_without_a_gold_annotator(
+    client: TestClient, gold_deleted_project: RunUserProject
+) -> None:
+    """An experiment whose gold annotator was deleted keeps the stored scores of its
+    runs: the refresh is refused (HTTP 409)."""
+    p = gold_deleted_project
+    experiment_id = p["virtual_gold_experiment"].id
+    runs_before = _get_experiment(client, experiment_id).runs
+
+    response = client.patch(f"/experiment/{experiment_id}/scores")
+
+    assert response.status_code == 409, response.text
+    assert "gold annotator" in response.text
+    assert _get_experiment(client, experiment_id).runs == runs_before
+
+
+@pytest.mark.parametrize(
+    "experiment_id_key",
+    [
+        # an experiment of a project the user is no member of
+        pytest.param("foreign_experiment", id="foreign"),
+        # an experiment that does not exist
+        pytest.param(None, id="unknown"),
+    ],
+)
+def test_refresh_all_run_scores_rejects_foreign_and_unknown_experiments(
+    client: TestClient,
+    experiment_project: ExperimentProject,
+    experiment_id_key: str | None,
+) -> None:
+    """Unknown experiments are forbidden, like every object the user cannot see."""
+    experiment_id = (
+        999999
+        if experiment_id_key is None
+        else experiment_project[experiment_id_key].id  # type: ignore[literal-required]
+    )
+
+    response = client.patch(f"/experiment/{experiment_id}/scores")
+
     assert response.status_code == 403, response.text
 
 
@@ -603,6 +739,41 @@ def test_delete_experiment_deletes_its_runs_virtual_users_and_their_annotations(
     gold_response = client.get(f"/span/{p['gold_anna'].id}")
     assert gold_response.status_code == 200, gold_response.text
     assert _get_experiment(client, p["experiment"].id).runs == []
+
+
+def test_delete_experiment_deletes_all_run_users_and_leaves_no_virtual_user_behind(
+    client: TestClient, run_user_project: RunUserProject
+) -> None:
+    """Deleting VirtualGold deletes the run users of all three runs with their
+    annotations; only the free virtual user and the run user of HumanGold stay."""
+    p = run_user_project
+    experiment_id = p["virtual_gold_experiment"].id
+    span_id = p["virtual_gold_anna"].id
+
+    response = client.delete(f"/experiment/{experiment_id}")
+
+    assert response.status_code == 200, response.text
+    assert client.get(f"/experiment/{experiment_id}").status_code == 403
+    assert client.get(f"/span/{span_id}").status_code == 403
+    assert _virtual_user_names(client, p["project"].id) == {
+        "Group Standard",
+        "HumanGold-Baseline",
+    }
+
+
+def test_delete_experiment_without_a_gold_annotator_deletes_its_run_users(
+    client: TestClient, gold_deleted_project: RunUserProject
+) -> None:
+    """An experiment whose gold annotator was deleted is deleted with its run users
+    like any other."""
+    p = gold_deleted_project
+    experiment_id = p["virtual_gold_experiment"].id
+
+    response = client.delete(f"/experiment/{experiment_id}")
+
+    assert response.status_code == 200, response.text
+    assert ExperimentRead.model_validate(response.json()).gold_user_id is None
+    assert _virtual_user_names(client, p["project"].id) == {"HumanGold-Baseline"}
 
 
 def test_delete_experiment_rejects_foreign_experiments(
@@ -638,6 +809,31 @@ def test_delete_run_deletes_its_virtual_user_and_annotations(
     assert client.get(f"/span/{run_met_id}").status_code == 403
     assert client.get(f"/span/{p['gold_bob'].id}").status_code == 200
     assert _get_experiment(client, result.id).runs == []
+
+
+def test_delete_run_deletes_only_its_own_run_user(
+    client: TestClient, run_user_project: RunUserProject
+) -> None:
+    """Deleting the run "Second" of VirtualGold deletes its run user with its
+    annotations; the other runs and their run users stay."""
+    p = run_user_project
+    experiment_id = p["virtual_gold_experiment"].id
+    second_id = p["second_run"].id
+    baseline_span_id = p["virtual_gold_anna"].id
+
+    response = client.delete(f"/experiment/run/{second_id}")
+
+    assert response.status_code == 200, response.text
+    result = ExperimentRead.model_validate(response.json())
+    assert [run.name for run in result.runs] == ["Baseline", "Broken"]
+    assert client.get(f"/span/{baseline_span_id}").status_code == 200
+    assert _virtual_user_names(client, p["project"].id) == {
+        "Group Standard",
+        "HumanGold-Baseline",
+        "VirtualGold-Baseline",
+        "VirtualGold-Broken",
+    }
+    assert _get_experiment(client, experiment_id).runs == result.runs
 
 
 def test_delete_run_rejects_unknown_runs(
@@ -689,6 +885,23 @@ def test_export_run_log_as_json_is_self_contained(
     assert log.user_name == "Test User"
     assert log.status == JobStatus.FINISHED
     assert log.scores == []
+
+
+def test_export_run_log_without_a_gold_annotator_keeps_the_scores(
+    client: TestClient, gold_deleted_project: RunUserProject
+) -> None:
+    """The log of a run whose gold annotator was deleted names no gold annotator
+    and holds the stored scores."""
+    p = gold_deleted_project
+    path = _export(client, p["virtual_gold_run"].id, ExperimentRunLogFormat.JSON.value)
+    log = ExperimentRunLog.model_validate(json.loads(path.read_text()))
+
+    assert log.gold_user_id is None
+    assert log.gold_user_name is None
+    assert log.virtual_user_name == "VirtualGold-Baseline"
+    assert [_counts(scores.total) for scores in log.scores] == [
+        BASELINE_COUNTS for _ in AgreementScoring
+    ]
 
 
 def test_export_run_log_as_csv_has_a_row_per_scoring_and_code(

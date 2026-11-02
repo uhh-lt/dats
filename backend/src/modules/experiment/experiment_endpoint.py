@@ -174,6 +174,31 @@ def refresh_run_scores(
     return result
 
 
+@router.patch(
+    "/{experiment_id}/scores",
+    response_model=ExperimentRead,
+    summary=(
+        "Recomputes and stores the agreement of all finished runs of the experiment "
+        "with the gold annotator, so that all runs are scored against the same state "
+        "of the gold annotator. Returns the experiment."
+    ),
+)
+def refresh_all_run_scores(
+    *,
+    db: Session = Depends(get_db_session),
+    experiment_id: int,
+    authz_user: AuthzUser = Depends(),
+    ws: WebsocketEmitter = Depends(),
+) -> ExperimentRead:
+    authz_user.assert_in_same_project_as(Crud.EXPERIMENT, experiment_id)
+
+    result = exs.refresh_all_run_scores(db=db, experiment_id=experiment_id)
+    ws.emit_to_project(
+        DATSEvent.EXPERIMENT_UPDATED, result, project_id=result.project_id
+    )
+    return result
+
+
 # --- delete operations
 
 

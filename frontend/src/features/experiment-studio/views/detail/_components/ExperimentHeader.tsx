@@ -22,7 +22,11 @@ export function ExperimentHeader({ experiment }: ExperimentHeaderProps) {
         <Setting label="Task">{TASK_TYPE_LABELS[experiment.task_type]}</Setting>
         <Setting label="Documents">{experiment.sdoc_ids.length}</Setting>
         <Setting label="Gold annotator">
-          <UserRenderer user={experiment.gold_user_id} />
+          {experiment.gold_user_id === null ? (
+            <Typography color="error">Deleted</Typography>
+          ) : (
+            <UserRenderer user={experiment.gold_user_id} />
+          )}
         </Setting>
         <Setting label="Codes">
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
