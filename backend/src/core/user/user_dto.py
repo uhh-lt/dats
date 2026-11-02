@@ -42,8 +42,6 @@ class UserRead(UserBaseDTO):
     project_id: int | None = Field(
         description="Project of a virtual user (None for other users)"
     )
-    # Flo: We actually never want to return the password hence we exclude it from serialization
-    password: str = Field(description="Hashed password of the User", exclude=True)
     created: datetime = Field(description="Created timestamp of the User")
     updated: datetime = Field(description="Updated timestamp of the User")
     model_config = ConfigDict(from_attributes=True)

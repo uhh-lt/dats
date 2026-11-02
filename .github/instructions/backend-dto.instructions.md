@@ -58,7 +58,7 @@ class FooRead(FooBaseDTO):
 - **Pydantic v2 API**: `model_config = ConfigDict(...)`, `@model_validator(mode="after")`, `@field_validator(..., mode="before")` + `@classmethod`. Never `class Config` or `orm_mode`.
 - **No enums**: enum classes live in the module's `<module>_enum.py` (see `backend.instructions.md`, checked by `check_enums.py`), never in a DTO module. DTOs import them from there.
 - **No exceptions**: exception classes live in `<module>_exceptions.py`, never in a DTO module.
-- **Hide secrets**: fields that must not reach the client use `Field(..., exclude=True)` (see `UserRead.password`) or live in a separate public DTO (`PublicUserRead`).
+- **Hide secrets**: fields that must not reach the client are left out of the Read DTO and read from the ORM object (the password hash in `AuthService`) or live in a separate public DTO (`PublicUserRead`); never hide a required field with `Field(..., exclude=True)`, because websocket events are serialized and validated again between API workers.
 
 ### CRUD-Entity DTOs
 
