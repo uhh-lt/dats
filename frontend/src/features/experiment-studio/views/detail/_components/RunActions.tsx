@@ -89,9 +89,20 @@ export function RunActions({ projectId, experiment, run, scoring, onDeleted }: R
       <Tooltip title="Agreement evaluation">
         <IconButton onClick={handleOpenAgreement}>{getIconComponent(Icon.AGREEMENT)}</IconButton>
       </Tooltip>
-      <Tooltip title="Recompute the scores, e.g. after the gold annotator changed annotations">
+      <Tooltip
+        title={
+          experiment.gold_user_id === null
+            ? "The gold annotator was deleted: the scores cannot be recomputed"
+            : "Recompute the scores, e.g. after the gold annotator changed annotations"
+        }
+      >
         <span>
-          <IconButton aria-label="Recompute the scores" onClick={handleRefresh} loading={isRefreshing}>
+          <IconButton
+            aria-label="Recompute the scores"
+            onClick={handleRefresh}
+            loading={isRefreshing}
+            disabled={experiment.gold_user_id === null}
+          >
             <RefreshIcon />
           </IconButton>
         </span>

@@ -78,6 +78,16 @@ const useRefreshRunScores = () =>
     },
   });
 
+const useRefreshAllRunScores = () =>
+  useMutation({
+    mutationKey: [...experimentQueries.all(), "refreshAllRunScores"],
+    mutationFn: ExperimentService.refreshAllRunScores,
+    meta: {
+      datsEvent: "EXPERIMENT_UPDATED",
+      successMessage: "Recomputed the agreement of all finished runs with the gold annotator",
+    },
+  });
+
 const useExportRunLog = () =>
   useMutation({
     mutationKey: [...experimentQueries.all(), "exportRunLog"],
@@ -94,5 +104,6 @@ export const ExperimentHooks = {
   useCreateRun,
   useDeleteRun,
   useRefreshRunScores,
+  useRefreshAllRunScores,
   useExportRunLog,
 };

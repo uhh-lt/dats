@@ -44,6 +44,12 @@ export function ExperimentView() {
     <ContentContainerLayout>
       <Stack spacing={2} className="h100">
         <ExperimentHeader experiment={experiment} />
+        {experiment.gold_user_id === null && (
+          <Alert severity="warning" sx={{ flexShrink: 0 }}>
+            The gold annotator of this experiment was deleted. The runs keep their stored scores, but new runs and
+            refreshing the scores are disabled.
+          </Alert>
+        )}
         <RunTable
           projectId={projectId}
           experiment={experiment}
