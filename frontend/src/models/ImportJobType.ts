@@ -17,5 +17,6 @@ export enum ImportJobType {
   COTA = "COTA",
   MEMOS = "MEMOS",
   PROMPTS = "PROMPTS",
+  EXPERIMENTS = "EXPERIMENTS",
   DOCUMENTS = "DOCUMENTS",
 }
