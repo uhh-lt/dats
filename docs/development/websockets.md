@@ -10,7 +10,7 @@ The backend exposes an authenticated WebSocket endpoint at `/ws`. Because the AP
 Browser ──WS──► API worker ──publish──► Redis channel dats:ws:fanout ──► all API workers ──► their local clients
 ```
 
-Every send operation delivers the event to matching local connections **and** publishes an envelope to Redis, so all other workers can deliver it to their own connections. Each worker skips envelopes it published itself.
+Every send operation delivers the event to matching local connections **and** publishes an envelope to Redis as JSON, so all other workers can deliver it to their own connections. The receiving workers validate the JSON back into an envelope, so an event whose payload loses a field in serialization is dropped as malformed. Each worker skips envelopes it published itself.
 
 Key files:
 
@@ -45,7 +45,7 @@ The backplane uses a dedicated logical Redis database, configured via `redis.ws_
 Backend (`backend/src/common/dats_event.py`):
 
 1. Add the event type to the `DATSEvent` enum.
-2. Add one line to the `_DATS_EVENT_PAYLOADS` registry mapping the event type to its payload DTO (a read model, `list[...]`, or `Union[...]`). The concrete event class is generated from this table — no separate class to write.
+2. Add one line to the `_DATS_EVENT_PAYLOADS` registry mapping the event type to its payload DTO (a read model, `list[...]`, or `Union[...]`). The concrete event class is generated from this table — no separate class to write. The payload DTO must survive the fan-out round trip with every field intact: never hide a required field with `Field(..., exclude=True)` (the field is missing after serialization and the receiving workers drop the event), and keep secrets out of read DTOs instead. `backend/test/unit/test_websocket_envelope.py` round-trips every registered event through the envelope and fails if a payload loses a field.
 3. Emit the event from an endpoint via the `WebsocketEmitter` dependency (`ws: WebsocketEmitter = Depends()`), choosing the audience: `emit_to_project`, `emit_to_projects_grouped` (batch of ORM objects, grouped by project), `emit_dtos_to_projects` (batch of read DTOs, e.g. service results, grouped by their `project_id`), `emit_to_user`, `emit_to_users`, or `emit_to_all`. The emitter queues the send as a FastAPI `BackgroundTasks` task so it fires after the DB commit, and automatically excludes the acting user.
 
    ```python
