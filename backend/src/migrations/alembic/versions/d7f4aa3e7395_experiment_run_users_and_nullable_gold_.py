@@ -74,7 +74,14 @@ def downgrade() -> None:
         ["id"],
         ondelete="CASCADE",
     )
-    # experiments without a gold annotator cannot exist before this revision
+    # experiments without a gold annotator cannot exist before this revision: delete
+    # their run users with their annotations (which cascades to the runs, see above),
+    # then the experiments
+    op.execute(
+        'DELETE FROM "user" WHERE id IN ('
+        "SELECT r.virtual_user_id FROM experimentrun r "
+        "JOIN experiment e ON e.id = r.experiment_id WHERE e.gold_user_id IS NULL)"
+    )
     op.execute("DELETE FROM experiment WHERE gold_user_id IS NULL")
     op.alter_column(
         "experiment", "gold_user_id", existing_type=sa.INTEGER(), nullable=False
