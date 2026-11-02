@@ -6,25 +6,25 @@ import type { ExperimentRunScores } from "./ExperimentRunScores";
 import type { JobStatus } from "./JobStatus";
 export type ExperimentRunRead = {
   /**
-   * ID of the run
-   */
-  id: number;
-  /**
    * ID of the experiment of the run
    */
   experiment_id: number;
   /**
-   * Name of the run, unique per experiment
+   * Name of the run, unique per experiment; the run writes into the virtual user <experiment name>-<run name>
    */
   name: string;
   /**
-   * ID of the prompt version of the run
+   * ID of the prompt version of the run: a version of the experiment's task whose codes equal the experiment's codes
    */
   prompt_version_id: number;
   /**
-   * Large Language Model of the run
+   * Large Language Model to run the prompt with
    */
   model: string;
+  /**
+   * ID of the run
+   */
+  id: number;
   /**
    * IDs of the documents the run ran on
    */
