@@ -18,26 +18,6 @@ export const annotationTypeDescriptions: Record<AgreementAnnotationType, string>
   [AgreementAnnotationType.SENTENCE]: "Annotations of one or more whole sentences. Their constituents are sentences.",
 };
 
-export function scoringLabel(annotationType: AgreementAnnotationType, scoring: AgreementScoring): string {
-  if (scoring === AgreementScoring.EXACT) return "Exact boundaries";
-  return annotationType === AgreementAnnotationType.SPAN ? "Per word" : "Per sentence";
-}
-
-export function scoringDescription(annotationType: AgreementAnnotationType, scoring: AgreementScoring): string {
-  const constituent = annotationType === AgreementAnnotationType.SPAN ? "word" : "sentence";
-  if (scoring === AgreementScoring.EXACT) {
-    return (
-      `Every annotation counts as a whole: it is correct only if the other annotator assigned the same code ` +
-      `from exactly the same first to the same last ${constituent}. ` +
-      `3 annotated ${constituent}s against 2 of them are a miss and an extra.`
-    );
-  }
-  return (
-    `Every ${constituent} counts on its own: it is correct if it carries the same code on both sides, ` +
-    `wherever the annotations begin or end. 3 annotated ${constituent}s against 2 of them: 2 of 3 are correct.`
-  );
-}
-
 /**
  * Which segments to show, from the point of view of one code (or of all codes). The values are
  * declared by the search schema of the route, which stores the selection in the URL.
