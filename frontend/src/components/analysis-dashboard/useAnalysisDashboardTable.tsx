@@ -11,6 +11,7 @@ import {
   MRT_ToggleDensePaddingButton,
   MRT_ToggleFiltersButton,
   MRT_ToggleGlobalFilterButton,
+  MRT_VisibilityState,
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
@@ -39,6 +40,8 @@ export type HandleCreateAnalysis<T extends AnalysisDashboardRow = AnalysisDashbo
  * It handles common functionalities such as loading state, error handling, row actions (create, update, duplicate, delete).
  * By default, it includes columns for ID, Name, and Last Modified date, but additional columns (additionalColumns) can be passed in as props.
  * It also provides a button to create new analyses, which can optionally show a menu of creation options (analysisCreateOptions).
+ * Analyses that are created in a dialog render their own create button (renderCreateButton) instead of the inline row.
+ * Without handleDuplicateAnalysis there is no duplicate action, without renderExportButton no export and no row selection.
  */
 export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> {
   analysisName: string;
@@ -53,13 +56,15 @@ export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> 
   deletingAnalysisId?: number;
   duplicatingAnalysisId?: number;
   onOpenAnalysis: (analysisRow: T) => void;
-  handleDuplicateAnalysis: (row: MRT_Row<T>) => void;
+  handleDuplicateAnalysis?: (row: MRT_Row<T>) => void;
   handleDeleteAnalysis: (row: MRT_Row<T>) => void;
-  handleCreateAnalysis: HandleCreateAnalysis<T>;
+  handleCreateAnalysis?: HandleCreateAnalysis<T>;
   handleEditAnalysis: MRT_TableOptions<T>["onEditingRowSave"];
   analysisCreateOptions?: AnalysisCreateOption[];
   additionalColumns?: MRT_ColumnDef<T>[];
-  renderExportButton: (props: ExportAnalysisButtonProps) => React.ReactNode;
+  initialColumnVisibility?: MRT_VisibilityState;
+  renderCreateButton?: () => React.ReactNode;
+  renderExportButton?: (props: ExportAnalysisButtonProps) => React.ReactNode;
 }
 
 export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props: UseAnaylsisDashboardTableProps<T>) => {
@@ -127,8 +132,8 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
     muiTableContainerProps: {
       style: { flexGrow: 1 },
     },
-    // selection
-    enableRowSelection: true,
+    // selection (only needed for the export)
+    enableRowSelection: Boolean(props.renderExportButton),
     // row
     muiTableBodyRowProps: ({ row, table }) => {
       const tableState = table.getState();
@@ -143,46 +148,49 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
     },
     // create analysis inline
     createDisplayMode: "row",
-    onCreatingRowSave: props.handleCreateAnalysis(analysisCreateOption),
-    renderTopToolbarCustomActions: ({ table }) => (
-      <>
-        <Button
-          variant="contained"
-          onClick={(event) => {
-            if (props.analysisCreateOptions && props.analysisCreateOptions.length > 0) {
-              handleOpenMenu(event);
-            } else {
-              showCreateAnalysisRow(table);
-            }
-          }}
-        >
-          Create New {props.analysisName}
-        </Button>
-        {props.analysisCreateOptions && (
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleCloseMenu}
-            MenuListProps={{
-              "aria-labelledby": "basic-button",
+    onCreatingRowSave: props.handleCreateAnalysis?.(analysisCreateOption),
+    renderTopToolbarCustomActions: ({ table }) =>
+      props.renderCreateButton ? (
+        props.renderCreateButton()
+      ) : (
+        <>
+          <Button
+            variant="contained"
+            onClick={(event) => {
+              if (props.analysisCreateOptions && props.analysisCreateOptions.length > 0) {
+                handleOpenMenu(event);
+              } else {
+                showCreateAnalysisRow(table);
+              }
             }}
           >
-            {props.analysisCreateOptions.map((option) => (
-              <MenuItem
-                key={option.option}
-                onClick={() => {
-                  setAnalysisCreateOption(option);
-                  showCreateAnalysisRow(table);
-                  handleCloseMenu();
-                }}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
-          </Menu>
-        )}
-      </>
-    ),
+            Create New {props.analysisName}
+          </Button>
+          {props.analysisCreateOptions && (
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleCloseMenu}
+              MenuListProps={{
+                "aria-labelledby": "basic-button",
+              }}
+            >
+              {props.analysisCreateOptions.map((option) => (
+                <MenuItem
+                  key={option.option}
+                  onClick={() => {
+                    setAnalysisCreateOption(option);
+                    showCreateAnalysisRow(table);
+                    handleCloseMenu();
+                  }}
+                >
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Menu>
+          )}
+        </>
+      ),
     // edit analysis inline
     enableEditing: true,
     editDisplayMode: "row", // ('modal', 'cell', 'table', and 'custom' are also available)
@@ -215,23 +223,25 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
             <>{getIconComponent(Icon.EDIT)}</>
           </IconButton>
         </Tooltip>
-        <Tooltip title="Duplicate">
-          <span>
-            <IconButton
-              onClick={(event) => {
-                event.stopPropagation();
-                props.handleDuplicateAnalysis(row);
-              }}
-              disabled={props.isDuplicatingAnalysis && props.duplicatingAnalysisId === row.original.id}
-            >
-              {props.isDuplicatingAnalysis && props.duplicatingAnalysisId === row.original.id ? (
-                <CircularProgress size={24} />
-              ) : (
-                <>{getIconComponent(Icon.DUPLICATE)}</>
-              )}
-            </IconButton>
-          </span>
-        </Tooltip>
+        {props.handleDuplicateAnalysis && (
+          <Tooltip title="Duplicate">
+            <span>
+              <IconButton
+                onClick={(event) => {
+                  event.stopPropagation();
+                  props.handleDuplicateAnalysis?.(row);
+                }}
+                disabled={props.isDuplicatingAnalysis && props.duplicatingAnalysisId === row.original.id}
+              >
+                {props.isDuplicatingAnalysis && props.duplicatingAnalysisId === row.original.id ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  <>{getIconComponent(Icon.DUPLICATE)}</>
+                )}
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
         <Tooltip title="Delete">
           <span>
             <IconButton
@@ -262,6 +272,7 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
       ],
       columnVisibility: {
         id: false,
+        ...props.initialColumnVisibility,
       },
     },
     // toolbar
@@ -271,7 +282,9 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
         <MRT_ToggleFiltersButton table={table} />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-        {props.renderExportButton({ analysisIds: table.getSelectedRowModel().flatRows.map((row) => parseInt(row.id)) })}
+        {props.renderExportButton?.({
+          analysisIds: table.getSelectedRowModel().flatRows.map((row) => parseInt(row.id)),
+        })}
       </Box>
     ),
   });
