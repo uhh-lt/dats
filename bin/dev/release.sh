@@ -38,13 +38,15 @@ if [[ ! "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 	exit 1
 fi
 
-if [ "$(git branch --show-current)" != "main" ]; then
-	echo "Please run this script from the main branch."
+# Works in any worktree: the checkout only has to be the latest origin/main, e.g. after 'git switch --detach origin/main'
+git fetch origin main
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+	echo "Please run this script on the latest origin/main, e.g. after 'git switch --detach origin/main'."
 	exit 1
 fi
 
-if [ "$(git diff-index --cached HEAD --)" ]; then
-	echo "There are staged changes. Please run this script in a clean working directory."
+if [ "$(git status --porcelain --untracked-files=no)" ]; then
+	echo "There are uncommitted changes. Please run this script in a clean working directory."
 	exit 1
 fi
 
@@ -70,6 +72,6 @@ npm run update-api && npm run update-version
 cd ..
 git add backend/configs/version.yaml backend/pyproject.toml backend/uv.lock ray/pyproject.toml ray/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/core/OpenAPI.ts
 git commit -m "Release v$1"
-git push
+git push origin HEAD:main
 
 echo "Release commit pushed. The v$1 tag will be created automatically after all required checks succeed."

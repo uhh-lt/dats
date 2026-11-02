@@ -179,7 +179,7 @@ alembic action *args:
 # --- 7. Release ---------------------------------------------------------------
 
 [arg("version", pattern="[0-9]+\\.[0-9]+\\.[0-9]+", help="Semantic version without a v prefix")]
-[doc("Cut a release from a clean main branch (version: MAJOR.MINOR.PATCH)")]
+[doc("Cut a release from a clean checkout of the latest origin/main, in any worktree (version: MAJOR.MINOR.PATCH)")]
 [group("7. Release")]
 release version:
     ./bin/dev/release.sh "$1"
