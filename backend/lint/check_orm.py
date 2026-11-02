@@ -14,7 +14,8 @@ Rules (the rule id is printed with every violation):
     nullable           Nullability comes from the annotation: no nullable=True (use
                        Mapped[T | None]) and no nullable=False on a Mapped[T | None] column.
     fk-ondelete        Every ForeignKey(...) passes ondelete="CASCADE" ("SET NULL" is
-                       allowed on a Mapped[T | None] column).
+                       allowed on a Mapped[T | None] column, "NO ACTION" on a row that a
+                       service deletes itself).
     fk-index           Every column with a ForeignKey(...) passes index=True.
     tz-datetime        DateTime columns are DateTime(timezone=True).
     no-native-enum     No native Enum(...) / ENUM(...) column type; store enums as String
@@ -192,10 +193,12 @@ def check_column(
             ondelete = keyword(sub, "ondelete")
             if is_const(ondelete, "SET NULL") and optional:
                 continue
-            if not is_const(ondelete, "CASCADE"):
+            if not is_const(ondelete, "CASCADE") and not is_const(
+                ondelete, "NO ACTION"
+            ):
                 add(
                     "fk-ondelete",
-                    'ForeignKey must pass ondelete="CASCADE" ("SET NULL" only on optional columns).',
+                    'ForeignKey must pass ondelete="CASCADE" ("SET NULL" only on optional columns, "NO ACTION" to protect a row a service deletes).',
                     sub.lineno,
                 )
         elif name == "DateTime":

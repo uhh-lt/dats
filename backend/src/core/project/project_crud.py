@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from core.project.project_dto import ProjectCreate, ProjectUpdate
@@ -14,6 +15,25 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
     def read_by_title(self, db: Session, *, title: str) -> ProjectORM | None:
         return db.query(self.model).filter(self.model.title == title).first()
+
+    ### DELETE OPERATIONS ###
+
+    def delete_multi(self, db: Session, *, ids: list[int]) -> int:
+        """
+        Delete the projects with all their data (ON DELETE CASCADE).
+
+        The cascades delete the users of a project and the rows that reference them
+        (e.g. the experiment runs of its virtual users) in any order, so the deferrable
+        references (ON DELETE NO ACTION) are checked at the commit.
+
+        Args:
+            ids: The ids to delete. Duplicates and missing ids are ignored.
+
+        Returns:
+            The number of deleted projects.
+        """
+        db.execute(text("SET CONSTRAINTS ALL DEFERRED"))
+        return super().delete_multi(db=db, ids=ids)
 
     ### OTHER OPERATIONS ###
 

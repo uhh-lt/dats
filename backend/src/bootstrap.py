@@ -352,22 +352,36 @@ def _register_library_exception_handlers() -> None:
     if _library_exception_handlers_registered:
         return
 
-    from psycopg2.errors import UniqueViolation
+    from psycopg2.errors import ForeignKeyViolation, UniqueViolation
     from rq.exceptions import NoSuchJobError
     from sqlalchemy.exc import IntegrityError
 
     from common.exception_handler import exception_handler
 
-    def _is_unique_violation(exc: Exception) -> bool:
-        return isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+    def _is_violation(exc: Exception, violation: type[Exception]) -> bool:
+        return isinstance(exc, IntegrityError) and isinstance(exc.orig, violation)
+
+    def _integrity_error_status(exc: Exception) -> int:
+        if _is_violation(exc, UniqueViolation):
+            return 409
+        # e.g. deleting the virtual user of an experiment run (ON DELETE NO ACTION)
+        if _is_violation(exc, ForeignKeyViolation):
+            return 409
+        return 500
+
+    def _integrity_error_message(exc: Exception) -> str:
+        if _is_violation(exc, UniqueViolation):
+            return str(exc.orig.pgerror).split("\n")[1]  # type: ignore[attr-defined]
+        if _is_violation(exc, ForeignKeyViolation):
+            return (
+                "The entry is still in use and cannot be deleted, or it refers to an "
+                "entry that does not exist."
+            )
+        return str(exc)
 
     exception_handler(
-        http_status_code=lambda exc: 409 if _is_unique_violation(exc) else 500,
-        extract_message=lambda exc: (
-            str(exc.orig.pgerror).split("\n")[1]  # type: ignore[attr-defined]
-            if _is_unique_violation(exc)
-            else str(exc)
-        ),
+        http_status_code=_integrity_error_status,
+        extract_message=_integrity_error_message,
     )(IntegrityError)
     exception_handler(404)(NoSuchJobError)
     _library_exception_handlers_registered = True

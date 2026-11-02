@@ -31,6 +31,7 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from dats_test_utils import create_span_for_text, create_text_document
+from experiment_test_utils import RunUserProject, create_run_user_project
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import ExperimentCreate
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
@@ -430,3 +431,32 @@ def experiment_project(
         "foreign_sdoc": foreign_sdoc,
         "foreign_experiment": foreign_experiment,
     }
+
+
+@pytest.fixture
+def run_user_project(
+    db_session: Session, test_user: UserORM, test_project: ProjectORM
+) -> RunUserProject:
+    """The project described in `RunUserProject`."""
+    return create_run_user_project(db_session, test_user, test_project)
+
+
+@pytest.fixture
+def gold_deleted_project(
+    db_session: Session, test_user: UserORM, test_project: ProjectORM
+) -> RunUserProject:
+    """The project described in `RunUserProject` after its virtual gold annotator
+    `group_standard` "Group Standard" was deleted (with its annotations):
+
+    - `virtual_gold_experiment` "VirtualGold" has no gold annotator anymore
+      (`gold_user_id` is None). It keeps its runs "Baseline" (with the stored
+      scores TP 1 / FP 0 / FN 1), "Second" (no scores) and "Broken" (failed, no
+      scores), and their run users with their annotations.
+    - `human_gold_experiment` "HumanGold" is unchanged; its gold annotator is
+      `gold_annotator`.
+    - Accessing `group_standard` fails: its row is deleted.
+    """
+    project = create_run_user_project(db_session, test_user, test_project)
+    crud_user.delete(db=db_session, id=project["group_standard"].id)
+    db_session.commit()
+    return project

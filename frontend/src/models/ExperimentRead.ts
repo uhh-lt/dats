@@ -22,10 +22,6 @@ export type ExperimentRead = {
    */
   code_ids: Array<number>;
   /**
-   * ID of the gold annotator, who must have annotated every document (filter 'Annotated by')
-   */
-  gold_user_id: number;
-  /**
    * ID of the experiment
    */
   id: number;
@@ -33,6 +29,10 @@ export type ExperimentRead = {
    * Project the experiment belongs to
    */
   project_id: number;
+  /**
+   * ID of the gold annotator; null if the gold annotator was deleted, then the experiment keeps its runs and their scores, but cannot start runs or refresh scores
+   */
+  gold_user_id: number | null;
   /**
    * Created timestamp of the experiment
    */

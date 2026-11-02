@@ -190,7 +190,7 @@ export class UserService {
     });
   }
   /**
-   * Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project)
+   * Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project). The virtual user of an experiment run is deleted with its run (HTTP 409).
    * @returns UserRead Successful Response
    * @throws ApiError
    */

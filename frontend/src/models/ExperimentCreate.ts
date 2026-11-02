@@ -21,11 +21,11 @@ export type ExperimentCreate = {
    */
   code_ids: Array<number>;
   /**
-   * ID of the gold annotator, who must have annotated every document (filter 'Annotated by')
-   */
-  gold_user_id: number;
-  /**
    * Project the experiment belongs to
    */
   project_id: number;
+  /**
+   * ID of the gold annotator, who must have annotated every document (filter 'Annotated by')
+   */
+  gold_user_id: number;
 };

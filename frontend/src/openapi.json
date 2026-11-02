@@ -1929,6 +1929,32 @@
         }
       }
     },
+    "/experiment/{experiment_id}/scores": {
+      "patch": {
+        "tags": ["experiment"],
+        "summary": "Recomputes and stores the agreement of all finished runs of the experiment with the gold annotator, so that all runs are scored against the same state of the gold annotator. Returns the experiment.",
+        "operationId": "refresh_all_run_scores",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Experiment Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExperimentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/experiment/run/{run_id}": {
       "delete": {
         "tags": ["experiment"],
@@ -7455,7 +7481,7 @@
       },
       "delete": {
         "tags": ["user"],
-        "summary": "Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project)",
+        "summary": "Removes the User with the given ID together with all its annotations and memos: a virtual user of one of your projects (other users have no project). The virtual user of an experiment run is deleted with its run (HTTP 409).",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -12537,15 +12563,19 @@
             "title": "Code Ids",
             "description": "IDs of the codes of the experiment"
           },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the experiment belongs to"
+          },
           "gold_user_id": {
             "type": "integer",
             "title": "Gold User Id",
             "description": "ID of the gold annotator, who must have annotated every document (filter 'Annotated by')"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the experiment belongs to" }
+          }
         },
         "type": "object",
-        "required": ["name", "task_type", "sdoc_ids", "code_ids", "gold_user_id", "project_id"],
+        "required": ["name", "task_type", "sdoc_ids", "code_ids", "project_id", "gold_user_id"],
         "title": "ExperimentCreate"
       },
       "ExperimentCreatedEvent": {
@@ -12587,16 +12617,16 @@
             "title": "Code Ids",
             "description": "IDs of the codes of the experiment"
           },
-          "gold_user_id": {
-            "type": "integer",
-            "title": "Gold User Id",
-            "description": "ID of the gold annotator, who must have annotated every document (filter 'Annotated by')"
-          },
           "id": { "type": "integer", "title": "Id", "description": "ID of the experiment" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
             "description": "Project the experiment belongs to"
+          },
+          "gold_user_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Gold User Id",
+            "description": "ID of the gold annotator; null if the gold annotator was deleted, then the experiment keeps its runs and their scores, but cannot start runs or refresh scores"
           },
           "created": {
             "type": "string",
@@ -12623,9 +12653,9 @@
           "task_type",
           "sdoc_ids",
           "code_ids",
-          "gold_user_id",
           "id",
           "project_id",
+          "gold_user_id",
           "created",
           "updated",
           "runs"

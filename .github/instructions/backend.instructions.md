@@ -93,7 +93,7 @@ Every exception class lives in an exceptions module: `<module>_exceptions.py` in
 - **Not found (404)**: subclass `NotFoundError` from `common/common_exceptions.py`. Subclasses inherit the 404 mapping and need no decorator. Existing ones: `NoSuchElementError` (SQL, `repos/db/sql_exceptions.py`), `NoSuchObjectInElasticSearchError` (`repos/elastic/elastic_exceptions.py`), the `WeaviateObject*NotFoundException`s (`repos/vector/weaviate_exceptions.py`).
 - **Forbidden (403)**: `ForbiddenError` (`core/auth/auth_exceptions.py`), raised by the `AuthzUser` assertions.
 - **Bad request (400)**: `InvalidError` (`core/auth/auth_exceptions.py`) and the module-specific errors in `*_exceptions.py` files (folder, search system, export/import).
-- **Duplicates (409)**: unique violations need no own exception: `bootstrap.py` maps an `IntegrityError` caused by a `UniqueViolation` to 409.
+- **Duplicates and references (409)**: unique and foreign key violations need no own exception: `bootstrap.py` maps an `IntegrityError` caused by a `UniqueViolation` or a `ForeignKeyViolation` to 409.
 - **Domain errors**: declare them in `<module>_exceptions.py`, decorated with `@exception_handler` when the client must see a specific status.
 - **Messages**: the message is sent to the client, so never put secrets, tokens or credentials in it.
 

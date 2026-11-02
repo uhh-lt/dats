@@ -29,7 +29,11 @@ export function RunDetails({ projectId, experiment, run }: RunDetailsProps) {
     <Stack spacing={0.5} alignItems="flex-start">
       <Stack direction="row" spacing={0.5} alignItems="center">
         <Typography>Compare</Typography>
-        <UserRenderer user={experiment.gold_user_id} renderAvatar={false} />
+        {experiment.gold_user_id === null ? (
+          <Typography>the deleted gold annotator</Typography>
+        ) : (
+          <UserRenderer user={experiment.gold_user_id} renderAvatar={false} />
+        )}
         <Typography>with {run.name}:</Typography>
       </Stack>
       {/* the documents scroll beyond a few rows; the list starts 4px left, so the compare icons align with the text */}

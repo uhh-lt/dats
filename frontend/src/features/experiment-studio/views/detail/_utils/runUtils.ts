@@ -29,10 +29,13 @@ export function eligibleVersions(experiment: ExperimentRead, prompts: PromptRead
     );
 }
 
-/** The search params of the comparison view of the gold annotator and the run's virtual user. */
+/**
+ * The search params of the comparison view of the gold annotator and the run's virtual user. Without a gold annotator
+ * (it was deleted), the view shows the annotations of the current user next to the run's.
+ */
 export function comparisonSearch(experiment: ExperimentRead, run: ExperimentRunRead) {
   return {
-    visibleUserId: experiment.gold_user_id,
+    visibleUserId: experiment.gold_user_id ?? undefined,
     compareWithUserId: run.virtual_user_id,
     annotationMode: experiment.task_type === TaskType.ANNOTATION ? ("span" as const) : ("sentence" as const),
   };
