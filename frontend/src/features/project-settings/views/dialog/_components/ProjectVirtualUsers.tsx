@@ -164,14 +164,18 @@ export const ProjectVirtualUsers = memo(({ project }: ProjectVirtualUsersProps) 
       </Typography>
 
       <Divider />
-      {virtualUsers.isLoading && <CardContent>Loading virtual users...</CardContent>}
+      {(virtualUsers.isLoading || experiments.isLoading) && <CardContent>Loading virtual users...</CardContent>}
       {virtualUsers.isError && (
         <CardContent>An error occurred while loading the virtual users of project {project.id}...</CardContent>
       )}
-      {virtualUsers.isSuccess && virtualUsers.data.length === 0 && (
+      {/* without the experiments, run users cannot be told apart from free virtual users */}
+      {experiments.isError && (
+        <CardContent>An error occurred while loading the experiments of project {project.id}...</CardContent>
+      )}
+      {virtualUsers.isSuccess && experiments.isSuccess && virtualUsers.data.length === 0 && (
         <CardContent>This project has no virtual users yet.</CardContent>
       )}
-      {virtualUsers.isSuccess && (
+      {virtualUsers.isSuccess && experiments.isSuccess && (
         <List style={{ maxHeight: "100%", overflowY: "auto" }}>
           {virtualUsers.data.map((virtualUser) => {
             const runOfUser = runsByUserId.get(virtualUser.id);
