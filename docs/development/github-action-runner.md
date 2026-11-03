@@ -62,18 +62,20 @@ GITHUB_REPO=dats
 GITHUB_PAT=ghp_YourSuperSecretTokenHere
 ```
 
-See the configuration reference in [action-runner/README.md](https://github.com/uhh-lt/dats/blob/main/action-runner/README.md) for optional settings like `RUNNER_GPU_DEVICE_ID`.
+Also set the two host directories, `RUNNER_WORK_BASE_DIR` and `RAY_CACHE_HOST_DIR`. See the configuration reference in [action-runner/README.md](https://github.com/uhh-lt/dats/blob/main/action-runner/README.md) for optional settings like `RUNNER_GPU_DEVICE_ID`.
 
-### 2. Prepare the Ray cache directory
+### 2. Prepare the host directories
 
-The runners share a common Ray model cache on the host. Create it with proper permissions:
+Create the host directories and give them to the container's `runner` user (uid 1000):
 
 ```bash
-mkdir -p ~/ray_cache
-chmod 777 ~/ray_cache
+./setup-folders.sh
 ```
 
-This directory is mounted into all runner containers and shared with sibling Ray containers spawned by CI jobs.
+- **Runner work directories** (`$RUNNER_WORK_BASE_DIR/runner-XX`) — each runner's `_work`, holding its checkouts and its uv cache.
+- **Ray model cache** (`$RAY_CACHE_HOST_DIR`) — shared by all runners and the Ray containers that CI jobs start, see [Shared resources](#shared-resources-intentionally-not-isolated).
+
+Use `sudo` if the directories are outside your home. `--recreate` deletes and recreates them.
 
 ### 3. Start the fleet
 
@@ -110,7 +112,7 @@ Navigate to **Settings → Actions → Runners** in the repository. You should s
 A few resources are deliberately shared across all runners on the machine:
 
 - **Disks** — all runners and their sibling containers write to the host's disks, see [Keeping the disk load low](#keeping-the-disk-load-low).
-- **Ray cache** (`$HOME/ray_cache`) — model downloads are cached machine-wide to avoid re-downloading large models for every runner. Concurrent access is tolerable for a cache.
+- **Ray cache** (`$RAY_CACHE_HOST_DIR`) — when a job starts Ray locally (`ray-checks`, or `backend-checks` for changes to `ray/`), `prepare-env` mounts this cache into the Ray container at `/ray_cache`. It holds the spaCy, Hugging Face, torch and EasyOCR models and compiled kernels, so each model is downloaded once per machine. Concurrent access is tolerable for a cache.
 - **GPU** — Ray jobs pin `RAY_DEVICE_IDS=1`. This means only one Ray-enabled job should run at a time per machine; running two concurrently will contend for the same GPU. If you need parallel Ray jobs, assign different GPUs per runner.
 - **Hosted services** — LLM, embedding, and Docling endpoints point at shared hosted infrastructure (`ltdwise.informatik.uni-hamburg.de`), which is stateless and safe to share.
 
