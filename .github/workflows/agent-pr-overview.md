@@ -1,7 +1,7 @@
 ---
 name: Agent PR Overview
 emoji: 📝
-description: Generate a current overview when a pull request is opened or updated
+description: Generate a current overview when a pull request's description leaves out its purpose or important changes
 intent: Keep every pull request's purpose and important changes easy for reviewers to understand without publishing duplicate overviews.
 on:
   pull_request:
@@ -95,12 +95,12 @@ jobs:
 
 # Pull Request Overview
 
-Maintain a single, always-current overview comment on pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`.
+Maintain a single, always-current overview comment on pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`, unless its description already tells a reviewer everything the overview would.
 
 A prepare step has already looked up the previous overview comment for this pull request. Its numeric comment ID is: `${{ needs.prepare.outputs.comment_ids }}`
 
-- If that ID is not empty, a previous overview comment exists: fetch that comment by ID, and update it in place (step 7).
-- If that ID is empty, no previous overview comment exists: create a new one (step 7).
+- If that ID is not empty, a previous overview comment exists: fetch that comment by ID, and update it in place (step 6).
+- If that ID is empty, no previous overview comment exists: create a new one (step 6), unless the description makes it unnecessary (step 4).
 
 ## Constraints
 
@@ -115,13 +115,14 @@ A prepare step has already looked up the previous overview comment for this pull
 1. Use the GitHub pull request tools to read the target PR's title, body, head SHA, changed files, commits, and diff. Read important changed files from the checked-out PR head only when the diff does not explain intent.
 2. Confirm the required PR data is complete and internally consistent. If it is not, call `noop` with a short reason and stop.
 3. If the prepare step reported a comment ID above, fetch that comment and read the complete SHA on its `Commit:` line. If it already matches the complete current head SHA, call `noop` with a short duplicate reason and stop without publishing.
-4. Write an overview of the PR at its current head that:
+4. If the prepare step reported no comment ID and the PR's description already explains its purpose and all of its important changes at the current head, an overview would add nothing: call `noop` with a short reason and stop without publishing. Judge only the description against the diff, not who opened the PR. Publish when the description is missing, is too short, or leaves out important changes.
+5. Write an overview of the PR at its current head that:
    - starts with a clear 2–4 sentence summary of the PR's purpose and effect;
    - is summary-only for a small, single-concern PR;
    - for a larger PR, adds grouped `##` sections, each with a short explanation and bullets for the important changes;
    - includes related issue references only when present in the PR title or body; and
    - ends with a visible `Commit: \`<complete-head-sha>\`` line using the complete current head SHA.
-5. Publish exactly once using `add-comment`:
+6. Publish exactly once using `add-comment`:
    - If the prepare step reported a comment ID above, update that comment by passing the ID as `comment_id` together with the PR number, replacing its whole body with the new overview. Pass exactly this ID — it is the only one on the trusted allowlist; any other ID will be rejected.
    - Otherwise, create the overview comment on the target PR. In this case you must omit `comment_id` entirely — never guess, reuse, or invent a comment ID, because only IDs from the trusted prepare-step allowlist are accepted and an unlisted ID will be rejected.
 
