@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from core.prompt.prompt_orm import PromptORM
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
+    from modules.agent.agent_session_orm import AgentSessionORM
     from modules.classifier.classifier_orm import ClassifierORM
     from modules.experiment.experiment_orm import ExperimentORM
     from modules.perspectives.aspect_orm import AspectORM
@@ -121,6 +122,13 @@ class ProjectORM(ORMBase):
 
     prompts: Mapped[list["PromptORM"]] = relationship(
         "PromptORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    agent_sessions: Mapped[list["AgentSessionORM"]] = relationship(
+        "AgentSessionORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

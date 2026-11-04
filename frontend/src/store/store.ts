@@ -11,6 +11,7 @@ import { sdocFilterReducer } from "@core/source-document";
 import { satFilterReducer } from "@core/span-annotation";
 import { annotationsReducer, codeShortcutsReducer } from "@features/annotation";
 import { bboxAnnotationAnalysisReducer } from "@features/bbox-annotation-analysis";
+import { agentReducer } from "@features/agent";
 import { classifierReducer } from "@features/classifier";
 import { cotaReducer } from "@features/concept-over-time-analysis";
 import { documentSamplerReducer } from "@features/document-sampler";
@@ -42,6 +43,7 @@ export const store = configureStore({
     ...projectReducer,
     ...tabsReducer,
     ...snackbarReducer,
+    ...agentReducer,
     ...classifierReducer,
     ...llmAssistantReducer,
     ...memoWorkspaceReducer,

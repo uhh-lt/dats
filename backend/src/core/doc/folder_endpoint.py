@@ -10,6 +10,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderRead, FolderUpdate, FolderUpdateBulk
 from core.doc.folder_enum import FolderType
 from core.doc.folder_service import FolderService
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -125,6 +126,8 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
+    # overwrites many folders at once
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=list[FolderRead],
     summary="Updates the Folders with the given IDs.",
 )
