@@ -121,7 +121,7 @@ Do not report speculative concerns, existing unrelated problems, general praise,
    - Action: none, the previous review still holds.
    - Comment: none.
 
-## Comments
+## Templates
 
 Number findings `F1`, `F2`, ... in severity order: `🔴 high`, `🟡 medium`, `🔵 low`.
 

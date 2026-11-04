@@ -130,7 +130,7 @@ The previous overview comment's ID, empty if there is none: `${{ needs.prepare.o
 
 Judge only the description against the diff, not who opened the pull request.
 
-## Overview
+## Templates
 
 - Start with a 2–4 sentence summary of the purpose and effect.
 - Stop there for a small, single-concern pull request.

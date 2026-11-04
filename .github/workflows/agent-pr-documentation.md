@@ -151,7 +151,7 @@ Keep the documentation of pull request `${{ github.event.pull_request.number || 
    - To update: call `push-to-pull-request-branch` with the documentation PR's number, its head branch, and a message summarizing the update.
    - To create: call `create-pull-request` with title `sync documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}`, branch `docs/sync-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}`, `draft: false`, `temporary_id: "#aw_docs"`, and a body that starts with `Syncs documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}.`, explains the changes, and says that this PR stacks on the source PR's branch and must be merged after it.
 
-## Status comments
+## Templates
 
 Keep them concise and base them on the assessment.
 
