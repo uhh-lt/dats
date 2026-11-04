@@ -1,4 +1,5 @@
-# Builds and pushes the backend, frontend, and Ray images, then creates the GitHub Release.
+# Builds and pushes the backend, frontend, and Ray images, creates the GitHub Release, and dispatches
+# agent-release-highlights to add end-user friendly highlights above the generated release notes.
 # This reusable workflow can only be called by release_gate.yml after all checks succeed.
 name: Release
 
@@ -101,6 +102,10 @@ jobs:
     name: Create GitHub Release
     needs: [prepare_release, build_images]
     runs-on: ubuntu-latest
+    permissions:
+      # actions: write dispatches the release highlights workflow
+      actions: write
+      contents: write
     steps:
       - name: Create Release
         uses: ncipollo/release-action@v1.21.0
@@ -108,3 +113,10 @@ jobs:
           commit: ${{ needs.prepare_release.outputs.release_sha }}
           generateReleaseNotes: true
           tag: ${{ needs.prepare_release.outputs.tag }}
+
+      # A release created with the GITHUB_TOKEN triggers no release event, so the highlights workflow is dispatched
+      - name: Add release highlights
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare_release.outputs.tag }}
+        run: gh workflow run agent-release-highlights.lock.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$TAG"

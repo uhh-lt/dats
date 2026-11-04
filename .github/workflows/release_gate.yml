@@ -111,6 +111,10 @@ jobs:
     name: Publish release
     needs: gate
     if: needs.gate.outputs.should_release == 'true'
+    permissions:
+      # actions: write lets release.yml dispatch the release highlights workflow
+      actions: write
+      contents: write
     uses: ./.github/workflows/release.yml
     with:
       release_ref: ${{ needs.gate.outputs.release_ref }}
