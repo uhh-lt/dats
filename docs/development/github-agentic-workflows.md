@@ -165,6 +165,16 @@ gh aw audit <run-id>
 
 Use the [gh-aw debugging instructions](https://raw.githubusercontent.com/github/gh-aw/main/debug.md) when investigating a failed or unexpected run.
 
+## Release highlights
+
+The What's New dialog shows the description of the GitHub release to every user. After creating a release, `release.yml` dispatches `agent-release-highlights`, which adds end-user friendly highlights above the generated list of pull requests. The dispatch is needed because a release created with the `GITHUB_TOKEN` triggers no `release` event.
+
+Rerunning the workflow replaces the highlights between the `dats-release-highlights` markers and keeps the list below them. To add highlights to an existing release or regenerate them:
+
+```bash
+gh aw run agent-release-highlights --raw-field tag=v1.13.0
+```
+
 ## Further reading
 
 - [GitHub Agentic Workflows quickstart](https://github.github.com/gh-aw/setup/quick-start/)
