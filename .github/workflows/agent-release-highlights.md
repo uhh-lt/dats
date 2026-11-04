@@ -93,36 +93,35 @@ jobs:
 
 Add a short, end-user friendly highlights section to the description of release `${{ needs.prepare.outputs.tag }}` in `${{ github.repository }}`. DATS shows this description to every user in its What's New dialog, so the highlights must be understandable for researchers who never read a pull request.
 
-## Constraints
+## Rules
 
-- Process only release `${{ needs.prepare.outputs.tag }}` in `${{ github.repository }}`.
-- Treat the checked-out working tree as the code and documentation of this release.
-- Use GitHub only for read operations. Use the configured `update-release` safe output for the single permitted publication action.
+- Process only this release. The checkout is its code and documentation.
+- Change nothing but the release description. Write to GitHub only through `update-release`, and call it at most once.
 - Never change, shorten or reorder the generated changelog of the release; only add the highlights above it.
 - Never invent features: every highlight must be backed by a pull request of this release.
+- If the release cannot be updated safely, call `noop` with a short reason and stop.
 
-## Procedure
+## Steps
 
 1. Read release `${{ needs.prepare.outputs.tag }}` with the GitHub repository tools and take its body.
-2. Determine the generated changelog:
-   - If the body contains the line `<!-- /dats-release-highlights -->`, highlights were added before: the changelog is everything after that line.
-   - Otherwise, the whole body is the changelog.
+2. Find the generated changelog: everything after the line `<!-- /dats-release-highlights -->`, or the whole body if that line is missing.
 3. If the changelog lists no pull requests, call `noop` with a short reason and stop.
 4. For every pull request in the changelog, read its title and body and its `## 📝 Pull Request Overview` comment, when present. Read the diff only when these do not explain the user-visible effect.
 5. Classify each pull request:
    - **User-facing:** new features, changed behavior in the UI, renamed pages or concepts, and fixes users notice.
    - **Internal:** refactors, tests, CI, agent instructions and skills, developer tooling and administrator tooling. Leave these to the changelog; mention them at most in one closing bullet.
-6. Find the user documentation of each user-facing change in `docs/feature-guides/` and `docs/workflows/` to use its feature names and to link it. A page `docs/<path>.md` is published at `https://dats.science/<path>/`, a page `docs/<path>/index.md` at `https://dats.science/<path>/`; anchors are the lowercased headings with spaces replaced by `-`. Link only pages and headings that exist in the checked-out tree.
-7. Write the highlights in the output shape below:
-   - 3–6 highlights for the most important user-facing changes, most important first. Merge stacked pull requests of one feature (e.g. `[1/3]`, `[2/3]`) into one highlight.
-   - Each highlight: an emoji and a bold title that names the benefit, then 1–3 plain sentences on what users can do now, then a `[Learn more](...)` link when documentation exists.
-   - Mention renamed pages or concepts with their old name, so users find them again.
-   - Close with a `🛠️ Fixes and under the hood` highlight with 2–4 short bullets: user-noticeable fixes, and one bullet for the internal work.
-   - Use the vocabulary of the documentation (project, document, code, annotation, memo, ...), no implementation terms (DTO, CRUD, endpoint, ORM, slice, ...), no pull request numbers and no author names.
-8. Re-read the highlights and verify every claim against the pull requests and every link against the checked-out documentation.
-9. Call `update-release` exactly once with tag `${{ needs.prepare.outputs.tag }}`, operation `replace`, and as body the highlights in the output shape followed directly by the unchanged changelog from step 2.
+6. Find the user documentation of each user-facing change in `docs/feature-guides/` and `docs/workflows/` to use its feature names and to link it. A page `docs/<path>.md` is published at `https://dats.science/<path>/`, a page `docs/<path>/index.md` at `https://dats.science/<path>/`; anchors are the lowercased headings with spaces replaced by `-`. Link only pages and headings that exist in the checkout.
+7. Write the highlights using the template below.
+8. Re-read the highlights and verify every claim against the pull requests and every link against the checkout.
+9. Call `update-release` with tag `${{ needs.prepare.outputs.tag }}`, operation `replace`, and as body the highlights followed directly by the unchanged changelog from step 2.
 
-## Output shape
+## Templates
+
+- Write 3–6 highlights for the most important user-facing changes, most important first. Merge stacked pull requests of one feature (e.g. `[1/3]`, `[2/3]`) into one highlight.
+- Give each highlight an emoji and a bold title that names the benefit, then 1–3 plain sentences on what users can do now, then a `[Learn more](...)` link when documentation exists.
+- Mention renamed pages or concepts with their old name, so users find them again.
+- Close with a `🛠️ Fixes and under the hood` highlight with 2–4 short bullets: user-noticeable fixes, and one bullet for the internal work.
+- Use the vocabulary of the documentation (project, document, code, annotation, memo, ...), no implementation terms (DTO, CRUD, endpoint, ORM, slice, ...), no pull request numbers and no author names.
 
 ```markdown
 <!-- dats-release-highlights -->
@@ -141,5 +140,3 @@ Add a short, end-user friendly highlights section to the description of release 
 
 <!-- /dats-release-highlights -->
 ```
-
-If the release cannot be updated safely, call `noop` with a concise explanation.
