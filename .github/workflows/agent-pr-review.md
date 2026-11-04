@@ -76,42 +76,48 @@ network:
 
 # Pull Request Review
 
-Review pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}` and publish one focused review comment for its current head commit when it has something new to report.
+Review pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}` and comment only when there is something new to report.
 
-## Constraints
+## Rules
 
-- Process only pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`.
-- Do not modify, create, or delete repository files. Do not change the PR's code, branch, title, body, labels, state, assignees, reviewers, or reviews.
-- Keep all GitHub access read-only except for the configured `add-comment` safe output.
-- Do not merge, close, approve, or request changes on the PR.
-- Publish at most one comment and only after completing the review. The comment is either an initial review or a follow-up review, as decided by the procedure below. If the required data is unavailable, the current head was already reviewed, or a follow-up has nothing new to report, call `noop` with a short reason.
+- Process only this pull request.
+- Change nothing: no repository files and nothing on the pull request. Write to GitHub only through `add-comment`.
+- Never merge, close, approve, or request changes.
+- Call `add-comment` at most once. When the table below asks for no comment, call `noop` with a short reason instead.
+- If the required data is unavailable, call `noop` and stop.
+- Dependencies are not installed in the checkout. Do not reconstruct library internals from memory: mark such an assumption as unverified and move on.
 
-## Procedure
+## What to report
 
-1. Use the GitHub context tools to identify the authenticated automation user.
-2. Use the GitHub pull request tools to read the target PR's title, body, complete head SHA, comments, changed files, commits, and diff. Confirm that its number and repository match the triggering context; otherwise call `noop` and stop.
-3. In comments authored by the authenticated automation user, look for `Reviewed commit: \`<head-sha>\``. If a comment contains the complete current head SHA, call `noop` with a duplicate reason and stop.
-4. Among the automation user's comments, find the latest earlier comment containing the `## 🤖 Automated Review (pr-reviewer)` header. This is the previous review. Extract from it:
-   - the complete SHA from its `Reviewed commit:` line (the previous reviewed commit),
-   - its findings list with their IDs (`F1`, `F2`, ...), severities, and descriptions.
-     If no such comment exists, this is an initial review; skip step 6.
-5. Review the diff and changed files at the current head. Read important files from the checked-out PR head only when the diff does not provide enough surrounding context. Follow `AGENTS.md` and the applicable instruction files in `.github/instructions/` (each declares the files it applies to in its `applyTo` frontmatter). Dependencies are not installed in the checkout, so do not reconstruct library internals from memory: when a finding depends on behavior you cannot inspect, mark that assumption as unverified and move on.
-6. Follow-up only — classify the previous review's findings and detect new ones:
-   a. Compare the previous reviewed commit with the current head (the checkout has full history; use the PR's commit list and changed files to see what changed since).
-   b. For each previous finding ID, inspect the flagged code at the current head and classify it as **addressed** (the flagged code was fixed or removed) or **still unresolved** (the flagged code is still present and the issue still applies). Record one line of evidence per classification (e.g. what changed, or that the code is unchanged).
-   c. Review the code changed since the previous reviewed commit for new actionable findings. Assign fresh IDs continuing the previous numbering (if the highest previous ID was `F3`, new findings start at `F4`).
-   d. If the previous review had no findings, skip the classification and only report new findings (or the clean state).
-7. Report only actionable findings introduced by the PR:
-   - **Security:** hardcoded secrets, injection risks, missing authorization, unsafe deserialization, or exposed sensitive data.
-   - **Correctness:** logic errors, unhandled edge cases, missing error handling, invalid state transitions, or race conditions.
-   - **Repository conventions:** meaningful deviations from established project patterns that can cause defects or maintenance risks.
-8. Do not report speculative concerns, existing unrelated problems, general praise, or formatting/style issues already enforced by automated tooling.
-9. Follow-up only — if no previous finding was addressed and there are no new findings, the previous review still holds: call `noop` with a short reason and stop without publishing.
-10. Use `add-comment` exactly once to publish the complete review, using the initial or follow-up format below. If an initial review has no findings, still publish the concise successful review described below.
+Report only actionable findings introduced by the pull request, following `AGENTS.md` and the applicable files in `.github/instructions/` (each declares its files in its `applyTo` frontmatter):
 
-## Comment format
+- **Security:** hardcoded secrets, injection risks, missing authorization, unsafe deserialization, or exposed sensitive data.
+- **Correctness:** logic errors, unhandled edge cases, missing error handling, invalid state transitions, or race conditions.
+- **Repository conventions:** meaningful deviations from established project patterns that can cause defects or maintenance risks.
 
-### Initial review (no previous review comment exists)
+Do not report speculative concerns, existing unrelated problems, general praise, or style issues already enforced by tooling.
+
+## Steps
+
+1. Identify the authenticated automation user. Read the pull request's title, body, complete head SHA, comments, changed files, commits, and diff. Confirm that its number and repository match the triggering context.
+2. Look for the **previous review**: the automation user's latest comment containing `## 🤖 Automated Review (pr-reviewer)`. Note its `Reviewed commit:` SHA and its findings.
+3. Skip this step if that SHA is the current head. Otherwise review the diff, reading files from the checked-out head only when the diff lacks context:
+   - Without a previous review: review the whole pull request.
+   - With a previous review: review what changed since its commit, and check whether each of its findings was fixed or is still open.
+4. Follow the first matching row:
+
+| Situation                                               | Comment          |
+| ------------------------------------------------------- | ---------------- |
+| The previous review covers the current head             | None             |
+| There is no previous review                             | Initial review   |
+| A previous finding was fixed, or there is a new finding | Follow-up review |
+| Nothing was fixed and nothing is new                    | None             |
+
+## Comments
+
+Number findings `F1`, `F2`, ... in severity order: `🔴 high`, `🟡 medium`, `🔵 low`.
+
+### Initial review
 
 ```markdown
 ## 🤖 Automated Review (pr-reviewer)
@@ -120,17 +126,26 @@ Reviewed commit: `<complete-head-sha>`
 
 ### Summary
 
-<2–4 sentences describing what the PR changes and the areas reviewed.>
+<2–4 sentences describing what the pull request changes and the areas reviewed.>
 
 ### Findings
 
 - **F1** <severity emoji> <file path and line when available>: <concise impact and actionable correction>
-- **F2** ...
 ```
 
-Number findings `F1`, `F2`, ... in severity order using `🔴 high`, `🟡 medium`, then `🔵 low`. If there are no actionable findings, replace the findings list with `No issues found. ✅`.
+Without findings, publish only this:
 
-### Follow-up review (a previous review comment exists)
+```markdown
+## 🤖 Automated Review (pr-reviewer)
+
+Reviewed commit: `<complete-head-sha>`
+
+No issues found. ✅
+```
+
+### Follow-up review
+
+gh-aw hides the previous review, so this comment must stand on its own: restate every open finding in full and never refer to an earlier review. Keep each finding's ID, continue the numbering for new findings, and omit empty sections.
 
 ```markdown
 ## 🤖 Automated Review (pr-reviewer)
@@ -141,22 +156,15 @@ Reviewed commit: `<complete-head-sha>`
 
 <1–3 sentences describing what changed since the previous review.>
 
-### ✅ Addressed
+### ✅ Fixed
 
 - **F1** <one line: what was fixed and where>
 
-### ⚠️ Still unresolved
+### ⚠️ Still open
 
 - **F2** <severity emoji> <file path and line when available>: <concise impact and actionable correction>
 
 ### 🆕 New findings
 
-- **F4** <severity emoji> <file path and line when available>: <concise impact and actionable correction>
+- **F3** <severity emoji> <file path and line when available>: <concise impact and actionable correction>
 ```
-
-- gh-aw hides the previous review when this comment is published, so this comment must stand on its own: restate every unresolved finding in full and never refer to an earlier review.
-- Omit the `✅ Addressed` or `⚠️ Still unresolved` section when it would be empty.
-- Replace the `🆕 New findings` list with `No new issues found.` when there are none.
-- New findings continue the ID numbering from the previous review and are ordered by severity (`🔴`, `🟡`, `🔵`).
-
-Always end the comment with the `Reviewed commit:` line containing the complete current head SHA.
