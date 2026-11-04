@@ -56,6 +56,7 @@ safe-outputs:
   add-comment:
     max: 1
     target: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+    hide-older-comments: true
     issues: false
     pull-requests: true
   noop:
@@ -75,7 +76,7 @@ network:
 
 # Pull Request Review
 
-Review pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}` and publish one focused review comment for its current head commit.
+Review pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}` and publish one focused review comment for its current head commit when it has something new to report.
 
 ## Constraints
 
@@ -83,7 +84,7 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
 - Do not modify, create, or delete repository files. Do not change the PR's code, branch, title, body, labels, state, assignees, reviewers, or reviews.
 - Keep all GitHub access read-only except for the configured `add-comment` safe output.
 - Do not merge, close, approve, or request changes on the PR.
-- Publish at most one comment and only after completing the review. The comment is either an initial review or a follow-up review, as decided by the procedure below. If the required data is unavailable or the current head was already reviewed, call `noop` with a short reason.
+- Publish at most one comment and only after completing the review. The comment is either an initial review or a follow-up review, as decided by the procedure below. If the required data is unavailable, the current head was already reviewed, or a follow-up has nothing new to report, call `noop` with a short reason.
 
 ## Procedure
 
@@ -92,7 +93,6 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
 3. In comments authored by the authenticated automation user, look for `Reviewed commit: \`<head-sha>\``. If a comment contains the complete current head SHA, call `noop` with a duplicate reason and stop.
 4. Among the automation user's comments, find the latest earlier comment containing the `## 🤖 Automated Review (pr-reviewer)` header. This is the previous review. Extract from it:
    - the complete SHA from its `Reviewed commit:` line (the previous reviewed commit),
-   - its comment URL (for linking back), and
    - its findings list with their IDs (`F1`, `F2`, ...), severities, and descriptions.
      If no such comment exists, this is an initial review; skip step 6.
 5. Review the diff and changed files at the current head. Read important files from the checked-out PR head only when the diff does not provide enough surrounding context. Follow `AGENTS.md` and the applicable instruction files in `.github/instructions/` (each declares the files it applies to in its `applyTo` frontmatter). Dependencies are not installed in the checkout, so do not reconstruct library internals from memory: when a finding depends on behavior you cannot inspect, mark that assumption as unverified and move on.
@@ -106,7 +106,8 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
    - **Correctness:** logic errors, unhandled edge cases, missing error handling, invalid state transitions, or race conditions.
    - **Repository conventions:** meaningful deviations from established project patterns that can cause defects or maintenance risks.
 8. Do not report speculative concerns, existing unrelated problems, general praise, or formatting/style issues already enforced by automated tooling.
-9. Use `add-comment` exactly once to publish the complete review, using the initial or follow-up format below. If there are no findings, still publish the concise successful review described below.
+9. Follow-up only — if no previous finding was addressed and there are no new findings, the previous review still holds: call `noop` with a short reason and stop without publishing.
+10. Use `add-comment` exactly once to publish the complete review, using the initial or follow-up format below. If an initial review has no findings, still publish the concise successful review described below.
 
 ## Comment format
 
@@ -136,8 +137,6 @@ Number findings `F1`, `F2`, ... in severity order using `🔴 high`, `🟡 mediu
 
 Reviewed commit: `<complete-head-sha>`
 
-Previous review: <previous comment URL> (commit `<short-sha of previous reviewed commit>`)
-
 ### Summary
 
 <1–3 sentences describing what changed since the previous review.>
@@ -148,16 +147,16 @@ Previous review: <previous comment URL> (commit `<short-sha of previous reviewed
 
 ### ⚠️ Still unresolved
 
-- **F2** <severity emoji> <one-line restatement of the issue> — see the previous review linked above for details.
+- **F2** <severity emoji> <file path and line when available>: <concise impact and actionable correction>
 
 ### 🆕 New findings
 
 - **F4** <severity emoji> <file path and line when available>: <concise impact and actionable correction>
 ```
 
-- Omit the `✅ Addressed` or `⚠️ Still unresolved` section when it would be empty. If the previous review had no findings, omit both.
+- gh-aw hides the previous review when this comment is published, so this comment must stand on its own: restate every unresolved finding in full and never refer to an earlier review.
+- Omit the `✅ Addressed` or `⚠️ Still unresolved` section when it would be empty.
 - Replace the `🆕 New findings` list with `No new issues found.` when there are none.
-- If the previous review had no findings and there are no new findings, keep the comment short: state that the new commits introduce no actionable issues and the PR is still clean.
 - New findings continue the ID numbering from the previous review and are ordered by severity (`🔴`, `🟡`, `🔵`).
 
 Always end the comment with the `Reviewed commit:` line containing the complete current head SHA.
