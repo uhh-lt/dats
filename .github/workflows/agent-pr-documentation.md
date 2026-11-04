@@ -104,93 +104,85 @@ network:
 
 # Pull Request Documentation
 
-Review pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`, report its documentation status on the source PR when that status changes, and create or update one focused documentation pull request only when its changes reveal a verifiable documentation gap.
+Keep the documentation of pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}` accurate, with at most one open documentation PR and no repeated status comments.
 
-## Constraints
+## Rules
 
-- Process only pull request `${{ github.event.pull_request.number || github.event.inputs.pr_number }}` in `${{ github.repository }}`.
-- Treat the checked-out working tree as the source PR's head. Do not modify source code or any path outside `docs/**` and `mkdocs.yml`.
-- Keep the agent job read-only on GitHub. Use only the configured safe outputs for remote writes.
-- Do not merge, close, approve, review, label, or otherwise modify the source PR.
-- Keep at most one open documentation PR for a source PR. Never replace, close, or reopen a documentation PR.
-- Create or update a documentation PR only for a real, evidence-backed gap.
-- Publish a status comment only when there is something new to report: when you create or update a documentation PR, or when the source PR has no documentation status comment yet. Otherwise call `noop` with a short reason. Never call `add-comment` more than once.
-- Also use `noop` when the target PR cannot be identified or the assessment cannot be completed safely.
-- Commit a new documentation PR on top of the checked-out source PR head, and an update on top of the open documentation PR's branch. Do not create a fresh branch off `main` and do not rebase.
+- Process only this pull request. The checkout starts on its head.
+- Change only `docs/**` and `mkdocs.yml`, and write to GitHub only through the safe outputs.
+- Never merge, close, approve, review, or label a pull request, and never rebase.
+- Document only real, evidence-backed gaps. Refactors, internal cleanups, test-only changes, and changes without observable behavior need no documentation.
+- Call `add-comment` at most once. When the table below asks for no comment, call `noop` with a short reason instead.
+- If the pull request cannot be identified or the assessment cannot be completed safely, call `noop` and stop.
 
-## Procedure
+## Steps
 
-1. Use the GitHub pull request tools to read the target PR's title, body, base branch, changed files, and diff. Confirm that the PR number and repository match the triggering context; otherwise call `noop` and stop.
-2. Check the comments on the target PR for an earlier status comment containing `## 📚 Documentation status`. Then search all pull requests, including closed ones, for the title `docs: sync documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}` and use the most recent match as the documentation PR:
-   - **Closed without merging:** a maintainer rejected it. Without an earlier status comment, publish the no-update status report, link it, and explain that it was rejected. Stop either way.
-   - **Open:** read its changed files and diff, then continue. The assessment below includes the changes it already contains.
-   - **Merged, or none found:** continue. Merged changes are part of the checked-out source PR head.
-3. Review relevant changed files from the checked-out source PR head, up to its latest commit, `mkdocs.yml`, and the existing documentation. Assess each applicable perspective:
+1. Read the pull request's title, body, base branch, changed files, diff, and comments. Confirm that its number and repository match the triggering context.
+2. Look for an **earlier status comment**: a comment on this pull request containing `## 📚 Documentation status`.
+3. Look for the **documentation PR**: the most recent pull request in any state titled `docs: sync documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}`. If it is open, read its diff.
+4. Decide whether documentation is missing, comparing the changes with `mkdocs.yml`, the existing documentation, and the open documentation PR's diff:
    - **User:** UI behavior, features, settings, and workflows under `docs/feature-guides/` and `docs/workflows/`.
    - **Developer:** setup, commands, tooling, tests, APIs, and architecture under `docs/development/`.
    - **Administrator:** configuration, infrastructure, Docker, and deployment under `docs/admin/`.
-4. Treat pure refactors, internal cleanups, test-only changes, and changes without observable behavior as cases that do not require a documentation PR. When the existing documentation, including an open documentation PR, remains accurate, stop: publish the no-update status report only if there is no earlier status comment, and call `noop` otherwise.
-5. When documentation is required, get onto the documentation branch before editing:
-   - With an open documentation PR: `git checkout -b <its head branch> origin/<its head branch>`.
-   - Otherwise: `git checkout -b docs/sync-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}` from the checked-out source PR head.
-6. Make the smallest complete update using the edit tool. Modify `mkdocs.yml` only when navigation must change. Re-read every changed documentation file and verify it is accurate, internally consistent, and contains no unrelated edits. Commit the change on the documentation branch.
-7. With an open documentation PR, call `push-to-pull-request-branch` exactly once with that PR's number and head branch, and a message that summarizes the update. Then publish the update-pushed status report through `add-comment`, including the PR's URL, and stop.
-8. Otherwise, call `create-pull-request` exactly once with:
-   - title `sync documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}`;
-   - branch `docs/sync-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}`, the complete name;
-   - body beginning `Syncs documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}.` and briefly explaining the documentation changes. Note that this PR stacks on the source PR branch and must be merged after it; and
-   - `draft: false`; and
-   - `temporary_id: "#aw_docs"`.
-9. Publish the update-created status report through `add-comment`, writing the literal text `#aw_docs` where the template asks for it. gh-aw replaces it with the link to the created documentation PR.
+5. Follow the first matching row:
 
-The configured title prefix produces `docs: sync documentation with #<number>`. The PR body reference links the documentation PR back to the source PR.
+| Situation                                          | Action                         | Status comment                                                                          |
+| -------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
+| Documentation PR was closed without merging        | None, a maintainer rejected it | Only without an earlier status comment: **No update required**, linking the rejected PR |
+| Documentation is missing, documentation PR is open | Update the documentation PR    | **Update pushed**                                                                       |
+| Documentation is missing, no open documentation PR | Create a documentation PR      | **Update created**                                                                      |
+| Nothing is missing                                 | None                           | Only without an earlier status comment: **No update required**                          |
 
-## Status comment templates
+## Writing documentation
 
-Use one of these shapes. Keep the report concise and replace the example text with evidence from the assessment.
+1. Get onto the documentation branch:
+   - To update: `git checkout -b <its head branch> origin/<its head branch>`.
+   - To create: `git checkout -b docs/sync-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}` from the pull request's head.
+2. Make the smallest complete edit with the edit tool. Change `mkdocs.yml` only when navigation must change. Re-read every changed file to verify it is accurate and contains no unrelated edits. Commit on the documentation branch.
+3. Publish it:
+   - To update: call `push-to-pull-request-branch` with the documentation PR's number, its head branch, and a message summarizing the update.
+   - To create: call `create-pull-request` with title `sync documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}`, branch `docs/sync-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}`, `draft: false`, `temporary_id: "#aw_docs"`, and a body that starts with `Syncs documentation with #${{ github.event.pull_request.number || github.event.inputs.pr_number }}.`, explains the changes, and says that this PR stacks on the source PR's branch and must be merged after it.
 
-### Documentation update created
+## Status comments
+
+Keep them concise and base them on the assessment.
+
+### Update created
 
 ```markdown
 ## 📚 Documentation status
 
 **Result:** Documentation update created ✅
 
-### Assessment
-
 - **User documentation:** <impact found, or why it was not affected>
 - **Developer documentation:** <impact found, or why it was not affected>
 - **Administrator documentation:** <impact found, or why it was not affected>
 
-### Action
-
 Created #aw_docs for the identified gaps.
 ```
 
-### Documentation update pushed
+Write `#aw_docs` literally. gh-aw replaces it with the link to the created documentation PR.
+
+### Update pushed
 
 ```markdown
 ## 📚 Documentation status
 
 **Result:** Documentation update pushed ✅
 
-### Assessment
-
 - **User documentation:** <impact found, or why it was not affected>
 - **Developer documentation:** <impact found, or why it was not affected>
 - **Administrator documentation:** <impact found, or why it was not affected>
 
-### Action
-
-Updated the open documentation PR <URL> for the identified gaps.
+Updated <documentation PR URL> for the identified gaps.
 ```
 
-### No documentation update required
+### No update required
 
 ```markdown
 ## 📚 Documentation status
 
 **Result:** No documentation update required ✅
 
-<One or two sentences explaining why the existing documentation remains accurate. If a documentation PR already exists, link it and explain its state.>
+<One or two sentences explaining why.>
 ```
