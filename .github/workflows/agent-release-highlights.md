@@ -50,6 +50,7 @@ tools:
   bash: [cat, find, grep, head, ls, sed, tail, wc]
   edit: false
 safe-outputs:
+  report-failure-as-issue: ["!engine_driver_failure"]
   needs: [prepare]
   threat-detection: {}
   update-release:
