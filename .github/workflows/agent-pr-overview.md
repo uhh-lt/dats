@@ -53,6 +53,7 @@ tools:
   edit: false
 safe-outputs:
   needs: [prepare]
+  report-failure-as-issue: ["!engine_driver_failure"]
   threat-detection: {}
   add-comment:
     max: 1

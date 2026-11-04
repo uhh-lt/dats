@@ -51,6 +51,7 @@ tools:
   bash: [cat, find, grep, head, ls, sed, tail, wc]
   edit: false
 safe-outputs:
+  report-failure-as-issue: ["!engine_driver_failure"]
   threat-detection: {}
   add-comment:
     max: 1
@@ -94,7 +95,7 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
    - its comment URL (for linking back), and
    - its findings list with their IDs (`F1`, `F2`, ...), severities, and descriptions.
      If no such comment exists, this is an initial review; skip step 6.
-5. Review the diff and changed files at the current head. Read important files from the checked-out PR head only when the diff does not provide enough surrounding context. Follow `AGENTS.md` and the applicable instruction files in `.github/instructions/` (each declares the files it applies to in its `applyTo` frontmatter).
+5. Review the diff and changed files at the current head. Read important files from the checked-out PR head only when the diff does not provide enough surrounding context. Follow `AGENTS.md` and the applicable instruction files in `.github/instructions/` (each declares the files it applies to in its `applyTo` frontmatter). Dependencies are not installed in the checkout, so do not reconstruct library internals from memory: when a finding depends on behavior you cannot inspect, mark that assumption as unverified and move on.
 6. Follow-up only — classify the previous review's findings and detect new ones:
    a. Compare the previous reviewed commit with the current head (the checkout has full history; use the PR's commit list and changed files to see what changed since).
    b. For each previous finding ID, inspect the flagged code at the current head and classify it as **addressed** (the flagged code was fixed or removed) or **still unresolved** (the flagged code is still present and the issue still applies). Record one line of evidence per classification (e.g. what changed, or that the code is unchanged).
