@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 
 RULES_DIR = Path(".github/instructions")
+FRONTMATTER = re.compile(r"---\n(.*?)\n---(?:\n|$)(.*)", re.DOTALL)
 
 
 def glob_to_regex(glob: str) -> re.Pattern[str]:
@@ -33,8 +34,9 @@ def glob_to_regex(glob: str) -> re.Pattern[str]:
 
 
 def split_frontmatter(rule: Path) -> tuple[str, str]:
-    _, frontmatter, body = rule.read_text().split("---\n", 2)
-    return frontmatter, body.strip()
+    match = FRONTMATTER.match(rule.read_text())
+    # Without frontmatter there are no paths to match, so the file never applies.
+    return (match[1], match[2].strip()) if match else ("", "")
 
 
 def rule_applies(frontmatter: str, relative_paths: list[str]) -> bool:
