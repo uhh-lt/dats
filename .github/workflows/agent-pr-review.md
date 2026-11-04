@@ -83,7 +83,7 @@ Review pull request `${{ github.event.pull_request.number || github.event.inputs
 - Process only this pull request.
 - Change nothing: no repository files and nothing on the pull request. Write to GitHub only through `add-comment`.
 - Never merge, close, approve, or request changes.
-- Call `add-comment` at most once. When the table below asks for no comment, call `noop` with a short reason instead.
+- Call `add-comment` at most once. When a situation below asks for no comment, call `noop` with a short reason instead.
 - If the required data is unavailable, call `noop` and stop.
 - Dependencies are not installed in the checkout. Do not reconstruct library internals from memory: mark such an assumption as unverified and move on.
 
@@ -104,14 +104,22 @@ Do not report speculative concerns, existing unrelated problems, general praise,
 3. Skip this step if that SHA is the current head. Otherwise review the diff, reading files from the checked-out head only when the diff lacks context:
    - Without a previous review: review the whole pull request.
    - With a previous review: review what changed since its commit, and check whether each of its findings was fixed or is still open.
-4. Follow the first matching row:
+4. Follow the first matching situation below.
 
-| Situation                                               | Comment          |
-| ------------------------------------------------------- | ---------------- |
-| The previous review covers the current head             | None             |
-| There is no previous review                             | Initial review   |
-| A previous finding was fixed, or there is a new finding | Follow-up review |
-| Nothing was fixed and nothing is new                    | None             |
+## Situations
+
+1. The previous review covers the current head.
+   - Action: none.
+   - Comment: none.
+2. There is no previous review.
+   - Action: report the findings.
+   - Comment: initial review.
+3. A previous finding was fixed, or there is a new finding.
+   - Action: report what was fixed, what is still open, and what is new.
+   - Comment: follow-up review.
+4. Nothing was fixed and nothing is new.
+   - Action: none, the previous review still holds.
+   - Comment: none.
 
 ## Comments
 

@@ -112,7 +112,7 @@ Keep the documentation of pull request `${{ github.event.pull_request.number || 
 - Change only `docs/**` and `mkdocs.yml`, and write to GitHub only through the safe outputs.
 - Never merge, close, approve, review, or label a pull request, and never rebase.
 - Document only real, evidence-backed gaps. Refactors, internal cleanups, test-only changes, and changes without observable behavior need no documentation.
-- Call `add-comment` at most once. When the table below asks for no comment, call `noop` with a short reason instead.
+- Call `add-comment` at most once. When a situation below asks for no comment, call `noop` with a short reason instead.
 - If the pull request cannot be identified or the assessment cannot be completed safely, call `noop` and stop.
 
 ## Steps
@@ -124,14 +124,22 @@ Keep the documentation of pull request `${{ github.event.pull_request.number || 
    - **User:** UI behavior, features, settings, and workflows under `docs/feature-guides/` and `docs/workflows/`.
    - **Developer:** setup, commands, tooling, tests, APIs, and architecture under `docs/development/`.
    - **Administrator:** configuration, infrastructure, Docker, and deployment under `docs/admin/`.
-5. Follow the first matching row:
+5. Follow the first matching situation below.
 
-| Situation                                          | Action                         | Status comment                                                                          |
-| -------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
-| Documentation PR was closed without merging        | None, a maintainer rejected it | Only without an earlier status comment: **No update required**, linking the rejected PR |
-| Documentation is missing, documentation PR is open | Update the documentation PR    | **Update pushed**                                                                       |
-| Documentation is missing, no open documentation PR | Create a documentation PR      | **Update created**                                                                      |
-| Nothing is missing                                 | None                           | Only without an earlier status comment: **No update required**                          |
+## Situations
+
+1. The documentation PR was closed without merging.
+   - Action: none, a maintainer rejected it.
+   - Comment: only without an earlier status comment, "No update required" linking the rejected PR.
+2. Documentation is missing and the documentation PR is open.
+   - Action: update the documentation PR.
+   - Comment: "Update pushed".
+3. Documentation is missing and no documentation PR is open.
+   - Action: create a documentation PR.
+   - Comment: "Update created".
+4. Nothing is missing.
+   - Action: none.
+   - Comment: only without an earlier status comment, "No update required".
 
 ## Writing documentation
 
