@@ -99,7 +99,7 @@ We use the following terms throughout the project:
 
 ## Further Instructions
 
-Detailed conventions live in `.github/instructions/*.instructions.md` (backend, endpoints, tests, frontend, entity renderers, perspectives). They apply automatically based on the files you touch. Reusable workflows live as skills in `.github/skills/<name>/SKILL.md`.
+Detailed conventions live in `.github/instructions/*.instructions.md` (backend, endpoints, tests, frontend, entity renderers, perspectives, agentic workflows). They apply automatically based on the files you touch. Reusable workflows live as skills in `.github/skills/<name>/SKILL.md`.
 
 ## Agent Configuration
 
