@@ -109,3 +109,4 @@ This repository supports several coding agents from a single source of truth:
 - `.github/instructions/`: file-scoped instructions. Each file declares its scope twice in the frontmatter: `applyTo` (comma-separated globs, GitHub Copilot) and `paths` (YAML list of the same globs, Claude Code). Keep both in sync. Every `.md` file in this folder is loaded as an instruction, so do not put other documents here.
 - `.github/skills/`: skills in the shared `SKILL.md` format.
 - `.claude/rules` and `.claude/skills` are symlinks to the two folders above. Never edit through them or replace them with copies.
+- `.claude/hooks/apply_instructions.py`: gives an agent the instruction files missing from its context once per compaction: `Edit` and `Write` are refused once with the rules as the reason, and a `Bash` command that changed matching files reports them right after it. It reads the `paths` globs, so keep them double-quoted.
