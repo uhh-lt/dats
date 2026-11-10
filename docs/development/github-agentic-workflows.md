@@ -143,17 +143,13 @@ Never store the API key as a repository variable or commit it to a workflow. Git
 
 The workflow's network allowlist is compiled into the lock file. The concrete provider hostname must be allowed when the base URL comes from a GitHub variable. Changing the provider hostname therefore requires updating the Markdown workflow and recompiling it.
 
-Custom or private models may not be present in gh-aw's public pricing catalog. Register each selected model under `models.providers.github-copilot` with its input and output costs so gh-aw can enforce AI-credit limits. Use zero rates only for a model with no direct per-token charge. When `COPILOT_MODEL` changes to an unregistered identifier, add its pricing entry and recompile the workflow. See [custom model pricing](https://github.github.com/gh-aw/reference/faq/#how-do-i-supply-pricing-for-a-custom-or-private-model) for the schema and units.
+Custom or private models may not be present in gh-aw's public pricing catalog, and gh-aw rejects every request to a model without a price. Each workflow therefore sets a default price for unknown models instead of naming a model, so changing `COPILOT_MODEL` needs no recompile. The rates must be positive, so use the smallest rate for a model with no direct per-token charge. See [custom model pricing](https://github.github.com/gh-aw/reference/faq/#how-do-i-supply-pricing-for-a-custom-or-private-model) for the units.
 
 ```yaml
 models:
-  providers:
-    github-copilot:
-      models:
-        moonshotai/Kimi-K3:
-          cost:
-            input: "0"
-            output: "0"
+  default-ai-credits-pricing:
+    input: 0.000001
+    output: 0.000001
 ```
 
 ## Running and debugging

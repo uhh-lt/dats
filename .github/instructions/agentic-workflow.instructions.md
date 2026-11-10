@@ -30,6 +30,7 @@ paths:
 ## Configuration and Testing
 
 - Set `report-failure-as-issue: ["!engine_driver_failure"]` on every agent, so a model outage opens no issue.
+- Set `models.default-ai-credits-pricing` instead of pricing a named model, so changing `COPILOT_MODEL` needs no recompile.
 - Set `hide-older-comments: true` on agents that post a new comment each time.
 - Never edit a `.lock.yml` by hand: run `gh aw compile <name>` and commit it with the prompt.
 - A pull request's own agent runs use the prompt from `main`, so prompt changes only get tested after merging.
