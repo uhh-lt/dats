@@ -1,3 +1,4 @@
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -43,6 +44,9 @@ def enrich_for_recompute(
     input_type=TextExtractionJobInput,
     output_type=TextExtractionJobOutput,
     enricher=enrich_for_recompute,
+    requires={Artefact.RAW_HTML},
+    produces={Artefact.CONTENT},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_extraction_job(
     payload: TextExtractionJobInput,

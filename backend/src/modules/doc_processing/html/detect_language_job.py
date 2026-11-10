@@ -1,3 +1,4 @@
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -48,6 +49,9 @@ def enrich_for_recompute(
     input_type=TextLanguageDetectionJobInput,
     output_type=TextLanguageDetectionJobOutput,
     enricher=enrich_for_recompute,
+    requires={Artefact.CONTENT},
+    produces={Artefact.LANGUAGE},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job

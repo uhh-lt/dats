@@ -1,3 +1,5 @@
+from common.artefact_enum import Artefact
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
@@ -36,6 +38,9 @@ def enrich_for_recompute(
     job_type=JobType.TEXT_ES_INDEX,
     input_type=TextESIndexJobInput,
     enricher=enrich_for_recompute,
+    requires={Artefact.CONTENT},
+    produces={Artefact.ES_INDEX},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
     # if we re-run this job, filename and text is None, we need to query it from db

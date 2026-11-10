@@ -4,6 +4,7 @@ from pathlib import Path
 import ffmpeg
 from loguru import logger
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -65,6 +66,9 @@ def enrich_for_recompute(
     output_type=TranscriptionJobOutput,
     device="api",
     enricher=enrich_for_recompute,
+    requires={Artefact.AUDIO},
+    produces={Artefact.TRANSCRIPT, Artefact.RAW_HTML},
+    doctypes={DocType.audio, DocType.video},
 )
 def handle_transcription_job(
     payload: TranscriptionJobInput, job: Job

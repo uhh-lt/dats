@@ -1,5 +1,7 @@
 from loguru import logger
 
+from common.artefact_enum import Artefact
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
@@ -43,6 +45,9 @@ def enrich_for_recompute(
     job_type=JobType.TEXT_HTML_MAPPING,
     input_type=TextHTMLMappingJobInput,
     enricher=enrich_for_recompute,
+    requires={Artefact.RAW_HTML, Artefact.TOKENS_SENTENCES},
+    produces={Artefact.HTML},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
     # parse html

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import ffmpeg
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -57,6 +58,9 @@ def enrich_for_recompute(
     job_type=JobType.VIDEO_METADATA_EXTRACTION,
     input_type=VideoMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.FILE_METADATA},
+    doctypes={DocType.video},
 )
 def handle_video_metadata_extraction_job(
     payload: VideoMetadataExtractionJobInput, job: Job

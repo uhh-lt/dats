@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -68,6 +69,9 @@ def enrich_for_recompute(
     job_type=JobType.IMAGE_THUMBNAIL,
     input_type=ImageThumbnailJobInput,
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.THUMBNAIL},
+    doctypes={DocType.image},
 )
 def handle_image_thumbnail_job(payload: ImageThumbnailJobInput, job: Job) -> None:
     generate_thumbnails(payload.filepath)

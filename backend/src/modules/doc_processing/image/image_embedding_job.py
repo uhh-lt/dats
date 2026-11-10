@@ -1,5 +1,7 @@
 from loguru import logger
 
+from common.artefact_enum import Artefact
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
@@ -34,6 +36,9 @@ def enrich_for_recompute(
     input_type=ImageEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.IMAGE_EMBEDDINGS},
+    doctypes={DocType.image},
 )
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
     with SQLRepo().transaction() as db:

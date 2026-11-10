@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -57,6 +58,9 @@ def enrich_for_recompute(
     output_type=ImageCaptionJobOutput,
     device="api",
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.IMAGE_CAPTION, Artefact.RAW_HTML},
+    doctypes={DocType.image},
 )
 def handle_image_caption_job(
     payload: ImageCaptionJobInput, job: Job
