@@ -27,6 +27,7 @@ class ExportEntity(str, Enum):
     EXPERIMENT = "experiment"
     FOLDER = "folder"
     MEMO = "memo"
+    PROJECT_DETAILS = "project_details"
     PROJECT_METADATA = "project_metadata"
     PROMPT = "prompt"
     SDOC = "sdoc"
@@ -51,6 +52,8 @@ class ExportEntity(str, Enum):
                 return r"project_\d+_all_folders.csv"
             case ExportEntity.MEMO:
                 return r"project_\d+_all_memos.csv"
+            case ExportEntity.PROJECT_DETAILS:
+                return r"project_\d+_details.json"
             case ExportEntity.PROJECT_METADATA:
                 return r"project_\d+_all_project_metadatas.csv"
             case ExportEntity.PROMPT:

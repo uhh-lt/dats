@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
+from core.doc.source_document_orm import SDOC_STATUS_COLUMNS
 
 
 class SourceDocumentExportSchema(BaseModel):
@@ -13,6 +14,12 @@ class SourceDocumentExportSchema(BaseModel):
     name: str = Field(description="Name of the source document (default is filename)")
     doctype: str = Field(description="Document type of the source document")
     status: int = Field(description="Status of the source document")
+    step_status: dict[str, int | None] | None = Field(
+        description="Status of each pipeline step of the doctype, null = not planned. "
+        "Missing in archives exported before the feature toggles: then every step "
+        "of the doctype has the status of the document.",
+        default=None,
+    )
 
     # Info about the folder that contains the source document
     folder_name: str = Field(
@@ -106,6 +113,21 @@ class SourceDocumentExportSchema(BaseModel):
         except Exception as e:
             raise ValueError(f"Invalid status format: {str(e)}")
 
+        return v
+
+    @field_validator("step_status")
+    @classmethod
+    def validate_step_status(cls, v):
+        """Validate that the keys are pipeline steps and the values statuses."""
+        if v is None:
+            return v
+        for step, status in v.items():
+            if step not in SDOC_STATUS_COLUMNS:
+                raise ValueError(
+                    f"Unknown pipeline step '{step}', must be one of {SDOC_STATUS_COLUMNS}"
+                )
+            if status is not None:
+                SDocStatus(status)
         return v
 
     @field_validator("tags")
@@ -261,6 +283,7 @@ class SourceDocumentExportCollection(BaseModel):
                 "token_time_ends",
                 "word_frequencies",
                 "metadata",
+                "step_status",
             ]:
                 if field in record and isinstance(record[field], str):
                     try:

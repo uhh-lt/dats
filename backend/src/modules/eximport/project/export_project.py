@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
@@ -15,6 +14,9 @@ from modules.eximport.experiments.export_experiments import export_all_experimen
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.folder.export_folders import export_all_folders
 from modules.eximport.memos.export_memos import export_all_memos
+from modules.eximport.project.project_export_schema import (
+    ProjectDetailsExportSchema,
+)
 from modules.eximport.project_metadata.export_project_metadata import (
     export_all_project_metadatas,
 )
@@ -57,7 +59,7 @@ def __export_project(
     fn: str,
     project: ProjectORM,
 ) -> Path:
-    export_files = []
+    export_files = [__export_project_details(fsr=fsr, project=project)]
     for export_fn in [
         export_all_bbox_annotations,
         export_all_codes,
@@ -93,24 +95,13 @@ def __export_project(
 
 
 def __export_project_details(fsr: FilesystemRepo, project: ProjectORM) -> Path:
-    export_data = __generate_export_json_for_project_details(project)
+    logger.info("Exporting project details ...")
+    export_data = ProjectDetailsExportSchema(
+        title=project.title,
+        description=project.description,
+        enabled_features=list(project.enabled_features),
+    )
     return fsr.write_json_to_temp_file(
-        json_obj=export_data,
+        json_obj=export_data.model_dump(),
         fn=f"project_{project.id}_details",
     )
-
-
-def __generate_export_json_for_project_details(
-    project: ProjectORM,
-) -> dict[str, str | int | datetime]:
-    logger.info("Exporting project details ...")
-
-    data = {
-        "id": project.id,
-        "title": project.title,
-        "description": project.description,
-        "created": project.created.isoformat(),
-        "updated": project.updated.isoformat(),
-    }
-
-    return data
