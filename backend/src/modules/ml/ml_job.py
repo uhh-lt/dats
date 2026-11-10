@@ -7,10 +7,8 @@ from modules.ml.ml_enum import MLJobStatus, MLJobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
-    DocumentEmbeddingParams,
     MLJobInput,
     QuotationAttributionParams,
-    SentenceEmbeddingParams,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.db.sql_repo import SQLRepo
@@ -76,36 +74,6 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
                 recompute = payload.specific_ml_job_parameters.recompute
                 filter_criterion = _build_filter_criterion(start_time, recompute)
                 CorefService().perform_coreference_resolution(
-                    db=db,
-                    project_id=payload.project_id,
-                    filter_criterion=filter_criterion,
-                    recompute=recompute,
-                )
-            case MLJobType.DOCUMENT_EMBEDDING:
-                from modules.ml.embedding_service import EmbeddingService
-
-                assert isinstance(
-                    payload.specific_ml_job_parameters,
-                    DocumentEmbeddingParams,
-                ), "DocumentEmbeddingParams expected"
-                recompute = payload.specific_ml_job_parameters.recompute
-                filter_criterion = _build_filter_criterion(start_time, recompute)
-                EmbeddingService().embed_documents(
-                    db=db,
-                    project_id=payload.project_id,
-                    filter_criterion=filter_criterion,
-                    recompute=recompute,
-                )
-            case MLJobType.SENTENCE_EMBEDDING:
-                from modules.ml.embedding_service import EmbeddingService
-
-                assert isinstance(
-                    payload.specific_ml_job_parameters,
-                    SentenceEmbeddingParams,
-                ), "SentencetEmbeddingParams expected"
-                recompute = payload.specific_ml_job_parameters.recompute
-                filter_criterion = _build_filter_criterion(start_time, recompute)
-                EmbeddingService().embed_sentences(
                     db=db,
                     project_id=payload.project_id,
                     filter_criterion=filter_criterion,
