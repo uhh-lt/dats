@@ -1,17 +1,21 @@
 import json
-from typing import TypedDict
+from typing import Callable, TypedDict
 from uuid import uuid4
 
 import pytest
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
+from common.doc_type_enum import DocType
+from common.sdoc_status_enum import SDocStatus
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
@@ -287,3 +291,133 @@ def assistant_users_database(
         "timeline_analysis_id": timeline_analysis_id,
         "search_view_id": search_view_id,
     }
+
+
+# The step status columns as before migration 448579029394 (all NOT NULL).
+_STATUS_COLUMNS = [
+    "extract_html",
+    "text_extraction",
+    "text_language_detection",
+    "text_spacy",
+    "text_es_index",
+    "text_sentence_embedding",
+    "text_html_mapping",
+    "image_caption",
+    "image_embedding",
+    "image_metadata_extraction",
+    "image_thumbnail",
+    "image_object_detection",
+    "audio_metadata",
+    "audio_thumbnail",
+    "audio_transcription",
+    "video_metadata",
+    "video_thumbnail",
+    "video_audio_extraction",
+]
+_HTML_STEPS = [
+    "text_extraction",
+    "text_language_detection",
+    "text_spacy",
+    "text_es_index",
+    "text_sentence_embedding",
+    "text_html_mapping",
+]
+SDOC_STEPS_BY_DOCTYPE = {
+    DocType.text: ["extract_html", *_HTML_STEPS],
+    DocType.image: [
+        "image_caption",
+        "image_embedding",
+        "image_metadata_extraction",
+        "image_thumbnail",
+        "image_object_detection",
+        *_HTML_STEPS,
+    ],
+    DocType.audio: [
+        "audio_metadata",
+        "audio_thumbnail",
+        "audio_transcription",
+        *_HTML_STEPS,
+    ],
+    DocType.video: [
+        "video_metadata",
+        "video_thumbnail",
+        "video_audio_extraction",
+        "audio_transcription",
+        *_HTML_STEPS,
+    ],
+}
+
+
+class SdocStatusDocument(TypedDict):
+    sdoc_id: int
+    doctype: DocType
+    status_before: SDocStatus
+
+
+@pytest.fixture(scope="function")
+def sdoc_status_database(
+    db_session: Session, test_project: ProjectORM
+) -> dict[str, SdocStatusDocument]:
+    """
+    This fixture sets up the step status columns of documents as they were before
+    the migration `448579029394_sdoc_status_null_means_not_planned`: every column is
+    set, the columns of steps that are no step of the doctype hold 0.
+
+    `test_project` holds, per doctype (text, image, audio, video), four documents
+    named `<doctype>_<case>`:
+
+    - `finished`: all steps of the doctype are finished (1)
+    - `processing`: all steps are finished except the second-to-last (0)
+    - `erroneous`: all steps are finished except the second (-100) and third (0)
+    - `new`: all steps are processing (0)
+
+    Returned by name, with the processed_status the application read before the
+    migration (`status_before`): -100 if the sum of all columns is negative, 1 if
+    it equals the step count of the doctype, 0 otherwise.
+    """
+    cases: dict[str, Callable[[list[str]], dict[str, int]]] = {
+        "finished": lambda steps: dict.fromkeys(steps, 1),
+        "processing": lambda steps: {**dict.fromkeys(steps, 1), steps[-2]: 0},
+        "erroneous": lambda steps: {
+            **dict.fromkeys(steps, 1),
+            steps[1]: -100,
+            steps[2]: 0,
+        },
+        "new": lambda steps: dict.fromkeys(steps, 0),
+    }
+
+    documents: dict[str, SdocStatusDocument] = {}
+    for doctype, steps in SDOC_STEPS_BY_DOCTYPE.items():
+        for case, step_values in cases.items():
+            name = f"{doctype.value}_{case}"
+            sdoc = crud_sdoc.create(
+                db=db_session,
+                create_dto=SourceDocumentCreate(
+                    filename=name,
+                    name=name,
+                    doctype=doctype,
+                    project_id=test_project.id,
+                ),
+            )
+            values = {c: step_values(steps).get(c, 0) for c in _STATUS_COLUMNS}
+            db_session.execute(
+                sa.text(
+                    "UPDATE sourcedocument SET "
+                    + ", ".join(f"{c} = :{c}" for c in _STATUS_COLUMNS)
+                    + " WHERE id = :id"
+                ),
+                {**values, "id": sdoc.id},
+            )
+            total = sum(values.values())
+            documents[name] = {
+                "sdoc_id": sdoc.id,
+                "doctype": doctype,
+                "status_before": SDocStatus.erroneous
+                if total < 0
+                else SDocStatus.finished
+                if total == len(steps)
+                else SDocStatus.processing,
+            }
+
+    db_session.commit()
+    return documents
