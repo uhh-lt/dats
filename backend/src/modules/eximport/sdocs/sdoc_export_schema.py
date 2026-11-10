@@ -85,6 +85,13 @@ class SourceDocumentExportSchema(BaseModel):
             raise ValueError(f"{info.field_name} cannot be empty")
         return v
 
+    @field_validator("html", "raw_html", mode="before")
+    @classmethod
+    def read_missing_html_as_empty(cls, v):
+        """An empty HTML (e.g. of an image without caption) is an empty CSV cell,
+        which pandas reads as a missing value."""
+        return "" if v is None else v
+
     @field_validator("doctype")
     @classmethod
     def validate_doctype(cls, v):
