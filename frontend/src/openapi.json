@@ -2027,6 +2027,78 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/feature/project/{project_id}/{feature}": {
+      "put": {
+        "tags": ["feature"],
+        "summary": "Enables the Feature in the Project, or completes it: computes its data for the documents that lack it. Returns the enabled Features",
+        "operationId": "activate_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeatureActivation" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Activate Feature"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["feature"],
+        "summary": "Disables the Feature in the Project; its data is kept. Returns the enabled Features",
+        "operationId": "disable_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Disable Feature"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/folder": {
       "put": {
         "tags": ["folder"],
@@ -13260,6 +13332,18 @@
         "title": "Feature",
         "description": "A user-facing capability that a project can enable or disable. Each feature\nis declared with `register_feature` in a `*_feature.py` file of its module.\n\nOnly toggleable features are listed: the features that need core data only\n(annotation, LLM assistant, classifier, perspectives, ...) are always available."
       },
+      "FeatureActivation": {
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/ProcessingSettings",
+            "description": "The processing settings of the computed steps"
+          }
+        },
+        "type": "object",
+        "required": ["settings"],
+        "title": "FeatureActivation",
+        "description": "Enable a Feature, or complete it: compute its data for the documents that lack it."
+      },
       "FeatureRead": {
         "properties": {
           "feature": { "$ref": "#/components/schemas/Feature", "description": "ID of the Feature" },
@@ -13275,6 +13359,12 @@
         "type": "object",
         "required": ["feature", "title", "description", "requires_features"],
         "title": "FeatureRead"
+      },
+      "FeatureStatus": {
+        "type": "string",
+        "enum": ["disabled", "computing", "partly_available", "fully_available"],
+        "title": "FeatureStatus",
+        "description": "The state of a feature in a project, derived from the step statuses of its\ndocuments."
       },
       "FilterExpression_BBoxColumns_": {
         "properties": {
@@ -15745,6 +15835,10 @@
             "title": "Enabled",
             "description": "Whether the Feature is enabled in the Project"
           },
+          "status": {
+            "$ref": "#/components/schemas/FeatureStatus",
+            "description": "State of the Feature: disabled, computing (documents are processing), partly available (documents lack its data and nothing runs for them) or fully available"
+          },
           "ready": {
             "type": "boolean",
             "title": "Ready",
@@ -15754,6 +15848,21 @@
             "type": "integer",
             "title": "Covered Documents",
             "description": "Number of documents the Feature applies to with all its steps finished"
+          },
+          "processing_documents": {
+            "type": "integer",
+            "title": "Processing Documents",
+            "description": "Number of documents the Feature applies to with a step of it processing"
+          },
+          "failed_documents": {
+            "type": "integer",
+            "title": "Failed Documents",
+            "description": "Number of documents the Feature applies to with a step of it erroneous and none processing"
+          },
+          "not_planned_documents": {
+            "type": "integer",
+            "title": "Not Planned Documents",
+            "description": "Number of documents the Feature applies to with a step of it not planned, and none processing or erroneous"
           },
           "total_documents": {
             "type": "integer",
@@ -15768,7 +15877,18 @@
           }
         },
         "type": "object",
-        "required": ["feature", "enabled", "ready", "covered_documents", "total_documents", "missing_steps"],
+        "required": [
+          "feature",
+          "enabled",
+          "status",
+          "ready",
+          "covered_documents",
+          "processing_documents",
+          "failed_documents",
+          "not_planned_documents",
+          "total_documents",
+          "missing_steps"
+        ],
         "title": "ProjectFeatureRead",
         "description": "The state of a Feature in a Project."
       },
@@ -15976,11 +16096,6 @@
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
             "description": "Description of the Project"
-          },
-          "enabled_features": {
-            "anyOf": [{ "items": { "$ref": "#/components/schemas/Feature" }, "type": "array" }, { "type": "null" }],
-            "title": "Enabled Features",
-            "description": "Features enabled in the Project; the Features they require are enabled as well"
           }
         },
         "type": "object",

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Feature } from "./Feature";
+import type { FeatureStatus } from "./FeatureStatus";
 import type { JobType } from "./JobType";
 /**
  * The state of a Feature in a Project.
@@ -17,6 +18,10 @@ export type ProjectFeatureRead = {
    */
   enabled: boolean;
   /**
+   * State of the Feature: disabled, computing (documents are processing), partly available (documents lack its data and nothing runs for them) or fully available
+   */
+  status: FeatureStatus;
+  /**
    * Whether all documents the Feature applies to have its data
    */
   ready: boolean;
@@ -24,6 +29,18 @@ export type ProjectFeatureRead = {
    * Number of documents the Feature applies to with all its steps finished
    */
   covered_documents: number;
+  /**
+   * Number of documents the Feature applies to with a step of it processing
+   */
+  processing_documents: number;
+  /**
+   * Number of documents the Feature applies to with a step of it erroneous and none processing
+   */
+  failed_documents: number;
+  /**
+   * Number of documents the Feature applies to with a step of it not planned, and none processing or erroneous
+   */
+  not_planned_documents: number;
   /**
    * Number of documents the Feature applies to
    */
