@@ -75,21 +75,19 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
                 (ProviderType.EMB, conf.emb_provider),
             ):
                 conn = OpenAI(
-                    base_url=f"http://{connection_info.host}:{connection_info.port}/v1",
+                    base_url=connection_info.url,
                     api_key=connection_info.api_key,
                 )
                 models = conn.models.list().data
                 if len(models) == 0:
-                    raise Exception(
-                        f"No model found at '{connection_info.host}:{connection_info.port}'!"
-                    )
+                    raise Exception(f"No model found at '{connection_info.url}'!")
                 match provider_type:
                     case ProviderType.LLM:
                         self.__llm_conn = conn
                     case ProviderType.EMB:
                         self.__emb_conn = conn
                 logger.info(
-                    f"Successfully established connection to LLM Provider '{provider_type}' at '{connection_info.host}:{connection_info.port}' with the following models: {[model.id for model in models]}"
+                    f"Successfully established connection to LLM Provider '{provider_type}' at '{connection_info.url}' with the following models: {[model.id for model in models]}"
                 )
 
         except Exception as e:

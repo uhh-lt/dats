@@ -85,12 +85,10 @@ elasticsearch:
   sniffer_timeout: ${oc.env:ES_SNIFFER_TIMEOUT, 120}
 
 llm_provider:
-  host: ${oc.env:LLM_PROVIDER_HOST, "localhost"}
-  port: ${oc.env:LLM_PROVIDER_PORT, 13133}
+  url: ${oc.env:LLM_PROVIDER_URL, "http://localhost:13133/v1"}
   api_key: ${oc.env:LLM_PROVIDER_API_KEY, ""}
 emb_provider:
-  host: ${oc.env:EMB_PROVIDER_HOST, "localhost"}
-  port: ${oc.env:EMB_PROVIDER_PORT, 13137}
+  url: ${oc.env:EMB_PROVIDER_URL, "http://localhost:13137/v1"}
   api_key: ${oc.env:EMB_PROVIDER_API_KEY, ""}
 
 docling:
