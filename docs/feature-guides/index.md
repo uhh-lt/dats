@@ -11,4 +11,4 @@ Use the navigation menu to explore detailed documentation on:
 - **Core Workspaces:** [Search](search-view.md), [Annotation](annotation-view.md), and [Logbook](logbook-view.md) views.
 - **Advanced AI Integration:** [LLM Assistant](llm-assistant.md) with its [Prompts](prompts.md) and the [Experiment Studio](experiment-studio.md), [AI Tools via MCP](mcp-integration.md), [Custom Classifiers](classifier.md), and [Perspectives](perspectives.md).
 - **Analysis:** Quantitative tools like [Code Frequency](analysis/code-frequency-analysis.md), [Timeline Analysis](analysis/timeline-analysis.md), and [Concept Over Time Analysis](analysis/concept-over-time-analysis.md).
-- **Data Management:** [Document Upload](document-upload.md), [Export/Import](export-import.md), and specialized utilities.
+- **Data Management:** [Project Features](project-features.md), [Document Upload](document-upload.md), [Export/Import](export-import.md), and specialized utilities.
