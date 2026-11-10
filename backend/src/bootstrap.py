@@ -9,8 +9,8 @@ workers, the setup script and the tests cannot drift apart:
 | `worker.py` (job processes)  | init_logging, register_jobs, connect_repos, init_services  |
 | `setup.py`                   | init_logging, setup_data_stores                            |
 | `run_migrations.py`          | init_logging, migrate_database                             |
-| `test/conftest.py`           | connect_repos, init_services, delete_all_data,             |
-|                              | ensure_system_data, create_app                             |
+| `test/conftest.py`           | register_jobs, connect_repos, init_services,               |
+|                              | delete_all_data, ensure_system_data, create_app            |
 
 All functions are idempotent, so calling one twice in a process is safe.
 """

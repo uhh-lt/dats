@@ -136,12 +136,14 @@ def _load_config(environment: Mapping[str, str]) -> dict[str, Any]:
 # STARTUP
 # ==============================================================================
 def start_dats() -> None:
-    """Start DATS in the test process like a server process: connect all repos,
-    init the services, and create the test database from scratch with the
-    migrations."""
+    """Start DATS in the test process like a job process: register the jobs (the
+    tests call job functions such as the export directly, which need the
+    pipeline), connect all repos, init the services, and create the test
+    database from scratch with the migrations."""
     from repos.db.sql_repo import SQLRepo
     from repos.redis_repo import RedisRepo
 
+    bootstrap.register_jobs()
     bootstrap.connect_repos()
     bootstrap.init_services()
     SQLRepo().drop_database()
