@@ -7,7 +7,7 @@ import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
 
 export function HealthTableToolbarLeft({
   selectedRows,
-  tableColumnInfo,
+  plannedSteps,
   settings,
   onChangeSettings,
   isRetryPending,
@@ -43,13 +43,18 @@ export function HealthTableToolbarLeft({
         title={
           <>
             <Typography>Recompute step:</Typography>
-            After selecting a step, this action <u>recomputes</u> it for the selected documents
+            After selecting a step, this action <u>recomputes</u> it for the selected documents. Only steps of enabled
+            features are offered; enable a feature in the project settings to compute its steps.
           </>
         }
         placement="top-start"
       >
         <span>
-          <Button onClick={(event) => setAnchorEl(event.currentTarget)} loading={isRecomputePending}>
+          <Button
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+            loading={isRecomputePending}
+            disabled={plannedSteps.length === 0}
+          >
             Recompute
           </Button>
           <Menu
@@ -58,7 +63,7 @@ export function HealthTableToolbarLeft({
             onClose={() => setAnchorEl(null)}
             anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
           >
-            {tableColumnInfo.map((step) => (
+            {plannedSteps.map((step) => (
               <MenuItem
                 key={step}
                 onClick={() => {
