@@ -41,14 +41,10 @@ class SdocProcessingJobInput(ProcessingJobInput):
 
 class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
-    processed_jobs: int = Field(
-        description="Number of processed jobs (depending on the doctype)"
-    )
-    total_jobs: int = Field(
-        description="Total number of jobs (depending on the doctype)"
-    )
+    processed_jobs: int = Field(description="Number of finished jobs")
+    total_jobs: int = Field(description="Number of planned jobs")
     processed_status: SDocStatus = Field(
-        description="Overall processing status. Results from processed_jobs and total_jobs"
+        description="Overall processing status: erroneous if any job failed, processing if any job is pending, finished otherwise"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -57,8 +53,8 @@ class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
 class SdocStatusRow(BaseModel):
     sdoc_id: int = Field(description="ID of the SourceDocument")
     name: str = Field(description="Name of the SourceDocument")
-    status: dict[str, SDocStatus] = Field(
-        description="Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)"
+    status: dict[str, SDocStatus | None] = Field(
+        description="Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype, null = the step is not planned)"
     )
     failed_job_uuids: dict[str, str] = Field(
         description="UUIDs of the failed processing jobs (the keys are the processing step/job and differ per doctype)",
@@ -72,7 +68,9 @@ class SdocStatusRow(BaseModel):
         cls, sdoc: "SourceDocumentORM", steps: list[JobType]
     ) -> "SdocStatusRow":
         """Reads the status of the given pipeline steps (the steps of the sdoc's doctype)."""
-        status: dict[str, SDocStatus] = {s.value: getattr(sdoc, s.value) for s in steps}
+        status: dict[str, SDocStatus | None] = {
+            s.value: getattr(sdoc, s.value) for s in steps
+        }
         return cls(
             sdoc_id=sdoc.id,
             name=sdoc.name,

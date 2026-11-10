@@ -8,16 +8,12 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
-    case,
     func,
 )
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
-from systems.job_system.pipeline_graph import pipeline_registry
 
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -35,6 +31,52 @@ if TYPE_CHECKING:
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
     from modules.word_frequency.word_frequency_orm import WordFrequencyORM
+
+# The pipeline step status columns of SourceDocumentORM.
+SDOC_STATUS_COLUMNS = [
+    # text (1)
+    "extract_html",
+    # html (6)
+    "text_extraction",
+    "text_language_detection",
+    "text_spacy",
+    "text_es_index",
+    "text_sentence_embedding",
+    "text_html_mapping",
+    # image (5)
+    "image_caption",
+    "image_embedding",
+    "image_metadata_extraction",
+    "image_thumbnail",
+    "image_object_detection",
+    # audio (3)
+    "audio_metadata",
+    "audio_thumbnail",
+    "audio_transcription",
+    # video (3)
+    "video_metadata",
+    "video_thumbnail",
+    "video_audio_extraction",
+]
+_ALL_STATUS = ", ".join(SDOC_STATUS_COLUMNS)
+# the number of finished steps
+_PROCESSED_JOBS_SQL = " + ".join(
+    f"(CASE WHEN {c} = {SDocStatus.finished.value} THEN 1 ELSE 0 END)"
+    for c in SDOC_STATUS_COLUMNS
+)
+# the number of planned steps
+_TOTAL_JOBS_SQL = " + ".join(
+    f"(CASE WHEN {c} IS NULL THEN 0 ELSE 1 END)" for c in SDOC_STATUS_COLUMNS
+)
+# erroneous if any step is erroneous, processing if any step is processing,
+# finished otherwise (also if no step is planned)
+_PROCESSED_STATUS_SQL = (
+    f"CASE WHEN {SDocStatus.erroneous.value} IN ({_ALL_STATUS}) "
+    f"THEN {SDocStatus.erroneous.value} "
+    f"WHEN {SDocStatus.processing.value} IN ({_ALL_STATUS}) "
+    f"THEN {SDocStatus.processing.value} "
+    f"ELSE {SDocStatus.finished.value} END"
+)
 
 
 class SourceDocumentORM(ORMBase):
@@ -153,194 +195,71 @@ class SourceDocumentORM(ORMBase):
         overlaps="document_clusters,cluster,source_document",
     )
 
-    # KEEP THE SAME ORDER AS job_type.py!
+    # Pipeline step status columns (see SDocStatus), NULL = step not planned.
+    # KEEP THE SAME ORDER AS job_type.py and SDOC_STATUS_COLUMNS!
 
     # TEXT (1)
-    extract_html: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
+    extract_html: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
 
     # HTML (6)
-    text_extraction: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
+    text_extraction: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    text_language_detection: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
     )
-    text_language_detection: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
+    text_spacy: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    text_es_index: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    text_sentence_embedding: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
     )
-    text_spacy: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    text_es_index: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    text_sentence_embedding: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    text_html_mapping: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
+    text_html_mapping: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
 
     # IMAGE (5)
-    image_caption: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
+    image_caption: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    image_embedding: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    image_metadata_extraction: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
     )
-    image_embedding: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    image_metadata_extraction: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    image_thumbnail: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    image_object_detection: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
+    image_thumbnail: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    image_object_detection: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
     )
 
     # AUDIO (3)
-    audio_metadata: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    audio_thumbnail: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    audio_transcription: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
+    audio_metadata: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    audio_thumbnail: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    audio_transcription: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
     )
 
     # VIDEO (3)
-    video_metadata: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    video_thumbnail: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    video_audio_extraction: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
+    video_metadata: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    video_thumbnail: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    video_audio_extraction: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
     )
 
+    # The overall status, derived from the step columns
     processed_jobs: Mapped[int] = mapped_column(
-        Computed(
-            # text (1)
-            extract_html
-            # html (6)
-            + text_extraction
-            + text_language_detection
-            + text_spacy
-            + text_es_index
-            + text_sentence_embedding
-            + text_html_mapping
-            # image (5)
-            + image_caption
-            + image_embedding
-            + image_metadata_extraction
-            + image_thumbnail
-            + image_object_detection
-            # audio (3)
-            + audio_metadata
-            + audio_thumbnail
-            + audio_transcription
-            # video (3)
-            + video_metadata
-            + video_thumbnail
-            + video_audio_extraction,
-            persisted=True,
-        ),
+        Integer,
+        Computed(_PROCESSED_JOBS_SQL, persisted=True),
         nullable=False,
         index=True,
     )
-
-    @property
-    def total_jobs(self) -> int:
-        return len(pipeline_registry.graph().steps(DocType(self.doctype)))
+    total_jobs: Mapped[int] = mapped_column(
+        Integer, Computed(_TOTAL_JOBS_SQL, persisted=True), nullable=False
+    )
+    processed_status: Mapped[int] = mapped_column(
+        Integer,
+        Computed(_PROCESSED_STATUS_SQL, persisted=True),
+        nullable=False,
+        index=True,
+    )
 
     @property
     def memo_ids(self) -> list[int]:
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]
-
-    @hybrid_property
-    def processed_status(self) -> SDocStatus:  # type: ignore
-        if self.processed_jobs < 0:
-            return SDocStatus.erroneous
-        elif self.processed_jobs == self.total_jobs:
-            return SDocStatus.finished
-        else:
-            return SDocStatus.processing
-
-    @processed_status.expression
-    def processed_status(cls):
-        graph = pipeline_registry.graph()
-        return case(
-            (
-                cls.processed_jobs < 0,
-                SDocStatus.erroneous,
-            ),  # type: ignore
-            *[
-                (
-                    (cls.doctype == doctype)
-                    & (cls.processed_jobs == len(graph.steps(doctype))),
-                    SDocStatus.finished,
-                )
-                for doctype in DocType
-            ],  # type: ignore
-            else_=SDocStatus.processing,
-        )
 
     __table_args__ = (
         UniqueConstraint(

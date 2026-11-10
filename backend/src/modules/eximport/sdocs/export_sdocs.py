@@ -157,7 +157,7 @@ def __export_sdocs(
             filename=sdoc.filename,
             name=sdoc.name,
             doctype=sdoc.doctype,
-            status=sdoc.processed_status.value,
+            status=sdoc.processed_status,
             folder_name=sdoc.folder.name,
             folder_parent_name=sdoc.folder.parent.name if sdoc.folder.parent else None,
             tags=tags,

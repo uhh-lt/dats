@@ -59,10 +59,10 @@ class CRUDSourceDocument(
     def read_status(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
-        sdoc = self.read(db=db, id=sdoc_id)
-        if sdoc.processed_status != SDocStatus.finished and raise_error_on_unfinished:
+        status = SDocStatus(self.read(db=db, id=sdoc_id).processed_status)
+        if status != SDocStatus.finished and raise_error_on_unfinished:
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
-        return sdoc.processed_status
+        return status
 
     def read_by_project_and_status(
         self, db: Session, *, project_id: int, status: SDocStatus
