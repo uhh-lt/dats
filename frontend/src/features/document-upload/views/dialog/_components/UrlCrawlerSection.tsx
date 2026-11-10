@@ -1,7 +1,7 @@
+import { DEFAULT_PROCESSING_SETTINGS } from "@components/defaultProcessingSettings";
 import { generalQueries } from "@api/general/generalQueries";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { Language } from "@models/Language";
 import { ProcessingSettings } from "@models/ProcessingSettings";
 import AddIcon from "@mui/icons-material/Add";
 import PlayCircle from "@mui/icons-material/PlayCircle";
@@ -23,15 +23,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   const [currentUrl, setCurrentUrl] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ProcessingSettings>({
-    model: "default",
-    extract_images: true,
-    pages_per_chunk: 10,
-    keyword_deduplication_threshold: 0.5,
-    keyword_max_ngram_size: 2,
-    keyword_number: 5,
-    language: Language.AUTO,
-  });
+  const [settings, setSettings] = useState<ProcessingSettings>(DEFAULT_PROCESSING_SETTINGS);
 
   const handleUrlChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentUrl(event.target.value);
