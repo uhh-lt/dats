@@ -12,6 +12,12 @@ export type FeatureRoute = Extract<
   `/project/$projectId/${string}`
 >;
 
+/**
+ * A navigation shortcut: a single key pressed with ⌘⇧ (`"s"`), or a two-step chord: the ⌘⇧ shortcut `after`
+ * (which keeps its own action), then the plain `key` within a moment.
+ */
+export type FeatureShortcut = string | { after: string; key: string };
+
 export interface FeatureEntry {
   /** Stable id of the navigation entry. */
   id: string;
@@ -23,8 +29,8 @@ export interface FeatureEntry {
   description?: string;
   icon: Icon;
   to: FeatureRoute;
-  /** Key of the ⌘⇧ navigation shortcut. */
-  shortcut?: string;
+  /** Navigation shortcut; every entry has one. */
+  shortcut: FeatureShortcut;
   /** Sidebar tooltip, if it differs from the title. */
   sidebarTooltip?: string;
   /** Quick command menu entry; every entry has one. */

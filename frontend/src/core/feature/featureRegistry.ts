@@ -1,6 +1,6 @@
 import { Icon } from "@components/icons";
 import { Feature } from "@models/Feature";
-import { FeatureCommandCategory, FeatureEntry, FeatureGroup } from "./featureTypes";
+import { FeatureCommandCategory, FeatureEntry, FeatureGroup, FeatureShortcut } from "./featureTypes";
 
 /**
  * Every user-facing navigation entry of a project, in sidebar and analysis dashboard order.
@@ -27,6 +27,7 @@ export const FEATURE_ENTRIES = [
     title: "Image Search",
     icon: Icon.IMAGE_SEARCH,
     to: "/project/$projectId/imagesearch",
+    shortcut: { after: "s", key: "i" },
     command: {
       description: "Search through images",
       keywords: ["find", "search", "images", "navigate"],
@@ -39,6 +40,7 @@ export const FEATURE_ENTRIES = [
     title: "Sentence Search",
     icon: Icon.SENTENCE_SEARCH,
     to: "/project/$projectId/sentencesearch",
+    shortcut: { after: "s", key: "s" },
     command: {
       description: "Search through sentences",
       keywords: ["find", "search", "sentences", "navigate"],
@@ -105,6 +107,7 @@ export const FEATURE_ENTRIES = [
     title: "Prompts",
     icon: Icon.PROMPT,
     to: "/project/$projectId/prompts",
+    shortcut: { after: "c", key: "p" },
     command: {
       title: "Open Prompts",
       description: "Go to the prompts of the project",
@@ -117,6 +120,7 @@ export const FEATURE_ENTRIES = [
     title: "Experiments",
     icon: Icon.EXPERIMENT,
     to: "/project/$projectId/experiments",
+    shortcut: { after: "c", key: "x" },
     sidebarTooltip: "Experiment Studio",
     command: {
       title: "Open Experiment Studio",
@@ -159,6 +163,7 @@ export const FEATURE_ENTRIES = [
     description: "Analyse the frequencies and occurrences of all codes in this project.",
     icon: Icon.CODE_FREQUENCY,
     to: "/project/$projectId/analysis/code-frequency",
+    shortcut: { after: "y", key: "c" },
     command: {
       title: "Code Frequency",
       description: "Go to code frequency analysis",
@@ -172,6 +177,7 @@ export const FEATURE_ENTRIES = [
     description: "Compare two annotators: scores, confusion matrix and disagreements.",
     icon: Icon.AGREEMENT,
     to: "/project/$projectId/analysis/agreement",
+    shortcut: { after: "y", key: "a" },
     command: {
       title: "Annotator Agreement",
       description: "Go to annotator agreement analysis",
@@ -185,6 +191,7 @@ export const FEATURE_ENTRIES = [
     description: "Analyse the occurrence of concepts over time.",
     icon: Icon.TIMELINE_ANALYSIS,
     to: "/project/$projectId/analysis/timeline",
+    shortcut: { after: "y", key: "t" },
     command: {
       description: "Go to timeline analysis dashboard",
       keywords: ["go", "to", "navigate", "timeline", "analysis"],
@@ -197,6 +204,7 @@ export const FEATURE_ENTRIES = [
     description: "View, search, edit span annotations in a table.",
     icon: Icon.SPAN_ANNOTATION_TABLE,
     to: "/project/$projectId/analysis/span-annotations",
+    shortcut: { after: "y", key: "s" },
     command: {
       description: "Go to span annotation table",
       keywords: ["go", "to", "navigate", "span", "annotation", "table"],
@@ -209,6 +217,7 @@ export const FEATURE_ENTRIES = [
     description: "View, search, edit sentence annotations in a table.",
     icon: Icon.SENTENCE_ANNOTATION_TABLE,
     to: "/project/$projectId/analysis/sentence-annotations",
+    shortcut: { after: "y", key: "e" },
     command: {
       description: "Go to sentence annotation table",
       keywords: ["go", "to", "navigate", "sentence", "annotation", "table"],
@@ -221,6 +230,7 @@ export const FEATURE_ENTRIES = [
     description: "View, search, edit bbox annotations in a table.",
     icon: Icon.BBOX_ANNOTATION_TABLE,
     to: "/project/$projectId/analysis/bbox-annotations",
+    shortcut: { after: "y", key: "b" },
     command: {
       title: "Image Annotation Table",
       description: "Go to image annotation table",
@@ -235,6 +245,7 @@ export const FEATURE_ENTRIES = [
     description: "Analyse the frequencies and occurrences of all words in this project.",
     icon: Icon.WORD_FREQUENCY,
     to: "/project/$projectId/analysis/word-frequency",
+    shortcut: { after: "y", key: "w" },
     command: {
       title: "Word Frequency",
       description: "Go to word frequency analysis",
@@ -249,6 +260,7 @@ export const FEATURE_ENTRIES = [
     description: "Analyse the occurrence of concepts over time.",
     icon: Icon.COTA,
     to: "/project/$projectId/analysis/concepts-over-time-analysis",
+    shortcut: { after: "y", key: "o" },
     command: {
       title: "Concept Over Time Analysis",
       description: "Go to concept over time analysis dashboard",
@@ -263,6 +275,7 @@ export const FEATURE_ENTRIES = [
     description: "Semi-automatically scale annotations",
     icon: Icon.ANNOTATION_SCALING,
     to: "/project/$projectId/analysis/annotation-scaling",
+    shortcut: { after: "y", key: "l" },
     command: {
       description: "Go to annotation scaling",
       keywords: ["go", "to", "navigate", "annotation", "scaling", "suggest", "similar", "sentences"],
@@ -276,6 +289,7 @@ export const FEATURE_ENTRIES = [
     description: "Semi-automatically scale tags",
     icon: Icon.TAG_RECOMMENDATION,
     to: "/project/$projectId/analysis/tag-recommendations",
+    shortcut: { after: "y", key: "r" },
     command: {
       description: "Go to tag recommendations",
       keywords: ["go", "to", "navigate", "tag", "recommendation", "suggest", "documents"],
@@ -289,6 +303,7 @@ export const FEATURE_ENTRIES = [
     title: "ML Automation",
     icon: Icon.ML_AUTOMATION,
     to: "/project/$projectId/tools/ml-automation",
+    shortcut: { after: "h", key: "m" },
     command: {
       description: "Configure and run ML automation tasks",
       keywords: ["machine learning", "automation", "ai", "ml"],
@@ -301,6 +316,7 @@ export const FEATURE_ENTRIES = [
     title: "Duplicate Finder",
     icon: Icon.DUPLICATE_FINDER,
     to: "/project/$projectId/tools/duplicate-finder",
+    shortcut: { after: "h", key: "d" },
     command: {
       description: "Go to duplicate finder",
       keywords: ["go", "to", "navigate", "duplicate", "finder"],
@@ -312,6 +328,7 @@ export const FEATURE_ENTRIES = [
     title: "Document Sampler",
     icon: Icon.DOCUMENT_SAMPLER,
     to: "/project/$projectId/tools/document-sampler",
+    shortcut: { after: "h", key: "s" },
     command: {
       description: "Go to document sampler",
       keywords: ["go", "to", "navigate", "document", "sampler"],
@@ -346,9 +363,10 @@ export function getFeatureCommandCategory(entry: FeatureEntry): FeatureCommandCa
   return entry.command.category ?? GROUP_COMMAND_CATEGORY[entry.group];
 }
 
-/** The shortcut hint shown in labels and tooltips, e.g. "⌘⇧S". */
-export function formatFeatureShortcut(shortcut: string): string {
-  return `⌘⇧${shortcut.toUpperCase()}`;
+/** The shortcut hint shown in labels and tooltips, e.g. "⌘⇧S" or "⌘⇧Y W". */
+export function formatFeatureShortcut(shortcut: FeatureShortcut): string {
+  if (typeof shortcut === "string") return `⌘⇧${shortcut.toUpperCase()}`;
+  return `⌘⇧${shortcut.after.toUpperCase()} ${shortcut.key.toUpperCase()}`;
 }
 
 /** The user-facing title of a gated feature, taken from its first registry entry. */
