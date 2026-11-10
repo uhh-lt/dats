@@ -33,7 +33,7 @@ def enrich_for_recompute(
 
         return TextHTMLMappingJobInput(
             **payload.model_dump(),
-            raw_html=sdoc_data.html,
+            raw_html=sdoc_data.raw_html,
             sentence_starts=sdoc_data.sentence_starts,
             sentence_ends=sdoc_data.sentence_ends,
             token_starts=sdoc_data.token_starts,
