@@ -1,5 +1,6 @@
 import { Feature } from "@models/Feature";
 import { Chip, Tooltip } from "@mui/material";
+import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { getFeatureTitle } from "./featureRegistry";
 import { useFeature } from "./useFeature";
 
@@ -8,22 +9,27 @@ interface FeatureCoverageHintProps {
 }
 
 /**
- * An unobtrusive hint for a feature that is enabled but still being computed: it is usable with the documents that
- * already have its data. Renders nothing for a ready or disabled feature.
+ * An unobtrusive hint for a feature that is enabled but not available for all documents (computing or partly
+ * available): it is usable with the documents that already have its data. A click opens the Features tab of the
+ * project settings. Renders nothing for a ready or disabled feature.
  */
 export function FeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
   const { enabled, ready, coverage } = useFeature(feature);
+  const openProjectSettings = useOpenDialog("projectSettings");
   if (!enabled || ready) return null;
+
+  const handleClick = () => openProjectSettings({ tab: "features" });
 
   const percent = Math.floor(coverage * 100);
   return (
     <Tooltip
-      title={`${getFeatureTitle(feature)} is still being computed. Results include only the ${percent} % of documents that are already processed.`}
+      title={`${getFeatureTitle(feature)} is not available for all documents yet. Results include only the ${percent} % of documents that have its data. Click to see the progress in the project settings.`}
     >
       <Chip
         size="small"
         color="info"
         label={`${percent} % of documents processed`}
+        onClick={handleClick}
         sx={{ position: "fixed", right: 16, bottom: 16, zIndex: (theme) => theme.zIndex.fab, opacity: 0.9 }}
       />
     </Tooltip>

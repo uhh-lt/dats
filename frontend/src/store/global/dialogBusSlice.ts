@@ -55,6 +55,11 @@ export type MemoDialogData =
   | { memoId: number; attachedObjectType?: AttachedObjectType; attachedObjectId?: number }
   | { memoId?: undefined; attachedObjectType: AttachedObjectType; attachedObjectId: number };
 
+/** The project settings open on their first tab, or on the given one. */
+export interface ProjectSettingsDialogData {
+  tab: "features";
+}
+
 export interface ConfirmationDialogData {
   text: string;
   type?: "DELETE";
@@ -66,7 +71,7 @@ export interface ConfirmationDialogData {
  * Central map of every dialog key → its payload type.
  *
  * Adding a new dialog = one line here + one entry in `initialState` below.
- * `undefined` data means the dialog carries no payload (open/close only).
+ * `undefined` data means the dialog carries no payload (open/close only); a payload that includes `undefined` is optional.
  */
 export interface DialogPayloadMap {
   tagCreate: TagCreateDialogData;
@@ -80,7 +85,7 @@ export interface DialogPayloadMap {
   bboxAnnotationEdit: BBoxAnnotationEditDialogData;
   memo: MemoDialogData;
   documentUpload: undefined;
-  projectSettings: undefined;
+  projectSettings: ProjectSettingsDialogData | undefined;
   quickCommandMenu: undefined;
   codeShortcutManager: undefined;
   confirmation: ConfirmationDialogData;
