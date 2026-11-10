@@ -1,5 +1,6 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
+import { FeatureSelection, featureQueries } from "@core/feature";
 import { ProjectHooks } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialog } from "@hooks/useDialog";
@@ -7,6 +8,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectCreate } from "@models/ProjectCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import {
+  Box,
   Button,
   Card,
   CardActionArea,
@@ -14,12 +16,14 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  Divider,
   Stack,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect } from "react";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { useCallback, useEffect, useMemo } from "react";
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { closeOnEscape } from "@utils/dialogUtils";
 
 export function ProjectCreationDialog() {
@@ -28,6 +32,10 @@ export function ProjectCreationDialog() {
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
+
+  // all toggleable features; a new project enables all of them by default ("Everything")
+  const features = useQuery(featureQueries.list());
+  const allFeatures = useMemo(() => (features.data ?? []).map((f) => f.feature), [features.data]);
 
   // form
   const {
@@ -40,9 +48,9 @@ export function ProjectCreationDialog() {
   // reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
-      reset({ title: "", description: "" });
+      reset({ title: "", description: "", enabled_features: allFeatures });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, allFeatures]);
 
   // form actions
   const navigate = useNavigate();
@@ -54,6 +62,7 @@ export function ProjectCreationDialog() {
           requestBody: {
             title: data.title,
             description: data.description,
+            enabled_features: data.enabled_features,
           },
         },
         {
@@ -141,6 +150,24 @@ export function ProjectCreationDialog() {
                 helperText: <ErrorMessage errors={errors} name="description" />,
               }}
             />
+            <Divider />
+            <Box>
+              <Typography variant="h6">Features</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Choose what this project needs. Annotation, analysis and the LLM assistant are always available.
+              </Typography>
+            </Box>
+            {features.isSuccess && (
+              <Controller
+                name="enabled_features"
+                control={control}
+                render={({ field }) => (
+                  <FeatureSelection features={features.data} value={field.value ?? []} onChange={field.onChange} />
+                )}
+              />
+            )}
+            {features.isLoading && <Typography color="text.secondary">Loading features...</Typography>}
+            {features.isError && <Typography color="error">The features could not be loaded.</Typography>}
           </Stack>
         </DialogContent>
         <DialogActions>
