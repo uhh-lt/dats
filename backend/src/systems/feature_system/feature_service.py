@@ -5,20 +5,20 @@ from sqlalchemy.orm import Session
 
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
+from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectFeatureRead
+from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivationJobInput, FeatureRead
 from systems.feature_system.feature_exceptions import (
     FeatureDisabledError,
     FeatureStillRequiredError,
 )
 from systems.feature_system.feature_registry import feature_registry
-from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 from systems.job_system.pipeline_graph import (
     UPLOADED_ARTEFACTS,
@@ -75,6 +75,52 @@ class FeatureService(metaclass=SingletonMeta):
         enabled = self.registry.closure(requested)
         return [f for f in Feature if f in enabled]
 
+    def disable_feature(
+        self, *, db: Session, project_id: int, feature: Feature
+    ) -> list[Feature]:
+        """Disable the feature: it is hidden and new uploads do not compute its
+        data; the stored data is kept. Rejects disabling a feature that another
+        enabled feature requires. Returns the enabled features."""
+        project = crud_project.read(db=db, id=project_id)
+        current = {Feature(f) for f in project.enabled_features}
+        enabled = self.resolve_enabled_features(
+            requested=current - {feature}, current=current
+        )
+        crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+        return enabled
+
+    def activate_feature(
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        feature: Feature,
+        settings: ProcessingSettings,
+    ) -> list[Feature]:
+        """Enable the feature, or complete it if it is enabled already: enable it
+        and the features it requires, and compute their data for the documents
+        that lack it (see `_plan_missing_steps`). A feature activation job on the
+        low-priority queue starts the steps with these settings. Returns the
+        enabled features."""
+        project = crud_project.read(db=db, id=project_id)
+        current = {Feature(f) for f in project.enabled_features}
+        enabled = self.resolve_enabled_features(
+            requested=current | {feature}, current=current
+        )
+        crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+
+        sdoc_steps = self._plan_missing_steps(
+            db=db, project_id=project_id, feature=feature, enabled=enabled
+        )
+        if sdoc_steps:
+            self.js.start_job(
+                JobType.FEATURE_ACTIVATION,
+                FeatureActivationJobInput(
+                    project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
+                ),
+            )
+        return enabled
+
     def assert_enabled(self, *, db: Session, project_id: int, feature: Feature) -> None:
         """Raise a `FeatureDisabledError` (403) if the feature is not enabled in
         the project."""
@@ -125,9 +171,11 @@ class FeatureService(metaclass=SingletonMeta):
     def read_project_features(
         self, *, db: Session, project_id: int
     ) -> list[ProjectFeatureRead]:
-        """The state of every feature in the project. The coverage counts, per
-        feature, the documents it applies to and those with all its steps finished;
-        both are computed in one aggregate query."""
+        """The state of every feature in the project. Per feature, each document
+        it applies to counts once, by the status of the feature's steps: processing
+        if one is processing, else failed if one is erroneous, else not planned if
+        one is not planned, else ready. The counts are computed in one aggregate
+        query."""
         project = crud_project.read(db=db, id=project_id)
         enabled = {Feature(f) for f in project.enabled_features}
 
@@ -139,42 +187,46 @@ class FeatureService(metaclass=SingletonMeta):
             for doctype in DocType
         }
 
-        # 1) one aggregate per doctype, per (doctype, step) and per step set
+        # 1) one aggregate per doctype, per (doctype, step) and per (doctype, step set)
         sdoc = SourceDocumentORM
+        processing = SDocStatus.processing.value
         finished = SDocStatus.finished.value
-        aggregates: dict[str, ColumnElement[int]] = {}
-
-        def is_doctype(doctype: DocType) -> ColumnElement[bool]:
-            return sdoc.doctype == doctype.value
-
-        def total_key(doctype: DocType) -> str:
-            return f"total_{doctype.value}"
-
-        def missing_key(doctype: DocType, step: JobType) -> str:
-            return f"missing_{doctype.value}_{step.value}"
-
-        def covered_key(doctype: DocType, step_set: list[JobType]) -> str:
-            return f"covered_{doctype.value}_" + "_".join(s.value for s in step_set)
+        erroneous = SDocStatus.erroneous.value
+        aggregates: dict[tuple, ColumnElement[int]] = {}
 
         for (_, doctype), step_set in steps.items():
             if not step_set:
                 continue
-            aggregates[total_key(doctype)] = func.count().filter(is_doctype(doctype))
-            aggregates[covered_key(doctype, step_set)] = func.count().filter(
+            is_doctype = sdoc.doctype == doctype.value
+            columns = [getattr(sdoc, s.value) for s in step_set]
+            # NULL-safe comparisons: a NOT over a NULL comparison would drop the row
+            any_processing = or_(*[c.is_not_distinct_from(processing) for c in columns])
+            any_erroneous = or_(*[c.is_not_distinct_from(erroneous) for c in columns])
+            key = (doctype, tuple(step_set))
+            aggregates[("total", doctype)] = func.count().filter(is_doctype)
+            aggregates[("ready", *key)] = func.count().filter(
+                and_(is_doctype, *[c == finished for c in columns])
+            )
+            aggregates[("processing", *key)] = func.count().filter(
+                and_(is_doctype, any_processing)
+            )
+            aggregates[("failed", *key)] = func.count().filter(
+                and_(is_doctype, ~any_processing, any_erroneous)
+            )
+            aggregates[("not_planned", *key)] = func.count().filter(
                 and_(
-                    is_doctype(doctype),
-                    *[getattr(sdoc, s.value) == finished for s in step_set],
+                    is_doctype,
+                    *[c.is_distinct_from(processing) for c in columns],
+                    *[c.is_distinct_from(erroneous) for c in columns],
+                    or_(*[c.is_(None) for c in columns]),
                 )
             )
-            for step in step_set:
-                aggregates[missing_key(doctype, step)] = func.count().filter(
-                    and_(
-                        is_doctype(doctype),
-                        getattr(sdoc, step.value).is_distinct_from(finished),
-                    )
+            for step, column in zip(step_set, columns):
+                aggregates[("missing", doctype, step)] = func.count().filter(
+                    and_(is_doctype, column.is_distinct_from(finished))
                 )
 
-        counts: dict[str, int] = {}
+        counts: dict[tuple, int] = {}
         if aggregates:
             # short labels: Postgres truncates identifiers to 63 characters
             row = db.execute(
@@ -187,105 +239,150 @@ class FeatureService(metaclass=SingletonMeta):
         # 2) sum up per feature
         result: list[ProjectFeatureRead] = []
         for feature in Feature:
-            total = covered = 0
+            total = ready = running = failed = not_planned = 0
             missing: set[JobType] = set()
             for doctype in DocType:
                 step_set = steps[(feature, doctype)]
                 if not step_set:
                     continue
-                total += counts[total_key(doctype)]
-                covered += counts[covered_key(doctype, step_set)]
-                missing |= {s for s in step_set if counts[missing_key(doctype, s)] > 0}
+                key = (doctype, tuple(step_set))
+                total += counts[("total", doctype)]
+                ready += counts[("ready", *key)]
+                running += counts[("processing", *key)]
+                failed += counts[("failed", *key)]
+                not_planned += counts[("not_planned", *key)]
+                missing |= {s for s in step_set if counts[("missing", doctype, s)] > 0}
             result.append(
                 ProjectFeatureRead(
                     feature=feature,
                     enabled=feature in enabled,
-                    ready=covered == total,
-                    covered_documents=covered,
+                    status=_status(
+                        enabled=feature in enabled,
+                        processing=running,
+                        lacking=failed + not_planned,
+                    ),
+                    ready=ready == total,
+                    covered_documents=ready,
+                    processing_documents=running,
+                    failed_documents=failed,
+                    not_planned_documents=not_planned,
                     total_documents=total,
                     missing_steps=[s for s in JobType if s in missing],
                 )
             )
         return result
 
-    def activate_missing_steps(
-        self, *, db: Session, project_id: int, enabled: Iterable[Feature]
-    ) -> Job | None:
-        """Plan the steps the enabled features need for all documents of the
-        project: set the steps that are not planned (NULL) to processing, in bulk
-        per doctype. Steps that are planned already keep their status and data.
+    def _plan_missing_steps(
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        feature: Feature,
+        enabled: list[Feature],
+    ) -> dict[int, list[JobType]]:
+        """Plan the steps the feature (and the features it requires) needs for all
+        documents of the project: steps that are not planned (NULL) are planned,
+        and erroneous steps of the feature are planned again; the steps of other
+        features are left alone. Finished and processing steps keep their status.
 
-        The newly planned steps whose inputs are finished are started by a
-        feature activation job, on the low-priority queue; the others start
-        when their inputs finish. Returns that job, or None if there is nothing
-        to start."""
+        A step whose input step is erroneous (or not planned) is set to erroneous:
+        it cannot run, and shows up as failed until its input is recomputed (the
+        input then starts it). Returns the planned steps whose inputs are finished,
+        per document: they can start now, the others start when their inputs
+        finish."""
         graph = pipeline_registry.graph()
         table = SourceDocumentORM.__table__
         processing = SDocStatus.processing.value
         finished = SDocStatus.finished.value
+        erroneous = SDocStatus.erroneous.value
+        features = self.registry.closure([feature])
 
         sdoc_steps: dict[int, list[JobType]] = {}
         for doctype in DocType:
             plan = self.planned_steps(doctype=doctype, features=enabled)
-            if not plan:
+            to_plan = set(self.planned_steps(doctype=doctype, features=features))
+            to_redo = {
+                step
+                for f in features
+                for step in self.feature_steps(
+                    doctype=doctype, feature=f, enabled=enabled
+                )
+            }
+            if not plan or not (to_plan or to_redo):
                 continue
-            columns = [table.c[s.value] for s in plan]
-
-            # 1) lock the documents with steps to plan, remember which were NULL
-            old = (
-                select(
-                    table.c.id,
-                    *[c.is_(None).label(f"new_{c.name}") for c in columns],
-                )
-                .where(
-                    table.c.project_id == project_id,
-                    table.c.doctype == doctype.value,
-                    or_(*[c.is_(None) for c in columns]),
-                )
-                .with_for_update()
-                .cte("old")
-            )
-            # 2) plan them, keeping the status of the planned ones
-            rows = db.execute(
-                update(SourceDocumentORM)
-                .where(SourceDocumentORM.id == old.c.id)
-                .values({c.name: func.coalesce(c, processing) for c in columns})
-                .returning(
-                    table.c.id,
-                    *[old.c[f"new_{c.name}"] for c in columns],
-                    *columns,
-                )
-                .execution_options(synchronize_session=False)
-            ).all()
-
-            # 3) the new steps whose inputs are finished can start now
             producers = _producers(graph, plan)
             inputs = {
-                step: {
+                step: [
                     producers[a]
                     for a in graph.declaration(step).requires
                     if a in producers
-                }
+                ]
                 for step in plan
             }
-            for row in rows:
-                sdoc_id = row[0]
-                is_new = dict(zip(plan, row[1 : 1 + len(plan)]))
-                status = dict(zip(plan, row[1 + len(plan) :]))
-                startable = [
-                    step
-                    for step in plan
-                    if is_new[step] and all(status[i] == finished for i in inputs[step])
-                ]
-                if startable:
-                    sdoc_steps[sdoc_id] = startable
 
-        if not sdoc_steps:
-            return None
-        return self.js.start_job(
-            JobType.FEATURE_ACTIVATION,
-            FeatureActivationJobInput(project_id=project_id, sdoc_steps=sdoc_steps),
-        )
+            # 1) lock the documents with steps to plan
+            rows = db.execute(
+                select(table.c.id, *[table.c[s.value] for s in plan])
+                .where(
+                    table.c.project_id == project_id,
+                    table.c.doctype == doctype.value,
+                    or_(
+                        *[table.c[s.value].is_(None) for s in plan if s in to_plan],
+                        *[table.c[s.value] == erroneous for s in plan if s in to_redo],
+                    ),
+                )
+                .with_for_update()
+            ).all()
+
+            # 2) the new status of their steps, in pipeline order
+            updates: dict[tuple[tuple[JobType, int], ...], list[int]] = {}
+            for row in rows:
+                status: dict[JobType, int | None] = dict(zip(plan, row[1:]))
+                changed: dict[JobType, int] = {}
+                startable: list[JobType] = []
+                for step in plan:
+                    old = status[step]
+                    if not (
+                        (old is None and step in to_plan)
+                        or (old == erroneous and step in to_redo)
+                    ):
+                        continue
+                    input_status = [status[i] for i in inputs[step]]
+                    if any(s is None or s == erroneous for s in input_status):
+                        new = erroneous
+                    else:
+                        new = processing
+                        if all(s == finished for s in input_status):
+                            startable.append(step)
+                    status[step] = new
+                    if new != old:
+                        changed[step] = new
+                if changed:
+                    updates.setdefault(tuple(changed.items()), []).append(row[0])
+                if startable:
+                    sdoc_steps[row[0]] = startable
+
+            # 3) store them, in bulk per combination of changes
+            for changes, ids in updates.items():
+                db.execute(
+                    update(SourceDocumentORM)
+                    .where(SourceDocumentORM.id.in_(ids))
+                    .values({step.value: value for step, value in changes})
+                    .execution_options(synchronize_session=False)
+                )
+
+        return sdoc_steps
+
+
+def _status(*, enabled: bool, processing: int, lacking: int) -> FeatureStatus:
+    """The status of a feature from the counts of its documents."""
+    if not enabled:
+        return FeatureStatus.DISABLED
+    if processing > 0:
+        return FeatureStatus.COMPUTING
+    if lacking > 0:
+        return FeatureStatus.PARTLY_AVAILABLE
+    return FeatureStatus.FULLY_AVAILABLE
 
 
 def _plan(
