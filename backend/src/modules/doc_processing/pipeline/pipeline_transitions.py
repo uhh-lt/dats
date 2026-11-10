@@ -26,6 +26,9 @@ from modules.doc_processing.html.detect_language_job import (
     TextLanguageDetectionJobInput,
     TextLanguageDetectionJobOutput,
 )
+from modules.doc_processing.html.document_embedding_job import (
+    TextDocumentEmbeddingJobInput,
+)
 from modules.doc_processing.html.es_index_job import TextESIndexJobInput
 from modules.doc_processing.html.html_mapping_job import (
     TextHTMLMappingJobInput,
@@ -151,6 +154,19 @@ def text_extraction_to_es_index(input, output):
         sdoc_id=input.sdoc_id,
         text=output.text,
         filename=input.filename,
+        settings=input.settings,
+    )
+
+
+def text_extraction_to_document_embedding(input, output):
+    assert isinstance(input, TextExtractionJobInput), "Expected TextExtractionJobInput"
+    assert isinstance(output, TextExtractionJobOutput), (
+        "Expected TextExtractionJobOutput"
+    )
+    return TextDocumentEmbeddingJobInput(
+        project_id=input.project_id,
+        sdoc_id=input.sdoc_id,
+        text=output.text,
         settings=input.settings,
     )
 

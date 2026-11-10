@@ -10,7 +10,6 @@ class Artefact(str, Enum):
     RAW_HTML = "raw_html"
     CONTENT = "content"
     LANGUAGE = "language"
-    # today, text_spacy also writes keywords, word frequencies and NER spans
     TOKENS_SENTENCES = "tokens_sentences"
     HTML = "html"
     THUMBNAIL = "thumbnail"
@@ -23,5 +22,9 @@ class Artefact(str, Enum):
     ES_INDEX = "es_index"
     SENTENCE_EMBEDDINGS = "sentence_embeddings"
     IMAGE_EMBEDDINGS = "image_embeddings"
+    DOCUMENT_EMBEDDINGS = "document_embeddings"
+    KEYWORDS = "keywords"
+    WORD_FREQUENCIES = "word_frequencies"
+    NER_SPANS = "ner_spans"
     IMAGE_CAPTION = "image_caption"
     OBJECT_BBOXES = "object_bboxes"

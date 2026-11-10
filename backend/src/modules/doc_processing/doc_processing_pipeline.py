@@ -76,6 +76,7 @@ TRANSITIONS: dict[tuple[JobType, JobType], Callable] = {
     # HTML
     (JobType.TEXT_EXTRACTION, JobType.TEXT_LANGUAGE_DETECTION): t.text_extraction_to_language_detection,
     (JobType.TEXT_EXTRACTION, JobType.TEXT_ES_INDEX): t.text_extraction_to_es_index,
+    (JobType.TEXT_EXTRACTION, JobType.TEXT_DOCUMENT_EMBEDDING): t.text_extraction_to_document_embedding,
     (JobType.TEXT_LANGUAGE_DETECTION, JobType.TEXT_SPACY): t.language_detection_to_spacy,
     (JobType.TEXT_SPACY, JobType.TEXT_HTML_MAPPING): t.spacy_to_html_mapping,
     (JobType.TEXT_SPACY, JobType.TEXT_SENTENCE_EMBEDDING): t.spacy_to_sentence_embedding,
@@ -91,13 +92,15 @@ TRANSITIONS: dict[tuple[JobType, JobType], Callable] = {
 
 def check_transitions() -> None:
     """Raise if an edge of the derived pipeline has no transition function, or a
-    transition function belongs to no edge."""
+    transition function belongs to no edge. The edges are between the jobs that
+    compute the steps."""
     graph = pipeline_registry.graph()
-    edges = graph.edges() | {
+    step_edges = graph.edges() | {
         (JobType.SDOC_INIT, root)
         for doctype in DocType
         for root in graph.roots(doctype)
     }
+    edges = {(graph.job(a), graph.job(b)) for a, b in step_edges}
     problems = [
         f"No transition function for the edge '{a.value}' -> '{b.value}'."
         for a, b in sorted(edges - TRANSITIONS.keys())
@@ -109,19 +112,55 @@ def check_transitions() -> None:
         raise PipelineDeclarationError(problems)
 
 
-def _start(job_type: JobType, next_job_type: JobType, input, output, job_service):
-    transition_fn = TRANSITIONS[(job_type, next_job_type)]
-    job_service.start_job(next_job_type, transition_fn(input, output))
+js = JobService()
+sqlr = SQLRepo()
+
+
+def _computed_steps(job_type: JobType, input: SdocProcessingJobInput) -> list[JobType]:
+    """The pipeline steps this run of the job computes."""
+    return pipeline_registry.graph().job_steps(job_type, input.steps)
+
+
+def _planned_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
+    """The steps that are planned for the document (status not NULL)."""
+    with sqlr.transaction() as db:
+        sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+        return [step for step in steps if getattr(sdoc, step.value) is not None]
+
+
+def _start_jobs(
+    jobs: dict[JobType, list[JobType]],
+    job_type: JobType,
+    input: JobInputBase,
+    output: JobOutputBase | None,
+    job_service: JobService,
+) -> None:
+    """Start each job for its steps that are planned for the document."""
+    for next_job_type, steps in jobs.items():
+        transition_fn = TRANSITIONS[(job_type, next_job_type)]
+        job_input = transition_fn(input, output)
+        if isinstance(job_input, SdocProcessingJobInput):
+            planned = _planned_steps(job_input.sdoc_id, steps)
+            if len(planned) == 0:
+                continue
+            job_input.steps = planned
+        job_service.start_job(next_job_type, job_input)
 
 
 def execute_pipeline_step(job_type: JobType, input, output, job_service):
     graph = pipeline_registry.graph()
     if job_type == JobType.SDOC_INIT:
         assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
-        for next_job_type in graph.roots(output.doctype):
-            _start(job_type, next_job_type, input, output, job_service)
-    for next_job_type in graph.successors(job_type):
-        _start(job_type, next_job_type, input, output, job_service)
+        root_jobs = graph.group_by_job(graph.roots(output.doctype))
+        _start_jobs(root_jobs, job_type, input, output, job_service)
+    # only the steps this run computed start their successors, so recomputing
+    # e.g. the named entities does not start the steps after tokens and sentences
+    finished_steps = (
+        _computed_steps(job_type, input)
+        if isinstance(input, SdocProcessingJobInput)
+        else [job_type]
+    )
+    _start_jobs(graph.next_jobs(finished_steps), job_type, input, output, job_service)
 
     for step in ENTRY_POINTS.get(job_type, []):
         if isinstance(step, LoopBranchOperator):
@@ -135,45 +174,30 @@ def execute_pipeline_step(job_type: JobType, input, output, job_service):
             job_service.start_job(next_job_type, job_input)
 
 
-js = JobService()
-sqlr = SQLRepo()
+def _set_status(job_type: JobType, input: JobInputBase, status: SDocStatus) -> None:
+    """Set the status of the steps this run of the job computes."""
+    if not isinstance(input, SdocProcessingJobInput):
+        return
+    with sqlr.transaction() as db:
+        crud_sdoc.update(
+            db=db,
+            id=input.sdoc_id,
+            update_dto=SourceDocumentUpdate.model_validate(
+                {step.value: status for step in _computed_steps(job_type, input)}
+            ),
+        )
 
 
 def handle_job_started(jobtype: JobType, input: JobInputBase):
-    if isinstance(input, SdocProcessingJobInput):
-        with sqlr.transaction() as db:
-            crud_sdoc.update(
-                db,
-                id=input.sdoc_id,
-                update_dto=SourceDocumentUpdate(
-                    **{jobtype.value: SDocStatus.processing},  # type: ignore
-                ),
-            )
+    _set_status(jobtype, input, SDocStatus.processing)
 
 
 def handle_job_error(job_type: JobType, input: JobInputBase):
-    if isinstance(input, SdocProcessingJobInput):
-        with sqlr.transaction() as db:
-            crud_sdoc.update(
-                db,
-                id=input.sdoc_id,
-                update_dto=SourceDocumentUpdate(
-                    **{job_type.value: SDocStatus.erroneous}  # type: ignore
-                ),
-            )
+    _set_status(job_type, input, SDocStatus.erroneous)
 
 
 def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ):
-    if isinstance(input, SdocProcessingJobInput):
-        with sqlr.transaction() as db:
-            crud_sdoc.update(
-                db,
-                id=input.sdoc_id,
-                update_dto=SourceDocumentUpdate(
-                    **{job_type.value: SDocStatus.finished}  # type: ignore
-                ),
-            )
-
+    _set_status(job_type, input, SDocStatus.finished)
     execute_pipeline_step(job_type=job_type, input=input, output=output, job_service=js)
