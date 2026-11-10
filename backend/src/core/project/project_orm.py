@@ -2,8 +2,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from common.feature_enum import Feature
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -30,6 +32,10 @@ class ProjectORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     description: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    # the values of the enabled features (Feature)
+    enabled_features: Mapped[list[Feature]] = mapped_column(
+        ARRAY(String), nullable=False
+    )
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
