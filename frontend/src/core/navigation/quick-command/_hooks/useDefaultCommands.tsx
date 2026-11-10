@@ -5,6 +5,7 @@ import {
   FeatureEntry,
   FeatureEntryId,
   getFeatureCommandCategory,
+  useIsFeatureEnabled,
 } from "@core/feature";
 import { Settings } from "@mui/icons-material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
@@ -53,11 +54,12 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const openDocumentUpload = useOpenDialog("documentUpload");
   const openProjectSettings = useOpenDialog("projectSettings");
   const tabNavigate = useTabNavigate();
+  const isFeatureEnabled = useIsFeatureEnabled();
 
   const featureCommands = useMemo(
     () =>
       COMMAND_ENTRIES.flatMap((entry: FeatureEntry): CommandItem[] => {
-        if (!entry.command) return [];
+        if (!entry.command || !isFeatureEnabled(entry.feature)) return [];
         return [
           {
             id: entry.id,
@@ -72,7 +74,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
           },
         ];
       }),
-    [tabNavigate, projectId],
+    [tabNavigate, projectId, isFeatureEnabled],
   );
 
   return useMemo(
