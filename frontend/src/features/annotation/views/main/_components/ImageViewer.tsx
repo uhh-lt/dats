@@ -1,6 +1,8 @@
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
+import { useFeature } from "@core/feature";
 import { useTabNavigate } from "@core/navigation";
 import { sdocMetadataQueries } from "@core/sdoc-metadata";
+import { Feature } from "@models/Feature";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
@@ -80,6 +82,8 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
 
   // find similar images
   const tabNavigate = useTabNavigate();
+  const imageSearch = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
+  const sentenceSearch = useFeature(Feature.SENTENCE_SIMILARITY_SEARCH);
   const handleImageSimilaritySearch = () => {
     tabNavigate({
       to: "/project/$projectId/imagesearch",
@@ -99,12 +103,21 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
 
   return (
     <Box>
-      <Button variant="outlined" onClick={handleImageSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2, mr: 1 }}>
-        Similar images
-      </Button>
-      <Button variant="outlined" onClick={handleSentenceSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2 }}>
-        Similar sentences
-      </Button>
+      {imageSearch.enabled && (
+        <Button
+          variant="outlined"
+          onClick={handleImageSimilaritySearch}
+          startIcon={<SearchIcon />}
+          sx={{ mb: 2, mr: 1 }}
+        >
+          Similar images
+        </Button>
+      )}
+      {sentenceSearch.enabled && (
+        <Button variant="outlined" onClick={handleSentenceSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2 }}>
+          Similar sentences
+        </Button>
+      )}
       <svg ref={measuredRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
           <image

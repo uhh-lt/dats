@@ -1,7 +1,9 @@
 import { CodeHooks } from "@core/code";
+import { useFeature } from "@core/feature";
 import { MemoCreateOrSelectListItemButton } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
+import { Feature } from "@models/Feature";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SearchIcon from "@mui/icons-material/Search";
@@ -36,6 +38,9 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
 
   // global server state
   const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
+  const sentenceSearch = useFeature(Feature.SENTENCE_SIMILARITY_SEARCH);
+  const imageSearch = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
+  const fullTextSearch = useFeature(Feature.FULL_TEXT_SEARCH);
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -109,46 +114,53 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
       }}
     >
       <List dense>
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!sentence}>
-            <ListItemIcon>
-              <SearchIcon />
-            </ListItemIcon>
-            <ListItemText primary="Find similar sentences" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleImageSimilaritySearch} disabled={!sentence}>
-            <ListItemIcon>
-              <SearchIcon />
-            </ListItemIcon>
-            <ListItemText primary="Find similar images" />
-          </ListItemButton>
-        </ListItem>
+        {sentenceSearch.enabled && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!sentence}>
+              <ListItemIcon>
+                <SearchIcon />
+              </ListItemIcon>
+              <ListItemText primary="Find similar sentences" />
+            </ListItemButton>
+          </ListItem>
+        )}
+        {imageSearch.enabled && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleImageSimilaritySearch} disabled={!sentence}>
+              <ListItemIcon>
+                <SearchIcon />
+              </ListItemIcon>
+              <ListItemText primary="Find similar images" />
+            </ListItemButton>
+          </ListItem>
+        )}
         {annotations &&
           codeId2CodeMap.isSuccess &&
           annotations.map((anno) => {
             const code = codeId2CodeMap.data[anno.code_id];
             return (
               <Fragment key={anno.id}>
-                <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleAddFilter(anno)}>
-                    <ListItemIcon>
-                      <FilterAltIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Filter: " />
-                    <Box
-                      style={{
-                        width: 20,
-                        height: 20,
-                        backgroundColor: code.color,
-                        marginRight: 8,
-                        marginLeft: 16,
-                      }}
-                    />
-                    <ListItemText primary={`${code.name}: ${anno.text}`} />
-                  </ListItemButton>
-                </ListItem>
+                {/* the filter searches the annotated text with the full-text search */}
+                {fullTextSearch.enabled && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleAddFilter(anno)}>
+                      <ListItemIcon>
+                        <FilterAltIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Filter: " />
+                      <Box
+                        style={{
+                          width: 20,
+                          height: 20,
+                          backgroundColor: code.color,
+                          marginRight: 8,
+                          marginLeft: 16,
+                        }}
+                      />
+                      <ListItemText primary={`${code.name}: ${anno.text}`} />
+                    </ListItemButton>
+                  </ListItem>
+                )}
                 <MemoCreateOrSelectListItemButton
                   onClick={() => closeMenu()}
                   attachedObjectId={anno.id}
