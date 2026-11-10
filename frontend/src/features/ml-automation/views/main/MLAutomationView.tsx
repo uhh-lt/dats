@@ -1,6 +1,8 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
+import { useFeature } from "@core/feature";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { Feature } from "@models/Feature";
 import { MLJobType } from "@models/MLJobType";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
@@ -32,6 +34,7 @@ export function MlAutomationView() {
 
   // actions
   const startMlJob = MlAutomationHooks.useStartMLJob();
+  const tagRecommendation = useFeature(Feature.TAG_RECOMMENDATION);
 
   // global server state (react-query)
   const { mlJobsByProjectOptions } = routeApi.useRouteContext();
@@ -175,26 +178,32 @@ export function MlAutomationView() {
               </ListItemIcon>
             </ListItem>
           </List>
-          <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>{getIconComponent(Icon.TAG)}</Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Document Tag Recommendations"
-                secondary={
-                  "Based on currently applied tags, recommend new tags for documents. Use the corresponding analysis feature to view recommendations."
-                }
-              />
-              <ListItemIcon>
-                <Tooltip title="Perform tag recommendation on untagged documents">
-                  <IconButton onClick={handleStartNewTagRecommendation} loading={startMlJob.isPending} color="success">
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </List>
+          {tagRecommendation.enabled && (
+            <List dense={false}>
+              <ListItem>
+                <ListItemAvatar>
+                  <Avatar>{getIconComponent(Icon.TAG)}</Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary="Document Tag Recommendations"
+                  secondary={
+                    "Based on currently applied tags, recommend new tags for documents. Use the corresponding analysis feature to view recommendations."
+                  }
+                />
+                <ListItemIcon>
+                  <Tooltip title="Perform tag recommendation on untagged documents">
+                    <IconButton
+                      onClick={handleStartNewTagRecommendation}
+                      loading={startMlJob.isPending}
+                      color="success"
+                    >
+                      <NotStartedIcon />
+                    </IconButton>
+                  </Tooltip>
+                </ListItemIcon>
+              </ListItem>
+            </List>
+          )}
         </CardContent>
       </Card>
       <MLJobsView
