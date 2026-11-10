@@ -339,3 +339,8 @@ export function getFeatureCommandCategory(entry: FeatureEntry): FeatureCommandCa
 export function formatFeatureShortcut(shortcut: string): string {
   return `⌘⇧${shortcut.toUpperCase()}`;
 }
+
+/** The user-facing title of a gated feature, taken from its first registry entry. */
+export function getFeatureTitle(feature: Feature): string {
+  return FEATURE_ENTRIES.find((entry: FeatureEntry) => entry.feature === feature)?.title ?? feature;
+}

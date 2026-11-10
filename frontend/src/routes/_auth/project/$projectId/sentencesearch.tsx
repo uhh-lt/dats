@@ -1,9 +1,11 @@
+import { ensureFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { similaritySearchQueries, SentenceSimilaritySearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
+import { Feature } from "@models/Feature";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
     tab: true,
     icon: Icon.SENTENCE_SEARCH,
     getTitle: () => "Sentence Search",
+    feature: Feature.SENTENCE_SIMILARITY_SEARCH,
   },
   validateSearch: zodValidator(sentenceSearchSchema),
   loaderDeps: ({ search }) => search,
@@ -33,7 +36,9 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
     }),
     projectMetadataOptions: projectMetadataQueries.byProject(params.projectId),
   }),
-  loader: async ({ context }) => {
+  loader: async ({ context, params }) => {
+    if (!(await ensureFeatureEnabled(context.queryClient, params.projectId, Feature.SENTENCE_SIMILARITY_SEARCH)))
+      return;
     await Promise.all([
       context.queryClient.ensureQueryData(context.projectMetadataOptions),
       context.queryClient.ensureQueryData(context.sentenceSimilaritySearchOptions),
