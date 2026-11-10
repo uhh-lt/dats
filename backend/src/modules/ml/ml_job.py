@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from modules.ml.ml_enum import MLJobStatus, MLJobType
 from modules.ml.ml_job_dto import (
@@ -12,6 +14,7 @@ from modules.ml.ml_job_dto import (
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.db.sql_repo import SQLRepo
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
@@ -19,9 +22,18 @@ from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 sqlr = SQLRepo()
 
 
+def validate_ml_input(db: Session, payload: MLJobInput) -> None:
+    """Tag recommendation needs its feature; the other ML jobs need core data only."""
+    if payload.ml_job_type == MLJobType.TAG_RECOMMENDATION:
+        FeatureService().assert_enabled(
+            db=db, project_id=payload.project_id, feature=Feature.TAG_RECOMMENDATION
+        )
+
+
 @register_job(
     job_type=JobType.ML,
     input_type=MLJobInput,
+    validate_input=validate_ml_input,
     generate_endpoints=EndpointGeneration.ALL,
     publish_updates=True,
     device="api",

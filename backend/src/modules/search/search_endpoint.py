@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
+from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_dto import MemoRead
 from modules.search.bbox_anno_search.bbox_anno_search import (
@@ -41,6 +42,7 @@ from modules.search.span_anno_search.span_anno_search import (
     find_span_annotations_info,
 )
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
+from systems.feature_system.feature_service import FeatureService
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.grouping import GroupPage, GroupQueryRequest
@@ -89,6 +91,11 @@ def search_sdocs(
     authz_user: AuthzUser = Depends(),
 ) -> PaginatedSDocHits:
     authz_user.assert_in_project(project_id)
+    # without full-text search, documents can be searched with filters only
+    if search_query.strip() != "":
+        FeatureService().assert_enabled(
+            db=db, project_id=project_id, feature=Feature.FULL_TEXT_SEARCH
+        )
     return find_sdocs(
         db=db,
         search_query=search_query,
