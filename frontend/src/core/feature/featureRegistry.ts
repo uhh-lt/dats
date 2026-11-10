@@ -1,5 +1,6 @@
 import { Icon } from "@components/icons";
-import { Feature, FeatureCommandCategory, FeatureEntry, FeatureGroup } from "./featureTypes";
+import { Feature } from "@models/Feature";
+import { FeatureCommandCategory, FeatureEntry, FeatureGroup } from "./featureTypes";
 
 /**
  * Every user-facing navigation entry of a project, in sidebar and analysis dashboard order.
@@ -47,7 +48,6 @@ export const FEATURE_ENTRIES = [
   // Main (sidebar)
   {
     id: "perspectives",
-    feature: Feature.PERSPECTIVES,
     group: "main",
     title: "Perspectives",
     icon: Icon.PERSPECTIVES,
@@ -88,7 +88,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "classifier",
-    feature: Feature.CLASSIFIER,
     group: "main",
     title: "Classifier",
     icon: Icon.CLASSIFIER,
@@ -102,7 +101,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "prompts",
-    feature: Feature.LLM_ASSISTANT,
     group: "main",
     title: "Prompts",
     icon: Icon.PROMPT,
@@ -115,7 +113,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "experiments",
-    feature: Feature.EXPERIMENTS,
     group: "main",
     title: "Experiments",
     icon: Icon.EXPERIMENT,
@@ -157,7 +154,6 @@ export const FEATURE_ENTRIES = [
   // Analysis (analysis dashboard)
   {
     id: "code-frequency",
-    feature: Feature.CODE_FREQUENCY,
     group: "analysis",
     title: "Code Frequency Analysis",
     description: "Analyse the frequencies and occurrences of all codes in this project.",
@@ -171,7 +167,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "agreement",
-    feature: Feature.AGREEMENT,
     group: "analysis",
     title: "Annotator Agreement",
     description: "Compare two annotators: scores, confusion matrix and disagreements.",
@@ -180,7 +175,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "timeline-analysis",
-    feature: Feature.TIMELINE,
     group: "analysis",
     title: "Timeline Analysis",
     description: "Analyse the occurrence of concepts over time.",
@@ -193,7 +187,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "span-annotation-table",
-    feature: Feature.ANNOTATION_TABLES,
     group: "analysis",
     title: "Span Annotation Table",
     description: "View, search, edit span annotations in a table.",
@@ -206,7 +199,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "sentence-annotation-table",
-    feature: Feature.ANNOTATION_TABLES,
     group: "analysis",
     title: "Sentence Annotation Table",
     description: "View, search, edit sentence annotations in a table.",
@@ -219,7 +211,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "bbox-annotation-table",
-    feature: Feature.ANNOTATION_TABLES,
     group: "analysis",
     title: "Bounding-Box Annotation Table",
     description: "View, search, edit bbox annotations in a table.",
@@ -304,7 +295,6 @@ export const FEATURE_ENTRIES = [
   },
   {
     id: "document-sampler",
-    feature: Feature.DOCUMENT_SAMPLER,
     group: "tools",
     title: "Document Sampler",
     icon: Icon.DOCUMENT_SAMPLER,
