@@ -113,7 +113,8 @@ class DocProcessingService(metaclass=SingletonMeta):
         page: int | None = None,
         page_size: int | None = None,
     ) -> SdocHealthResult:
-        steps = pipeline_registry.graph().steps(DocType(doctype))
+        graph = pipeline_registry.graph()
+        steps = graph.steps(DocType(doctype))
 
         # query
         query = db.query(SourceDocumentORM).filter(
@@ -158,7 +159,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         # 1. retrieve all failed jobs in this project
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
-            job_types=steps,
+            job_types=list(graph.group_by_job(steps)),
         )
 
         # 2. convert to SdocProcessingJob and build dict for easy access
@@ -174,10 +175,14 @@ class DocProcessingService(metaclass=SingletonMeta):
         for row in results.data:
             if row.sdoc_id in failed_jobs_dict:
                 for failed_job in failed_jobs_dict[row.sdoc_id]:
-                    row.failed_job_uuids[failed_job.job_type] = failed_job.job_id
-                    row.failed_job_status_msgs[failed_job.job_type] = (
-                        failed_job.status_message or ""
-                    )
+                    # a job with several steps failed all steps it computed
+                    for step in graph.job_steps(
+                        JobType(failed_job.job_type), failed_job.input.steps
+                    ):
+                        row.failed_job_uuids[step.value] = failed_job.job_id
+                        row.failed_job_status_msgs[step.value] = (
+                            failed_job.status_message or ""
+                        )
 
         return results
 
@@ -190,9 +195,10 @@ class DocProcessingService(metaclass=SingletonMeta):
     ) -> str:
         # Retrieve information about failed jobs
         # 1. retrieve all failed jobs in this project
+        graph = pipeline_registry.graph()
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
-            job_types=pipeline_registry.graph().steps(doctype),
+            job_types=list(graph.group_by_job(graph.steps(doctype))),
         )
 
         # 2. convert to SdocProcessingJob and collect by sdoc_id
@@ -249,18 +255,24 @@ class DocProcessingService(metaclass=SingletonMeta):
                 )
 
         # 3. check that processing_step is valid for the doctype
-        if processing_step not in pipeline_registry.graph().steps(DocType(doctype)):
+        graph = pipeline_registry.graph()
+        if processing_step not in graph.steps(DocType(doctype)):
             raise ValueError(
                 f"Processing step '{processing_step}' is not valid for doctype '{doctype}'"
             )
 
-        # Start recompute jobs for the specified processing step
+        # Start recompute jobs for the specified processing step: the job that
+        # computes the step, for this step only (e.g. text_spacy for text_ner)
+        step = JobType(processing_step)
         jobs = []
         for sdoc_id in sdoc_ids:
             job = self.js.start_job(
-                job_type=JobType(processing_step),
+                job_type=graph.job(step),
                 payload=SdocProcessingJobInput(
-                    project_id=project_id, sdoc_id=sdoc_id, settings=settings
+                    project_id=project_id,
+                    sdoc_id=sdoc_id,
+                    settings=settings,
+                    steps=[step],
                 ),
             )
             jobs.append(job)

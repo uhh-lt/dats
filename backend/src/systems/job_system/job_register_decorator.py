@@ -35,6 +35,7 @@ def register_job(
     requires: set[Artefact] | None = None,
     produces: set[Artefact] | None = None,
     doctypes: set[DocType] | None = None,
+    further_steps: dict[JobType, set[Artefact]] | None = None,
 ):
     """
     Register a job handler with the job system.
@@ -46,6 +47,11 @@ def register_job(
     `doctypes` makes the job a step of the document preprocessing pipeline: it runs
     for documents of these doctypes, after the steps that produce the artefacts it
     `requires`, and it `produces` artefacts for the steps after it.
+
+    `further_steps` are more steps the job computes in the same run, each with its
+    own status column and the artefacts it produces, and the job's `requires` and
+    `doctypes`. The job input (`SdocProcessingJobInput.steps`) says which of the
+    job's steps to compute, so each can be planned and recomputed on its own.
     """
 
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
@@ -70,6 +76,7 @@ def register_job(
             requires=requires,
             produces=produces,
             doctypes=doctypes,
+            further_steps=further_steps,
         )
         return func
 

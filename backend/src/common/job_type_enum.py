@@ -16,8 +16,13 @@ class JobType(str, Enum):
     TEXT_EXTRACTION = "text_extraction"
     TEXT_LANGUAGE_DETECTION = "text_language_detection"
     TEXT_SPACY = "text_spacy"
+    # further steps of the text_spacy job (no jobs of their own)
+    TEXT_KEYWORDS = "text_keywords"
+    TEXT_WORD_FREQUENCY = "text_word_frequency"
+    TEXT_NER = "text_ner"
     TEXT_ES_INDEX = "text_es_index"
     TEXT_SENTENCE_EMBEDDING = "text_sentence_embedding"
+    TEXT_DOCUMENT_EMBEDDING = "text_document_embedding"
     TEXT_HTML_MAPPING = "text_html_mapping"
 
     # image

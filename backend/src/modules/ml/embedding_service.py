@@ -58,6 +58,17 @@ class EmbeddingService(metaclass=SingletonMeta):
         )
         return encoded_query.numpy().squeeze()
 
+    def embed_document(self, *, project_id: int, sdoc_id: int, text: str) -> None:
+        """Embed the text of a document and store it in the Document collection,
+        replacing the document's previous embedding."""
+        embedding = self.encode_document(text).tolist()[0]
+        crud_document_embedding.create_multi(
+            client=self.weaviate.get_client(),
+            project_id=project_id,
+            ids=[DocumentObjectIdentifier(sdoc_id=sdoc_id)],
+            embeddings=[embedding],
+        )
+
     def embed_sentences(
         self,
         db: Session,

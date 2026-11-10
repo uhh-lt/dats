@@ -53,12 +53,26 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
     text_language_detection: SDocStatus | None = Field(
         description="Text Language Detection done?", default=None
     )
-    text_spacy: SDocStatus | None = Field(description="Text Spacy done?", default=None)
+    text_spacy: SDocStatus | None = Field(
+        description="Text Spacy (tokens and sentences) done?", default=None
+    )
+    text_keywords: SDocStatus | None = Field(
+        description="Text Keywords done?", default=None
+    )
+    text_word_frequency: SDocStatus | None = Field(
+        description="Text Word Frequency done?", default=None
+    )
+    text_ner: SDocStatus | None = Field(
+        description="Text Named Entity Recognition done?", default=None
+    )
     text_es_index: SDocStatus | None = Field(
         description="Text ES Index done?", default=None
     )
     text_sentence_embedding: SDocStatus | None = Field(
         description="Text Sentence Embedding done?", default=None
+    )
+    text_document_embedding: SDocStatus | None = Field(
+        description="Text Document Embedding done?", default=None
     )
     text_html_mapping: SDocStatus | None = Field(
         description="Text HTML Mapping done?", default=None

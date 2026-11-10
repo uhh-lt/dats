@@ -8,14 +8,20 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from common.doc_type_enum import DocType
 
-# The steps per doctype before they were derived from the step declarations
-# (common/doc_processing_steps.py): the derived lists must not change.
+# The steps per doctype: the former hand-written lists
+# (common/doc_processing_steps.py), with the further steps of text_spacy
+# (keywords, word frequencies, named entities) after it and the document
+# embedding after the sentence embedding.
 TEXT_STEPS = [
     "text_extraction",
     "text_language_detection",
     "text_spacy",
+    "text_keywords",
+    "text_word_frequency",
+    "text_ner",
     "text_es_index",
     "text_sentence_embedding",
+    "text_document_embedding",
     "text_html_mapping",
 ]
 STEPS_BY_DOCTYPE = {
@@ -134,8 +140,7 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
     client: TestClient, doctype: DocType
 ):
     """The steps per doctype are derived from the requires/produces/doctypes
-    declarations of the jobs; they equal the former hand-written lists, in the
-    same order."""
+    declarations of the jobs, in the order of `STEPS_BY_DOCTYPE`."""
     response = client.get(f"/docprocessing/searchColumns/{doctype.value}")
 
     assert response.status_code == 200, response.text

@@ -2,6 +2,7 @@ from typing import Counter
 from uuid import uuid4
 
 import yake
+from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
@@ -25,6 +26,7 @@ from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.pipeline_graph import pipeline_registry
 
 sqlr = SQLRepo()
 ray = RayRepo()
@@ -82,8 +84,17 @@ def enrich_for_recompute(
     requires={Artefact.CONTENT, Artefact.LANGUAGE},
     produces={Artefact.TOKENS_SENTENCES},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+    further_steps={
+        JobType.TEXT_KEYWORDS: {Artefact.KEYWORDS},
+        JobType.TEXT_WORD_FREQUENCY: {Artefact.WORD_FREQUENCIES},
+        JobType.TEXT_NER: {Artefact.NER_SPANS},
+    },
 )
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
+    # the outputs to write: tokens and sentences (text_spacy), keywords, word
+    # frequencies, named entities; spacy is called once for all of them
+    steps = pipeline_registry.graph().job_steps(JobType.TEXT_SPACY, payload.steps)
+
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
         SpacyInput(
@@ -92,94 +103,32 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
     )
 
+    # tokens & offsets & sentences
+    sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
+
     with sqlr.transaction() as trans:
-        # query required data from db
-        system_codes = crud_code.read_system_codes_by_project(
-            db=trans, project_id=payload.project_id
-        )
-        system_code_ids = {code.name: code.id for code in system_codes}
-        # the codes of the named entities spacy annotates
-        ner_parent_id = system_code_ids.get(NAMED_ENTITY_CODE)
-        ner_code_ids = [
-            code.id
-            for code in system_codes
-            if ner_parent_id is not None and code.parent_id == ner_parent_id
-        ]
-        adoc = crud_adoc.exists_or_create(
-            db=trans,
-            user_id=SYSTEM_USER_ID,
-            sdoc_id=payload.sdoc_id,
-        )
-
-        # tokens & offsets & sentences
-        sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
-
-        # keywords
-        # if payload does not have keywords:
-        keywords = extract_keywords(payload, spacy_output)
-
-        # word frequencies
-        word_frequencies = extract_word_frequencies(payload, spacy_output)
-
-        # span annotations
-        span_annotations = extract_span_annotations(
-            payload, spacy_output, system_code_ids, adoc.id
-        )
-
-        # store outputs in db
-        crud_sdoc_meta.update_multi_with_doctype(
-            db=trans,
-            project_id=payload.project_id,
-            sdoc_id=payload.sdoc_id,
-            doctype=payload.doctype,
-            keys=["keywords"],
-            values=[keywords],
-        )
-        crud_word_frequency.delete_by_sdoc_id(
-            db=trans,
-            sdoc_id=payload.sdoc_id,
-        )
-        crud_word_frequency.create_multi(
-            db=trans,
-            create_dtos=word_frequencies,
-        )
-        # replace only the system user's named entities, keeping the annotations
-        # of all users and of other automatic annotators (quotation, coreference)
-        crud_span_anno.delete_by_user_sdocs_codes(
-            db=trans,
-            user_id=SYSTEM_USER_ID,
-            sdoc_ids=[payload.sdoc_id],
-            code_ids=ner_code_ids,
-        )
-        crud_span_anno.create_multi(
-            trans,
-            create_dtos=span_annotations,
-        )
-
-        if payload.doctype in {DocType.text, DocType.image}:
-            crud_sdoc_data.update(
+        if JobType.TEXT_SPACY in steps:
+            _store_tokens_sentences(trans, payload, sdoc_data)
+        if JobType.TEXT_KEYWORDS in steps:
+            crud_sdoc_meta.update_multi_with_doctype(
                 db=trans,
-                id=payload.sdoc_id,
-                update_dto=SourceDocumentDataUpdate(
-                    token_starts=sdoc_data["token_starts"],
-                    token_ends=sdoc_data["token_ends"],
-                    sentence_starts=sdoc_data["sentence_starts"],
-                    sentence_ends=sdoc_data["sentence_ends"],
-                ),
+                project_id=payload.project_id,
+                sdoc_id=payload.sdoc_id,
+                doctype=payload.doctype,
+                keys=["keywords"],
+                values=[extract_keywords(payload, spacy_output)],
             )
-        else:
-            # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
-            existing_sdoc_data = crud_sdoc_data.read(db=trans, id=payload.sdoc_id)
-            sdoc_data["token_starts"] = existing_sdoc_data.token_starts
-            sdoc_data["token_ends"] = existing_sdoc_data.token_ends
-            crud_sdoc_data.update(
+        if JobType.TEXT_WORD_FREQUENCY in steps:
+            crud_word_frequency.delete_by_sdoc_id(
                 db=trans,
-                id=payload.sdoc_id,
-                update_dto=SourceDocumentDataUpdate(
-                    sentence_starts=sdoc_data["sentence_starts"],
-                    sentence_ends=sdoc_data["sentence_ends"],
-                ),
+                sdoc_id=payload.sdoc_id,
             )
+            crud_word_frequency.create_multi(
+                db=trans,
+                create_dtos=extract_word_frequencies(payload, spacy_output),
+            )
+        if JobType.TEXT_NER in steps:
+            _store_named_entities(trans, payload, spacy_output)
 
     return SpacyJobOutput(
         sentence_starts=sdoc_data["sentence_starts"],
@@ -190,6 +139,70 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             payload.text[s:e]
             for s, e in zip(sdoc_data["sentence_starts"], sdoc_data["sentence_ends"])
         ],
+    )
+
+
+def _store_tokens_sentences(
+    db: Session, payload: SpacyJobInput, sdoc_data: dict
+) -> None:
+    if payload.doctype in {DocType.text, DocType.image}:
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                token_starts=sdoc_data["token_starts"],
+                token_ends=sdoc_data["token_ends"],
+                sentence_starts=sdoc_data["sentence_starts"],
+                sentence_ends=sdoc_data["sentence_ends"],
+            ),
+        )
+    else:
+        # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
+        existing_sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
+        sdoc_data["token_starts"] = existing_sdoc_data.token_starts
+        sdoc_data["token_ends"] = existing_sdoc_data.token_ends
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                sentence_starts=sdoc_data["sentence_starts"],
+                sentence_ends=sdoc_data["sentence_ends"],
+            ),
+        )
+
+
+def _store_named_entities(
+    db: Session, payload: SpacyJobInput, spacy_output: SpacyPipelineOutput
+) -> None:
+    system_codes = crud_code.read_system_codes_by_project(
+        db=db, project_id=payload.project_id
+    )
+    system_code_ids = {code.name: code.id for code in system_codes}
+    # the codes of the named entities spacy annotates
+    ner_parent_id = system_code_ids.get(NAMED_ENTITY_CODE)
+    ner_code_ids = [
+        code.id
+        for code in system_codes
+        if ner_parent_id is not None and code.parent_id == ner_parent_id
+    ]
+    adoc = crud_adoc.exists_or_create(
+        db=db,
+        user_id=SYSTEM_USER_ID,
+        sdoc_id=payload.sdoc_id,
+    )
+    # replace only the system user's named entities, keeping the annotations
+    # of all users and of other automatic annotators (quotation, coreference)
+    crud_span_anno.delete_by_user_sdocs_codes(
+        db=db,
+        user_id=SYSTEM_USER_ID,
+        sdoc_ids=[payload.sdoc_id],
+        code_ids=ner_code_ids,
+    )
+    crud_span_anno.create_multi(
+        db,
+        create_dtos=extract_span_annotations(
+            payload, spacy_output, system_code_ids, adoc.id
+        ),
     )
 
 

@@ -217,3 +217,112 @@ def test_pipeline_graph_fails_on_step_with_two_direct_predecessors():
     assert any(
         "'text_html_mapping'" in p and "started by several steps" in p for p in problems
     ), problems
+
+
+# ===========================================================================
+# PIPELINE GRAPH: JOBS WITH SEVERAL STEPS
+# ===========================================================================
+
+_SPACY_REQUIRES = {Artefact.CONTENT, Artefact.LANGUAGE}
+
+
+def _further_step(produces: set[Artefact], job: JobType) -> PipelineStep:
+    return PipelineStep(
+        requires=frozenset(_SPACY_REQUIRES),
+        produces=frozenset(produces),
+        doctypes=ALL_DOCTYPES,
+        job=job,
+    )
+
+
+def _spacy_steps() -> dict[JobType, PipelineStep]:
+    """text_spacy with its further steps keywords and named entities, and the
+    steps before and after it."""
+    return _producing_all_other_artefacts(
+        {
+            JobType.TEXT_EXTRACTION: _step(set(), {Artefact.CONTENT}),
+            JobType.TEXT_LANGUAGE_DETECTION: _step(
+                {Artefact.CONTENT}, {Artefact.LANGUAGE}
+            ),
+            JobType.TEXT_SPACY: _step(_SPACY_REQUIRES, {Artefact.TOKENS_SENTENCES}),
+            JobType.TEXT_KEYWORDS: _further_step(
+                {Artefact.KEYWORDS}, JobType.TEXT_SPACY
+            ),
+            JobType.TEXT_NER: _further_step({Artefact.NER_SPANS}, JobType.TEXT_SPACY),
+            JobType.TEXT_HTML_MAPPING: _step(
+                {Artefact.TOKENS_SENTENCES}, {Artefact.HTML}
+            ),
+        }
+    )
+
+
+def test_pipeline_graph_lists_further_steps_of_a_job_as_steps():
+    """The further steps of a job are steps of the doctype with their own
+    status column, computed by the job."""
+    graph = PipelineGraph(_spacy_steps())
+
+    assert graph.steps(DocType.text)[2:5] == [
+        JobType.TEXT_SPACY,
+        JobType.TEXT_KEYWORDS,
+        JobType.TEXT_NER,
+    ]
+    assert graph.job(JobType.TEXT_NER) == JobType.TEXT_SPACY
+    assert graph.job(JobType.TEXT_SPACY) == JobType.TEXT_SPACY
+    assert graph.job_steps(JobType.TEXT_SPACY) == [
+        JobType.TEXT_SPACY,
+        JobType.TEXT_KEYWORDS,
+        JobType.TEXT_NER,
+    ]
+    assert graph.job_steps(JobType.TEXT_EXTRACTION) == [JobType.TEXT_EXTRACTION]
+
+
+def test_pipeline_graph_starts_one_job_for_all_its_steps():
+    """Language detection starts the spacy job once, computing all its steps."""
+    graph = PipelineGraph(_spacy_steps())
+
+    assert graph.next_jobs([JobType.TEXT_LANGUAGE_DETECTION]) == {
+        JobType.TEXT_SPACY: [
+            JobType.TEXT_SPACY,
+            JobType.TEXT_KEYWORDS,
+            JobType.TEXT_NER,
+        ]
+    }
+
+
+def test_pipeline_graph_only_computed_steps_start_their_successors():
+    """A run that computes only the named entities starts nothing; a run that
+    computes tokens and sentences starts the HTML mapping."""
+    graph = PipelineGraph(_spacy_steps())
+
+    ner_only = graph.job_steps(JobType.TEXT_SPACY, [JobType.TEXT_NER])
+    assert ner_only == [JobType.TEXT_NER]
+    assert graph.next_jobs(ner_only) == {}
+    assert graph.next_jobs([JobType.TEXT_SPACY, JobType.TEXT_NER]) == {
+        JobType.TEXT_HTML_MAPPING: [JobType.TEXT_HTML_MAPPING]
+    }
+
+
+def test_pipeline_graph_rejects_a_requested_step_of_another_job():
+    """A job computes only its own steps."""
+    graph = PipelineGraph(_spacy_steps())
+
+    with pytest.raises(PipelineDeclarationError):
+        graph.job_steps(JobType.TEXT_SPACY, [JobType.TEXT_HTML_MAPPING])
+
+
+def test_pipeline_graph_fails_on_further_step_with_other_inputs():
+    """A further step shares the inputs of its job, as both are computed in
+    the same run."""
+    steps = _spacy_steps()
+    steps[JobType.TEXT_KEYWORDS] = PipelineStep(
+        requires=frozenset({Artefact.CONTENT}),
+        produces=frozenset({Artefact.KEYWORDS}),
+        doctypes=ALL_DOCTYPES,
+        job=JobType.TEXT_SPACY,
+    )
+
+    problems = _problems(steps)
+
+    assert any(
+        "'text_keywords' must have the requires and doctypes" in p for p in problems
+    ), problems

@@ -103,6 +103,7 @@ class JobService(metaclass=SingletonMeta):
         requires: set[Artefact] | None = None,
         produces: set[Artefact] | None = None,
         doctypes: set[DocType] | None = None,
+        further_steps: dict[JobType, set[Artefact]] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -125,6 +126,11 @@ class JobService(metaclass=SingletonMeta):
                 f"JobType {job_type} declares artefacts, but no doctypes: only "
                 "pipeline steps declare 'requires' and 'produces'."
             )
+        if further_steps and not doctypes:
+            raise ValueError(
+                f"JobType {job_type} declares further steps, but no doctypes: only "
+                "pipeline steps declare 'further_steps'."
+            )
         if doctypes:
             pipeline_registry.register(
                 job_type,
@@ -134,6 +140,16 @@ class JobService(metaclass=SingletonMeta):
                     doctypes=frozenset(doctypes),
                 ),
             )
+            for step, step_produces in (further_steps or {}).items():
+                pipeline_registry.register(
+                    step,
+                    PipelineStep(
+                        requires=frozenset(requires or ()),
+                        produces=frozenset(step_produces),
+                        doctypes=frozenset(doctypes),
+                        job=job_type,
+                    ),
+                )
 
         # The ONE concrete JobRead model for this job type. Modules with
         # hand-written endpoints pass their own subclass (e.g. ImportJobRead);

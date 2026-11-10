@@ -36,12 +36,16 @@ if TYPE_CHECKING:
 SDOC_STATUS_COLUMNS = [
     # text (1)
     "extract_html",
-    # html (6)
+    # html (10)
     "text_extraction",
     "text_language_detection",
     "text_spacy",
+    "text_keywords",
+    "text_word_frequency",
+    "text_ner",
     "text_es_index",
     "text_sentence_embedding",
+    "text_document_embedding",
     "text_html_mapping",
     # image (5)
     "image_caption",
@@ -201,14 +205,22 @@ class SourceDocumentORM(ORMBase):
     # TEXT (1)
     extract_html: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
 
-    # HTML (6)
+    # HTML (10)
     text_extraction: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
     text_language_detection: Mapped[SDocStatus | None] = mapped_column(
         Integer, deferred=True
     )
     text_spacy: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    text_keywords: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
+    text_word_frequency: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
+    )
+    text_ner: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
     text_es_index: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)
     text_sentence_embedding: Mapped[SDocStatus | None] = mapped_column(
+        Integer, deferred=True
+    )
+    text_document_embedding: Mapped[SDocStatus | None] = mapped_column(
         Integer, deferred=True
     )
     text_html_mapping: Mapped[SDocStatus | None] = mapped_column(Integer, deferred=True)

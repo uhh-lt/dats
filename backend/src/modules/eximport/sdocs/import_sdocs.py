@@ -4,6 +4,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.folder_crud import crud_folder
@@ -221,11 +222,16 @@ def import_sdocs_to_proj(
             folder_id=sdoc_folder.id,
         )
 
-        # 2.3 Set the source document status to success
-        jobs = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
-        sdoc_update = SourceDocumentUpdate(
-            **{job.value: sdoc_export.status for job in jobs},  # type: ignore
-        )
+        # 2.3 Set the status of the steps to the exported status. The archive
+        # holds no document embedding of documents that never got one: that step
+        # is not planned for them.
+        steps = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
+        step_status: dict[str, int | None] = {
+            step.value: sdoc_export.status for step in steps
+        }
+        if sdoc_export.document_embedding is None:
+            step_status[JobType.TEXT_DOCUMENT_EMBEDDING.value] = None
+        sdoc_update = SourceDocumentUpdate.model_validate(step_status)
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
         crud_sdoc.update(db=db, id=created_sdoc.id, update_dto=sdoc_update)

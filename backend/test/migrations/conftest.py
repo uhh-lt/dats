@@ -421,3 +421,113 @@ def sdoc_status_database(
 
     db_session.commit()
     return documents
+
+
+# The step status columns as before migration f2811eafb060 (text_spacy still
+# wrote keywords, word frequencies and named entities).
+_SPLIT_HTML_STEPS = [
+    "text_extraction",
+    "text_language_detection",
+    "text_spacy",
+    "text_es_index",
+    "text_sentence_embedding",
+    "text_html_mapping",
+]
+SPLIT_STEPS_BY_DOCTYPE = {
+    DocType.text: ["extract_html", *_SPLIT_HTML_STEPS],
+    DocType.image: ["image_caption", "image_thumbnail", *_SPLIT_HTML_STEPS],
+}
+# sourcedocumentjobstatus types and statuses
+ML_COREFERENCE = 101
+ML_DOCUMENT_EMBEDDING = 102
+ML_SENTENCE_EMBEDDING = 103
+ML_FINISHED = 3
+ML_ERROR = 4
+
+
+class SplitStepsDocument(TypedDict):
+    sdoc_id: int
+    text_spacy: SDocStatus
+    document_embedding_finished: bool
+    status_before: SDocStatus
+
+
+@pytest.fixture(scope="function")
+def split_steps_database(
+    db_session: Session, test_project: ProjectORM
+) -> dict[str, SplitStepsDocument]:
+    """
+    This fixture sets up documents as they were before the migration
+    `f2811eafb060_split_spacy_steps_and_add_document_`: the columns
+    text_keywords, text_word_frequency, text_ner and text_document_embedding are
+    NULL, the steps of the doctype (`SPLIT_STEPS_BY_DOCTYPE`) are set, all other
+    step columns are NULL.
+
+    `test_project` holds, per doctype (text, image), a document per combination
+    named `<doctype>_<spacy>_<embedding>`:
+
+    - `<spacy>`: the status of text_spacy, all other steps are finished:
+      `finished` (1), `processing` (0) or `erroneous` (-100)
+    - `<embedding>`: the row of the ML job DOCUMENT_EMBEDDING (type 102) in
+      sourcedocumentjobstatus: `embedded` (status finished, 3), `failed`
+      (status error, 4) or `none` (no row)
+
+    Every document also has a finished SENTENCE_EMBEDDING row (103) and a finished
+    COREFERENCE_RESOLUTION row (101).
+
+    Returned by name, with its text_spacy status, whether its document embedding
+    finished, and its processed_status before the migration (`status_before`,
+    the status of text_spacy, since all other steps are finished).
+    """
+    spacy_cases = {
+        "finished": SDocStatus.finished,
+        "processing": SDocStatus.processing,
+        "erroneous": SDocStatus.erroneous,
+    }
+    embedding_cases = {"embedded": ML_FINISHED, "failed": ML_ERROR, "none": None}
+
+    documents: dict[str, SplitStepsDocument] = {}
+    for doctype, steps in SPLIT_STEPS_BY_DOCTYPE.items():
+        for spacy_case, spacy_status in spacy_cases.items():
+            for embedding_case, ml_status in embedding_cases.items():
+                name = f"{doctype.value}_{spacy_case}_{embedding_case}"
+                sdoc = crud_sdoc.create(
+                    db=db_session,
+                    create_dto=SourceDocumentCreate(
+                        filename=name,
+                        name=name,
+                        doctype=doctype,
+                        project_id=test_project.id,
+                    ),
+                )
+                values = {**dict.fromkeys(steps, 1), "text_spacy": spacy_status.value}
+                db_session.execute(
+                    sa.text(
+                        "UPDATE sourcedocument SET "
+                        + ", ".join(f"{c} = :{c}" for c in values)
+                        + " WHERE id = :id"
+                    ),
+                    {**values, "id": sdoc.id},
+                )
+                job_rows = [(ML_SENTENCE_EMBEDDING, ML_FINISHED)]
+                job_rows.append((ML_COREFERENCE, ML_FINISHED))
+                if ml_status is not None:
+                    job_rows.append((ML_DOCUMENT_EMBEDDING, ml_status))
+                for job_type, job_status in job_rows:
+                    db_session.execute(
+                        sa.text(
+                            "INSERT INTO sourcedocumentjobstatus "
+                            "(id, type, status, timestamp) "
+                            "VALUES (:id, :type, :status, now())"
+                        ),
+                        {"id": sdoc.id, "type": job_type, "status": job_status},
+                    )
+                documents[name] = {
+                    "sdoc_id": sdoc.id,
+                    "text_spacy": spacy_status,
+                    "document_embedding_finished": ml_status == ML_FINISHED,
+                    "status_before": spacy_status,
+                }
+
+    db_session.commit()
+    return documents
