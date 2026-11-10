@@ -44,24 +44,6 @@ class CoreferenceResolutionParams(BaseModel):
     )
 
 
-class DocumentEmbeddingParams(BaseModel):
-    ml_job_type: Literal[MLJobType.DOCUMENT_EMBEDDING] = Field(
-        description="The type of the MLJob"
-    )
-    recompute: bool = Field(
-        default=False, description="Whether to recompute already processed documents"
-    )
-
-
-class SentenceEmbeddingParams(BaseModel):
-    ml_job_type: Literal[MLJobType.SENTENCE_EMBEDDING] = Field(
-        description="The type of the MLJob"
-    )
-    recompute: bool = Field(
-        default=False, description="Whether to recompute already processed documents"
-    )
-
-
 class MLJobInput(JobInputBase):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
@@ -69,8 +51,6 @@ class MLJobInput(JobInputBase):
         QuotationAttributionParams
         | DocTagRecommendationParams
         | CoreferenceResolutionParams
-        | DocumentEmbeddingParams
-        | SentenceEmbeddingParams
         | None
     ) = Field(
         description="Specific parameters for the MLJob w.r.t it's type",
