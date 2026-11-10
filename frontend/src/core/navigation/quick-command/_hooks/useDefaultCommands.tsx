@@ -3,7 +3,6 @@ import {
   FEATURE_ENTRIES,
   FeatureCommandCategory,
   FeatureEntry,
-  FeatureEntryId,
   getFeatureCommandCategory,
   useIsFeatureEnabled,
 } from "@core/feature";
@@ -15,38 +14,11 @@ import { CommandItem } from "../_types/CommandItem";
 
 const CATEGORY_ORDER: FeatureCommandCategory[] = ["Navigation", "Analysis", "Tools"];
 
-// The menu order within a category, which differs from the registry (sidebar) order.
-const COMMAND_ORDER: FeatureEntryId[] = [
-  "document-search",
-  "image-search",
-  "sentence-search",
-  "perspectives",
-  "classifier",
-  "prompts",
-  "experiments",
-  "annotation",
-  "memo-workspace",
-  "whiteboard",
-  "analysis",
-  "timeline-analysis",
-  "concept-over-time-analysis",
-  "word-frequency",
-  "code-frequency",
-  "span-annotation-table",
-  "sentence-annotation-table",
-  "bbox-annotation-table",
-];
-
-function commandRank(entry: FeatureEntry): [number, number] {
-  const position = COMMAND_ORDER.findIndex((id) => id === entry.id);
-  return [CATEGORY_ORDER.indexOf(getFeatureCommandCategory(entry)), position < 0 ? COMMAND_ORDER.length : position];
-}
-
-const COMMAND_ENTRIES = FEATURE_ENTRIES.filter((entry: FeatureEntry) => entry.command !== undefined).sort((a, b) => {
-  const [categoryA, positionA] = commandRank(a);
-  const [categoryB, positionB] = commandRank(b);
-  return categoryA - categoryB || positionA - positionB;
-});
+// Commands are grouped by category; within a category they keep the registry (sidebar and dashboard) order.
+const COMMAND_ENTRIES = [...FEATURE_ENTRIES].sort(
+  (a: FeatureEntry, b: FeatureEntry) =>
+    CATEGORY_ORDER.indexOf(getFeatureCommandCategory(a)) - CATEGORY_ORDER.indexOf(getFeatureCommandCategory(b)),
+);
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const openCodeCreate = useOpenDialog("codeCreate");
@@ -59,7 +31,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const featureCommands = useMemo(
     () =>
       COMMAND_ENTRIES.flatMap((entry: FeatureEntry): CommandItem[] => {
-        if (!entry.command || !isFeatureEnabled(entry.feature)) return [];
+        if (!isFeatureEnabled(entry.feature)) return [];
         return [
           {
             id: entry.id,

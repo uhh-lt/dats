@@ -27,8 +27,8 @@ export interface FeatureEntry {
   shortcut?: string;
   /** Sidebar tooltip, if it differs from the title. */
   sidebarTooltip?: string;
-  /** Quick command menu entry; entries without one are not in the menu. */
-  command?: {
+  /** Quick command menu entry; every entry has one. */
+  command: {
     title?: string;
     description: string;
     keywords: readonly string[];
