@@ -5,7 +5,6 @@ from typing import Callable
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.feature_enum import Feature
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from modules.eximport.bbox_annotations.import_bbox_annotations import (
@@ -43,17 +42,11 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.filesystem_repo import FilesystemRepo
-from systems.feature_system.feature_service import FeatureService
-from systems.job_system.job_dto import Job
-
-# The imports that create documents, whose missing steps are planned afterwards
-SDOC_IMPORT_JOB_TYPES = {ImportJobType.PROJECT, ImportJobType.DOCUMENTS}
 
 
 class ImportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.fs = FeatureService()
         cls.import_method_for_job_type: dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
@@ -104,20 +97,6 @@ class ImportService(metaclass=SingletonMeta):
             self=self,
             db=db,
             payload=payload,
-        )
-
-    def plan_missing_steps(self, db: Session, payload: ImportJobInput) -> Job | None:
-        """Plan and start the steps that the enabled features of the project need
-        but the imported documents lack (e.g. embeddings missing in the archive).
-        Call it in a transaction after the import committed, so the started steps
-        find the imported documents. Returns the feature activation job, if any."""
-        if payload.import_job_type not in SDOC_IMPORT_JOB_TYPES:
-            return None
-        project = crud_project.read(db=db, id=payload.project_id)
-        return self.fs.activate_missing_steps(
-            db=db,
-            project_id=payload.project_id,
-            enabled=[Feature(f) for f in project.enabled_features],
         )
 
     def _import_codes_to_proj(

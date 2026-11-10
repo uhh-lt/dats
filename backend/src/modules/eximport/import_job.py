@@ -19,7 +19,3 @@ def import_data(payload: ImportJobInput, job: Job) -> None:
             db=db,
             payload=payload,
         )
-
-    # after the import committed: compute what the enabled features need
-    with SQLRepo().transaction() as db:
-        ImportService().plan_missing_steps(db=db, payload=payload)
