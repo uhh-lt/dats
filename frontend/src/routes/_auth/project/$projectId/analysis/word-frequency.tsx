@@ -1,8 +1,10 @@
+import { ensureFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators, toSorts } from "@core/filter";
 import { wordFrequencyQueries, WordFrequencyView } from "@features/word-frequency-analysis";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress } from "@mui/material";
+import { Feature } from "@models/Feature";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
     tab: true,
     icon: Icon.WORD_FREQUENCY,
     getTitle: () => "Word Frequency",
+    feature: Feature.WORD_FREQUENCY,
   },
   validateSearch: zodValidator(wordFrequencySearchSchema),
   loaderDeps: ({ search }) => search,
@@ -29,7 +32,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
       pageSize: deps.fetchSize,
     }),
   }),
-  loader: async ({ context }) => {
+  loader: async ({ context, params }) => {
+    if (!(await ensureFeatureEnabled(context.queryClient, params.projectId, Feature.WORD_FREQUENCY))) return;
     await context.queryClient.ensureInfiniteQueryData(context.wordFrequencySearchOptions);
   },
   pendingComponent: () => <CircularProgress />,
