@@ -10,6 +10,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
+    ProjectFeatureRead,
     ProjectRead,
     ProjectUpdate,
 )
@@ -17,6 +18,7 @@ from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.sql_exceptions import NoSuchElementError
+from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -96,6 +98,22 @@ def resolve_filename(
 
 
 @router.get(
+    "/{project_id}/features",
+    response_model=list[ProjectFeatureRead],
+    summary="Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps",
+)
+def get_features(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[ProjectFeatureRead]:
+    authz_user.assert_in_project(project_id)
+
+    return FeatureService().read_project_features(db=db, project_id=project_id)
+
+
+@router.get(
     "/user/projects",
     response_model=list[ProjectRead],
     summary="Returns all Projects of the logged-in User",
@@ -144,8 +162,9 @@ def update_project(
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(project_id)
-    db_obj = crud_project.update(db=db, id=project_id, update_dto=proj)
-    result = ProjectRead.model_validate(db_obj)
+    result = ProjectService().update_project(
+        db=db, project_id=project_id, update_dto=proj
+    )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=project_id)
     return result
 
