@@ -10,7 +10,7 @@ tools/project_doctor/dats-doctor.sh heal report.json --apply
 
 The wrapper runs the doctor in a one-off container of the deployment's backend image (`docker/`), with the instance's own environment and volumes. `--local` (or `just doctor ...`) runs it against the dev stack of the checkout.
 
-The doctor imports no DATS code, only the libraries of the backend environment, so it works with the DATS version the deployment runs. It verifies the database schema before it touches anything.
+The doctor imports no DATS code, only the libraries of the backend environment, so it works with the DATS version the deployment runs. It verifies the database schema before it touches anything. It keeps its own copy of the pipeline steps per doctype (`doctor_stores.py`); `backend/test/unit/test_project_doctor_steps.py` fails when the copy differs from the backend.
 
 See [docs/admin/project-doctor.md](../../docs/admin/project-doctor.md) for the checks, the fixes and how heal stays safe.
 
