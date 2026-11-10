@@ -27,13 +27,9 @@ engine:
     COPILOT_PROVIDER_TYPE: ${{ vars.COPILOT_PROVIDER_TYPE }}
     COPILOT_PROVIDER_WIRE_API: ${{ vars.COPILOT_PROVIDER_WIRE_API }}
 models:
-  providers:
-    github-copilot:
-      models:
-        moonshotai/Kimi-K3:
-          cost:
-            input: "0"
-            output: "0"
+  default-ai-credits-pricing:
+    input: 0.000001
+    output: 0.000001
 strict: true
 runs-on: ubuntu-latest
 runs-on-slim: ubuntu-slim
