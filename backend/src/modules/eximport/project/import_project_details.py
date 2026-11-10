@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from common.feature_enum import Feature
 from core.project.project_crud import crud_project
-from core.project.project_dto import ProjectUpdate
 from modules.eximport.import_exceptions import ImportProjectDetailsError
 from modules.eximport.project.project_export_schema import (
     ProjectDetailsExportSchema,
@@ -51,16 +50,12 @@ def import_project_details_to_proj(
     project_id: int,
 ) -> None:
     """Restore the enabled features of the archive's project, and the features
-    they require. The steps of the features are planned after the import (see
-    `ImportService.plan_missing_steps`), once the documents are committed."""
+    they require. The import plans no steps: features whose data the archive lacks are
+    partly available until a user completes them in the project settings."""
     features = FeatureService().resolve_enabled_features(
         requested=archived_features(details)
     )
-    crud_project.update(
-        db=db,
-        id=project_id,
-        update_dto=ProjectUpdate(enabled_features=features),
-    )
+    crud_project.update_enabled_features(db=db, id=project_id, features=features)
     logger.info(
         f"Enabled the features {[f.value for f in features]} in project {project_id}"
     )
