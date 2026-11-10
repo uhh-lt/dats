@@ -4,13 +4,25 @@ from typing import TypedDict
 
 import pytest
 from loguru import logger
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.meta_type_enum import MetaType
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
+from core.doc.sentence_embedding_crud import crud_sentence_embedding
+from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_dto import (
+    SourceDocumentCreate,
+    SourceDocumentRead,
+    SourceDocumentUpdate,
+)
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
@@ -27,6 +39,11 @@ from core.tag.tag_dto import TagCreate
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
+from feature_test_utils import (
+    MINIMAL_IMAGE_STEPS,
+    MINIMAL_TEXT_STEPS,
+    create_project_with_features,
+)
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
 from modules.experiment.experiment_crud import crud_experiment
@@ -50,6 +67,7 @@ from provenance_test_utils import (
     create_provenance_project,
 )
 from repos.filesystem_repo import FilesystemRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_system_enum import JobStatus
 from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
 
@@ -515,3 +533,113 @@ def logged_warnings() -> Iterator[list[str]]:
     )
     yield messages
     logger.remove(handler_id)
+
+
+class FeatureToggleEximportProjects(TypedDict):
+    project: ProjectORM
+    target_project: ProjectORM
+    text: SourceDocumentORM
+    image: SourceDocumentORM
+    sentence_embeddings: list[list[float]]
+
+
+# The steps of the documents of `feature_toggle_eximport_projects`
+TOGGLED_TEXT_STEPS = [*MINIMAL_TEXT_STEPS, "text_sentence_embedding"]
+
+
+@pytest.fixture(scope="function")
+def feature_toggle_eximport_projects(
+    db_session: Session, test_user: UserORM
+) -> FeatureToggleEximportProjects:
+    """
+    This fixture sets up the following projects of the test user:
+
+    - Project "Toggled Project" (`project`), which enables only sentence
+      similarity search (all other features are disabled), with two documents:
+      - "text.txt" (`text`), a text document with the three sentences "Alpha
+        one.", "Beta two." and "Gamma three.", its raw file, and finished
+        `TOGGLED_TEXT_STEPS` (the core steps and `text_sentence_embedding`); every
+        other step is not planned (NULL). Each sentence has its own embedding in
+        Weaviate (`sentence_embeddings`, by sentence id): sentence i has 1.0 at
+        position i.
+      - "image.png" (`image`), a 4x4 PNG image with its raw file, without caption
+        (empty content, HTML and raw HTML), and finished `MINIMAL_IMAGE_STEPS`;
+        every other step is not planned.
+    - Project "Import Target" (`target_project`), with all features enabled and
+      no documents.
+
+    Non-obvious derived behavior:
+
+    - The empty HTML of the image is an empty CSV cell in the export, which
+      pandas reads as a missing value.
+    """
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Toggled Project",
+        features=[Feature.SENTENCE_SIMILARITY_SEARCH],
+    )
+    text = _create_text_document_with_file(
+        db_session,
+        project=project,
+        filename="text.txt",
+        sentences=["Alpha one.", "Beta two.", "Gamma three."],
+    )
+    sentence_embeddings = [[1.0 if i == j else 0.0 for j in range(4)] for i in range(3)]
+    crud_sentence_embedding.create_multi(
+        client=WeaviateRepo().get_client(),
+        project_id=project.id,
+        ids=[
+            SentenceObjectIdentifier(sdoc_id=text.id, sentence_id=i)
+            for i in range(len(sentence_embeddings))
+        ],
+        embeddings=sentence_embeddings,
+    )
+
+    image = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="image.png",
+            name="image.png",
+            doctype=DocType.image,
+            project_id=project.id,
+        ),
+    )
+    image_path = FilesystemRepo().get_path_to_sdoc_file(
+        SourceDocumentRead.model_validate(image)
+    )
+    Image.new("RGB", (4, 4)).save(image_path, "PNG")
+    crud_sdoc_data.create(
+        db=db_session,
+        create_dto=SourceDocumentDataCreate(
+            id=image.id,
+            content="",
+            repo_url=str(image_path.relative_to(FilesystemRepo().root_dir)),
+            raw_html="",
+            html="",
+            token_starts=[],
+            token_ends=[],
+            sentence_starts=[],
+            sentence_ends=[],
+            token_time_starts=None,
+            token_time_ends=None,
+        ),
+    )
+
+    for sdoc, steps in ((text, TOGGLED_TEXT_STEPS), (image, MINIMAL_IMAGE_STEPS)):
+        crud_sdoc.update(
+            db=db_session,
+            id=sdoc.id,
+            update_dto=SourceDocumentUpdate.model_validate(dict.fromkeys(steps, 1)),
+        )
+    target_project = _create_target_project(db_session, test_user)
+    db_session.commit()
+    for obj in (project, target_project, text, image):
+        db_session.refresh(obj)
+    return {
+        "project": project,
+        "target_project": target_project,
+        "text": text,
+        "image": image,
+        "sentence_embeddings": sentence_embeddings,
+    }
