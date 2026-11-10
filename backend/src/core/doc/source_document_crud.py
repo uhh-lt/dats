@@ -1,6 +1,7 @@
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select, update
 from sqlalchemy.orm import Session
 
+from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
@@ -258,6 +259,27 @@ class CRUDSourceDocument(
             .filter(self.model.folder_id.in_(folder_ids))
             .all()
         ]
+
+    ### UPDATE OPERATIONS ###
+
+    def update_pending_steps_to_erroneous(
+        self, db: Session, *, sdoc_id: int, steps: list[JobType]
+    ) -> None:
+        """Set the given steps of the document that are pending (processing) to
+        erroneous; steps with another status or not planned keep it."""
+        if not steps:
+            return
+        processing = SDocStatus.processing.value
+        erroneous = SDocStatus.erroneous.value
+        columns = [getattr(self.model, s.value) for s in steps]
+        db.execute(
+            update(self.model)
+            .where(self.model.id == sdoc_id)
+            .values(
+                {c.key: case((c == processing, erroneous), else_=c) for c in columns}
+            )
+            .execution_options(synchronize_session=False)
+        )
 
     ### DELETE OPERATIONS ###
     # Inherited from SQLCRUDBase

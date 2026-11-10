@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
+from core.user.user_orm import UserORM
+from feature_test_utils import FeatureProject, create_feature_project
 
 
 class AudioProject(TypedDict):
@@ -87,3 +89,9 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
         "audio_document": sdoc,
         "audio_filepath": str(file_path),
     }
+
+
+@pytest.fixture(scope="function")
+def feature_project(db_session, test_user: UserORM) -> FeatureProject:
+    """The project described in `FeatureProject`."""
+    return create_feature_project(db_session, test_user)
