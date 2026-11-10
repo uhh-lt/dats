@@ -64,7 +64,8 @@ def _init_sentry() -> None:
 # ==============================================================================
 def register_jobs() -> None:
     """Register all jobs (by importing the `*_job.py` modules), check the
-    preprocessing pipeline derived from their declarations and build the
+    preprocessing pipeline derived from their declarations, register the
+    features (`register_features`) and build the
     JOB_UPDATED event model, which needs all jobs registered.
 
     Must run before any endpoint is imported: the job endpoints are generated
@@ -78,7 +79,20 @@ def register_jobs() -> None:
     # fails on artefacts nobody produces, cycles and missing transitions
     pipeline_registry.graph()
     check_transitions()
+    register_features()
     build_job_event_models()
+
+
+def register_features() -> None:
+    """Register all features (by importing the `*_feature.py` modules) and check
+    their declarations against the pipeline: fails on undeclared features,
+    artefacts no step produces, unknown or cyclic feature requirements. Called by
+    `register_jobs`, as the check needs the pipeline steps."""
+    from systems.feature_system.feature_registry import feature_registry
+    from systems.job_system.pipeline_graph import pipeline_registry
+
+    import_by_suffix("_feature.py")
+    feature_registry.check(pipeline_registry.graph().artefacts())
 
 
 # ==============================================================================

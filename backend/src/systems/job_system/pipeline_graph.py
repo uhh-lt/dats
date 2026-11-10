@@ -41,6 +41,7 @@ class PipelineGraph:
     `PipelineDeclarationError` listing all problems if the declarations are invalid."""
 
     def __init__(self, steps: dict[JobType, PipelineStep]) -> None:
+        self._declarations = dict(steps)
         self._job_of = {jt: s.job or jt for jt, s in steps.items()}
         self._steps_of_job: dict[JobType, list[JobType]] = {}
         for job_type in sorted(steps, key=lambda jt: _JOB_TYPE_ORDER[jt]):
@@ -94,6 +95,17 @@ class PipelineGraph:
     def steps(self, doctype: DocType) -> list[JobType]:
         """The steps run for a document of this doctype, in a valid order."""
         return self._steps_by_doctype[doctype]
+
+    def declaration(self, step: JobType) -> PipelineStep:
+        """The declaration of this step: what it requires, produces and its doctypes."""
+        return self._declarations[step]
+
+    def artefacts(self) -> frozenset[Artefact]:
+        """All artefacts a step produces or an uploaded file provides."""
+        return frozenset(
+            {a for s in self._declarations.values() for a in s.produces}
+            | {a for artefacts in UPLOADED_ARTEFACTS.values() for a in artefacts}
+        )
 
     def roots(self, doctype: DocType) -> list[JobType]:
         """The steps that start when a document of this doctype is created."""
