@@ -1,20 +1,6 @@
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, List, Tuple
 
 from common.job_type_enum import JobType
-
-
-class SwitchCaseBranchOperator:
-    def __init__(
-        self,
-        switch_variable: Callable[[Any], Any],
-        cases: Dict[Any, List[Tuple[Callable, JobType]]],
-    ):
-        self.switch_variable = switch_variable
-        self.cases = cases
-
-    def get_next_jobs(self, input, output):
-        key = self.switch_variable(output)
-        return self.cases.get(key, [])
 
 
 class LoopBranchOperator:

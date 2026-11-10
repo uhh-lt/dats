@@ -4,7 +4,6 @@ from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type_enum import DocType
 from common.doc_type_utils import get_doc_type, is_archive_file, mime_type_supported
 from common.job_type_enum import JobType
@@ -30,6 +29,7 @@ from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
+from systems.job_system.pipeline_graph import pipeline_registry
 from systems.search_system.pagination import apply_pagination
 
 SdocPreprocessingJob = JobRead[SdocProcessingJobInput, JobOutputBase | None]
@@ -111,6 +111,8 @@ class DocProcessingService(metaclass=SingletonMeta):
         page: int | None = None,
         page_size: int | None = None,
     ) -> SdocHealthResult:
+        steps = pipeline_registry.graph().steps(DocType(doctype))
+
         # query
         query = db.query(SourceDocumentORM).filter(
             SourceDocumentORM.project_id == project_id,
@@ -147,14 +149,14 @@ class DocProcessingService(metaclass=SingletonMeta):
         # transform to dto
         results = SdocHealthResult(
             total_results=total_results,
-            data=[SdocStatusRow.from_sdoc_orm(sdoc) for sdoc in result_rows],
+            data=[SdocStatusRow.from_sdoc_orm(sdoc, steps) for sdoc in result_rows],
         )
 
         # Retrieve information about failed jobs
         # 1. retrieve all failed jobs in this project
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
-            job_types=[JobType(jt) for jt in PROCESSING_JOBS[DocType(doctype)]],
+            job_types=steps,
         )
 
         # 2. convert to SdocProcessingJob and build dict for easy access
@@ -188,7 +190,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         # 1. retrieve all failed jobs in this project
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
-            job_types=[JobType(jt) for jt in PROCESSING_JOBS[doctype]],
+            job_types=pipeline_registry.graph().steps(doctype),
         )
 
         # 2. convert to SdocProcessingJob and collect by sdoc_id
@@ -245,7 +247,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                 )
 
         # 3. check that processing_step is valid for the doctype
-        if processing_step not in PROCESSING_JOBS[DocType(doctype)]:
+        if processing_step not in pipeline_registry.graph().steps(DocType(doctype)):
             raise ValueError(
                 f"Processing step '{processing_step}' is not valid for doctype '{doctype}'"
             )

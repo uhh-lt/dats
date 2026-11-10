@@ -63,15 +63,21 @@ def _init_sentry() -> None:
 # JOBS
 # ==============================================================================
 def register_jobs() -> None:
-    """Register all jobs (by importing the `*_job.py` modules) and build the
+    """Register all jobs (by importing the `*_job.py` modules), check the
+    preprocessing pipeline derived from their declarations and build the
     JOB_UPDATED event model, which needs all jobs registered.
 
     Must run before any endpoint is imported: the job endpoints are generated
     on registration.
     """
     from common.dats_event import build_job_event_models
+    from modules.doc_processing.doc_processing_pipeline import check_transitions
+    from systems.job_system.pipeline_graph import pipeline_registry
 
     import_by_suffix("_job.py")
+    # fails on artefacts nobody produces, cycles and missing transitions
+    pipeline_registry.graph()
+    check_transitions()
     build_job_event_models()
 
 

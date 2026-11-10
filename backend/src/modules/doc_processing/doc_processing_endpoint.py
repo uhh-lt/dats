@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
-from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
@@ -14,6 +13,7 @@ from modules.doc_processing.doc_processing_dto import (
     SourceDocumentStatusSimple,
 )
 from modules.doc_processing.doc_processing_service import DocProcessingService
+from systems.job_system.pipeline_graph import pipeline_registry
 
 router = APIRouter(
     prefix="/docprocessing",
@@ -36,7 +36,7 @@ def get_search_columns_by_doctype(
     doctype: DocType,
     authz_user: AuthzUser = Depends(),
 ) -> list[str]:
-    return PROCESSING_JOBS[doctype]
+    return [step.value for step in pipeline_registry.graph().steps(doctype)]
 
 
 @router.post(

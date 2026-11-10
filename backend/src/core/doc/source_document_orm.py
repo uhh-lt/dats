@@ -14,10 +14,10 @@ from sqlalchemy import (
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
+from systems.job_system.pipeline_graph import pipeline_registry
 
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -306,7 +306,7 @@ class SourceDocumentORM(ORMBase):
 
     @property
     def total_jobs(self) -> int:
-        return len(PROCESSING_JOBS[DocType(self.doctype)])
+        return len(pipeline_registry.graph().steps(DocType(self.doctype)))
 
     @property
     def memo_ids(self) -> list[int]:
@@ -318,38 +318,27 @@ class SourceDocumentORM(ORMBase):
     def processed_status(self) -> SDocStatus:  # type: ignore
         if self.processed_jobs < 0:
             return SDocStatus.erroneous
-        elif self.processed_jobs == len(PROCESSING_JOBS[DocType(self.doctype)]):
+        elif self.processed_jobs == self.total_jobs:
             return SDocStatus.finished
         else:
             return SDocStatus.processing
 
     @processed_status.expression
     def processed_status(cls):
+        graph = pipeline_registry.graph()
         return case(
             (
                 cls.processed_jobs < 0,
                 SDocStatus.erroneous,
             ),  # type: ignore
-            (
-                (cls.doctype == DocType.text)
-                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.text])),
-                SDocStatus.finished,
-            ),  # type: ignore
-            (
-                (cls.doctype == DocType.image)
-                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.image])),
-                SDocStatus.finished,
-            ),  # type: ignore
-            (
-                (cls.doctype == DocType.audio)
-                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.audio])),
-                SDocStatus.finished,
-            ),  # type: ignore
-            (
-                (cls.doctype == DocType.video)
-                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.video])),
-                SDocStatus.finished,
-            ),  # type: ignore
+            *[
+                (
+                    (cls.doctype == doctype)
+                    & (cls.processed_jobs == len(graph.steps(doctype))),
+                    SDocStatus.finished,
+                )
+                for doctype in DocType
+            ],  # type: ignore
             else_=SDocStatus.processing,
         )
 
