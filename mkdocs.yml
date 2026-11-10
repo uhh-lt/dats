@@ -70,6 +70,7 @@ nav:
           - Duplicate Finder: feature-guides/tools/duplicate-finder.md
           - Health View: feature-guides/tools/health-view.md
       - Document Upload: feature-guides/document-upload.md
+      - Project Features: feature-guides/project-features.md
       - Export & Import: feature-guides/export-import.md
       - Technical Details:
           - technical-details/index.md
