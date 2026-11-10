@@ -1,3 +1,5 @@
+import { useFeature } from "@core/feature";
+import { Feature } from "@models/Feature";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
@@ -11,7 +13,10 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ aspectId }: SettingsPanelProps) {
   // explorer
-  const [tab, setTab] = useState("color");
+  const ragChat = useFeature(Feature.RAG_CHAT);
+  const [selectedTab, setTab] = useState("color");
+  // the analysis assistant is the RAG chat
+  const tab = selectedTab === "assistant" && !ragChat.enabled ? "color" : selectedTab;
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
@@ -22,7 +27,7 @@ export function SettingsPanel({ aspectId }: SettingsPanelProps) {
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Color Settings" value="color" />
             <Tab label="Position Settings" value="position" />
-            <Tab label="Analysis Assistant" value="assistant" />
+            {ragChat.enabled && <Tab label="Analysis Assistant" value="assistant" />}
           </Tabs>
         </Box>
         <Box className="myFlexFillAllContainer">
@@ -33,7 +38,7 @@ export function SettingsPanel({ aspectId }: SettingsPanelProps) {
             {tab === "position" && <PositionSettings aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="assistant" style={{ padding: 0 }} className="h100">
-            {tab === "assistant" && <AnalysisAssistant />}
+            {tab === "assistant" && ragChat.enabled && <AnalysisAssistant />}
           </TabPanel>
         </Box>
       </TabContext>
