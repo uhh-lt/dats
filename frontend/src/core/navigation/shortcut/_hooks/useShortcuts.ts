@@ -1,4 +1,4 @@
-import { FEATURE_ENTRIES, FeatureEntry } from "@core/feature";
+import { FEATURE_ENTRIES, FeatureEntry, useIsFeatureEnabled } from "@core/feature";
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
@@ -41,6 +41,7 @@ export function useShortcuts() {
   const tabManager = useTabManager(projectId || -1);
   const toggleQuickCommandMenu = useToggleDialog("quickCommandMenu");
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
+  const isFeatureEnabled = useIsFeatureEnabled();
 
   // Memoize the sorted shortcuts
   const sortedShortcuts = useMemo(() => {
@@ -55,7 +56,8 @@ export function useShortcuts() {
 
       // Navigation shortcuts
       ...FEATURE_ENTRIES.flatMap((entry: FeatureEntry): Shortcut[] => {
-        if (!entry.shortcut) return [];
+        // a disabled feature has no shortcut, so its keys do nothing
+        if (!entry.shortcut || !isFeatureEnabled(entry.feature)) return [];
         return [
           createShortcut(
             `goTo-${entry.id}`,
@@ -99,7 +101,7 @@ export function useShortcuts() {
       const bModifiers = (b.keys.ctrlmeta ? 1 : 0) + (b.keys.shift ? 1 : 0) + (b.keys.alt ? 1 : 0);
       return bModifiers - aModifiers; // Sort in descending order
     });
-  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu]);
+  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu, isFeatureEnabled]);
 
   return sortedShortcuts;
 }

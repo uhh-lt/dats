@@ -1,7 +1,13 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { getIconComponent, Icon } from "@components/icons";
 import { useAuth } from "@core/auth";
-import { FeatureRoute, formatFeatureShortcut, getFeatureEntries } from "@core/feature";
+import {
+  FeatureEntry,
+  FeatureRoute,
+  formatFeatureShortcut,
+  getFeatureEntries,
+  useIsFeatureEnabled,
+} from "@core/feature";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
@@ -27,7 +33,7 @@ import {
 } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useLocation } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { LinkListItemButton, LinkMenuItem } from "./links";
 import { useTabNavigate } from "./tabs";
 import { WebSocketStatusIndicator } from "./WebSocketStatusIndicator";
@@ -75,6 +81,11 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const location = useLocation();
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
   const tabNavigate = useTabNavigate();
+  const isFeatureEnabled = useIsFeatureEnabled();
+  const [searchEntries, mainEntries, toolsEntries] = useMemo(() => {
+    const isEnabled = (entry: FeatureEntry) => isFeatureEnabled(entry.feature);
+    return [SEARCH_ENTRIES.filter(isEnabled), MAIN_ENTRIES.filter(isEnabled), TOOLS_ENTRIES.filter(isEnabled)];
+  }, [isFeatureEnabled]);
 
   // Memoize isActive function
   const isActive = useCallback(
@@ -230,7 +241,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                {SEARCH_ENTRIES.map((entry) => (
+                {searchEntries.map((entry) => (
                   <MenuItem key={entry.id} onClick={() => handleOpenSearchTab(entry.to)}>
                     <ListItemIcon>{getIconComponent(entry.icon)}</ListItemIcon>
                     <ListItemText>{entry.title}</ListItemText>
@@ -239,7 +250,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
               </Menu>
             </ListItem>
 
-            {MAIN_ENTRIES.map((entry) => (
+            {mainEntries.map((entry) => (
               <ListItem key={entry.id} disablePadding sx={{ display: "block" }}>
                 <Tooltip
                   title={withShortcutHint(entry.sidebarTooltip ?? entry.title, entry.shortcut)}
@@ -311,7 +322,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                {TOOLS_ENTRIES.map((entry) => (
+                {toolsEntries.map((entry) => (
                   <LinkMenuItem key={entry.id} to={entry.to} params={{ projectId }}>
                     <ListItemIcon>{getIconComponent(entry.icon)}</ListItemIcon>
                     <ListItemText primary={withShortcutHint(entry.title, entry.shortcut)} />

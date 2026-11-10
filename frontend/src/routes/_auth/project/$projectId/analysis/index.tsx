@@ -1,6 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { Icon } from "@components/icons";
-import { getFeatureEntries } from "@core/feature";
+import { getFeatureEntries, useIsFeatureEnabled } from "@core/feature";
 import { LinkCard } from "@core/navigation";
 import { Box } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -19,11 +19,12 @@ const ANALYSIS_ENTRIES = getFeatureEntries("analysis");
 
 function AnalysisView() {
   const projectId = Route.useParams({ select: (params) => params.projectId });
+  const isFeatureEnabled = useIsFeatureEnabled();
 
   return (
     <ContentContainerLayout>
       <Box display="flex" gap={2} flexWrap="wrap">
-        {ANALYSIS_ENTRIES.map((entry) => (
+        {ANALYSIS_ENTRIES.filter((entry) => isFeatureEnabled(entry.feature)).map((entry) => (
           <LinkCard
             key={entry.id}
             to={entry.to}
