@@ -4,16 +4,22 @@ from loguru import logger
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
+from core.doc.source_document_dto import (
+    SourceDocumentCreate,
+    SourceDocumentRead,
+    SourceDocumentUpdate,
+)
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.pipeline_graph import pipeline_registry
 
 sqlr = SQLRepo()
 fsr = FilesystemRepo()
@@ -48,6 +54,16 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             folder_id=payload.folder_id,
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
+
+        # plan the steps of the doctype, so the sdoc is never seen as finished
+        steps = pipeline_registry.graph().steps(payload.doctype)
+        crud_sdoc.update(
+            db=db,
+            id=sdoc_db_obj.id,
+            update_dto=SourceDocumentUpdate.model_validate(
+                {step.value: SDocStatus.processing for step in steps}
+            ),
+        )
 
         # find repo path
         repo_url = FilesystemRepo().get_sdoc_url(
