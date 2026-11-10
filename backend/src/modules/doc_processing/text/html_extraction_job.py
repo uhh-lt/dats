@@ -5,6 +5,7 @@ import mammoth
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -59,6 +60,9 @@ def enrich_for_recompute(
     input_type=ExtractHTMLJobInput,
     output_type=ExtractHTMLJobOutput,
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.RAW_HTML},
+    doctypes={DocType.text},
 )
 def handle_extract_html_job(
     payload: ExtractHTMLJobInput, job: Job

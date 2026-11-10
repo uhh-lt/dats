@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from loguru import logger
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
@@ -54,6 +55,9 @@ def enrich_for_recompute(
     input_type=ObjectDetectionJobInput,
     device="api",
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.OBJECT_BBOXES},
+    doctypes={DocType.image},
 )
 def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> None:
     # Run object detection with ray

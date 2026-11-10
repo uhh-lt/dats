@@ -17,11 +17,14 @@ from rq.registry import (
 )
 from sqlalchemy.orm import Session
 
+from common.artefact_enum import Artefact
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from repos.redis_repo import RedisRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
 from systems.job_system.job_system_enum import EndpointGeneration, JobPriority
+from systems.job_system.pipeline_graph import PipelineStep, pipeline_registry
 
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=JobOutputBase)
@@ -97,6 +100,9 @@ class JobService(metaclass=SingletonMeta):
         enricher: Callable[[InputT], InputT] | None = None,
         read_model: type[JobRead] | None = None,
         validate_input: Callable[[Session, InputT], None] | None = None,
+        requires: set[Artefact] | None = None,
+        produces: set[Artefact] | None = None,
+        doctypes: set[DocType] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -113,6 +119,21 @@ class JobService(metaclass=SingletonMeta):
 
         if self.job_registry.get(job_type) is not None:
             raise ValueError(f"JobType {job_type} is already registered!")
+
+        if (requires or produces) and not doctypes:
+            raise ValueError(
+                f"JobType {job_type} declares artefacts, but no doctypes: only "
+                "pipeline steps declare 'requires' and 'produces'."
+            )
+        if doctypes:
+            pipeline_registry.register(
+                job_type,
+                PipelineStep(
+                    requires=frozenset(requires or ()),
+                    produces=frozenset(produces or ()),
+                    doctypes=frozenset(doctypes),
+                ),
+            )
 
         # The ONE concrete JobRead model for this job type. Modules with
         # hand-written endpoints pass their own subclass (e.g. ImportJobRead);

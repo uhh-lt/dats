@@ -1,5 +1,7 @@
 from loguru import logger
 
+from common.artefact_enum import Artefact
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
@@ -38,6 +40,9 @@ def enrich_for_recompute(
     input_type=TextSentenceEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,
+    requires={Artefact.TOKENS_SENTENCES},
+    produces={Artefact.SENTENCE_EMBEDDINGS},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_sentence_embedding_job(
     payload: TextSentenceEmbeddingJobInput, job: Job

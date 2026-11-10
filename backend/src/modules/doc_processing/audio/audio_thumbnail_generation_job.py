@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -41,6 +42,9 @@ def enrich_for_recompute(
     job_type=JobType.AUDIO_THUMBNAIL,
     input_type=AudioThumbnailJobInput,
     enricher=enrich_for_recompute,
+    requires=set(),
+    produces={Artefact.THUMBNAIL},
+    doctypes={DocType.audio},
 )
 def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> None:
     thumbnail_filename = fsr.generate_sdoc_filename(

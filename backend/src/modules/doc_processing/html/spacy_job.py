@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import yake
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
@@ -76,6 +77,9 @@ def enrich_for_recompute(
     input_type=SpacyJobInput,
     output_type=SpacyJobOutput,
     enricher=enrich_for_recompute,
+    requires={Artefact.CONTENT, Artefact.LANGUAGE},
+    produces={Artefact.TOKENS_SENTENCES},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # 1. call spacy in ray

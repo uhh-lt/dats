@@ -4,6 +4,7 @@ from pathlib import Path
 import ffmpeg
 from PIL import Image
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -46,6 +47,9 @@ def enrich_for_recompute(
 @register_job(
     job_type=JobType.VIDEO_THUMBNAIL,
     input_type=VideoThumbnailJobInput,
+    requires=set(),
+    produces={Artefact.THUMBNAIL},
+    doctypes={DocType.video},
 )
 def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> None:
     start_frame, err = (
