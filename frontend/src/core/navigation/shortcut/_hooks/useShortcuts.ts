@@ -1,3 +1,4 @@
+import { FEATURE_ENTRIES, FeatureEntry } from "@core/feature";
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
@@ -53,86 +54,21 @@ export function useShortcuts() {
       }),
 
       // Navigation shortcuts
-      createShortcut(
-        "goToSearch",
-        "s",
-        "Go to Search",
-        () => tabNavigate({ to: "/project/$projectId/search", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToPerspectives",
-        "e",
-        "Go to Perspectives",
-        () => tabNavigate({ to: "/project/$projectId/perspectives", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToAnnotation",
-        "a",
-        "Go to Annotation",
-        () => tabNavigate({ to: "/project/$projectId/annotation", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToAnalysis",
-        "y",
-        "Go to Analysis",
-        () => tabNavigate({ to: "/project/$projectId/analysis", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToClassifier",
-        "c",
-        "Go to Classifier",
-        () => tabNavigate({ to: "/project/$projectId/classifier", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToWhiteboard",
-        "b",
-        "Go to Whiteboard",
-        () => tabNavigate({ to: "/project/$projectId/whiteboard", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToMemoWorkspace",
-        "m",
-        "Go to Memo Workspace",
-        () => tabNavigate({ to: "/project/$projectId/memo-workspace", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToHealth",
-        "h",
-        "Go to Health",
-        () => tabNavigate({ to: "/project/$projectId/tools/health", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
+      ...FEATURE_ENTRIES.flatMap((entry: FeatureEntry): Shortcut[] => {
+        if (!entry.shortcut) return [];
+        return [
+          createShortcut(
+            `goTo-${entry.id}`,
+            entry.shortcut,
+            `Go to ${entry.title}`,
+            () => tabNavigate({ to: entry.to, params: { projectId } }),
+            {
+              ctrlmeta: true,
+              shift: true,
+            },
+          ),
+        ];
+      }),
       createShortcut("goToSettings", ",", "Go to Settings", openProjectSettingsDialog, {
         ctrlmeta: true,
         shift: true,
