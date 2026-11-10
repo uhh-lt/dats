@@ -1,6 +1,6 @@
 # Plan: Per-Project Feature Toggles
 
-Status: agreed plan. Implementation proceeds phase by phase.
+Status: agreed plan. The backend (phases 1 to 4), the frontend registry (phase 5a) and the backend and tooling part of phase 7 are implemented, each on its own branch; the frontend gating (5b), the creation and activation UI (6) and the user guides are open. Where the implementation deviates from the plan, the sections below describe the implementation.
 
 ## Goal
 
@@ -79,20 +79,21 @@ Without `image_caption`, an image document has no text and its text chain is not
 
 ### Features
 
-| Feature                                                                                                                                                                  | Requires                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
-| Annotation, LLM Assistant, Classifier, Perspectives, Agreement, Memo generation, Experiments, Whiteboards, Timeline, Code frequency, annotation tables, Document sampler | core only (always available)         |
-| Full-text search, Search & auto-annotate                                                                                                                                 | `es_index`                           |
-| Sentence similarity search                                                                                                                                               | `sentence_embeddings`                |
-| Image similarity search                                                                                                                                                  | `image_embeddings`                   |
-| RAG chat, Annotation scaling, Concepts over time                                                                                                                         | feature "Sentence similarity search" |
-| Tag recommendation                                                                                                                                                       | `document_embeddings`                |
-| Word frequency analysis, Duplicate finder                                                                                                                                | `word_frequencies`                   |
-| Keyword statistics and filter                                                                                                                                            | `keywords`                           |
-| Automatic entity annotations                                                                                                                                             | `ner_spans`                          |
-| Image captions                                                                                                                                                           | `image_caption`                      |
-| Automatic object detection                                                                                                                                               | `object_bboxes`                      |
+| Feature                                                                                                                                                                  | Requires                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| Annotation, LLM Assistant, Classifier, Perspectives, Agreement, Memo generation, Experiments, Whiteboards, Timeline, Code frequency, annotation tables, Document sampler | core only (always available, not registered) |
+| Full-text search, Search & auto-annotate                                                                                                                                 | `es_index`                                   |
+| Sentence similarity search                                                                                                                                               | `sentence_embeddings`                        |
+| Image similarity search                                                                                                                                                  | `image_embeddings`                           |
+| RAG chat, Annotation scaling, Concepts over time                                                                                                                         | feature "Sentence similarity search"         |
+| Tag recommendation                                                                                                                                                       | `document_embeddings`                        |
+| Word frequency analysis, Duplicate finder                                                                                                                                | `word_frequencies`                           |
+| Keyword statistics and filter                                                                                                                                            | `keywords`                                   |
+| Automatic entity annotations                                                                                                                                             | `ner_spans`                                  |
+| Image captions                                                                                                                                                           | `image_caption`                              |
+| Automatic object detection                                                                                                                                               | `object_bboxes`                              |
 
+Only the toggleable features are `Feature` values with a `register_feature` declaration; the features that need core data only are always available and are neither declared nor stored in `enabled_features`.
 Document search without `es_index` still works with filters only; the text query box is hidden.
 Coreference and quotation need core data only and stay on-demand actions in ML Automation.
 
@@ -122,7 +123,7 @@ register_feature(
 - `PIPELINE_GRAPH` and `PROCESSING_JOBS` are replaced by a graph derived from the declarations. The transition functions and the loop/switch entry points (archive, chunking, extracted images) stay.
 - **Planning at `sdoc_init`:** the planner computes the steps for this document from its doctype and the project's enabled features, and sets their status columns to `processing` (0). All other columns stay `NULL`.
 - **Advancing:** after a step finishes, only successors whose status is pending and whose required artefacts are all finished are enqueued. This replaces the unconditional cascade.
-- **spaCy split:** `text_spacy` keeps tokens and sentences. `text_keywords`, `text_word_frequency` and `text_ner` become own steps with own status columns. They share one Ray spaCy call: the `text_spacy` job stays the only job that calls spaCy and takes the set of outputs to write (tokens/sentences, keywords, word frequencies, named entities). At upload it writes every planned output; on activation it runs with only the missing outputs and leaves tokens and sentences untouched. The pipeline hooks set one status column per requested output. Named entities replace only the system user's spans.
+- **spaCy split:** `text_spacy` keeps tokens and sentences. `text_keywords`, `text_word_frequency` and `text_ner` become own steps with own status columns. They share one Ray spaCy call: the `text_spacy` job stays the only job that calls spaCy and declares the three as `further_steps` in `@register_job` (step → produced artefacts, with the job's `requires` and `doctypes`). The job input (`SdocProcessingJobInput.steps`) names the steps to compute: at upload every planned one; on activation only the missing ones, leaving tokens and sentences untouched. The pipeline hooks set one status column per computed step. Named entities replace only the system user's spans.
 - **Document embedding** moves from the ML job into the step `text_document_embedding`. The `SENTENCE_EMBEDDING` and `DOCUMENT_EMBEDDING` ML job types and their rows in `SourceDocumentJobStatusORM` are removed after migrating their status into the new columns.
 
 ### Status model
@@ -130,13 +131,14 @@ register_feature(
 - Status column values: `NULL` = not planned, `0` = processing, `1` = finished, `-100` = erroneous. The server default changes from `0` to `NULL`.
 - `processed_status`: erroneous if any column is `-100`; processing if any column is `0`; finished otherwise.
 - `processed_jobs` and `total_jobs` count non-null finished and non-null columns.
+- `processed_status`, `processed_jobs` and `total_jobs` are stored computed columns (`Computed(..., persisted=True)`); `processed_status` and `processed_jobs` are indexed, so filters on them stay cheap.
 - New columns: `text_keywords`, `text_word_frequency`, `text_ner`, `text_document_embedding`.
 
 ### Project
 
 - `ProjectORM.enabled_features`: array of `Feature` values. `ProjectCreate` and `ProjectUpdate` carry it; `ProjectRead` returns it.
 - `GET /project/{id}/features` returns per feature: `enabled`, `ready`, document coverage (ready / total), and missing steps.
-- Enabling a feature (`ProjectUpdate`) sets the missing steps from `NULL` to `0` for all existing documents and enqueues the ones whose inputs are ready, on the low-priority queue.
+- Enabling a feature (`ProjectUpdate`) sets the missing steps from `NULL` to `0` for all existing documents, in bulk per doctype (`FeatureService.activate_missing_steps`). One `FEATURE_ACTIVATION` job on the low-priority queue then starts the newly planned steps whose inputs are finished, enriched like a recompute; the others start through the normal advancing.
 - Disabling a feature only changes `enabled_features`.
 - Project creation still creates the Elasticsearch index and all Weaviate tenants; empty ones cost almost nothing.
 
@@ -151,7 +153,7 @@ register_feature(
 1. Add `project.enabled_features`; set all features for every existing project.
 2. Change status defaults to `NULL`; set to `NULL` every column that is not a step of the document's doctype.
 3. Add the new step columns. Copy `text_spacy` into `text_keywords`, `text_word_frequency`, `text_ner`. Fill `text_document_embedding` from `SourceDocumentJobStatusORM` (finished → 1, otherwise `NULL`).
-4. Recreate the computed `processed_jobs` column with the new expression.
+4. Recreate the stored computed columns `processed_jobs`, `total_jobs` and `processed_status` with the new expressions.
 
 The migration must be validated on a copy of production data before merge.
 
@@ -170,22 +172,24 @@ The migration must be validated on a copy of production data before merge.
 
 Each phase is one PR and leaves DATS fully working.
 
-| Phase                                       | Content                                                                                                                                                    | Behaviour change                           |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| 1. Declarative pipeline                     | `requires`/`produces` on steps, derived graph and step lists, conditional advancing, fix the three recompute bugs, narrow the annotation deletion in spaCy | none                                       |
-| 2. Status model                             | `NULL` = not planned, new computed columns, migration, health view state                                                                                   | none for existing projects                 |
-| 3. Split spaCy, add document embedding step | new steps and columns, remove the two embedding ML jobs, migration                                                                                         | document embeddings are computed at upload |
-| 4. Backend features                         | registry, `enabled_features`, planner, features endpoint, activation, gating                                                                               | API accepts features; all on by default    |
-| 5a. Frontend registry                       | feature registry; sidebar, analysis dashboard, quick commands and shortcuts generated from it. Independent of phases 1–4.                                  | none                                       |
-| 5b. Frontend gating                         | project features query, route guard, `useFeature`, gated entry points. Needs phase 4.                                                                      | hidden entry points for disabled features  |
-| 6. Creation and activation UI               | creation dialog, settings tab, health view actions                                                                                                         | the feature is usable end to end           |
-| 7. Edges                                    | export/import, project doctor, docs, instructions                                                                                                          | —                                          |
+| Phase                                       | Content                                                                                                                                                    | Behaviour change                           | State                                             |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| 1. Declarative pipeline                     | `requires`/`produces` on steps, derived graph and step lists, conditional advancing, fix the three recompute bugs, narrow the annotation deletion in spaCy | none                                       | implemented                                       |
+| 2. Status model                             | `NULL` = not planned, new computed columns, migration, health view state                                                                                   | none for existing projects                 | implemented                                       |
+| 3. Split spaCy, add document embedding step | new steps and columns, remove the two embedding ML jobs, migration                                                                                         | document embeddings are computed at upload | implemented                                       |
+| 4. Backend features                         | registry, `enabled_features`, planner, features endpoint, activation, gating                                                                               | API accepts features; all on by default    | implemented                                       |
+| 5a. Frontend registry                       | feature registry; sidebar, analysis dashboard, quick commands and shortcuts generated from it. Independent of phases 1–4.                                  | none                                       | implemented                                       |
+| 5b. Frontend gating                         | project features query, route guard, `useFeature`, gated entry points. Needs phase 4.                                                                      | hidden entry points for disabled features  | open                                              |
+| 6. Creation and activation UI               | creation dialog, settings tab, health view actions                                                                                                         | the feature is usable end to end           | open                                              |
+| 7. Edges                                    | export/import, project doctor, docs, instructions                                                                                                          | —                                          | backend and tooling implemented; user guides open |
+
+The DB-backed tests of phases 1 to 4 and 7 (migrations, document processing, features, gating, export/import round trips) have not run yet: the backend needs the hosted LLM service at startup, which was unreachable. They must pass, and the migrations must be validated on a production copy, before merge.
 
 Phase 7 details:
 
-- **Export/import:** export writes `enabled_features` and only the artefacts that exist; import restores them and sets status columns from what the archive contains.
-- **Project doctor:** read `NULL` as "not planned"; read the step list from the released backend instead of its own copy; suggest activation instead of recompute for missing data of disabled features.
-- **Instructions:** add the feature declaration rules to `.github/instructions/` (backend module, frontend feature).
+- **Export/import:** the project archive carries `enabled_features` (`project_<id>_details.json`); the import rejects features this version does not know. The document archive holds the status of every step of the doctype (`step_status`, `null` = not planned) and only the artefacts whose step finished. The import sets the status columns from the archive; an embedding step whose embeddings the archive lacks is not planned, and empty embeddings or index entries are not written. After the import has committed, it plans and starts the steps the enabled features still need (`FeatureService.activate_missing_steps`). Archives without these fields import as before: all features enabled, every step of the doctype set from the document status.
+- **Project doctor:** reads `NULL` as "not planned" and checks no data of such steps; it prints the skipped steps per project and says that their feature is not enabled. It knows the new steps, checks the document embeddings, and reads only the step columns the database has, so it works before and after the migrations. The step list stays a copy in `doctor_stores.py`: the doctor runs with the backend code out of reach (`PYTHONPATH` empty) and on releases without the pipeline graph, so it cannot read the list from the backend. `backend/test/unit/test_project_doctor_steps.py` keeps the copy in sync.
+- **Instructions:** the rules for pipeline steps, features and gating are in `backend.instructions.md` and `backend-endpoint.instructions.md`; the frontend feature rules follow with phases 5b and 6.
 
 ## Testing
 
