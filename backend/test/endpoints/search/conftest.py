@@ -689,4 +689,8 @@ def featureless_project(seed_db_session, test_user) -> FeaturelessProject:
     feature (so full-text search is disabled), with the text document
     "text_done.txt". It is a project of its own, so it changes no result of the
     `search_project` tests."""
-    return create_featureless_project(seed_db_session, test_user)
+    featureless = create_featureless_project(seed_db_session, test_user)
+    # end the transaction of the final refreshes: an open transaction of the
+    # seed session blocks the TRUNCATE of the next test suite's cleanup
+    seed_db_session.commit()
+    return featureless
