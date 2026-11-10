@@ -30,7 +30,10 @@ from modules.doc_processing.image.image_thumbnail_generation_job import (
 )
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
-from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
+from modules.eximport.sdocs.sdoc_export_schema import (
+    SourceDocumentExportCollection,
+    SourceDocumentExportSchema,
+)
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
@@ -40,6 +43,35 @@ from systems.job_system.pipeline_graph import pipeline_registry
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
+
+
+def archived_step_status(
+    sdoc_export: SourceDocumentExportSchema,
+) -> dict[str, int | None]:
+    """The status of each pipeline step of the document's doctype, as in the
+    archive (None = not planned). Archives exported before the feature toggles
+    hold one status per document: every step of the doctype gets it.
+
+    An embedding step whose embeddings are missing in the archive is not planned,
+    whatever its status: if a feature of the project needs the embeddings, the
+    import plans the step again and computes them (see `ImportService`)."""
+    steps = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
+    archived = sdoc_export.step_status
+    step_status: dict[str, int | None] = {
+        step.value: sdoc_export.status if archived is None else archived.get(step.value)
+        for step in steps
+    }
+
+    missing = {
+        JobType.TEXT_DOCUMENT_EMBEDDING: sdoc_export.document_embedding is None,
+        JobType.TEXT_SENTENCE_EMBEDDING: len(sdoc_export.sentence_embeddings) == 0
+        and len(sdoc_export.sentence_starts) > 0,
+        JobType.IMAGE_EMBEDDING: sdoc_export.image_embedding is None,
+    }
+    for step, is_missing in missing.items():
+        if is_missing and step.value in step_status:
+            step_status[step.value] = None
+    return step_status
 
 
 def import_sdocs_to_proj(
@@ -222,15 +254,8 @@ def import_sdocs_to_proj(
             folder_id=sdoc_folder.id,
         )
 
-        # 2.3 Set the status of the steps to the exported status. The archive
-        # holds no document embedding of documents that never got one: that step
-        # is not planned for them.
-        steps = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
-        step_status: dict[str, int | None] = {
-            step.value: sdoc_export.status for step in steps
-        }
-        if sdoc_export.document_embedding is None:
-            step_status[JobType.TEXT_DOCUMENT_EMBEDDING.value] = None
+        # 2.3 Set the status of the steps from the archive
+        step_status = archived_step_status(sdoc_export)
         sdoc_update = SourceDocumentUpdate.model_validate(step_status)
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
@@ -293,15 +318,16 @@ def import_sdocs_to_proj(
             )
 
         # Sentence embeddings
-        crud_sentence_embedding.create_multi(
-            client=client,
-            project_id=project_id,
-            ids=[
-                SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
-                for i in range(len(sdoc_export.sentence_embeddings))
-            ],
-            embeddings=[se for se in sdoc_export.sentence_embeddings],
-        )
+        if len(sdoc_export.sentence_embeddings) > 0:
+            crud_sentence_embedding.create_multi(
+                client=client,
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
+                    for i in range(len(sdoc_export.sentence_embeddings))
+                ],
+                embeddings=[se for se in sdoc_export.sentence_embeddings],
+            )
 
         # Image embedding
         if (
@@ -315,17 +341,19 @@ def import_sdocs_to_proj(
                 embedding=sdoc_export.image_embedding,
             )
 
-        # 6. Add the source documents to the Elasticsearch index
-        crud_sdoc_elastic.create(
-            client=ElasticSearchRepo().get_client(),
-            project_id=project_id,
-            create_dto=ElasticSearchDocumentCreate(
+        # 6. Add the source documents to the Elasticsearch index (if planned: the
+        # entry is computed from the content and the filename only)
+        if step_status.get(JobType.TEXT_ES_INDEX.value) is not None:
+            crud_sdoc_elastic.create(
+                client=ElasticSearchRepo().get_client(),
                 project_id=project_id,
-                sdoc_id=created_sdoc.id,
-                filename=created_sdoc.filename,
-                content=sdoc_export.content if sdoc_export.content else "",
-            ),
-        )
+                create_dto=ElasticSearchDocumentCreate(
+                    project_id=project_id,
+                    sdoc_id=created_sdoc.id,
+                    filename=created_sdoc.filename,
+                    content=sdoc_export.content if sdoc_export.content else "",
+                ),
+            )
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"

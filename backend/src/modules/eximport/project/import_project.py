@@ -19,6 +19,10 @@ from modules.eximport.folder.import_folders import import_folders_to_proj
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ExportEntity
 from modules.eximport.memos.import_memos import import_memos_to_proj
+from modules.eximport.project.import_project_details import (
+    import_project_details_to_proj,
+    read_project_details,
+)
 from modules.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
 )
@@ -40,6 +44,7 @@ from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.filesystem_repo import FilesystemRepo
 
+# The project details are imported first, see import_project.
 IMPORT_ORDER = [
     ExportEntity.PROJECT_METADATA,
     ExportEntity.USER,
@@ -146,9 +151,18 @@ def import_project(
                 organized_data[entity] = path_to_temp_import_dir
             except Exception as e:
                 raise e
+        elif entity == ExportEntity.PROJECT_DETAILS:
+            organized_data[entity] = read_project_details(file_path)
         else:
             # read csv
             organized_data[entity] = read_import_csv(file_path)
+
+    # import the project details first: they validate the enabled features
+    import_project_details_to_proj(
+        db=db,
+        details=organized_data.get(ExportEntity.PROJECT_DETAILS),
+        project_id=project_id,
+    )
 
     # import data
     for entity in IMPORT_ORDER:
