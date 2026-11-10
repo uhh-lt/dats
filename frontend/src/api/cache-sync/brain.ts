@@ -323,6 +323,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       break;
     case "PROJECT_UPDATED":
       replaceListItem(projectQueries.userProjects().queryKey, event.payload);
+      // enabling or disabling features changes their state
+      queryClient.invalidateQueries({ queryKey: projectQueries.features(event.payload.id).queryKey });
       break;
     case "PROJECT_DELETED":
       removeListItem(projectQueries.userProjects().queryKey, event.payload.id);
