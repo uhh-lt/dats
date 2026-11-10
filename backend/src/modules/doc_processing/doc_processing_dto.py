@@ -2,8 +2,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from common.doc_processing_steps import PROCESSING_JOBS
-from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
@@ -69,9 +68,11 @@ class SdocStatusRow(BaseModel):
     )
 
     @classmethod
-    def from_sdoc_orm(cls, sdoc: "SourceDocumentORM") -> "SdocStatusRow":
-        status_fields = PROCESSING_JOBS[DocType(sdoc.doctype)]
-        status: dict[str, SDocStatus] = {s: getattr(sdoc, s) for s in status_fields}
+    def from_sdoc_orm(
+        cls, sdoc: "SourceDocumentORM", steps: list[JobType]
+    ) -> "SdocStatusRow":
+        """Reads the status of the given pipeline steps (the steps of the sdoc's doctype)."""
+        status: dict[str, SDocStatus] = {s.value: getattr(sdoc, s.value) for s in steps}
         return cls(
             sdoc_id=sdoc.id,
             name=sdoc.name,

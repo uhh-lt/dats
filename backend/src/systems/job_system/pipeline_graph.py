@@ -46,7 +46,9 @@ class PipelineGraph:
             problems.extend(dep_problems)
             order = _order(doctype_steps, deps)
             if order is None:
-                problems.append(f"The steps of doctype '{doctype}' contain a cycle.")
+                problems.append(
+                    f"The steps of doctype '{doctype.value}' contain a cycle."
+                )
                 continue
             triggers = _transitive_reduction(order, deps)
             for job_type, predecessors in triggers.items():
@@ -54,8 +56,8 @@ class PipelineGraph:
                 # by each of its predecessors
                 if len(predecessors) > 1:
                     problems.append(
-                        f"Step '{job_type}' of doctype '{doctype}' would be started by "
-                        f"several steps: {sorted(predecessors)}."
+                        f"Step '{job_type.value}' of doctype '{doctype.value}' would be "
+                        f"started by several steps: {sorted(p.value for p in predecessors)}."
                     )
             self._steps_by_doctype[doctype] = order
             self._roots_by_doctype[doctype] = [jt for jt in order if not deps[jt]]
@@ -72,7 +74,7 @@ class PipelineGraph:
             }
             if len({tuple(s) for s in per_doctype.values()}) > 1:
                 problems.append(
-                    f"Step '{job_type}' starts different steps per doctype: {per_doctype}."
+                    f"Step '{job_type.value}' starts different steps per doctype."
                 )
             self._successors[job_type] = next(iter(per_doctype.values()), [])
 
@@ -116,8 +118,8 @@ def _dependencies(
         for artefact in step.produces:
             if artefact in producers:
                 problems.append(
-                    f"Artefact '{artefact.value}' of doctype '{doctype}' is produced by "
-                    f"several steps: '{producers[artefact]}', '{job_type}'."
+                    f"Artefact '{artefact.value}' of doctype '{doctype.value}' is produced "
+                    f"by several steps: '{producers[artefact].value}', '{job_type.value}'."
                 )
             producers[artefact] = job_type
 
@@ -129,8 +131,8 @@ def _dependencies(
                 continue
             if artefact not in producers:
                 problems.append(
-                    f"Step '{job_type}' requires artefact '{artefact.value}', which no "
-                    f"step produces for doctype '{doctype}'."
+                    f"Step '{job_type.value}' requires artefact '{artefact.value}', which "
+                    f"no step produces for doctype '{doctype.value}'."
                 )
                 continue
             deps[job_type].add(producers[artefact])

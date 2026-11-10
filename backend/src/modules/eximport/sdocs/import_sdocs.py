@@ -3,7 +3,6 @@ from pathlib import Path
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type_enum import DocType
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
@@ -36,6 +35,7 @@ from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
+from systems.job_system.pipeline_graph import pipeline_registry
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
@@ -222,9 +222,9 @@ def import_sdocs_to_proj(
         )
 
         # 2.3 Set the source document status to success
-        jobs = PROCESSING_JOBS[DocType(sdoc_export.doctype)]
+        jobs = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
         sdoc_update = SourceDocumentUpdate(
-            **{job: sdoc_export.status for job in jobs},  # type: ignore
+            **{job.value: sdoc_export.status for job in jobs},  # type: ignore
         )
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
