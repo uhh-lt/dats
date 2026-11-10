@@ -92,6 +92,15 @@ export function SdocStatusTable({
       .filter((id) => !isNaN(id));
   }, [rowSelectionModel]);
 
+  // the steps that are planned for at least one selected document: only these can be recomputed
+  const plannedSteps = useMemo(() => {
+    const selected = new Set(selectedRows);
+    const rows = searchData.pages.flatMap(flatMapData).filter((row) => selected.has(row.sdoc_id));
+    return tableColumnInfo.filter((step) =>
+      rows.some((row) => row.status[step] !== null && row.status[step] !== undefined),
+    );
+  }, [searchData, selectedRows, tableColumnInfo]);
+
   // actions
   const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = HealthHooks.useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
@@ -187,7 +196,7 @@ export function SdocStatusTable({
       renderTopRightToolbar={HealthTableToolbarRight}
       toolbarExtraProps={{
         selectedRows,
-        tableColumnInfo,
+        plannedSteps,
         settings,
         onChangeSettings: setSettings,
         isRetryPending,
