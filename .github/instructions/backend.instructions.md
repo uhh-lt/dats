@@ -177,6 +177,7 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - A job that computes several steps in one run declares the others in `further_steps` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
 - Every step has a nullable status column of the same name on `SourceDocumentORM` and in `SDOC_STATUS_COLUMNS`, a `JobType` value and a migration; `NULL` means not planned, never default it to processing.
 - The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
+- A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
 - A new step is also added to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`); `test_project_doctor_steps.py` fails otherwise.
 
 ## Features
@@ -184,4 +185,6 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
 - A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
 - The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
-- Only `FeatureService` plans steps (sets a status column from `NULL`): `planned_steps` at upload and `activate_missing_steps` when a feature is enabled; never plan steps by hand.
+- Only `FeatureService` plans steps (sets a status column from `NULL`): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
+- The enabled features change only through `FeatureService.activate_feature` and `disable_feature` (the `/feature/project/...` endpoints), never through `ProjectUpdate`.
+- An import restores only what the archive holds and plans no steps; features whose data is missing are partly available until a user completes them.

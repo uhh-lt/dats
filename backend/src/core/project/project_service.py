@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 
-from common.feature_enum import Feature
 from common.singleton_meta import SingletonMeta
 from core.code.code_crud import crud_code
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
@@ -89,31 +88,9 @@ class ProjectService(metaclass=SingletonMeta):
     def update_project(
         self, *, db: Session, project_id: int, update_dto: ProjectUpdate
     ) -> ProjectRead:
-        """Update the project. Enabling features enables the features they require
-        and plans the steps they need for all documents of the project (see
-        `FeatureService.activate_missing_steps`); disabling a feature only changes
-        the enabled features, the computed data stays."""
-        # 1) resolve the enabled features: add the required ones, reject disabling
-        # a feature that an enabled feature requires
-        project = crud_project.read(db=db, id=project_id)
-        current = {Feature(f) for f in project.enabled_features}
-        if update_dto.enabled_features is not None:
-            enabled = self.fs.resolve_enabled_features(
-                requested=update_dto.enabled_features, current=current
-            )
-            update_dto = update_dto.model_copy(update={"enabled_features": enabled})
-
-        # 2) update the project
+        """Update the title and description of the project. The enabled features
+        change through `FeatureService.activate_feature` and `disable_feature`."""
         crud_project.update(db=db, id=project_id, update_dto=update_dto)
-
-        # 3) plan and start the steps of newly enabled features
-        if update_dto.enabled_features is not None and (
-            set(update_dto.enabled_features) - current
-        ):
-            self.fs.activate_missing_steps(
-                db=db, project_id=project_id, enabled=update_dto.enabled_features
-            )
-
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def delete_project(self, *, db: Session, project_id: int) -> ProjectRead:

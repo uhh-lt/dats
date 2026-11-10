@@ -22,3 +22,13 @@ class Feature(str, Enum):
     ENTITY_ANNOTATIONS = "entity_annotations"
     IMAGE_CAPTIONS = "image_captions"
     OBJECT_DETECTION = "object_detection"
+
+
+class FeatureStatus(str, Enum):
+    """The state of a feature in a project, derived from the step statuses of its
+    documents."""
+
+    DISABLED = "disabled"
+    COMPUTING = "computing"  # enabled, some documents are still processing
+    PARTLY_AVAILABLE = "partly_available"  # enabled, some documents lack the data and nothing runs for them
+    FULLY_AVAILABLE = "fully_available"  # enabled, all documents have the data
