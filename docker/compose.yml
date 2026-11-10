@@ -31,11 +31,9 @@ x-dats-common: &dats-common
     ES_HOST: elasticsearch
     ES_PORT: 9200
     # Service Connections
-    LLM_PROVIDER_HOST: ${LLM_PROVIDER_HOST?llm-provider-host-required!}
-    LLM_PROVIDER_PORT: ${LLM_PROVIDER_PORT?llm-provider-port-required!}
+    LLM_PROVIDER_URL: ${LLM_PROVIDER_URL?llm-provider-url-required!}
     LLM_PROVIDER_API_KEY: ${LLM_PROVIDER_API_KEY?llm-provider-api-key-required!}
-    EMB_PROVIDER_HOST: ${EMB_PROVIDER_HOST?emb-provider-host-required!}
-    EMB_PROVIDER_PORT: ${EMB_PROVIDER_PORT?emb-provider-port-required!}
+    EMB_PROVIDER_URL: ${EMB_PROVIDER_URL?emb-provider-url-required!}
     EMB_PROVIDER_API_KEY: ${EMB_PROVIDER_API_KEY?emb-provider-api-key-required!}
     DOCLING_HOST: ${DOCLING_HOST?docling-host-required!}
     DOCLING_PORT: ${DOCLING_PORT?docling-port-required!}

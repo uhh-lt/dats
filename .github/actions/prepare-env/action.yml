@@ -70,10 +70,8 @@ runs:
         fi
 
         # Connect to the hosted services.
-        sed -i 's/^LLM_PROVIDER_HOST=.*/LLM_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-        sed -i 's/^LLM_PROVIDER_PORT=.*/LLM_PROVIDER_PORT=10133/' backend/.env docker/.env
-        sed -i 's/^EMB_PROVIDER_HOST=.*/EMB_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-        sed -i 's/^EMB_PROVIDER_PORT=.*/EMB_PROVIDER_PORT=10137/' backend/.env docker/.env
+        sed -i 's|^LLM_PROVIDER_URL=.*|LLM_PROVIDER_URL=http://ltdwise.informatik.uni-hamburg.de:10133/v1|' backend/.env docker/.env
+        sed -i 's|^EMB_PROVIDER_URL=.*|EMB_PROVIDER_URL=http://ltdwise.informatik.uni-hamburg.de:10137/v1|' backend/.env docker/.env
         sed -i 's/^RAY_HOST=.*/RAY_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
         sed -i 's/^RAY_PORT=.*/RAY_PORT=10130/' backend/.env docker/.env
         sed -i 's/^DOCLING_HOST=.*/DOCLING_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env

@@ -287,8 +287,8 @@ class ElasticsearchConfig(BaseModel):
 class APIConnectionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    host: str = Field(min_length=1)
-    port: int = Field(gt=0, lt=65536)
+    # base URL of the OpenAI-compatible API, e.g. "https://llm.example.org/v1"
+    url: str = Field(pattern=r"^https?://\S+$")
     api_key: str = Field()
 
 

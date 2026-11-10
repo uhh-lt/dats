@@ -21,13 +21,11 @@ for env_file in backend/.env docker/.env; do
 	fi
 done
 
-# vLLM LLM provider (hosted on hcdsgpu2)
-sed -i 's/^LLM_PROVIDER_HOST=.*/LLM_PROVIDER_HOST=hcdsgpu2.informatik.uni-hamburg.de/' backend/.env docker/.env
-sed -i 's/^LLM_PROVIDER_PORT=.*/LLM_PROVIDER_PORT=1111/' backend/.env docker/.env
+# LLM provider (HCDS LLM gateway)
+sed -i 's|^LLM_PROVIDER_URL=.*|LLM_PROVIDER_URL=https://llm.api.hcds.uni-hamburg.de/v1|' backend/.env docker/.env
 
 # vLLM embedding provider (hosted on ltdwise)
-sed -i 's/^EMB_PROVIDER_HOST=.*/EMB_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-sed -i 's/^EMB_PROVIDER_PORT=.*/EMB_PROVIDER_PORT=10137/' backend/.env docker/.env
+sed -i 's|^EMB_PROVIDER_URL=.*|EMB_PROVIDER_URL=http://ltdwise.informatik.uni-hamburg.de:10137/v1|' backend/.env docker/.env
 
 # Ray (hosted on ltdwise)
 sed -i 's/^RAY_HOST=.*/RAY_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
