@@ -61,7 +61,7 @@ def stamp_file(payload: dict) -> Path:
 
 
 def clear_delivered(payload: dict) -> None:
-    # Compaction hooks carry no agent_id, so any compaction resets all agents of the session.
+    # Compaction hooks carry no agent_id, so any compaction or clear resets all agents of the session.
     prefix = f"dats-instructions-{payload['session_id']}-"
     for state in Path(tempfile.gettempdir()).glob(f"{prefix}*"):
         state.unlink(missing_ok=True)
