@@ -48,11 +48,17 @@ def enrich_for_recompute(
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
-        assert sdoc.doctype == DocType.audio, (
-            f"SourceDocument with {payload.sdoc_id=} is not an audio file!"
+        assert sdoc.doctype in {DocType.audio, DocType.video}, (
+            f"SourceDocument with {payload.sdoc_id=} is not an audio or video file!"
         )
 
     audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+    if sdoc.doctype == DocType.video:
+        # the audio stream extracted by the video_audio_extraction step
+        audio_path = audio_path.with_suffix(".mp3")
+        assert audio_path.exists(), (
+            f"The audio stream of the video with {payload.sdoc_id=} was not extracted!"
+        )
 
     return TranscriptionJobInput(
         **payload.model_dump(),
