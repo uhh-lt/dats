@@ -12,7 +12,7 @@ interface FeatureNotEnabledViewProps {
 export function FeatureNotEnabledView({ feature }: FeatureNotEnabledViewProps) {
   const openProjectSettings = useOpenDialog("projectSettings");
 
-  const handleOpenSettings = () => openProjectSettings();
+  const handleOpenSettings = () => openProjectSettings({ tab: "features" });
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
@@ -29,7 +29,8 @@ export function FeatureNotEnabledView({ feature }: FeatureNotEnabledViewProps) {
           This feature is not enabled for this project
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          {getFeatureTitle(feature)} is disabled in this project. A project owner can enable it in the project settings.
+          {getFeatureTitle(feature)} is disabled in this project. You can enable it in the Features tab of the project
+          settings; its data is then computed for the existing documents.
         </Typography>
         <Button
           variant="contained"
@@ -37,7 +38,7 @@ export function FeatureNotEnabledView({ feature }: FeatureNotEnabledViewProps) {
           startIcon={getIconComponent(Icon.SETTINGS)}
           onClick={handleOpenSettings}
         >
-          Open project settings
+          Open feature settings
         </Button>
       </Box>
     </Container>

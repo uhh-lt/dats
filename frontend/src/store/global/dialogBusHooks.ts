@@ -35,9 +35,9 @@ function hasDialogSuccessCallback(key: keyof DialogPayloadMap): key is keyof Dia
 
 // ─── Typed hook helpers ────────────────────────────────────────────────────────
 
-/** Return type for useOpenDialog: no-arg function for undefined-data dialogs, typed-arg otherwise. */
-type OpenDialogFn<K extends keyof DialogPayloadMap> = DialogPayloadMap[K] extends undefined
-  ? (data?: undefined, onSuccess?: DialogCallback<K>) => void
+/** Return type for useOpenDialog: optional data for dialogs whose data may be undefined, typed-arg otherwise. */
+type OpenDialogFn<K extends keyof DialogPayloadMap> = undefined extends DialogPayloadMap[K]
+  ? (data?: DialogPayloadMap[K], onSuccess?: DialogCallback<K>) => void
   : (data: DialogPayloadMap[K], onSuccess?: DialogCallback<K>) => void;
 
 /**
