@@ -1,4 +1,6 @@
 import { CodeHooks } from "@core/code";
+import { useFeature } from "@core/feature";
+import { Feature } from "@models/Feature";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
@@ -30,8 +32,10 @@ export function SearchStatistics({
   handleTagClick,
   ...props
 }: SearchStatisticsProps & BoxProps) {
-  // tabs
-  const [tab, setTab] = useState("keywords");
+  // tabs: keyword statistics (and the keyword filter they add) only exist with the feature
+  const keywordStatistics = useFeature(Feature.KEYWORD_STATISTICS);
+  const [selectedTab, setTab] = useState("keywords");
+  const tab = selectedTab === "keywords" && !keywordStatistics.enabled ? "tags" : selectedTab;
   const handleTabChange = (_event: SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
@@ -79,7 +83,7 @@ export function SearchStatistics({
             )}
           />
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
-            <Tab label="Keywords" value="keywords" />
+            {keywordStatistics.enabled && <Tab label="Keywords" value="keywords" />}
             <Tab label="Tags" value="tags" />
             {projectCodes.data?.map((code) => (
               <Tab key={code.id} label={code.name} value={`${code.id}`} />
