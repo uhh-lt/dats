@@ -26,15 +26,15 @@ export type SourceDocumentStatusSimple = {
    */
   id: number;
   /**
-   * Number of processed jobs (depending on the doctype)
+   * Number of finished jobs
    */
   processed_jobs: number;
   /**
-   * Total number of jobs (depending on the doctype)
+   * Number of planned jobs
    */
   total_jobs: number;
   /**
-   * Overall processing status. Results from processed_jobs and total_jobs
+   * Overall processing status: erroneous if any job failed, processing if any job is pending, finished otherwise
    */
   processed_status: SDocStatus;
 };

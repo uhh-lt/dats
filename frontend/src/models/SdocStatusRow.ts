@@ -13,9 +13,9 @@ export type SdocStatusRow = {
    */
   name: string;
   /**
-   * Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)
+   * Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype, null = the step is not planned)
    */
-  status: Record<string, SDocStatus>;
+  status: Record<string, SDocStatus | null>;
   /**
    * UUIDs of the failed processing jobs (the keys are the processing step/job and differ per doctype)
    */

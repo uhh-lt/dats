@@ -25,9 +25,21 @@ export type SourceDocumentUpdate = {
    */
   text_language_detection?: SDocStatus | null;
   /**
-   * Text Spacy done?
+   * Text Spacy (tokens and sentences) done?
    */
   text_spacy?: SDocStatus | null;
+  /**
+   * Text Keywords done?
+   */
+  text_keywords?: SDocStatus | null;
+  /**
+   * Text Word Frequency done?
+   */
+  text_word_frequency?: SDocStatus | null;
+  /**
+   * Text Named Entity Recognition done?
+   */
+  text_ner?: SDocStatus | null;
   /**
    * Text ES Index done?
    */
@@ -36,6 +48,10 @@ export type SourceDocumentUpdate = {
    * Text Sentence Embedding done?
    */
   text_sentence_embedding?: SDocStatus | null;
+  /**
+   * Text Document Embedding done?
+   */
+  text_document_embedding?: SDocStatus | null;
   /**
    * Text HTML Mapping done?
    */

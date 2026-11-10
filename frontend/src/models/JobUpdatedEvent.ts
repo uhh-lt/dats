@@ -15,9 +15,9 @@ import type { PerspectivesJobRead } from "./PerspectivesJobRead";
 export type JobUpdatedEvent = {
   type?: string;
   payload:
+    | CrawlerJobRead
     | ClassifierJobRead
     | COTARefinementJobRead
-    | CrawlerJobRead
     | DuplicateFinderJobRead
     | LlmAssistantJobRead
     | ExperimentRunJobRead
