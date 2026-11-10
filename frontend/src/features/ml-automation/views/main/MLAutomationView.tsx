@@ -103,58 +103,6 @@ export function MlAutomationView() {
     });
   };
 
-  // document embedding job
-  const handleStartNewDocumentEmbeddings = () => {
-    startMlJob.mutate({
-      requestBody: {
-        ml_job_type: MLJobType.DOCUMENT_EMBEDDING,
-        project_id: projectId,
-        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.DOCUMENT_EMBEDDING },
-      },
-    });
-  };
-
-  const handleStartReComputeDocumentEmbeddings = () => {
-    openConfirmationDialog({
-      text: "Remove all document embeddings from the index and compute new embeddings?",
-      onAccept: () => {
-        startMlJob.mutate({
-          requestBody: {
-            ml_job_type: MLJobType.DOCUMENT_EMBEDDING,
-            project_id: projectId,
-            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.DOCUMENT_EMBEDDING },
-          },
-        });
-      },
-    });
-  };
-
-  // document embedding job
-  const handleStartNewSentenceEmbeddings = () => {
-    startMlJob.mutate({
-      requestBody: {
-        ml_job_type: MLJobType.SENTENCE_EMBEDDING,
-        project_id: projectId,
-        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.SENTENCE_EMBEDDING },
-      },
-    });
-  };
-
-  const handleStartReComputeSentenceEmbeddings = () => {
-    openConfirmationDialog({
-      text: "Remove all document embeddings from the index and compute new embeddings?",
-      onAccept: () => {
-        startMlJob.mutate({
-          requestBody: {
-            ml_job_type: MLJobType.SENTENCE_EMBEDDING,
-            project_id: projectId,
-            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.SENTENCE_EMBEDDING },
-          },
-        });
-      },
-    });
-  };
-
   return (
     <ContentContainerLayout>
       <Card sx={{ minHeight: "540px", mb: 2 }} variant="outlined" className="myFlexFillAllContainer myFlexContainer">
@@ -242,54 +190,6 @@ export function MlAutomationView() {
                 <Tooltip title="Perform tag recommendation on untagged documents">
                   <IconButton onClick={handleStartNewTagRecommendation} loading={startMlJob.isPending} color="success">
                     <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </List>
-          <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>{getIconComponent(Icon.DOCUMENT)}</Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="Document Embeddings" secondary="Compute document embeddings" />
-              <ListItemIcon>
-                <Tooltip title="Compute embeddings for all unprocessed documents">
-                  <IconButton onClick={handleStartNewDocumentEmbeddings} loading={startMlJob.isPending} color="success">
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Re-compute embeddings for all documents">
-                  <IconButton
-                    onClick={handleStartReComputeDocumentEmbeddings}
-                    loading={startMlJob.isPending}
-                    color="error"
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </List>
-          <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>{getIconComponent(Icon.SENTENCE_SEARCH)}</Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="Sentence Embeddings" secondary="Compute sentence embeddings" />
-              <ListItemIcon>
-                <Tooltip title="Compute sentence embeddings for all unprocessed documents">
-                  <IconButton onClick={handleStartNewSentenceEmbeddings} loading={startMlJob.isPending} color="success">
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Re-compute sentence embeddings for all documents">
-                  <IconButton
-                    onClick={handleStartReComputeSentenceEmbeddings}
-                    loading={startMlJob.isPending}
-                    color="error"
-                  >
-                    <RestartAltIcon />
                   </IconButton>
                 </Tooltip>
               </ListItemIcon>
