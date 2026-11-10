@@ -1,11 +1,16 @@
 from sqlalchemy.orm import Session
 
+from common.feature_enum import Feature
 from common.singleton_meta import SingletonMeta
 from core.code.code_crud import crud_code
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
-from core.project.project_dto import ProjectCreate, ProjectRead
+from core.project.project_dto import (
+    ProjectCreate,
+    ProjectRead,
+    ProjectUpdate,
+)
 from core.prompt.prompt_service import PromptService
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserRead
@@ -13,6 +18,7 @@ from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_service import JobService
 
 
@@ -25,6 +31,7 @@ class ProjectService(metaclass=SingletonMeta):
         cls.weaviate = WeaviateRepo()
         cls.js = JobService()
         cls.pts = PromptService()
+        cls.fs = FeatureService()
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, project_id: int, user_id: int) -> UserRead:
@@ -34,8 +41,16 @@ class ProjectService(metaclass=SingletonMeta):
     def create_project(
         self, *, db: Session, create_dto: ProjectCreate, creating_user_id: int
     ) -> ProjectRead:
-        # 1) create the project
-        proj = crud_project.create(db=db, create_dto=create_dto)
+        # 1) create the project, with the features its features require
+        enabled_features = self.fs.resolve_enabled_features(
+            requested=create_dto.enabled_features
+        )
+        proj = crud_project.create(
+            db=db,
+            create_dto=create_dto.model_copy(
+                update={"enabled_features": enabled_features}
+            ),
+        )
         project_id = proj.id
 
         # 2) associate the system user
@@ -69,6 +84,36 @@ class ProjectService(metaclass=SingletonMeta):
             collection.create_tenant(client, project_id)
 
         # 10) re-load a fresh instance to avoid detachment
+        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
+
+    def update_project(
+        self, *, db: Session, project_id: int, update_dto: ProjectUpdate
+    ) -> ProjectRead:
+        """Update the project. Enabling features enables the features they require
+        and plans the steps they need for all documents of the project (see
+        `FeatureService.activate_missing_steps`); disabling a feature only changes
+        the enabled features, the computed data stays."""
+        # 1) resolve the enabled features: add the required ones, reject disabling
+        # a feature that an enabled feature requires
+        project = crud_project.read(db=db, id=project_id)
+        current = {Feature(f) for f in project.enabled_features}
+        if update_dto.enabled_features is not None:
+            enabled = self.fs.resolve_enabled_features(
+                requested=update_dto.enabled_features, current=current
+            )
+            update_dto = update_dto.model_copy(update={"enabled_features": enabled})
+
+        # 2) update the project
+        crud_project.update(db=db, id=project_id, update_dto=update_dto)
+
+        # 3) plan and start the steps of newly enabled features
+        if update_dto.enabled_features is not None and (
+            set(update_dto.enabled_features) - current
+        ):
+            self.fs.activate_missing_steps(
+                db=db, project_id=project_id, enabled=update_dto.enabled_features
+            )
+
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def delete_project(self, *, db: Session, project_id: int) -> ProjectRead:

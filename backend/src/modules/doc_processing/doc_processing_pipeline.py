@@ -128,6 +128,17 @@ def _planned_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
         return [step for step in steps if getattr(sdoc, step.value) is not None]
 
 
+def _pending_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
+    """The steps that are planned for the document and not computed yet."""
+    with sqlr.transaction() as db:
+        sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+        return [
+            step
+            for step in steps
+            if getattr(sdoc, step.value) == SDocStatus.processing.value
+        ]
+
+
 def _start_jobs(
     jobs: dict[JobType, list[JobType]],
     job_type: JobType,
@@ -161,6 +172,15 @@ def execute_pipeline_step(job_type: JobType, input, output, job_service):
         else [job_type]
     )
     _start_jobs(graph.next_jobs(finished_steps), job_type, input, output, job_service)
+
+    # steps of this job that were planned while it ran (a feature activation
+    # plans e.g. the keywords while the spaCy job runs for tokens only): run the
+    # job again for them
+    if isinstance(input, SdocProcessingJobInput):
+        others = [s for s in graph.job_steps(job_type) if s not in finished_steps]
+        pending = _pending_steps(input.sdoc_id, others) if others else []
+        if pending:
+            job_service.start_job(job_type, input.model_copy(update={"steps": pending}))
 
     for step in ENTRY_POINTS.get(job_type, []):
         if isinstance(step, LoopBranchOperator):
