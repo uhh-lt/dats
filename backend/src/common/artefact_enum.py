@@ -6,7 +6,7 @@ class Artefact(str, Enum):
     artefacts they require and produce (see `register_job`); the step order and
     the steps per doctype are derived from these declarations."""
 
-    # core
+    # core (CORE_ARTEFACTS)
     RAW_HTML = "raw_html"
     CONTENT = "content"
     LANGUAGE = "language"
@@ -28,3 +28,20 @@ class Artefact(str, Enum):
     NER_SPANS = "ner_spans"
     IMAGE_CAPTION = "image_caption"
     OBJECT_BBOXES = "object_bboxes"
+
+
+# The artefacts every document gets, whatever features its project enables. All
+# other artefacts are computed only for the features that need them.
+CORE_ARTEFACTS: frozenset[Artefact] = frozenset(
+    {
+        Artefact.RAW_HTML,
+        Artefact.CONTENT,
+        Artefact.LANGUAGE,
+        Artefact.TOKENS_SENTENCES,
+        Artefact.HTML,
+        Artefact.THUMBNAIL,
+        Artefact.FILE_METADATA,
+        Artefact.AUDIO,
+        Artefact.TRANSCRIPT,
+    }
+)
