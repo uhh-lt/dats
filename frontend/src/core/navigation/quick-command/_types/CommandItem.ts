@@ -9,4 +9,6 @@ export interface CommandItem {
   action?: () => void;
   route?: string;
   keywords?: string[];
+  /** Shortcut hint shown next to the command, e.g. "⌘⇧Y W". */
+  shortcut?: string;
 }

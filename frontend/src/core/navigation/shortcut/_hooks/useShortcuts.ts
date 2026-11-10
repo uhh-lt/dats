@@ -12,6 +12,8 @@ export interface Shortcut {
     shift?: boolean;
     alt?: boolean;
   };
+  /** A chord: the plain key that follows `keys` within CHORD_TIMEOUT_MS; `keys` keeps its own shortcut. */
+  then?: string;
   description: string;
   action: () => void;
 }
@@ -57,18 +59,23 @@ export function useShortcuts() {
       // Navigation shortcuts
       ...FEATURE_ENTRIES.flatMap((entry: FeatureEntry): Shortcut[] => {
         // a disabled feature has no shortcut, so its keys do nothing
-        if (!entry.shortcut || !isFeatureEnabled(entry.feature)) return [];
+        if (!isFeatureEnabled(entry.feature)) return [];
+        const { shortcut } = entry;
+        const shortcutKey = typeof shortcut === "string" ? shortcut : shortcut.after;
         return [
-          createShortcut(
-            `goTo-${entry.id}`,
-            entry.shortcut,
-            `Go to ${entry.title}`,
-            () => tabNavigate({ to: entry.to, params: { projectId } }),
-            {
-              ctrlmeta: true,
-              shift: true,
-            },
-          ),
+          {
+            ...createShortcut(
+              `goTo-${entry.id}`,
+              shortcutKey,
+              `Go to ${entry.title}`,
+              () => tabNavigate({ to: entry.to, params: { projectId } }),
+              {
+                ctrlmeta: true,
+                shift: true,
+              },
+            ),
+            then: typeof shortcut === "string" ? undefined : shortcut.key,
+          },
         ];
       }),
       createShortcut("goToSettings", ",", "Go to Settings", openProjectSettingsDialog, {

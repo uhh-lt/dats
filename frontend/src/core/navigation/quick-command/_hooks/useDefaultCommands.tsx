@@ -3,6 +3,7 @@ import {
   FEATURE_ENTRIES,
   FeatureCommandCategory,
   FeatureEntry,
+  formatFeatureShortcut,
   getFeatureCommandCategory,
   useIsFeatureEnabled,
 } from "@core/feature";
@@ -43,6 +44,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
               tabNavigate({ to: entry.to, params: { projectId } });
             },
             keywords: [...entry.command.keywords],
+            shortcut: formatFeatureShortcut(entry.shortcut),
           },
         ];
       }),

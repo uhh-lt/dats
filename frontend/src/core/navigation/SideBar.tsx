@@ -4,6 +4,7 @@ import { useAuth } from "@core/auth";
 import {
   FeatureEntry,
   FeatureRoute,
+  FeatureShortcut,
   formatFeatureShortcut,
   getFeatureEntries,
   useIsFeatureEnabled,
@@ -48,18 +49,18 @@ const SELECTED_COLOR_OVERRIDES: Record<string, string> = {
   perspectives: "rgba(0, 0, 0, 0.08)",
 };
 
-function withShortcutHint(label: string, shortcut: string | undefined) {
-  return shortcut ? `${label} (${formatFeatureShortcut(shortcut)})` : label;
+function withShortcutHint(label: string, shortcut: FeatureShortcut) {
+  return `${label} (${formatFeatureShortcut(shortcut)})`;
 }
 
 interface ShortcutLabelProps {
   title: string;
-  shortcut?: string;
+  shortcut: FeatureShortcut;
 }
 
-/** Underlines the first letter of the title that matches the shortcut key. */
+/** Underlines the first letter of the title that matches a single-key shortcut; chords are shown in the tooltip. */
 function ShortcutLabel({ title, shortcut }: ShortcutLabelProps) {
-  const index = shortcut ? title.toLowerCase().indexOf(shortcut.toLowerCase()) : -1;
+  const index = typeof shortcut === "string" ? title.toLowerCase().indexOf(shortcut.toLowerCase()) : -1;
   if (index < 0) return title;
   return (
     <>
@@ -244,7 +245,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 {searchEntries.map((entry) => (
                   <MenuItem key={entry.id} onClick={() => handleOpenSearchTab(entry.to)}>
                     <ListItemIcon>{getIconComponent(entry.icon)}</ListItemIcon>
-                    <ListItemText>{entry.title}</ListItemText>
+                    <ListItemText>{withShortcutHint(entry.title, entry.shortcut)}</ListItemText>
                   </MenuItem>
                 ))}
               </Menu>

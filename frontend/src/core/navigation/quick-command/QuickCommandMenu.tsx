@@ -7,6 +7,7 @@ import {
   ListItemText,
   Popover,
   TextField,
+  Typography,
   alpha,
 } from "@mui/material";
 import { useDialogBus } from "@store/global/dialogBusHooks";
@@ -123,6 +124,11 @@ export function QuickCommandMenu({ projectId }: { projectId: number }) {
           <ListItem key={key} {...props}>
             {option.icon && <ListItemIcon sx={{ minWidth: 40 }}>{option.icon}</ListItemIcon>}
             <ListItemText primary={option.title} secondary={option.description} />
+            {option.shortcut && (
+              <Typography variant="body2" sx={{ color: "text.secondary", ml: 1, flexShrink: 0 }}>
+                {option.shortcut}
+              </Typography>
+            )}
           </ListItem>
         )}
         sx={{
