@@ -47,6 +47,7 @@ def enrich_for_recompute(
 @register_job(
     job_type=JobType.VIDEO_THUMBNAIL,
     input_type=VideoThumbnailJobInput,
+    enricher=enrich_for_recompute,
     requires=set(),
     produces={Artefact.THUMBNAIL},
     doctypes={DocType.video},
