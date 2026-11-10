@@ -172,6 +172,11 @@ export const FEATURE_ENTRIES = [
     description: "Compare two annotators: scores, confusion matrix and disagreements.",
     icon: Icon.AGREEMENT,
     to: "/project/$projectId/analysis/agreement",
+    command: {
+      title: "Annotator Agreement",
+      description: "Go to annotator agreement analysis",
+      keywords: ["go", "to", "navigate", "agreement", "annotator", "inter-annotator", "kappa", "compare"],
+    },
   },
   {
     id: "timeline-analysis",
@@ -258,6 +263,10 @@ export const FEATURE_ENTRIES = [
     description: "Semi-automatically scale annotations",
     icon: Icon.ANNOTATION_SCALING,
     to: "/project/$projectId/analysis/annotation-scaling",
+    command: {
+      description: "Go to annotation scaling",
+      keywords: ["go", "to", "navigate", "annotation", "scaling", "suggest", "similar", "sentences"],
+    },
   },
   {
     id: "tag-recommendations",
@@ -267,6 +276,10 @@ export const FEATURE_ENTRIES = [
     description: "Semi-automatically scale tags",
     icon: Icon.TAG_RECOMMENDATION,
     to: "/project/$projectId/analysis/tag-recommendations",
+    command: {
+      description: "Go to tag recommendations",
+      keywords: ["go", "to", "navigate", "tag", "recommendation", "suggest", "documents"],
+    },
   },
 
   // Tools (sidebar tools menu)
@@ -318,8 +331,6 @@ export const FEATURE_ENTRIES = [
   },
 ] as const satisfies readonly FeatureEntry[];
 
-export type FeatureEntryId = (typeof FEATURE_ENTRIES)[number]["id"];
-
 const GROUP_COMMAND_CATEGORY: Record<FeatureGroup, FeatureCommandCategory> = {
   search: "Navigation",
   main: "Navigation",
@@ -332,7 +343,7 @@ export function getFeatureEntries(group: FeatureGroup): readonly FeatureEntry[] 
 }
 
 export function getFeatureCommandCategory(entry: FeatureEntry): FeatureCommandCategory {
-  return entry.command?.category ?? GROUP_COMMAND_CATEGORY[entry.group];
+  return entry.command.category ?? GROUP_COMMAND_CATEGORY[entry.group];
 }
 
 /** The shortcut hint shown in labels and tooltips, e.g. "⌘⇧S". */
