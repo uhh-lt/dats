@@ -1,7 +1,11 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { ProjectService } from "@api/services/ProjectService";
+import type { Feature } from "@models/Feature";
+import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { SDocStatus } from "@models/SDocStatus";
 import { queryOptions } from "@tanstack/react-query";
+
+export type ProjectFeatureMap = Partial<Record<Feature, ProjectFeatureRead>>;
 
 /**
  * Query factory for projects.
@@ -10,6 +14,7 @@ import { queryOptions } from "@tanstack/react-query";
  *   projectQueries.userProjects()                       ["project", "user"]
  *   projectQueries.sdocStatusCount(projectId, status)   ["project", "sdocStatusCount", projectId, status]
  *   projectQueries.sdocStatusSimple(projectId, status)  ["project", "sdocStatusSimple", projectId, status]
+ *   projectQueries.features(projectId)                  ["project", "features", projectId]
  */
 export const projectQueries = {
   all: () => ["project"] as const,
@@ -36,5 +41,20 @@ export const projectQueries = {
     queryOptions({
       queryKey: [...projectQueries.sdocStatusSimpleScope(), projectId, status] as const,
       queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
+    }),
+
+  // state (enabled, ready, coverage) of every toggleable feature in a project, as a map feature -> state
+  featuresScope: () => [...projectQueries.all(), "features"] as const,
+  features: (projectId: number) =>
+    queryOptions({
+      queryKey: [...projectQueries.featuresScope(), projectId] as const,
+      queryFn: async () => {
+        const states = await ProjectService.getFeatures({ projectId });
+        return states.reduce<ProjectFeatureMap>((acc, state) => {
+          acc[state.feature] = state;
+          return acc;
+        }, {});
+      },
+      staleTime: 1000 * 60,
     }),
 };
