@@ -70,6 +70,7 @@ The suffix states the role of a file. Several suffixes are auto-imported by `imp
 - `*_service.py`: business logic
 - `*_endpoint.py`: one FastAPI router (auto-mounted by `bootstrap.create_app`)
 - `*_job.py`: background job handlers registered with `@register_job`
+- `*_feature.py`: the module's toggleable feature, declared with `register_feature`
 - `*_exceptions.py`: module-specific exceptions
 - `*_enum.py`: the module's enums
 - `*_repo.py`: external service connection (only in `repos/`)
@@ -167,3 +168,20 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - Add the job type to `JobType` (`common/job_type_enum.py`) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
 - `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(JobType.X, <X>JobInput(...))`.
 - See [ml_job.py](backend/src/modules/ml/ml_job.py) and `systems/job_system/README.md`.
+- A job of a gated module checks its feature in its `validate_input` hook with `FeatureService().assert_enabled(...)` (`duplicate_finder_job.py`).
+
+## Pipeline Steps
+
+- A document preprocessing step is a job with `doctypes`, `requires` and `produces` in `@register_job`; the pipeline order and the steps per doctype are derived from these declarations, never listed by hand.
+- `requires` and `produces` hold `Artefact` values (`common/artefact_enum.py`); a new artefact is added there, and to `CORE_ARTEFACTS` only if every document needs it whatever features its project enables.
+- A job that computes several steps in one run declares the others in `further_steps` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
+- Every step has a nullable status column of the same name on `SourceDocumentORM` and in `SDOC_STATUS_COLUMNS`, a `JobType` value and a migration; `NULL` means not planned, never default it to processing.
+- The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
+- A new step is also added to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`); `test_project_doctor_steps.py` fails otherwise.
+
+## Features
+
+- A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
+- A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
+- The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
+- Only `FeatureService` plans steps (sets a status column from `NULL`): `planned_steps` at upload and `activate_missing_steps` when a feature is enabled; never plan steps by hand.
