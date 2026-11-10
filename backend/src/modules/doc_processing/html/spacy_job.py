@@ -7,7 +7,6 @@ from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
@@ -29,6 +28,9 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
+
+# the system code whose children are the named entity codes
+NAMED_ENTITY_CODE = "NAMED_ENTITY"
 
 
 class SpacyJobInput(SdocProcessingJobInput):
@@ -92,12 +94,17 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
 
     with sqlr.transaction() as trans:
         # query required data from db
-        system_code_ids = {
-            code.name: code.id
-            for code in crud_code.read_system_codes_by_project(
-                db=trans, project_id=payload.project_id
-            )
-        }
+        system_codes = crud_code.read_system_codes_by_project(
+            db=trans, project_id=payload.project_id
+        )
+        system_code_ids = {code.name: code.id for code in system_codes}
+        # the codes of the named entities spacy annotates
+        ner_parent_id = system_code_ids.get(NAMED_ENTITY_CODE)
+        ner_code_ids = [
+            code.id
+            for code in system_codes
+            if ner_parent_id is not None and code.parent_id == ner_parent_id
+        ]
         adoc = crud_adoc.exists_or_create(
             db=trans,
             user_id=SYSTEM_USER_ID,
@@ -136,13 +143,13 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             db=trans,
             create_dtos=word_frequencies,
         )
-        crud_span_anno.delete_by_sdoc(
+        # replace only the system user's named entities, keeping the annotations
+        # of all users and of other automatic annotators (quotation, coreference)
+        crud_span_anno.delete_by_user_sdocs_codes(
             db=trans,
-            sdoc_id=payload.sdoc_id,
-        )
-        crud_sentence_anno.delete_by_sdoc(
-            db=trans,
-            sdoc_id=payload.sdoc_id,
+            user_id=SYSTEM_USER_ID,
+            sdoc_ids=[payload.sdoc_id],
+            code_ids=ner_code_ids,
         )
         crud_span_anno.create_multi(
             trans,
