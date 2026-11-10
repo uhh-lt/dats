@@ -17,13 +17,16 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
+from common.feature_enum import Feature
 from core.memo.memo_dto import MemoRead
 from core.memo.memo_enum import AttachedObjectType
+from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.search_dto import (
     BBoxAnnotationRow,
     Page,
+    PaginatedSDocHits,
     QueryRequest,
     SentenceAnnotationRow,
     SpanAnnotationRow,
@@ -3215,3 +3218,46 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
         (str(project["assistant"].id), project["assistant"].email, 1),
         ("__none__", "Not accepted", 4),
     ]
+
+
+# ===========================================================================
+# SEARCH SDOCS (/search/sdoc) TESTS
+# ===========================================================================
+# Without full-text search, documents can be searched with filters only: a text
+# query is rejected, an empty one is answered from the database.
+
+
+def _search_sdocs(client: TestClient, project_id: int, search_query: str):
+    return client.post(
+        "/search/sdoc",
+        params={
+            "project_id": project_id,
+            "search_query": search_query,
+            "expert_mode": False,
+            "highlight": False,
+        },
+        json={
+            "filter": {"id": "root", "logic_operator": "and", "items": []},
+            "sorts": [],
+        },
+    )
+
+
+def test_search_sdocs_with_a_text_query_is_rejected_without_full_text_search(
+    client: TestClient, featureless_project: FeaturelessProject
+):
+    response = _search_sdocs(client, featureless_project["project"].id, "alpha")
+
+    assert_feature_disabled(response, Feature.FULL_TEXT_SEARCH)
+
+
+def test_search_sdocs_without_a_text_query_works_without_full_text_search(
+    client: TestClient, featureless_project: FeaturelessProject
+):
+    """Filter-only search needs no Elasticsearch index: it finds the project's
+    only document."""
+    response = _search_sdocs(client, featureless_project["project"].id, "  ")
+
+    assert response.status_code == 200, response.text
+    hits = PaginatedSDocHits.model_validate(response.json())
+    assert list(hits.sdocs) == [featureless_project["sdoc"].id]

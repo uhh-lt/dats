@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
+from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from core.tag.tag_crud import crud_tag
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
@@ -16,6 +17,8 @@ from modules.ml.tag_recommendation.tag_recommendation_dto import (
 from modules.ml.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
+from systems.feature_system.feature_dependency import require_feature
+from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -30,6 +33,7 @@ router = APIRouter(
 
 @router.get(
     "/{project_id}",
+    dependencies=[Depends(require_feature(Feature.TAG_RECOMMENDATION))],
     response_model=list[int],
     summary="Retrieve all finished tag recommendation MLJobs.",
 )
@@ -69,7 +73,11 @@ def get_all_tagrecommendations_from_job(
     )
     if len(recommendations) == 0:
         return []
-    authz_user.assert_in_project(recommendations[0].source_document.project_id)
+    project_id = recommendations[0].source_document.project_id
+    authz_user.assert_in_project(project_id)
+    FeatureService().assert_enabled(
+        db=db, project_id=project_id, feature=Feature.TAG_RECOMMENDATION
+    )
 
     sdoc2recommendations: dict[int, list[TagRecommendationLinkORM]] = {}
     for recommendation in recommendations:
