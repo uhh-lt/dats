@@ -156,10 +156,15 @@ def __export_sdocs(
         ) and crud_sentence_embedding._tenant_exists(
             client=client, project_id=sdoc.project_id
         ):
+            # Weaviate returns the objects unordered; the import assigns the
+            # sentence ids by position
             sentence_embeddings = [
                 se.embedding
-                for se in crud_sentence_embedding.read_by_sdoc_id(
-                    client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
+                for se in sorted(
+                    crud_sentence_embedding.read_by_sdoc_id(
+                        client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
+                    ),
+                    key=lambda se: se.id.sentence_id,
                 )
             ]
 
