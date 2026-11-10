@@ -26,7 +26,6 @@ from doctor_report import (
 )
 from doctor_stores import (
     ALL_COLLECTIONS,
-    ALL_STEPS,
     ANNOTATION_TABLES,
     PROCESSING_STEPS,
     SDOC_COLLECTIONS,
@@ -56,22 +55,30 @@ _HINT_CROSS_PROJECT = (
 
 # the steps that write the embeddings of a Weaviate collection
 _EMBEDDING_STEPS = {
+    "Document": "text_document_embedding",
     "Sentence": "text_sentence_embedding",
     "Image": "image_embedding",
 }
 
 
 class SdocRow:
-    """The columns of a source document that the checks need (no content)."""
+    """The columns of a source document that the checks need (no content).
+
+    `statuses` holds the planned steps of the document only: steps of other
+    doctypes, steps whose column this database lacks, and steps that are not
+    planned (NULL, their feature is not enabled) are left out, so no check
+    expects their data."""
 
     def __init__(self, row: dict[str, Any]) -> None:
         self.id: int = row["id"]
         self.filename: str = row["filename"]
         self.doctype: str = row["doctype"]
         self.project_id: int = row["project_id"]
+        steps = [step for step in PROCESSING_STEPS.get(self.doctype, []) if step in row]
         self.statuses: dict[str, int] = {
-            step: row[step] for step in PROCESSING_STEPS.get(self.doctype, [])
+            step: row[step] for step in steps if row[step] is not None
         }
+        self.not_planned: list[str] = [step for step in steps if row[step] is None]
 
     def is_finished(self, step: str) -> bool:
         return self.statuses.get(step) == STATUS_FINISHED
@@ -129,6 +136,7 @@ class Checker:
 
     def check_project(self, *, project_id: int) -> list[Issue]:
         sdocs = self._read_sdocs(project_id=project_id)
+        self._print_not_planned(sdocs=sdocs)
         data_ids = set(
             self._ids(
                 "SELECT d.id FROM sourcedocumentdata d "
@@ -277,7 +285,9 @@ class Checker:
     # POSTGRES
     # ==========================================================================
     def _read_sdocs(self, *, project_id: int) -> list[SdocRow]:
-        columns = ", ".join(["id", "filename", "doctype", "project_id", *ALL_STEPS])
+        columns = ", ".join(
+            ["id", "filename", "doctype", "project_id", *self.stores.step_columns]
+        )
         rows = self.conn.execute(
             text(
                 f"SELECT {columns} FROM sourcedocument "
@@ -286,6 +296,25 @@ class Checker:
             {"pid": project_id},
         ).mappings()
         return [SdocRow(dict(row)) for row in rows]
+
+    @staticmethod
+    def _print_not_planned(*, sdocs: list[SdocRow]) -> None:
+        """Data of steps that are not planned is missing on purpose: no check
+        reports it. Say so, as it explains e.g. an empty search index."""
+        counts: dict[str, int] = {}
+        for sdoc in sdocs:
+            for step in sdoc.not_planned:
+                counts[step] = counts.get(step, 0) + 1
+        if not counts:
+            return
+        steps = ", ".join(
+            f"{step} ({n} documents)" for step, n in sorted(counts.items())
+        )
+        print(
+            f"  Not checked, as the feature is not enabled (step not planned): {steps}. "
+            "Enable the feature in the project settings to compute the data.",
+            file=sys.stderr,
+        )
 
     def _check_processing(
         self, *, sdocs: list[SdocRow], data_ids: set[int]

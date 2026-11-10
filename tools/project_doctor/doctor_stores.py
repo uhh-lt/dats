@@ -8,7 +8,7 @@ an incompatible DATS version fails early instead of half-way.
 """
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -24,14 +24,24 @@ STATUS_ERRONEOUS = -100
 STATUS_PROCESSING = 0
 STATUS_FINISHED = 1
 
-# The processing steps per doctype; each is a status column of sourcedocument
-# (common/doc_processing_steps.py)
+# The processing steps per doctype, in pipeline order; each is a status column of
+# sourcedocument (pipeline_registry.graph().steps(doctype) of the backend). A copy:
+# the doctor imports no DATS code. backend/test/unit/test_project_doctor_steps.py
+# fails when it differs from the backend.
+#
+# Since the feature toggles, a step column is NULL when the step is not planned
+# for the document (its feature is not enabled). Before, every column held a
+# status and only the steps of the doctype counted.
 _TEXT_STEPS = [
     "text_extraction",
     "text_language_detection",
     "text_spacy",
+    "text_keywords",
+    "text_word_frequency",
+    "text_ner",
     "text_es_index",
     "text_sentence_embedding",
+    "text_document_embedding",
     "text_html_mapping",
 ]
 PROCESSING_STEPS: dict[str, list[str]] = {
@@ -53,6 +63,11 @@ PROCESSING_STEPS: dict[str, list[str]] = {
         *_TEXT_STEPS,
     ],
 }
+# The step columns added with the feature toggles: databases of older DATS
+# versions lack them, the doctor then skips them
+NEW_STEPS = frozenset(
+    {"text_keywords", "text_word_frequency", "text_ner", "text_document_embedding"}
+)
 ALL_STEPS = sorted({step for steps in PROCESSING_STEPS.values() for step in steps})
 
 # The Weaviate collections (the `name` of the *_collection.py classes) and
@@ -123,7 +138,7 @@ REQUIRED_COLUMNS: dict[str, list[str]] = {
         "project_id",
         "folder_id",
         "created",
-        *ALL_STEPS,
+        *[step for step in ALL_STEPS if step not in NEW_STEPS],
     ],
     "sourcedocumentdata": [
         "id",
@@ -209,6 +224,8 @@ class Stores:
     collection_postfix: str
     system_code_parents: dict[str, str | None]
     config_metadata: dict[tuple[str, str], str]
+    # the step columns of sourcedocument in this database (set by verify_schema)
+    step_columns: list[str] = field(default_factory=list)
 
     # ==========================================================================
     # NAMING
@@ -277,7 +294,8 @@ class Stores:
             )
 
     def verify_schema(self) -> None:
-        """Raises if a table or column the doctor uses does not exist."""
+        """Raises if a table or column the doctor uses does not exist. Remembers
+        which step columns exist (the new steps only since the feature toggles)."""
         with self.db.connect() as conn:
             rows = conn.execute(
                 text(
@@ -291,6 +309,9 @@ class Stores:
             for table, columns in REQUIRED_COLUMNS.items()
             for column in columns
             if (table, column) not in existing
+        ]
+        self.step_columns = [
+            step for step in ALL_STEPS if ("sourcedocument", step) in existing
         ]
         if missing:
             raise UnsupportedSchemaError(
