@@ -70,6 +70,10 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
     close: closeMenu,
   }));
 
+  // without the similarity search features and annotations, the menu has no entries
+  const hasEntries =
+    sentenceSearch.enabled || imageSearch.enabled || (annotations !== undefined && annotations.length > 0);
+
   // ui events
   const handleSentenceSimilaritySearch = () => {
     closeMenu();
@@ -100,7 +104,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
 
   return (
     <Popover
-      open={isPopoverOpen}
+      open={isPopoverOpen && hasEntries}
       onClose={() => closeMenu()}
       anchorPosition={position}
       anchorReference="anchorPosition"
