@@ -1,4 +1,6 @@
+import { useFeature } from "@core/feature";
 import { LinkListItemButton, useTabNavigate } from "@core/navigation";
+import { Feature } from "@models/Feature";
 import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
@@ -16,6 +18,7 @@ interface ImageMenuProps {
 
 export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
   const tabNavigate = useTabNavigate();
+  const imageSearch = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -80,14 +83,16 @@ export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
             <ListItemText primary="Open image" />
           </LinkListItemButton>
         </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleImageSimilaritySearch} disabled={!image}>
-            <ListItemIcon>
-              <SearchIcon />
-            </ListItemIcon>
-            <ListItemText primary="Find similar images" />
-          </ListItemButton>
-        </ListItem>
+        {imageSearch.enabled && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleImageSimilaritySearch} disabled={!image}>
+              <ListItemIcon>
+                <SearchIcon />
+              </ListItemIcon>
+              <ListItemText primary="Find similar images" />
+            </ListItemButton>
+          </ListItem>
+        )}
       </List>
     </Popover>
   );
