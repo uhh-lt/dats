@@ -1,5 +1,7 @@
 import { CodeHooks, CodeRenderer } from "@core/code";
+import { useFeature } from "@core/feature";
 import { ProjectMetadataHooks } from "@core/project-metadata";
+import { Feature } from "@models/Feature";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
@@ -69,6 +71,7 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   // query all codes of the current project
   const projectCodes = CodeHooks.useGetEnabledCodes();
   const pinnedStatistics = useAppSelector((state) => state.perspectives.pinnedStatistics);
+  const keywordStatistics = useFeature(Feature.KEYWORD_STATISTICS);
   const handlePinStatistics = useCallback(
     (stat: string) => {
       dispatch(PerspectivesActions.onPinStatistics(stat));
@@ -116,6 +119,8 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
       </Box>
       {pinnedStatistics.map((stat) => {
         if (stat === "keywords") {
+          // keyword statistics (and the keyword filter they add) only exist with the feature
+          if (!keywordStatistics.enabled) return null;
           return (
             <Stack overflow="auto" flexGrow={1} key={stat} minHeight="71px">
               <Divider />
