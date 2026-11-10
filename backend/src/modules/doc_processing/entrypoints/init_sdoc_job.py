@@ -3,6 +3,7 @@ from pathlib import Path
 from loguru import logger
 
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
@@ -14,12 +15,13 @@ from core.doc.source_document_dto import (
     SourceDocumentUpdate,
 )
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from core.project.project_crud import crud_project
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
-from systems.job_system.pipeline_graph import pipeline_registry
 
 sqlr = SQLRepo()
 fsr = FilesystemRepo()
@@ -55,8 +57,13 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
-        # plan the steps of the doctype, so the sdoc is never seen as finished
-        steps = pipeline_registry.graph().steps(payload.doctype)
+        # plan the steps the project's features need for the doctype, so the sdoc
+        # is never seen as finished; the other steps stay NULL (not planned)
+        project = crud_project.read(db=db, id=payload.project_id)
+        steps = FeatureService().planned_steps(
+            doctype=payload.doctype,
+            features=[Feature(f) for f in project.enabled_features],
+        )
         crud_sdoc.update(
             db=db,
             id=sdoc_db_obj.id,

@@ -189,7 +189,10 @@ class JobService(metaclass=SingletonMeta):
         self,
         job_type: JobType,
         payload: JobInputBase,
+        priority: JobPriority | None = None,
     ) -> Job:
+        """Enqueue a job on the queue of its device, with its registered priority
+        unless `priority` overrides it (e.g. low for bulk work in the background)."""
         from systems.job_system.job_handler import rq_job_handler
 
         job_info = self.job_registry.get(job_type)
@@ -216,7 +219,7 @@ class JobService(metaclass=SingletonMeta):
                 raise ValueError(f"Invalid payload for job type {job_type}: {e}")
 
         # Enqueue the job
-        queue = self.queues[(job_info["device"], job_info["priority"])]
+        queue = self.queues[(job_info["device"], priority or job_info["priority"])]
         rq_job = queue.enqueue(
             rq_job_handler,
             # Our function parameters
