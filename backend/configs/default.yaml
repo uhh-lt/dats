@@ -54,6 +54,8 @@ weaviate:
   port: ${oc.env:WEAVIATE_PORT, 13132}
   collection_postfix: ${oc.env:WEAVIATE_COLLECTION_POSTFIX,""}
   grpc_port: ${oc.env:WEAVIATE_GRPC_PORT, 13134}
+  # objects per page of a filtered read (Weaviate returns 25 without a limit)
+  page_size: 1000
 
 postgres:
   host: ${oc.env:POSTGRES_HOST, "localhost"}

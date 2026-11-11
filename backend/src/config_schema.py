@@ -188,6 +188,7 @@ class WeaviateConfig(BaseModel):
     port: int = Field(gt=0, lt=65536)
     collection_postfix: str
     grpc_port: int = Field(gt=0, lt=65536)
+    page_size: int = Field(gt=0)
 
 
 class PostgresPoolConfig(BaseModel):

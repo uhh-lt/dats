@@ -167,6 +167,10 @@ def __export_sdocs(
                     key=lambda se: se.id.sentence_id,
                 )
             ]
+            # not one embedding per sentence: export them as missing, the import
+            # leaves the step not planned
+            if len(sentence_embeddings) != len(sdoc_data.sentence_starts):
+                sentence_embeddings = []
 
         # Get image embeddings
         image_embedding = None

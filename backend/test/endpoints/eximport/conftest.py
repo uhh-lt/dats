@@ -560,12 +560,12 @@ def feature_toggle_eximport_projects(
 
     - Project "Toggled Project" (`project`), which enables only sentence
       similarity search (all other features are disabled), with two documents:
-      - "text.txt" (`text`), a text document with the three sentences "Alpha
-        one.", "Beta two." and "Gamma three.", its raw file, and finished
-        `TOGGLED_TEXT_STEPS` (the core steps and `text_sentence_embedding`); every
-        other step is not planned (NULL). Each sentence has its own embedding in
-        Weaviate (`sentence_embeddings`, by sentence id): sentence i has 1.0 at
-        position i.
+      - "text.txt" (`text`), a text document with the 30 sentences "Sentence
+        0." to "Sentence 29.", its raw file, and finished `TOGGLED_TEXT_STEPS`
+        (the core steps and `text_sentence_embedding`); every other step is not
+        planned (NULL). Each sentence has its own embedding in Weaviate
+        (`sentence_embeddings`, by sentence id): sentence i has 1.0 at position
+        i of 30.
       - "image.png" (`image`), a 4x4 PNG image with its raw file, without caption
         (empty content, HTML and raw HTML), and finished `MINIMAL_IMAGE_STEPS`;
         every other step is not planned.
@@ -576,6 +576,7 @@ def feature_toggle_eximport_projects(
 
     - The empty HTML of the image is an empty CSV cell in the export, which
       pandas reads as a missing value.
+    - The text has more sentences than Weaviate returns without a limit (25).
     """
     project = create_project_with_features(
         db_session,
@@ -587,9 +588,11 @@ def feature_toggle_eximport_projects(
         db_session,
         project=project,
         filename="text.txt",
-        sentences=["Alpha one.", "Beta two.", "Gamma three."],
+        sentences=[f"Sentence {i}." for i in range(30)],
     )
-    sentence_embeddings = [[1.0 if i == j else 0.0 for j in range(4)] for i in range(3)]
+    sentence_embeddings = [
+        [1.0 if i == j else 0.0 for j in range(30)] for i in range(30)
+    ]
     crud_sentence_embedding.create_multi(
         client=WeaviateRepo().get_client(),
         project_id=project.id,

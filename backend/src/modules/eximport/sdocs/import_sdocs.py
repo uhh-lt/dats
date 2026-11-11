@@ -56,7 +56,8 @@ def archived_step_status(
     A step that was processing when the archive was exported is not planned: the
     import starts no job, so it would stay processing forever. An embedding step
     whose embeddings are missing in the archive is not planned either, whatever
-    its status. The import plans no step: a feature whose steps are not planned
+    its status; so is the sentence embedding of a document whose archive does not
+    hold one embedding per sentence. The import plans no step: a feature whose steps are not planned
     is partly available until a user completes it."""
     steps = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
     archived = sdoc_export.step_status
@@ -70,8 +71,9 @@ def archived_step_status(
 
     missing = {
         JobType.TEXT_DOCUMENT_EMBEDDING: sdoc_export.document_embedding is None,
-        JobType.TEXT_SENTENCE_EMBEDDING: len(sdoc_export.sentence_embeddings) == 0
-        and len(sdoc_export.sentence_starts) > 0,
+        # archives of older versions hold only the first 25 embeddings
+        JobType.TEXT_SENTENCE_EMBEDDING: len(sdoc_export.sentence_embeddings)
+        != len(sdoc_export.sentence_starts),
         JobType.IMAGE_EMBEDDING: sdoc_export.image_embedding is None,
     }
     for step, is_missing in missing.items():
@@ -323,8 +325,10 @@ def import_sdocs_to_proj(
                 embedding=sdoc_export.document_embedding,
             )
 
-        # Sentence embeddings
-        if len(sdoc_export.sentence_embeddings) > 0:
+        # Sentence embeddings (only one per sentence: partial ones are missing)
+        if len(sdoc_export.sentence_embeddings) > 0 and len(
+            sdoc_export.sentence_embeddings
+        ) == len(sdoc_export.sentence_starts):
             crud_sentence_embedding.create_multi(
                 client=client,
                 project_id=project_id,
