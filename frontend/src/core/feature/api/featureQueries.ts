@@ -11,7 +11,7 @@ import { queryOptions } from "@tanstack/react-query";
 export const featureQueries = {
   all: () => ["feature"] as const,
 
-  // every toggleable feature with its title, description and the features it requires; fixed per DATS version
+  // every toggleable feature with the features it requires (its display text is in `FEATURES`); fixed per DATS version
   list: () =>
     queryOptions({
       queryKey: [...featureQueries.all(), "list"] as const,

@@ -3,6 +3,7 @@ import { FeatureService } from "@api/services/FeatureService";
 import { projectQueries } from "@core/project";
 import { Feature } from "@models/Feature";
 import { useMutation } from "@tanstack/react-query";
+import { FEATURES } from "../features";
 import { featureQueries } from "./featureQueries";
 
 // The backend sends PROJECT_UPDATED to the other members only (the actor has the response): store the enabled features
@@ -16,10 +17,6 @@ const refreshProjectFeatures = (projectId: number, enabledFeatures: Feature[]) =
   queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey });
 };
 
-// The title the backend declares for the feature (`featureQueries.list()`, loaded by every view that changes features).
-const featureTitle = (feature: Feature) =>
-  queryClient.getQueryData(featureQueries.list().queryKey)?.find((f) => f.feature === feature)?.title ?? feature;
-
 const useActivateFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "activateFeature"],
@@ -27,7 +24,7 @@ const useActivateFeature = () =>
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
-        `Started computing ${featureTitle(feature)}`,
+        `Started computing ${FEATURES[feature].title}`,
     },
   });
 
@@ -38,7 +35,7 @@ const useRestartFeature = () =>
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
-        `Restarted computing ${featureTitle(feature)}`,
+        `Restarted computing ${FEATURES[feature].title}`,
     },
   });
 
@@ -48,7 +45,7 @@ const useDisableFeature = () =>
     mutationFn: FeatureService.disableFeature,
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     meta: {
-      successMessage: (_data: Feature[], { feature }: { feature: Feature }) => `Disabled ${featureTitle(feature)}`,
+      successMessage: (_data: Feature[], { feature }: { feature: Feature }) => `Disabled ${FEATURES[feature].title}`,
     },
   });
 

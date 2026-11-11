@@ -2,7 +2,8 @@ import { Feature } from "@models/Feature";
 import { FeatureRead } from "@models/FeatureRead";
 import { Box, Checkbox, FormControlLabel, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { MouseEvent, useMemo } from "react";
-import { deselectFeature, groupFeaturesByArea, selectFeature } from "./featureAreas";
+import { deselectFeature, selectFeature } from "./featureRequirements";
+import { FEATURES, groupFeaturesByArea } from "./features";
 
 type FeaturePreset = "everything" | "minimal" | "custom";
 
@@ -19,7 +20,6 @@ interface FeatureSelectionProps {
  */
 export function FeatureSelection({ features, value, onChange }: FeatureSelectionProps) {
   const requires = useMemo(() => new Map(features.map((f) => [f.feature, f.requires_features])), [features]);
-  const titles = useMemo(() => new Map(features.map((f) => [f.feature, f.title])), [features]);
   const areas = useMemo(() => groupFeaturesByArea(features), [features]);
 
   const preset: FeaturePreset =
@@ -51,9 +51,9 @@ export function FeatureSelection({ features, value, onChange }: FeatureSelection
         </Typography>
       </Box>
       {areas.map((area) => (
-        <Box key={area.title}>
+        <Box key={area.area}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            {area.title}
+            {area.area}
           </Typography>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, columnGap: 2, rowGap: 1 }}>
             {area.items.map((feature) => (
@@ -70,11 +70,11 @@ export function FeatureSelection({ features, value, onChange }: FeatureSelection
                 }
                 label={
                   <Box>
-                    <Typography variant="body2">{feature.title}</Typography>
+                    <Typography variant="body2">{FEATURES[feature.feature].title}</Typography>
                     <Typography variant="caption" color="text.secondary" component="div">
-                      {feature.description}
+                      {FEATURES[feature.feature].description}
                       {feature.requires_features.length > 0 &&
-                        ` Needs ${feature.requires_features.map((f) => titles.get(f) ?? f).join(", ")}.`}
+                        ` Needs ${feature.requires_features.map((f) => FEATURES[f].title).join(", ")}.`}
                     </Typography>
                   </Box>
                 }

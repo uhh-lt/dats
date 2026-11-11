@@ -13386,8 +13386,6 @@
       "FeatureRead": {
         "properties": {
           "feature": { "$ref": "#/components/schemas/Feature", "description": "ID of the Feature" },
-          "title": { "type": "string", "title": "Title", "description": "Title of the Feature" },
-          "description": { "type": "string", "title": "Description", "description": "Description of the Feature" },
           "requires_features": {
             "items": { "$ref": "#/components/schemas/Feature" },
             "type": "array",
@@ -13396,7 +13394,7 @@
           }
         },
         "type": "object",
-        "required": ["feature", "title", "description", "requires_features"],
+        "required": ["feature", "requires_features"],
         "title": "FeatureRead"
       },
       "FeatureStatus": {

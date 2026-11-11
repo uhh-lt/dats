@@ -1,5 +1,5 @@
 import { LinearProgressWithLabel } from "@components/progress-bars";
-import { FeatureHooks, featuresRequiring } from "@core/feature";
+import { FeatureHooks, FEATURES, featuresRequiring } from "@core/feature";
 import { useTabNavigate } from "@core/navigation";
 import { ProjectFeatureMap } from "@core/project";
 import { useOpenConfirmationDialog } from "@core/notification";
@@ -37,8 +37,7 @@ export const ProjectFeatureListItem = memo(
     const neededBy = useMemo(() => {
       const requires = new Map(features.map((f) => [f.feature, f.requires_features]));
       const enabled = features.filter((f) => states[f.feature]?.enabled).map((f) => f.feature);
-      const titles = new Map(features.map((f) => [f.feature, f.title]));
-      return featuresRequiring(enabled, feature.feature, requires).map((f) => titles.get(f) ?? f);
+      return featuresRequiring(enabled, feature.feature, requires).map((f) => FEATURES[f].title);
     }, [features, states, feature.feature]);
 
     // disable
@@ -46,16 +45,17 @@ export const ProjectFeatureListItem = memo(
     const { mutate: disableFeatureMutation, isPending: isDisablePending } = FeatureHooks.useDisableFeature();
     const refreshHealthTable = useRefreshHealthTable();
     const isComputing = state.status === FeatureStatus.COMPUTING;
+    const { title, description } = FEATURES[feature.feature];
     const handleClickDisable = useCallback(() => {
       openConfirmationDialog({
-        text: `Do you really want to disable ${feature.title}? It is hidden in this project and not computed for new uploads anymore.${isComputing ? " The computation in progress stops." : ""} Its data is kept, so enabling it again only computes the documents that lack it.`,
+        text: `Do you really want to disable ${title}? It is hidden in this project and not computed for new uploads anymore.${isComputing ? " The computation in progress stops." : ""} Its data is kept, so enabling it again only computes the documents that lack it.`,
         onAccept: () =>
           disableFeatureMutation({ projectId, feature: feature.feature }, { onSuccess: refreshHealthTable }),
       });
     }, [
       disableFeatureMutation,
       feature.feature,
-      feature.title,
+      title,
       isComputing,
       openConfirmationDialog,
       projectId,
@@ -153,11 +153,11 @@ export const ProjectFeatureListItem = memo(
       >
         <Box flexGrow={1} minWidth={0}>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-            <Typography variant="subtitle1">{feature.title}</Typography>
+            <Typography variant="subtitle1">{title}</Typography>
             <Chip size="small" label={chip.label} color={chip.color} />
           </Stack>
           <Typography variant="body2" color="text.secondary">
-            {feature.description}
+            {description}
           </Typography>
           {state.status === FeatureStatus.COMPUTING && (
             <Box mt={1} ml={-3}>
