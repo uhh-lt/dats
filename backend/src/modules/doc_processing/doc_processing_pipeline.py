@@ -5,8 +5,7 @@ from loguru import logger
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentUpdate
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobOutput
 from modules.doc_processing.pipeline import pipeline_transitions as t
@@ -124,21 +123,17 @@ def _computed_steps(job_type: JobType, input: SdocProcessingJobInput) -> list[Jo
 
 
 def _planned_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
-    """The steps that are planned for the document (status not NULL)."""
+    """The steps that are planned for the document (they have a status)."""
     with sqlr.transaction() as db:
-        sdoc = crud_sdoc.read(db=db, id=sdoc_id)
-        return [step for step in steps if getattr(sdoc, step.value) is not None]
+        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
+    return [step for step in steps if step in status]
 
 
 def _pending_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
     """The steps that are planned for the document and not computed yet."""
     with sqlr.transaction() as db:
-        sdoc = crud_sdoc.read(db=db, id=sdoc_id)
-        return [
-            step
-            for step in steps
-            if getattr(sdoc, step.value) == SDocStatus.processing.value
-        ]
+        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
+    return [step for step in steps if status.get(step) == SDocStatus.processing]
 
 
 def _start_jobs(
@@ -210,12 +205,8 @@ def _set_status(
     if not steps:
         return
     with sqlr.transaction() as db:
-        crud_sdoc.update(
-            db=db,
-            id=input.sdoc_id,
-            update_dto=SourceDocumentUpdate.model_validate(
-                {step.value: status for step in steps}
-            ),
+        crud_sdoc_step_status.update_status(
+            db=db, sdoc_ids=[input.sdoc_id], steps=steps, status=status
         )
 
 
@@ -265,7 +256,7 @@ def handle_job_error(job_type: JobType, input: JobInputBase):
         job_type, input, SDocStatus.erroneous, _planned_steps(input.sdoc_id, computed)
     )
     with sqlr.transaction() as db:
-        crud_sdoc.update_pending_steps_to_erroneous(
+        crud_sdoc_step_status.update_pending_to_erroneous(
             db=db,
             sdoc_id=input.sdoc_id,
             steps=_descendants(computed),

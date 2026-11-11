@@ -1,5 +1,3 @@
-import sqlalchemy as sa
-
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from feature_test_utils import FeatureProject
@@ -11,6 +9,7 @@ from modules.doc_processing.doc_processing_pipeline import (
     handle_job_error,
     handle_job_started,
 )
+from pipeline_test_utils import read_step_status
 
 SETTINGS = ProcessingSettings(
     extract_images=True,
@@ -24,14 +23,7 @@ SETTINGS = ProcessingSettings(
 
 
 def _statuses(db_session, sdoc_id: int, steps: list[JobType]) -> list[int | None]:
-    db_session.expire_all()
-    return [
-        db_session.execute(
-            sa.text(f"SELECT {s.value} FROM sourcedocument WHERE id = :id"),
-            {"id": sdoc_id},
-        ).scalar_one()
-        for s in steps
-    ]
+    return [read_step_status(db_session, sdoc_id, s) for s in steps]
 
 
 def test_a_failed_step_fails_the_pending_steps_after_it(

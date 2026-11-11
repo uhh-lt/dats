@@ -1,6 +1,7 @@
+from collections import defaultdict
 from typing import Iterable
 
-from sqlalchemy import ColumnElement, and_, event, func, or_, select, update
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
@@ -9,8 +10,7 @@ from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectFeatureRead, ProjectRead
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
@@ -99,7 +99,7 @@ class FeatureService(metaclass=SingletonMeta):
         graph = pipeline_registry.graph()
         for doctype in DocType:
             plan = set(self.planned_steps(doctype=doctype, features=enabled))
-            crud_sdoc.update_pending_steps_to_not_planned(
+            crud_sdoc_step_status.delete_pending_by_project(
                 db=db,
                 project_id=project_id,
                 doctype=doctype,
@@ -232,54 +232,37 @@ class FeatureService(metaclass=SingletonMeta):
             for doctype in DocType
         }
 
-        # 1) one aggregate per doctype, per (doctype, step) and per (doctype, step set)
-        sdoc = SourceDocumentORM
-        processing = SDocStatus.processing.value
-        finished = SDocStatus.finished.value
-        erroneous = SDocStatus.erroneous.value
-        aggregates: dict[tuple, ColumnElement[int]] = {}
-
-        for (_, doctype), step_set in steps.items():
-            if not step_set:
-                continue
-            is_doctype = sdoc.doctype == doctype.value
-            columns = [getattr(sdoc, s.value) for s in step_set]
-            # NULL-safe comparisons: a NOT over a NULL comparison would drop the row
-            any_processing = or_(*[c.is_not_distinct_from(processing) for c in columns])
-            any_erroneous = or_(*[c.is_not_distinct_from(erroneous) for c in columns])
-            key = (doctype, tuple(step_set))
-            aggregates[("total", doctype)] = func.count().filter(is_doctype)
-            aggregates[("ready", *key)] = func.count().filter(
-                and_(is_doctype, *[c == finished for c in columns])
-            )
-            aggregates[("processing", *key)] = func.count().filter(
-                and_(is_doctype, any_processing)
-            )
-            aggregates[("failed", *key)] = func.count().filter(
-                and_(is_doctype, ~any_processing, any_erroneous)
-            )
-            aggregates[("not_planned", *key)] = func.count().filter(
-                and_(
-                    is_doctype,
-                    *[c.is_distinct_from(processing) for c in columns],
-                    *[c.is_distinct_from(erroneous) for c in columns],
-                    or_(*[c.is_(None) for c in columns]),
-                )
-            )
-            for step, column in zip(step_set, columns):
-                aggregates[("missing", doctype, step)] = func.count().filter(
-                    and_(is_doctype, column.is_distinct_from(finished))
-                )
-
-        counts: dict[tuple, int] = {}
-        if aggregates:
-            # short labels: Postgres truncates identifiers to 63 characters
-            row = db.execute(
-                select(
-                    *[agg.label(f"a{i}") for i, agg in enumerate(aggregates.values())]
-                ).where(sdoc.project_id == project_id)
-            ).one()
-            counts = dict(zip(aggregates.keys(), row))
+        # 1) the documents per doctype and combination of step statuses
+        combinations = crud_sdoc_step_status.count_by_project(
+            db=db, project_id=project_id
+        )
+        processing = SDocStatus.processing
+        finished = SDocStatus.finished
+        erroneous = SDocStatus.erroneous
+        step_sets = {
+            (d, tuple(step_set)) for (_, d), step_set in steps.items() if step_set
+        }
+        counts: dict[tuple, int] = defaultdict(int)
+        for doctype, step_status, count in combinations:
+            counts[("total", doctype)] += count
+            for d, step_set in step_sets:
+                if d != doctype:
+                    continue
+                key = (doctype, step_set)
+                status = [step_status.get(step) for step in step_set]
+                if all(st == finished for st in status):
+                    counts[("ready", *key)] += count
+                if processing in status:
+                    counts[("processing", *key)] += count
+                elif erroneous in status:
+                    counts[("failed", *key)] += count
+                elif None in status:
+                    counts[("not_planned", *key)] += count
+            for step in {
+                s for d, step_set in step_sets if d == doctype for s in step_set
+            }:
+                if step_status.get(step) != finished:
+                    counts[("missing", doctype, step)] += count
 
         # 2) sum up per feature
         result: list[ProjectFeatureRead] = []
@@ -360,7 +343,7 @@ class FeatureService(metaclass=SingletonMeta):
         need: the feature's steps (and those of the features it requires), the
         core steps, and the steps the feature makes possible (the text steps of
         an image once it has a caption). Of these, steps that are not planned
-        (NULL) are planned, and erroneous steps of the feature are planned
+        are planned, and erroneous steps of the feature are planned
         again; with `restart`, its processing steps too. Finished steps keep
         their status, and so do processing steps without `restart`.
 
@@ -370,10 +353,9 @@ class FeatureService(metaclass=SingletonMeta):
         per document: they can start now, the others start when their inputs
         finish."""
         graph = pipeline_registry.graph()
-        table = SourceDocumentORM.__table__
-        processing = SDocStatus.processing.value
-        finished = SDocStatus.finished.value
-        erroneous = SDocStatus.erroneous.value
+        processing = SDocStatus.processing
+        finished = SDocStatus.finished
+        erroneous = SDocStatus.erroneous
         features = self.registry.closure([feature])
         others = [f for f in enabled if f not in features]
         redo = [erroneous, processing] if restart else [erroneous]
@@ -410,24 +392,22 @@ class FeatureService(metaclass=SingletonMeta):
             }
 
             # 1) lock the documents with steps to plan
-            rows = db.execute(
-                select(table.c.id, *[table.c[s.value] for s in plan])
-                .where(
-                    table.c.project_id == project_id,
-                    table.c.doctype == doctype.value,
-                    or_(
-                        *[table.c[s.value].is_(None) for s in plan if s in to_plan],
-                        *[table.c[s.value].in_(redo) for s in plan if s in own],
-                    ),
-                )
-                .with_for_update()
-            ).all()
+            sdoc_ids = crud_sdoc_step_status.read_sdoc_ids_to_plan(
+                db=db,
+                project_id=project_id,
+                doctype=doctype,
+                missing_steps=[s for s in plan if s in to_plan],
+                redo_steps=[s for s in plan if s in own],
+                redo_statuses=redo,
+            )
+            stored = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
 
             # 2) the new status of their steps, in pipeline order
-            updates: dict[tuple[tuple[JobType, int], ...], list[int]] = {}
-            for row in rows:
-                status: dict[JobType, int | None] = dict(zip(plan, row[1:]))
-                changed: dict[JobType, int] = {}
+            updates: dict[tuple[JobType, SDocStatus], list[int]] = defaultdict(list)
+            for sdoc_id in sdoc_ids:
+                status: dict[JobType, SDocStatus | None] = {
+                    step: stored[sdoc_id].get(step) for step in plan
+                }
                 startable: list[JobType] = []
                 for step in plan:
                     old = status[step]
@@ -445,19 +425,14 @@ class FeatureService(metaclass=SingletonMeta):
                             startable.append(step)
                     status[step] = new
                     if new != old:
-                        changed[step] = new
-                if changed:
-                    updates.setdefault(tuple(changed.items()), []).append(row[0])
+                        updates[(step, new)].append(sdoc_id)
                 if startable:
-                    sdoc_steps[row[0]] = startable
+                    sdoc_steps[sdoc_id] = startable
 
-            # 3) store them, in bulk per combination of changes
-            for changes, ids in updates.items():
-                db.execute(
-                    update(SourceDocumentORM)
-                    .where(SourceDocumentORM.id.in_(ids))
-                    .values({step.value: value for step, value in changes})
-                    .execution_options(synchronize_session=False)
+            # 3) store them, in bulk per step and status
+            for (step, new), ids in updates.items():
+                crud_sdoc_step_status.update_status(
+                    db=db, sdoc_ids=ids, steps=[step], status=new
                 )
 
         return sdoc_steps

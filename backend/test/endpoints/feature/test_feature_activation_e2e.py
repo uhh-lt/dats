@@ -9,11 +9,11 @@ from fastapi.testclient import TestClient
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
-from core.doc.source_document_orm import SDOC_STATUS_COLUMNS
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
 )
+from pipeline_test_utils import count_processing_sdocs, read_step_status
 from systems.feature_system.feature_dto import FeatureActivation
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
@@ -43,32 +43,13 @@ def _wait_until_nothing_processes(
     db_session, project_id: int, timeout: float = 180.0
 ) -> None:
     """Wait until no step of the project's documents is processing."""
-    any_processing = " OR ".join(f"{c} = 0" for c in SDOC_STATUS_COLUMNS)
     deadline = time.monotonic() + timeout
     while True:
-        db_session.expire_all()
-        processing = db_session.execute(
-            sa.text(
-                "SELECT count(*) FROM sourcedocument "
-                f"WHERE project_id = :p AND ({any_processing})"
-            ),
-            {"p": project_id},
-        ).scalar_one()
-        db_session.commit()
+        processing = count_processing_sdocs(db_session, project_id)
         if processing == 0:
             return
         assert time.monotonic() < deadline, f"{processing} documents still process"
         time.sleep(1)
-
-
-def _status(db_session, sdoc_id: int, step: JobType) -> int | None:
-    db_session.expire_all()
-    status = db_session.execute(
-        sa.text(f"SELECT {step.value} FROM sourcedocument WHERE id = :id"),
-        {"id": sdoc_id},
-    ).scalar_one()
-    db_session.commit()
-    return status
 
 
 def test_activate_full_text_search_indexes_the_documents_and_fails_those_without_data(
@@ -84,8 +65,8 @@ def test_activate_full_text_search_indexes_the_documents_and_fails_those_without
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
     _wait_until_nothing_processes(db_session, p["project"].id)
 
-    assert _status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) == 1
-    assert _status(db_session, p["no_data"].id, JobType.TEXT_ES_INDEX) == -100
+    assert read_step_status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) == 1
+    assert read_step_status(db_session, p["no_data"].id, JobType.TEXT_ES_INDEX) == -100
 
 
 def test_activate_keyword_statistics_advances_through_the_planned_steps(
@@ -108,9 +89,9 @@ def test_activate_keyword_statistics_advances_through_the_planned_steps(
         JobType.TEXT_HTML_MAPPING,
         JobType.TEXT_KEYWORDS,
     ):
-        assert _status(db_session, p["extracted"].id, step) == 1, step
-        assert _status(db_session, p["tokenized"].id, step) == 1, step
-    assert _status(db_session, p["tokenized"].id, JobType.TEXT_NER) is None
+        assert read_step_status(db_session, p["extracted"].id, step) == 1, step
+        assert read_step_status(db_session, p["tokenized"].id, step) == 1, step
+    assert read_step_status(db_session, p["tokenized"].id, JobType.TEXT_NER) is None
 
 
 def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
@@ -127,13 +108,13 @@ def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
     _wait_until_nothing_processes(db_session, p["project"].id)
 
     sdoc_id = p["tokenized"].id
-    assert _status(db_session, sdoc_id, JobType.TEXT_WORD_FREQUENCY) == 1
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_WORD_FREQUENCY) == 1
     words = db_session.execute(
         sa.text("SELECT word FROM wordfrequency WHERE sdoc_id = :id"),
         {"id": sdoc_id},
     ).scalars()
     assert {"cat", "mat"} <= set(words)
-    assert _status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == 1
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == 1
 
 
 def test_step_job_of_a_step_that_is_not_planned_is_skipped(
@@ -163,4 +144,6 @@ def test_step_job_of_a_step_that_is_not_planned_is_skipped(
         job = js.get_job(job.get_id())
     assert job.get_status() == JobStatus.FINISHED
     assert job.job.meta["status_message"].startswith("Skipped")
-    assert _status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) is None
+    assert (
+        read_step_status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) is None
+    )

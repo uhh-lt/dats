@@ -1,6 +1,5 @@
 import threading
 
-import sqlalchemy as sa
 from fastapi.testclient import TestClient
 
 from common.feature_enum import Feature, FeatureStatus
@@ -10,6 +9,7 @@ from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectFeatureRead
 from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
+from pipeline_test_utils import read_step_status
 from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_dto import (
     FeatureActivation,
@@ -70,14 +70,6 @@ def _activate(client: TestClient, project_id: int, feature: Feature) -> list[Fea
     return [Feature(f) for f in response.json()]
 
 
-def _status(db_session, sdoc_id: int, step: JobType) -> int | None:
-    db_session.expire_all()
-    return db_session.execute(
-        sa.text(f"SELECT {step.value} FROM sourcedocument WHERE id = :id"),
-        {"id": sdoc_id},
-    ).scalar_one()
-
-
 def _features(client: TestClient, project_id: int) -> dict[Feature, ProjectFeatureRead]:
     response = client.get(f"/project/{project_id}/features")
     assert response.status_code == 200, response.text
@@ -124,10 +116,12 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     for sdoc in (p["text_done"], p["text_running"]):
-        assert _status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) == 0, sdoc.name
-        assert _status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) is None
-    assert _status(db_session, p["text_done"].id, JobType.TEXT_SPACY) == 1
-    assert _status(db_session, p["image"].id, JobType.IMAGE_CAPTION) is None
+        assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) == 0, (
+            sdoc.name
+        )
+        assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) is None
+    assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_SPACY) == 1
+    assert read_step_status(db_session, p["image"].id, JobType.IMAGE_CAPTION) is None
     payload = _activation_job(started_jobs)
     assert payload.settings == SETTINGS
     assert payload.sdoc_steps == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
@@ -161,7 +155,7 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
     _activate(client, p["project"].id, Feature.IMAGE_CAPTIONS)
 
     for step in (JobType.IMAGE_CAPTION, JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY):
-        assert _status(db_session, p["image"].id, step) == 0, step
+        assert read_step_status(db_session, p["image"].id, step) == 0, step
     payload = _activation_job(started_jobs)
     assert payload.sdoc_steps == {p["image"].id: [JobType.IMAGE_CAPTION]}
 
@@ -186,7 +180,7 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
         JobType.TEXT_SENTENCE_EMBEDDING,
         JobType.TEXT_KEYWORDS,
     ):
-        assert _status(db_session, image_id, step) == 0, step
+        assert read_step_status(db_session, image_id, step) == 0, step
 
 
 def test_activate_feature_starts_its_job_only_after_the_commit(
@@ -303,10 +297,16 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
 
     for key in ("index_failed", "not_indexed", "extraction_failed", "spacy_failed"):
-        assert _status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == 0, key
-    assert _status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION) == 0
-    assert _status(db_session, p["extraction_failed"].id, JobType.TEXT_SPACY) == -100
-    assert _status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
+        assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == 0, key
+    assert (
+        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
+        == 0
+    )
+    assert (
+        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_SPACY)
+        == -100
+    )
+    assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
     payload = _activation_job(started_jobs)
     assert payload.sdoc_steps == {
         p["index_failed"].id: [JobType.TEXT_ES_INDEX],
@@ -329,8 +329,8 @@ def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
 
     _activate(client, partly_project["project"].id, Feature.FULL_TEXT_SEARCH)
 
-    assert _status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
-    assert _status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
 
 
 # ===========================================================================
@@ -367,7 +367,9 @@ def test_restart_feature_starts_its_processing_steps_again(
         p["text_done"].id: [JobType.TEXT_KEYWORDS],
         p["text_running"].id: [JobType.TEXT_LANGUAGE_DETECTION],
     }
-    assert _status(db_session, p["text_running"].id, JobType.TEXT_KEYWORDS) == 0
+    assert (
+        read_step_status(db_session, p["text_running"].id, JobType.TEXT_KEYWORDS) == 0
+    )
 
 
 def test_restart_feature_leaves_the_steps_of_other_features_alone(
@@ -430,7 +432,7 @@ def test_disable_feature_keeps_its_steps(
 
     assert response.status_code == 200, response.text
     assert response.json() == []
-    assert _status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
+    assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
     read = _features(client, p["project"].id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.DISABLED
 
@@ -449,8 +451,13 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     )
 
     assert response.status_code == 200, response.text
-    assert _status(db_session, p["index_failed"].id, JobType.TEXT_ES_INDEX) == -100
-    assert _status(db_session, p["not_indexed"].id, JobType.TEXT_ES_INDEX) is None
+    assert (
+        read_step_status(db_session, p["index_failed"].id, JobType.TEXT_ES_INDEX)
+        == -100
+    )
+    assert (
+        read_step_status(db_session, p["not_indexed"].id, JobType.TEXT_ES_INDEX) is None
+    )
 
 
 def test_disable_computing_feature_unplans_its_processing_steps(
@@ -473,8 +480,10 @@ def test_disable_computing_feature_unplans_its_processing_steps(
     assert response.status_code == 200, response.text
     assert response.json() == []
     for sdoc in (p["text_done"], p["text_running"]):
-        assert _status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) is None, sdoc.name
-    assert _status(db_session, p["text_running"].id, JobType.TEXT_SPACY) == 0
+        assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) is None, (
+            sdoc.name
+        )
+    assert read_step_status(db_session, p["text_running"].id, JobType.TEXT_SPACY) == 0
     read = _features(client, p["project"].id)[Feature.KEYWORD_STATISTICS]
     assert read.status == FeatureStatus.DISABLED
 
@@ -498,7 +507,7 @@ def test_disable_computing_feature_keeps_the_steps_other_features_need(
     assert response.status_code == 200, response.text
     assert response.json() == [Feature.SENTENCE_SIMILARITY_SEARCH]
     step = JobType.TEXT_SENTENCE_EMBEDDING
-    assert _status(db_session, p["text_done"].id, step) == 0
+    assert read_step_status(db_session, p["text_done"].id, step) == 0
     read = _features(client, p["project"].id)[Feature.SENTENCE_SIMILARITY_SEARCH]
     assert read.status == FeatureStatus.COMPUTING
 
@@ -522,12 +531,14 @@ def test_disable_one_of_two_features_sharing_a_step_keeps_it_processing(
     )
 
     assert response.status_code == 200, response.text
-    assert _status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) == 0
+    assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) == 0
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.FULL_TEXT_SEARCH.value}"
     )
     assert response.status_code == 200, response.text
-    assert _status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) is None
+    assert (
+        read_step_status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) is None
+    )
 
 
 def test_enable_disable_enable_plans_the_steps_again(
@@ -548,7 +559,7 @@ def test_enable_disable_enable_plans_the_steps_again(
     enabled = _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert enabled == [Feature.KEYWORD_STATISTICS]
-    assert _status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0
+    assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0
     assert _activation_job(started_jobs).sdoc_steps == {
         p["text_done"].id: [JobType.TEXT_KEYWORDS]
     }

@@ -19,6 +19,7 @@ from .conftest import (
 )
 
 REVISION = "448579029394"
+TABLE = "sourcedocumentstepstatus"
 MIGRATION = (
     Path(__file__).parents[2]
     / "src/migrations/alembic/versions"
@@ -53,6 +54,21 @@ def _row(db: Session, sdoc_id: int) -> dict:
     return dict(row._mapping)
 
 
+def _steps(db: Session, sdoc_id: int) -> dict[str, int]:
+    """The rows of the document in the status table: status per planned step."""
+    rows = db.execute(
+        sa.text(f"SELECT step, status FROM {TABLE} WHERE sdoc_id = :id"),
+        {"id": sdoc_id},
+    ).all()
+    db.commit()
+    return {step: status for step, status in rows}
+
+
+def _overall(steps: dict[str, int]) -> int:
+    """The overall status the application derives from the steps."""
+    return min(steps.values(), default=1)
+
+
 def _job_rows(db: Session) -> set[tuple[int, int, int]]:
     rows = db.execute(sa.text("SELECT id, type, status FROM sourcedocumentjobstatus"))
     result = {(r.id, r.type, r.status) for r in rows}
@@ -82,23 +98,32 @@ def test_migration_snapshot_matches_the_fixture_steps():
 def test_upgrade_keeps_the_processed_status_of_every_document(
     db_session: Session, upgraded: dict[str, OldStatusDocument]
 ):
-    """Every document keeps the processed_status the application read before."""
+    """Every document keeps the overall status the application read before."""
     for name, document in upgraded.items():
-        row = _row(db_session, document["sdoc_id"])
-        assert row["processed_status"] == document["status_before"].value, name
+        steps = _steps(db_session, document["sdoc_id"])
+        assert _overall(steps) == document["status_before"].value, name
 
 
-def test_upgrade_unplans_the_steps_of_other_doctypes(
+def test_upgrade_drops_the_step_columns(
     db_session: Session, upgraded: dict[str, OldStatusDocument]
 ):
-    """The columns of the doctype's steps keep their status, all others are not
-    planned (NULL)."""
+    """sourcedocument has no step status and no computed status column left."""
+    row = _row(db_session, upgraded["text_finished"]["sdoc_id"])
+
+    assert not set(row) & {*OLD_STATUS_COLUMNS, *SPACY_STEPS, "processed_jobs"}
+
+
+def test_upgrade_plans_only_the_steps_of_the_doctype(
+    db_session: Session, upgraded: dict[str, OldStatusDocument]
+):
+    """The doctype's steps keep the status of their column; the columns of other
+    doctypes' steps get no row (not planned)."""
     for name, document in upgraded.items():
-        row = _row(db_session, document["sdoc_id"])
-        steps = OLD_STEPS_BY_DOCTYPE[document["doctype"]]
-        for column in OLD_STATUS_COLUMNS:
-            expected = document["status"][column] if column in steps else None
-            assert row[column] == expected, (name, column)
+        steps = _steps(db_session, document["sdoc_id"])
+        old_steps = OLD_STEPS_BY_DOCTYPE[document["doctype"]]
+        assert {c: steps[c] for c in OLD_STATUS_COLUMNS if c in steps} == {
+            c: document["status"][c] for c in old_steps
+        }, name
 
 
 def test_upgrade_copies_text_spacy_into_the_spacy_steps(
@@ -107,9 +132,9 @@ def test_upgrade_copies_text_spacy_into_the_spacy_steps(
     """Keywords, word frequencies and named entities get the status of
     text_spacy, which computed them before."""
     for name, document in upgraded.items():
-        row = _row(db_session, document["sdoc_id"])
-        for column in SPACY_STEPS:
-            assert row[column] == document["status"]["text_spacy"], (name, column)
+        steps = _steps(db_session, document["sdoc_id"])
+        for step in SPACY_STEPS:
+            assert steps[step] == document["status"]["text_spacy"], (name, step)
 
 
 def test_upgrade_sets_the_document_embedding_where_its_ml_job_finished(
@@ -119,9 +144,9 @@ def test_upgrade_sets_the_document_embedding_where_its_ml_job_finished(
     The failed job of text_processing and the documents without a job leave it
     not planned."""
     for name, document in upgraded.items():
-        row = _row(db_session, document["sdoc_id"])
+        steps = _steps(db_session, document["sdoc_id"])
         expected = 1 if name == "text_finished" else None
-        assert row["text_document_embedding"] == expected, name
+        assert steps.get("text_document_embedding") == expected, name
 
 
 def test_upgrade_deletes_only_the_rows_of_the_removed_ml_jobs(
@@ -133,22 +158,6 @@ def test_upgrade_deletes_only_the_rows_of_the_removed_ml_jobs(
     assert _job_rows(db_session) == {(sdoc_id, ML_COREFERENCE, ML_FINISHED)}
 
 
-def test_upgrade_counts_planned_and_finished_steps(
-    db_session: Session, upgraded: dict[str, OldStatusDocument]
-):
-    """total_jobs counts the planned steps (the doctype's steps, the three spaCy
-    steps and the document embedding where it finished), processed_jobs the
-    finished ones."""
-    for name, document in upgraded.items():
-        row = _row(db_session, document["sdoc_id"])
-        steps = OLD_STEPS_BY_DOCTYPE[document["doctype"]]
-        embedded = 1 if name == "text_finished" else 0
-        assert row["total_jobs"] == len(steps) + 3 + embedded, name
-        finished = [c for c in steps if document["status"][c] == 1]
-        spacy_finished = 3 if document["status"]["text_spacy"] == 1 else 0
-        assert row["processed_jobs"] == len(finished) + spacy_finished + embedded, name
-
-
 # --- B. downgrade -----------------------------------------------------------
 
 
@@ -156,8 +165,8 @@ def test_downgrade_restores_the_status_columns(
     db_session: Session, upgraded: dict[str, OldStatusDocument]
 ):
     """After the downgrade every old column is set again (not planned steps are
-    processing, 0, as before), the new columns are gone and processed_jobs is
-    the sum of the old columns."""
+    processing, 0, as before), the new steps are gone and processed_jobs is the
+    sum of the old columns."""
     command.downgrade(alembic_config(), BEFORE_STEP_STATUS)
 
     for name, document in upgraded.items():
@@ -168,7 +177,10 @@ def test_downgrade_restores_the_status_columns(
         }
         assert {c: row[c] for c in OLD_STATUS_COLUMNS} == expected, name
         assert row["processed_jobs"] == sum(expected.values()), name
-        assert "text_keywords" not in row and "total_jobs" not in row, name
+        assert "text_keywords" not in row, name
+    table = db_session.execute(sa.text(f"SELECT to_regclass('{TABLE}')")).scalar()
+    db_session.commit()
+    assert table is None
 
 
 def test_downgrade_restores_the_document_embedding_job(
@@ -190,15 +202,15 @@ def test_downgrade_restores_the_document_embedding_job(
 def test_upgrade_after_a_downgrade_gives_the_same_status(
     db_session: Session, upgraded: dict[str, OldStatusDocument]
 ):
-    """A round trip (down and up again) keeps every document's step status,
-    except that steps of other doctypes, processing (0) after the downgrade,
-    are not planned again."""
-    before = {name: _row(db_session, d["sdoc_id"]) for name, d in upgraded.items()}
+    """A round trip (down and up again) keeps every document's step statuses:
+    the steps of other doctypes, processing (0) after the downgrade, are not
+    planned again."""
+    before = {name: _steps(db_session, d["sdoc_id"]) for name, d in upgraded.items()}
 
     command.downgrade(alembic_config(), BEFORE_STEP_STATUS)
     command.upgrade(alembic_config(), REVISION)
 
     for name, document in upgraded.items():
-        row = _row(db_session, document["sdoc_id"])
-        assert row["processed_status"] == document["status_before"].value, name
-        assert row == before[name], name
+        steps = _steps(db_session, document["sdoc_id"])
+        assert _overall(steps) == document["status_before"].value, name
+        assert steps == before[name], name

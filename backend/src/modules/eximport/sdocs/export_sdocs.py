@@ -2,8 +2,8 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
@@ -13,6 +13,7 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
@@ -96,6 +97,10 @@ def __export_sdocs(
     all_files.extend(sdoc_files)
 
     # Create a collection of export data
+    graph = pipeline_registry.graph()
+    stored_status = crud_sdoc_step_status.read_by_sdocs(
+        db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
+    )
     export_collection = []
     for sdoc in sdocs:
         sdoc_data = sdoc.data
@@ -117,18 +122,21 @@ def __export_sdocs(
             )
 
         # Status of each pipeline step of the doctype, None = not planned
-        steps = pipeline_registry.graph().steps(DocType(sdoc.doctype))
+        doctype = DocType(sdoc.doctype)
+        planned = stored_status[sdoc.id]
         step_status: dict[str, int | None] = {
-            step.value: getattr(sdoc, step.value) for step in steps
+            step.value: planned.get(step) for step in graph.steps(doctype)
         }
 
-        def is_finished(step: JobType) -> bool:
-            return step_status.get(step.value) == SDocStatus.finished.value
+        def is_finished(artefact: Artefact) -> bool:
+            """Whether the step of the doctype producing the artefact finished."""
+            step = graph.producer(doctype, artefact)
+            return step is not None and planned.get(step) == SDocStatus.finished
 
         # Word frequencies
         word_frequencies = (
             [(wf.word, wf.count) for wf in sdoc.word_frequencies]
-            if is_finished(JobType.TEXT_WORD_FREQUENCY)
+            if is_finished(Artefact.WORD_FREQUENCIES)
             else []
         )
 
@@ -136,7 +144,7 @@ def __export_sdocs(
         # Get document embeddings
         doc_embedding = None
         if is_finished(
-            JobType.TEXT_DOCUMENT_EMBEDDING
+            Artefact.DOCUMENT_EMBEDDINGS
         ) and crud_document_embedding._tenant_exists(
             client=client, project_id=sdoc.project_id
         ):
@@ -152,7 +160,7 @@ def __export_sdocs(
         # Get sentence embeddings
         sentence_embeddings = []
         if is_finished(
-            JobType.TEXT_SENTENCE_EMBEDDING
+            Artefact.SENTENCE_EMBEDDINGS
         ) and crud_sentence_embedding._tenant_exists(
             client=client, project_id=sdoc.project_id
         ):
@@ -174,7 +182,9 @@ def __export_sdocs(
 
         # Get image embeddings
         image_embedding = None
-        if is_finished(JobType.IMAGE_EMBEDDING) and crud_image_embedding._tenant_exists(
+        if is_finished(
+            Artefact.IMAGE_EMBEDDINGS
+        ) and crud_image_embedding._tenant_exists(
             client=client, project_id=sdoc.project_id
         ):
             try:
@@ -191,7 +201,7 @@ def __export_sdocs(
             filename=sdoc.filename,
             name=sdoc.name,
             doctype=sdoc.doctype,
-            status=sdoc.processed_status,
+            status=SDocStatus.of_steps(planned.values()),
             step_status=step_status,
             folder_name=sdoc.folder.name,
             folder_parent_name=sdoc.folder.parent.name if sdoc.folder.parent else None,

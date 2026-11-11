@@ -1,8 +1,6 @@
-from sqlalchemy import case, func, or_, select, update
+from sqlalchemy import ColumnElement, and_, func, select
 from sqlalchemy.orm import Session
 
-from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
@@ -16,6 +14,8 @@ from core.doc.source_document_exceptions import (
     SourceDocumentPreprocessingUnfinishedError,
 )
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
+from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
@@ -61,7 +61,10 @@ class CRUDSourceDocument(
     def read_status(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
-        status = SDocStatus(self.read(db=db, id=sdoc_id).processed_status)
+        self.exists(db=db, id=sdoc_id, raise_error=True)
+        status = SDocStatus.of_steps(
+            crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id).values()
+        )
         if status != SDocStatus.finished and raise_error_on_unfinished:
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
         return status
@@ -73,7 +76,7 @@ class CRUDSourceDocument(
             db.query(self.model)
             .filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == status.value,
+                self._status_filter(status),
             )
             .all()
         )
@@ -92,7 +95,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == SDocStatus.finished.value,
+                self._status_filter(SDocStatus.finished),
                 TagORM.id == tag_id,
             )
         else:
@@ -121,7 +124,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == SDocStatus.finished.value,
+                self._status_filter(SDocStatus.finished),
             )
         else:
             query = query.filter(self.model.project_id == project_id)
@@ -151,7 +154,7 @@ class CRUDSourceDocument(
             query = query.filter(
                 self.model.project_id == project_id,
                 self.model.filename == filename,
-                self.model.processed_status == SDocStatus.finished.value,
+                self._status_filter(SDocStatus.finished),
             )
         else:
             query = query.filter(
@@ -262,53 +265,7 @@ class CRUDSourceDocument(
         ]
 
     ### UPDATE OPERATIONS ###
-
-    def update_pending_steps_to_erroneous(
-        self, db: Session, *, sdoc_id: int, steps: list[JobType]
-    ) -> None:
-        """Set the given steps of the document that are pending (processing) to
-        erroneous; steps with another status or not planned keep it."""
-        if not steps:
-            return
-        processing = SDocStatus.processing.value
-        erroneous = SDocStatus.erroneous.value
-        columns = [getattr(self.model, s.value) for s in steps]
-        db.execute(
-            update(self.model)
-            .where(self.model.id == sdoc_id)
-            .values(
-                {c.key: case((c == processing, erroneous), else_=c) for c in columns}
-            )
-            .execution_options(synchronize_session=False)
-        )
-
-    def update_pending_steps_to_not_planned(
-        self, db: Session, *, project_id: int, doctype: DocType, steps: list[JobType]
-    ) -> None:
-        """
-        Set the given steps of the project's documents of this doctype that are
-        pending (processing) to not planned (NULL); steps with another status
-        keep it.
-
-        Args:
-            project_id: The project of the documents.
-            doctype: The doctype of the documents.
-            steps: The steps to unplan.
-        """
-        if not steps:
-            return
-        processing = SDocStatus.processing.value
-        columns = [getattr(self.model, s.value) for s in steps]
-        db.execute(
-            update(self.model)
-            .where(
-                self.model.project_id == project_id,
-                self.model.doctype == doctype,
-                or_(*[c == processing for c in columns]),
-            )
-            .values({c.key: case((c == processing, None), else_=c) for c in columns})
-            .execution_options(synchronize_session=False)
-        )
+    # Inherited from SQLCRUDBase (the step statuses: crud_sdoc_step_status)
 
     ### DELETE OPERATIONS ###
     # Inherited from SQLCRUDBase
@@ -322,11 +279,31 @@ class CRUDSourceDocument(
         if status is not None:
             query = query.filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == status.value,
+                self._status_filter(status),
             )
         else:
             query = query.filter(self.model.project_id == project_id)
         return query.with_entities(func.count()).scalar()
+
+    def _status_filter(self, status: SDocStatus) -> ColumnElement[bool]:
+        """Documents with this overall status (see `SDocStatus.of_steps`), as
+        (NOT) EXISTS over their unfinished steps: finished means no step is
+        erroneous or processing. Every condition repeats `status <> finished`,
+        the predicate of the partial index on the unfinished steps."""
+        steps = self.model.step_statuses
+        step_status = SourceDocumentStepStatusORM.status
+        unfinished = step_status != SDocStatus.finished
+
+        def has_step(status: SDocStatus) -> ColumnElement[bool]:
+            return steps.any(and_(unfinished, step_status == status))
+
+        match status:
+            case SDocStatus.finished:
+                return ~steps.any(unfinished)
+            case SDocStatus.erroneous:
+                return has_step(SDocStatus.erroneous)
+            case SDocStatus.processing:
+                return ~has_step(SDocStatus.erroneous) & has_step(SDocStatus.processing)
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

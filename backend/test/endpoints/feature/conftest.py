@@ -11,14 +11,14 @@ from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from feature_test_utils import (
-    MINIMAL_IMAGE_STEPS,
-    MINIMAL_TEXT_STEPS,
     FeatureProject,
     PartlyProject,
     _create_sdoc,
     create_feature_project,
     create_partly_project,
     create_project_with_features,
+    minimal_image_steps,
+    minimal_text_steps,
     set_step_status,
 )
 from systems.job_system.job_dto import JobInputBase
@@ -76,7 +76,7 @@ def image_text_project(db_session, test_user: UserORM) -> ImageTextProject:
         project,
         name="image.png",
         doctype=DocType.image,
-        status=dict.fromkeys(MINIMAL_IMAGE_STEPS, 1),
+        status=dict.fromkeys(minimal_image_steps(), 1),
     )
     db_session.commit()
     db_session.refresh(project)
@@ -137,14 +137,14 @@ def activation_project(db_session, test_user: UserORM) -> ActivationProject:
         sentences=sentences,
     )
     db_session.flush()
-    set_step_status(db_session, tokenized.id, dict.fromkeys(MINIMAL_TEXT_STEPS, 1))
+    set_step_status(db_session, tokenized.id, dict.fromkeys(minimal_text_steps(), 1))
     set_step_status(db_session, extracted.id, {"extract_html": 1, "text_extraction": 1})
     no_data = _create_sdoc(
         db_session,
         project,
         name="no_data.txt",
         doctype=DocType.text,
-        status=dict.fromkeys(MINIMAL_TEXT_STEPS, 1),
+        status=dict.fromkeys(minimal_text_steps(), 1),
     )
     db_session.commit()
     for obj in (project, tokenized, extracted, no_data):

@@ -23,7 +23,6 @@ from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
-    SourceDocumentUpdate,
 )
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
@@ -42,9 +41,10 @@ from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from feature_test_utils import (
-    MINIMAL_IMAGE_STEPS,
-    MINIMAL_TEXT_STEPS,
     create_project_with_features,
+    minimal_image_steps,
+    minimal_text_steps,
+    set_step_status,
 )
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
@@ -547,8 +547,9 @@ class FeatureToggleEximportProjects(TypedDict):
     sentence_embeddings: list[list[float]]
 
 
-# The steps of the documents of `feature_toggle_eximport_projects`
-TOGGLED_TEXT_STEPS = [*MINIMAL_TEXT_STEPS, "text_sentence_embedding"]
+def toggled_text_steps() -> list[str]:
+    """The steps of the text document of `feature_toggle_eximport_projects`."""
+    return [*minimal_text_steps(), "text_sentence_embedding"]
 
 
 @pytest.fixture(scope="function")
@@ -561,13 +562,13 @@ def feature_toggle_eximport_projects(
     - Project "Toggled Project" (`project`), which enables only sentence
       similarity search (all other features are disabled), with two documents:
       - "text.txt" (`text`), a text document with the 30 sentences "Sentence
-        0." to "Sentence 29.", its raw file, and finished `TOGGLED_TEXT_STEPS`
+        0." to "Sentence 29.", its raw file, and finished `toggled_text_steps()`
         (the core steps and `text_sentence_embedding`); every other step is not
-        planned (NULL). Each sentence has its own embedding in Weaviate
+        planned. Each sentence has its own embedding in Weaviate
         (`sentence_embeddings`, by sentence id): sentence i has 1.0 at position
         i of 30.
       - "image.png" (`image`), a 4x4 PNG image with its raw file, without caption
-        (empty content, HTML and raw HTML), and finished `MINIMAL_IMAGE_STEPS`;
+        (empty content, HTML and raw HTML), and finished `minimal_image_steps()`;
         every other step is not planned.
     - Project "Import Target" (`target_project`), which enables only keyword
       statistics, with no documents.
@@ -633,12 +634,8 @@ def feature_toggle_eximport_projects(
         ),
     )
 
-    for sdoc, steps in ((text, TOGGLED_TEXT_STEPS), (image, MINIMAL_IMAGE_STEPS)):
-        crud_sdoc.update(
-            db=db_session,
-            id=sdoc.id,
-            update_dto=SourceDocumentUpdate.model_validate(dict.fromkeys(steps, 1)),
-        )
+    set_step_status(db_session, text.id, dict.fromkeys(toggled_text_steps(), 1))
+    set_step_status(db_session, image.id, dict.fromkeys(minimal_image_steps(), 1))
     target_project = create_project_with_features(
         db_session,
         test_user,

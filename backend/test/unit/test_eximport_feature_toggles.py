@@ -135,6 +135,13 @@ def test_unknown_step_is_rejected() -> None:
         _sdoc(step_status={"nope": FINISHED})
 
 
+def test_step_of_another_doctype_is_rejected() -> None:
+    """The archived statuses are validated against the steps of the document's
+    doctype: a text document has no image caption."""
+    with pytest.raises(ValueError, match="Unknown pipeline step 'image_caption'"):
+        _sdoc(step_status={JobType.IMAGE_CAPTION.value: FINISHED})
+
+
 def test_step_status_survives_the_csv_round_trip() -> None:
     """The per-step statuses, including None, are written to and read from the CSV unchanged."""
     archived: dict[str, int | None] = {

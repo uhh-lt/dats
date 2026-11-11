@@ -1,9 +1,9 @@
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
-from core.doc.source_document_orm import SDOC_STATUS_COLUMNS
+from systems.job_system.pipeline_graph import pipeline_registry
 
 
 class SourceDocumentExportSchema(BaseModel):
@@ -124,14 +124,20 @@ class SourceDocumentExportSchema(BaseModel):
 
     @field_validator("step_status")
     @classmethod
-    def validate_step_status(cls, v):
-        """Validate that the keys are pipeline steps and the values statuses."""
-        if v is None:
+    def validate_step_status(cls, v, info: ValidationInfo):
+        """Validate that the keys are pipeline steps of the doctype and the values
+        statuses."""
+        if v is None or "doctype" not in info.data:
             return v
+        steps = [
+            s.value
+            for s in pipeline_registry.graph().steps(DocType(info.data["doctype"]))
+        ]
         for step, status in v.items():
-            if step not in SDOC_STATUS_COLUMNS:
+            if step not in steps:
                 raise ValueError(
-                    f"Unknown pipeline step '{step}', must be one of {SDOC_STATUS_COLUMNS}"
+                    f"Unknown pipeline step '{step}' of doctype "
+                    f"'{info.data['doctype']}', must be one of {steps}"
                 )
             if status is not None:
                 SDocStatus(status)

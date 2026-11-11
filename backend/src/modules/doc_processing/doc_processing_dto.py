@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
@@ -51,7 +52,21 @@ class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
         description="Overall processing status: erroneous if any job failed, processing if any job is pending, finished otherwise"
     )
 
-    model_config = ConfigDict(from_attributes=True)
+    @classmethod
+    def from_sdoc_orm(
+        cls, sdoc: "SourceDocumentORM", step_status: dict[JobType, SDocStatus]
+    ) -> "SourceDocumentStatusSimple":
+        """Derives the overall status from the status of the planned steps."""
+        return cls(
+            id=sdoc.id,
+            filename=sdoc.filename,
+            name=sdoc.name,
+            doctype=DocType(sdoc.doctype),
+            project_id=sdoc.project_id,
+            processed_jobs=sum(s == SDocStatus.finished for s in step_status.values()),
+            total_jobs=len(step_status),
+            processed_status=SDocStatus.of_steps(step_status.values()),
+        )
 
 
 class SdocStatusRow(BaseModel):
@@ -69,11 +84,15 @@ class SdocStatusRow(BaseModel):
 
     @classmethod
     def from_sdoc_orm(
-        cls, sdoc: "SourceDocumentORM", steps: list[JobType]
+        cls,
+        sdoc: "SourceDocumentORM",
+        steps: list[JobType],
+        step_status: dict[JobType, SDocStatus],
     ) -> "SdocStatusRow":
-        """Reads the status of the given pipeline steps (the steps of the sdoc's doctype)."""
+        """The status of the given pipeline steps (the steps of the sdoc's
+        doctype), None for steps that are not planned."""
         status: dict[str, SDocStatus | None] = {
-            s.value: getattr(sdoc, s.value) for s in steps
+            s.value: step_status.get(s) for s in steps
         }
         return cls(
             sdoc_id=sdoc.id,

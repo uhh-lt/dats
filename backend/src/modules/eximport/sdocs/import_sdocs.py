@@ -3,6 +3,7 @@ from pathlib import Path
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
@@ -20,7 +21,9 @@ from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentUpdate
+from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
+from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
@@ -59,7 +62,9 @@ def archived_step_status(
     its status; so is the sentence embedding of a document whose archive does not
     hold one embedding per sentence. The import plans no step: a feature whose steps are not planned
     is partly available until a user completes it."""
-    steps = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
+    graph = pipeline_registry.graph()
+    doctype = DocType(sdoc_export.doctype)
+    steps = graph.steps(doctype)
     archived = sdoc_export.step_status
     step_status: dict[str, int | None] = {
         step.value: sdoc_export.status if archived is None else archived.get(step.value)
@@ -70,14 +75,15 @@ def archived_step_status(
             step_status[step] = None
 
     missing = {
-        JobType.TEXT_DOCUMENT_EMBEDDING: sdoc_export.document_embedding is None,
+        Artefact.DOCUMENT_EMBEDDINGS: sdoc_export.document_embedding is None,
         # archives of older versions hold only the first 25 embeddings
-        JobType.TEXT_SENTENCE_EMBEDDING: len(sdoc_export.sentence_embeddings)
+        Artefact.SENTENCE_EMBEDDINGS: len(sdoc_export.sentence_embeddings)
         != len(sdoc_export.sentence_starts),
-        JobType.IMAGE_EMBEDDING: sdoc_export.image_embedding is None,
+        Artefact.IMAGE_EMBEDDINGS: sdoc_export.image_embedding is None,
     }
-    for step, is_missing in missing.items():
-        if is_missing and step.value in step_status:
+    for artefact, is_missing in missing.items():
+        step = graph.producer(doctype, artefact)
+        if is_missing and step is not None:
             step_status[step.value] = None
     return step_status
 
@@ -264,10 +270,20 @@ def import_sdocs_to_proj(
 
         # 2.3 Set the status of the steps from the archive
         step_status = archived_step_status(sdoc_export)
-        sdoc_update = SourceDocumentUpdate.model_validate(step_status)
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
-        crud_sdoc.update(db=db, id=created_sdoc.id, update_dto=sdoc_update)
+        crud_sdoc_step_status.create_multi(
+            db=db,
+            create_dtos=[
+                SourceDocumentStepStatusCreate(
+                    sdoc_id=created_sdoc.id,
+                    step=JobType(step),
+                    status=SDocStatus(status),
+                )
+                for step, status in step_status.items()
+                if status is not None
+            ],
+        )
         imported_sdoc_ids.append(created_sdoc.id)
         filename_to_id_map[created_sdoc.filename] = created_sdoc.id
 
@@ -353,7 +369,13 @@ def import_sdocs_to_proj(
 
         # 6. Add the source documents to the Elasticsearch index (if it was
         # indexed: the entry is computed from the content and the filename only)
-        if step_status.get(JobType.TEXT_ES_INDEX.value) == SDocStatus.finished.value:
+        es_index_step = pipeline_registry.graph().producer(
+            DocType(sdoc_export.doctype), Artefact.ES_INDEX
+        )
+        if (
+            es_index_step is not None
+            and step_status.get(es_index_step.value) == SDocStatus.finished
+        ):
             crud_sdoc_elastic.create(
                 client=ElasticSearchRepo().get_client(),
                 project_id=project_id,

@@ -4,7 +4,6 @@ from typing import ClassVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.doc_type_enum import DocType
-from common.sdoc_status_enum import SDocStatus
 from core.doc.folder_dto import FolderRead
 from repos.db.dto_base import UpdateDTOBase
 
@@ -28,7 +27,6 @@ class SourceDocumentBaseDTO(BaseModel):
 # Properties for updating
 class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
     # NOT NULL columns: omit to keep the value, an explicit null is rejected.
-    # The step status columns accept null: the step is not planned.
     non_nullable_fields: ClassVar[frozenset[str]] = frozenset({"name", "folder_id"})
 
     name: str | None = Field(
@@ -37,84 +35,6 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
     )
     folder_id: int | None = Field(
         description="ID of the Folder this SourceDocument belongs to", default=None
-    )
-
-    # KEEP THE SAME ORDER AS source_document_orm.py!
-
-    # text
-    extract_html: SDocStatus | None = Field(
-        description="Extract HTML done?", default=None
-    )
-
-    # HTML
-    text_extraction: SDocStatus | None = Field(
-        description="Text Extraction done?", default=None
-    )
-    text_language_detection: SDocStatus | None = Field(
-        description="Text Language Detection done?", default=None
-    )
-    text_spacy: SDocStatus | None = Field(
-        description="Text Spacy (tokens and sentences) done?", default=None
-    )
-    text_keywords: SDocStatus | None = Field(
-        description="Text Keywords done?", default=None
-    )
-    text_word_frequency: SDocStatus | None = Field(
-        description="Text Word Frequency done?", default=None
-    )
-    text_ner: SDocStatus | None = Field(
-        description="Text Named Entity Recognition done?", default=None
-    )
-    text_es_index: SDocStatus | None = Field(
-        description="Text ES Index done?", default=None
-    )
-    text_sentence_embedding: SDocStatus | None = Field(
-        description="Text Sentence Embedding done?", default=None
-    )
-    text_document_embedding: SDocStatus | None = Field(
-        description="Text Document Embedding done?", default=None
-    )
-    text_html_mapping: SDocStatus | None = Field(
-        description="Text HTML Mapping done?", default=None
-    )
-
-    # IMAGES
-    image_caption: SDocStatus | None = Field(
-        description="Image Captioning done?", default=None
-    )
-    image_embedding: SDocStatus | None = Field(
-        description="Image Embedding done?", default=None
-    )
-    image_metadata_extraction: SDocStatus | None = Field(
-        description="Image Metadata Extraction done?", default=None
-    )
-    image_thumbnail: SDocStatus | None = Field(
-        description="Image Thumbnail Generation done?", default=None
-    )
-    image_object_detection: SDocStatus | None = Field(
-        description="Object Detection done?", default=None
-    )
-
-    # AUDIO
-    audio_metadata: SDocStatus | None = Field(
-        description="Audio Metadata Extraction done?", default=None
-    )
-    audio_thumbnail: SDocStatus | None = Field(
-        description="Audio Thumbnail Generation done?", default=None
-    )
-    audio_transcription: SDocStatus | None = Field(
-        description="Transcription done?", default=None
-    )
-
-    # VIDEO
-    video_metadata: SDocStatus | None = Field(
-        description="Video Metadata Extraction done?", default=None
-    )
-    video_thumbnail: SDocStatus | None = Field(
-        description="Video Thumbnail Generation done?", default=None
-    )
-    video_audio_extraction: SDocStatus | None = Field(
-        description="Video Audio Extraction done?", default=None
     )
 
 
