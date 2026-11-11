@@ -1,7 +1,7 @@
 import { Feature } from "@models/Feature";
 import { Chip, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
-import { useFeatureCoverage, useFeatureTitle } from "./useFeature";
+import { useFeature, useFeatureCoverage, useFeatureTitle } from "./useFeature";
 
 interface FeatureCoverageHintProps {
   feature: Feature;
@@ -10,10 +10,16 @@ interface FeatureCoverageHintProps {
 /**
  * An unobtrusive hint for a feature that is enabled but not available for all documents (computing or partly
  * available): it is usable with the documents that already have its data. A click opens the Features tab of the
- * project settings. Renders nothing for a ready feature; the guard renders it for enabled features only. Its coverage
- * loads after the page and refreshes while the feature is computing.
+ * project settings. Renders nothing for a ready or disabled feature. Its coverage loads after the page (only for an
+ * enabled feature) and refreshes while the feature is computing.
  */
 export function FeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
+  const enabled = useFeature(feature);
+  if (!enabled) return null;
+  return <EnabledFeatureCoverageHint feature={feature} />;
+}
+
+function EnabledFeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
   const state = useFeatureCoverage(feature);
   const title = useFeatureTitle(feature);
   const openProjectSettings = useOpenDialog("projectSettings");
