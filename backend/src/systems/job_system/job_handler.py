@@ -18,7 +18,15 @@ from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
-    handle_job_started(jobtype, input=payload)
+    if not handle_job_started(jobtype, input=payload):
+        # its pipeline steps are not planned anymore: nothing to compute
+        job.update(
+            status_message="Skipped: its steps are not planned anymore.",
+            finished=datetime.now(UTC),
+            publish=False,
+        )
+        publish_job_update(job, status_override=JobStatus.FINISHED)
+        return None
     publish_job_update(job)
     try:
         # figure whether to run the job on gpu

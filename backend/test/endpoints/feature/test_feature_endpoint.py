@@ -263,6 +263,74 @@ def test_disable_feature_keeps_its_steps(
     assert read.status == FeatureStatus.DISABLED
 
 
+def test_disable_partly_available_feature_keeps_its_failed_steps(
+    client: TestClient,
+    db_session,
+    partly_project: PartlyProject,
+):
+    """Full-text search is partly available: disabling it keeps the failed and the
+    finished index; the not indexed document stays not planned."""
+    p = partly_project
+
+    response = client.delete(
+        f"/feature/project/{p['project'].id}/{Feature.FULL_TEXT_SEARCH.value}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert _status(db_session, p["index_failed"].id, JobType.TEXT_ES_INDEX) == -100
+    assert _status(db_session, p["not_indexed"].id, JobType.TEXT_ES_INDEX) is None
+
+
+def test_disable_computing_feature_unplans_its_processing_steps(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Keyword statistics is computing after its activation: disabling it sets the
+    processing keywords of both text documents to not planned, so no document
+    stays processing for it. The processing core steps of text_running stay
+    processing, and the feature is disabled, not re-enabled."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+
+    response = client.delete(
+        f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+    for sdoc in (p["text_done"], p["text_running"]):
+        assert _status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) is None, sdoc.name
+    assert _status(db_session, p["text_running"].id, JobType.TEXT_SPACY) == 0
+    read = _features(client, p["project"].id)[Feature.KEYWORD_STATISTICS]
+    assert read.status == FeatureStatus.DISABLED
+
+
+def test_disable_computing_feature_keeps_the_steps_other_features_need(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Activating RAG chat enables sentence similarity search too, and both are
+    computing the sentence embeddings. Disabling RAG chat keeps them processing:
+    sentence similarity search still needs them."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.RAG_CHAT)
+
+    response = client.delete(
+        f"/feature/project/{p['project'].id}/{Feature.RAG_CHAT.value}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == [Feature.SENTENCE_SIMILARITY_SEARCH]
+    step = JobType.TEXT_SENTENCE_EMBEDDING
+    assert _status(db_session, p["text_done"].id, step) == 0
+    read = _features(client, p["project"].id)[Feature.SENTENCE_SIMILARITY_SEARCH]
+    assert read.status == FeatureStatus.COMPUTING
+
+
 def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
     client: TestClient, test_project
 ):

@@ -24,14 +24,14 @@ You can change your choice at any time later.
 
 ## 2\. The Features Tab
 
-Open the **Project Settings** (the cog icon in the bottom left navigation bar) and select the **Features** tab. Every feature is listed with its description, its status and one action:
+Open the **Project Settings** (the cog icon in the bottom left navigation bar) and select the **Features** tab. Every feature is listed with its description, its status and its actions:
 
-| Status               | Meaning                                                                                                   | Action       |
-| -------------------- | --------------------------------------------------------------------------------------------------------- | ------------ |
-| **Disabled**         | The feature is switched off and hidden in the project.                                                    | **Enable**   |
-| **Computing**        | The feature is enabled and its data is being computed; a progress bar shows how many documents are ready. | none         |
-| **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete** |
-| **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**  |
+| Status               | Meaning                                                                                                   | Actions                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------- |
+| **Disabled**         | The feature is switched off and hidden in the project.                                                    | **Enable**                |
+| **Computing**        | The feature is enabled and its data is being computed; a progress bar shows how many documents are ready. | **Disable**               |
+| **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete**, **Disable** |
+| **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**               |
 
 While a feature is computing, the tab refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature show a small "x % of documents processed" hint in the bottom right corner; click it to open the Features tab.
 
@@ -48,7 +48,9 @@ A feature becomes **partly available** when documents lack its data, for example
 
 ### Disabling a Feature
 
-Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents uploaded in the meantime.
+Every enabled feature can be disabled, whatever its status. Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents that lack it.
+
+Disabling a **computing** feature stops the computation: documents that are not done yet are no longer processed for it and do not stay "processing". The data computed so far is kept.
 
 A feature that another enabled feature needs cannot be disabled; hover over its greyed out **Disable** button to see which features need it, and disable those first.
 
