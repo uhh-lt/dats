@@ -188,4 +188,4 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - Only `FeatureService` plans steps (sets a status column from `NULL`): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
 - The enabled features change only through `FeatureService.activate_feature` and `disable_feature` (the `/feature/project/...` endpoints), never through `ProjectUpdate`.
 - Disabling a feature sets its processing steps that no remaining feature plans to not planned, and `handle_job_started` skips steps that are not planned, so a disabled feature leaves no document processing.
-- An import restores only what the archive holds and plans no steps; features whose data is missing are partly available until a user completes them.
+- An import restores only what the archive holds, adds the archive's features to the project's (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.

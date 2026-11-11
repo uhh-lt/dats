@@ -54,6 +54,10 @@ Disabling a **computing** feature stops the computation: documents that are not 
 
 A feature that another enabled feature needs cannot be disabled; hover over its greyed out **Disable** button to see which features need it, and disable those first.
 
+### Importing a Project
+
+A project archive is imported into an existing project (**Project Settings** → **Import**). The import only ever adds features: afterwards the project enables its own features plus the features of the exported project. It never disables a feature and never starts processing. If the archive lacks the data of an enabled feature, the feature is partly available until you click **Complete**. To get exactly the features of the exported project, create the target project with **Minimal**.
+
 ## 3\. Opening a Disabled Feature
 
 If you open a page of a disabled feature (for example through a link or a bookmark), DATS shows "This feature is not enabled for this project" instead. Click **Open feature settings** to go straight to the Features tab and enable it.
