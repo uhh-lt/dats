@@ -29,11 +29,11 @@ Open the **Project Settings** (the cog icon in the bottom left navigation bar) a
 | Status               | Meaning                                                                                                   | Actions                   |
 | -------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------- |
 | **Disabled**         | The feature is switched off and hidden in the project.                                                    | **Enable**                |
-| **Computing**        | The feature is enabled and its data is being computed; a progress bar shows how many documents are ready. | **Disable**               |
+| **Computing**        | The feature is enabled and its data is being computed; a progress bar shows how many documents are ready. | **Restart**, **Disable**  |
 | **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete**, **Disable** |
 | **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**               |
 
-While a feature is computing, the tab refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature (and of a partly available one) show a small hint such as "Full-text search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
+While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature (and of a partly available one) show a small hint such as "Full-text search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
 
 ### Enabling and Completing a Feature
 
@@ -48,6 +48,10 @@ A feature becomes **partly available** when documents lack its data, for example
 
 If documents failed, the feature shows **Open Document Health** next to the failed count. It opens the [Health View](tools/health-view.md), where you select the failed documents (in the tab of their document type) and **Recompute** the failed steps. Once they succeed, the feature is **fully available**.
 
+### Restarting a Computing Feature
+
+A feature should not stay **Computing** for long. If its progress does not move for a long time (for example after the server was restarted while it computed), click **Restart** and confirm. DATS starts the computation of the documents that are not done yet again, with the processing settings you choose. Restart may repeat work that is still running: a document whose computation was only slow is computed twice, which costs time but does no harm.
+
 ### Disabling a Feature
 
 Every enabled feature can be disabled, whatever its status. Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents that lack it.
@@ -58,7 +62,9 @@ A feature that another enabled feature needs cannot be disabled; hover over its 
 
 ### Importing a Project
 
-A project archive is imported into an existing project (**Project Settings** → **Import**). The import only ever adds features: afterwards the project enables its own features plus the features of the exported project. It never disables a feature and never starts processing. If the archive lacks the data of an enabled feature, the feature is partly available until you click **Complete**. To get exactly the features of the exported project, create the target project with **Minimal**.
+A project archive is imported into an existing project (**Project Settings** → **Import**). The import only ever adds features: afterwards the project enables its own features plus the features of the exported project. It never disables a feature and never starts processing. If the archive lacks the data of an enabled feature, the feature is partly available until you click **Complete**. This also holds for documents that were still being processed when the project was exported: their unfinished data is not imported. To get exactly the features of the exported project, create the target project with **Minimal**.
+
+Archives exported with a DATS version before project features do not say which features the project used. Importing such an archive enables **all** features in the target project. Disable the ones you do not need afterwards.
 
 ## 3\. Opening a Disabled Feature
 
