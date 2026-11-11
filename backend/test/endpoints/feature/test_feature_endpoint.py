@@ -11,7 +11,7 @@ from systems.feature_system.feature_dto import FeatureRead
 def test_get_all_features_lists_every_feature_with_its_requirements(
     client: TestClient,
 ):
-    """Every toggleable feature, in enum order, with a title and the features it
+    """Every toggleable feature, in enum order, with the features it
     requires (RAG chat, annotation scaling and concepts over time require
     sentence similarity search, no other feature requires one)."""
     response = client.get("/feature")
@@ -19,7 +19,6 @@ def test_get_all_features_lists_every_feature_with_its_requirements(
     assert response.status_code == 200, response.text
     features = [FeatureRead.model_validate(f) for f in response.json()]
     assert [f.feature for f in features] == list(Feature)
-    assert all(f.title for f in features)
     requires = {f.feature: f.requires_features for f in features if f.requires_features}
     assert requires == {
         Feature.RAG_CHAT: [Feature.SENTENCE_SIMILARITY_SEARCH],

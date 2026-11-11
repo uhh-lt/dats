@@ -28,8 +28,6 @@ class FeatureService(metaclass=SingletonMeta):
         return [
             FeatureRead(
                 feature=d.feature,
-                title=d.title,
-                description=d.description,
                 requires_features=[f for f in Feature if f in d.requires_features],
             )
             for d in self.registry.declarations()
