@@ -15,6 +15,7 @@ learns which features a project enables.
 from typing import Callable
 
 from fastapi import Depends, Request
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
@@ -50,7 +51,22 @@ def require_feature_of(
         authz_user: AuthzUser = Depends(),
         db: Session = Depends(get_db_session),
     ) -> None:
-        orm_object = authz_user.read_crud(crud, int(request.path_params[id_param]))
+        raw_id = request.path_params[id_param]
+        try:
+            object_id = int(raw_id)
+        except ValueError:
+            # the route's own validation would report it, but this runs first
+            raise RequestValidationError(
+                [
+                    {
+                        "type": "int_parsing",
+                        "loc": ("path", id_param),
+                        "msg": "Input should be a valid integer, unable to parse string as an integer",
+                        "input": raw_id,
+                    }
+                ]
+            )
+        orm_object = authz_user.read_crud(crud, object_id)
         project_id = orm_object.get_project_id()
         authz_user.assert_in_project(project_id)
         FeatureService().assert_enabled(db=db, project_id=project_id, feature=feature)
