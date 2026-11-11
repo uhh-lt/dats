@@ -5,7 +5,7 @@ from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_dto import ProjectFeatureRead
-from feature_test_utils import FeatureProject, PartlyProject
+from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from systems.feature_system.feature_dto import (
     FeatureActivation,
@@ -287,6 +287,84 @@ def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
 
     assert _status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
     assert _status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
+
+
+# ===========================================================================
+# RESTART FEATURE (/feature/project/{project_id}/{feature}/restart) TESTS
+# ===========================================================================
+
+
+def _restart(client: TestClient, project_id: int, feature: Feature):
+    return client.post(
+        f"/feature/project/{project_id}/{feature.value}/restart",
+        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+    )
+
+
+def test_restart_feature_starts_its_processing_steps_again(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Keyword statistics is computing after its activation, but its jobs never
+    ran (they are captured). Restarting it starts the keywords of text_done again,
+    and the language detection of text_running, which was processing before the
+    activation; the keywords of text_running wait for it and stay processing."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    started_jobs.clear()
+
+    response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+
+    assert response.status_code == 200, response.text
+    assert response.json() == [Feature.KEYWORD_STATISTICS]
+    assert _activation_job(started_jobs).sdoc_steps == {
+        p["text_done"].id: [JobType.TEXT_KEYWORDS],
+        p["text_running"].id: [JobType.TEXT_LANGUAGE_DETECTION],
+    }
+    assert _status(db_session, p["text_running"].id, JobType.TEXT_KEYWORDS) == 0
+
+
+def test_restart_feature_leaves_the_steps_of_other_features_alone(
+    client: TestClient,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Restarting full-text search starts only its own processing steps (the
+    index), not the keywords another activation left processing."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    started_jobs.clear()
+
+    response = _restart(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+
+    assert response.status_code == 200, response.text
+    assert _activation_job(started_jobs).sdoc_steps == {
+        p["text_done"].id: [JobType.TEXT_ES_INDEX],
+        p["text_running"].id: [JobType.TEXT_ES_INDEX],
+    }
+
+
+def test_restart_a_disabled_feature_is_rejected(
+    client: TestClient,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Only an enabled feature can be restarted: a disabled one gets 403."""
+    response = _restart(client, feature_project["project"].id, Feature.FULL_TEXT_SEARCH)
+
+    assert_feature_disabled(response, Feature.FULL_TEXT_SEARCH)
+    assert started_jobs == []
+
+
+def test_restart_feature_requires_membership(client: TestClient):
+    """A non-member gets 403."""
+    response = _restart(client, 123456, Feature.FULL_TEXT_SEARCH)
+
+    assert response.status_code == 403, response.text
+    assert "not enabled" not in response.text
 
 
 # ===========================================================================
