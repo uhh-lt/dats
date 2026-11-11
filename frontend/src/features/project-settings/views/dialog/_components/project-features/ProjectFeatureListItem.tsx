@@ -9,6 +9,7 @@ import { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import { Box, Button, Chip, ChipProps, Link, ListItem, Stack, Tooltip, Typography } from "@mui/material";
 import { useDialogBus } from "@store/global/dialogBusHooks";
 import { memo, useCallback, useMemo } from "react";
+import { useRefreshHealthTable } from "./_hooks/useRefreshHealthTable";
 
 const STATUS_CHIP: Record<FeatureStatus, { label: string; color: ChipProps["color"] }> = {
   [FeatureStatus.DISABLED]: { label: "Disabled", color: "default" },
@@ -26,6 +27,7 @@ interface ProjectFeatureListItemProps {
   /** All features and their states, to tell which enabled features need this one. */
   features: FeatureRead[];
   states: ProjectFeatureMap;
+  /** Enable, complete or restart the feature (by its status). */
   onActivate: (feature: FeatureRead) => void;
 }
 
@@ -42,13 +44,23 @@ export const ProjectFeatureListItem = memo(
     // disable
     const openConfirmationDialog = useOpenConfirmationDialog();
     const { mutate: disableFeatureMutation, isPending: isDisablePending } = FeatureHooks.useDisableFeature();
+    const refreshHealthTable = useRefreshHealthTable();
     const isComputing = state.status === FeatureStatus.COMPUTING;
     const handleClickDisable = useCallback(() => {
       openConfirmationDialog({
         text: `Do you really want to disable ${feature.title}? It is hidden in this project and not computed for new uploads anymore.${isComputing ? " The computation in progress stops." : ""} Its data is kept, so enabling it again only computes the documents that lack it.`,
-        onAccept: () => disableFeatureMutation({ projectId, feature: feature.feature }),
+        onAccept: () =>
+          disableFeatureMutation({ projectId, feature: feature.feature }, { onSuccess: refreshHealthTable }),
       });
-    }, [disableFeatureMutation, feature.feature, feature.title, isComputing, openConfirmationDialog, projectId]);
+    }, [
+      disableFeatureMutation,
+      feature.feature,
+      feature.title,
+      isComputing,
+      openConfirmationDialog,
+      projectId,
+      refreshHealthTable,
+    ]);
 
     const handleClickActivate = useCallback(() => onActivate(feature), [feature, onActivate]);
 
@@ -112,6 +124,17 @@ export const ProjectFeatureListItem = memo(
         );
         break;
       case FeatureStatus.COMPUTING:
+        action = (
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Compute the documents that are not done yet again, e.g. when the progress has not moved for a long time.">
+              <Button variant="outlined" color="warning" onClick={handleClickActivate}>
+                Restart
+              </Button>
+            </Tooltip>
+            {disableButton}
+          </Stack>
+        );
+        break;
       case FeatureStatus.FULLY_AVAILABLE:
         action = disableButton;
         break;
