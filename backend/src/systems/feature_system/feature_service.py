@@ -297,10 +297,16 @@ class FeatureService(metaclass=SingletonMeta):
         feature: Feature,
         enabled: list[Feature],
     ) -> dict[int, list[JobType]]:
-        """Plan the steps the feature (and the features it requires) needs for all
-        documents of the project: steps that are not planned (NULL) are planned,
-        and erroneous steps of the feature are planned again; the steps of other
-        features are left alone. Finished and processing steps keep their status.
+        """Plan the steps of the enabled plan that the feature needs for all
+        documents of the project.
+
+        The steps to plan are the steps of the enabled plan, except those that
+        were already planned without the feature and that only other features
+        need: the feature's steps (and those of the features it requires), the
+        core steps, and the steps the feature makes possible (the text steps of
+        an image once it has a caption). Of these, steps that are not planned
+        (NULL) are planned, and erroneous steps of the feature are planned
+        again. Finished and processing steps keep their status.
 
         A step whose input step is erroneous (or not planned) is set to erroneous:
         it cannot run, and shows up as failed until its input is recomputed (the
@@ -313,19 +319,28 @@ class FeatureService(metaclass=SingletonMeta):
         finished = SDocStatus.finished.value
         erroneous = SDocStatus.erroneous.value
         features = self.registry.closure([feature])
+        others = [f for f in enabled if f not in features]
 
         sdoc_steps: dict[int, list[JobType]] = {}
         for doctype in DocType:
             plan = self.planned_steps(doctype=doctype, features=enabled)
-            to_plan = set(self.planned_steps(doctype=doctype, features=features))
-            to_redo = {
+            without = set(self.planned_steps(doctype=doctype, features=others))
+            own = {
                 step
                 for f in features
                 for step in self.feature_steps(
                     doctype=doctype, feature=f, enabled=enabled
                 )
             }
-            if not plan or not (to_plan or to_redo):
+            only_others = {
+                step
+                for f in others
+                for step in self.feature_steps(
+                    doctype=doctype, feature=f, enabled=enabled
+                )
+            } - own
+            to_plan = {s for s in plan if not (s in without and s in only_others)}
+            if not to_plan:
                 continue
             producers = _producers(graph, plan)
             inputs = {
@@ -345,7 +360,7 @@ class FeatureService(metaclass=SingletonMeta):
                     table.c.doctype == doctype.value,
                     or_(
                         *[table.c[s.value].is_(None) for s in plan if s in to_plan],
-                        *[table.c[s.value] == erroneous for s in plan if s in to_redo],
+                        *[table.c[s.value] == erroneous for s in plan if s in own],
                     ),
                 )
                 .with_for_update()
@@ -361,7 +376,7 @@ class FeatureService(metaclass=SingletonMeta):
                     old = status[step]
                     if not (
                         (old is None and step in to_plan)
-                        or (old == erroneous and step in to_redo)
+                        or (old == erroneous and step in own)
                     ):
                         continue
                     input_status = [status[i] for i in inputs[step]]

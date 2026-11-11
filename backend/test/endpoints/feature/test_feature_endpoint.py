@@ -14,6 +14,8 @@ from systems.feature_system.feature_dto import (
 )
 from systems.job_system.job_dto import JobInputBase
 
+from .conftest import ImageTextProject
+
 # ===========================================================================
 # GET ALL FEATURES (/feature) TESTS
 # ===========================================================================
@@ -157,6 +159,29 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
         assert _status(db_session, p["image"].id, step) == 0, step
     payload = _activation_job(started_jobs)
     assert payload.sdoc_steps == {p["image"].id: [JobType.IMAGE_CAPTION]}
+
+
+def test_activate_image_captions_plans_the_text_features_it_makes_possible(
+    client: TestClient,
+    db_session,
+    image_text_project: ImageTextProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """With image captions an image has text: activating them plans the steps of
+    the enabled text features for the image too (the index, sentence embeddings
+    and keywords), not only the caption and the core text steps."""
+    image_id = image_text_project["image"].id
+
+    _activate(client, image_text_project["project"].id, Feature.IMAGE_CAPTIONS)
+
+    for step in (
+        JobType.IMAGE_CAPTION,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_ES_INDEX,
+        JobType.TEXT_SENTENCE_EMBEDDING,
+        JobType.TEXT_KEYWORDS,
+    ):
+        assert _status(db_session, image_id, step) == 0, step
 
 
 def test_activate_a_fully_available_feature_starts_nothing(
