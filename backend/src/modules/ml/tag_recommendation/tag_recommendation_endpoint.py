@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -115,6 +116,10 @@ def update_recommendations(
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
 ) -> list[TagRecommendationLinkRead]:
+    authz_user.assert_in_same_project_as_many(
+        Crud.TAG_RECOMMENDATION, reviewd_recommendation_ids
+    )
+
     modifications = crud_tag_recommendation_link.update_multi(
         db=db,
         ids=reviewd_recommendation_ids,
