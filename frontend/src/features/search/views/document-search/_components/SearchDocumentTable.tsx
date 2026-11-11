@@ -110,6 +110,11 @@ export function SearchDocumentTable({
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
   // without full-text search, documents are searched with filters only
   const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
+  // full-text search was disabled while the page is open: drop the text query from the URL (the route loader drops
+  // it when the page loads), else the search fails with 403
+  useEffect(() => {
+    if (!fullTextSearchEnabled && searchQuery.trim() !== "") setSearchQuery("");
+  }, [fullTextSearchEnabled, searchQuery, setSearchQuery]);
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
   const navigate = DocumentSearchRouteAPI.useNavigate();
   const tabNavigate = useTabNavigate();
