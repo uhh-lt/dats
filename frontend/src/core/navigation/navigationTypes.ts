@@ -21,8 +21,6 @@ export type NavigationShortcut = string | { after: string; key: string };
 export interface NavigationEntry {
   /** Stable id of the navigation entry. */
   id: string;
-  /** The toggleable backend feature that gates this entry; entries without one need core data only and are always available. */
-  feature?: Feature;
   group: NavigationGroup;
   title: string;
   /** Shown on the analysis dashboard card. */
@@ -41,4 +39,10 @@ export interface NavigationEntry {
     /** Defaults to the category of the entry's group. */
     category?: NavigationCommandCategory;
   };
+}
+
+/** A navigation entry with the feature its route declares (`staticData.feature`). */
+export interface ResolvedNavigationEntry extends NavigationEntry {
+  /** The toggleable feature of the page; pages without one need core data only and are always available. */
+  feature: Feature | undefined;
 }

@@ -1,7 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { Icon } from "@components/icons";
-import { useIsFeatureEnabled } from "@core/feature";
-import { getNavigationEntries, LinkCard } from "@core/navigation";
+import { LinkCard, useEnabledNavigationEntries } from "@core/navigation";
 import { Box } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -15,16 +14,15 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/")({
 });
 
 const cardColor = "rgb(150, 200, 255)";
-const ANALYSIS_ENTRIES = getNavigationEntries("analysis");
 
 function AnalysisView() {
   const projectId = Route.useParams({ select: (params) => params.projectId });
-  const isFeatureEnabled = useIsFeatureEnabled();
+  const entries = useEnabledNavigationEntries("analysis");
 
   return (
     <ContentContainerLayout>
       <Box display="flex" gap={2} flexWrap="wrap">
-        {ANALYSIS_ENTRIES.filter((entry) => isFeatureEnabled(entry.feature)).map((entry) => (
+        {entries.map((entry) => (
           <LinkCard
             key={entry.id}
             to={entry.to}

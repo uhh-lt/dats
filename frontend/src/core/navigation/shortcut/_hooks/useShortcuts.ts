@@ -1,10 +1,9 @@
-import { useIsFeatureEnabled } from "@core/feature";
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { NAVIGATION_ENTRIES } from "../../navigationEntries";
-import { NavigationEntry } from "../../navigationTypes";
+import { ResolvedNavigationEntry } from "../../navigationTypes";
 import { useTabManager, useTabNavigate } from "../../tabs";
+import { useEnabledNavigationEntries } from "../../useNavigationEntries";
 
 export interface Shortcut {
   id: string;
@@ -45,7 +44,7 @@ export function useShortcuts() {
   const tabManager = useTabManager(projectId || -1);
   const toggleQuickCommandMenu = useToggleDialog("quickCommandMenu");
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
-  const isFeatureEnabled = useIsFeatureEnabled();
+  const navigationEntries = useEnabledNavigationEntries();
 
   // Memoize the sorted shortcuts
   const sortedShortcuts = useMemo(() => {
@@ -59,9 +58,8 @@ export function useShortcuts() {
       }),
 
       // Navigation shortcuts
-      ...NAVIGATION_ENTRIES.flatMap((entry: NavigationEntry): Shortcut[] => {
-        // a disabled feature has no shortcut, so its keys do nothing
-        if (!isFeatureEnabled(entry.feature)) return [];
+      // a disabled feature has no shortcut, so its keys do nothing
+      ...navigationEntries.flatMap((entry: ResolvedNavigationEntry): Shortcut[] => {
         const { shortcut } = entry;
         const shortcutKey = typeof shortcut === "string" ? shortcut : shortcut.after;
         return [
@@ -110,7 +108,7 @@ export function useShortcuts() {
       const bModifiers = (b.keys.ctrlmeta ? 1 : 0) + (b.keys.shift ? 1 : 0) + (b.keys.alt ? 1 : 0);
       return bModifiers - aModifiers; // Sort in descending order
     });
-  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu, isFeatureEnabled]);
+  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu, navigationEntries]);
 
   return sortedShortcuts;
 }
