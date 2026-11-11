@@ -1,12 +1,16 @@
+import threading
+
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
 
 from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
+from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectFeatureRead
 from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
+from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_dto import (
     FeatureActivation,
     FeatureActivationJobInput,
@@ -207,6 +211,46 @@ def test_activate_feature_starts_its_job_only_after_the_commit(
         feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
         feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
     }
+
+
+def test_activate_feature_waits_for_a_concurrent_activation(
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Two members enable a feature at the same time: the second activation waits
+    until the first commits and keeps its feature, so both are enabled. Calls the
+    service the endpoint delegates to, to hold the first transaction open."""
+    project_id = feature_project["project"].id
+    service = FeatureService()
+    service.activate_feature(
+        db=db_session,
+        project_id=project_id,
+        feature=Feature.KEYWORD_STATISTICS,
+        settings=SETTINGS,
+    )
+
+    def _other_member() -> None:
+        with SQLRepo().transaction() as db:
+            service.activate_feature(
+                db=db,
+                project_id=project_id,
+                feature=Feature.WORD_FREQUENCY,
+                settings=SETTINGS,
+            )
+
+    other = threading.Thread(target=_other_member)
+    other.start()
+    other.join(timeout=1)
+    assert other.is_alive(), "the second activation did not wait for the first"
+    db_session.commit()
+    other.join(timeout=30)
+
+    db_session.expire_all()
+    assert crud_project.read(db=db_session, id=project_id).enabled_features == [
+        Feature.WORD_FREQUENCY,
+        Feature.KEYWORD_STATISTICS,
+    ]
 
 
 def test_activate_a_fully_available_feature_starts_nothing(
