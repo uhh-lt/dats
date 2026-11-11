@@ -92,15 +92,20 @@ def _create_sdoc(
             filename=name, name=name, doctype=doctype, project_id=project.id
         ),
     )
+    set_step_status(db, sdoc.id, status)
+    return sdoc
+
+
+def set_step_status(db: Session, sdoc_id: int, status: dict[str, int]) -> None:
+    """Set the status of the given steps of the document."""
     db.execute(
         sa.text(
             "UPDATE sourcedocument SET "
             + ", ".join(f"{c} = :{c}" for c in status)
             + " WHERE id = :id"
         ),
-        {**status, "id": sdoc.id},
+        {**status, "id": sdoc_id},
     )
-    return sdoc
 
 
 def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
