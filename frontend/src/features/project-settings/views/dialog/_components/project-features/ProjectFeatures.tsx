@@ -34,8 +34,8 @@ export function ProjectFeatures({ project }: ProjectFeaturesProps) {
     <Stack spacing={2} p={2} overflow="auto" height="100%" sx={{ backgroundColor: "grey.100" }}>
       <Typography variant="body2" color="text.secondary">
         Features prepare data for every document when it is uploaded. Enabling a feature computes its data for the
-        existing documents; disabling it hides it and stops computing it for new uploads, but keeps the data.
-        Annotation, analysis and the LLM assistant are always available.
+        existing documents; disabling it hides it and stops computing its data, but keeps the data computed so far.
+        Annotation, the LLM assistant and all tools not listed here are always available.
       </Typography>
       {areas.map((area) => (
         <Box key={area.title} flexShrink={0}>

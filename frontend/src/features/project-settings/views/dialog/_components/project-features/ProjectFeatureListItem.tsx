@@ -108,9 +108,18 @@ export const ProjectFeatureListItem = memo(
     }
 
     return (
-      <ListItem divider sx={{ alignItems: "flex-start", gap: 2, py: 1.5 }}>
+      <ListItem
+        divider
+        sx={{
+          // narrow screens: the actions go below the description
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "flex-start" },
+          gap: { xs: 1, sm: 2 },
+          py: 1.5,
+        }}
+      >
         <Box flexGrow={1} minWidth={0}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
             <Typography variant="subtitle1">{feature.title}</Typography>
             <Chip size="small" label={chip.label} color={chip.color} />
           </Stack>
