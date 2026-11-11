@@ -1,5 +1,4 @@
 import { ProjectService } from "@api/services/ProjectService";
-import { FeatureStatus } from "@models/FeatureStatus";
 import { ProjectRead } from "@models/ProjectRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { projectQueries } from "./projectQueries";
@@ -12,14 +11,6 @@ const useGetProject = (projectId: number | null | undefined) =>
     ...projectQueries.userProjects(),
     select: (data) => data.find((project) => project.id === projectId)!,
     enabled: !!projectId,
-  });
-
-// The state of the project's features, refreshed every few seconds while a feature is computing.
-const usePollProjectFeatures = (projectId: number) =>
-  useQuery({
-    ...projectQueries.features(projectId),
-    refetchInterval: (query) =>
-      Object.values(query.state.data ?? {}).some((state) => state.status === FeatureStatus.COMPUTING) ? 3000 : false,
   });
 
 // PROJECT MUTATIONS
@@ -56,7 +47,6 @@ const useDeleteProject = () =>
 
 export const ProjectHooks = {
   useGetProject,
-  usePollProjectFeatures,
   useCreateProject,
   useUpdateProject,
   useDeleteProject,

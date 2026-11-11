@@ -1,6 +1,7 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { ProjectService } from "@api/services/ProjectService";
 import type { Feature } from "@models/Feature";
+import { FeatureStatus } from "@models/FeatureStatus";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { SDocStatus } from "@models/SDocStatus";
 import { queryOptions } from "@tanstack/react-query";
@@ -43,7 +44,9 @@ export const projectQueries = {
       queryFn: () => DocprocessingService.getSimpleSdocStatusByProjectAndStatus({ projectId, status }),
     }),
 
-  // state (enabled, ready, coverage) of every toggleable feature in a project, as a map feature -> state
+  // state (enabled, ready, coverage) of every toggleable feature in a project, as a map feature -> state; an
+  // aggregate over all documents, so it is loaded only where it is shown. Refreshed every few seconds while a feature
+  // is computing, wherever it is used (the pipeline steps send no events).
   featuresScope: () => [...projectQueries.all(), "features"] as const,
   features: (projectId: number) =>
     queryOptions({
@@ -56,5 +59,7 @@ export const projectQueries = {
         }, {});
       },
       staleTime: 1000 * 60,
+      refetchInterval: (query) =>
+        Object.values(query.state.data ?? {}).some((state) => state.status === FeatureStatus.COMPUTING) ? 3000 : false,
     }),
 };
