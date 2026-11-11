@@ -13,7 +13,9 @@ import {
   URLFilterTableProps,
   URLFilterTableToolbarLeft,
 } from "@core/filter";
+import { useFeature } from "@core/feature";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { Feature } from "@models/Feature";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
@@ -58,6 +60,8 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
   toolbarExtraProps,
 }: FilterTableContainerProps<HierarchicalElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
+  // without full-text search, documents are searched with filters only (a text query is rejected)
+  const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
 
   // table columns
   const { data: tableInfo } = useQuery(sdocQueries.tableInfo(projectId));
@@ -121,7 +125,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery(
     sdocQueries.search({
       projectId,
-      searchQuery: searchQuery || "",
+      searchQuery: fullTextSearchEnabled ? searchQuery || "" : "",
       requestBody: { filter, sorts: toSorts<SdocColumns>(sortingModel) },
       pageSize: fetchSize,
       expertMode: false,
@@ -176,7 +180,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
       state={{ globalFilter: searchQuery }}
-      enableGlobalFilter
+      enableGlobalFilter={fullTextSearchEnabled}
       onGlobalFilterChange={setSearchQuery}
       renderDetailPanel={renderDetailPanel}
     />
