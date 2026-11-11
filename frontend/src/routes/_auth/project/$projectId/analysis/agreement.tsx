@@ -32,7 +32,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/agreeme
   staticData: {
     tab: true,
     icon: Icon.AGREEMENT,
-    getTitle: () => "Annotator Agreement",
   },
   validateSearch: zodValidator(agreementSearchSchema),
   component: AgreementAnalysisView,

@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/")(
   staticData: {
     tab: true,
     icon: Icon.PERSPECTIVES,
-    getTitle: () => "Perspectives",
   },
   context: ({ params }) => ({ aspectsByProjectOptions: perspectivesQueries.aspectsByProject(params.projectId) }),
   loader: async ({ context }) => {

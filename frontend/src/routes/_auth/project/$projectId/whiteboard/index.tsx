@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/")({
   staticData: {
     tab: true,
     icon: Icon.WHITEBOARD,
-    getTitle: () => "Whiteboard",
   },
   context: ({ params }) => ({ whiteboardsByProjectOptions: whiteboardQueries.byProject(params.projectId) }),
   loader: async ({ context }) => {

@@ -27,7 +27,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
       [...entries].sort(byCategory).map(
         (entry: ResolvedNavigationEntry): CommandItem => ({
           id: entry.id,
-          title: entry.command.title ?? entry.title,
+          title: entry.title,
           description: entry.command.description,
           category: getNavigationCommandCategory(entry),
           icon: getIconComponent(entry.icon),

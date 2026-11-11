@@ -21,7 +21,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
   staticData: {
     tab: true,
     icon: Icon.SENTENCE_SEARCH,
-    getTitle: () => "Sentence Search",
     feature: Feature.SENTENCE_SIMILARITY_SEARCH,
   },
   validateSearch: zodValidator(sentenceSearchSchema),

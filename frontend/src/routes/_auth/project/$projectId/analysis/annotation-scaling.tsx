@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/annotat
   staticData: {
     tab: true,
     icon: Icon.ANNOTATION_SCALING,
-    getTitle: () => "Annotation Scaling",
     feature: Feature.ANNOTATION_SCALING,
   },
   component: AnnotationScalingView,

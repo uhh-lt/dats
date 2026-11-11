@@ -1486,8 +1486,9 @@ const routeOptionsRule = {
       validateSearch: "`validateSearch` uses `zodValidator(<page>SearchSchema)`.",
       featureLoader:
         "The `loader` of a route with `staticData.feature` returns early when `await ensureRouteFeatureEnabled({ context, params, route })` is false (its queries fail with 403 while the feature is disabled).",
-      tabStaticData:
-        "A page route of a project needs `staticData: { tab: true, icon, getTitle }` (missing: {{missing}}).",
+      tabStaticData: "A page route of a project needs `staticData: { tab: true, icon }` (missing: {{missing}}).",
+      staticTitle:
+        "A static tab title comes from the page's navigation entry (`NAVIGATION_ENTRIES`); `getTitle` is only for dynamic titles.",
     },
     schema: [],
   },
@@ -1535,6 +1536,15 @@ const routeOptionsRule = {
           context.report({ node: options.loader, messageId: "featureLoader" });
         }
 
+        const getTitle =
+          staticData && staticData.type === "ObjectExpression"
+            ? staticData.properties.find((p) => p.type === "Property" && propertyName(p) === "getTitle")
+            : undefined;
+        const getTitleFn = unwrapFunctionBody(getTitle?.value);
+        if (getTitleFn && getTitleFn.params.length === 0) {
+          context.report({ node: getTitle, messageId: "staticTitle" });
+        }
+
         const beforeLoad = unwrapFunctionBody(options.beforeLoad?.value);
         if (beforeLoad) {
           for (const ret of findValueReturns(beforeLoad)) context.report({ node: ret, messageId: "beforeLoadReturn" });
@@ -1564,7 +1574,7 @@ const routeOptionsRule = {
         }
 
         if (isProjectPage) {
-          const missing = ["tab", "icon", "getTitle"].filter((key) => !staticDataKeys.includes(key));
+          const missing = ["tab", "icon"].filter((key) => !staticDataKeys.includes(key));
           if (missing.length > 0) {
             context.report({ node, messageId: "tabStaticData", data: { missing: missing.join(", ") } });
           }

@@ -244,7 +244,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             {mainEntries.map((entry) => (
               <ListItem key={entry.id} disablePadding sx={{ display: "block" }}>
                 <Tooltip
-                  title={withShortcutHint(entry.sidebarTooltip ?? entry.title, entry.shortcut)}
+                  title={withShortcutHint(entry.title, entry.shortcut)}
                   placement="right"
                   arrow
                   disableHoverListener={isExpanded}

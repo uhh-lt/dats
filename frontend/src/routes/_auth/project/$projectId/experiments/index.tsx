@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/experiments/")({
   staticData: {
     tab: true,
     icon: Icon.EXPERIMENT,
-    getTitle: () => "Experiment Studio",
   },
   context: ({ params }) => ({ experimentsByProjectOptions: experimentQueries.byProject(params.projectId) }),
   loader: async ({ context }) => {

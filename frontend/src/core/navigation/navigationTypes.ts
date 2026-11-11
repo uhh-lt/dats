@@ -22,18 +22,19 @@ export interface NavigationEntry {
   /** Stable id of the navigation entry. */
   id: string;
   group: NavigationGroup;
-  title: string;
+  /**
+   * The one title of the page: sidebar, analysis dashboard card, command, shortcut and tab. Omitted for the page of a
+   * toggleable feature, which takes its title and description from `FEATURES`.
+   */
+  title?: string;
   /** Shown on the analysis dashboard card. */
   description?: string;
   icon: Icon;
   to: NavigationRoute;
   /** Navigation shortcut; every entry has one. */
   shortcut: NavigationShortcut;
-  /** Sidebar tooltip, if it differs from the title. */
-  sidebarTooltip?: string;
   /** Quick command menu entry; every entry has one. */
   command: {
-    title?: string;
     description: string;
     keywords: readonly string[];
     /** Defaults to the category of the entry's group. */
@@ -41,8 +42,9 @@ export interface NavigationEntry {
   };
 }
 
-/** A navigation entry with the feature its route declares (`staticData.feature`). */
-export interface ResolvedNavigationEntry extends NavigationEntry {
+/** A navigation entry with the feature its route declares (`staticData.feature`) and its title. */
+export interface ResolvedNavigationEntry extends Omit<NavigationEntry, "title"> {
   /** The toggleable feature of the page; pages without one need core data only and are always available. */
   feature: Feature | undefined;
+  title: string;
 }
