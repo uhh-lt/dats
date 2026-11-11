@@ -4,7 +4,7 @@ Projects get the list of their enabled features. Every existing project enables
 all features, so its documents keep all their steps and nothing is recomputed.
 
 Revision ID: f0bfbe883d73
-Revises: f2811eafb060
+Revises: 448579029394
 Create Date: 2026-11-10 13:31:37.189983
 
 """
@@ -17,7 +17,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "f0bfbe883d73"
-down_revision: str | None = "f2811eafb060"
+down_revision: str | None = "448579029394"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
