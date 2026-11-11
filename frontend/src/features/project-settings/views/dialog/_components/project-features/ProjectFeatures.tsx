@@ -1,6 +1,6 @@
 import { DialogSection } from "@components/DialogSection";
 import { featureQueries, groupFeaturesByArea } from "@core/feature";
-import { ProjectHooks } from "@core/project";
+import { projectQueries } from "@core/project";
 import { FeatureRead } from "@models/FeatureRead";
 import { ProjectRead } from "@models/ProjectRead";
 import { Box, List, Stack, Typography } from "@mui/material";
@@ -16,7 +16,7 @@ interface ProjectFeaturesProps {
 /** Every toggleable feature with its status in the project and its one action: enable, complete or disable. */
 export function ProjectFeatures({ project }: ProjectFeaturesProps) {
   const features = useQuery(featureQueries.list());
-  const states = ProjectHooks.usePollProjectFeatures(project.id);
+  const states = useQuery(projectQueries.features(project.id));
   const areas = useMemo(() => groupFeaturesByArea(features.data ?? []), [features.data]);
 
   // the feature to enable or complete

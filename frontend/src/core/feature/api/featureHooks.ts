@@ -5,11 +5,15 @@ import { Feature } from "@models/Feature";
 import { useMutation } from "@tanstack/react-query";
 import { featureQueries } from "./featureQueries";
 
-// The backend sends no DATS event when the features of a project change: refresh the project (its enabled features)
-// and the state of its features here.
-const refreshProjectFeatures = (projectId: number) => {
+// The backend sends PROJECT_UPDATED to the other members only (the actor has the response): store the enabled features
+// in the project and refresh the state of the features here.
+const refreshProjectFeatures = (projectId: number, enabledFeatures: Feature[]) => {
+  queryClient.setQueryData(projectQueries.userProjects().queryKey, (projects) =>
+    projects?.map((project) =>
+      project.id === projectId ? { ...project, enabled_features: enabledFeatures } : project,
+    ),
+  );
   queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey });
-  queryClient.invalidateQueries({ queryKey: projectQueries.userProjects().queryKey });
 };
 
 // The title the backend declares for the feature (`featureQueries.list()`, loaded by every view that changes features).
@@ -20,7 +24,7 @@ const useActivateFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "activateFeature"],
     mutationFn: FeatureService.activateFeature,
-    onSuccess: (_data, { projectId }) => refreshProjectFeatures(projectId),
+    onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
         `Started computing ${featureTitle(feature)}`,
@@ -31,7 +35,7 @@ const useDisableFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "disableFeature"],
     mutationFn: FeatureService.disableFeature,
-    onSuccess: (_data, { projectId }) => refreshProjectFeatures(projectId),
+    onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) => `Disabled ${featureTitle(feature)}`,
     },
