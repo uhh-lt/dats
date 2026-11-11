@@ -33,7 +33,7 @@ Open the **Project Settings** (the cog icon in the bottom left navigation bar) a
 | **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete**, **Disable** |
 | **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**               |
 
-While a feature is computing, the tab refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature show a small "x % of documents processed" hint in the bottom right corner; click it to open the Features tab.
+While a feature is computing, the tab refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature (and of a partly available one) show a small hint such as "Full-text search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
 
 ### Enabling and Completing a Feature
 

@@ -2,7 +2,7 @@ import { getIconComponent, Icon } from "@components/icons";
 import { Feature } from "@models/Feature";
 import { Box, Button, Container, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
-import { getFeatureTitle } from "./featureRegistry";
+import { useFeatureTitle } from "./useFeature";
 
 interface FeatureNotEnabledViewProps {
   feature: Feature;
@@ -11,6 +11,7 @@ interface FeatureNotEnabledViewProps {
 /** Shown instead of a page whose feature is disabled in the current project. */
 export function FeatureNotEnabledView({ feature }: FeatureNotEnabledViewProps) {
   const openProjectSettings = useOpenDialog("projectSettings");
+  const title = useFeatureTitle(feature);
 
   const handleOpenSettings = () => openProjectSettings({ tab: "features" });
 
@@ -29,8 +30,8 @@ export function FeatureNotEnabledView({ feature }: FeatureNotEnabledViewProps) {
           This feature is not enabled for this project
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          {getFeatureTitle(feature)} is disabled in this project. You can enable it in the Features tab of the project
-          settings; its data is then computed for the existing documents.
+          {title} is disabled in this project. You can enable it in the Features tab of the project settings; its data
+          is then computed for the existing documents.
         </Typography>
         <Button
           variant="contained"
