@@ -9,6 +9,7 @@ from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectFeatureRead
@@ -78,15 +79,31 @@ class FeatureService(metaclass=SingletonMeta):
     def disable_feature(
         self, *, db: Session, project_id: int, feature: Feature
     ) -> list[Feature]:
-        """Disable the feature: it is hidden and new uploads do not compute its
-        data; the stored data is kept. Rejects disabling a feature that another
-        enabled feature requires. Returns the enabled features."""
+        """Disable the feature in any enabled state: it is hidden and its data is
+        not computed anymore; the stored data is kept. Rejects disabling a feature
+        that another enabled feature requires. Returns the enabled features.
+
+        Steps that are still processing (an activation or an upload computing the
+        feature) and that the remaining features do not need are set to not
+        planned: the documents do not stay processing, and step jobs still in the
+        queue skip them (`handle_job_started`). Finished and erroneous steps keep
+        their status."""
         project = crud_project.read(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.resolve_enabled_features(
             requested=current - {feature}, current=current
         )
         crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+
+        graph = pipeline_registry.graph()
+        for doctype in DocType:
+            plan = set(self.planned_steps(doctype=doctype, features=enabled))
+            crud_sdoc.update_pending_steps_to_not_planned(
+                db=db,
+                project_id=project_id,
+                doctype=doctype,
+                steps=[s for s in graph.steps(doctype) if s not in plan],
+            )
         return enabled
 
     def activate_feature(

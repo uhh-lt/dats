@@ -1,5 +1,7 @@
 from typing import Callable
 
+from loguru import logger
+
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
@@ -194,22 +196,47 @@ def execute_pipeline_step(job_type: JobType, input, output, job_service):
             job_service.start_job(next_job_type, job_input)
 
 
-def _set_status(job_type: JobType, input: JobInputBase, status: SDocStatus) -> None:
-    """Set the status of the steps this run of the job computes."""
+def _set_status(
+    job_type: JobType,
+    input: JobInputBase,
+    status: SDocStatus,
+    steps: list[JobType] | None = None,
+) -> None:
+    """Set the status of the steps this run of the job computes (or of `steps`)."""
     if not isinstance(input, SdocProcessingJobInput):
+        return
+    if steps is None:
+        steps = _computed_steps(job_type, input)
+    if not steps:
         return
     with sqlr.transaction() as db:
         crud_sdoc.update(
             db=db,
             id=input.sdoc_id,
             update_dto=SourceDocumentUpdate.model_validate(
-                {step.value: status for step in _computed_steps(job_type, input)}
+                {step.value: status for step in steps}
             ),
         )
 
 
-def handle_job_started(jobtype: JobType, input: JobInputBase):
+def handle_job_started(jobtype: JobType, input: JobInputBase) -> bool:
+    """Set the steps of the run to processing. Steps that are not planned for the
+    document anymore (their feature was disabled while the job waited in the
+    queue) are dropped from the run; returns False if no step is left, and the
+    job is skipped."""
+    if isinstance(input, SdocProcessingJobInput):
+        computed = _computed_steps(jobtype, input)
+        planned = _planned_steps(input.sdoc_id, computed)
+        if not planned:
+            logger.info(
+                f"Skipping job {jobtype.value} of document {input.sdoc_id}: "
+                f"its steps are not planned anymore."
+            )
+            return False
+        if len(planned) < len(computed):
+            input.steps = planned
     _set_status(jobtype, input, SDocStatus.processing)
+    return True
 
 
 def _descendants(steps: list[JobType]) -> list[JobType]:
@@ -230,14 +257,18 @@ def handle_job_error(job_type: JobType, input: JobInputBase):
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.
     Recomputing the input starts them again (see `_start_jobs`)."""
-    _set_status(job_type, input, SDocStatus.erroneous)
     if not isinstance(input, SdocProcessingJobInput):
         return
+    # a step unplanned while the job ran (its feature was disabled) stays unplanned
+    computed = _computed_steps(job_type, input)
+    _set_status(
+        job_type, input, SDocStatus.erroneous, _planned_steps(input.sdoc_id, computed)
+    )
     with sqlr.transaction() as db:
         crud_sdoc.update_pending_steps_to_erroneous(
             db=db,
             sdoc_id=input.sdoc_id,
-            steps=_descendants(_computed_steps(job_type, input)),
+            steps=_descendants(computed),
         )
 
 

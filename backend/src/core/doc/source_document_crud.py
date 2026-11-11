@@ -1,6 +1,7 @@
-from sqlalchemy import case, func, select, update
+from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.orm import Session
 
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -278,6 +279,34 @@ class CRUDSourceDocument(
             .values(
                 {c.key: case((c == processing, erroneous), else_=c) for c in columns}
             )
+            .execution_options(synchronize_session=False)
+        )
+
+    def update_pending_steps_to_not_planned(
+        self, db: Session, *, project_id: int, doctype: DocType, steps: list[JobType]
+    ) -> None:
+        """
+        Set the given steps of the project's documents of this doctype that are
+        pending (processing) to not planned (NULL); steps with another status
+        keep it.
+
+        Args:
+            project_id: The project of the documents.
+            doctype: The doctype of the documents.
+            steps: The steps to unplan.
+        """
+        if not steps:
+            return
+        processing = SDocStatus.processing.value
+        columns = [getattr(self.model, s.value) for s in steps]
+        db.execute(
+            update(self.model)
+            .where(
+                self.model.project_id == project_id,
+                self.model.doctype == doctype,
+                or_(*[c == processing for c in columns]),
+            )
+            .values({c.key: case((c == processing, None), else_=c) for c in columns})
             .execution_options(synchronize_session=False)
         )
 

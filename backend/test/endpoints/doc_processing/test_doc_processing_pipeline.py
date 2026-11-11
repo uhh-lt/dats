@@ -7,7 +7,10 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.doc_processing_pipeline import handle_job_error
+from modules.doc_processing.doc_processing_pipeline import (
+    handle_job_error,
+    handle_job_started,
+)
 
 SETTINGS = ProcessingSettings(
     extract_images=True,
@@ -58,3 +61,67 @@ def test_a_failed_step_fails_the_pending_steps_after_it(
         JobType.TEXT_SENTENCE_EMBEDDING,
     ]
     assert _statuses(db_session, sdoc_id, steps) == [1, 1, -100, -100, -100, None]
+
+
+def test_a_failed_job_leaves_its_steps_that_are_not_planned_unplanned(
+    db_session, feature_project: FeatureProject
+):
+    """A spaCy job of text_running for tokens and keywords fails after the
+    keywords were unplanned (their feature was disabled while it ran): tokens
+    become erroneous, the keywords stay not planned."""
+    sdoc_id = feature_project["text_running"].id
+
+    handle_job_error(
+        JobType.TEXT_SPACY,
+        SdocProcessingJobInput(
+            project_id=feature_project["project"].id,
+            sdoc_id=sdoc_id,
+            settings=SETTINGS,
+            steps=[JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS],
+        ),
+    )
+
+    steps = [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
+    assert _statuses(db_session, sdoc_id, steps) == [-100, None]
+
+
+def test_a_job_whose_steps_are_not_planned_is_skipped(
+    db_session, feature_project: FeatureProject
+):
+    """A queued sentence embedding job of text_done, whose step is not planned
+    (its feature was disabled while the job waited), is skipped and does not
+    set the step to processing."""
+    sdoc_id = feature_project["text_done"].id
+
+    started = handle_job_started(
+        JobType.TEXT_SENTENCE_EMBEDDING,
+        SdocProcessingJobInput(
+            project_id=feature_project["project"].id,
+            sdoc_id=sdoc_id,
+            settings=SETTINGS,
+        ),
+    )
+
+    assert started is False
+    assert _statuses(db_session, sdoc_id, [JobType.TEXT_SENTENCE_EMBEDDING]) == [None]
+
+
+def test_a_job_drops_its_steps_that_are_not_planned(
+    db_session, feature_project: FeatureProject
+):
+    """A recompute of tokens and keywords of text_done, where the keywords are not
+    planned, runs for the tokens only: the keywords stay not planned."""
+    sdoc_id = feature_project["text_done"].id
+    payload = SdocProcessingJobInput(
+        project_id=feature_project["project"].id,
+        sdoc_id=sdoc_id,
+        settings=SETTINGS,
+        steps=[JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS],
+    )
+
+    started = handle_job_started(JobType.TEXT_SPACY, payload)
+
+    assert started is True
+    assert payload.steps == [JobType.TEXT_SPACY]
+    steps = [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
+    assert _statuses(db_session, sdoc_id, steps) == [0, None]
