@@ -88,7 +88,8 @@ class FeatureService(metaclass=SingletonMeta):
         planned: the documents do not stay processing, and step jobs still in the
         queue skip them (`handle_job_started`). Finished and erroneous steps keep
         their status."""
-        project = crud_project.read(db=db, id=project_id)
+        # lock the project: a concurrent change of its features waits for this one
+        project = crud_project.read_locked(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.resolve_enabled_features(
             requested=current - {feature}, current=current
@@ -119,7 +120,8 @@ class FeatureService(metaclass=SingletonMeta):
         that lack it (see `_plan_missing_steps`). A feature activation job on the
         low-priority queue starts the steps with these settings once the
         transaction commits. Returns the project."""
-        project = crud_project.read(db=db, id=project_id)
+        # lock the project: a concurrent change of its features waits for this one
+        project = crud_project.read_locked(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.resolve_enabled_features(
             requested=current | {feature}, current=current
@@ -147,8 +149,9 @@ class FeatureService(metaclass=SingletonMeta):
         does for missing steps. For steps left processing without a job (a crashed
         worker); a step whose job still runs computes twice. Returns the
         project."""
-        self.assert_enabled(db=db, project_id=project_id, feature=feature)
-        project = crud_project.read(db=db, id=project_id)
+        project = crud_project.read_locked(db=db, id=project_id)
+        if feature.value not in project.enabled_features:
+            raise FeatureDisabledError(project_id=project_id, feature=feature)
         enabled = [Feature(f) for f in project.enabled_features]
 
         sdoc_steps = self._plan_missing_steps(

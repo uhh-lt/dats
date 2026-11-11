@@ -58,8 +58,10 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
         # plan the steps the project's features need for the doctype, so the sdoc
-        # is never seen as finished; the other steps stay NULL (not planned)
-        project = crud_project.read(db=db, id=payload.project_id)
+        # is never seen as finished; the other steps stay NULL (not planned). The
+        # share lock makes a concurrent feature activation wait for this upload,
+        # so it plans its steps for this document too, or this upload for it.
+        project = crud_project.read_locked(db=db, id=payload.project_id, shared=True)
         steps = FeatureService().planned_steps(
             doctype=payload.doctype,
             features=[Feature(f) for f in project.enabled_features],
