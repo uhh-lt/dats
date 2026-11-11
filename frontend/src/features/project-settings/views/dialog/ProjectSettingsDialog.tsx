@@ -40,10 +40,13 @@ export function ProjectSettingsDialog({
   const handleChangeTab = useCallback((_event: SyntheticEvent, newValue: string) => {
     setChosenTab(newValue);
   }, []);
-  const handleClose = useCallback(() => {
-    setChosenTab(null);
-    closeDialog();
-  }, [closeDialog]);
+  // forget the chosen tab when the dialog closes, also when its content closed it (e.g. "Open Document Health")
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) setChosenTab(null);
+  }
+  const handleClose = useCallback(() => closeDialog(), [closeDialog]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
