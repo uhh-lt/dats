@@ -175,17 +175,19 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - A document preprocessing step is a job with `doctypes`, `requires` and `produces` in `@register_job`; the pipeline order and the steps per doctype are derived from these declarations, never listed by hand.
 - `requires` and `produces` hold `Artefact` values (`common/artefact_enum.py`); a new artefact is added there, and to `CORE_ARTEFACTS` only if every document needs it whatever features its project enables.
 - A job that computes several steps in one run declares the others in `further_steps` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
-- Every step has a nullable status column of the same name on `SourceDocumentORM` and in `SDOC_STATUS_COLUMNS`, a `JobType` value and a migration; `NULL` means not planned, never default it to processing.
+- Every step has a `JobType` value; its status per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` reads or writes these rows.
+- The overall status of a document is derived from its step rows (erroneous, else processing, else finished); never store it.
 - The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
 - A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
-- A new step is also added to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`); `test_project_doctor_steps.py` fails otherwise.
+- Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).
+- A new step is also added to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
 
 ## Features
 
 - A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
 - A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
 - The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
-- Only `FeatureService` plans steps (sets a status column from `NULL`): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
+- Only `FeatureService` plans steps (adds their status rows): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
 - The enabled features change only through `FeatureService.activate_feature` and `disable_feature` (the `/feature/project/...` endpoints), never through `ProjectUpdate`.
 - Disabling a feature sets its processing steps that no remaining feature plans to not planned, and `handle_job_started` skips steps that are not planned, so a disabled feature leaves no document processing.
 - An import restores only what the archive holds, adds the archive's features to the project's (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.
