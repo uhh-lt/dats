@@ -1,8 +1,7 @@
 import { Feature } from "@models/Feature";
 import { Chip, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
-import { getFeatureTitle } from "./featureRegistry";
-import { useFeature } from "./useFeature";
+import { useFeature, useFeatureTitle } from "./useFeature";
 
 interface FeatureCoverageHintProps {
   feature: Feature;
@@ -15,6 +14,7 @@ interface FeatureCoverageHintProps {
  */
 export function FeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
   const { enabled, ready, coverage } = useFeature(feature);
+  const title = useFeatureTitle(feature);
   const openProjectSettings = useOpenDialog("projectSettings");
   if (!enabled || ready) return null;
 
@@ -23,12 +23,12 @@ export function FeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
   const percent = Math.floor(coverage * 100);
   return (
     <Tooltip
-      title={`${getFeatureTitle(feature)} is not available for all documents yet. Results include only the ${percent} % of documents that have its data. Click to see the progress in the project settings.`}
+      title={`${title} is not available for all documents. Results include only the ${percent} % of documents that have its data. Click to see its status in the project settings.`}
     >
       <Chip
         size="small"
         color="info"
-        label={`${percent} % of documents processed`}
+        label={`${title}: ${percent} % of documents`}
         onClick={handleClick}
         sx={{ position: "fixed", right: 16, bottom: 16, zIndex: (theme) => theme.zIndex.fab, opacity: 0.9 }}
       />
