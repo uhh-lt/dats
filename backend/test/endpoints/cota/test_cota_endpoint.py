@@ -104,3 +104,12 @@ def test_refine_cota_is_rejected_when_concepts_over_time_is_disabled(
     response = client.post("/cota/refine", json=payload.model_dump(mode="json"))
 
     assert_feature_disabled(response, Feature.CONCEPTS_OVER_TIME)
+
+
+def test_cota_route_with_a_non_integer_id_is_a_validation_error(client: TestClient):
+    """The gate reads the analysis by the path parameter: an id that is no
+    integer is rejected with 422 like on any other route, not with 500."""
+    response = client.get("/cota/abc")
+
+    assert response.status_code == 422, response.text
+    assert "cota_id" in response.text
