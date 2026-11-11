@@ -1,24 +1,19 @@
 import { getIconComponent, Icon } from "@components/icons";
-import {
-  FEATURE_ENTRIES,
-  FeatureCommandCategory,
-  FeatureEntry,
-  formatFeatureShortcut,
-  getFeatureCommandCategory,
-  useIsFeatureEnabled,
-} from "@core/feature";
+import { useIsFeatureEnabled } from "@core/feature";
 import { Settings } from "@mui/icons-material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useMemo } from "react";
+import { formatNavigationShortcut, getNavigationCommandCategory, NAVIGATION_ENTRIES } from "../../navigationEntries";
+import { NavigationCommandCategory, NavigationEntry } from "../../navigationTypes";
 import { useTabNavigate } from "../../tabs";
 import { CommandItem } from "../_types/CommandItem";
 
-const CATEGORY_ORDER: FeatureCommandCategory[] = ["Navigation", "Analysis", "Tools"];
+const CATEGORY_ORDER: NavigationCommandCategory[] = ["Navigation", "Analysis", "Tools"];
 
 // Commands are grouped by category; within a category they keep the registry (sidebar and dashboard) order.
-const COMMAND_ENTRIES = [...FEATURE_ENTRIES].sort(
-  (a: FeatureEntry, b: FeatureEntry) =>
-    CATEGORY_ORDER.indexOf(getFeatureCommandCategory(a)) - CATEGORY_ORDER.indexOf(getFeatureCommandCategory(b)),
+const COMMAND_ENTRIES = [...NAVIGATION_ENTRIES].sort(
+  (a: NavigationEntry, b: NavigationEntry) =>
+    CATEGORY_ORDER.indexOf(getNavigationCommandCategory(a)) - CATEGORY_ORDER.indexOf(getNavigationCommandCategory(b)),
 );
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {
@@ -31,20 +26,20 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
 
   const featureCommands = useMemo(
     () =>
-      COMMAND_ENTRIES.flatMap((entry: FeatureEntry): CommandItem[] => {
+      COMMAND_ENTRIES.flatMap((entry: NavigationEntry): CommandItem[] => {
         if (!isFeatureEnabled(entry.feature)) return [];
         return [
           {
             id: entry.id,
             title: entry.command.title ?? entry.title,
             description: entry.command.description,
-            category: getFeatureCommandCategory(entry),
+            category: getNavigationCommandCategory(entry),
             icon: getIconComponent(entry.icon),
             action: () => {
               tabNavigate({ to: entry.to, params: { projectId } });
             },
             keywords: [...entry.command.keywords],
-            shortcut: formatFeatureShortcut(entry.shortcut),
+            shortcut: formatNavigationShortcut(entry.shortcut),
           },
         ];
       }),

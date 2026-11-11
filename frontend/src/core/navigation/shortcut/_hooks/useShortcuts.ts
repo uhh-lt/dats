@@ -1,7 +1,9 @@
-import { FEATURE_ENTRIES, FeatureEntry, useIsFeatureEnabled } from "@core/feature";
+import { useIsFeatureEnabled } from "@core/feature";
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
+import { NAVIGATION_ENTRIES } from "../../navigationEntries";
+import { NavigationEntry } from "../../navigationTypes";
 import { useTabManager, useTabNavigate } from "../../tabs";
 
 export interface Shortcut {
@@ -57,7 +59,7 @@ export function useShortcuts() {
       }),
 
       // Navigation shortcuts
-      ...FEATURE_ENTRIES.flatMap((entry: FeatureEntry): Shortcut[] => {
+      ...NAVIGATION_ENTRIES.flatMap((entry: NavigationEntry): Shortcut[] => {
         // a disabled feature has no shortcut, so its keys do nothing
         if (!isFeatureEnabled(entry.feature)) return [];
         const { shortcut } = entry;

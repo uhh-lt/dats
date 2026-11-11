@@ -1,12 +1,12 @@
 import { Icon } from "@components/icons";
 import { Feature } from "@models/Feature";
-import { FeatureCommandCategory, FeatureEntry, FeatureGroup, FeatureShortcut } from "./featureTypes";
+import { NavigationCommandCategory, NavigationEntry, NavigationGroup, NavigationShortcut } from "./navigationTypes";
 
 /**
- * Every user-facing navigation entry of a project, in sidebar and analysis dashboard order.
+ * Every user-facing navigation entry (page) of a project, in sidebar and analysis dashboard order.
  * The sidebar, the analysis dashboard, the quick command menu and the navigation shortcuts are generated from it.
  */
-export const FEATURE_ENTRIES = [
+export const NAVIGATION_ENTRIES = [
   // Search (sidebar search menu)
   {
     id: "document-search",
@@ -346,25 +346,25 @@ export const FEATURE_ENTRIES = [
       keywords: ["health", "document", "status", "processing"],
     },
   },
-] as const satisfies readonly FeatureEntry[];
+] as const satisfies readonly NavigationEntry[];
 
-const GROUP_COMMAND_CATEGORY: Record<FeatureGroup, FeatureCommandCategory> = {
+const GROUP_COMMAND_CATEGORY: Record<NavigationGroup, NavigationCommandCategory> = {
   search: "Navigation",
   main: "Navigation",
   analysis: "Analysis",
   tools: "Tools",
 };
 
-export function getFeatureEntries(group: FeatureGroup): readonly FeatureEntry[] {
-  return FEATURE_ENTRIES.filter((entry: FeatureEntry) => entry.group === group);
+export function getNavigationEntries(group: NavigationGroup): readonly NavigationEntry[] {
+  return NAVIGATION_ENTRIES.filter((entry: NavigationEntry) => entry.group === group);
 }
 
-export function getFeatureCommandCategory(entry: FeatureEntry): FeatureCommandCategory {
+export function getNavigationCommandCategory(entry: NavigationEntry): NavigationCommandCategory {
   return entry.command.category ?? GROUP_COMMAND_CATEGORY[entry.group];
 }
 
 /** The shortcut hint shown in labels and tooltips, e.g. "⌘⇧S" or "⌘⇧Y W". */
-export function formatFeatureShortcut(shortcut: FeatureShortcut): string {
+export function formatNavigationShortcut(shortcut: NavigationShortcut): string {
   if (typeof shortcut === "string") return `⌘⇧${shortcut.toUpperCase()}`;
   return `⌘⇧${shortcut.after.toUpperCase()} ${shortcut.key.toUpperCase()}`;
 }
