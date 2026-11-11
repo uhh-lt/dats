@@ -2,7 +2,8 @@ from collections import defaultdict
 
 from fastapi import UploadFile
 from loguru import logger
-from sqlalchemy.orm import Session
+from sqlalchemy import and_
+from sqlalchemy.orm import Session, aliased
 
 from common.doc_type_enum import DocType
 from common.doc_type_utils import get_doc_type, is_archive_file, mime_type_supported
@@ -10,6 +11,8 @@ from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
+from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
@@ -30,7 +33,6 @@ from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
 from systems.job_system.pipeline_graph import pipeline_registry
-from systems.search_system.pagination import apply_pagination
 
 SdocPreprocessingJob = JobRead[SdocProcessingJobInput, JobOutputBase | None]
 
@@ -122,37 +124,41 @@ class DocProcessingService(metaclass=SingletonMeta):
             SourceDocumentORM.doctype == doctype,
         )
 
-        # sorting
-        if len(sorts) > 0:
-            for s in sorts:
-                assert hasattr(SourceDocumentORM, s.column), (
-                    f"Invalid column: {s.column}"
+        # sorting: by a column of the document or by the status of a step
+        base_query = query
+        order_by = []
+        for s in sorts:
+            if s.column in steps:
+                status = aliased(SourceDocumentStepStatusORM)
+                query = query.outerjoin(
+                    status,
+                    and_(
+                        status.sdoc_id == SourceDocumentORM.id,
+                        status.step == s.column,
+                    ),
                 )
-            query = query.order_by(
-                *[
-                    s.direction.apply(getattr(SourceDocumentORM, s.column))
-                    for s in sorts
-                ]
-            )
-        else:
-            query = query.order_by(SourceDocumentORM.name.asc())
+                order_by.append(s.direction.apply(status.status))
+                continue
+            assert hasattr(SourceDocumentORM, s.column), f"Invalid column: {s.column}"
+            order_by.append(s.direction.apply(getattr(SourceDocumentORM, s.column)))
+        query = query.order_by(*order_by, SourceDocumentORM.name.asc())
 
-        # pagination
+        # pagination: count without the joins of the sorting
+        total_results = base_query.count()
         if page is not None and page_size is not None:
-            query, pagination = apply_pagination(
-                query=query, page_number=page + 1, page_size=page_size
-            )
-            total_results = pagination.total_results
-            result_rows = query.all()
-        # no pagination
-        else:
-            result_rows = query.all()
-            total_results = len(result_rows)
+            query = query.offset(page * page_size).limit(page_size)
+        result_rows = query.all()
 
         # transform to dto
+        step_status = crud_sdoc_step_status.read_by_sdocs(
+            db=db, sdoc_ids=[sdoc.id for sdoc in result_rows]
+        )
         results = SdocHealthResult(
             total_results=total_results,
-            data=[SdocStatusRow.from_sdoc_orm(sdoc, steps) for sdoc in result_rows],
+            data=[
+                SdocStatusRow.from_sdoc_orm(sdoc, steps, step_status[sdoc.id])
+                for sdoc in result_rows
+            ],
         )
 
         # Retrieve information about failed jobs

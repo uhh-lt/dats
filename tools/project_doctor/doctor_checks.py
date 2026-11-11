@@ -27,11 +27,15 @@ from doctor_report import (
 from doctor_stores import (
     ALL_COLLECTIONS,
     ANNOTATION_TABLES,
+    EMBEDDING_STEPS,
+    ES_INDEX_STEP,
+    IMAGE_THUMBNAIL_STEP,
     PROCESSING_STEPS,
     SDOC_COLLECTIONS,
     STATUS_ERRONEOUS,
     STATUS_FINISHED,
     STATUS_PROCESSING,
+    STEP_STATUS_TABLE,
     AnnotationKind,
     Stores,
 )
@@ -53,32 +57,34 @@ _HINT_CROSS_PROJECT = (
     "database and decide by hand."
 )
 
-# the steps that write the embeddings of a Weaviate collection
-_EMBEDDING_STEPS = {
-    "Document": "text_document_embedding",
-    "Sentence": "text_sentence_embedding",
-    "Image": "image_embedding",
-}
-
 
 class SdocRow:
     """The columns of a source document that the checks need (no content).
 
     `statuses` holds the planned steps of the document only: steps of other
-    doctypes, steps whose column this database lacks, and steps that are not
-    planned (NULL, their feature is not enabled) are left out, so no check
-    expects their data."""
+    doctypes, steps this database does not know, and steps that are not planned
+    (their feature is not enabled) are left out, so no check expects their
+    data.
 
-    def __init__(self, row: dict[str, Any]) -> None:
+    `step_status` holds the status of the steps this database knows, None if a
+    step is not planned."""
+
+    def __init__(self, row: dict[str, Any], step_status: dict[str, int | None]) -> None:
         self.id: int = row["id"]
         self.filename: str = row["filename"]
         self.doctype: str = row["doctype"]
         self.project_id: int = row["project_id"]
-        steps = [step for step in PROCESSING_STEPS.get(self.doctype, []) if step in row]
+        steps = [
+            step
+            for step in PROCESSING_STEPS.get(self.doctype, [])
+            if step in step_status
+        ]
         self.statuses: dict[str, int] = {
-            step: row[step] for step in steps if row[step] is not None
+            step: status for step in steps if (status := step_status[step]) is not None
         }
-        self.not_planned: list[str] = [step for step in steps if row[step] is None]
+        self.not_planned: list[str] = [
+            step for step in steps if step_status[step] is None
+        ]
 
     def is_finished(self, step: str) -> bool:
         return self.statuses.get(step) == STATUS_FINISHED
@@ -220,7 +226,7 @@ class Checker:
                 continue
 
             # 2) the image thumbnails, which the document views show
-            if sdoc.doctype == "image" and sdoc.is_finished("image_thumbnail"):
+            if sdoc.doctype == "image" and sdoc.is_finished(IMAGE_THUMBNAIL_STEP):
                 missing = [
                     fn
                     for fn in (f"{name}.webp", f"{name}.thumbnail.webp")
@@ -235,7 +241,7 @@ class Checker:
                             message=f"SourceDocument {sdoc.id} ({sdoc.filename}): "
                             f"missing {', '.join(missing)}",
                             fix=None,
-                            hint=_HINT_RECOMPUTE.format(step="image_thumbnail"),
+                            hint=_HINT_RECOMPUTE.format(step=IMAGE_THUMBNAIL_STEP),
                         )
                     )
 
@@ -285,17 +291,45 @@ class Checker:
     # POSTGRES
     # ==========================================================================
     def _read_sdocs(self, *, project_id: int) -> list[SdocRow]:
-        columns = ", ".join(
-            ["id", "filename", "doctype", "project_id", *self.stores.step_columns]
+        step_columns = (
+            [] if self.stores.has_step_status_table else self.stores.step_columns
         )
-        rows = self.conn.execute(
+        columns = ", ".join(["id", "filename", "doctype", "project_id", *step_columns])
+        rows = [
+            dict(row)
+            for row in self.conn.execute(
+                text(
+                    f"SELECT {columns} FROM sourcedocument "
+                    "WHERE project_id = :pid ORDER BY id"
+                ),
+                {"pid": project_id},
+            ).mappings()
+        ]
+        if not self.stores.has_step_status_table:
+            return [
+                SdocRow(row, {step: row[step] for step in step_columns}) for row in rows
+            ]
+
+        # one row per planned step; the steps without a row are not planned
+        planned: dict[int, dict[str, int]] = {}
+        for sdoc_id, step, status in self.conn.execute(
             text(
-                f"SELECT {columns} FROM sourcedocument "
-                "WHERE project_id = :pid ORDER BY id"
+                f"SELECT t.sdoc_id, t.step, t.status FROM {STEP_STATUS_TABLE} t "
+                "JOIN sourcedocument s ON s.id = t.sdoc_id WHERE s.project_id = :pid"
             ),
             {"pid": project_id},
-        ).mappings()
-        return [SdocRow(dict(row)) for row in rows]
+        ):
+            planned.setdefault(sdoc_id, {})[step] = status
+        return [
+            SdocRow(
+                row,
+                {
+                    step: planned.get(row["id"], {}).get(step)
+                    for step in PROCESSING_STEPS.get(row["doctype"], [])
+                },
+            )
+            for row in rows
+        ]
 
     @staticmethod
     def _print_not_planned(*, sdocs: list[SdocRow]) -> None:
@@ -510,7 +544,7 @@ class Checker:
         missing = [
             sdoc.id
             for sdoc in sdocs
-            if sdoc.is_finished("text_es_index")
+            if sdoc.is_finished(ES_INDEX_STEP)
             and sdoc.id in data_ids
             and sdoc.id not in es_ids
         ]
@@ -530,7 +564,7 @@ class Checker:
                     hint=None
                     if index_exists
                     else f"The index {index} does not exist. "
-                    + _HINT_RECOMPUTE.format(step="text_es_index"),
+                    + _HINT_RECOMPUTE.format(step=ES_INDEX_STEP),
                 )
             )
         if orphaned:
@@ -617,7 +651,7 @@ class Checker:
                     )
                 )
 
-            step = _EMBEDDING_STEPS.get(name)
+            step = EMBEDDING_STEPS.get(name)
             if step is None:
                 continue
             missing = [
@@ -627,7 +661,7 @@ class Checker:
                 and sdoc.id not in embedded
                 # documents without sentences have no sentence embeddings
                 and (
-                    step != "text_sentence_embedding"
+                    step != EMBEDDING_STEPS["Sentence"]
                     or sentence_counts.get(sdoc.id, 0) > 0
                 )
             ]

@@ -7,48 +7,7 @@ from core.doc.source_document_crud import crud_sdoc
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from common.doc_type_enum import DocType
-
-# The steps per doctype: the former hand-written lists
-# (common/doc_processing_steps.py), with the further steps of text_spacy
-# (keywords, word frequencies, named entities) after it and the document
-# embedding after the sentence embedding.
-TEXT_STEPS = [
-    "text_extraction",
-    "text_language_detection",
-    "text_spacy",
-    "text_keywords",
-    "text_word_frequency",
-    "text_ner",
-    "text_es_index",
-    "text_sentence_embedding",
-    "text_document_embedding",
-    "text_html_mapping",
-]
-STEPS_BY_DOCTYPE = {
-    DocType.text: ["extract_html", *TEXT_STEPS],
-    DocType.image: [
-        "image_caption",
-        "image_embedding",
-        "image_metadata_extraction",
-        "image_thumbnail",
-        "image_object_detection",
-        *TEXT_STEPS,
-    ],
-    DocType.audio: [
-        "audio_metadata",
-        "audio_thumbnail",
-        "audio_transcription",
-        *TEXT_STEPS,
-    ],
-    DocType.video: [
-        "video_metadata",
-        "video_thumbnail",
-        "video_audio_extraction",
-        "audio_transcription",
-        *TEXT_STEPS,
-    ],
-}
-
+from pipeline_test_utils import all_steps, step_names
 
 # ===========================================================================
 # UPLOAD (/docprocessing/project/{project_id}) TESTS
@@ -140,8 +99,8 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
     client: TestClient, doctype: DocType
 ):
     """The steps per doctype are derived from the requires/produces/doctypes
-    declarations of the jobs, in the order of `STEPS_BY_DOCTYPE`."""
+    declarations of the jobs, in pipeline order."""
     response = client.get(f"/docprocessing/searchColumns/{doctype.value}")
 
     assert response.status_code == 200, response.text
-    assert response.json() == STEPS_BY_DOCTYPE[doctype]
+    assert response.json() == step_names(all_steps(doctype))

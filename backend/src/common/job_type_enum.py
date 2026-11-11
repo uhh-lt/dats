@@ -2,7 +2,8 @@ from enum import Enum
 
 
 class JobType(str, Enum):
-    # KEEP THE SAME ORDER AS source_document_status_orm.py!
+    # The order of the pipeline steps breaks ties in the derived step order
+    # (systems/job_system/pipeline_graph.py).
 
     # entrypoints
     EXTRACT_ARCHIVE = "extract_archive"

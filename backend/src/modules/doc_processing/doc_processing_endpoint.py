@@ -6,6 +6,7 @@ from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
@@ -78,11 +79,15 @@ def get_simple_sdoc_status_by_project_and_status(
     authz_user: AuthzUser = Depends(),
 ) -> list[SourceDocumentStatusSimple]:
     authz_user.assert_in_project(project_id)
+    sdocs = crud_sdoc.read_by_project_and_status(
+        db=db, project_id=project_id, status=status
+    )
+    step_status = crud_sdoc_step_status.read_by_sdocs(
+        db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
+    )
     return [
-        SourceDocumentStatusSimple.model_validate(sdoc)
-        for sdoc in crud_sdoc.read_by_project_and_status(
-            db=db, project_id=project_id, status=status
-        )
+        SourceDocumentStatusSimple.from_sdoc_orm(sdoc, step_status[sdoc.id])
+        for sdoc in sdocs
     ]
 
 

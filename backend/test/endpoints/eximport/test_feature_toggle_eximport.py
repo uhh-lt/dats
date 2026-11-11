@@ -7,10 +7,11 @@ from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_orm import SDOC_STATUS_COLUMNS, SourceDocumentORM
+from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
+from pipeline_test_utils import read_all_step_status
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import JobInputBase
@@ -40,8 +41,9 @@ def _round_trip(db: Session, projects: FeatureToggleEximportProjects) -> None:
     db.commit()
 
 
-def _step_status(sdoc: SourceDocumentORM) -> dict[str, int | None]:
-    return {step: getattr(sdoc, step) for step in SDOC_STATUS_COLUMNS}
+def _step_status(db: Session, sdoc: SourceDocumentORM) -> dict[str, int]:
+    """The status of the planned steps of the document."""
+    return read_all_step_status(db, sdoc.id)
 
 
 def test_project_import_merges_the_enabled_features(
@@ -77,8 +79,8 @@ def test_project_import_plans_and_starts_nothing(
     )
     assert len(imported) == 2
     for sdoc in imported:
-        assert 0 not in _step_status(sdoc).values(), sdoc.filename
-        assert sdoc.text_keywords is None, sdoc.filename
+        assert 0 not in _step_status(db_session, sdoc).values(), sdoc.filename
+        assert JobType.TEXT_KEYWORDS.value not in _step_status(db_session, sdoc)
     assert started_jobs == []
 
 
@@ -86,11 +88,11 @@ def test_project_round_trip_keeps_step_statuses(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> None:
     """Every imported document has the step statuses of its original: finished
-    steps stay finished and not planned steps stay NULL. The image without
+    steps stay finished and not planned steps stay not planned. The image without
     caption (empty HTML) is imported as well."""
     projects = feature_toggle_eximport_projects
     expected = {
-        sdoc.filename: _step_status(sdoc)
+        sdoc.filename: _step_status(db_session, sdoc)
         for sdoc in (projects["text"], projects["image"])
     }
 
@@ -99,7 +101,9 @@ def test_project_round_trip_keeps_step_statuses(
     imported = crud_sdoc.read_by_project(
         db=db_session, project_id=projects["target_project"].id, only_finished=False
     )
-    assert {sdoc.filename: _step_status(sdoc) for sdoc in imported} == expected
+    assert {
+        sdoc.filename: _step_status(db_session, sdoc) for sdoc in imported
+    } == expected
     image = next(sdoc for sdoc in imported if sdoc.doctype == DocType.image)
     assert image.data is not None
     assert (image.data.html, image.data.raw_html) == ("", "")

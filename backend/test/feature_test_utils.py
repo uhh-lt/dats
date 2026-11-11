@@ -2,7 +2,6 @@
 
 from typing import Protocol, TypedDict
 
-import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -15,18 +14,19 @@ from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
 from core.user.user_orm import UserORM
+from pipeline_test_utils import core_steps, set_step_status, step_names
 
 FEATURE_PROJECT_TITLE = "Feature Project"
 
-# The steps of a text document in a project without features.
-MINIMAL_TEXT_STEPS = [
-    "extract_html",
-    "text_extraction",
-    "text_language_detection",
-    "text_spacy",
-    "text_html_mapping",
-]
-MINIMAL_IMAGE_STEPS = ["image_metadata_extraction", "image_thumbnail"]
+
+def minimal_text_steps() -> list[str]:
+    """The steps of a text document in a project without features."""
+    return step_names(core_steps(DocType.text))
+
+
+def minimal_image_steps() -> list[str]:
+    """The steps of an image document in a project without features."""
+    return step_names(core_steps(DocType.image))
 
 
 class FeatureProject(TypedDict):
@@ -38,7 +38,7 @@ class FeatureProject(TypedDict):
     - text_done: text document "text_done.txt"; the steps of a project without
       features are finished (extract_html, text_extraction,
       text_language_detection, text_spacy, text_html_mapping), all other steps
-      are not planned (NULL)
+      are not planned
     - text_running: text document "text_running.txt"; extract_html and
       text_extraction are finished, text_language_detection, text_spacy and
       text_html_mapping are processing, all other steps are not planned
@@ -96,18 +96,6 @@ def _create_sdoc(
     return sdoc
 
 
-def set_step_status(db: Session, sdoc_id: int, status: dict[str, int]) -> None:
-    """Set the status of the given steps of the document."""
-    db.execute(
-        sa.text(
-            "UPDATE sourcedocument SET "
-            + ", ".join(f"{c} = :{c}" for c in status)
-            + " WHERE id = :id"
-        ),
-        {**status, "id": sdoc_id},
-    )
-
-
 def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
     """The project described in the fixtures that use `FeatureProject`."""
     project = create_project_with_features(
@@ -118,7 +106,7 @@ def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
         project,
         name="text_done.txt",
         doctype=DocType.text,
-        status=dict.fromkeys(MINIMAL_TEXT_STEPS, 1),
+        status=dict.fromkeys(minimal_text_steps(), 1),
     )
     text_running = _create_sdoc(
         db,
@@ -138,7 +126,7 @@ def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
         project,
         name="image.png",
         doctype=DocType.image,
-        status=dict.fromkeys(MINIMAL_IMAGE_STEPS, 1),
+        status=dict.fromkeys(minimal_image_steps(), 1),
     )
     db.commit()
     for obj in (project, text_done, text_running, image):
@@ -162,7 +150,7 @@ class PartlyProject(TypedDict):
       search enabled
     - five text documents; the minimal text steps are extract_html,
       text_extraction, text_language_detection, text_spacy, text_html_mapping;
-      steps not listed are not planned (NULL):
+      steps not listed are not planned:
       - indexed: minimal steps and text_es_index finished
       - index_failed: minimal steps finished, text_es_index erroneous
       - not_indexed: minimal steps finished (text_es_index not planned)
@@ -191,7 +179,7 @@ def create_partly_project(db: Session, user: UserORM) -> PartlyProject:
     project = create_project_with_features(
         db, user, title=PARTLY_PROJECT_TITLE, features=[Feature.FULL_TEXT_SEARCH]
     )
-    done = dict.fromkeys(MINIMAL_TEXT_STEPS, 1)
+    done = dict.fromkeys(minimal_text_steps(), 1)
     sdocs = {
         "indexed": {**done, "text_es_index": 1},
         "index_failed": {**done, "text_es_index": -100},
@@ -248,7 +236,7 @@ def create_featureless_project(db: Session, user: UserORM) -> FeaturelessProject
         project,
         name="text_done.txt",
         doctype=DocType.text,
-        status=dict.fromkeys(MINIMAL_TEXT_STEPS, 1),
+        status=dict.fromkeys(minimal_text_steps(), 1),
     )
     db.commit()
     db.refresh(project)

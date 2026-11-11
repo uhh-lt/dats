@@ -12,8 +12,8 @@ from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
-    SourceDocumentUpdate,
 )
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
@@ -58,7 +58,7 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
         # plan the steps the project's features need for the doctype, so the sdoc
-        # is never seen as finished; the other steps stay NULL (not planned). The
+        # is never seen as finished; the other steps stay not planned. The
         # share lock makes a concurrent feature activation wait for this upload,
         # so it plans its steps for this document too, or this upload for it.
         project = crud_project.read_locked(db=db, id=payload.project_id, shared=True)
@@ -66,12 +66,11 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             doctype=payload.doctype,
             features=[Feature(f) for f in project.enabled_features],
         )
-        crud_sdoc.update(
+        crud_sdoc_step_status.update_status(
             db=db,
-            id=sdoc_db_obj.id,
-            update_dto=SourceDocumentUpdate.model_validate(
-                {step.value: SDocStatus.processing for step in steps}
-            ),
+            sdoc_ids=[sdoc_db_obj.id],
+            steps=steps,
+            status=SDocStatus.processing,
         )
 
         # find repo path

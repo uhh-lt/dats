@@ -7,6 +7,7 @@ from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
+from pipeline_test_utils import all_steps, core_steps
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
     FeatureStillRequiredError,
@@ -21,32 +22,6 @@ from systems.job_system.pipeline_graph import pipeline_registry
 register_jobs()
 
 ALL_FEATURES = list(Feature)
-
-# The steps of the core artefacts, per doctype ("Minimal" project).
-MINIMAL_TEXT_STEPS = [
-    JobType.TEXT_EXTRACTION,
-    JobType.TEXT_LANGUAGE_DETECTION,
-    JobType.TEXT_SPACY,
-    JobType.TEXT_HTML_MAPPING,
-]
-MINIMAL_STEPS = {
-    DocType.text: [JobType.EXTRACT_HTML, *MINIMAL_TEXT_STEPS],
-    # without image captions, an image has no text
-    DocType.image: [JobType.IMAGE_METADATA_EXTRACTION, JobType.IMAGE_THUMBNAIL],
-    DocType.audio: [
-        JobType.AUDIO_METADATA_EXTRACTION,
-        JobType.AUDIO_THUMBNAIL,
-        JobType.AUDIO_TRANSCRIPTION,
-        *MINIMAL_TEXT_STEPS,
-    ],
-    DocType.video: [
-        JobType.VIDEO_METADATA_EXTRACTION,
-        JobType.VIDEO_THUMBNAIL,
-        JobType.VIDEO_AUDIO_EXTRACTION,
-        JobType.AUDIO_TRANSCRIPTION,
-        *MINIMAL_TEXT_STEPS,
-    ],
-}
 
 
 def _planned(doctype: DocType, features: list[Feature]) -> list[JobType]:
@@ -70,7 +45,7 @@ def test_minimal_project_plans_only_the_core_steps(doctype: DocType):
     """A project without features plans only the steps of the core artefacts;
     no Elasticsearch index, embeddings, keywords, word frequencies, entities,
     captions or object detection."""
-    assert _planned(doctype, []) == MINIMAL_STEPS[doctype]
+    assert _planned(doctype, []) == core_steps(doctype)
 
 
 @pytest.mark.parametrize(
@@ -137,22 +112,26 @@ def test_a_feature_adds_the_steps_of_its_artefacts(
     """Enabling one feature in a minimal project adds exactly the steps that
     produce its artefacts."""
     planned = _planned(doctype, [feature])
-    assert set(planned) - set(MINIMAL_STEPS[doctype]) == set(added_steps)
-    assert set(MINIMAL_STEPS[doctype]) <= set(planned)
+    assert set(planned) - set(core_steps(doctype)) == set(added_steps)
+    assert set(core_steps(doctype)) <= set(planned)
 
 
 def test_image_text_steps_need_image_captions():
     """An image has text only with a caption: without image captions, the text
     steps a feature needs are not planned, with them they are."""
-    assert (
-        _planned(DocType.image, [Feature.SENTENCE_SIMILARITY_SEARCH])
-        == (MINIMAL_STEPS[DocType.image])
+    assert _planned(DocType.image, [Feature.SENTENCE_SIMILARITY_SEARCH]) == (
+        core_steps(DocType.image)
     )
+    # the caption, then the core steps of the image and of the caption's text
+    text_core_steps = [
+        s for s in core_steps(DocType.text) if s in all_steps(DocType.image)
+    ]
     assert _planned(DocType.image, [Feature.IMAGE_CAPTIONS]) == [
-        JobType.IMAGE_CAPTION,
-        JobType.IMAGE_METADATA_EXTRACTION,
-        JobType.IMAGE_THUMBNAIL,
-        *MINIMAL_TEXT_STEPS,
+        s
+        for s in all_steps(DocType.image)
+        if s == JobType.IMAGE_CAPTION
+        or s in core_steps(DocType.image)
+        or s in text_core_steps
     ]
     assert JobType.TEXT_SENTENCE_EMBEDDING in _planned(
         DocType.image, [Feature.IMAGE_CAPTIONS, Feature.SENTENCE_SIMILARITY_SEARCH]

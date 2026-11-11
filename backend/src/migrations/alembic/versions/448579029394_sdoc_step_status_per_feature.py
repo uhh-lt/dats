@@ -1,32 +1,32 @@
 """sdoc step status per feature
 
-The step status columns of sourcedocument become nullable with default NULL
-(= step not planned). Every column that is not a step of the document's doctype
-is set to NULL.
+The status of the pipeline steps moves from the step columns of sourcedocument
+into the new table sourcedocumentstepstatus: one row (sdoc_id, step, status) per
+planned step; a step without a row is not planned. The step columns and the
+computed column processed_jobs are dropped; the overall status of a document is
+derived from its rows (erroneous if any step is erroneous, processing if any is
+processing, finished otherwise).
+
+Every step of the document's doctype gets a row with the status of its column;
+the columns of steps the doctype does not have get none.
 
 The spaCy outputs become steps of their own: text_keywords, text_word_frequency
-and text_ner get status columns, text_spacy now stands for tokens and sentences
-only. As the old text_spacy step wrote all four outputs, the new columns copy
-its status.
+and text_ner copy the status of text_spacy, which wrote all four outputs and now
+stands for tokens and sentences only.
 
 Document embeddings become the pipeline step text_document_embedding. It is
 finished where the removed ML job DOCUMENT_EMBEDDING finished for the document
-(sourcedocumentjobstatus type 102, status 3), and not planned (NULL) otherwise.
-The rows of the removed ML jobs DOCUMENT_EMBEDDING (102) and SENTENCE_EMBEDDING
-(103) are deleted; sentence embeddings are the step text_sentence_embedding.
+(sourcedocumentjobstatus type 102, status 3), and not planned otherwise. The rows
+of the removed ML jobs DOCUMENT_EMBEDDING (102) and SENTENCE_EMBEDDING (103) are
+deleted; sentence embeddings are the step text_sentence_embedding.
 
-The computed column processed_jobs now counts the finished steps, and the new
-computed columns total_jobs (planned steps) and processed_status (-100 if any
-step is erroneous, 0 if any is processing, 1 otherwise) replace the step count
-per doctype that the application used to compare against.
+The table is large, so every pass over it counts: all rows are written by one
+INSERT ... SELECT, the keys and indexes are created afterwards, and the old
+columns are dropped in one ALTER TABLE that only touches the catalog.
 
-The table is large, so every pass over it counts: the schema changes that only
-touch the catalog run as one ALTER TABLE, all status columns are set in one
-UPDATE, and the three computed columns are added in one ALTER TABLE (one table
-rewrite).
-
-The upgrade checks that no document changes its processed_status and fails
-(rolling back the migration) otherwise. The downgrade restores the
+The upgrade checks that no document changes its overall status and fails
+(rolling back the migration) otherwise. The downgrade restores the columns (a
+step that is not planned gets the old default, processing) and the
 DOCUMENT_EMBEDDING rows from text_document_embedding; the SENTENCE_EMBEDDING
 rows cannot be restored.
 
@@ -46,6 +46,8 @@ revision: str = "448579029394"
 down_revision: str | None = "d7f4aa3e7395"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
+
+TABLE = "sourcedocumentstepstatus"
 
 # Snapshot of the step status columns before this revision, in table order.
 OLD_STATUS_COLUMNS = [
@@ -68,10 +70,8 @@ OLD_STATUS_COLUMNS = [
     "video_thumbnail",
     "video_audio_extraction",
 ]
-SPACY_STEP_COLUMNS = ["text_keywords", "text_word_frequency", "text_ner"]
-DOCUMENT_EMBEDDING_COLUMN = "text_document_embedding"
-NEW_COLUMNS = [*SPACY_STEP_COLUMNS, DOCUMENT_EMBEDDING_COLUMN]
-STATUS_COLUMNS = [*OLD_STATUS_COLUMNS, *NEW_COLUMNS]
+SPACY_STEPS = ["text_keywords", "text_word_frequency", "text_ner"]
+DOCUMENT_EMBEDDING_STEP = "text_document_embedding"
 
 # Snapshot of the pipeline steps per doctype before this revision.
 _HTML_STEPS = [
@@ -107,23 +107,6 @@ ML_DOCUMENT_EMBEDDING = 102
 ML_SENTENCE_EMBEDDING = 103
 ML_FINISHED = 3
 
-
-def _processed_jobs_sql(columns: list[str]) -> str:
-    return " + ".join(f"(CASE WHEN {c} = 1 THEN 1 ELSE 0 END)" for c in columns)
-
-
-def _total_jobs_sql(columns: list[str]) -> str:
-    return " + ".join(f"(CASE WHEN {c} IS NULL THEN 0 ELSE 1 END)" for c in columns)
-
-
-def _processed_status_sql(columns: list[str]) -> str:
-    all_columns = ", ".join(columns)
-    return (
-        f"CASE WHEN -100 IN ({all_columns}) THEN -100 "
-        f"WHEN 0 IN ({all_columns}) THEN 0 ELSE 1 END"
-    )
-
-
 # the processed_status of the application before this revision
 OLD_PROCESSED_STATUS_SQL = (
     "CASE WHEN processed_jobs < 0 THEN -100 "
@@ -142,52 +125,44 @@ def _doctypes_sql(column: str) -> str:
     )
 
 
-def _step_status_sql() -> str:
-    """The SET clause of the upgrade: a step that is not part of the document's
-    doctype is not planned; the spaCy steps copy text_spacy (the old step wrote
-    all of them); the document embedding is finished where its ML job finished."""
-    assignments = [
-        f"{c} = CASE WHEN doctype IN ({_doctypes_sql(c)}) THEN {c} END"
+def _unpivot_sql() -> str:
+    """The (step, status) pairs of a document `s`, as a VALUES list; a NULL
+    status is no row. A step that is not part of the document's doctype is not
+    planned; the spaCy steps copy text_spacy (the old step wrote all of them; every
+    doctype has it); the document embedding is finished where its ML job `j`
+    finished."""
+    pairs = [
+        f"('{c}', CASE WHEN s.doctype IN ({_doctypes_sql(c)}) THEN s.{c} END)"
         for c in OLD_STATUS_COLUMNS
     ]
-    # every doctype has the text steps, so text_spacy keeps its value
-    assignments += [f"{c} = text_spacy" for c in SPACY_STEP_COLUMNS]
-    assignments.append(
-        f"{DOCUMENT_EMBEDDING_COLUMN} = CASE WHEN id IN ("
-        "SELECT id FROM sourcedocumentjobstatus "
-        f"WHERE type = {ML_DOCUMENT_EMBEDDING} AND status = {ML_FINISHED}"
-        ") THEN 1 END"
+    pairs += [f"('{c}', s.text_spacy)" for c in SPACY_STEPS]
+    pairs.append(
+        f"('{DOCUMENT_EMBEDDING_STEP}', CASE WHEN j.id IS NOT NULL THEN 1 END)"
     )
-    return ", ".join(assignments)
+    return ", ".join(pairs)
 
 
-def _add_computed_sql(columns: list[str]) -> list[str]:
-    """ALTER TABLE subcommands that add the computed columns over these status
-    columns."""
-    return [
-        f"ADD COLUMN {name} integer GENERATED ALWAYS AS ({sql}) STORED NOT NULL"
-        for name, sql in (
-            ("processed_jobs", _processed_jobs_sql(columns)),
-            ("total_jobs", _total_jobs_sql(columns)),
-            ("processed_status", _processed_status_sql(columns)),
-        )
-    ]
-
-
-def _create_indexes(*, with_status: bool) -> None:
-    op.create_index(
-        op.f("ix_sourcedocument_processed_jobs"),
+def _create_constraints() -> None:
+    """The keys and indexes of the status table, created after it is filled: one
+    pass each instead of one check or index insertion per row."""
+    op.create_primary_key(f"{TABLE}_pkey", TABLE, ["sdoc_id", "step"])
+    op.create_foreign_key(
+        f"{TABLE}_sdoc_id_fkey",
+        TABLE,
         "sourcedocument",
-        ["processed_jobs"],
-        unique=False,
+        ["sdoc_id"],
+        ["id"],
+        ondelete="CASCADE",
     )
-    if with_status:
-        op.create_index(
-            op.f("ix_sourcedocument_processed_status"),
-            "sourcedocument",
-            ["processed_status"],
-            unique=False,
-        )
+    op.create_index(op.f(f"ix_{TABLE}_sdoc_id"), TABLE, ["sdoc_id"], unique=False)
+    op.create_index(f"ix_{TABLE}_step_status", TABLE, ["step", "status"], unique=False)
+    op.create_index(
+        f"ix_{TABLE}_unfinished",
+        TABLE,
+        ["status", "sdoc_id"],
+        unique=False,
+        postgresql_where=sa.text("status <> 1"),
+    )
 
 
 def upgrade() -> None:
@@ -201,41 +176,48 @@ def upgrade() -> None:
         )
     )
 
-    # 2) catalog changes only: processed_jobs references the status columns, so
-    # it is recreated; the status columns become nullable without a default
-    op.drop_index(op.f("ix_sourcedocument_processed_jobs"), table_name="sourcedocument")
+    # 2) the status table, filled in one pass; the keys and indexes are created
+    # afterwards
+    op.create_table(
+        TABLE,
+        sa.Column("sdoc_id", sa.Integer(), nullable=False),
+        sa.Column("step", sa.String(), nullable=False),
+        sa.Column("status", sa.Integer(), nullable=False),
+    )
     conn.execute(
         sa.text(
-            "ALTER TABLE sourcedocument DROP COLUMN processed_jobs, "
-            + ", ".join(
-                f"ALTER COLUMN {c} DROP NOT NULL, ALTER COLUMN {c} DROP DEFAULT"
-                for c in OLD_STATUS_COLUMNS
-            )
-            + ", "
-            + ", ".join(f"ADD COLUMN {c} integer" for c in NEW_COLUMNS)
+            f"INSERT INTO {TABLE} (sdoc_id, step, status) "
+            "SELECT s.id, v.step, v.status FROM sourcedocument s "
+            "LEFT JOIN sourcedocumentjobstatus j ON j.id = s.id "
+            f"AND j.type = {ML_DOCUMENT_EMBEDDING} AND j.status = {ML_FINISHED} "
+            f"CROSS JOIN LATERAL (VALUES {_unpivot_sql()}) AS v(step, status) "
+            "WHERE v.status IS NOT NULL"
         )
     )
-
-    # 3) all step statuses in one pass
-    conn.execute(sa.text(f"UPDATE sourcedocument SET {_step_status_sql()}"))
+    _create_constraints()
     conn.execute(
         sa.text("DELETE FROM sourcedocumentjobstatus WHERE type IN (:doc, :sent)"),
         {"doc": ML_DOCUMENT_EMBEDDING, "sent": ML_SENTENCE_EMBEDDING},
     )
 
-    # 4) the computed columns, in one table rewrite
+    # 3) catalog changes only: drop the step columns and processed_jobs
+    op.drop_index(op.f("ix_sourcedocument_processed_jobs"), table_name="sourcedocument")
     conn.execute(
         sa.text(
-            "ALTER TABLE sourcedocument " + ", ".join(_add_computed_sql(STATUS_COLUMNS))
+            "ALTER TABLE sourcedocument "
+            + ", ".join(
+                f"DROP COLUMN {c}" for c in ["processed_jobs", *OLD_STATUS_COLUMNS]
+            )
         )
     )
-    _create_indexes(with_status=True)
 
-    # 5) check that no document changed its status
+    # 4) check that no document changed its status: the minimum of its step
+    # statuses (-100 erroneous, 0 processing, 1 finished), finished without steps
     changed = conn.execute(
         sa.text(
-            "SELECT count(*) FROM sourcedocument s JOIN old_sdoc_status o "
-            "ON s.id = o.id WHERE s.processed_status <> o.status"
+            "SELECT count(*) FROM old_sdoc_status o LEFT JOIN ("
+            f"SELECT sdoc_id, min(status) AS status FROM {TABLE} GROUP BY sdoc_id"
+            ") n ON n.sdoc_id = o.id WHERE coalesce(n.status, 1) <> o.status"
         )
     ).scalar_one()
     if changed > 0:
@@ -252,38 +234,40 @@ def downgrade() -> None:
     conn.execute(
         sa.text(
             "INSERT INTO sourcedocumentjobstatus (id, type, status, timestamp) "
-            "SELECT id, :type, :finished, now() FROM sourcedocument "
-            f"WHERE {DOCUMENT_EMBEDDING_COLUMN} = 1 "
+            f"SELECT sdoc_id, :type, :finished, now() FROM {TABLE} "
+            "WHERE step = :step AND status = 1 "
             "ON CONFLICT (id, type) DO NOTHING"
         ),
-        {"type": ML_DOCUMENT_EMBEDDING, "finished": ML_FINISHED},
+        {
+            "type": ML_DOCUMENT_EMBEDDING,
+            "finished": ML_FINISHED,
+            "step": DOCUMENT_EMBEDDING_STEP,
+        },
     )
 
-    # 2) catalog changes only: drop the computed and the new step columns
-    op.drop_index(
-        op.f("ix_sourcedocument_processed_status"), table_name="sourcedocument"
-    )
-    op.drop_index(op.f("ix_sourcedocument_processed_jobs"), table_name="sourcedocument")
+    # 2) the old columns, filled in one pass; a step that is not planned had the
+    # default status processing (0) before
     conn.execute(
         sa.text(
             "ALTER TABLE sourcedocument "
-            + ", ".join(
-                f"DROP COLUMN {c}"
-                for c in ["processed_status", "total_jobs", "processed_jobs"]
-                + NEW_COLUMNS
-            )
+            + ", ".join(f"ADD COLUMN {c} integer" for c in OLD_STATUS_COLUMNS)
         )
     )
-
-    # 3) a step that is not planned had the default status processing (0) before
     conn.execute(
         sa.text(
-            "UPDATE sourcedocument SET "
-            + ", ".join(f"{c} = coalesce({c}, 0)" for c in OLD_STATUS_COLUMNS)
+            "UPDATE sourcedocument s SET "
+            + ", ".join(f"{c} = coalesce(p.{c}, 0)" for c in OLD_STATUS_COLUMNS)
+            + " FROM sourcedocument d LEFT JOIN (SELECT sdoc_id, "
+            + ", ".join(
+                f"max(status) FILTER (WHERE step = '{c}') AS {c}"
+                for c in OLD_STATUS_COLUMNS
+            )
+            + f" FROM {TABLE} GROUP BY sdoc_id) p ON p.sdoc_id = d.id "
+            "WHERE d.id = s.id"
         )
     )
 
-    # 4) the old columns and processed_jobs, in one table rewrite
+    # 3) the constraints and processed_jobs, in one table rewrite
     old_processed_jobs = " + ".join(OLD_STATUS_COLUMNS)
     conn.execute(
         sa.text(
@@ -296,4 +280,12 @@ def downgrade() -> None:
             f"GENERATED ALWAYS AS ({old_processed_jobs}) STORED NOT NULL"
         )
     )
-    _create_indexes(with_status=False)
+    op.create_index(
+        op.f("ix_sourcedocument_processed_jobs"),
+        "sourcedocument",
+        ["processed_jobs"],
+        unique=False,
+    )
+
+    # 4) the status table
+    op.drop_table(TABLE)
