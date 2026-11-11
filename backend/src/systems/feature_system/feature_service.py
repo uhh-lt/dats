@@ -12,7 +12,7 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
-from core.project.project_dto import ProjectFeatureRead
+from core.project.project_dto import ProjectFeatureRead, ProjectRead
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivationJobInput, FeatureRead
 from systems.feature_system.feature_exceptions import (
@@ -78,10 +78,10 @@ class FeatureService(metaclass=SingletonMeta):
 
     def disable_feature(
         self, *, db: Session, project_id: int, feature: Feature
-    ) -> list[Feature]:
+    ) -> ProjectRead:
         """Disable the feature in any enabled state: it is hidden and its data is
         not computed anymore; the stored data is kept. Rejects disabling a feature
-        that another enabled feature requires. Returns the enabled features.
+        that another enabled feature requires. Returns the project.
 
         Steps that are still processing (an activation or an upload computing the
         feature) and that the remaining features do not need are set to not
@@ -104,7 +104,7 @@ class FeatureService(metaclass=SingletonMeta):
                 doctype=doctype,
                 steps=[s for s in graph.steps(doctype) if s not in plan],
             )
-        return enabled
+        return self._read_project(db=db, project_id=project_id)
 
     def activate_feature(
         self,
@@ -113,12 +113,12 @@ class FeatureService(metaclass=SingletonMeta):
         project_id: int,
         feature: Feature,
         settings: ProcessingSettings,
-    ) -> list[Feature]:
+    ) -> ProjectRead:
         """Enable the feature, or complete it if it is enabled already: enable it
         and the features it requires, and compute their data for the documents
         that lack it (see `_plan_missing_steps`). A feature activation job on the
         low-priority queue starts the steps with these settings once the
-        transaction commits. Returns the enabled features."""
+        transaction commits. Returns the project."""
         project = crud_project.read(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.resolve_enabled_features(
@@ -129,21 +129,39 @@ class FeatureService(metaclass=SingletonMeta):
         sdoc_steps = self._plan_missing_steps(
             db=db, project_id=project_id, feature=feature, enabled=enabled
         )
-        if sdoc_steps:
-            # start the job after the commit: a step job that starts earlier reads
-            # its steps as not planned and is skipped
-            job_input = FeatureActivationJobInput(
-                project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
-            )
-            event.listen(
-                db,
-                "after_commit",
-                lambda _session: self.js.start_job(
-                    JobType.FEATURE_ACTIVATION, job_input
-                ),
-                once=True,
-            )
-        return enabled
+        self._start_steps_after_commit(
+            db=db, project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
+        )
+        return self._read_project(db=db, project_id=project_id)
+
+    def restart_feature(
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        feature: Feature,
+        settings: ProcessingSettings,
+    ) -> ProjectRead:
+        """Restart the processing of an enabled feature: plan its processing steps
+        again and start those whose inputs are finished, like `activate_feature`
+        does for missing steps. For steps left processing without a job (a crashed
+        worker); a step whose job still runs computes twice. Returns the
+        project."""
+        self.assert_enabled(db=db, project_id=project_id, feature=feature)
+        project = crud_project.read(db=db, id=project_id)
+        enabled = [Feature(f) for f in project.enabled_features]
+
+        sdoc_steps = self._plan_missing_steps(
+            db=db,
+            project_id=project_id,
+            feature=feature,
+            enabled=enabled,
+            restart=True,
+        )
+        self._start_steps_after_commit(
+            db=db, project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
+        )
+        return self._read_project(db=db, project_id=project_id)
 
     def assert_enabled(self, *, db: Session, project_id: int, feature: Feature) -> None:
         """Raise a `FeatureDisabledError` (403) if the feature is not enabled in
@@ -296,6 +314,32 @@ class FeatureService(metaclass=SingletonMeta):
             )
         return result
 
+    def _read_project(self, *, db: Session, project_id: int) -> ProjectRead:
+        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
+
+    def _start_steps_after_commit(
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        sdoc_steps: dict[int, list[JobType]],
+        settings: ProcessingSettings,
+    ) -> None:
+        """Start a feature activation job for the planned steps once the
+        transaction commits: a step job that starts earlier reads its steps as not
+        planned and is skipped."""
+        if not sdoc_steps:
+            return
+        job_input = FeatureActivationJobInput(
+            project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
+        )
+        event.listen(
+            db,
+            "after_commit",
+            lambda _session: self.js.start_job(JobType.FEATURE_ACTIVATION, job_input),
+            once=True,
+        )
+
     def _plan_missing_steps(
         self,
         *,
@@ -303,6 +347,7 @@ class FeatureService(metaclass=SingletonMeta):
         project_id: int,
         feature: Feature,
         enabled: list[Feature],
+        restart: bool = False,
     ) -> dict[int, list[JobType]]:
         """Plan the steps of the enabled plan that the feature needs for all
         documents of the project.
@@ -313,7 +358,8 @@ class FeatureService(metaclass=SingletonMeta):
         core steps, and the steps the feature makes possible (the text steps of
         an image once it has a caption). Of these, steps that are not planned
         (NULL) are planned, and erroneous steps of the feature are planned
-        again. Finished and processing steps keep their status.
+        again; with `restart`, its processing steps too. Finished steps keep
+        their status, and so do processing steps without `restart`.
 
         A step whose input step is erroneous (or not planned) is set to erroneous:
         it cannot run, and shows up as failed until its input is recomputed (the
@@ -327,6 +373,7 @@ class FeatureService(metaclass=SingletonMeta):
         erroneous = SDocStatus.erroneous.value
         features = self.registry.closure([feature])
         others = [f for f in enabled if f not in features]
+        redo = [erroneous, processing] if restart else [erroneous]
 
         sdoc_steps: dict[int, list[JobType]] = {}
         for doctype in DocType:
@@ -367,7 +414,7 @@ class FeatureService(metaclass=SingletonMeta):
                     table.c.doctype == doctype.value,
                     or_(
                         *[table.c[s.value].is_(None) for s in plan if s in to_plan],
-                        *[table.c[s.value] == erroneous for s in plan if s in own],
+                        *[table.c[s.value].in_(redo) for s in plan if s in own],
                     ),
                 )
                 .with_for_update()
@@ -383,7 +430,7 @@ class FeatureService(metaclass=SingletonMeta):
                     old = status[step]
                     if not (
                         (old is None and step in to_plan)
-                        or (old == erroneous and step in own)
+                        or (old in redo and step in own)
                     ):
                         continue
                     input_status = [status[i] for i in inputs[step]]
