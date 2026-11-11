@@ -107,6 +107,14 @@ class PipelineGraph:
             | {a for artefacts in UPLOADED_ARTEFACTS.values() for a in artefacts}
         )
 
+    def producer(self, doctype: DocType, artefact: Artefact) -> JobType | None:
+        """The step of this doctype that produces the artefact, None if no step
+        of the doctype does (e.g. image embeddings of a text document)."""
+        for step in self.steps(doctype):
+            if artefact in self._declarations[step].produces:
+                return step
+        return None
+
     def roots(self, doctype: DocType) -> list[JobType]:
         """The steps that start when a document of this doctype is created."""
         return self._roots_by_doctype[doctype]
