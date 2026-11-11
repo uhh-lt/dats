@@ -38,9 +38,9 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
 
   // global server state
   const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
-  const sentenceSearch = useFeature(Feature.SENTENCE_SIMILARITY_SEARCH);
-  const imageSearch = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
-  const fullTextSearch = useFeature(Feature.FULL_TEXT_SEARCH);
+  const sentenceSearchEnabled = useFeature(Feature.SENTENCE_SIMILARITY_SEARCH);
+  const imageSearchEnabled = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
+  const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -72,7 +72,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
 
   // without the similarity search features and annotations, the menu has no entries
   const hasEntries =
-    sentenceSearch.enabled || imageSearch.enabled || (annotations !== undefined && annotations.length > 0);
+    sentenceSearchEnabled || imageSearchEnabled || (annotations !== undefined && annotations.length > 0);
 
   // ui events
   const handleSentenceSimilaritySearch = () => {
@@ -118,7 +118,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
       }}
     >
       <List dense>
-        {sentenceSearch.enabled && (
+        {sentenceSearchEnabled && (
           <ListItem disablePadding>
             <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!sentence}>
               <ListItemIcon>
@@ -128,7 +128,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
             </ListItemButton>
           </ListItem>
         )}
-        {imageSearch.enabled && (
+        {imageSearchEnabled && (
           <ListItem disablePadding>
             <ListItemButton onClick={handleImageSimilaritySearch} disabled={!sentence}>
               <ListItemIcon>
@@ -145,7 +145,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
             return (
               <Fragment key={anno.id}>
                 {/* the filter searches the annotated text with the full-text search */}
-                {fullTextSearch.enabled && (
+                {fullTextSearchEnabled && (
                   <ListItem disablePadding>
                     <ListItemButton onClick={() => handleAddFilter(anno)}>
                       <ListItemIcon>

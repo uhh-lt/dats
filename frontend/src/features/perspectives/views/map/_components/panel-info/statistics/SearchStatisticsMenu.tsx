@@ -45,12 +45,12 @@ export function SearchStatisticsMenu({ menuItems, handleMenuItemClick, renderBut
   };
 
   const codesWithLevel = useWithLevel(menuItems);
-  const keywordStatistics = useFeature(Feature.KEYWORD_STATISTICS);
+  const keywordStatisticsEnabled = useFeature(Feature.KEYWORD_STATISTICS);
 
   // filter feature
   const options: StatisticsFilter[] = useMemo(() => {
     return [
-      ...(keywordStatistics.enabled ? [{ id: -1, title: "Keywords", navigateTo: "keywords", level: 0 }] : []),
+      ...(keywordStatisticsEnabled ? [{ id: -1, title: "Keywords", navigateTo: "keywords", level: 0 }] : []),
       { id: -2, title: "Tags", navigateTo: "tags", level: 0 },
       ...codesWithLevel.map((code) => ({
         id: code.data.id,
@@ -60,7 +60,7 @@ export function SearchStatisticsMenu({ menuItems, handleMenuItemClick, renderBut
         level: code.level,
       })),
     ];
-  }, [codesWithLevel, keywordStatistics.enabled]);
+  }, [codesWithLevel, keywordStatisticsEnabled]);
   const handleChange: UseAutocompleteProps<StatisticsFilter, false, false, true>["onChange"] = (event, newValue) => {
     event.stopPropagation();
     if (typeof newValue === "string") {

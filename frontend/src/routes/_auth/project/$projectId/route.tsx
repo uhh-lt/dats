@@ -29,9 +29,10 @@ export const Route = createFileRoute("/_auth/project/$projectId")({
   params: {
     parse: ({ projectId }) => ({ projectId: parseIdParam(projectId) }),
   },
-  context: ({ params }) => ({ projectFeaturesOptions: projectQueries.features(params.projectId) }),
+  // the guard needs the enabled features of the project; the feature states load where they are shown
+  context: () => ({ userProjectsOptions: projectQueries.userProjects() }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(context.projectFeaturesOptions);
+    await context.queryClient.ensureQueryData(context.userProjectsOptions);
   },
   pendingComponent: () => <CircularProgress />,
   component: ProjectRouteLayout,

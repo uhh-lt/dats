@@ -34,7 +34,7 @@ export function MlAutomationView() {
 
   // actions
   const startMlJob = MlAutomationHooks.useStartMLJob();
-  const tagRecommendation = useFeature(Feature.TAG_RECOMMENDATION);
+  const tagRecommendationEnabled = useFeature(Feature.TAG_RECOMMENDATION);
 
   // global server state (react-query)
   const { mlJobsByProjectOptions } = routeApi.useRouteContext();
@@ -178,7 +178,7 @@ export function MlAutomationView() {
               </ListItemIcon>
             </ListItem>
           </List>
-          {tagRecommendation.enabled && (
+          {tagRecommendationEnabled && (
             <List dense={false}>
               <ListItem>
                 <ListItemAvatar>

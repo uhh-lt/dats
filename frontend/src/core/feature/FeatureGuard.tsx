@@ -11,7 +11,7 @@ interface FeatureGuardProps {
 
 /** Renders the page of an enabled feature (with a coverage hint while it is not ready) or the "not enabled" view. */
 export function FeatureGuard({ feature, children }: FeatureGuardProps) {
-  const { enabled } = useFeature(feature);
+  const enabled = useFeature(feature);
   if (feature === undefined) return children;
   if (!enabled) return <FeatureNotEnabledView feature={feature} />;
   return (
