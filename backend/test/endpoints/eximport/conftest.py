@@ -779,3 +779,93 @@ def feature_toggle_eximport_projects(
         "video": video,
         "sentence_embeddings": sentence_embeddings,
     }
+
+
+class SdocEximportProjects(TypedDict):
+    """
+    This fixture sets up the following projects:
+
+    Project "project" (the test project, owned by the test user):
+    - Tag "Important"
+    - Document "report.txt" (name "report.txt", text, with its raw file):
+        - Sentences "Alpha beta alpha." and "Gamma delta."
+        - Linked to the tag "Important"
+        - Word frequencies: "alpha" 2, "beta" 1
+        - Metadata: the initial metadata of a text document, with "language" = "en"
+        - Document embedding SDOC_DOCUMENT_EMBEDDING
+        - Sentence embeddings SDOC_SENTENCE_EMBEDDINGS (one per sentence)
+        - Finished `toggled_text_steps()`; every other step is not planned
+
+    Project "target_project" ("Import Target", owned by the test user):
+    - Tag "Important" (the documents import requires the tags of the documents)
+    - No documents
+
+    Non-obvious derived behavior:
+    - The documents export writes one CSV row per document. The list fields (tags,
+      word frequencies, metadata, token and sentence offsets, embeddings) are cells
+      with the Python representation of the list, e.g. "[('alpha', 2), ('beta', 1)]".
+    - The embedding values are exact in float32, so they survive Weaviate unchanged.
+    - The archive holds the word frequencies and embeddings because their steps are
+      finished.
+    """
+
+    project: ProjectORM
+    target_project: ProjectORM
+    sdoc: SourceDocumentORM
+
+
+SDOC_DOCUMENT_EMBEDDING = [0.25, 0.5, 0.75, 1.0]
+SDOC_SENTENCE_EMBEDDINGS = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]
+
+
+@pytest.fixture(scope="function")
+def sdoc_eximport_projects(
+    db_session, test_project: ProjectORM, test_user: UserORM
+) -> SdocEximportProjects:
+    """The projects described in `SdocEximportProjects`."""
+    target_project = _create_target_project(db_session, test_user)
+    tag_ids = [
+        crud_tag.create(
+            db=db_session,
+            create_dto=TagCreate(
+                name="Important", color="blue", description="", project_id=project.id
+            ),
+        ).id
+        for project in (test_project, target_project)
+    ]
+    sdoc = _create_text_document_with_file(
+        db_session,
+        project=test_project,
+        filename="report.txt",
+        sentences=["Alpha beta alpha.", "Gamma delta."],
+    )
+    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=tag_ids[:1])
+    set_step_status(db_session, sdoc.id, dict.fromkeys(toggled_text_steps(), 1))
+    crud_word_frequency.create_multi(
+        db=db_session,
+        create_dtos=[
+            WordFrequencyCreate(sdoc_id=sdoc.id, word="alpha", count=2),
+            WordFrequencyCreate(sdoc_id=sdoc.id, word="beta", count=1),
+        ],
+    )
+    client = WeaviateRepo().get_client()
+    crud_document_embedding.create(
+        client=client,
+        project_id=test_project.id,
+        id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
+        embedding=SDOC_DOCUMENT_EMBEDDING,
+    )
+    crud_sentence_embedding.create_multi(
+        client=client,
+        project_id=test_project.id,
+        ids=[
+            SentenceObjectIdentifier(sdoc_id=sdoc.id, sentence_id=i)
+            for i in range(len(SDOC_SENTENCE_EMBEDDINGS))
+        ],
+        embeddings=SDOC_SENTENCE_EMBEDDINGS,
+    )
+    db_session.commit()
+    db_session.refresh(test_project)
+    db_session.refresh(target_project)
+    db_session.refresh(sdoc)
+    return {"project": test_project, "target_project": target_project, "sdoc": sdoc}

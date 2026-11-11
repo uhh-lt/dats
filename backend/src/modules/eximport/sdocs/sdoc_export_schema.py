@@ -1,3 +1,5 @@
+import ast
+
 import pandas as pd
 from pydantic import (
     BaseModel,
@@ -236,10 +238,10 @@ class SourceDocumentExportCollection(BaseModel):
         df_cleaned = df.replace({pd.NA: None, float("nan"): None})
         records = df_cleaned.to_dict("records")
 
-        # Process each record to convert string representations back to Python objects
+        # The export writes lists as their Python representation (e.g. "[('a', 1)]").
+        # The cells come from an uploaded file: parse them as literals, never evaluate them.
         processed_records = []
         for record in records:
-            # Convert string representations of lists and tuples back to Python objects
             for field in [
                 "tags",
                 "token_starts",
@@ -257,10 +259,15 @@ class SourceDocumentExportCollection(BaseModel):
             ]:
                 if field in record and isinstance(record[field], str):
                     try:
-                        # Safe evaluation of string representation to Python object
-                        record[field] = eval(record[field])
-                    except (SyntaxError, NameError, ValueError):
-                        # If eval fails, keep as is - validation will catch it later
+                        record[field] = ast.literal_eval(record[field])
+                    except (
+                        SyntaxError,
+                        ValueError,
+                        TypeError,
+                        MemoryError,
+                        RecursionError,
+                    ):
+                        # Not a literal: keep the string, the schema validation rejects it
                         pass
 
             processed_records.append(record)
