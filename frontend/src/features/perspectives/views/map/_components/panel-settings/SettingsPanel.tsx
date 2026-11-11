@@ -13,10 +13,10 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ aspectId }: SettingsPanelProps) {
   // explorer
-  const ragChat = useFeature(Feature.RAG_CHAT);
+  const ragChatEnabled = useFeature(Feature.RAG_CHAT);
   const [selectedTab, setTab] = useState("color");
   // the analysis assistant is the RAG chat
-  const tab = selectedTab === "assistant" && !ragChat.enabled ? "color" : selectedTab;
+  const tab = selectedTab === "assistant" && !ragChatEnabled ? "color" : selectedTab;
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
@@ -27,7 +27,7 @@ export function SettingsPanel({ aspectId }: SettingsPanelProps) {
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Color Settings" value="color" />
             <Tab label="Position Settings" value="position" />
-            {ragChat.enabled && <Tab label="Analysis Assistant" value="assistant" />}
+            {ragChatEnabled && <Tab label="Analysis Assistant" value="assistant" />}
           </Tabs>
         </Box>
         <Box className="myFlexFillAllContainer">
@@ -38,7 +38,7 @@ export function SettingsPanel({ aspectId }: SettingsPanelProps) {
             {tab === "position" && <PositionSettings aspectId={aspectId} />}
           </TabPanel>
           <TabPanel value="assistant" style={{ padding: 0 }} className="h100">
-            {tab === "assistant" && ragChat.enabled && <AnalysisAssistant />}
+            {tab === "assistant" && ragChatEnabled && <AnalysisAssistant />}
           </TabPanel>
         </Box>
       </TabContext>

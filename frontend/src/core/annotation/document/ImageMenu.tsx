@@ -18,7 +18,7 @@ interface ImageMenuProps {
 
 export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
   const tabNavigate = useTabNavigate();
-  const imageSearch = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
+  const imageSearchEnabled = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -83,7 +83,7 @@ export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
             <ListItemText primary="Open image" />
           </LinkListItemButton>
         </ListItem>
-        {imageSearch.enabled && (
+        {imageSearchEnabled && (
           <ListItem disablePadding>
             <ListItemButton onClick={handleImageSimilaritySearch} disabled={!image}>
               <ListItemIcon>

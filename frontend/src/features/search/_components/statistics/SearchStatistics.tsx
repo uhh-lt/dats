@@ -33,9 +33,9 @@ export function SearchStatistics({
   ...props
 }: SearchStatisticsProps & BoxProps) {
   // tabs: keyword statistics (and the keyword filter they add) only exist with the feature
-  const keywordStatistics = useFeature(Feature.KEYWORD_STATISTICS);
+  const keywordStatisticsEnabled = useFeature(Feature.KEYWORD_STATISTICS);
   const [selectedTab, setTab] = useState("keywords");
-  const tab = selectedTab === "keywords" && !keywordStatistics.enabled ? "tags" : selectedTab;
+  const tab = selectedTab === "keywords" && !keywordStatisticsEnabled ? "tags" : selectedTab;
   const handleTabChange = (_event: SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
@@ -83,7 +83,7 @@ export function SearchStatistics({
             )}
           />
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
-            {keywordStatistics.enabled && <Tab label="Keywords" value="keywords" />}
+            {keywordStatisticsEnabled && <Tab label="Keywords" value="keywords" />}
             <Tab label="Tags" value="tags" />
             {projectCodes.data?.map((code) => (
               <Tab key={code.id} label={code.name} value={`${code.id}`} />

@@ -109,7 +109,7 @@ export function SearchDocumentTable({
   const { searchFilter } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
   // without full-text search, documents are searched with filters only
-  const fullTextSearch = useFeature(Feature.FULL_TEXT_SEARCH);
+  const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
   const navigate = DocumentSearchRouteAPI.useNavigate();
   const tabNavigate = useTabNavigate();
@@ -285,13 +285,13 @@ export function SearchDocumentTable({
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
-      showGlobalFilter: fullTextSearch.enabled,
+      showGlobalFilter: fullTextSearchEnabled,
       expanded: expandedModel,
     },
     // search query
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
-    enableGlobalFilter: fullTextSearch.enabled,
+    enableGlobalFilter: fullTextSearchEnabled,
     onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: rowSelection(folderSelectionType),
