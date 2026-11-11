@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { closeOnEscape } from "@utils/dialogUtils";
 
@@ -35,7 +35,6 @@ export function ProjectCreationDialog() {
 
   // all toggleable features; a new project enables all of them by default ("Everything")
   const features = useQuery(featureQueries.list());
-  const allFeatures = useMemo(() => (features.data ?? []).map((f) => f.feature), [features.data]);
 
   // form
   const {
@@ -43,14 +42,26 @@ export function ProjectCreationDialog() {
     formState: { errors },
     control,
     reset,
+    getValues,
+    setValue,
   } = useForm<ProjectCreate>();
 
   // reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
-      reset({ title: "", description: "", enabled_features: allFeatures });
+      reset({ title: "", description: "", enabled_features: undefined });
     }
-  }, [isOpen, reset, allFeatures]);
+  }, [isOpen, reset]);
+
+  // select all features once they are loaded, without touching what the user typed or selected
+  useEffect(() => {
+    if (isOpen && features.data && getValues("enabled_features") === undefined) {
+      setValue(
+        "enabled_features",
+        features.data.map((f) => f.feature),
+      );
+    }
+  }, [isOpen, features.data, getValues, setValue]);
 
   // form actions
   const navigate = useNavigate();
@@ -62,7 +73,8 @@ export function ProjectCreationDialog() {
           requestBody: {
             title: data.title,
             description: data.description,
-            enabled_features: data.enabled_features,
+            // without the feature list, the backend's default applies: all features
+            enabled_features: features.isSuccess ? data.enabled_features : undefined,
           },
         },
         {
@@ -77,7 +89,7 @@ export function ProjectCreationDialog() {
         },
       );
     },
-    [createProjectMutation, handleClose, navigate],
+    [createProjectMutation, features.isSuccess, handleClose, navigate],
   );
   const handleError: SubmitErrorHandler<ProjectCreate> = (data) => console.error(data);
 
@@ -168,7 +180,12 @@ export function ProjectCreationDialog() {
               />
             )}
             {features.isLoading && <Typography color="text.secondary">Loading features...</Typography>}
-            {features.isError && <Typography color="error">The features could not be loaded.</Typography>}
+            {features.isError && (
+              <Typography color="error">
+                The features could not be loaded. The project enables all features; you can change them later in the
+                project settings.
+              </Typography>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -177,6 +194,7 @@ export function ProjectCreationDialog() {
             color="success"
             startIcon={<SaveIcon />}
             type="submit"
+            disabled={features.isLoading}
             loading={isPending}
             loadingPosition="start"
             fullWidth
