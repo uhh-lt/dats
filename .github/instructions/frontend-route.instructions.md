@@ -88,6 +88,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 ### Guards
 
 - **`beforeLoad`** is only for guards: it throws `redirect(...)` (login, already authenticated) and never returns context or builds query options. It is synchronous. Protected pages live under `_auth`, public pages under `_public`.
+- **Toggleable features**: a page of a toggleable feature declares `staticData.feature` (the project layout's `FeatureGuard` then shows the "not enabled" view) and has an entry in `FEATURE_ENTRIES` (`core/feature/featureRegistry.ts`).
+- **Disabled features**: the loader of such a page returns early when `ensureFeatureEnabled(...)` is false, as its queries would fail with 403.
 
 ### Tabs (`staticData`)
 

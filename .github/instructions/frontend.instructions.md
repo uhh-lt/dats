@@ -78,6 +78,11 @@ Choose the home of a piece of state by its kind; [frontend-slice.instructions.md
 - **Form state** → React Hook Form with the `@components/form-inputs` controls (`FormText`, `FormNumber`, `FormSwitch`, `FormColorPicker`, `FormMenu`, ...) and `ErrorMessage` from `@hookform/error-message`; forms in dialogs follow [frontend-dialog](frontend-dialog.instructions.md).
 - **Local UI state** (hover, a toggled section) → `useState`.
 
+## Toggleable Features
+
+- Gate an embedded entry point (menu item, button, search box) with `useFeature(Feature.X)` from `@core/feature`, which reads `ProjectRead.enabled_features`.
+- Never gate on the feature states (`projectQueries.features`): they are an aggregate over all documents, loaded only by `useFeatureCoverage` and the Features tab.
+
 ## Feedback and Errors
 
 - Mutations report through `meta`: `successMessage` and `errorMessage` (string or function, typed in `plugins/tanstack/mutationMeta.ts`) are shown as snackbars by the `MutationCache` in `api/queryClient.ts`; `datsEvent` writes the result into the caches. Do not open snackbars in `onError`/`onSuccess` for this.
