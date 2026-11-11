@@ -40,17 +40,41 @@ export const ProjectFeatureListItem = memo(
     // disable
     const openConfirmationDialog = useOpenConfirmationDialog();
     const { mutate: disableFeatureMutation, isPending: isDisablePending } = FeatureHooks.useDisableFeature();
+    const isComputing = state.status === FeatureStatus.COMPUTING;
     const handleClickDisable = useCallback(() => {
       openConfirmationDialog({
-        text: `Do you really want to disable ${feature.title}? It is hidden in this project and not computed for new uploads anymore. Its data is kept, so enabling it again only computes the documents uploaded in the meantime.`,
+        text: `Do you really want to disable ${feature.title}? It is hidden in this project and not computed for new uploads anymore.${isComputing ? " The computation in progress stops." : ""} Its data is kept, so enabling it again only computes the documents that lack it.`,
         onAccept: () => disableFeatureMutation({ projectId, feature: feature.feature }),
       });
-    }, [disableFeatureMutation, feature.feature, feature.title, openConfirmationDialog, projectId]);
+    }, [disableFeatureMutation, feature.feature, feature.title, isComputing, openConfirmationDialog, projectId]);
 
     const handleClickActivate = useCallback(() => onActivate(feature), [feature, onActivate]);
 
     const lacking = state.failed_documents + state.not_planned_documents;
     const chip = STATUS_CHIP[state.status];
+
+    // every enabled feature can be disabled, unless an enabled feature needs it
+    const disableButton = (
+      <Tooltip
+        title={
+          neededBy.length > 0
+            ? `${neededBy.join(", ")} ${neededBy.length === 1 ? "needs" : "need"} this feature. Disable ${neededBy.length === 1 ? "it" : "them"} first.`
+            : ""
+        }
+      >
+        <span>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClickDisable}
+            disabled={neededBy.length > 0}
+            loading={isDisablePending}
+          >
+            Disable
+          </Button>
+        </span>
+      </Tooltip>
+    );
 
     let action = null;
     switch (state.status) {
@@ -63,33 +87,17 @@ export const ProjectFeatureListItem = memo(
         break;
       case FeatureStatus.PARTLY_AVAILABLE:
         action = (
-          <Button variant="outlined" color="warning" onClick={handleClickActivate}>
-            Complete
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" color="warning" onClick={handleClickActivate}>
+              Complete
+            </Button>
+            {disableButton}
+          </Stack>
         );
         break;
+      case FeatureStatus.COMPUTING:
       case FeatureStatus.FULLY_AVAILABLE:
-        action = (
-          <Tooltip
-            title={
-              neededBy.length > 0
-                ? `${neededBy.join(", ")} ${neededBy.length === 1 ? "needs" : "need"} this feature. Disable ${neededBy.length === 1 ? "it" : "them"} first.`
-                : ""
-            }
-          >
-            <span>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={handleClickDisable}
-                disabled={neededBy.length > 0}
-                loading={isDisablePending}
-              >
-                Disable
-              </Button>
-            </span>
-          </Tooltip>
-        );
+        action = disableButton;
         break;
     }
 
