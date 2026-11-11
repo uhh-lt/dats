@@ -311,8 +311,10 @@ class Checker:
             f"{step} ({n} documents)" for step, n in sorted(counts.items())
         )
         print(
-            f"  Not checked, as the feature is not enabled (step not planned): {steps}. "
-            "Enable the feature in the project settings to compute the data.",
+            f"  Not checked, as the step is not planned: {steps}. A step is not "
+            "planned if no enabled feature needs it, or if it was never computed "
+            "for the document; enable or complete the feature in the project "
+            "settings to compute the data.",
             file=sys.stderr,
         )
 
@@ -333,8 +335,9 @@ class Checker:
                         hint=_HINT_FAILED_PROCESSING,
                     )
                 )
-            # the export needs the processed data of every document. After a
-            # failed step, the later steps stay "processing" forever.
+            # the export needs the processed data of every document. A document
+            # that still processes gets its data later; one with a failed step
+            # does not (the steps after a failed step fail too).
             if sdoc.id not in data_ids and (
                 sdoc.failed_steps or not sdoc.is_processing
             ):
