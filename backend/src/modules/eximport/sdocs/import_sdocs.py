@@ -347,9 +347,9 @@ def import_sdocs_to_proj(
                 embedding=sdoc_export.image_embedding,
             )
 
-        # 6. Add the source documents to the Elasticsearch index (if planned: the
-        # entry is computed from the content and the filename only)
-        if step_status.get(JobType.TEXT_ES_INDEX.value) is not None:
+        # 6. Add the source documents to the Elasticsearch index (if it was
+        # indexed: the entry is computed from the content and the filename only)
+        if step_status.get(JobType.TEXT_ES_INDEX.value) == SDocStatus.finished.value:
             crud_sdoc_elastic.create(
                 client=ElasticSearchRepo().get_client(),
                 project_id=project_id,
