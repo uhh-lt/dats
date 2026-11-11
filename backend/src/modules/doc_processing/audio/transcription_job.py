@@ -72,14 +72,14 @@ def handle_transcription_job(
     # convert audio file to uncompessed PCM format
     pcm_bytes = convert_to_pcm(payload.filepath)
 
-    with sqlr.transaction() as db:
-        # generate transcription using ray
-        transcription = generate_automatic_transcription(
-            payload=payload, audio_bytes=pcm_bytes
-        )
+    # generate transcription using ray
+    transcription = generate_automatic_transcription(
+        payload=payload, audio_bytes=pcm_bytes
+    )
 
-        # create sdoc data
-        sdoc_data = crud_sdoc_data.update(
+    # store the transcription as sdoc data
+    with sqlr.transaction() as db:
+        crud_sdoc_data.update(
             db=db,
             id=payload.sdoc_id,
             update_dto=SourceDocumentDataUpdate(
@@ -92,17 +92,15 @@ def handle_transcription_job(
             ),
         )
 
-    assert (
-        sdoc_data.token_time_starts is not None
-        and sdoc_data.token_time_ends is not None
-    ), "Transcribed documents must have token timings"
+    # The output is built from the transcription, not from the updated ORM object:
+    # it is detached once the transaction is closed.
     return TranscriptionJobOutput(
-        token_starts=sdoc_data.token_starts,
-        token_ends=sdoc_data.token_ends,
-        token_time_starts=sdoc_data.token_time_starts,
-        token_time_ends=sdoc_data.token_time_ends,
-        content=sdoc_data.content,
-        raw_html=sdoc_data.raw_html,
+        token_starts=transcription["token_starts"],
+        token_ends=transcription["token_ends"],
+        token_time_starts=transcription["token_time_starts"],
+        token_time_ends=transcription["token_time_ends"],
+        content=transcription["content"],
+        raw_html=transcription["html"],
         language=transcription["language"],
         language_probability=transcription["language_probability"],
     )
