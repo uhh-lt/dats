@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from sqlalchemy import ColumnElement, and_, func, or_, select, update
+from sqlalchemy import ColumnElement, and_, event, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
@@ -117,8 +117,8 @@ class FeatureService(metaclass=SingletonMeta):
         """Enable the feature, or complete it if it is enabled already: enable it
         and the features it requires, and compute their data for the documents
         that lack it (see `_plan_missing_steps`). A feature activation job on the
-        low-priority queue starts the steps with these settings. Returns the
-        enabled features."""
+        low-priority queue starts the steps with these settings once the
+        transaction commits. Returns the enabled features."""
         project = crud_project.read(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.resolve_enabled_features(
@@ -130,11 +130,18 @@ class FeatureService(metaclass=SingletonMeta):
             db=db, project_id=project_id, feature=feature, enabled=enabled
         )
         if sdoc_steps:
-            self.js.start_job(
-                JobType.FEATURE_ACTIVATION,
-                FeatureActivationJobInput(
-                    project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
+            # start the job after the commit: a step job that starts earlier reads
+            # its steps as not planned and is skipped
+            job_input = FeatureActivationJobInput(
+                project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
+            )
+            event.listen(
+                db,
+                "after_commit",
+                lambda _session: self.js.start_job(
+                    JobType.FEATURE_ACTIVATION, job_input
                 ),
+                once=True,
             )
         return enabled
 

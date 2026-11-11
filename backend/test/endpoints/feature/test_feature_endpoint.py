@@ -12,6 +12,7 @@ from systems.feature_system.feature_dto import (
     FeatureActivationJobInput,
     FeatureRead,
 )
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import JobInputBase
 
 from .conftest import ImageTextProject
@@ -182,6 +183,30 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
         JobType.TEXT_KEYWORDS,
     ):
         assert _status(db_session, image_id, step) == 0, step
+
+
+def test_activate_feature_starts_its_job_only_after_the_commit(
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """The activation job starts once the request's transaction commits: a step
+    job that started earlier would read its steps as not planned and skip them.
+    Calls the service the endpoint delegates to, to commit by hand."""
+    FeatureService().activate_feature(
+        db=db_session,
+        project_id=feature_project["project"].id,
+        feature=Feature.FULL_TEXT_SEARCH,
+        settings=SETTINGS,
+    )
+    assert started_jobs == []
+
+    db_session.commit()
+
+    assert _activation_job(started_jobs).sdoc_steps == {
+        feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
+        feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
+    }
 
 
 def test_activate_a_fully_available_feature_starts_nothing(
