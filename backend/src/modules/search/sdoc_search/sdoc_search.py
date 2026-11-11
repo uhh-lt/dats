@@ -3,6 +3,7 @@ from collections import OrderedDict
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
 from core.doc.folder_orm import FolderORM
@@ -19,6 +20,7 @@ from modules.search.search_dto import (
 )
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
+from systems.feature_system.feature_service import FeatureService
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.search_builder import SearchBuilder
@@ -150,6 +152,10 @@ def find_sdoc_ids(
             total_results=total_results,
         )
     else:
+        # without full-text search, documents can be searched with filters only
+        FeatureService().assert_enabled(
+            db=db, project_id=project_id, feature=Feature.FULL_TEXT_SEARCH
+        )
         # special case: no filter, no sorting, no folder restriction -> all sdocs are relevant
         if (
             len(filter.items) == 0
