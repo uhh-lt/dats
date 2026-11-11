@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
+from common.job_type_enum import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SDOC_STATUS_COLUMNS, SourceDocumentORM
@@ -12,6 +13,7 @@ from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
+from systems.job_system.job_dto import JobInputBase
 
 from .conftest import FeatureToggleEximportProjects
 
@@ -42,17 +44,42 @@ def _step_status(sdoc: SourceDocumentORM) -> dict[str, int | None]:
     return {step: getattr(sdoc, step) for step in SDOC_STATUS_COLUMNS}
 
 
-def test_project_round_trip_keeps_enabled_features(
+def test_project_import_merges_the_enabled_features(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> None:
-    """The target project enables exactly the features of the exported project,
-    although it was created with all features."""
+    """The target project enables keyword statistics, the archive sentence
+    similarity search: the import enables both and disables nothing."""
     projects = feature_toggle_eximport_projects
 
     _round_trip(db_session, projects)
 
     target = crud_project.read(db=db_session, id=projects["target_project"].id)
-    assert target.enabled_features == [Feature.SENTENCE_SIMILARITY_SEARCH]
+    assert target.enabled_features == [
+        Feature.SENTENCE_SIMILARITY_SEARCH,
+        Feature.KEYWORD_STATISTICS,
+    ]
+
+
+def test_project_import_plans_and_starts_nothing(
+    db_session: Session,
+    feature_toggle_eximport_projects: FeatureToggleEximportProjects,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+) -> None:
+    """Keyword statistics is enabled in the target, but the import neither plans
+    its steps for the imported documents nor starts a job: no step is processing
+    and the keywords stay not planned."""
+    projects = feature_toggle_eximport_projects
+
+    _round_trip(db_session, projects)
+
+    imported = crud_sdoc.read_by_project(
+        db=db_session, project_id=projects["target_project"].id, only_finished=False
+    )
+    assert len(imported) == 2
+    for sdoc in imported:
+        assert 0 not in _step_status(sdoc).values(), sdoc.filename
+        assert sdoc.text_keywords is None, sdoc.filename
+    assert started_jobs == []
 
 
 def test_project_round_trip_keeps_step_statuses(

@@ -49,11 +49,16 @@ def import_project_details_to_proj(
     details: ProjectDetailsExportSchema | None,
     project_id: int,
 ) -> None:
-    """Restore the enabled features of the archive's project, and the features
-    they require. The import plans no steps: features whose data the archive lacks are
-    partly available until a user completes them in the project settings."""
+    """Enable the features of the archive's project, and the features they
+    require, in addition to the features the project enables already: an import
+    never disables a feature. The import plans no steps: features whose data the
+    archive lacks are partly available until a user completes them in the project
+    settings."""
+    current = {
+        Feature(f) for f in crud_project.read(db=db, id=project_id).enabled_features
+    }
     features = FeatureService().resolve_enabled_features(
-        requested=archived_features(details)
+        requested=current | set(archived_features(details)), current=current
     )
     crud_project.update_enabled_features(db=db, id=project_id, features=features)
     logger.info(
