@@ -46,6 +46,8 @@ A feature becomes **partly available** when documents lack its data, for example
 
 **Complete** computes the data for exactly these documents, including the failed ones; documents that already have the data are left alone.
 
+If documents failed, the feature shows **Open Document Health** next to the failed count. It opens the [Health View](tools/health-view.md), where you select the failed documents (in the tab of their document type) and **Recompute** the failed steps. Once they succeed, the feature is **fully available**.
+
 ### Disabling a Feature
 
 Every enabled feature can be disabled, whatever its status. Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents that lack it.

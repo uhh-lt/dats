@@ -1,11 +1,13 @@
 import { LinearProgressWithLabel } from "@components/progress-bars";
 import { FeatureHooks, featuresRequiring } from "@core/feature";
+import { useTabNavigate } from "@core/navigation";
 import { ProjectFeatureMap } from "@core/project";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { FeatureRead } from "@models/FeatureRead";
 import { FeatureStatus } from "@models/FeatureStatus";
 import { ProjectFeatureRead } from "@models/ProjectFeatureRead";
-import { Box, Button, Chip, ChipProps, ListItem, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Chip, ChipProps, Link, ListItem, Stack, Tooltip, Typography } from "@mui/material";
+import { useDialogBus } from "@store/global/dialogBusHooks";
 import { memo, useCallback, useMemo } from "react";
 
 const STATUS_CHIP: Record<FeatureStatus, { label: string; color: ChipProps["color"] }> = {
@@ -49,6 +51,14 @@ export const ProjectFeatureListItem = memo(
     }, [disableFeatureMutation, feature.feature, feature.title, isComputing, openConfirmationDialog, projectId]);
 
     const handleClickActivate = useCallback(() => onActivate(feature), [feature, onActivate]);
+
+    // failed documents are recomputed in the document health view
+    const tabNavigate = useTabNavigate();
+    const { close: closeSettings } = useDialogBus("projectSettings");
+    const handleClickHealth = useCallback(() => {
+      closeSettings();
+      tabNavigate({ to: "/project/$projectId/tools/health", params: { projectId } });
+    }, [closeSettings, projectId, tabNavigate]);
 
     const lacking = state.failed_documents + state.not_planned_documents;
     const lackingDetails = [
@@ -141,6 +151,16 @@ export const ProjectFeatureListItem = memo(
               {formatCount(state.covered_documents)} of {formatCount(state.total_documents)} documents
               {state.status === FeatureStatus.PARTLY_AVAILABLE &&
                 ` · ${formatCount(lacking)} without data (${lackingDetails})`}
+              {state.status === FeatureStatus.PARTLY_AVAILABLE && state.failed_documents > 0 && (
+                <>
+                  {" · "}
+                  <Tooltip title="Recompute the failed steps in the Document Health view; the feature is fully available once they succeed.">
+                    <Link component="button" variant="caption" onClick={handleClickHealth}>
+                      Open Document Health
+                    </Link>
+                  </Tooltip>
+                </>
+              )}
             </Typography>
           )}
         </Box>
