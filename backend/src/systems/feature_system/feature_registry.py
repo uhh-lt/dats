@@ -17,8 +17,6 @@ from systems.feature_system.feature_exceptions import FeatureDeclarationError
 @dataclass(frozen=True)
 class FeatureDeclaration:
     feature: Feature
-    title: str
-    description: str
     requires_artefacts: frozenset[Artefact]
     requires_features: frozenset[Feature]
 
@@ -113,18 +111,15 @@ feature_registry = FeatureRegistry()
 def register_feature(
     feature: Feature,
     *,
-    title: str,
-    description: str,
     requires_artefacts: set[Artefact],
     requires_features: set[Feature],
 ) -> None:
     """Declare a feature: a user-facing capability that a project can enable,
-    with the artefacts and the other features it requires."""
+    with the artefacts and the other features it requires. Its title and
+    description live in the frontend feature map (`FEATURES`)."""
     feature_registry.register(
         FeatureDeclaration(
             feature=feature,
-            title=title,
-            description=description,
             requires_artefacts=frozenset(requires_artefacts),
             requires_features=frozenset(requires_features),
         )

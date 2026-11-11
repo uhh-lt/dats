@@ -225,8 +225,6 @@ def _declaration(
 ) -> FeatureDeclaration:
     return FeatureDeclaration(
         feature=feature,
-        title=feature.value,
-        description="",
         requires_artefacts=frozenset(artefacts or set()),
         requires_features=frozenset(features or set()),
     )

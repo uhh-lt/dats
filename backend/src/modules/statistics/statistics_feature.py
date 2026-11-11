@@ -4,8 +4,6 @@ from systems.feature_system.feature_registry import register_feature
 
 register_feature(
     Feature.KEYWORD_STATISTICS,
-    title="Keyword statistics and filter",
-    description="Extract the keywords of each document, to count them and filter documents by them.",
     requires_artefacts={Artefact.KEYWORDS},
     requires_features=set(),
 )
