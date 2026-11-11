@@ -503,6 +503,57 @@ def test_disable_computing_feature_keeps_the_steps_other_features_need(
     assert read.status == FeatureStatus.COMPUTING
 
 
+def test_disable_one_of_two_features_sharing_a_step_keeps_it_processing(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Full-text search and search & auto-annotate both need the index, without
+    requiring each other. Disabling search & auto-annotate keeps the index
+    processing for full-text search; disabling full-text search as well
+    unplans it."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
+
+    response = client.delete(
+        f"/feature/project/{p['project'].id}/{Feature.SEARCH_ANNOTATE.value}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert _status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) == 0
+    response = client.delete(
+        f"/feature/project/{p['project'].id}/{Feature.FULL_TEXT_SEARCH.value}"
+    )
+    assert response.status_code == 200, response.text
+    assert _status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) is None
+
+
+def test_enable_disable_enable_plans_the_steps_again(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Disabling a computing feature unplans its processing steps; enabling it
+    again plans and starts them again."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    client.delete(
+        f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
+    )
+    started_jobs.clear()
+
+    enabled = _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+
+    assert enabled == [Feature.KEYWORD_STATISTICS]
+    assert _status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0
+    assert _activation_job(started_jobs).sdoc_steps == {
+        p["text_done"].id: [JobType.TEXT_KEYWORDS]
+    }
+
+
 def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
     client: TestClient, test_project
 ):
