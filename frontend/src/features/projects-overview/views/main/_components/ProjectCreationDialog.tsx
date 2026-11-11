@@ -154,7 +154,8 @@ export function ProjectCreationDialog() {
             <Box>
               <Typography variant="h6">Features</Typography>
               <Typography variant="body2" color="text.secondary">
-                Choose what this project needs. Annotation, analysis and the LLM assistant are always available.
+                Choose what this project needs. Annotation, the LLM assistant and all tools not listed here are always
+                available.
               </Typography>
             </Box>
             {features.isSuccess && (

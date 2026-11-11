@@ -46,7 +46,7 @@ export function FeatureSelection({ features, value, onChange }: FeatureSelection
         </ToggleButtonGroup>
         <Typography variant="body2" color="text.secondary" mt={1}>
           {preset === "minimal"
-            ? "Only annotation, analysis and the LLM assistant: uploads are processed fastest."
+            ? "Only the tools that are always available: uploads are processed fastest."
             : "The selected features are prepared for every uploaded document. You can change this later in the project settings."}
         </Typography>
       </Box>
