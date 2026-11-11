@@ -72,4 +72,32 @@ export class FeatureService {
       },
     });
   }
+  /**
+   * Restarts the processing of the enabled Feature: plans and starts its processing steps again (steps whose job still runs compute twice). Returns the enabled Features
+   * @returns Feature Successful Response
+   * @throws ApiError
+   */
+  public static restartFeature({
+    projectId,
+    feature,
+    requestBody,
+  }: {
+    projectId: number;
+    feature: Feature;
+    requestBody: FeatureActivation;
+  }): CancelablePromise<Array<Feature>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/feature/project/{project_id}/{feature}/restart",
+      path: {
+        project_id: projectId,
+        feature: feature,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

@@ -2099,6 +2099,45 @@
         }
       }
     },
+    "/feature/project/{project_id}/{feature}/restart": {
+      "post": {
+        "tags": ["feature"],
+        "summary": "Restarts the processing of the enabled Feature: plans and starts its processing steps again (steps whose job still runs compute twice). Returns the enabled Features",
+        "operationId": "restart_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeatureActivation" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Restart Feature"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/folder": {
       "put": {
         "tags": ["folder"],

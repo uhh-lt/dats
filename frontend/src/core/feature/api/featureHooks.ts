@@ -31,6 +31,17 @@ const useActivateFeature = () =>
     },
   });
 
+const useRestartFeature = () =>
+  useMutation({
+    mutationKey: [...featureQueries.all(), "restartFeature"],
+    mutationFn: FeatureService.restartFeature,
+    onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
+    meta: {
+      successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
+        `Restarted computing ${featureTitle(feature)}`,
+    },
+  });
+
 const useDisableFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "disableFeature"],
@@ -43,5 +54,6 @@ const useDisableFeature = () =>
 
 export const FeatureHooks = {
   useActivateFeature,
+  useRestartFeature,
   useDisableFeature,
 };
