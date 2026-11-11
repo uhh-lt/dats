@@ -4,7 +4,5 @@ export * from "./FeatureCoverageHint";
 export * from "./featureRequirements";
 export * from "./features";
 export * from "./FeatureGuard";
-export * from "./featureRegistry";
 export * from "./FeatureSelection";
-export * from "./featureTypes";
 export * from "./useFeature";

@@ -1,14 +1,7 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { getIconComponent, Icon } from "@components/icons";
 import { useAuth } from "@core/auth";
-import {
-  FeatureEntry,
-  FeatureRoute,
-  FeatureShortcut,
-  formatFeatureShortcut,
-  getFeatureEntries,
-  useIsFeatureEnabled,
-} from "@core/feature";
+import { useIsFeatureEnabled } from "@core/feature";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
@@ -36,12 +29,14 @@ import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useLocation } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { LinkListItemButton, LinkMenuItem } from "./links";
+import { formatNavigationShortcut, getNavigationEntries } from "./navigationEntries";
+import { NavigationEntry, NavigationRoute, NavigationShortcut } from "./navigationTypes";
 import { useTabNavigate } from "./tabs";
 import { WebSocketStatusIndicator } from "./WebSocketStatusIndicator";
 
-const SEARCH_ENTRIES = getFeatureEntries("search");
-const MAIN_ENTRIES = getFeatureEntries("main");
-const TOOLS_ENTRIES = getFeatureEntries("tools");
+const SEARCH_ENTRIES = getNavigationEntries("search");
+const MAIN_ENTRIES = getNavigationEntries("main");
+const TOOLS_ENTRIES = getNavigationEntries("tools");
 const PROJECT_ROUTE_PREFIX = "/project/$projectId";
 
 // Perspectives has always been highlighted lighter than the other entries.
@@ -49,13 +44,13 @@ const SELECTED_COLOR_OVERRIDES: Record<string, string> = {
   perspectives: "rgba(0, 0, 0, 0.08)",
 };
 
-function withShortcutHint(label: string, shortcut: FeatureShortcut) {
-  return `${label} (${formatFeatureShortcut(shortcut)})`;
+function withShortcutHint(label: string, shortcut: NavigationShortcut) {
+  return `${label} (${formatNavigationShortcut(shortcut)})`;
 }
 
 interface ShortcutLabelProps {
   title: string;
-  shortcut: FeatureShortcut;
+  shortcut: NavigationShortcut;
 }
 
 /** Underlines the first letter of the title that matches a single-key shortcut; chords are shown in the tooltip. */
@@ -84,7 +79,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const tabNavigate = useTabNavigate();
   const isFeatureEnabled = useIsFeatureEnabled();
   const [searchEntries, mainEntries, toolsEntries] = useMemo(() => {
-    const isEnabled = (entry: FeatureEntry) => isFeatureEnabled(entry.feature);
+    const isEnabled = (entry: NavigationEntry) => isFeatureEnabled(entry.feature);
     return [SEARCH_ENTRIES.filter(isEnabled), MAIN_ENTRIES.filter(isEnabled), TOOLS_ENTRIES.filter(isEnabled)];
   }, [isFeatureEnabled]);
 
@@ -121,7 +116,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   }, []);
 
   const handleOpenSearchTab = useCallback(
-    (to: FeatureRoute) => {
+    (to: NavigationRoute) => {
       if (!projectId) {
         return;
       }
