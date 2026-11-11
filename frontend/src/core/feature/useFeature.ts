@@ -4,8 +4,6 @@ import { ProjectRead } from "@models/ProjectRead";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { featureQueries } from "./api/featureQueries";
-import { getFeatureTitle } from "./featureRegistry";
 
 export interface FeatureCoverage {
   /** All documents the feature applies to have its data. */
@@ -80,14 +78,4 @@ export async function ensureFeatureEnabled(
     projects.find((project) => project.id === projectId),
     feature,
   );
-}
-
-/**
- * The user-facing title of a gated feature, as the backend declares it (the titles of the Features tab); the registry
- * title while the features are loading. Features without a page of their own (e.g. full-text search) have no registry
- * entry.
- */
-export function useFeatureTitle(feature: Feature): string {
-  const { data } = useQuery(featureQueries.list());
-  return data?.find((f) => f.feature === feature)?.title ?? getFeatureTitle(feature);
 }

@@ -2,7 +2,7 @@ import { generalQueries } from "@api/general/generalQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { DEFAULT_PROCESSING_SETTINGS } from "@components/defaultProcessingSettings";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { FeatureHooks } from "@core/feature";
+import { FeatureHooks, FEATURES } from "@core/feature";
 import { ProjectFeatureMap } from "@core/project";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { FeatureRead } from "@models/FeatureRead";
@@ -22,7 +22,6 @@ interface FeatureActivationDialogProps {
   /** The feature to enable, complete or restart; the dialog is open while it is set. */
   feature: FeatureRead | null;
   state: ProjectFeatureRead | undefined;
-  features: FeatureRead[];
   /** The states of all features, to name only the required features that are not enabled yet. */
   states: ProjectFeatureMap;
   onClose: () => void;
@@ -33,14 +32,7 @@ interface FeatureActivationDialogProps {
  * processed and lets the user choose the processing settings, like the upload. Restarting asks for a confirmation, as
  * it may repeat work that is still running.
  */
-export function FeatureActivationDialog({
-  projectId,
-  feature,
-  state,
-  features,
-  states,
-  onClose,
-}: FeatureActivationDialogProps) {
+export function FeatureActivationDialog({ projectId, feature, state, states, onClose }: FeatureActivationDialogProps) {
   const { isMaximized, toggleMaximize } = useDialogMaximize();
   const availableLLMs = useQuery(generalQueries.availableModels());
   const [settings, setSettings] = useState<ProcessingSettings>(DEFAULT_PROCESSING_SETTINGS);
@@ -74,7 +66,7 @@ export function FeatureActivationDialog({
       : state.failed_documents + state.not_planned_documents;
   const requiredTitles = (feature?.requires_features ?? [])
     .filter((f) => !states[f]?.enabled)
-    .map((f) => features.find((other) => other.feature === f)?.title ?? f);
+    .map((f) => FEATURES[f].title);
 
   return (
     <Dialog
@@ -85,14 +77,14 @@ export function FeatureActivationDialog({
       fullScreen={isMaximized}
     >
       <DATSDialogHeader
-        title={`${verb} ${feature?.title ?? "feature"}`}
+        title={`${verb} ${feature ? FEATURES[feature.feature].title : "feature"}`}
         onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={2}>
-          <Typography>{feature?.description}</Typography>
+          <Typography>{feature && FEATURES[feature.feature].description}</Typography>
           {isRestart ? (
             <Typography>
               {`${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} still computing. Restart computes ${count === 1 ? "it" : "them"} again in the background, for example when the progress has not moved for a long time.`}

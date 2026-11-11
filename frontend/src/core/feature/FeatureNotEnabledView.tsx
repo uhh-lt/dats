@@ -2,7 +2,7 @@ import { getIconComponent, Icon } from "@components/icons";
 import { Feature } from "@models/Feature";
 import { Box, Button, Container, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
-import { useFeatureTitle } from "./useFeature";
+import { FEATURES } from "./features";
 
 interface FeatureNotEnabledViewProps {
   feature: Feature;
@@ -11,7 +11,7 @@ interface FeatureNotEnabledViewProps {
 /** Shown instead of a page whose feature is disabled in the current project. */
 export function FeatureNotEnabledView({ feature }: FeatureNotEnabledViewProps) {
   const openProjectSettings = useOpenDialog("projectSettings");
-  const title = useFeatureTitle(feature);
+  const { title } = FEATURES[feature];
 
   const handleOpenSettings = () => openProjectSettings({ tab: "features" });
 

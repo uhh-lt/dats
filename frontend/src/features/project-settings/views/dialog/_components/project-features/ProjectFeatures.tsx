@@ -38,8 +38,8 @@ export function ProjectFeatures({ project }: ProjectFeaturesProps) {
         Annotation, the LLM assistant and all tools not listed here are always available.
       </Typography>
       {areas.map((area) => (
-        <Box key={area.title} flexShrink={0}>
-          <DialogSection title={area.title} cardContentProps={{ sx: { p: 0, "&:last-child": { pb: 0 } } }}>
+        <Box key={area.area} flexShrink={0}>
+          <DialogSection title={area.area} cardContentProps={{ sx: { p: 0, "&:last-child": { pb: 0 } } }}>
             <List disablePadding>
               {area.items.map((feature) => {
                 const state = states.data[feature.feature];
@@ -64,7 +64,6 @@ export function ProjectFeatures({ project }: ProjectFeaturesProps) {
         projectId={project.id}
         feature={activating}
         state={activating ? states.data[activating.feature] : undefined}
-        features={features.data}
         states={states.data}
         onClose={handleCloseActivation}
       />
