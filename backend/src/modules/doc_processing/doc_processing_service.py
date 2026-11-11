@@ -49,13 +49,15 @@ class DocProcessingService(metaclass=SingletonMeta):
         uploaded_files: list[UploadFile],
         settings: ProcessingSettings,
     ) -> list[Job]:
-        jobs = []
-        for uploaded_file in uploaded_files:
-            # 1. Check if mime type is ok
-            mime_type = uploaded_file.content_type
-            if mime_type is None or not mime_type_supported(mime_type=mime_type):
-                raise UnsupportedMimeTypeError(mime_type)
+        # 1. Check the mime types of all files before storing any of them,
+        # so that a rejected request leaves no files behind
+        mime_types = [
+            self._get_supported_mime_type(uploaded_file=uploaded_file)
+            for uploaded_file in uploaded_files
+        ]
 
+        jobs = []
+        for uploaded_file, mime_type in zip(uploaded_files, mime_types):
             # 2. store uploaded file
             file_path = self.fsr.store_uploaded_file_in_project_dir(
                 project_id=project_id, uploaded_file=uploaded_file
@@ -262,3 +264,9 @@ class DocProcessingService(metaclass=SingletonMeta):
             jobs.append(job)
 
         return jobs
+
+    def _get_supported_mime_type(self, *, uploaded_file: UploadFile) -> str:
+        mime_type = uploaded_file.content_type
+        if mime_type is None or not mime_type_supported(mime_type=mime_type):
+            raise UnsupportedMimeTypeError(mime_type)
+        return mime_type
