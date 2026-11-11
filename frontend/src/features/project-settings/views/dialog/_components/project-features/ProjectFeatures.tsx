@@ -65,6 +65,7 @@ export function ProjectFeatures({ project }: ProjectFeaturesProps) {
         feature={activating}
         state={activating ? states.data[activating.feature] : undefined}
         features={features.data}
+        states={states.data}
         onClose={handleCloseActivation}
       />
     </Stack>

@@ -3,6 +3,7 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { DEFAULT_PROCESSING_SETTINGS } from "@components/defaultProcessingSettings";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { FeatureHooks } from "@core/feature";
+import { ProjectFeatureMap } from "@core/project";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { FeatureRead } from "@models/FeatureRead";
 import { FeatureStatus } from "@models/FeatureStatus";
@@ -20,6 +21,8 @@ interface FeatureActivationDialogProps {
   feature: FeatureRead | null;
   state: ProjectFeatureRead | undefined;
   features: FeatureRead[];
+  /** The states of all features, to name only the required features that are not enabled yet. */
+  states: ProjectFeatureMap;
   onClose: () => void;
 }
 
@@ -32,6 +35,7 @@ export function FeatureActivationDialog({
   feature,
   state,
   features,
+  states,
   onClose,
 }: FeatureActivationDialogProps) {
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -55,9 +59,9 @@ export function FeatureActivationDialog({
   const isComplete = state?.status === FeatureStatus.PARTLY_AVAILABLE;
   const verb = isComplete ? "Complete" : "Enable";
   const count = state ? state.failed_documents + state.not_planned_documents : 0;
-  const requiredTitles = (feature?.requires_features ?? []).map(
-    (f) => features.find((other) => other.feature === f)?.title ?? f,
-  );
+  const requiredTitles = (feature?.requires_features ?? [])
+    .filter((f) => !states[f]?.enabled)
+    .map((f) => features.find((other) => other.feature === f)?.title ?? f);
 
   return (
     <Dialog
@@ -79,7 +83,7 @@ export function FeatureActivationDialog({
           <Typography>
             {count === 0
               ? "No document needs to be processed."
-              : `${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} processed in the background${isComplete ? ": the documents whose data failed or was never computed" : ""}. The feature can be used while it is computing.`}
+              : `${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} processed in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
           </Typography>
           {!isComplete && requiredTitles.length > 0 && (
             <Typography color="text.secondary">This also enables {requiredTitles.join(", ")}.</Typography>

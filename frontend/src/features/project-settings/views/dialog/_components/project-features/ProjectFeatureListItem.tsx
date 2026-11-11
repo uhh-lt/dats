@@ -51,6 +51,12 @@ export const ProjectFeatureListItem = memo(
     const handleClickActivate = useCallback(() => onActivate(feature), [feature, onActivate]);
 
     const lacking = state.failed_documents + state.not_planned_documents;
+    const lackingDetails = [
+      state.failed_documents > 0 ? `${formatCount(state.failed_documents)} failed` : null,
+      state.not_planned_documents > 0 ? `${formatCount(state.not_planned_documents)} not computed` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
     const chip = STATUS_CHIP[state.status];
 
     // every enabled feature can be disabled, unless an enabled feature needs it
@@ -125,7 +131,7 @@ export const ProjectFeatureListItem = memo(
             <Typography variant="caption" color="text.secondary" component="div" mt={0.5}>
               {formatCount(state.covered_documents)} of {formatCount(state.total_documents)} documents
               {state.status === FeatureStatus.PARTLY_AVAILABLE &&
-                ` · ${formatCount(lacking)} without data (${formatCount(state.failed_documents)} failed, ${formatCount(state.not_planned_documents)} not computed)`}
+                ` · ${formatCount(lacking)} without data (${lackingDetails})`}
             </Typography>
           )}
         </Box>
