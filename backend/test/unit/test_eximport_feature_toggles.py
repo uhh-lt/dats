@@ -26,6 +26,8 @@ from systems.job_system.pipeline_graph import pipeline_registry
 register_jobs()
 
 FINISHED = SDocStatus.finished.value
+PROCESSING = SDocStatus.processing.value
+ERRONEOUS = SDocStatus.erroneous.value
 TEXT_STEPS = pipeline_registry.graph().steps(DocType.text)
 
 
@@ -81,6 +83,27 @@ def test_archive_step_status_keeps_not_planned_steps() -> None:
     assert status[JobType.TEXT_ES_INDEX.value] is None
     assert status[JobType.TEXT_KEYWORDS.value] is None
     assert status[JobType.TEXT_NER.value] == FINISHED
+
+
+def test_processing_steps_are_imported_as_not_planned() -> None:
+    """Steps archived as processing are not planned: the import starts no job, so
+    they would stay processing forever. Other steps keep their status."""
+    archived: dict[str, int | None] = {step.value: FINISHED for step in TEXT_STEPS}
+    archived[JobType.TEXT_ES_INDEX.value] = PROCESSING
+    archived[JobType.TEXT_KEYWORDS.value] = ERRONEOUS
+
+    status = archived_step_status(_sdoc(step_status=archived))
+
+    assert status[JobType.TEXT_ES_INDEX.value] is None
+    assert status[JobType.TEXT_KEYWORDS.value] == ERRONEOUS
+    assert status[JobType.TEXT_SPACY.value] == FINISHED
+
+
+def test_legacy_archive_of_a_processing_document_plans_no_step() -> None:
+    """A legacy archive holds one status per document: a document archived while
+    it processed gets every step not planned."""
+    status = archived_step_status(_sdoc(status=PROCESSING))
+    assert status == {step.value: None for step in TEXT_STEPS}
 
 
 def test_steps_missing_in_the_archive_are_not_planned() -> None:

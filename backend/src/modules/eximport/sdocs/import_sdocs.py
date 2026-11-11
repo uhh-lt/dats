@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.folder_crud import crud_folder
@@ -52,15 +53,20 @@ def archived_step_status(
     archive (None = not planned). Archives exported before the feature toggles
     hold one status per document: every step of the doctype gets it.
 
-    An embedding step whose embeddings are missing in the archive is not planned,
-    whatever its status: if a feature of the project needs the embeddings, the
-    import plans the step again and computes them (see `ImportService`)."""
+    A step that was processing when the archive was exported is not planned: the
+    import starts no job, so it would stay processing forever. An embedding step
+    whose embeddings are missing in the archive is not planned either, whatever
+    its status. The import plans no step: a feature whose steps are not planned
+    is partly available until a user completes it."""
     steps = pipeline_registry.graph().steps(DocType(sdoc_export.doctype))
     archived = sdoc_export.step_status
     step_status: dict[str, int | None] = {
         step.value: sdoc_export.status if archived is None else archived.get(step.value)
         for step in steps
     }
+    for step, status in step_status.items():
+        if status == SDocStatus.processing.value:
+            step_status[step] = None
 
     missing = {
         JobType.TEXT_DOCUMENT_EMBEDDING: sdoc_export.document_embedding is None,
