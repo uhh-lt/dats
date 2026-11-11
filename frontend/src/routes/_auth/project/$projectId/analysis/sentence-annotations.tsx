@@ -17,7 +17,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/sentenc
   staticData: {
     tab: true,
     icon: Icon.SENTENCE_ANNOTATION_TABLE,
-    getTitle: () => "Sentence Annotations",
   },
   validateSearch: zodValidator(sentenceAnnotationAnalysisSearchSchema),
   component: SentAnnotationAnalysisView,

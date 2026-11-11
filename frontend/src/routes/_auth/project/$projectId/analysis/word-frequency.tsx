@@ -20,7 +20,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
   staticData: {
     tab: true,
     icon: Icon.WORD_FREQUENCY,
-    getTitle: () => "Word Frequency",
     feature: Feature.WORD_FREQUENCY,
   },
   validateSearch: zodValidator(wordFrequencySearchSchema),

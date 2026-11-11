@@ -15,7 +15,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/code-fr
   staticData: {
     tab: true,
     icon: Icon.CODE_FREQUENCY,
-    getTitle: () => "Code Frequency",
   },
   validateSearch: zodValidator(codeFrequencySearchSchema),
   component: CodeFrequencyAnalysisView,

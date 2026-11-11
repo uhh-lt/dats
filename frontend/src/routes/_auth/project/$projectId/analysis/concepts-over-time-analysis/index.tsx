@@ -9,7 +9,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
   staticData: {
     tab: true,
     icon: Icon.COTA,
-    getTitle: () => "Concepts Over Time Analysis",
     feature: Feature.CONCEPTS_OVER_TIME,
   },
   context: ({ params }) => ({ cotasByProjectOptions: cotaQueries.byProject(params.projectId) }),

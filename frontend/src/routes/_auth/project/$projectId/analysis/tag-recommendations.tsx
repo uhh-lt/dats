@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/tag-rec
   staticData: {
     tab: true,
     icon: Icon.TAG_RECOMMENDATION,
-    getTitle: () => "Tag Recommendations",
     feature: Feature.TAG_RECOMMENDATION,
   },
   component: TagRecommendationsView,

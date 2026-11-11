@@ -6,7 +6,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/document-s
   staticData: {
     tab: true,
     icon: Icon.DOCUMENT_SAMPLER,
-    getTitle: () => "Document Sampler",
   },
   component: DocumentSamplerView,
 });

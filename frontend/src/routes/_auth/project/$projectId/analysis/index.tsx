@@ -8,7 +8,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/")({
   staticData: {
     tab: true,
     icon: Icon.ANALYSIS,
-    getTitle: () => "Analysis",
   },
   component: AnalysisView,
 });

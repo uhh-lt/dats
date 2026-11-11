@@ -5,6 +5,7 @@ import { useParams, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { TabRouteSearch, TabRouteState } from "../_types/TabData";
 import { TabsActions } from "../tabsSlice";
+import { findNavigationEntry, useNavigationEntries } from "../useNavigationEntries";
 
 function isRouteSearchCandidate(value: unknown): value is TabRouteSearch {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -13,6 +14,7 @@ function isRouteSearchCandidate(value: unknown): value is TabRouteSearch {
 export function TabSynchronizer() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const navigationEntries = useNavigationEntries();
 
   const params = useParams({ strict: false }) as { projectId?: string | number };
   const { status, matches, location } = useRouterState({
@@ -43,12 +45,13 @@ export function TabSynchronizer() {
     // Bail if none of the active routes are configured to be a tab
     if (!matchedTabRoute) return;
 
-    // 3. Extract static data and invoke your getTitle function safely
+    // 3. A dynamic title from getTitle, a static one from the navigation entry of the page
     const staticData = matchedTabRoute.staticData ?? {};
-    const label = staticData.getTitle?.({
-      queryClient,
-      params: (matchedTabRoute.params ?? {}) as Record<string, unknown>,
-    });
+    const label =
+      staticData.getTitle?.({
+        queryClient,
+        params: (matchedTabRoute.params ?? {}) as Record<string, unknown>,
+      }) ?? findNavigationEntry(navigationEntries, matchedTabRoute.fullPath)?.title;
 
     // 4. Sync the tab data to your Redux store
     const route: TabRouteState = {
@@ -72,6 +75,7 @@ export function TabSynchronizer() {
   }, [
     dispatch,
     queryClient,
+    navigationEntries,
     location.hash,
     location.href,
     location.pathname,

@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/duplicate-
   staticData: {
     tab: true,
     icon: Icon.DUPLICATE_FINDER,
-    getTitle: () => "Duplicate Finder",
     feature: Feature.DUPLICATE_FINDER,
   },
   component: DuplicateFinderView,

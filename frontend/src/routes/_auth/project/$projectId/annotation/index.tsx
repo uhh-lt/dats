@@ -6,7 +6,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/")({
   staticData: {
     tab: true,
     icon: Icon.ANNOTATION,
-    getTitle: () => "Annotation",
   },
   component: AnnotationFallbackView,
 });

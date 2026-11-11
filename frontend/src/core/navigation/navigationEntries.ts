@@ -24,7 +24,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "image-search",
     group: "search",
-    title: "Image Search",
     icon: Icon.IMAGE_SEARCH,
     to: "/project/$projectId/imagesearch",
     shortcut: { after: "s", key: "i" },
@@ -36,7 +35,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "sentence-search",
     group: "search",
-    title: "Sentence Search",
     icon: Icon.SENTENCE_SEARCH,
     to: "/project/$projectId/sentencesearch",
     shortcut: { after: "s", key: "s" },
@@ -55,7 +53,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/perspectives",
     shortcut: "e",
     command: {
-      title: "Open Perspectives",
       description: "Go to project perspectives",
       keywords: ["perspectives", "map"],
     },
@@ -68,7 +65,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/annotation",
     shortcut: "a",
     command: {
-      title: "Annotation View",
       description: "Go to annotation view",
       keywords: ["annotate", "annotation", "tag", "code"],
     },
@@ -81,7 +77,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/analysis",
     shortcut: "y",
     command: {
-      title: "Analysis Dashboard",
       description: "Go to analysis dashboard",
       keywords: ["go", "to", "navigate", "analysis", "dashboard"],
       category: "Analysis",
@@ -95,7 +90,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/classifier",
     shortcut: "c",
     command: {
-      title: "Open Classifiers",
       description: "Go to project classifiers",
       keywords: ["classifier", "document", "span", "sentence", "annotation", "training", "evaluation", "inference"],
     },
@@ -108,7 +102,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/prompts",
     shortcut: { after: "c", key: "p" },
     command: {
-      title: "Open Prompts",
       description: "Go to the prompts of the project",
       keywords: ["prompt", "template", "llm", "assistant", "placeholder", "few-shot", "examples"],
     },
@@ -120,9 +113,7 @@ export const NAVIGATION_ENTRIES = [
     icon: Icon.EXPERIMENT,
     to: "/project/$projectId/experiments",
     shortcut: { after: "c", key: "x" },
-    sidebarTooltip: "Experiment Studio",
     command: {
-      title: "Open Experiment Studio",
       description: "Go to the experiments of the project: compare prompt versions and models",
       keywords: ["experiment", "run", "prompt", "model", "llm", "evaluation", "gold", "f1"],
     },
@@ -135,7 +126,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/whiteboard",
     shortcut: "b",
     command: {
-      title: "Open Whiteboards",
       description: "Go to project whiteboards",
       keywords: ["whiteboard", "board", "visualization", "brainstorming"],
     },
@@ -148,7 +138,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/memo-workspace",
     shortcut: "m",
     command: {
-      title: "Open Memo Workspace",
       description: "Go to project memo workspace",
       keywords: ["log", "notes", "journal", "memo", "logbook"],
     },
@@ -164,7 +153,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/analysis/code-frequency",
     shortcut: { after: "y", key: "c" },
     command: {
-      title: "Code Frequency",
       description: "Go to code frequency analysis",
       keywords: ["go", "to", "navigate", "code", "frequency", "analysis"],
     },
@@ -178,7 +166,6 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/analysis/agreement",
     shortcut: { after: "y", key: "a" },
     command: {
-      title: "Annotator Agreement",
       description: "Go to annotator agreement analysis",
       keywords: ["go", "to", "navigate", "agreement", "annotator", "inter-annotator", "kappa", "compare"],
     },
@@ -231,21 +218,17 @@ export const NAVIGATION_ENTRIES = [
     to: "/project/$projectId/analysis/bbox-annotations",
     shortcut: { after: "y", key: "b" },
     command: {
-      title: "Image Annotation Table",
-      description: "Go to image annotation table",
+      description: "Go to bounding-box annotation table",
       keywords: ["go", "to", "navigate", "image", "bbox", "box", "annotation", "table"],
     },
   },
   {
     id: "word-frequency",
     group: "analysis",
-    title: "Word Frequency Analysis",
-    description: "Analyse the frequencies and occurrences of all words in this project.",
     icon: Icon.WORD_FREQUENCY,
     to: "/project/$projectId/analysis/word-frequency",
     shortcut: { after: "y", key: "w" },
     command: {
-      title: "Word Frequency",
       description: "Go to word frequency analysis",
       keywords: ["go", "to", "navigate", "word", "frequency", "analysis"],
     },
@@ -253,22 +236,17 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "concept-over-time-analysis",
     group: "analysis",
-    title: "Concepts Over Time Analysis",
-    description: "Analyse the occurrence of concepts over time.",
     icon: Icon.COTA,
     to: "/project/$projectId/analysis/concepts-over-time-analysis",
     shortcut: { after: "y", key: "o" },
     command: {
-      title: "Concept Over Time Analysis",
-      description: "Go to concept over time analysis dashboard",
+      description: "Go to concepts over time analysis",
       keywords: ["go", "to", "navigate", "concept", "over", "time", "analysis"],
     },
   },
   {
     id: "annotation-scaling",
     group: "analysis",
-    title: "Annotation Scaling",
-    description: "Semi-automatically scale annotations",
     icon: Icon.ANNOTATION_SCALING,
     to: "/project/$projectId/analysis/annotation-scaling",
     shortcut: { after: "y", key: "l" },
@@ -280,8 +258,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "tag-recommendations",
     group: "analysis",
-    title: "Tag Recommendations",
-    description: "Semi-automatically scale tags",
     icon: Icon.TAG_RECOMMENDATION,
     to: "/project/$projectId/analysis/tag-recommendations",
     shortcut: { after: "y", key: "r" },
@@ -307,7 +283,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "duplicate-finder",
     group: "tools",
-    title: "Duplicate Finder",
     icon: Icon.DUPLICATE_FINDER,
     to: "/project/$projectId/tools/duplicate-finder",
     shortcut: { after: "h", key: "d" },

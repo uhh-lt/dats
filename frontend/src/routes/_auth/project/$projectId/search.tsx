@@ -27,7 +27,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
   staticData: {
     tab: true,
     icon: Icon.DOCUMENT_SEARCH,
-    getTitle: () => "Document Search",
   },
   validateSearch: zodValidator(documentSearchSchema),
   loaderDeps: ({ search }) => search,
