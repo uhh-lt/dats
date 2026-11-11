@@ -1,10 +1,11 @@
 import { Icon } from "@components/icons";
-import { Feature } from "@models/Feature";
 import { NavigationCommandCategory, NavigationEntry, NavigationGroup, NavigationShortcut } from "./navigationTypes";
 
 /**
  * Every user-facing navigation entry (page) of a project, in sidebar and analysis dashboard order.
- * The sidebar, the analysis dashboard, the quick command menu and the navigation shortcuts are generated from it.
+ * The sidebar, the analysis dashboard, the quick command menu, the navigation shortcuts and the tab titles are
+ * generated from it (through `useNavigationEntries`). The feature of a page is declared on its route
+ * (`staticData.feature`), never here.
  */
 export const NAVIGATION_ENTRIES = [
   // Search (sidebar search menu)
@@ -22,7 +23,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "image-search",
-    feature: Feature.IMAGE_SIMILARITY_SEARCH,
     group: "search",
     title: "Image Search",
     icon: Icon.IMAGE_SEARCH,
@@ -35,7 +35,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "sentence-search",
-    feature: Feature.SENTENCE_SIMILARITY_SEARCH,
     group: "search",
     title: "Sentence Search",
     icon: Icon.SENTENCE_SEARCH,
@@ -239,7 +238,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "word-frequency",
-    feature: Feature.WORD_FREQUENCY,
     group: "analysis",
     title: "Word Frequency Analysis",
     description: "Analyse the frequencies and occurrences of all words in this project.",
@@ -254,7 +252,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "concept-over-time-analysis",
-    feature: Feature.CONCEPTS_OVER_TIME,
     group: "analysis",
     title: "Concepts Over Time Analysis",
     description: "Analyse the occurrence of concepts over time.",
@@ -269,7 +266,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "annotation-scaling",
-    feature: Feature.ANNOTATION_SCALING,
     group: "analysis",
     title: "Annotation Scaling",
     description: "Semi-automatically scale annotations",
@@ -283,7 +279,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "tag-recommendations",
-    feature: Feature.TAG_RECOMMENDATION,
     group: "analysis",
     title: "Tag Recommendations",
     description: "Semi-automatically scale tags",
@@ -311,7 +306,6 @@ export const NAVIGATION_ENTRIES = [
   },
   {
     id: "duplicate-finder",
-    feature: Feature.DUPLICATE_FINDER,
     group: "tools",
     title: "Duplicate Finder",
     icon: Icon.DUPLICATE_FINDER,
@@ -354,10 +348,6 @@ const GROUP_COMMAND_CATEGORY: Record<NavigationGroup, NavigationCommandCategory>
   analysis: "Analysis",
   tools: "Tools",
 };
-
-export function getNavigationEntries(group: NavigationGroup): readonly NavigationEntry[] {
-  return NAVIGATION_ENTRIES.filter((entry: NavigationEntry) => entry.group === group);
-}
 
 export function getNavigationCommandCategory(entry: NavigationEntry): NavigationCommandCategory {
   return entry.command.category ?? GROUP_COMMAND_CATEGORY[entry.group];

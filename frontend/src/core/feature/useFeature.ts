@@ -2,7 +2,7 @@ import { projectQueries } from "@core/project";
 import { Feature } from "@models/Feature";
 import { ProjectRead } from "@models/ProjectRead";
 import { QueryClient, useQuery } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { AnyRoute, useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 export interface FeatureCoverage {
@@ -63,11 +63,7 @@ export function useFeatureCoverage(feature: Feature): FeatureCoverage | undefine
   };
 }
 
-/**
- * For route loaders of gated pages: loads the projects of the user and tells whether the feature is enabled in the
- * project. A loader skips its queries for a disabled feature (they would fail with 403); the project layout then shows
- * the "not enabled" view instead of the page.
- */
+/** Loads the projects of the user and tells whether the feature is enabled in the project. */
 export async function ensureFeatureEnabled(
   queryClient: QueryClient,
   projectId: number,
@@ -78,4 +74,21 @@ export async function ensureFeatureEnabled(
     projects.find((project) => project.id === projectId),
     feature,
   );
+}
+
+interface FeatureRouteLoaderArgs {
+  context: { queryClient: QueryClient };
+  params: { projectId: number };
+  route: AnyRoute;
+}
+
+/**
+ * For the loader of a page that declares `staticData.feature`: tells whether the feature of the loader's own route is
+ * enabled. The loader skips its queries for a disabled feature (they would fail with 403); the project layout then shows
+ * the "not enabled" view instead of the page.
+ */
+export async function ensureRouteFeatureEnabled({ context, params, route }: FeatureRouteLoaderArgs): Promise<boolean> {
+  const feature = route.options.staticData?.feature;
+  if (feature === undefined) return true;
+  return ensureFeatureEnabled(context.queryClient, params.projectId, feature);
 }

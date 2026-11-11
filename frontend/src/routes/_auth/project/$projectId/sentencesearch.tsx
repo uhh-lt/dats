@@ -1,4 +1,4 @@
-import { ensureFeatureEnabled } from "@core/feature";
+import { ensureRouteFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
@@ -36,9 +36,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
     }),
     projectMetadataOptions: projectMetadataQueries.byProject(params.projectId),
   }),
-  loader: async ({ context, params }) => {
-    if (!(await ensureFeatureEnabled(context.queryClient, params.projectId, Feature.SENTENCE_SIMILARITY_SEARCH)))
-      return;
+  loader: async ({ context, params, route }) => {
+    if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;
     await Promise.all([
       context.queryClient.ensureQueryData(context.projectMetadataOptions),
       context.queryClient.ensureQueryData(context.sentenceSimilaritySearchOptions),

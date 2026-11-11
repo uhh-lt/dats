@@ -1435,6 +1435,18 @@ const propertyName = (property) =>
       ? String(property.key.value)
       : "";
 
+/** Whether a call of the function named `name` appears anywhere in `node`. */
+const containsCallOf = (node, name) => {
+  if (!node || typeof node.type !== "string") return false;
+  if (node.type === "CallExpression" && node.callee.type === "Identifier" && node.callee.name === name) return true;
+  return Object.keys(node).some((key) => {
+    if (key === "parent") return false;
+    const child = node[key];
+    if (Array.isArray(child)) return child.some((c) => containsCallOf(c, name));
+    return child && typeof child === "object" ? containsCallOf(child, name) : false;
+  });
+};
+
 /** Finds return statements with a value that belong to the function itself (not to nested functions). */
 const findValueReturns = (fn) => {
   if (fn.type === "ArrowFunctionExpression" && fn.body.type !== "BlockStatement") return [fn.body];
@@ -1472,6 +1484,8 @@ const routeOptionsRule = {
       contextName: "Route context option '{{name}}' must be named after the data it loads and end with 'Options'.",
       beforeLoadReturn: "`beforeLoad` is only for guards (throw redirect / notFound); it never returns context.",
       validateSearch: "`validateSearch` uses `zodValidator(<page>SearchSchema)`.",
+      featureLoader:
+        "The `loader` of a route with `staticData.feature` returns early when `await ensureRouteFeatureEnabled({ context, params, route })` is false (its queries fail with 403 while the feature is disabled).",
       tabStaticData:
         "A page route of a project needs `staticData: { tab: true, icon, getTitle }` (missing: {{missing}}).",
     },
@@ -1512,6 +1526,15 @@ const routeOptionsRule = {
           for (const ret of findValueReturns(loader)) context.report({ node: ret, messageId: "loaderReturn" });
         }
 
+        const staticData = options.staticData?.value;
+        const staticDataKeys =
+          staticData && staticData.type === "ObjectExpression"
+            ? staticData.properties.filter((p) => p.type === "Property").map(propertyName)
+            : [];
+        if (loader && staticDataKeys.includes("feature") && !containsCallOf(loader.body, "ensureRouteFeatureEnabled")) {
+          context.report({ node: options.loader, messageId: "featureLoader" });
+        }
+
         const beforeLoad = unwrapFunctionBody(options.beforeLoad?.value);
         if (beforeLoad) {
           for (const ret of findValueReturns(beforeLoad)) context.report({ node: ret, messageId: "beforeLoadReturn" });
@@ -1541,12 +1564,7 @@ const routeOptionsRule = {
         }
 
         if (isProjectPage) {
-          const staticData = options.staticData?.value;
-          const keys =
-            staticData && staticData.type === "ObjectExpression"
-              ? staticData.properties.filter((p) => p.type === "Property").map(propertyName)
-              : [];
-          const missing = ["tab", "icon", "getTitle"].filter((key) => !keys.includes(key));
+          const missing = ["tab", "icon", "getTitle"].filter((key) => !staticDataKeys.includes(key));
           if (missing.length > 0) {
             context.report({ node, messageId: "tabStaticData", data: { missing: missing.join(", ") } });
           }

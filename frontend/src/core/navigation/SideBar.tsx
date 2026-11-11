@@ -1,7 +1,6 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { getIconComponent, Icon } from "@components/icons";
 import { useAuth } from "@core/auth";
-import { useIsFeatureEnabled } from "@core/feature";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
@@ -27,16 +26,14 @@ import {
 } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useLocation } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { LinkListItemButton, LinkMenuItem } from "./links";
-import { formatNavigationShortcut, getNavigationEntries } from "./navigationEntries";
-import { NavigationEntry, NavigationRoute, NavigationShortcut } from "./navigationTypes";
+import { formatNavigationShortcut } from "./navigationEntries";
+import { NavigationRoute, NavigationShortcut } from "./navigationTypes";
 import { useTabNavigate } from "./tabs";
+import { useEnabledNavigationEntries } from "./useNavigationEntries";
 import { WebSocketStatusIndicator } from "./WebSocketStatusIndicator";
 
-const SEARCH_ENTRIES = getNavigationEntries("search");
-const MAIN_ENTRIES = getNavigationEntries("main");
-const TOOLS_ENTRIES = getNavigationEntries("tools");
 const PROJECT_ROUTE_PREFIX = "/project/$projectId";
 
 // Perspectives has always been highlighted lighter than the other entries.
@@ -77,11 +74,9 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const location = useLocation();
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
   const tabNavigate = useTabNavigate();
-  const isFeatureEnabled = useIsFeatureEnabled();
-  const [searchEntries, mainEntries, toolsEntries] = useMemo(() => {
-    const isEnabled = (entry: NavigationEntry) => isFeatureEnabled(entry.feature);
-    return [SEARCH_ENTRIES.filter(isEnabled), MAIN_ENTRIES.filter(isEnabled), TOOLS_ENTRIES.filter(isEnabled)];
-  }, [isFeatureEnabled]);
+  const searchEntries = useEnabledNavigationEntries("search");
+  const mainEntries = useEnabledNavigationEntries("main");
+  const toolsEntries = useEnabledNavigationEntries("tools");
 
   // Memoize isActive function
   const isActive = useCallback(

@@ -1,20 +1,18 @@
 import { getIconComponent, Icon } from "@components/icons";
-import { useIsFeatureEnabled } from "@core/feature";
 import { Settings } from "@mui/icons-material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useMemo } from "react";
-import { formatNavigationShortcut, getNavigationCommandCategory, NAVIGATION_ENTRIES } from "../../navigationEntries";
-import { NavigationCommandCategory, NavigationEntry } from "../../navigationTypes";
+import { formatNavigationShortcut, getNavigationCommandCategory } from "../../navigationEntries";
+import { NavigationCommandCategory, NavigationEntry, ResolvedNavigationEntry } from "../../navigationTypes";
 import { useTabNavigate } from "../../tabs";
+import { useEnabledNavigationEntries } from "../../useNavigationEntries";
 import { CommandItem } from "../_types/CommandItem";
 
 const CATEGORY_ORDER: NavigationCommandCategory[] = ["Navigation", "Analysis", "Tools"];
 
 // Commands are grouped by category; within a category they keep the registry (sidebar and dashboard) order.
-const COMMAND_ENTRIES = [...NAVIGATION_ENTRIES].sort(
-  (a: NavigationEntry, b: NavigationEntry) =>
-    CATEGORY_ORDER.indexOf(getNavigationCommandCategory(a)) - CATEGORY_ORDER.indexOf(getNavigationCommandCategory(b)),
-);
+const byCategory = (a: NavigationEntry, b: NavigationEntry) =>
+  CATEGORY_ORDER.indexOf(getNavigationCommandCategory(a)) - CATEGORY_ORDER.indexOf(getNavigationCommandCategory(b));
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const openCodeCreate = useOpenDialog("codeCreate");
@@ -22,28 +20,25 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const openDocumentUpload = useOpenDialog("documentUpload");
   const openProjectSettings = useOpenDialog("projectSettings");
   const tabNavigate = useTabNavigate();
-  const isFeatureEnabled = useIsFeatureEnabled();
+  const entries = useEnabledNavigationEntries();
 
   const featureCommands = useMemo(
     () =>
-      COMMAND_ENTRIES.flatMap((entry: NavigationEntry): CommandItem[] => {
-        if (!isFeatureEnabled(entry.feature)) return [];
-        return [
-          {
-            id: entry.id,
-            title: entry.command.title ?? entry.title,
-            description: entry.command.description,
-            category: getNavigationCommandCategory(entry),
-            icon: getIconComponent(entry.icon),
-            action: () => {
-              tabNavigate({ to: entry.to, params: { projectId } });
-            },
-            keywords: [...entry.command.keywords],
-            shortcut: formatNavigationShortcut(entry.shortcut),
+      [...entries].sort(byCategory).map(
+        (entry: ResolvedNavigationEntry): CommandItem => ({
+          id: entry.id,
+          title: entry.command.title ?? entry.title,
+          description: entry.command.description,
+          category: getNavigationCommandCategory(entry),
+          icon: getIconComponent(entry.icon),
+          action: () => {
+            tabNavigate({ to: entry.to, params: { projectId } });
           },
-        ];
-      }),
-    [tabNavigate, projectId, isFeatureEnabled],
+          keywords: [...entry.command.keywords],
+          shortcut: formatNavigationShortcut(entry.shortcut),
+        }),
+      ),
+    [tabNavigate, projectId, entries],
   );
 
   return useMemo(

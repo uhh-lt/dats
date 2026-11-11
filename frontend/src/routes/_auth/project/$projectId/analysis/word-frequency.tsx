@@ -1,4 +1,4 @@
-import { ensureFeatureEnabled } from "@core/feature";
+import { ensureRouteFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators, toSorts } from "@core/filter";
 import { wordFrequencyQueries, WordFrequencyView } from "@features/word-frequency-analysis";
@@ -32,8 +32,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
       pageSize: deps.fetchSize,
     }),
   }),
-  loader: async ({ context, params }) => {
-    if (!(await ensureFeatureEnabled(context.queryClient, params.projectId, Feature.WORD_FREQUENCY))) return;
+  loader: async ({ context, params, route }) => {
+    if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;
     await context.queryClient.ensureInfiniteQueryData(context.wordFrequencySearchOptions);
   },
   pendingComponent: () => <CircularProgress />,
