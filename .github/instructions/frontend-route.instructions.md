@@ -88,13 +88,14 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 ### Guards
 
 - **`beforeLoad`** is only for guards: it throws `redirect(...)` (login, already authenticated) and never returns context or builds query options. It is synchronous. Protected pages live under `_auth`, public pages under `_public`.
-- **Toggleable features**: a page of a toggleable feature declares `staticData.feature` (the project layout's `FeatureGuard` then shows the "not enabled" view) and has an entry in `FEATURE_ENTRIES` (`core/feature/featureRegistry.ts`).
-- **Disabled features**: the loader of such a page returns early when `ensureFeatureEnabled(...)` is false, as its queries would fail with 403.
+- **Toggleable features**: the feature of a page is declared only on its route, as `staticData.feature` (the project layout's `FeatureGuard` then shows the "not enabled" view); its navigation entry, the sidebar, the dashboard, the commands and the shortcuts read it from there.
+- **Disabled features**: the loader of such a page starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;`, as its queries would fail with 403 (lint: `local/route-options`).
 
 ### Tabs (`staticData`)
 
-- Every page route under `$projectId/` (not `route.tsx`) declares `staticData: { tab: true, icon: Icon.XXX, getTitle }`. Routes outside a project (`me`, `projects`, `_public/*`) have no `staticData`.
-- A static title is `getTitle: () => "Document Search"`. A dynamic title reads the entity from the cache with the factory's typed key and is `<Kind> <name>` with an empty name as fallback: `` `Whiteboard ${whiteboards?.[Number(params.whiteboardId)]?.title ?? ""}` ``. `params` are untyped there, so wrap them in `Number(...)`.
+- Every page route under `$projectId/` (not `route.tsx`) declares `staticData: { tab: true, icon: Icon.XXX }`. Routes outside a project (`me`, `projects`, `_public/*`) have no `staticData`.
+- A static tab title is the `title` of the page's navigation entry (`NAVIGATION_ENTRIES`), never a `getTitle: () => "..."` (lint: `local/route-options`).
+- `getTitle` is only for a dynamic title, which reads the entity from the cache with the factory's typed key and is `<Kind> <name>` with an empty name as fallback: `` `Whiteboard ${whiteboards?.[Number(params.whiteboardId)]?.title ?? ""}` ``. `params` are untyped there, so wrap them in `Number(...)`.
 
 ## Examples
 
