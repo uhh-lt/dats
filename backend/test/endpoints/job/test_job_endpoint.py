@@ -41,3 +41,18 @@ def test_tag_recommendation_ml_job_is_rejected_when_the_feature_is_disabled(
     response = client.post("/job/ml", json=payload.model_dump(mode="json"))
 
     assert_feature_disabled(response, Feature.TAG_RECOMMENDATION)
+
+
+# ===========================================================================
+# RETRY JOB (/job/{job_type}/{job_id}/retry) TESTS
+# ===========================================================================
+
+
+def test_retry_job_is_rejected_when_the_feature_is_disabled(
+    client: TestClient, featureless_tag_recommendation_job: str
+):
+    """A retry checks the input again like the start: tag recommendation is
+    disabled in the job's project, so the job is not requeued."""
+    response = client.post(f"/job/ml/{featureless_tag_recommendation_job}/retry")
+
+    assert_feature_disabled(response, Feature.TAG_RECOMMENDATION)

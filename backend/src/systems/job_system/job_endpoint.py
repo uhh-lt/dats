@@ -94,6 +94,9 @@ def register_job_endpoints(
         def retry_job(job_id: str, authz_user: AuthzUser = Depends()):
             job = job_service.get_job(job_id)
             authz_user.assert_in_project(job.get_project_id())
+            # the input may not be valid anymore (e.g. its feature was disabled)
+            if validate_input is not None:
+                validate_input(authz_user.db, job.job.kwargs["payload"])
             return job_service.retry_job(job_id)
 
         router.add_api_route(
