@@ -1679,6 +1679,105 @@ const routeOptionsRule = {
 
 datsRulesPlugin.rules["route-options"] = routeOptionsRule;
 
+// NAVIGATION ENTRIES (see .github/instructions/frontend.instructions.md, "Toggleable Features and Navigation")
+
+/** The page path (`to`) of a route id: without pathless segments (`_auth`) and the trailing slash of an index. */
+const routeIdToPath = (id) =>
+  id
+    .split("/")
+    .filter((segment) => !segment.startsWith("_") && !/^\(.*\)$/.test(segment))
+    .join("/")
+    .replace(/(.)\/$/, "$1");
+
+/** The page routes (`staticData.tab`) under `routesDir`, by path, with whether they have a feature (own or inherited). */
+function readPageRoutes(routesDir) {
+  /** @type {Map<string, { file: string, feature: boolean }>} */
+  const pages = new Map();
+  const visit = (dir) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const file = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        visit(file);
+        continue;
+      }
+      if (!entry.name.endsWith(".tsx")) continue;
+      const content = readFileOrNull(file) ?? "";
+      const id = content.match(/createFileRoute\(\s*["'`]([^"'`]+)["'`]\s*\)/)?.[1];
+      if (!id || !/\btab\s*:\s*true\b/.test(content)) continue;
+      const feature = ROUTE_FEATURE_PATTERN.test(content) || findFeatureParentRouteFile(file) !== undefined;
+      pages.set(routeIdToPath(id), { file, feature });
+    }
+  };
+  visit(routesDir);
+  return pages;
+}
+
+/** @type {Rule.RuleModule} */
+const navigationEntriesRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "Every navigation entry points to a page route (`staticData.tab`); the entry of a feature's page has no title or description (they come from FEATURES), every other entry has a title.",
+    },
+    messages: {
+      to: "The `to` of a navigation entry is a string literal.",
+      noRoute: "No page route declares `staticData.tab` for '{{to}}'.",
+      featureTitle:
+        "The page '{{to}}' has a feature (its route or a parent route declares `staticData.feature`); its entry takes the title and description from FEATURES.",
+      missingTitle: "The page '{{to}}' has no feature; its entry needs a `title`.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = (context.filename || context.getFilename()).split(path.sep).join("/");
+    const srcIndex = filename.lastIndexOf("/src/");
+    if (srcIndex === -1) return {};
+    const pages = readPageRoutes(`${filename.slice(0, srcIndex)}/src/routes`);
+
+    return {
+      "VariableDeclarator[id.name='NAVIGATION_ENTRIES']"(node) {
+        let list = node.init;
+        while (list && (list.type === "TSSatisfiesExpression" || list.type === "TSAsExpression"))
+          list = list.expression;
+        if (!list || list.type !== "ArrayExpression") return;
+        for (const element of list.elements) {
+          if (!element || element.type !== "ObjectExpression") continue;
+          /** @type {Record<string, import("estree").Property>} */
+          const props = {};
+          for (const p of element.properties) if (p.type === "Property") props[propertyName(p)] = p;
+          const toValue = props.to?.value;
+          if (!toValue || toValue.type !== "Literal" || typeof toValue.value !== "string") {
+            context.report({ node: props.to ?? element, messageId: "to" });
+            continue;
+          }
+          const to = toValue.value;
+          const page = pages.get(to);
+          if (!page) {
+            context.report({ node: props.to, messageId: "noRoute", data: { to } });
+            continue;
+          }
+          if (page.feature && (props.title || props.description)) {
+            context.report({ node: props.title ?? props.description, messageId: "featureTitle", data: { to } });
+          }
+          if (!page.feature && !props.title) {
+            context.report({ node: element, messageId: "missingTitle", data: { to } });
+          }
+        }
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["navigation-entries"] = navigationEntriesRule;
+
 // ---------------------------------------------------------------------------
 // feature folder rules (see .github/instructions/frontend-feature.instructions.md)
 // ---------------------------------------------------------------------------

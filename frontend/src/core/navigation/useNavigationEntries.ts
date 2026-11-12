@@ -6,29 +6,36 @@ import { NAVIGATION_ENTRIES } from "./navigationEntries";
 import { NavigationEntry, NavigationGroup, NavigationRoute, ResolvedNavigationEntry } from "./navigationTypes";
 
 /** The page route at `to`: the one that declares `staticData.tab` (the layout route of a path declares none). */
-function getPageRoute(router: AnyRouter, to: NavigationRoute): AnyRoute {
-  const route = Object.values(router.looseRoutesById).find((route) => route.to === to && route.options.staticData?.tab);
-  if (!route) throw new Error(`No page route declares \`staticData.tab\` for '${to}'.`);
-  return route;
+function findPageRoute(router: AnyRouter, to: NavigationRoute): AnyRoute | undefined {
+  return Object.values(router.looseRoutesById).find((route) => route.to === to && route.options.staticData?.tab);
 }
 
 /**
- * An entry with the feature (`getRouteFeature`) and the icon of its route; the page of a feature takes its title and description from
- * `FEATURES`. Throws for an entry that names a title although its route declares a feature, or none although it
- * declares none.
+ * An entry with the feature and the icon of its route; the page of a feature takes its title and description from
+ * `FEATURES`. The lint rule `local/navigation-entries` rejects an entry whose route or title does not fit; should one
+ * slip through, it is logged and shown with what is known instead of failing every page.
  */
 function resolveNavigationEntry(router: AnyRouter, entry: NavigationEntry): ResolvedNavigationEntry {
-  const route = getPageRoute(router, entry.to);
-  const icon = route.options.staticData?.icon ?? Icon.PROJECT;
-  const feature = getRouteFeature(route);
+  const route = findPageRoute(router, entry.to);
+  if (!route) {
+    console.error(`Navigation entry '${entry.id}': no page route declares \`staticData.tab\` for '${entry.to}'.`);
+  }
+  const icon = route?.options.staticData?.icon ?? Icon.PROJECT;
+  const feature = route ? getRouteFeature(route) : undefined;
   if (feature === undefined) {
-    if (entry.title === undefined) throw new Error(`Navigation entry '${entry.id}' needs a title.`);
-    return { ...entry, feature, icon, title: entry.title };
+    if (entry.title === undefined) console.error(`Navigation entry '${entry.id}' needs a title.`);
+    return { ...entry, feature, icon, title: entry.title ?? entry.id };
   }
   if (entry.title !== undefined || entry.description !== undefined) {
-    throw new Error(`Navigation entry '${entry.id}' takes its title and description from FEATURES['${feature}'].`);
+    console.error(`Navigation entry '${entry.id}' takes its title and description from FEATURES['${feature}'].`);
   }
-  return { ...entry, feature, icon, title: FEATURES[feature].title, description: FEATURES[feature].description };
+  return {
+    ...entry,
+    feature,
+    icon,
+    title: entry.title ?? FEATURES[feature].title,
+    description: entry.description ?? FEATURES[feature].description,
+  };
 }
 
 /** Every navigation entry with the feature of its page, also the entries of disabled features. */
