@@ -9,6 +9,7 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
@@ -54,13 +55,15 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.FILE_METADATA},
+    doctypes={DocType.video},
+)
 @register_job(
     job_type=JobType.VIDEO_METADATA_EXTRACTION,
     input_type=VideoMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.FILE_METADATA},
-    doctypes={DocType.video},
 )
 def handle_video_metadata_extraction_job(
     payload: VideoMetadataExtractionJobInput, job: Job

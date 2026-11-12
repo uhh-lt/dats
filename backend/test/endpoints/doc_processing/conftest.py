@@ -20,12 +20,13 @@ from feature_test_utils import (
     create_project_with_features,
 )
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService
-from systems.job_system.pipeline_graph import pipeline_registry
 
 
 @pytest.fixture(scope="function")
@@ -74,8 +75,8 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     """
     Declares a new pipeline step the way a developer adds one: a `JobType` value
     (`test_dummy_step`), a core artefact it produces (`test_dummy_artefact`, in
-    `Artefact` and `CORE_ARTEFACTS`) and one `@register_job` declaration with an
-    enricher. Nothing else is registered.
+    `Artefact` and `CORE_ARTEFACTS`) and one `@pipeline_step` declaration on a job registered
+    with an enricher. Nothing else is registered.
 
     The step requires the content of a document, so it follows `text_extraction`
     and runs for all doctypes that have content. Its enricher loads the content from the document data;
@@ -104,20 +105,20 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     def handle_dummy_job(payload: DummyJobInput, job: Job) -> None:
         computed[payload.sdoc_id] = payload.text
 
-    register_job(
-        job_type=step,
-        input_type=DummyJobInput,
-        enricher=enrich,
+    pipeline_step(
         requires={Artefact.CONTENT},
         produces={artefact},
         doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
-    )(handle_dummy_job)
+    )(
+        register_job(job_type=step, input_type=DummyJobInput, enricher=enrich)(
+            handle_dummy_job
+        )
+    )
 
     yield {"step": step, "artefact": artefact, "computed": computed}
 
     JobService().job_registry.pop(step)
-    pipeline_registry._steps.pop(step)
-    pipeline_registry._graph = None
+    pipeline_registry.unregister(step)
     for p in patches:
         p.stop()
     _remove_enum_member(Artefact, artefact)

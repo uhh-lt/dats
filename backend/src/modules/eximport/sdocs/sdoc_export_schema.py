@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
-from systems.job_system.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 
 
 class SourceDocumentExportSchema(BaseModel):

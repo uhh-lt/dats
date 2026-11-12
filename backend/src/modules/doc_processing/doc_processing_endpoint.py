@@ -14,7 +14,7 @@ from modules.doc_processing.doc_processing_dto import (
     SourceDocumentStatusSimple,
 )
 from modules.doc_processing.doc_processing_service import DocProcessingService
-from systems.job_system.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 
 router = APIRouter(
     prefix="/docprocessing",

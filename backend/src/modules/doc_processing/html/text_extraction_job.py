@@ -5,6 +5,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
@@ -39,14 +40,16 @@ def enrich_for_recompute(
         )
 
 
+@pipeline_step(
+    requires={Artefact.RAW_HTML},
+    produces={Artefact.CONTENT},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+)
 @register_job(
     job_type=JobType.TEXT_EXTRACTION,
     input_type=TextExtractionJobInput,
     output_type=TextExtractionJobOutput,
     enricher=enrich_for_recompute,
-    requires={Artefact.RAW_HTML},
-    produces={Artefact.CONTENT},
-    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_extraction_job(
     payload: TextExtractionJobInput,

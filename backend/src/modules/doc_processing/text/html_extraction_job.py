@@ -13,6 +13,7 @@ from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_cleaning_utils import clean_html
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.docling_repo import DoclingRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -55,14 +56,16 @@ def enrich_for_recompute(
         )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.RAW_HTML},
+    doctypes={DocType.text},
+)
 @register_job(
     job_type=JobType.EXTRACT_HTML,
     input_type=ExtractHTMLJobInput,
     output_type=ExtractHTMLJobOutput,
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.RAW_HTML},
-    doctypes={DocType.text},
 )
 def handle_extract_html_job(
     payload: ExtractHTMLJobInput, job: Job

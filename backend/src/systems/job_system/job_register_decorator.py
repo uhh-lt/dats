@@ -3,8 +3,6 @@ from typing import Callable, Literal, TypeVar
 from fastapi import APIRouter
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
-from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
 from systems.job_system.job_system_enum import (
@@ -32,10 +30,6 @@ def register_job(
     enricher: Callable[[InputT], InputT] | None = None,
     read_model: type[JobRead] | None = None,
     validate_input: Callable[[Session, InputT], None] | None = None,
-    requires: set[Artefact] | None = None,
-    produces: set[Artefact] | None = None,
-    doctypes: set[DocType] | None = None,
-    further_steps: dict[JobType, set[Artefact]] | None = None,
 ):
     """
     Register a job handler with the job system.
@@ -43,15 +37,6 @@ def register_job(
     `validate_input` checks the input when the generated start endpoint starts a
     job, after the project membership check and before the job is enqueued. It
     raises an exception (e.g. a 400 or 403 error) to reject the input.
-
-    `doctypes` makes the job a step of the document preprocessing pipeline: it runs
-    for documents of these doctypes, after the steps that produce the artefacts it
-    `requires`, and it `produces` artefacts for the steps after it.
-
-    `further_steps` are more steps the job computes in the same run, each with its
-    own status column and the artefacts it produces, and the job's `requires` and
-    `doctypes`. The job input (`SdocProcessingJobInput.steps`) says which of the
-    job's steps to compute, so each can be planned and recomputed on its own.
     """
 
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
@@ -73,10 +58,6 @@ def register_job(
             enricher=enricher,
             read_model=read_model,
             validate_input=validate_input,
-            requires=requires,
-            produces=produces,
-            doctypes=doctypes,
-            further_steps=further_steps,
         )
         return func
 

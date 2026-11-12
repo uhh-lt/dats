@@ -1,6 +1,6 @@
 import inspect
 from datetime import UTC, datetime
-from typing import Any, Callable, Dict, Literal, TypedDict, TypeVar
+from typing import Any, Callable, Dict, Literal, NamedTuple, TypedDict, TypeVar
 
 import rq
 from fastapi import APIRouter
@@ -17,14 +17,11 @@ from rq.registry import (
 )
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
-from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from repos.redis_repo import RedisRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
 from systems.job_system.job_system_enum import EndpointGeneration, JobPriority
-from systems.job_system.pipeline_graph import PipelineStep, pipeline_registry
 
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=JobOutputBase)
@@ -51,12 +48,31 @@ class RegisteredJob(TypedDict):
     validate_input: Callable[[Session, Any], None] | None
 
 
+class JobHooks(NamedTuple):
+    """Called by the job handler around every job (see `JobService.register_hooks`)."""
+
+    # before the handler; returns False to skip the job
+    started: Callable[[JobType, JobInputBase], bool]
+    # after the handler returned; a failing hook fails the job
+    finished: Callable[[JobType, JobInputBase, JobOutputBase | None], None]
+    # after the handler or the `finished` hook raised
+    failed: Callable[[JobType, JobInputBase], None]
+
+
+_NO_HOOKS = JobHooks(
+    started=lambda job_type, input: True,
+    finished=lambda job_type, input, output: None,
+    failed=lambda job_type, input: None,
+)
+
+
 class JobService(metaclass=SingletonMeta):
     def __init__(self):
         self.redis_conn: Redis | None = None
         self.queues: Dict[tuple[str, JobPriority], rq.Queue] = {}
         self.registries: dict[tuple[str, JobPriority], dict[str, BaseRegistry]] = {}
         self.job_registry: Dict[JobType, RegisteredJob] = {}
+        self.hooks: JobHooks = _NO_HOOKS
 
     def initialize(self) -> None:
         """Initialize the JobService by connecting to Redis and setting up queues and registries."""
@@ -100,10 +116,6 @@ class JobService(metaclass=SingletonMeta):
         enricher: Callable[[InputT], InputT] | None = None,
         read_model: type[JobRead] | None = None,
         validate_input: Callable[[Session, InputT], None] | None = None,
-        requires: set[Artefact] | None = None,
-        produces: set[Artefact] | None = None,
-        doctypes: set[DocType] | None = None,
-        further_steps: dict[JobType, set[Artefact]] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -120,42 +132,6 @@ class JobService(metaclass=SingletonMeta):
 
         if self.job_registry.get(job_type) is not None:
             raise ValueError(f"JobType {job_type} is already registered!")
-
-        if (requires or produces) and not doctypes:
-            raise ValueError(
-                f"JobType {job_type} declares artefacts, but no doctypes: only "
-                "pipeline steps declare 'requires' and 'produces'."
-            )
-        if further_steps and not doctypes:
-            raise ValueError(
-                f"JobType {job_type} declares further steps, but no doctypes: only "
-                "pipeline steps declare 'further_steps'."
-            )
-        if doctypes and enricher is None:
-            raise ValueError(
-                f"JobType {job_type} is a pipeline step, but has no enricher: the "
-                "steps before it start it with a bare SdocProcessingJobInput, and "
-                "the enricher loads the rest of its input from the stored data."
-            )
-        if doctypes:
-            pipeline_registry.register(
-                job_type,
-                PipelineStep(
-                    requires=frozenset(requires or ()),
-                    produces=frozenset(produces or ()),
-                    doctypes=frozenset(doctypes),
-                ),
-            )
-            for step, step_produces in (further_steps or {}).items():
-                pipeline_registry.register(
-                    step,
-                    PipelineStep(
-                        requires=frozenset(requires or ()),
-                        produces=frozenset(step_produces),
-                        doctypes=frozenset(doctypes),
-                        job=job_type,
-                    ),
-                )
 
         # The ONE concrete JobRead model for this job type. Modules with
         # hand-written endpoints pass their own subclass (e.g. ImportJobRead);
@@ -190,6 +166,21 @@ class JobService(metaclass=SingletonMeta):
             "enricher": enricher,
             "validate_input": validate_input,
         }
+
+    def register_hooks(self, hooks: JobHooks) -> None:
+        """Set the hooks the job handler calls around every job. Registered at
+        bootstrap (`bootstrap.register_jobs`), e.g. by the document processing,
+        which tracks the pipeline step statuses and starts the next steps."""
+        self.hooks = hooks
+
+    def read_job_type(self, handler: Callable) -> JobType:
+        """The job type registered with this handler. Raises if none is."""
+        for job_type, job_info in self.job_registry.items():
+            if job_info["handler"] is handler:
+                return job_type
+        raise ValueError(
+            f"The function '{handler.__name__}' is not registered as a job handler."
+        )
 
     def start_job(
         self,

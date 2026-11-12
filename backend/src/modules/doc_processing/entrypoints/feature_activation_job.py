@@ -3,11 +3,11 @@ from loguru import logger
 from common.job_type_enum import JobType
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.doc_processing_pipeline import start_step_job
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from systems.feature_system.feature_dto import FeatureActivationJobInput
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobPriority, JobTiming
-from systems.job_system.pipeline_graph import pipeline_registry
 
 
 @register_job(

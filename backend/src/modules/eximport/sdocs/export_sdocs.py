@@ -17,6 +17,7 @@ from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
@@ -27,7 +28,6 @@ from repos.vector.weaviate_exceptions import (
     WeaviateObjectIDNotFoundException,
 )
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.pipeline_graph import pipeline_registry
 
 
 def export_selected_sdocs(

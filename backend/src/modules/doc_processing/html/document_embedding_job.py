@@ -3,6 +3,7 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
@@ -30,14 +31,16 @@ def enrich_for_recompute(
         )
 
 
+@pipeline_step(
+    requires={Artefact.CONTENT},
+    produces={Artefact.DOCUMENT_EMBEDDINGS},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+)
 @register_job(
     job_type=JobType.TEXT_DOCUMENT_EMBEDDING,
     input_type=TextDocumentEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,
-    requires={Artefact.CONTENT},
-    produces={Artefact.DOCUMENT_EMBEDDINGS},
-    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_document_embedding_job(
     payload: TextDocumentEmbeddingJobInput, job: Job

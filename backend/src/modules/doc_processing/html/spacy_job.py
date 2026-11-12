@@ -19,6 +19,8 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo
@@ -26,7 +28,6 @@ from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
-from systems.job_system.pipeline_graph import pipeline_registry
 
 sqlr = SQLRepo()
 ray = RayRepo()
@@ -76,11 +77,7 @@ def enrich_for_recompute(
         )
 
 
-@register_job(
-    job_type=JobType.TEXT_SPACY,
-    input_type=SpacyJobInput,
-    output_type=SpacyJobOutput,
-    enricher=enrich_for_recompute,
+@pipeline_step(
     requires={Artefact.CONTENT, Artefact.LANGUAGE},
     produces={Artefact.TOKENS_SENTENCES},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
@@ -89,6 +86,12 @@ def enrich_for_recompute(
         JobType.TEXT_WORD_FREQUENCY: {Artefact.WORD_FREQUENCIES},
         JobType.TEXT_NER: {Artefact.NER_SPANS},
     },
+)
+@register_job(
+    job_type=JobType.TEXT_SPACY,
+    input_type=SpacyJobInput,
+    output_type=SpacyJobOutput,
+    enricher=enrich_for_recompute,
 )
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # the outputs to write: tokens and sentences (text_spacy), keywords, word

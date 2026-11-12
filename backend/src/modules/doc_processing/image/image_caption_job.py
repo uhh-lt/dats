@@ -9,6 +9,7 @@ from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
@@ -52,15 +53,17 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.IMAGE_CAPTION, Artefact.RAW_HTML},
+    doctypes={DocType.image},
+)
 @register_job(
     job_type=JobType.IMAGE_CAPTION,
     input_type=ImageCaptionJobInput,
     output_type=ImageCaptionJobOutput,
     device="api",
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.IMAGE_CAPTION, Artefact.RAW_HTML},
-    doctypes={DocType.image},
 )
 def handle_image_caption_job(
     payload: ImageCaptionJobInput, job: Job
