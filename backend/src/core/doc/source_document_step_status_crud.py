@@ -20,7 +20,7 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import InstrumentedAttribute, Session, aliased
 from sqlalchemy.sql.selectable import TableValuedAlias
 
 from common.doc_type_enum import DocType
@@ -30,6 +30,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
 from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
+from systems.search_system.sorting import SortDirection
 
 # The status of each planned step of a document; a step without a status is not
 # planned.
@@ -278,6 +279,55 @@ class CRUDSourceDocumentStepStatus(
             for sdoc_id in startable:
                 result.setdefault(sdoc_id, []).append(step)
         return result
+
+    def read_sdocs_sorted(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        doctype: DocType,
+        order_by: list[tuple[JobType | InstrumentedAttribute, SortDirection]],
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[SourceDocumentORM]:
+        """
+        Read the documents of the project and doctype, sorted by the status of
+        steps and by columns of the document, then by name.
+
+        Args:
+            project_id: The project of the documents.
+            doctype: The doctype of the documents.
+            order_by: The sorts in order: a step sorts by its status (documents
+                without the step last), a column of `SourceDocumentORM` by its
+                value.
+            offset: The number of documents to skip.
+            limit: The most documents to return.
+
+        Returns:
+            The sorted documents.
+        """
+        sdoc = SourceDocumentORM
+        query = db.query(sdoc).filter(
+            sdoc.project_id == project_id,
+            sdoc.doctype == doctype.value,
+        )
+        order = []
+        for key, direction in order_by:
+            if isinstance(key, JobType):
+                status = aliased(self.model)
+                query = query.outerjoin(
+                    status,
+                    and_(status.sdoc_id == sdoc.id, status.step == key),
+                )
+                order.append(direction.apply(status.status))
+                continue
+            order.append(direction.apply(key))
+        query = query.order_by(*order, sdoc.name.asc())
+        if offset is not None:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
+        return query.all()
 
     ### UPDATE OPERATIONS ###
 

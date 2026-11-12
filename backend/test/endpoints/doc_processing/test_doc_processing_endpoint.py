@@ -7,7 +7,11 @@ from core.doc.source_document_crud import crud_sdoc
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from common.doc_type_enum import DocType
+from common.job_type_enum import JobType
+from feature_test_utils import FeatureProject
+from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocHealthSort
 from pipeline_test_utils import all_steps, step_names
+from systems.search_system.sorting import SortDirection
 
 # ===========================================================================
 # UPLOAD (/docprocessing/project/{project_id}) TESTS
@@ -77,6 +81,65 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     )
     assert response.status_code == 200, response.text
     assert response.json() == 1
+# ===========================================================================
+# SEARCH SDOC HEALTH (/docprocessing/project/{project_id}/search) TESTS
+# ===========================================================================
+
+
+@pytest.mark.parametrize(
+    "sorts,page_size,expected",
+    [
+        # processing (0) before finished (1)
+        pytest.param(
+            [(JobType.TEXT_LANGUAGE_DETECTION, SortDirection.ASC)],
+            2,
+            ["text_running.txt", "text_done.txt"],
+            id="step-asc",
+        ),
+        pytest.param(
+            [(JobType.TEXT_LANGUAGE_DETECTION, SortDirection.DESC)],
+            2,
+            ["text_done.txt", "text_running.txt"],
+            id="step-desc",
+        ),
+        # not planned for both, so the name decides
+        pytest.param(
+            [(JobType.TEXT_KEYWORDS, SortDirection.DESC)],
+            2,
+            ["text_done.txt", "text_running.txt"],
+            id="step-not-planned",
+        ),
+        # a column of the document, then a page of one
+        pytest.param(
+            [("name", SortDirection.DESC)], 1, ["text_running.txt"], id="column-page"
+        ),
+    ],
+)
+def test_search_sdoc_health_sorts_by_the_status_of_a_step_or_a_column(
+    client: TestClient,
+    feature_project: FeatureProject,
+    sorts: list[tuple[str, SortDirection]],
+    page_size: int,
+    expected: list[str],
+):
+    """The text documents of `feature_project` sorted by the status of a step
+    (documents without the step last) or a column, then by name; the total
+    counts all text documents."""
+    response = client.post(
+        f"/docprocessing/project/{feature_project['project'].id}/search",
+        params={"doctype": DocType.text.value, "page": 0, "page_size": page_size},
+        json=[
+            SdocHealthSort(column=column, direction=direction).model_dump()
+            for column, direction in sorts
+        ],
+    )
+
+    assert response.status_code == 200, response.text
+    result = SdocHealthResult.model_validate(response.json())
+    assert [row.name for row in result.data] == expected
+    assert result.total_results == 2
+
+
 # ===========================================================================
 # SEARCH COLUMNS (/docprocessing/searchColumns/{doctype}) TESTS
 # ===========================================================================
