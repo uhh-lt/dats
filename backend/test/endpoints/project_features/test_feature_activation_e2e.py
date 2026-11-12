@@ -13,8 +13,8 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
 )
+from modules.project_features.project_feature_dto import FeatureActivation
 from pipeline_test_utils import count_processing_sdocs, read_step_status
-from systems.feature_system.feature_dto import FeatureActivation
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 

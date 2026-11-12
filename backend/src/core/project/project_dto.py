@@ -3,8 +3,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from common.feature_enum import Feature, FeatureStatus
-from common.job_type_enum import JobType
+from common.feature_enum import Feature
 from core.user.user_dto import UserRead
 from repos.db.dto_base import UpdateDTOBase
 
@@ -51,35 +50,4 @@ class ProjectUserLinks(BaseModel):
     project_id: int = Field(description="ID of the Project")
     users: list[UserRead] = Field(
         description="Complete list of Users linked to the Project"
-    )
-
-
-class ProjectFeatureRead(BaseModel):
-    """The state of a Feature in a Project."""
-
-    feature: Feature = Field(description="ID of the Feature")
-    enabled: bool = Field(description="Whether the Feature is enabled in the Project")
-    status: FeatureStatus = Field(
-        description="State of the Feature: disabled, computing (documents are processing), partly available (documents lack its data and nothing runs for them) or fully available"
-    )
-    ready: bool = Field(
-        description="Whether all documents the Feature applies to have its data"
-    )
-    covered_documents: int = Field(
-        description="Number of documents the Feature applies to with all its steps finished"
-    )
-    processing_documents: int = Field(
-        description="Number of documents the Feature applies to with a step of it processing"
-    )
-    failed_documents: int = Field(
-        description="Number of documents the Feature applies to with a step of it erroneous and none processing"
-    )
-    not_planned_documents: int = Field(
-        description="Number of documents the Feature applies to with a step of it not planned, and none processing or erroneous"
-    )
-    total_documents: int = Field(
-        description="Number of documents the Feature applies to"
-    )
-    missing_steps: list[JobType] = Field(
-        description="The steps of the Feature that are not finished for at least one document"
     )

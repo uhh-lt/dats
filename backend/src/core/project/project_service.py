@@ -89,7 +89,7 @@ class ProjectService(metaclass=SingletonMeta):
         self, *, db: Session, project_id: int, update_dto: ProjectUpdate
     ) -> ProjectRead:
         """Update the title and description of the project. The enabled features
-        change through `FeatureService.activate_feature` and `disable_feature`."""
+        change through `ProjectFeatureService.activate_feature` and `disable_feature`."""
         crud_project.update(db=db, id=project_id, update_dto=update_dto)
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
