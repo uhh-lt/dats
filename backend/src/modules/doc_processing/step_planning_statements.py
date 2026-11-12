@@ -8,6 +8,7 @@ status rows."""
 
 from sqlalchemy import (
     ARRAY,
+    ColumnElement,
     CursorResult,
     Integer,
     ScalarSelect,
@@ -170,8 +171,12 @@ def create_missing(
                 sdoc.doctype == doctype.value,
                 sdoc.id > sdoc_ids[0],
                 sdoc.id <= sdoc_ids[1],
+                # the range again on the existing rows: the anti join reads
+                # the batch's rows from the primary key, not the whole table
                 ~exists().where(
                     existing.sdoc_id == sdoc.id,
+                    existing.sdoc_id > sdoc_ids[0],
+                    existing.sdoc_id <= sdoc_ids[1],
                     existing.step == step_values.c.step,
                 ),
             ),
@@ -261,6 +266,7 @@ def update_blocked_to_erroneous(
             update(SourceDocumentStepStatusORM)
             .where(
                 SourceDocumentStepStatusORM.sdoc_id == ids.c.sdoc_id,
+                _in_range(sdoc_ids),
                 SourceDocumentStepStatusORM.step == step,
                 SourceDocumentStepStatusORM.status == SDocStatus.processing,
                 _count_inputs(
@@ -297,6 +303,7 @@ def read_startable(
             select(SourceDocumentStepStatusORM.sdoc_id)
             .join(ids, ids.c.sdoc_id == SourceDocumentStepStatusORM.sdoc_id)
             .where(
+                _in_range(sdoc_ids),
                 SourceDocumentStepStatusORM.step == step,
                 SourceDocumentStepStatusORM.status == SDocStatus.processing,
                 _count_inputs(inputs[step], [SDocStatus.finished]) == len(inputs[step]),
@@ -354,6 +361,15 @@ def delete_pending_by_project(
         deleted += result.rowcount
     db.flush()
     return deleted
+
+
+def _in_range(sdoc_ids: list[int]) -> ColumnElement[bool]:
+    """The rows of the documents' id range (`sdoc_ids` ascending), next to the
+    join with the documents: during an activation the statistics count few
+    rows of a newly planned step, so the planner may read all its rows by an
+    index on the step; this cheap condition comes before the correlated input
+    count, which then runs for the given rows only."""
+    return SourceDocumentStepStatusORM.sdoc_id.between(sdoc_ids[0], sdoc_ids[-1])
 
 
 def _count_inputs(
