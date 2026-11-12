@@ -23,8 +23,8 @@ from .conftest import PlanningProjects
 
 # The planning operations at the interface of StepPlanningService, for what the
 # feature endpoint tests (`endpoints/project_features`) cannot see: other
-# projects and doctypes, a chain of blocked steps, the document locks and the
-# planning of a new document.
+# projects and doctypes, a chain of blocked steps, the document locks, the
+# features an import adds and the planning of a new document.
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -198,6 +198,46 @@ def test_disable_feature_unplans_only_the_processing_steps_of_the_project(
         "text_html_mapping": 1,
     }
     assert read_step_status(db_session, p["indexing"].id, JobType.TEXT_ES_INDEX) == 0
+
+
+# ===========================================================================
+# ADD FEATURES
+# ===========================================================================
+
+
+def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
+    db_session: Session,
+    planning_projects: PlanningProjects,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Adding RAG chat to the other project, as an import does, keeps full-text
+    search and enables sentence similarity search, which RAG chat requires; the
+    steps of its documents stay as they are and no job starts."""
+    p = planning_projects
+
+    enabled = StepPlanningService().add_features(
+        db=db_session, project_id=p["other_project"].id, features=[Feature.RAG_CHAT]
+    )
+    db_session.commit()
+
+    expected = [
+        Feature.FULL_TEXT_SEARCH,
+        Feature.SENTENCE_SIMILARITY_SEARCH,
+        Feature.RAG_CHAT,
+    ]
+    assert enabled == expected
+    project = crud_project.read(db=db_session, id=p["other_project"].id)
+    assert project.enabled_features == expected
+    assert read_all_step_status(db_session, p["indexing"].id) == {
+        "extract_html": 1,
+        "text_extraction": 1,
+        "text_language_detection": 1,
+        "text_spacy": 1,
+        "text_html_mapping": 1,
+        "text_es_index": 0,
+    }
+    assert read_all_step_status(db_session, p["new"].id) == {}
+    assert started_jobs == []
 
 
 # ===========================================================================
