@@ -19,9 +19,9 @@ from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
     ProcessingJobInput,
     ProcessingSettings,
+    SdocInitJobOutput,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobOutput
 from modules.doc_processing.pipeline import pipeline_transitions as t
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
