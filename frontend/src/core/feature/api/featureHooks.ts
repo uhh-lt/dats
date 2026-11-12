@@ -25,6 +25,8 @@ const useActivateFeature = () =>
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
         `Started computing ${FEATURES[feature].title}`,
+      errorMessage: (_error: Error, { feature }: { feature: Feature }) =>
+        `Could not compute ${FEATURES[feature].title}`,
     },
   });
 
