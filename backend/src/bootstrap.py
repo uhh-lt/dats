@@ -64,19 +64,33 @@ def _init_sentry() -> None:
 # ==============================================================================
 def register_jobs() -> None:
     """Register all jobs (by importing the `*_job.py` modules), check the
-    preprocessing pipeline derived from their declarations, register the
-    features (`register_features`) and build the
-    JOB_UPDATED event model, which needs all jobs registered.
+    preprocessing pipeline derived from their declarations, register the job
+    lifecycle hooks of the pipeline, register the features (`register_features`)
+    and build the JOB_UPDATED event model, which needs all jobs registered.
 
     Must run before any endpoint is imported: the job endpoints are generated
     on registration.
     """
     from common.dats_event import build_job_event_models
-    from systems.job_system.pipeline_graph import pipeline_registry
+    from modules.doc_processing.doc_processing_pipeline import (
+        handle_job_error,
+        handle_job_finished,
+        handle_job_started,
+    )
+    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+    from systems.job_system.job_service import JobHooks, JobService
 
     import_by_suffix("_job.py")
     # fails on artefacts nobody produces and cycles
     pipeline_registry.graph()
+    # the pipeline tracks the step statuses and starts the next steps
+    JobService().register_hooks(
+        JobHooks(
+            started=handle_job_started,
+            finished=handle_job_finished,
+            failed=handle_job_error,
+        )
+    )
     register_features()
     build_job_event_models()
 
@@ -86,8 +100,8 @@ def register_features() -> None:
     their declarations against the pipeline: fails on undeclared features,
     artefacts no step produces, unknown or cyclic feature requirements. Called by
     `register_jobs`, as the check needs the pipeline steps."""
+    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
     from systems.feature_system.feature_registry import feature_registry
-    from systems.job_system.pipeline_graph import pipeline_registry
 
     import_by_suffix("_feature.py")
     feature_registry.check(pipeline_registry.graph().artefacts())

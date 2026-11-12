@@ -12,6 +12,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
@@ -44,13 +45,15 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.THUMBNAIL},
+    doctypes={DocType.video},
+)
 @register_job(
     job_type=JobType.VIDEO_THUMBNAIL,
     input_type=VideoThumbnailJobInput,
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.THUMBNAIL},
-    doctypes={DocType.video},
 )
 def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> None:
     start_frame, err = (

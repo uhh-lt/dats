@@ -15,6 +15,7 @@ from core.doc.source_document_data_dto import (
 )
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
@@ -66,15 +67,17 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires={Artefact.AUDIO},
+    produces={Artefact.TRANSCRIPT, Artefact.RAW_HTML},
+    doctypes={DocType.audio, DocType.video},
+)
 @register_job(
     job_type=JobType.AUDIO_TRANSCRIPTION,
     input_type=TranscriptionJobInput,
     output_type=TranscriptionJobOutput,
     device="api",
     enricher=enrich_for_recompute,
-    requires={Artefact.AUDIO},
-    produces={Artefact.TRANSCRIPT, Artefact.RAW_HTML},
-    doctypes={DocType.audio, DocType.video},
 )
 def handle_transcription_job(
     payload: TranscriptionJobInput, job: Job

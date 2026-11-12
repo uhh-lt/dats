@@ -14,6 +14,11 @@ from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectFeatureRead, ProjectRead
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
+from modules.doc_processing.pipeline.pipeline_graph import (
+    UPLOADED_ARTEFACTS,
+    PipelineGraph,
+    pipeline_registry,
+)
 from systems.feature_system.feature_dto import FeatureActivationJobInput, FeatureRead
 from systems.feature_system.feature_exceptions import (
     FeatureDisabledError,
@@ -21,11 +26,6 @@ from systems.feature_system.feature_exceptions import (
 )
 from systems.feature_system.feature_registry import feature_registry
 from systems.job_system.job_service import JobService
-from systems.job_system.pipeline_graph import (
-    UPLOADED_ARTEFACTS,
-    PipelineGraph,
-    pipeline_registry,
-)
 
 
 class FeatureService(metaclass=SingletonMeta):

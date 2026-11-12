@@ -10,7 +10,7 @@ from bootstrap import register_jobs
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
-from systems.job_system.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 
 register_jobs()
 

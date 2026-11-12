@@ -7,6 +7,7 @@ from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from pipeline_test_utils import all_steps, core_steps
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
@@ -17,7 +18,6 @@ from systems.feature_system.feature_registry import (
     FeatureRegistry,
 )
 from systems.feature_system.feature_service import FeatureService
-from systems.job_system.pipeline_graph import pipeline_registry
 
 register_jobs()
 

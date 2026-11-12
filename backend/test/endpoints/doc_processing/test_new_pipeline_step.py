@@ -25,6 +25,7 @@ from modules.doc_processing.entrypoints.init_sdoc_job import (
     SdocInitJobInput,
     handle_init_sdoc_job,
 )
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from pipeline_test_utils import read_step_status
@@ -154,10 +155,13 @@ def test_a_step_without_an_enricher_is_rejected(unregistered_job_type: JobType):
         pass
 
     with pytest.raises(ValueError, match="has no enricher"):
-        register_job(
-            job_type=unregistered_job_type,
-            input_type=SdocProcessingJobInput,
+        pipeline_step(
             requires={Artefact.CONTENT},
             produces=set(),
             doctypes={DocType.text},
-        )(handle)
+        )(
+            register_job(
+                job_type=unregistered_job_type,
+                input_type=SdocProcessingJobInput,
+            )(handle)
+        )

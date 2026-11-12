@@ -4,24 +4,21 @@ from loguru import logger
 
 from common.job_type_enum import JobType
 from config import conf
-from modules.doc_processing.doc_processing_pipeline import (
-    handle_job_error,
-    handle_job_finished,
-    handle_job_started,
-)
 from systems.job_system.cuda_utils import ensure_cuda_available
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_events import publish_job_update
+from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
 
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
-    if not handle_job_started(jobtype, input=payload):
-        # its pipeline steps are not planned anymore: nothing to compute
+    hooks = JobService().hooks
+    if not hooks.started(jobtype, payload):
+        # e.g. its pipeline steps are not planned anymore: nothing to compute
         job.update(
-            status_message="Skipped: its steps are not planned anymore.",
+            status_message="Skipped: nothing to compute anymore.",
             finished=datetime.now(UTC),
             publish=False,
         )
@@ -55,12 +52,12 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
         # successfully finished job (a failing finish hook, e.g. enqueueing the next
         # pipeline step, fails the job, so it is handled like a failing handler):
         job.update(finished=datetime.now(UTC), publish=False)
-        handle_job_finished(jobtype, input=payload, output=output)
+        hooks.finished(jobtype, payload, output)
     except Exception as e:
         # erroneous job:
         job.update(status_message=str(e), finished=datetime.now(UTC), publish=False)
         try:
-            handle_job_error(jobtype, input=payload)
+            hooks.failed(jobtype, payload)
         finally:
             # RQ marks the job as FAILED only after this handler raised,
             # so the final event has to carry the terminal status explicitly

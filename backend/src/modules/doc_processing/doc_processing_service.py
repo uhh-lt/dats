@@ -29,10 +29,10 @@ from modules.doc_processing.entrypoints.archive_extraction_job import (
 )
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
-from systems.job_system.pipeline_graph import pipeline_registry
 
 SdocPreprocessingJob = JobRead[SdocProcessingJobInput, JobOutputBase | None]
 

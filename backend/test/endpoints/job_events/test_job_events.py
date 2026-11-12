@@ -289,9 +289,12 @@ class TestJobUpdatedEmission:
 
         with (
             patch("systems.job_system.job_handler.Job", return_value=job),
-            patch(
-                "systems.job_system.job_handler.handle_job_finished",
-                side_effect=RuntimeError("enqueue failed"),
+            patch.object(
+                JobService(),
+                "hooks",
+                JobService().hooks._replace(
+                    finished=MagicMock(side_effect=RuntimeError("enqueue failed")),
+                ),
             ),
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"
@@ -324,9 +327,12 @@ class TestJobUpdatedEmission:
 
         with (
             patch("systems.job_system.job_handler.Job", return_value=job),
-            patch(
-                "systems.job_system.job_handler.handle_job_error",
-                side_effect=RuntimeError("status update failed"),
+            patch.object(
+                JobService(),
+                "hooks",
+                JobService().hooks._replace(
+                    failed=MagicMock(side_effect=RuntimeError("status update failed")),
+                ),
             ),
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"

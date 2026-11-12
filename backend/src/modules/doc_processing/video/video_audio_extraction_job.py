@@ -9,6 +9,7 @@ from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -45,14 +46,16 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.AUDIO},
+    doctypes={DocType.video},
+)
 @register_job(
     job_type=JobType.VIDEO_AUDIO_EXTRACTION,
     input_type=VideoAudioExtractionJobInput,
     output_type=VideoAudioExtractionJobOutput,
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.AUDIO},
-    doctypes={DocType.video},
 )
 def create_and_store_audio_stream_file(
     payload: VideoAudioExtractionJobInput, job: Job

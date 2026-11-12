@@ -9,7 +9,10 @@ from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
-from systems.job_system.pipeline_graph import UPLOADED_ARTEFACTS, pipeline_registry
+from modules.doc_processing.pipeline.pipeline_graph import (
+    UPLOADED_ARTEFACTS,
+    pipeline_registry,
+)
 
 
 def all_steps(doctype: DocType) -> list[JobType]:

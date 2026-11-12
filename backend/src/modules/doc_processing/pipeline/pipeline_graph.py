@@ -1,6 +1,6 @@
 """The document preprocessing pipeline, derived from the step declarations.
 
-Every pipeline step declares in `@register_job` the artefacts it `requires` and
+Every pipeline step declares in `@pipeline_step` the artefacts it `requires` and
 `produces` and the doctypes it applies to. From these declarations, this module
 derives per doctype the steps, their order and which step starts which.
 
@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
-from systems.job_system.job_exceptions import (
+from modules.doc_processing.doc_processing_exceptions import (
     PipelineDeclarationError,
     PipelineNotRegisteredError,
 )
@@ -267,7 +267,7 @@ def _transitive_reduction(
 
 
 class PipelineRegistry:
-    """Collects the step declarations of `@register_job` and builds the graph
+    """Collects the step declarations of `@pipeline_step` and builds the graph
     from them on first use."""
 
     def __init__(self) -> None:
@@ -276,6 +276,12 @@ class PipelineRegistry:
 
     def register(self, job_type: JobType, step: PipelineStep) -> None:
         self._steps[job_type] = step
+        self._graph = None
+
+    def unregister(self, job_type: JobType) -> None:
+        """Remove the steps of the job (the job's own step and its further steps)."""
+        for step in [s for s, d in self._steps.items() if job_type in (s, d.job)]:
+            del self._steps[step]
         self._graph = None
 
     def graph(self) -> PipelineGraph:

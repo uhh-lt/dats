@@ -14,6 +14,7 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.dto.detr import DETRImageInput
@@ -50,14 +51,16 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.OBJECT_BBOXES},
+    doctypes={DocType.image},
+)
 @register_job(
     job_type=JobType.IMAGE_OBJECT_DETECTION,
     input_type=ObjectDetectionJobInput,
     device="api",
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.OBJECT_BBOXES},
-    doctypes={DocType.image},
 )
 def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> None:
     # Run object detection with ray

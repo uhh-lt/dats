@@ -8,6 +8,7 @@ from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -31,14 +32,16 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.IMAGE_EMBEDDINGS},
+    doctypes={DocType.image},
+)
 @register_job(
     job_type=JobType.IMAGE_EMBEDDING,
     input_type=ImageEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,
-    requires=set(),
-    produces={Artefact.IMAGE_EMBEDDINGS},
-    doctypes={DocType.image},
 )
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
     with SQLRepo().transaction() as db:

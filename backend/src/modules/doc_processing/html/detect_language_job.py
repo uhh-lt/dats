@@ -6,6 +6,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.doc_processing_exceptions import LanguageNotSupportedError
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.ray.ray_repo import RayRepo
@@ -44,14 +45,16 @@ def enrich_for_recompute(
         )
 
 
+@pipeline_step(
+    requires={Artefact.CONTENT},
+    produces={Artefact.LANGUAGE},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+)
 @register_job(
     job_type=JobType.TEXT_LANGUAGE_DETECTION,
     input_type=TextLanguageDetectionJobInput,
     output_type=TextLanguageDetectionJobOutput,
     enricher=enrich_for_recompute,
-    requires={Artefact.CONTENT},
-    produces={Artefact.LANGUAGE},
-    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 def handle_text_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job

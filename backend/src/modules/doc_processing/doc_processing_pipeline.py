@@ -9,6 +9,7 @@ from modules.doc_processing.doc_processing_dto import (
 )
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobOutput
 from modules.doc_processing.pipeline import pipeline_transitions as t
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import (
@@ -17,7 +18,6 @@ from systems.job_system.job_dto import (
 )
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
-from systems.job_system.pipeline_graph import pipeline_registry
 
 # --- ENTRY POINTS ---
 # Jobs that are no pipeline steps: they create the documents. Their successors

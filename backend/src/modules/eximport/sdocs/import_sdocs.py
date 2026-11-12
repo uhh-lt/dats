@@ -32,6 +32,7 @@ from core.tag.tag_crud import crud_tag
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.sdocs.sdoc_export_schema import (
@@ -43,7 +44,6 @@ from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.pipeline_graph import pipeline_registry
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
