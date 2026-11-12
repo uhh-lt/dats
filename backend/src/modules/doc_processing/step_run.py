@@ -27,7 +27,7 @@ from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
-from systems.job_system.job_exceptions import JobInputError
+from systems.job_system.job_exceptions import JobInputError, JobQueueUnavailableError
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
 
@@ -129,7 +129,13 @@ def _start_planned(
     jobs: dict[JobType, list[JobType]], input: ProcessingJobInput, sdoc_id: int
 ) -> None:
     """Start each job for its steps that are planned for the document, with the
-    settings of the run."""
+    settings of the run.
+
+    If the queue cannot be reached, the failure is logged and the steps not
+    started stay processing (Restart or Recompute starts them again): the job
+    that finished stays finished, as failing it would mark its own steps
+    erroneous although their data is stored, and unplanning the steps would
+    make the document read finished without their data."""
     if not jobs:
         return
     with sqlr.transaction() as db:
@@ -138,12 +144,19 @@ def _start_planned(
         planned = [step for step in steps if step in status]
         if not planned:
             continue
-        start_steps(
-            project_id=input.project_id,
-            sdoc_id=sdoc_id,
-            steps=planned,
-            settings=input.settings,
-        )
+        try:
+            start_steps(
+                project_id=input.project_id,
+                sdoc_id=sdoc_id,
+                steps=planned,
+                settings=input.settings,
+            )
+        except JobQueueUnavailableError as e:
+            logger.error(
+                f"Cannot start the steps after a finished job of document {sdoc_id}, "
+                f"they stay processing: {e}"
+            )
+            return
 
 
 def _start_next(
@@ -164,12 +177,7 @@ def _start_next(
         others = [s for s in graph.job_steps(job_type) if s not in finished_steps]
         pending = _pending_steps(input.sdoc_id, others) if others else []
         if pending:
-            start_steps(
-                project_id=input.project_id,
-                sdoc_id=input.sdoc_id,
-                steps=pending,
-                settings=input.settings,
-            )
+            _start_planned({job_type: pending}, input, input.sdoc_id)
 
     if job_type == JobType.SDOC_INIT:
         assert isinstance(input, ProcessingJobInput), "Expected ProcessingJobInput"

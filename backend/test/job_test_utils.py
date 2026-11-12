@@ -8,9 +8,10 @@ from contextlib import contextmanager
 import rq
 from redis import Redis
 from rq import SimpleWorker
+from rq.registry import FailedJobRegistry, FinishedJobRegistry
 
 from common.job_type_enum import JobType
-from systems.job_system.job_dto import JobInputBase
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_service import JobService
 
 # no held queue starts with "gpu": the job handler would take its GPU branch
@@ -57,6 +58,17 @@ class HeldJobs:
             queue.remove(job)
             self._run_queue.enqueue_job(job)
             self._work()
+
+    def ran(self, job_type: JobType) -> list[Job]:
+        """The jobs of `job_type` that `run` ran to the end, finished or
+        failed."""
+        conn = self._run_queue.connection
+        ids = [
+            *FinishedJobRegistry(queue=self._run_queue).get_job_ids(),
+            *FailedJobRegistry(queue=self._run_queue).get_job_ids(),
+        ]
+        jobs = [rq.job.Job.fetch(job_id, connection=conn) for job_id in ids]
+        return [Job(job) for job in jobs if job.kwargs["jobtype"] == job_type]
 
     def _next(
         self, job_types: tuple[JobType, ...]

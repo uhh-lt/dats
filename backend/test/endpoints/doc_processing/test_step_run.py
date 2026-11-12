@@ -1,13 +1,16 @@
 import pytest
 
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from feature_test_utils import FeatureProject
-from job_test_utils import HeldJobs
+from job_test_utils import HeldJobs, unreachable_redis
 from modules.doc_processing import step_run
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
+    SdocInitJobInput,
     SdocProcessingJobInput,
 )
 from modules.doc_processing.step_run import (
@@ -19,6 +22,8 @@ from pipeline_test_utils import read_step_status
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
+
+from .conftest import DummyStepProjects
 
 SETTINGS = ProcessingSettings(
     extract_images=True,
@@ -176,3 +181,39 @@ def test_a_job_whose_started_hook_fails_fails_its_steps(
         JobType.TEXT_HTML_MAPPING,
     ]
     assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
+
+
+def test_a_finished_job_leaves_its_successors_processing_if_the_queue_is_unreachable(
+    db_session,
+    dummy_step_projects: DummyStepProjects,
+    held_jobs: HeldJobs,
+):
+    """The upload of `dummy_step_projects` runs up to extract_html, which
+    finishes while the queue cannot be reached: the job is finished, its step
+    is finished, and the steps after it stay processing (none is erroneous),
+    as the failure to start them is only logged."""
+    JobService().start_job(
+        JobType.SDOC_INIT,
+        SdocInitJobInput(
+            project_id=dummy_step_projects["project"].id,
+            filepath=dummy_step_projects["upload"],
+            doctype=DocType.text,
+            folder_id=None,
+            settings=SETTINGS,
+        ),
+    )
+    held_jobs.run(JobType.SDOC_INIT)
+    (extract_html,) = held_jobs.inputs(JobType.EXTRACT_HTML)
+    assert isinstance(extract_html, SdocProcessingJobInput)
+    sdoc_id = extract_html.sdoc_id
+
+    with unreachable_redis():
+        held_jobs.run(JobType.EXTRACT_HTML)
+
+    (job,) = held_jobs.ran(JobType.EXTRACT_HTML)
+    assert job.get_status() == JobStatus.FINISHED
+    assert held_jobs.jobs() == []
+    status = crud_sdoc_step_status.read_by_sdoc(db=db_session, sdoc_id=sdoc_id)
+    assert status.pop(JobType.EXTRACT_HTML) == SDocStatus.finished
+    assert JobType.TEXT_EXTRACTION in status
+    assert set(status.values()) == {SDocStatus.processing}
