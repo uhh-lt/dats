@@ -38,11 +38,9 @@ StepStatus = dict[JobType, SDocStatus]
 StepRows = dict[JobType, list[int]]
 
 
-def _step_bits() -> dict[JobType, int]:
-    """A bit per step, to aggregate the steps of a document per status as bit
-    masks. Built per query, so it knows every `JobType` value (also one added
-    after this module was imported)."""
-    return {step: 1 << i for i, step in enumerate(JobType)}
+# The most steps `count_by_project` counts: one bit each in a BIGINT, without the
+# sign bit. The pipeline graph rejects more pipeline steps at startup.
+MAX_COUNTED_STEPS = 63
 
 
 class CRUDSourceDocumentStepStatus(
@@ -447,13 +445,16 @@ class CRUDSourceDocumentStepStatus(
     ### OTHER OPERATIONS ###
 
     def count_by_project(
-        self, db: Session, *, project_id: int
+        self, db: Session, *, project_id: int, steps: list[JobType]
     ) -> list[tuple[DocType, StepStatus, int]]:
         """
-        Count the documents of the project per doctype and step status.
+        Count the documents of the project per doctype and status of the given
+        steps.
 
         Args:
             project_id: The project.
+            steps: The steps to count, at most `MAX_COUNTED_STEPS`; the statuses
+                of other steps are left out.
 
         Returns:
             Per doctype and combination of step statuses that a document of the
@@ -463,7 +464,11 @@ class CRUDSourceDocumentStepStatus(
         # per document, one bit mask of its steps per status (cheaper than
         # aggregating the statuses themselves), then count the masks
         sdoc = SourceDocumentORM
-        step_bits = _step_bits()
+        if len(steps) > MAX_COUNTED_STEPS:
+            raise ValueError(
+                f"Cannot count {len(steps)} steps, at most {MAX_COUNTED_STEPS}."
+            )
+        step_bits = {step: 1 << i for i, step in enumerate(steps)}
         bit = cast(case(step_bits, value=self.model.step, else_=0), BigInteger)
         masks = {
             status: func.bit_or(case((self.model.status == status, bit), else_=0))

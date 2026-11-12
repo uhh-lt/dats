@@ -1,5 +1,6 @@
 import threading
 
+import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -120,7 +121,7 @@ def test_count_by_project_groups_the_documents_by_step_status(
     p = step_status_project
 
     counts = crud_sdoc_step_status.count_by_project(
-        db=db_session, project_id=p["project"].id
+        db=db_session, project_id=p["project"].id, steps=list(JobType)
     )
 
     def key(status: dict[JobType, SDocStatus]) -> frozenset:
@@ -134,6 +135,36 @@ def test_count_by_project_groups_the_documents_by_step_status(
         (DocType.image, frozenset()): 1,
         **{(DocType.text, key(status)): 1 for status in text_status.values()},
     }
+
+
+def test_count_by_project_leaves_out_the_steps_not_counted(
+    db_session: Session, step_status_project: StepStatusProject
+):
+    """Only the given steps are in the counted statuses: counting extract_html
+    alone puts the three text documents (each with a finished extract_html) into
+    one group."""
+    p = step_status_project
+
+    counts = crud_sdoc_step_status.count_by_project(
+        db=db_session, project_id=p["project"].id, steps=[JobType.EXTRACT_HTML]
+    )
+
+    assert sorted(counts) == [
+        (DocType.image, {}, 1),
+        (DocType.text, {JobType.EXTRACT_HTML: FINISHED}, 3),
+    ]
+
+
+def test_count_by_project_rejects_more_steps_than_bits(
+    db_session: Session, step_status_project: StepStatusProject
+):
+    """A step is one bit of a BIGINT: more than MAX_COUNTED_STEPS steps fail."""
+    with pytest.raises(ValueError, match="at most 63"):
+        crud_sdoc_step_status.count_by_project(
+            db=db_session,
+            project_id=step_status_project["project"].id,
+            steps=[JobType.EXTRACT_HTML] * 64,
+        )
 
 
 def test_read_startable_returns_processing_rows_whose_inputs_are_finished(
