@@ -25,7 +25,10 @@ from modules.doc_processing.pipeline.step_planning import (
 )
 from modules.doc_processing.step_run import start_steps
 from repos.db.sql_repo import SQLRepo
-from systems.feature_system.feature_exceptions import FeatureDisabledError
+from systems.feature_system.feature_exceptions import (
+    FeatureActivationPendingError,
+    FeatureDisabledError,
+)
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
@@ -98,9 +101,12 @@ class StepPlanningService(metaclass=SingletonMeta):
         and the features it requires, and start a feature activation job that
         computes their data for the documents that lack it (see
         `_plan_activation_batch`) on the low-priority queue with these settings.
-        A feature with a pending activation gets no second job. Returns the
+        Rejects a feature with a pending activation: a restart computes it with
+        other settings. A feature it requires may have one. Returns the
         project."""
         project = statements.read_project_locked(db=db, project_id=project_id)
+        if feature.value in project.feature_activations:
+            raise FeatureActivationPendingError(project_id=project_id, feature=feature)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.fs.resolve_enabled_features(
             requested=current | {feature}, current=current
@@ -108,14 +114,13 @@ class StepPlanningService(metaclass=SingletonMeta):
         statements.update_enabled_features(
             db=db, project_id=project_id, features=enabled
         )
-        if feature.value not in project.feature_activations:
-            self._start_activation(
-                db=db,
-                project_id=project_id,
-                feature=feature,
-                restart=False,
-                settings=settings,
-            )
+        self._start_activation(
+            db=db,
+            project_id=project_id,
+            feature=feature,
+            restart=False,
+            settings=settings,
+        )
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def restart_feature(

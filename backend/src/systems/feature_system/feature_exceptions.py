@@ -34,3 +34,14 @@ class FeatureStillRequiredError(Exception):
             f"The feature '{feature.value}' cannot be disabled: the enabled features "
             f"{names} require it. Disable them as well."
         )
+
+
+@exception_handler(status.HTTP_409_CONFLICT)
+class FeatureActivationPendingError(Exception):
+    """Raised when a feature is enabled or completed while its activation runs."""
+
+    def __init__(self, project_id: int, feature: Feature) -> None:
+        super().__init__(
+            f"The feature '{feature.value}' is being computed in project "
+            f"{project_id}. Restart it to compute it with other settings."
+        )

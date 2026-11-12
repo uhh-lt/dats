@@ -256,14 +256,45 @@ def test_activate_feature_twice_starts_one_activation(
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Activating a feature whose activation is still pending starts no second
-    activation job: the pending one plans all documents."""
+    """Activating a feature whose activation is still pending is rejected with
+    409, which names the feature and tells to restart it: the pending activation
+    plans all documents, and a second one would drop the new settings."""
     project_id = feature_project["project"].id
-
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
     _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
 
+    response = client.put(
+        f"/feature/project/{project_id}/{Feature.FULL_TEXT_SEARCH.value}",
+        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+    )
+
+    assert response.status_code == 409, response.text
+    assert f"The feature '{Feature.FULL_TEXT_SEARCH.value}' is being computed" in (
+        response.text
+    )
+    assert "Restart it" in response.text
     assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 1
+
+
+def test_activate_feature_that_requires_a_computing_feature_starts_its_activation(
+    client: TestClient,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """Activating RAG chat while sentence similarity search, which it requires,
+    has a pending activation still starts the activation of RAG chat."""
+    project_id = feature_project["project"].id
+    _activate(client, project_id, Feature.SENTENCE_SIMILARITY_SEARCH)
+
+    enabled = _activate(client, project_id, Feature.RAG_CHAT)
+
+    assert enabled == [Feature.SENTENCE_SIMILARITY_SEARCH, Feature.RAG_CHAT]
+    activations = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
+    assert [
+        a.feature for a in activations if isinstance(a, FeatureActivationJobInput)
+    ] == [
+        Feature.SENTENCE_SIMILARITY_SEARCH,
+        Feature.RAG_CHAT,
+    ]
 
 
 def test_activate_two_features_sharing_a_step_starts_it_once(
