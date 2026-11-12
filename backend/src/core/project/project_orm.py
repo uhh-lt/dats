@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from common.feature_enum import Feature
@@ -35,6 +35,13 @@ class ProjectORM(ORMBase):
     # the values of the enabled features (Feature)
     enabled_features: Mapped[list[Feature]] = mapped_column(
         ARRAY(String), nullable=False
+    )
+    # the pending feature activations: Feature value -> activation id; written and
+    # removed only by StepPlanningService
+    feature_activations: Mapped[dict[str, str]] = mapped_column(
+        JSONB(none_as_null=True),
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
     )
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True

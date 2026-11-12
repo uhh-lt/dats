@@ -30,6 +30,10 @@ step that is not planned gets the old default, processing) and the
 DOCUMENT_EMBEDDING rows from text_document_embedding; the SENTENCE_EMBEDDING
 rows cannot be restored.
 
+The project gets the column feature_activations (Feature value -> activation id)
+of the feature activations still planning in the background; the downgrade drops
+it.
+
 Revision ID: 448579029394
 Revises: d7f4aa3e7395
 Create Date: 2026-11-10 12:41:33.287764
@@ -40,6 +44,7 @@ from typing import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "448579029394"
@@ -225,9 +230,23 @@ def upgrade() -> None:
         )
     conn.execute(sa.text("DROP TABLE old_sdoc_status"))
 
+    # 5) the pending feature activations of the project
+    op.add_column(
+        "project",
+        sa.Column(
+            "feature_activations",
+            postgresql.JSONB(none_as_null=True, astext_type=sa.Text()),
+            server_default=sa.text("'{}'::jsonb"),
+            nullable=False,
+        ),
+    )
+
 
 def downgrade() -> None:
     conn = op.get_bind()
+
+    # 0) the pending feature activations of the project
+    op.drop_column("project", "feature_activations")
 
     # 1) the ML job DOCUMENT_EMBEDDING finished where the step finished
     conn.execute(
