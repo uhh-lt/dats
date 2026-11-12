@@ -44,6 +44,15 @@ class SdocProcessingJobInput(ProcessingJobInput):
     )
 
 
+class FeatureActivationJobInput(JobInputBase):
+    sdoc_steps: dict[int, list[JobType]] = Field(
+        description="The newly planned steps to start per SourceDocument ID; their inputs are finished"
+    )
+    settings: ProcessingSettings = Field(
+        description="The processing settings of the started steps"
+    )
+
+
 class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
     processed_jobs: int = Field(description="Number of finished jobs")

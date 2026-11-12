@@ -14,6 +14,7 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from feature_test_utils import FeatureProject
 from modules.doc_processing.doc_processing_dto import (
+    FeatureActivationJobInput,
     ProcessingSettings,
     SdocHealthResult,
     SdocProcessingJobInput,
@@ -26,10 +27,7 @@ from modules.doc_processing.entrypoints.init_sdoc_job import (
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
-from modules.project_features.project_feature_dto import (
-    FeatureActivation,
-    FeatureActivationJobInput,
-)
+from modules.project_features.project_feature_dto import FeatureActivation
 from pipeline_test_utils import last_started, read_step_status, run_job
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobInputBase

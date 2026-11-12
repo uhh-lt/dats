@@ -8,10 +8,12 @@ from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
 from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
+from modules.doc_processing.doc_processing_dto import (
+    FeatureActivationJobInput,
+    ProcessingSettings,
+)
 from modules.project_features.project_feature_dto import (
     FeatureActivation,
-    FeatureActivationJobInput,
     ProjectFeatureRead,
 )
 from modules.project_features.project_feature_service import ProjectFeatureService
