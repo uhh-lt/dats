@@ -70,7 +70,15 @@ class CRUDSourceDocumentStepStatus(
     `update_blocked_to_erroneous`), which run after `read_sdoc_ids_to_plan`
     locked the documents to plan: a status change and a planning of the same
     document run one after the other, so the planning never misses a step that
-    finishes while it plans."""
+    finishes while it plans.
+
+    Known gaps, accepted for now (docs/development/feature-toggles-plan.md):
+    - A step that commits finished just before a planning can start a successor
+      that the planning starts too; it computes twice.
+    - If the activation job cannot be enqueued after the planning committed, its
+      rows stay processing without a job until a user restarts the feature.
+    - `handle_job_started` reads and sets a job's steps in two transactions, so
+      a disable in between is undone for that document."""
 
     ### CREATE OPERATIONS ###
     # Inherited from SQLCRUDBase (create_multi: the statuses of new documents)
