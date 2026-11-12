@@ -414,7 +414,8 @@ def test_deleting_a_document_deletes_its_step_statuses(
 def test_the_overall_status_is_derived_from_the_step_statuses(
     db_session: Session, step_status_project: StepStatusProject
 ):
-    """read_status, the status filters and the counts of crud_sdoc agree: a
+    """The two forms of the document rule of `source_document_status_rules` agree
+    (read_status, the status filters and the counts of crud_sdoc): a
     document is erroneous if a step is erroneous, else processing if a step is
     processing, else finished (also without planned steps)."""
     p = step_status_project
