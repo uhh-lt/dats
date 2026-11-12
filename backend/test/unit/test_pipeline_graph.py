@@ -2,7 +2,7 @@
 
 import pytest
 
-from common.artefact_enum import Artefact
+from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from modules.doc_processing.doc_processing_exceptions import PipelineDeclarationError
@@ -131,6 +131,132 @@ def test_pipeline_graph_uploaded_audio_satisfies_the_audio_requirement():
     assert graph.successors(JobType.VIDEO_AUDIO_EXTRACTION) == [
         JobType.AUDIO_TRANSCRIPTION
     ]
+
+
+# ===========================================================================
+# PIPELINE GRAPH: PLAN AND STEP RELATIONS
+# ===========================================================================
+
+TEXT = frozenset({DocType.text})
+IMAGE = frozenset({DocType.image})
+TEXT_IMAGE = frozenset({DocType.text, DocType.image})
+
+
+def _planning_graph() -> PipelineGraph:
+    """Text gets its raw HTML from extract_html, an image from its caption,
+    which produces the optional caption and the core raw HTML. Keywords are
+    optional and the document embeddings require them."""
+    return PipelineGraph(
+        _producing_all_other_artefacts(
+            {
+                JobType.EXTRACT_HTML: _step(set(), {Artefact.RAW_HTML}, TEXT),
+                JobType.IMAGE_CAPTION: _step(
+                    set(), {Artefact.IMAGE_CAPTION, Artefact.RAW_HTML}, IMAGE
+                ),
+                JobType.IMAGE_THUMBNAIL: _step(set(), {Artefact.THUMBNAIL}, IMAGE),
+                JobType.TEXT_EXTRACTION: _step(
+                    {Artefact.RAW_HTML}, {Artefact.CONTENT}, TEXT_IMAGE
+                ),
+                JobType.TEXT_LANGUAGE_DETECTION: _step(
+                    {Artefact.CONTENT}, {Artefact.LANGUAGE}, TEXT_IMAGE
+                ),
+                JobType.TEXT_KEYWORDS: _step(
+                    {Artefact.LANGUAGE}, {Artefact.KEYWORDS}, TEXT_IMAGE
+                ),
+                JobType.TEXT_DOCUMENT_EMBEDDING: _step(
+                    {Artefact.KEYWORDS}, {Artefact.DOCUMENT_EMBEDDINGS}, TEXT_IMAGE
+                ),
+            }
+        )
+    )
+
+
+def test_plan_selects_the_producers_of_the_needed_artefacts():
+    """The core artefacts select their producers; a step of optional artefacts
+    runs only if one of them is needed."""
+    graph = _planning_graph()
+
+    assert graph.plan(DocType.text, CORE_ARTEFACTS) == [
+        JobType.EXTRACT_HTML,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+    ]
+    assert graph.plan(DocType.text, CORE_ARTEFACTS | {Artefact.KEYWORDS}) == [
+        JobType.EXTRACT_HTML,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+        JobType.TEXT_KEYWORDS,
+    ]
+
+
+def test_plan_pulls_in_an_optional_artefact_a_selected_step_requires():
+    """The document embeddings require the keywords, so their step is planned
+    although the keywords are not needed themselves."""
+    graph = _planning_graph()
+
+    plan = graph.plan(DocType.text, CORE_ARTEFACTS | {Artefact.DOCUMENT_EMBEDDINGS})
+
+    assert plan[-2:] == [JobType.TEXT_KEYWORDS, JobType.TEXT_DOCUMENT_EMBEDDING]
+
+
+def test_plan_drops_a_step_whose_input_is_not_produced_and_the_steps_after_it():
+    """The image caption also produces the core raw HTML, but only its optional
+    caption selects it: without the caption, an image has no raw HTML, so text
+    extraction and the steps after it are dropped."""
+    graph = _planning_graph()
+
+    assert graph.plan(DocType.image, CORE_ARTEFACTS | {Artefact.KEYWORDS}) == [
+        JobType.IMAGE_THUMBNAIL
+    ]
+    assert graph.plan(DocType.image, CORE_ARTEFACTS | {Artefact.IMAGE_CAPTION}) == [
+        JobType.IMAGE_CAPTION,
+        JobType.IMAGE_THUMBNAIL,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+    ]
+
+
+def test_inputs_are_the_producers_of_the_required_artefacts_per_doctype():
+    """Text extraction reads the raw HTML of extract_html in a text document and
+    of the caption in an image."""
+    graph = _planning_graph()
+
+    assert graph.inputs(DocType.text, JobType.TEXT_EXTRACTION) == [JobType.EXTRACT_HTML]
+    assert graph.inputs(DocType.image, JobType.TEXT_EXTRACTION) == [
+        JobType.IMAGE_CAPTION
+    ]
+    assert graph.inputs(DocType.text, JobType.EXTRACT_HTML) == []
+
+
+def test_descendants_are_the_steps_after_a_step_transitively():
+    graph = _planning_graph()
+
+    assert graph.descendants([JobType.TEXT_LANGUAGE_DETECTION]) == [
+        JobType.TEXT_KEYWORDS,
+        JobType.TEXT_DOCUMENT_EMBEDDING,
+    ]
+    assert graph.descendants([JobType.TEXT_DOCUMENT_EMBEDDING]) == []
+
+
+def test_needed_steps_are_the_producers_of_the_artefacts_and_their_inputs():
+    """The keywords need the steps before them, not the document embeddings;
+    only steps of the given plan count."""
+    graph = _planning_graph()
+    text_plan = graph.steps(DocType.text)
+    image_plan = graph.plan(DocType.image, CORE_ARTEFACTS)
+
+    assert graph.needed_steps(
+        DocType.text, text_plan, frozenset({Artefact.KEYWORDS})
+    ) == [
+        JobType.EXTRACT_HTML,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+        JobType.TEXT_KEYWORDS,
+    ]
+    assert (
+        graph.needed_steps(DocType.image, image_plan, frozenset({Artefact.KEYWORDS}))
+        == []
+    )
 
 
 # ===========================================================================
