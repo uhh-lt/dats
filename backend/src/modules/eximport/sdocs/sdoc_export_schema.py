@@ -204,28 +204,13 @@ class SourceDocumentExportSchema(BaseModel):
         # Validate sentence arrays
         sentence_starts = values.get("sentence_starts")
         sentence_ends = values.get("sentence_ends")
-        sentence_embeddings = values.get("sentence_embeddings")
-        if (
-            sentence_starts is None
-            or sentence_ends is None
-            or sentence_embeddings is None
-        ):
-            raise ValueError(
-                "sentence_starts, sentence_ends and sentence_embeddings must be present"
-            )
+        if sentence_starts is None or sentence_ends is None:
+            raise ValueError("sentence_starts and sentence_ends must be present")
 
         if len(sentence_starts) != len(sentence_ends):
             raise ValueError(
                 f"sentence_starts and sentence_ends must have the same length. "
                 f"Got {len(sentence_starts)} and {len(sentence_ends)}"
-            )
-
-        if len(sentence_embeddings) > 0 and len(sentence_starts) != len(
-            sentence_embeddings
-        ):
-            raise ValueError(
-                f"sentence_starts and sentence_embeddings must have the same length if sentence_embeddings are present. "
-                f"Got {len(sentence_starts)} and {len(sentence_embeddings)}"
             )
 
         # Validate token time arrays
@@ -245,20 +230,6 @@ class SourceDocumentExportSchema(BaseModel):
                     f"token_time_starts and token_time_ends must have the same length. "
                     f"Got {len(token_time_starts)} and {len(token_time_ends)}"
                 )
-
-        return values
-
-    @classmethod
-    @field_validator("__all__", mode="after")
-    def validate_image_embedding(cls, values, info):
-        """Validate that image_embedding is present for image documents (if available)."""
-        # Skip validation if this isn't the whole model
-        if not isinstance(values, dict):
-            return values
-
-        # Validate image embedding for image documents - no longer strictly required
-        # doctype = values.get("doctype")
-        # image_embedding = values.get("image_embedding")
 
         return values
 
