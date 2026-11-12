@@ -172,15 +172,28 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 
 ## Pipeline Steps
 
-- A document preprocessing step is a job with `doctypes`, `requires` and `produces` in `@register_job`; the pipeline order and the steps per doctype are derived from these declarations, never listed by hand.
-- `requires` and `produces` hold `Artefact` values (`common/artefact_enum.py`); a new artefact is added there, and to `CORE_ARTEFACTS` only if every document needs it whatever features its project enables.
+Add a step:
+
+1. Add its `JobType` value (`common/job_type_enum.py`); its position breaks ties in the derived step order.
+2. Add new artefacts to `Artefact` (`common/artefact_enum.py`), and to `CORE_ARTEFACTS` only if every document needs them whatever features its project enables.
+3. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher, requires, produces, doctypes)`.
+4. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
+
+Rules:
+
+- The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations; never list steps by hand.
+- A finished step starts each planned successor with a bare `SdocProcessingJobInput` (project, document, settings, steps), and the successor's enricher loads the rest of its input from the database or filesystem, so a step stores all its output before its handler returns and never passes data to the next step in memory.
+- Every step registers an enricher (`register_job` rejects a step without one); the same enricher serves the advancing, recompute and feature activation.
+- A step job that cannot start (its enricher fails) sets its steps and the pending steps after them to erroneous (`start_step_job`).
+- A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
+- Only jobs that create documents or fan out over files (`ENTRY_POINTS` in `doc_processing_pipeline.py`) build the input of the next job by hand.
 - A job that computes several steps in one run declares the others in `further_steps` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
-- Every step has a `JobType` value; its status per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` reads or writes these rows.
+- The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` reads or writes these rows.
 - The overall status of a document is derived from its step rows (erroneous, else processing, else finished); never store it.
 - The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
 - A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
 - Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).
-- A new step is also added to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
+- `test_new_pipeline_step.py` declares a step in a test and follows it through the pipeline; keep it passing when the pipeline changes.
 
 ## Features
 
@@ -188,6 +201,7 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
 - The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
 - Only `FeatureService` plans steps (adds their status rows): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
+- Enabling or completing a feature plans `(plan(enabled) - plan(enabled without the feature)) | steps(feature) | core steps` and never the missing data of another feature.
 - The enabled features change only through `FeatureService.activate_feature` and `disable_feature` (the `/feature/project/...` endpoints), never through `ProjectUpdate`.
 - Disabling a feature sets its processing steps that no remaining feature plans to not planned, and `handle_job_started` skips steps that are not planned, so a disabled feature leaves no document processing.
 - An import restores only what the archive holds, adds the archive's features to the project's (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.
