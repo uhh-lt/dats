@@ -160,6 +160,10 @@ promptembedder:
 chunking:
   characters_per_page: ${oc.env:CHUNKING_CHARACTERS_PER_PAGE, 2000}
 
+feature_activation:
+  # documents a feature activation plans per transaction (the longest lock hold)
+  batch_size: 10000
+
 mail:
   enabled: ${oc.env:MAIL_ENABLED, False}
   mail: ${oc.env:MAIL_FROM, "dats@uni-hamburg.de"}

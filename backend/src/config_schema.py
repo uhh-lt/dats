@@ -421,6 +421,12 @@ class ChunkingConfig(BaseModel):
     characters_per_page: int = Field(gt=0)
 
 
+class FeatureActivationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    batch_size: int = Field(gt=0)
+
+
 class BackendConfigSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -446,6 +452,7 @@ class BackendConfigSchema(BaseModel):
     classifier: ClassifierConfig
     promptembedder: PromptEmbedderConfig
     chunking: ChunkingConfig
+    feature_activation: FeatureActivationConfig
     project_metadata: list[ProjectMetadataConfig]
     system_codes: list[SystemCodeConfig]
 
