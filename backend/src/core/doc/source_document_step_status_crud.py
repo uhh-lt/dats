@@ -3,6 +3,7 @@ from typing import Iterable
 from sqlalchemy import (
     BigInteger,
     CursorResult,
+    ScalarSelect,
     and_,
     case,
     cast,
@@ -14,7 +15,7 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
@@ -27,6 +28,9 @@ from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
 # The status of each planned step of a document; a step without a status is not
 # planned.
 StepStatus = dict[JobType, SDocStatus]
+
+# Documents per step: the rows (sdoc id, step) a planning touched
+StepRows = dict[JobType, list[int]]
 
 # A bit per step, to aggregate the steps of a document per status as bit masks
 _STEP_BITS: dict[JobType, int] = {step: 1 << i for i, step in enumerate(JobType)}
@@ -43,12 +47,55 @@ class CRUDSourceDocumentStepStatus(
     """The only code that reads or writes the pipeline step statuses.
 
     Every write first locks the documents' rows (`_lock_sdocs`), as the feature
-    planning does (`read_sdoc_ids_to_plan`): a status change and a planning of
-    the same document run one after the other, so the planning never misses a
-    step that finishes while it plans."""
+    planning does (`read_sdoc_ids_to_plan`, which runs before `create_missing`,
+    `update_to_processing` and `update_blocked_to_erroneous`): a status change
+    and a planning of the same document run one after the other, so the planning
+    never misses a step that finishes while it plans."""
 
     ### CREATE OPERATIONS ###
     # Inherited from SQLCRUDBase (create_multi: the statuses of new documents)
+
+    def create_missing(
+        self, db: Session, *, sdoc_ids: list[int], steps: list[JobType]
+    ) -> StepRows:
+        """
+        Plan the steps for the documents: insert a processing row for every
+        (document, step) that has no row; existing rows keep their status.
+
+        Args:
+            sdoc_ids: The documents.
+            steps: The steps to plan.
+
+        Returns:
+            The planned documents per step, for the steps in the order of `steps`.
+        """
+        result: StepRows = {step: [] for step in steps}
+        if not sdoc_ids or not steps:
+            return result
+        self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            stmt = (
+                insert(self.model)
+                .values(
+                    [
+                        {
+                            "sdoc_id": sdoc_id,
+                            "step": step.value,
+                            "status": SDocStatus.processing.value,
+                        }
+                        for sdoc_id in sdoc_ids[i : i + BATCH_SIZE]
+                        for step in steps
+                    ]
+                )
+                .on_conflict_do_nothing(
+                    index_elements=[self.model.sdoc_id, self.model.step]
+                )
+                .returning(self.model.sdoc_id, self.model.step)
+            )
+            for sdoc_id, step in db.execute(stmt).all():
+                result[JobType(step)].append(sdoc_id)
+        db.flush()
+        return result
 
     ### READ OPERATIONS ###
 
@@ -150,6 +197,36 @@ class CRUDSourceDocumentStepStatus(
             )
         )
 
+    def read_startable(
+        self, db: Session, *, rows: StepRows, inputs: dict[JobType, list[JobType]]
+    ) -> dict[int, list[JobType]]:
+        """
+        Read which of the given rows can start now: they are processing and all
+        their input steps are finished.
+
+        Args:
+            rows: The documents per step to check.
+            inputs: The input steps of each step in `rows`.
+
+        Returns:
+            The startable steps per document, in the order of `rows`.
+        """
+        result: dict[int, list[JobType]] = {}
+        for step, sdoc_ids in rows.items():
+            for i in range(0, len(sdoc_ids), BATCH_SIZE):
+                startable = db.scalars(
+                    select(self.model.sdoc_id).where(
+                        self.model.sdoc_id.in_(sdoc_ids[i : i + BATCH_SIZE]),
+                        self.model.step == step,
+                        self.model.status == SDocStatus.processing,
+                        self._count_inputs(inputs[step], [SDocStatus.finished])
+                        == len(inputs[step]),
+                    )
+                )
+                for sdoc_id in startable:
+                    result.setdefault(sdoc_id, []).append(step)
+        return result
+
     ### UPDATE OPERATIONS ###
 
     def update_status(
@@ -188,6 +265,81 @@ class CRUDSourceDocumentStepStatus(
                     set_={"status": stmt.excluded.status},
                 ).execution_options(synchronize_session=False)
             )
+        db.flush()
+
+    def update_to_processing(
+        self,
+        db: Session,
+        *,
+        sdoc_ids: list[int],
+        steps: list[JobType],
+        statuses: list[SDocStatus],
+    ) -> StepRows:
+        """
+        Plan the given steps of the documents again: set those with one of
+        `statuses` to processing.
+
+        Args:
+            sdoc_ids: The documents.
+            steps: The steps to plan again.
+            statuses: The statuses to set to processing.
+
+        Returns:
+            The changed documents per step, for the steps in the order of `steps`.
+        """
+        result: StepRows = {step: [] for step in steps}
+        if not sdoc_ids or not steps or not statuses:
+            return result
+        self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            changed = db.execute(
+                update(self.model)
+                .where(
+                    self.model.sdoc_id.in_(sdoc_ids[i : i + BATCH_SIZE]),
+                    self.model.step.in_(steps),
+                    self.model.status.in_(statuses),
+                )
+                .values(status=SDocStatus.processing)
+                .returning(self.model.sdoc_id, self.model.step)
+                .execution_options(synchronize_session=False)
+            ).all()
+            for sdoc_id, step in changed:
+                result[JobType(step)].append(sdoc_id)
+        db.flush()
+        return result
+
+    def update_blocked_to_erroneous(
+        self, db: Session, *, rows: StepRows, inputs: dict[JobType, list[JobType]]
+    ) -> None:
+        """
+        Set the given rows that are processing to erroneous if one of their input
+        steps is erroneous or not planned: they cannot run. The steps are handled
+        in the order of `rows`, which must be the pipeline order, so a failed
+        step fails the given steps after it.
+
+        Args:
+            rows: The documents per step to check, in pipeline order.
+            inputs: The input steps of each step in `rows`.
+        """
+        for step, sdoc_ids in rows.items():
+            if not sdoc_ids or not inputs[step]:
+                continue
+            self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
+            for i in range(0, len(sdoc_ids), BATCH_SIZE):
+                db.execute(
+                    update(self.model)
+                    .where(
+                        self.model.sdoc_id.in_(sdoc_ids[i : i + BATCH_SIZE]),
+                        self.model.step == step,
+                        self.model.status == SDocStatus.processing,
+                        self._count_inputs(
+                            inputs[step], [SDocStatus.processing, SDocStatus.finished]
+                        )
+                        < len(inputs[step]),
+                    )
+                    .values(status=SDocStatus.erroneous)
+                    .execution_options(synchronize_session=False)
+                )
         db.flush()
 
     def update_pending_to_erroneous(
@@ -325,6 +477,22 @@ class CRUDSourceDocumentStepStatus(
             )
             for row in rows
         ]
+
+    def _count_inputs(
+        self, input_steps: list[JobType], statuses: list[SDocStatus]
+    ) -> ScalarSelect[int]:
+        """The number of the input steps of the row's document that have one of
+        the statuses, as a correlated subquery."""
+        row = aliased(self.model)
+        return (
+            select(func.count())
+            .where(
+                row.sdoc_id == self.model.sdoc_id,
+                row.step.in_(input_steps),
+                row.status.in_(statuses),
+            )
+            .scalar_subquery()
+        )
 
     def _lock_sdocs(self, *, db: Session, sdoc_ids: list[int]) -> None:
         """Lock the documents' rows, in id order (no deadlocks), for a change of

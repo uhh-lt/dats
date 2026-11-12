@@ -335,30 +335,35 @@ class FeatureService(metaclass=SingletonMeta):
         enabled: list[Feature],
         restart: bool = False,
     ) -> dict[int, list[JobType]]:
-        """Plan the steps of the enabled plan that the feature needs for all
-        documents of the project.
+        """Plan for all documents of the project the steps that the feature (with
+        the features it requires) adds to the enabled plan, its own steps and the
+        core steps:
 
-        The steps to plan are the steps of the enabled plan, except those that
-        were already planned without the feature and that only other features
-        need: the feature's steps (and those of the features it requires), the
-        core steps, and the steps the feature makes possible (the text steps of
-        an image once it has a caption). Of these, steps that are not planned
-        are planned, and erroneous steps of the feature are planned
-        again; with `restart`, its processing steps too. Finished steps keep
-        their status, and so do processing steps without `restart`.
+            to_plan = (plan(enabled) - plan(enabled without the feature))
+                      | steps(feature) | plan(no features)
 
-        A step whose input step is erroneous (or not planned) is set to erroneous:
-        it cannot run, and shows up as failed until its input is recomputed (the
-        input then starts it). Returns the planned steps whose inputs are finished,
-        per document: they can start now, the others start when their inputs
-        finish."""
+        The first part holds the steps the feature makes possible (the text
+        steps of an image once it has a caption). The steps that only other
+        features need are in none of the parts, so this never computes the
+        missing data of another feature; a planned step starts only its planned
+        successors.
+
+        1) A step of `to_plan` without a row is planned; existing rows keep their
+           status.
+        2) The feature's erroneous steps are planned again; with `restart`, its
+           processing steps too.
+        3) A step of 1) or 2) whose input step is erroneous or not planned is set
+           to erroneous: it cannot run, and shows up as failed until its input is
+           recomputed (the input then starts it).
+
+        Returns the steps of 1) and 2) whose inputs are finished, per document:
+        they can start now, the others start when their inputs finish."""
         graph = pipeline_registry.graph()
-        processing = SDocStatus.processing
-        finished = SDocStatus.finished
-        erroneous = SDocStatus.erroneous
         features = self.registry.closure([feature])
         others = [f for f in enabled if f not in features]
-        redo = [erroneous, processing] if restart else [erroneous]
+        redo = [SDocStatus.erroneous]
+        if restart:
+            redo.append(SDocStatus.processing)
 
         sdoc_steps: dict[int, list[JobType]] = {}
         for doctype in DocType:
@@ -371,69 +376,43 @@ class FeatureService(metaclass=SingletonMeta):
                     doctype=doctype, feature=f, enabled=enabled
                 )
             }
-            only_others = {
-                step
-                for f in others
-                for step in self.feature_steps(
-                    doctype=doctype, feature=f, enabled=enabled
-                )
-            } - own
-            to_plan = {s for s in plan if not (s in without and s in only_others)}
+            core = set(self.planned_steps(doctype=doctype, features=[]))
+            to_plan = [s for s in plan if s not in without or s in own | core]
+            to_redo = [s for s in plan if s in own]
             if not to_plan:
                 continue
-            producers = _producers(graph, plan)
-            inputs = {
-                step: [
-                    producers[a]
-                    for a in graph.declaration(step).requires
-                    if a in producers
-                ]
-                for step in plan
-            }
 
-            # 1) lock the documents with steps to plan
+            # lock the documents with steps to plan
             sdoc_ids = crud_sdoc_step_status.read_sdoc_ids_to_plan(
                 db=db,
                 project_id=project_id,
                 doctype=doctype,
-                missing_steps=[s for s in plan if s in to_plan],
-                redo_steps=[s for s in plan if s in own],
+                missing_steps=to_plan,
+                redo_steps=to_redo,
                 redo_statuses=redo,
             )
-            stored = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
 
-            # 2) the new status of their steps, in pipeline order
-            updates: dict[tuple[JobType, SDocStatus], list[int]] = defaultdict(list)
-            for sdoc_id in sdoc_ids:
-                status: dict[JobType, SDocStatus | None] = {
-                    step: stored[sdoc_id].get(step) for step in plan
-                }
-                startable: list[JobType] = []
-                for step in plan:
-                    old = status[step]
-                    if not (
-                        (old is None and step in to_plan)
-                        or (old in redo and step in own)
-                    ):
-                        continue
-                    input_status = [status[i] for i in inputs[step]]
-                    if any(s is None or s == erroneous for s in input_status):
-                        new = erroneous
-                    else:
-                        new = processing
-                        if all(s == finished for s in input_status):
-                            startable.append(step)
-                    status[step] = new
-                    if new != old:
-                        updates[(step, new)].append(sdoc_id)
-                if startable:
-                    sdoc_steps[sdoc_id] = startable
+            # 1) plan the missing steps, 2) and the feature's steps to redo
+            planned = crud_sdoc_step_status.create_missing(
+                db=db, sdoc_ids=sdoc_ids, steps=to_plan
+            )
+            redone = crud_sdoc_step_status.update_to_processing(
+                db=db, sdoc_ids=sdoc_ids, steps=to_redo, statuses=redo
+            )
+            rows = {
+                step: planned.get(step, []) + redone.get(step, [])
+                for step in plan
+                if planned.get(step) or redone.get(step)
+            }
 
-            # 3) store them, in bulk per step and status
-            for (step, new), ids in updates.items():
-                crud_sdoc_step_status.update_status(
-                    db=db, sdoc_ids=ids, steps=[step], status=new
-                )
+            # 3) fail the steps that cannot run, then read those that can start
+            inputs = _inputs(graph, plan)
+            crud_sdoc_step_status.update_blocked_to_erroneous(
+                db=db, rows=rows, inputs=inputs
+            )
+            sdoc_steps |= crud_sdoc_step_status.read_startable(
+                db=db, rows=rows, inputs=inputs
+            )
 
         return sdoc_steps
 
@@ -491,3 +470,13 @@ def _is_selected(graph: PipelineGraph, step: JobType, wanted: set[Artefact]) -> 
 def _producers(graph: PipelineGraph, steps: list[JobType]) -> dict[Artefact, JobType]:
     """The step producing each artefact, among these steps of one doctype."""
     return {a: s for s in steps for a in graph.declaration(s).produces}
+
+
+def _inputs(graph: PipelineGraph, steps: list[JobType]) -> dict[JobType, list[JobType]]:
+    """The input steps of each of these steps of one doctype: the producers of
+    the artefacts it requires."""
+    producers = _producers(graph, steps)
+    return {
+        step: [producers[a] for a in graph.declaration(step).requires if a in producers]
+        for step in steps
+    }
