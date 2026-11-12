@@ -117,7 +117,7 @@ register_feature(
 - `systems/feature_system` holds the generic part: the declarations, the registry, the requirement resolution, the `require_feature` dependencies and `GET /feature`.
 - The planner lives in the `pipeline` package of `modules/doc_processing`: `PipelineGraph` answers the plan of a doctype for the needed artefacts and every question about which step feeds which (input steps, the steps after a step, the steps some artefacts need), and `step_planning.py` answers the steps of enabled features (`planned_steps`, `feature_steps`) with the feature registry.
 - Step planning is one module, `StepPlanningService` in `modules/doc_processing`, with five operations: enable a feature (also completes an enabled one), restart a feature, disable a feature, add the features of a project import without planning, and plan a new document. Only these operations take the project and document locks for planning (in the lock order its docstring states), write the planning rows (through the planning methods of `crud_sdoc_step_status`) and `project.enabled_features`, and hand the startable steps to the `FEATURE_ACTIVATION` job.
-- `modules/project_features` holds what knows projects and documents: `ProjectFeatureService` computes the state of every feature of a project and delegates enabling, restarting and disabling to `StepPlanningService`.
+- `modules/project_features` holds what knows projects and documents: `ProjectFeatureService` computes the state of every feature of a project; its endpoints enable, restart and disable a feature with `StepPlanningService`.
 - A startup check fails on undeclared artefacts, artefacts nobody produces, and cycles.
 
 ### Pipeline
