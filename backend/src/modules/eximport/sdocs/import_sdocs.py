@@ -3,25 +3,16 @@ from pathlib import Path
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
-from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
-from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
@@ -29,27 +20,16 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
-from modules.doc_processing.image.image_thumbnail_generation_job import (
-    generate_thumbnails,
-)
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-from modules.doc_processing.video.video_audio_extraction_job import (
-    extract_audio_stream,
-)
-from modules.doc_processing.video.video_thumbnail_generation_job import (
-    store_video_thumbnail,
-)
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
+from modules.eximport.sdocs.artefact_archive import archive_modules
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,
 )
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.vector.weaviate_repo import WeaviateRepo
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
@@ -63,11 +43,10 @@ def archived_step_status(
     hold one status per document: every step of the doctype gets it.
 
     A step that was processing when the archive was exported is not planned: the
-    import starts no job, so it would stay processing forever. An embedding step
-    whose embeddings are missing in the archive is not planned either, whatever
-    its status; so is the sentence embedding of a document whose archive does not
-    hold one embedding per sentence. The import plans no step: a feature whose steps are not planned
-    is partly available until a user completes it."""
+    import starts no job, so it would stay processing forever. A step whose
+    artefact the archive does not hold completely (its archive module says so) is
+    not planned either, whatever its status. The import plans no step: a feature
+    whose steps are not planned is partly available until a user completes it."""
     graph = pipeline_registry.graph()
     doctype = DocType(sdoc_export.doctype)
     steps = graph.steps(doctype)
@@ -80,16 +59,9 @@ def archived_step_status(
         if status == SDocStatus.processing.value:
             step_status[step] = None
 
-    missing = {
-        Artefact.DOCUMENT_EMBEDDINGS: sdoc_export.document_embedding is None,
-        # archives of older versions hold only the first 25 embeddings
-        Artefact.SENTENCE_EMBEDDINGS: len(sdoc_export.sentence_embeddings)
-        != len(sdoc_export.sentence_starts),
-        Artefact.IMAGE_EMBEDDINGS: sdoc_export.image_embedding is None,
-    }
-    for artefact, is_missing in missing.items():
+    for artefact, module in archive_modules().items():
         step = graph.producer(doctype, artefact)
-        if is_missing and step is not None:
+        if step is not None and not module.is_complete(sdoc_export):
             step_status[step.value] = None
     return step_status
 
@@ -247,9 +219,6 @@ def import_sdocs_to_proj(
             project_id=project_id, src_file=source_file
         )
         relative_url = str(repo_path.relative_to(fsr.root_dir))
-        # generate thumbnail if needed
-        if DocType(sdoc_export.doctype) == DocType.image:
-            generate_thumbnails(repo_path)
 
         # 2.1 Create the sdoc folder (if it does not already exist)
         sdoc_folder = crud_folder.read_by_name_and_project(
@@ -309,17 +278,10 @@ def import_sdocs_to_proj(
         )
         crud_sdoc_data.create(db=db, create_dto=sdoc_data_create)
 
-        # 4. Link the source documents with the attached data (tags, metadata, word frequencies)
+        # 4. Link the source documents with the attached data (tags, metadata)
         # Tags
         tag_ids = [existing_tags[tag_name].id for tag_name in sdoc_export.tags]
         crud_tag.link_multiple_tags(db=db, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids)
-
-        # Word frequencies
-        wf_create_dtos = [
-            WordFrequencyCreate(sdoc_id=created_sdoc.id, word=word, count=count)
-            for word, count in sdoc_export.word_frequencies
-        ]
-        crud_word_frequency.create_multi(db=db, create_dtos=wf_create_dtos)
 
         # Metadata
         metadata_create_dtos = []
@@ -336,89 +298,13 @@ def import_sdocs_to_proj(
             metadata_create_dtos.append(metadata_create)
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
-        # 5. Add embeddings to the vector database
-        client = WeaviateRepo().get_client()
-        # Document embeddings
-        if sdoc_export.document_embedding is not None:
-            crud_document_embedding.create(
-                client=client,
-                project_id=project_id,
-                id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
-                embedding=sdoc_export.document_embedding,
-            )
-
-        # Sentence embeddings (only one per sentence: partial ones are missing)
-        if len(sdoc_export.sentence_embeddings) > 0 and len(
-            sdoc_export.sentence_embeddings
-        ) == len(sdoc_export.sentence_starts):
-            crud_sentence_embedding.create_multi(
-                client=client,
-                project_id=project_id,
-                ids=[
-                    SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
-                    for i in range(len(sdoc_export.sentence_embeddings))
-                ],
-                embeddings=[se for se in sdoc_export.sentence_embeddings],
-            )
-
-        # Image embedding
-        if (
-            sdoc_export.image_embedding is not None
-            and DocType(sdoc_export.doctype) == DocType.image
-        ):
-            crud_image_embedding.create(
-                client=client,
-                project_id=project_id,
-                id=ImageObjectIdentifier(sdoc_id=created_sdoc.id),
-                embedding=sdoc_export.image_embedding,
-            )
-
-        # 6. Add the source documents to the Elasticsearch index (if it was
-        # indexed: the entry is computed from the content and the filename only)
-        es_index_step = pipeline_registry.graph().producer(
-            DocType(sdoc_export.doctype), Artefact.ES_INDEX
-        )
-        if (
-            es_index_step is not None
-            and step_status.get(es_index_step.value) == SDocStatus.finished
-        ):
-            crud_sdoc_elastic.create(
-                client=ElasticSearchRepo().get_client(),
-                project_id=project_id,
-                create_dto=ElasticSearchDocumentCreate(
-                    project_id=project_id,
-                    sdoc_id=created_sdoc.id,
-                    filename=created_sdoc.filename,
-                    content=sdoc_export.content if sdoc_export.content else "",
-                ),
-            )
-
-        # 7. Extract the audio stream of a video again (if it was extracted): the
-        # archive holds only the uploaded file
-        audio_step = pipeline_registry.graph().producer(
-            DocType(sdoc_export.doctype), Artefact.AUDIO
-        )
-        if (
-            audio_step is not None
-            and step_status.get(audio_step.value) == SDocStatus.finished
-        ):
-            extract_audio_stream(repo_path)
-
-        # 8. Write the thumbnail of a video again (if it was written): the archive
-        # holds only the uploaded file
-        thumbnail_step = pipeline_registry.graph().producer(
-            DocType(sdoc_export.doctype), Artefact.THUMBNAIL
-        )
-        if (
-            DocType(sdoc_export.doctype) == DocType.video
-            and thumbnail_step is not None
-            and step_status.get(thumbnail_step.value) == SDocStatus.finished
-        ):
-            store_video_thumbnail(
-                db=db,
-                sdoc=SourceDocumentRead.model_validate(created_sdoc),
-                video_path=repo_path,
-            )
+        # 5. Write the artefacts with an archive module to their stores, if
+        # their step was imported as finished
+        graph = pipeline_registry.graph()
+        for artefact, module in archive_modules().items():
+            step = graph.producer(DocType(sdoc_export.doctype), artefact)
+            if step is not None and step_status.get(step.value) == SDocStatus.finished:
+                module.write(db=db, sdoc=created_sdoc, archived=sdoc_export)
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"
