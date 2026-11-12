@@ -179,6 +179,7 @@ Add a step:
 2. Add new artefacts to `Artefact` (`common/artefact_enum.py`), and to `CORE_ARTEFACTS` only if every document needs them whatever features its project enables.
 3. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`modules/doc_processing/pipeline/pipeline_step_decorator.py`).
 4. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
+5. Regenerate the API client (`just update-api`), which adds the value to `JobType.ts`.
 
 Rules:
 
@@ -198,6 +199,15 @@ Rules:
 - `test_new_pipeline_step.py` declares a step in a test and follows it through the pipeline; keep it passing when the pipeline changes.
 
 ## Features
+
+Add a feature:
+
+1. Add its `Feature` value (`common/feature_enum.py`).
+2. Declare it with `register_feature(feature, requires_artefacts, requires_features)` in `<module>/<module>_feature.py`.
+3. Gate its routes and jobs (see "Feature Gating" in `backend-endpoint.instructions.md`).
+4. Regenerate the API client and add its entry to the frontend feature map `FEATURES` (`frontend.instructions.md`).
+
+Rules:
 
 - A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
 - A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.

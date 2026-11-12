@@ -93,7 +93,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 
 ### Tabs (`staticData`)
 
-- Every page route under `$projectId/` (not `route.tsx`) declares `staticData: { tab: true, icon: Icon.XXX }`. Routes outside a project (`me`, `projects`, `_public/*`) have no `staticData`.
+- Every page route under `$projectId/` (not `route.tsx`) declares `staticData: { tab: true, icon: Icon.XXX }`; this is the only place of a page's icon, its navigation entry reads it from here. Routes outside a project (`me`, `projects`, `_public/*`) have no `staticData`.
 - A static tab title is the `title` of the page's navigation entry (`NAVIGATION_ENTRIES`), never a `getTitle: () => "..."` (lint: `local/route-options`).
 - `getTitle` is only for a dynamic title, which reads the entity from the cache with the factory's typed key and is `<Kind> <name>` with an empty name as fallback: `` `Whiteboard ${whiteboards?.[Number(params.whiteboardId)]?.title ?? ""}` ``. `params` are untyped there, so wrap them in `Number(...)`.
 

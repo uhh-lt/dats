@@ -80,8 +80,20 @@ Choose the home of a piece of state by its kind; [frontend-slice.instructions.md
 
 ## Toggleable Features and Navigation
 
+Add a feature (after its backend `Feature` value and the regenerated client):
+
+1. Add its entry with title, description and area to `FEATURES` (`core/feature/features.ts`); `tsc` fails without it.
+2. Gate its embedded entry points with `useFeature(Feature.X)`.
+
+Add a page to a feature:
+
+1. Write the route with `staticData: { tab: true, icon: Icon.X, feature: Feature.X }` and `ensureRouteFeatureEnabled` at the start of its loader (see [frontend-route](frontend-route.instructions.md)).
+2. Add one entry without `title` and `description` to `NAVIGATION_ENTRIES` (`core/navigation/navigationEntries.ts`).
+
+Rules:
+
 - `FEATURES` in `core/feature/features.ts` holds the one title, description and area of every feature (`tsc` enforces one entry per `Feature`); never write a feature's title anywhere else.
-- `NAVIGATION_ENTRIES` in `core/navigation/navigationEntries.ts` lists every page of a project once, with its group, icon, route, shortcut and command; the sidebar, the analysis dashboard, the command palette, the shortcuts and the tab titles are generated from it through `useNavigationEntries`.
+- `NAVIGATION_ENTRIES` in `core/navigation/navigationEntries.ts` lists every page of a project once, with its group, route, shortcut and command, and takes the feature and the icon from the page's route; the sidebar, the analysis dashboard, the command palette, the shortcuts and the tab titles are generated from it through `useNavigationEntries`.
 - A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from `FEATURES`, and a page heading uses `useNavigationTitle()`.
 - The feature of a page is declared only on its route (`staticData.feature`, see [frontend-route](frontend-route.instructions.md)), never in its navigation entry.
 - Gate an embedded entry point (menu item, button, search box) with `useFeature(Feature.X)` from `@core/feature`, which reads `ProjectRead.enabled_features`.
