@@ -2,11 +2,10 @@ from loguru import logger
 
 from common.job_type_enum import JobType
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.doc_processing_pipeline import handle_job_error
+from modules.doc_processing.doc_processing_pipeline import start_step_job
 from systems.feature_system.feature_dto import FeatureActivationJobInput
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
-from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority, JobTiming
 from systems.job_system.pipeline_graph import pipeline_registry
 
@@ -25,7 +24,6 @@ def handle_feature_activation_job(payload: FeatureActivationJobInput, job: Job) 
     input data is missing) sets its steps and the pending steps after them to
     erroneous, like a failed job, and the other documents still start."""
     graph = pipeline_registry.graph()
-    js = JobService()
     total = len(payload.sdoc_steps)
     failed = 0
     logger.info(
@@ -40,13 +38,7 @@ def handle_feature_activation_job(payload: FeatureActivationJobInput, job: Job) 
                 settings=payload.settings,
                 steps=job_steps,
             )
-            try:
-                js.start_job(job_type, job_input, priority=JobPriority.LOW)
-            except Exception as e:
-                logger.warning(
-                    f"Cannot start {job_type.value} of document {sdoc_id}: {e}"
-                )
-                handle_job_error(job_type, job_input)
+            if not start_step_job(job_type, job_input, priority=JobPriority.LOW):
                 failed += 1
         if idx % 1000 == 0:
             job.update(status_message=f"Started the steps of {idx}/{total} documents")

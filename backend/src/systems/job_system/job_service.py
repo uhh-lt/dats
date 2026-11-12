@@ -131,6 +131,12 @@ class JobService(metaclass=SingletonMeta):
                 f"JobType {job_type} declares further steps, but no doctypes: only "
                 "pipeline steps declare 'further_steps'."
             )
+        if doctypes and enricher is None:
+            raise ValueError(
+                f"JobType {job_type} is a pipeline step, but has no enricher: the "
+                "steps before it start it with a bare SdocProcessingJobInput, and "
+                "the enricher loads the rest of its input from the stored data."
+            )
         if doctypes:
             pipeline_registry.register(
                 job_type,

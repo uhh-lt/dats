@@ -72,13 +72,11 @@ def register_jobs() -> None:
     on registration.
     """
     from common.dats_event import build_job_event_models
-    from modules.doc_processing.doc_processing_pipeline import check_transitions
     from systems.job_system.pipeline_graph import pipeline_registry
 
     import_by_suffix("_job.py")
-    # fails on artefacts nobody produces, cycles and missing transitions
+    # fails on artefacts nobody produces and cycles
     pipeline_registry.graph()
-    check_transitions()
     register_features()
     build_job_event_models()
 
