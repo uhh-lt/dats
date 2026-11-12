@@ -13,7 +13,8 @@ if TYPE_CHECKING:
 
 class SourceDocumentStepStatusORM(ORMBase):
     """The status of one pipeline step of a document; no row means the step is
-    not planned. Only crud_sdoc_step_status reads and writes it."""
+        not planned. Only crud_sdoc_step_status and source_document_status_rules
+    (the status filters) touch it."""
 
     # many to one; the primary key (sdoc_id, step) indexes it
     sdoc_id: Mapped[int] = mapped_column(

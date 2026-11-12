@@ -64,7 +64,8 @@ class CRUDSourceDocumentStepStatus(
         tuple[int, str],  # (sdoc id, step)
     ]
 ):
-    """The only code that reads or writes the pipeline step statuses.
+    """The only code that reads or writes the pipeline step statuses; only
+    `source_document_status_rules` (the status filters) queries them besides.
 
     Every write first locks the documents' rows (`_lock_sdocs`), except the
     planning writes (`create_missing`, `update_to_processing`,
