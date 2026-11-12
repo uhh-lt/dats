@@ -65,8 +65,8 @@ def _init_sentry() -> None:
 def register_jobs() -> None:
     """Register all jobs (by importing the `*_job.py` modules), check the
     preprocessing pipeline derived from their declarations, register the job
-    lifecycle hooks of the pipeline, register the features (`register_features`)
-    and build the JOB_UPDATED event model, which needs all jobs registered.
+    lifecycle hooks of the pipeline, check that the feature states can count
+    all steps, register the features (`register_features`) and build the JOB_UPDATED event model, which needs all jobs registered.
 
     Must run before any endpoint is imported: the job endpoints are generated
     on registration.
@@ -91,8 +91,27 @@ def register_jobs() -> None:
             failed=handle_job_error,
         )
     )
+    _check_counted_steps(len(pipeline_registry.graph().all_steps()))
     register_features()
     build_job_event_models()
+
+
+def _check_counted_steps(steps: int) -> None:
+    """Raise a `PipelineDeclarationError` if the feature states cannot count
+    this many pipeline steps (`crud_sdoc_step_status.count_by_project`)."""
+    from core.doc.source_document_step_status_crud import MAX_COUNTED_STEPS
+    from modules.doc_processing.doc_processing_exceptions import (
+        PipelineDeclarationError,
+    )
+
+    if steps > MAX_COUNTED_STEPS:
+        raise PipelineDeclarationError(
+            [
+                f"There are {steps} pipeline steps, but the feature states "
+                f"count at most {MAX_COUNTED_STEPS} (one bit each in a BIGINT, see "
+                f"crud_sdoc_step_status.count_by_project)."
+            ]
+        )
 
 
 def register_features() -> None:

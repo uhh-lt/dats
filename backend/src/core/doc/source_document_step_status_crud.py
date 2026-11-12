@@ -40,7 +40,7 @@ StepRows = dict[JobType, list[int]]
 
 
 # The most steps `count_by_project` counts: one bit each in a BIGINT, without the
-# sign bit. The pipeline graph rejects more pipeline steps at startup.
+# sign bit. `bootstrap.register_jobs` rejects more pipeline steps at startup.
 MAX_COUNTED_STEPS = 63
 
 
