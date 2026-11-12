@@ -14,7 +14,6 @@ from core.doc.source_document_crud import crud_sdoc
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import (
-    FeatureActivationJobInput,
     ProcessingSettings,
     SdocHealthResult,
     SdocProcessingJobInput,
@@ -24,7 +23,7 @@ from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_ste
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from modules.project_features.project_feature_dto import FeatureActivation
-from pipeline_test_utils import read_step_status
+from pipeline_test_utils import read_step_status, started_steps
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -153,13 +152,13 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     )
 
     assert response.status_code == 200, response.text
-    (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
-    assert isinstance(activation, FeatureActivationJobInput)
-    assert producer in activation.sdoc_steps[sdoc_id]
-    assert consumer not in activation.sdoc_steps[sdoc_id]
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
+    assert producer in started[sdoc_id]
+    assert consumer not in started[sdoc_id]
     assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.processing
 
-    held_jobs.run(JobType.FEATURE_ACTIVATION, producer, consumer)
+    held_jobs.run(producer, consumer)
 
     assert paired_steps["ran"][producer].count(sdoc_id) == 1
     assert paired_steps["ran"][consumer].count(sdoc_id) == 1
