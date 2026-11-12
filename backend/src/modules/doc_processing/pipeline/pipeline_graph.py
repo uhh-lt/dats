@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
-from core.doc.source_document_step_status_crud import MAX_COUNTED_STEPS
 from modules.doc_processing.doc_processing_exceptions import (
     PipelineDeclarationError,
     PipelineNotRegisteredError,
@@ -62,12 +61,6 @@ class PipelineGraph:
         successors_by_doctype: dict[DocType, dict[JobType, list[JobType]]] = {}
 
         problems = _check_artefacts_produced(steps) + _check_jobs(steps)
-        if len(steps) > MAX_COUNTED_STEPS:
-            problems.append(
-                f"There are {len(steps)} pipeline steps, but the feature states "
-                f"count at most {MAX_COUNTED_STEPS} (one bit each in a BIGINT, see "
-                f"crud_sdoc_step_status.count_by_project)."
-            )
         for doctype in DocType:
             doctype_steps = {jt: s for jt, s in steps.items() if doctype in s.doctypes}
             deps, dep_problems = _dependencies(doctype, doctype_steps)

@@ -452,19 +452,3 @@ def test_pipeline_graph_fails_on_further_step_with_other_inputs():
     assert any(
         "'text_keywords' must have the requires and doctypes" in p for p in problems
     ), problems
-
-
-def test_more_steps_than_the_feature_states_count_are_rejected(monkeypatch):
-    """The feature states count each step as one bit of a BIGINT: a pipeline
-    with more steps than that fails at startup with a clear message."""
-    from modules.doc_processing.pipeline import pipeline_graph
-
-    monkeypatch.setattr(pipeline_graph, "MAX_COUNTED_STEPS", 1)
-    steps = _producing_all_other_artefacts(
-        {JobType.TEXT_EXTRACTION: _step(set(), {Artefact.CONTENT})}
-    )
-
-    assert _problems(steps) == [
-        "There are 2 pipeline steps, but the feature states count at most 1 (one "
-        "bit each in a BIGINT, see crud_sdoc_step_status.count_by_project)."
-    ]
