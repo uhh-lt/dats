@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
@@ -46,11 +47,18 @@ class SdocProcessingJobInput(ProcessingJobInput):
 
 
 class FeatureActivationJobInput(JobInputBase):
-    sdoc_steps: dict[int, list[JobType]] = Field(
-        description="The newly planned steps to start per SourceDocument ID; their inputs are finished"
+    feature: Feature = Field(description="The enabled, completed or restarted Feature")
+    restart: bool = Field(
+        description="Whether to plan the Feature's processing steps again (restart) or only its missing and erroneous ones"
     )
     settings: ProcessingSettings = Field(
         description="The processing settings of the started steps"
+    )
+    activation_id: str = Field(
+        description="ID of this activation; the job stops once the Project's pending activation of the Feature has another ID"
+    )
+    last_sdoc_id: int = Field(
+        description="The highest SourceDocument ID of the Project at the request; later documents plan their steps on upload"
     )
 
 

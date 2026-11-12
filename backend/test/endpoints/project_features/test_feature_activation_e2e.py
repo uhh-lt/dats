@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
+from core.project.project_crud import crud_project
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -42,13 +43,19 @@ def _activate(client: TestClient, project_id: int, feature: Feature) -> None:
 def _wait_until_nothing_processes(
     db_session, project_id: int, timeout: float = 180.0
 ) -> None:
-    """Wait until no step of the project's documents is processing."""
+    """Wait until the project has no pending feature activation (its job has
+    planned all documents) and no step of its documents is processing."""
     deadline = time.monotonic() + timeout
     while True:
+        db_session.expire_all()
+        pending = crud_project.read(db=db_session, id=project_id).feature_activations
+        db_session.commit()
         processing = count_processing_sdocs(db_session, project_id)
-        if processing == 0:
+        if not pending and processing == 0:
             return
-        assert time.monotonic() < deadline, f"{processing} documents still process"
+        assert time.monotonic() < deadline, (
+            f"pending activations {pending}, {processing} documents still process"
+        )
         time.sleep(1)
 
 

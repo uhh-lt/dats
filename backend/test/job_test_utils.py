@@ -3,8 +3,10 @@ run on demand in this process through the real job handler."""
 
 import signal
 from collections.abc import Generator
+from contextlib import contextmanager
 
 import rq
+from redis import Redis
 from rq import SimpleWorker
 
 from common.job_type_enum import JobType
@@ -100,3 +102,20 @@ def hold_jobs() -> Generator[HeldJobs, None, None]:
     finally:
         js.queues = original
         held_jobs.empty()
+
+
+@contextmanager
+def unreachable_redis() -> Generator[None, None, None]:
+    """Point `JobService().queues` at a Redis that cannot be reached while the
+    context is open, so every `start_job` fails like when Redis is down."""
+    js = JobService()
+    original = js.queues
+    down = Redis(host="localhost", port=1, socket_connect_timeout=1)
+    js.queues = {
+        key: rq.Queue(name=queue.name, connection=down)
+        for key, queue in original.items()
+    }
+    try:
+        yield
+    finally:
+        js.queues = original

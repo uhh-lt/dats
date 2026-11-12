@@ -1,7 +1,8 @@
 """The SQL statements of `StepPlanningService`, private to it: only
 `step_planning_service.py` imports this file. They lock the project and the
 documents to plan, write the planning rows and `project.enabled_features`, in
-the lock order the service states. Besides the status CRUD and
+the lock order the service states, and the pending feature activations of the
+project (`project.feature_activations`). Besides the status CRUD and
 `source_document_status_rules.py`, this is the only code that touches the step
 status rows."""
 
@@ -56,17 +57,19 @@ def read_sdoc_ids_to_plan(
     *,
     project_id: int,
     doctype: DocType,
+    sdoc_ids: tuple[int, int],
     missing_steps: list[JobType],
     redo_steps: dict[SDocStatus, list[JobType]],
 ) -> list[int]:
     """
     Read and lock (FOR NO KEY UPDATE) the documents of the project and doctype
-    that lack one of `missing_steps`, or have one of the `redo_steps` of a
-    status with that status.
+    in the id range that lack one of `missing_steps`, or have one of the
+    `redo_steps` of a status with that status.
 
     Args:
         project_id: The project of the documents.
         doctype: The doctype of the documents.
+        sdoc_ids: The range of the document ids (after, until]: the batch.
         missing_steps: Steps a document is selected for if one is not planned.
         redo_steps: Per status, the steps a document is selected for if one
             has this status.
@@ -104,6 +107,8 @@ def read_sdoc_ids_to_plan(
             .where(
                 sdoc.project_id == project_id,
                 sdoc.doctype == doctype.value,
+                sdoc.id > sdoc_ids[0],
+                sdoc.id <= sdoc_ids[1],
                 or_(*conditions),
             )
             .order_by(sdoc.id)
@@ -113,18 +118,24 @@ def read_sdoc_ids_to_plan(
 
 
 def create_missing(
-    db: Session, *, project_id: int, doctype: DocType, steps: list[JobType]
+    db: Session,
+    *,
+    project_id: int,
+    doctype: DocType,
+    sdoc_ids: tuple[int, int],
+    steps: list[JobType],
 ) -> StepRows:
     """
-    Plan the steps for the documents of the project and doctype: insert a
-    processing row for every (document, step) that has no row; existing rows
-    keep their status. `StepPlanningService` has locked the documents that
-    lack a step (`read_sdoc_ids_to_plan` with these steps as
+    Plan the steps for the documents of the project and doctype in the id
+    range: insert a processing row for every (document, step) that has no row;
+    existing rows keep their status. `StepPlanningService` has locked the
+    documents that lack a step (`read_sdoc_ids_to_plan` with these steps as
     `missing_steps`).
 
     Args:
         project_id: The project of the documents.
         doctype: The doctype of the documents.
+        sdoc_ids: The range of the document ids (after, until]: the batch.
         steps: The steps to plan.
 
     Returns:
@@ -157,6 +168,8 @@ def create_missing(
             .where(
                 sdoc.project_id == project_id,
                 sdoc.doctype == doctype.value,
+                sdoc.id > sdoc_ids[0],
+                sdoc.id <= sdoc_ids[1],
                 ~exists().where(
                     existing.sdoc_id == sdoc.id,
                     existing.step == step_values.c.step,
@@ -175,8 +188,8 @@ def create_missing(
     )
     for sdoc_id, step in db.execute(stmt).all():
         result[JobType(step)].append(sdoc_id)
-    for sdoc_ids in result.values():
-        sdoc_ids.sort()
+    for planned_ids in result.values():
+        planned_ids.sort()
     db.flush()
     return result
 
@@ -397,3 +410,66 @@ def update_enabled_features(
     db.add(db_obj)
     db.flush()
     return db_obj
+
+
+def update_feature_activation(
+    db: Session, *, project_id: int, feature: Feature, activation_id: str | None
+) -> ProjectORM:
+    """Store the id of the feature's pending activation in the project, or
+    remove it (None). The caller has locked the project (FOR NO KEY UPDATE)."""
+    db_obj = crud_project.read(db=db, id=project_id)
+    activations = dict(db_obj.feature_activations)
+    if activation_id is None:
+        activations.pop(feature.value, None)
+    else:
+        activations[feature.value] = activation_id
+    db_obj.feature_activations = activations
+    db.add(db_obj)
+    db.flush()
+    return db_obj
+
+
+def read_last_sdoc_id(db: Session, *, project_id: int) -> int | None:
+    """The highest document id of the project, None without documents."""
+    return db.scalar(
+        select(func.max(SourceDocumentORM.id)).where(
+            SourceDocumentORM.project_id == project_id
+        )
+    )
+
+
+def read_batch_end(
+    db: Session,
+    *,
+    project_id: int,
+    after_sdoc_id: int,
+    last_sdoc_id: int,
+    batch_size: int,
+) -> int | None:
+    """
+    The end of the next batch of the project's documents: the highest id of
+    the (at most) `batch_size` documents after `after_sdoc_id` up to
+    `last_sdoc_id`.
+
+    Args:
+        project_id: The project of the documents.
+        after_sdoc_id: The end of the previous batch (0 before the first).
+        last_sdoc_id: The highest id to plan.
+        batch_size: The number of documents per batch.
+
+    Returns:
+        The highest document id of the batch, None if no document is left.
+    """
+    sdoc = SourceDocumentORM
+    batch = (
+        select(sdoc.id)
+        .where(
+            sdoc.project_id == project_id,
+            sdoc.id > after_sdoc_id,
+            sdoc.id <= last_sdoc_id,
+        )
+        .order_by(sdoc.id)
+        .limit(batch_size)
+        .subquery()
+    )
+    return db.scalar(select(func.max(batch.c.id)))

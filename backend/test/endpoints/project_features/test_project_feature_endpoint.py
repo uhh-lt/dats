@@ -2,13 +2,14 @@ import threading
 
 import pytest
 from fastapi.testclient import TestClient
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
 from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
-from job_test_utils import HeldJobs
+from job_test_utils import HeldJobs, unreachable_redis
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
@@ -18,7 +19,7 @@ from modules.project_features.project_feature_dto import (
     FeatureActivation,
     ProjectFeatureRead,
 )
-from pipeline_test_utils import read_step_status
+from pipeline_test_utils import plan_activations, read_step_status
 from repos.db.sql_repo import SQLRepo
 
 from .conftest import ImageTextProject, UploadingProject
@@ -171,16 +172,6 @@ def _activate(client: TestClient, project_id: int, feature: Feature) -> list[Fea
     return [Feature(f) for f in response.json()]
 
 
-def _activation_job(held_jobs: HeldJobs) -> FeatureActivationJobInput:
-    """The input of the one held job, a feature activation."""
-    jobs = held_jobs.jobs()
-    assert len(jobs) == 1, jobs
-    job_type, payload = jobs[0]
-    assert job_type == JobType.FEATURE_ACTIVATION
-    assert isinstance(payload, FeatureActivationJobInput)
-    return payload
-
-
 # --- A. enable --------------------------------------------------------------
 
 
@@ -201,13 +192,16 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Activating keyword statistics plans text_keywords for both text documents
-    and leaves the image and the steps of other features alone. One feature
-    activation job with the chosen settings starts the steps whose inputs are
-    finished (text_done); text_running gets them when its inputs finish."""
+    """Activating keyword statistics starts one feature activation job with the
+    chosen settings, which plans text_keywords for both text documents and
+    leaves the image and the steps of other features alone; it starts the steps
+    whose inputs are finished (text_done), text_running gets them when its
+    inputs finish."""
     p = feature_project
 
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
+    started = plan_activations(held_jobs)
 
     for sdoc in (p["text_done"], p["text_running"]):
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) == 0, (
@@ -216,9 +210,9 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) is None
     assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_SPACY) == 1
     assert read_step_status(db_session, p["image"].id, JobType.IMAGE_CAPTION) is None
-    payload = _activation_job(held_jobs)
-    assert payload.settings == SETTINGS
-    assert payload.sdoc_steps == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
+    assert isinstance(activation, FeatureActivationJobInput)
+    assert activation.settings == SETTINGS
+    assert started == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
 
 
 def test_activate_feature_makes_it_computing(
@@ -230,6 +224,7 @@ def test_activate_feature_makes_it_computing(
     project_id = feature_project["project"].id
 
     _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    plan_activations(held_jobs)
 
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.COMPUTING
@@ -247,11 +242,11 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
     p = feature_project
 
     _activate(client, p["project"].id, Feature.IMAGE_CAPTIONS)
+    started = plan_activations(held_jobs)
 
     for step in (JobType.IMAGE_CAPTION, JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY):
         assert read_step_status(db_session, p["image"].id, step) == 0, step
-    payload = _activation_job(held_jobs)
-    assert payload.sdoc_steps == {p["image"].id: [JobType.IMAGE_CAPTION]}
+    assert started == {p["image"].id: [JobType.IMAGE_CAPTION]}
 
 
 def test_activate_image_captions_plans_the_text_features_it_makes_possible(
@@ -266,6 +261,7 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
     image_id = image_text_project["image"].id
 
     _activate(client, image_text_project["project"].id, Feature.IMAGE_CAPTIONS)
+    plan_activations(held_jobs)
 
     for step in (
         JobType.IMAGE_CAPTION,
@@ -277,28 +273,99 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
         assert read_step_status(db_session, image_id, step) == 0, step
 
 
-def test_activate_feature_starts_its_job_only_after_the_commit(
+def test_activate_feature_job_waits_for_the_request_to_commit(
     db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """The activation job starts once the request's transaction commits: a step
-    job that started earlier would read its steps as not planned and skip them.
-    Calls the planning operation the endpoint delegates to, to commit by hand."""
-    StepPlanningService().enable_feature(
+    """The request starts the activation job before it commits; the job's first
+    batch waits for the request's lock on the project and then plans with the
+    committed state. Calls the planning operations the endpoint and the job
+    delegate to, to hold the request's transaction open."""
+    service = StepPlanningService()
+    service.enable_feature(
         db=db_session,
         project_id=feature_project["project"].id,
         feature=Feature.FULL_TEXT_SEARCH,
         settings=SETTINGS,
     )
+    (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
+    assert isinstance(activation, FeatureActivationJobInput)
+    batches: list[tuple[int, dict[int, list[JobType]]] | None] = []
+
+    def _job() -> None:
+        with SQLRepo().transaction() as db:
+            batches.append(
+                service.plan_activation_batch(
+                    db=db, activation=activation, after_sdoc_id=0
+                )
+            )
+
+    job = threading.Thread(target=_job)
+    job.start()
+    job.join(timeout=1)
+    assert job.is_alive(), "the job did not wait for the request"
+    db_session.commit()
+    job.join(timeout=30)
+
+    assert batches == [
+        (
+            activation.last_sdoc_id,
+            {
+                feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
+                feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
+            },
+        )
+    ]
+
+
+def test_activate_feature_with_redis_down_changes_nothing(
+    client: TestClient,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """If the activation job cannot be enqueued, the request fails and rolls
+    back: the feature stays disabled and nothing is planned or pending."""
+    project_id = feature_project["project"].id
+
+    with unreachable_redis(), pytest.raises(RedisConnectionError):
+        _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+
+    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    assert read.status == FeatureStatus.DISABLED
+    assert read.processing_documents == 0
     assert held_jobs.jobs() == []
 
-    db_session.commit()
 
-    assert _activation_job(held_jobs).sdoc_steps == {
-        feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
-        feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
-    }
+def test_activate_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
+    db_session,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """A request that rolls back after it enqueued its activation job leaves no
+    pending activation: the job stops without planning or starting anything.
+    Calls the planning operation the endpoint delegates to, to roll back."""
+    project_id = feature_project["project"].id
+    StepPlanningService().enable_feature(
+        db=db_session,
+        project_id=project_id,
+        feature=Feature.FULL_TEXT_SEARCH,
+        settings=SETTINGS,
+    )
+    db_session.rollback()
+
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+
+    assert held_jobs.jobs() == []
+    project = crud_project.read(db=db_session, id=project_id)
+    assert project.enabled_features == []
+    assert project.feature_activations == {}
+    assert (
+        read_step_status(
+            db_session, feature_project["text_done"].id, JobType.TEXT_ES_INDEX
+        )
+        is None
+    )
 
 
 def test_activate_feature_waits_for_a_concurrent_activation(
@@ -389,6 +456,7 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
     p = partly_project
 
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    started = plan_activations(held_jobs)
 
     for key in ("index_failed", "not_indexed", "extraction_failed", "spacy_failed"):
         assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == 0, key
@@ -401,8 +469,7 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
         == -100
     )
     assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
-    payload = _activation_job(held_jobs)
-    assert payload.sdoc_steps == {
+    assert started == {
         p["index_failed"].id: [JobType.TEXT_ES_INDEX],
         p["not_indexed"].id: [JobType.TEXT_ES_INDEX],
         p["extraction_failed"].id: [JobType.TEXT_EXTRACTION],
@@ -422,6 +489,7 @@ def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     sdoc_id = partly_project["spacy_failed"].id
 
     _activate(client, partly_project["project"].id, Feature.FULL_TEXT_SEARCH)
+    plan_activations(held_jobs)
 
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
@@ -452,13 +520,14 @@ def test_restart_feature_starts_its_processing_steps_again(
     text_running wait for it and stay processing."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    plan_activations(held_jobs)
     held_jobs.empty()
 
     response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert response.status_code == 200, response.text
     assert response.json() == [Feature.KEYWORD_STATISTICS]
-    assert _activation_job(held_jobs).sdoc_steps == {
+    assert plan_activations(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_KEYWORDS],
     }
     assert (
@@ -480,7 +549,7 @@ def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
     response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert response.status_code == 200, response.text
-    assert held_jobs.jobs() == []
+    assert plan_activations(held_jobs) == {}
     sdoc_id = p["uploading"].id
     assert read_step_status(db_session, sdoc_id, JobType.EXTRACT_HTML) == 0
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_KEYWORDS) == 0
@@ -496,12 +565,13 @@ def test_restart_feature_leaves_the_steps_of_other_features_alone(
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    plan_activations(held_jobs)
     held_jobs.empty()
 
     response = _restart(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
 
     assert response.status_code == 200, response.text
-    assert _activation_job(held_jobs).sdoc_steps == {
+    assert plan_activations(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
     }
@@ -586,6 +656,7 @@ def test_disable_computing_feature_unplans_its_processing_steps(
     processing, and the feature is disabled, not re-enabled."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    plan_activations(held_jobs)
 
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
@@ -613,6 +684,7 @@ def test_disable_computing_feature_keeps_the_steps_other_features_need(
     sentence similarity search still needs them."""
     p = feature_project
     _activate(client, p["project"].id, Feature.RAG_CHAT)
+    plan_activations(held_jobs)
 
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.RAG_CHAT.value}"
@@ -639,6 +711,7 @@ def test_disable_one_of_two_features_sharing_a_step_keeps_it_processing(
     p = feature_project
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
     _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
+    plan_activations(held_jobs)
 
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.SEARCH_ANNOTATE.value}"
@@ -665,18 +738,18 @@ def test_enable_disable_enable_plans_the_steps_again(
     again plans and starts them again."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    plan_activations(held_jobs)
     client.delete(
         f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
     )
     held_jobs.empty()
 
     enabled = _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    started = plan_activations(held_jobs)
 
     assert enabled == [Feature.KEYWORD_STATISTICS]
     assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0
-    assert _activation_job(held_jobs).sdoc_steps == {
-        p["text_done"].id: [JobType.TEXT_KEYWORDS]
-    }
+    assert started == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
 
 
 def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
