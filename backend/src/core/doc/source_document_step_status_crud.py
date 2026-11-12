@@ -170,21 +170,19 @@ class CRUDSourceDocumentStepStatus(
         project_id: int,
         doctype: DocType,
         missing_steps: list[JobType],
-        redo_steps: list[JobType],
-        redo_statuses: list[SDocStatus],
+        redo_steps: dict[SDocStatus, list[JobType]],
     ) -> list[int]:
         """
-        Read and lock (FOR NO KEY UPDATE) the documents of the project and doctype that
-        lack one of `missing_steps`, or have one of `redo_steps` with a status in
-        `redo_statuses`.
+        Read and lock (FOR NO KEY UPDATE) the documents of the project and doctype
+        that lack one of `missing_steps`, or have one of the `redo_steps` of a
+        status with that status.
 
         Args:
             project_id: The project of the documents.
             doctype: The doctype of the documents.
             missing_steps: Steps a document is selected for if one is not planned.
-            redo_steps: Steps a document is selected for if one has a status of
-                `redo_statuses`.
-            redo_statuses: The statuses of `redo_steps` to select.
+            redo_steps: Per status, the steps a document is selected for if one
+                has this status.
 
         Returns:
             The ids of the selected documents, ascending.
@@ -201,12 +199,14 @@ class CRUDSourceDocumentStepStatus(
                 .scalar_subquery()
             )
             conditions.append(planned < len(missing_steps))
-        if redo_steps and redo_statuses:
+        for status, steps in redo_steps.items():
+            if not steps:
+                continue
             conditions.append(
                 exists().where(
                     self.model.sdoc_id == sdoc.id,
-                    self.model.step.in_(redo_steps),
-                    self.model.status.in_(redo_statuses),
+                    self.model.step.in_(steps),
+                    self.model.status == status,
                 )
             )
         if not conditions:

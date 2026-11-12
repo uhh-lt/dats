@@ -50,7 +50,7 @@ If documents failed, the feature shows **Open Document Health** next to the fail
 
 ### Restarting a Computing Feature
 
-A feature should not stay **Computing** for long. If its progress does not move for a long time (for example after the server was restarted while it computed), click **Restart** and confirm. DATS starts the computation of the documents that are not done yet again, with the processing settings you choose. Restart may repeat work that is still running: a document whose computation was only slow is computed twice, which costs time but does no harm.
+A feature should not stay **Computing** for long. If its progress does not move for a long time (for example after the server was restarted while it computed), click **Restart** and confirm. DATS starts the computation of the documents that are not done yet again, with the processing settings you choose; documents that are still being uploaded keep their upload processing. Restart may repeat work that is still running: a document whose computation was only slow is computed twice, which costs time but does no harm.
 
 ### Disabling a Feature
 

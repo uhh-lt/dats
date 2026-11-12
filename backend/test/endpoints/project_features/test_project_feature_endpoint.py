@@ -19,7 +19,7 @@ from pipeline_test_utils import read_step_status
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import JobInputBase
 
-from .conftest import ImageTextProject
+from .conftest import ImageTextProject, UploadingProject
 
 # ===========================================================================
 # GET PROJECT FEATURES (/feature/project/{project_id}) TESTS
@@ -444,9 +444,10 @@ def test_restart_feature_starts_its_processing_steps_again(
     started_jobs: list[tuple[JobType, JobInputBase]],
 ):
     """Keyword statistics is computing after its activation, but its jobs never
-    ran (they are captured). Restarting it starts the keywords of text_done again,
-    and the language detection of text_running, which was processing before the
-    activation; the keywords of text_running wait for it and stay processing."""
+    ran (they are captured). Restarting it starts the keywords of text_done again;
+    the language detection of text_running, a core step that was processing
+    before the activation, is not started again, and the keywords of
+    text_running wait for it and stay processing."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
     started_jobs.clear()
@@ -457,11 +458,30 @@ def test_restart_feature_starts_its_processing_steps_again(
     assert response.json() == [Feature.KEYWORD_STATISTICS]
     assert _activation_job(started_jobs).sdoc_steps == {
         p["text_done"].id: [JobType.TEXT_KEYWORDS],
-        p["text_running"].id: [JobType.TEXT_LANGUAGE_DETECTION],
     }
     assert (
         read_step_status(db_session, p["text_running"].id, JobType.TEXT_KEYWORDS) == 0
     )
+
+
+def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
+    client: TestClient,
+    db_session,
+    uploading_project: UploadingProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Restarting keyword statistics while uploading.txt runs its extract_html
+    starts nothing: extract_html is a core step and keeps its job (a second run
+    would extract the document's images twice), and the keywords wait for it."""
+    p = uploading_project
+
+    response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+
+    assert response.status_code == 200, response.text
+    assert started_jobs == []
+    sdoc_id = p["uploading"].id
+    assert read_step_status(db_session, sdoc_id, JobType.EXTRACT_HTML) == 0
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_KEYWORDS) == 0
 
 
 def test_restart_feature_leaves_the_steps_of_other_features_alone(
