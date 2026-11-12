@@ -21,7 +21,7 @@ from feature_test_utils import (
     minimal_text_steps,
     set_step_status,
 )
-from modules.project_features.project_feature_service import ProjectFeatureService
+from modules.doc_processing.pipeline.step_planning import planned_steps
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
 
@@ -115,9 +115,7 @@ def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
         title="Uploading Project",
         features=[Feature.KEYWORD_STATISTICS],
     )
-    steps = ProjectFeatureService().planned_steps(
-        doctype=DocType.text, features=[Feature.KEYWORD_STATISTICS]
-    )
+    steps = planned_steps(doctype=DocType.text, features=[Feature.KEYWORD_STATISTICS])
     uploading = _create_sdoc(
         db_session,
         project,

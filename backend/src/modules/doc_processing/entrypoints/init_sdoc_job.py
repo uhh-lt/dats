@@ -17,7 +17,7 @@ from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
-from modules.project_features.project_feature_service import ProjectFeatureService
+from modules.doc_processing.pipeline.step_planning import planned_steps
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -62,7 +62,7 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         # share lock makes a concurrent feature activation wait for this upload,
         # so it plans its steps for this document too, or this upload for it.
         project = crud_project.read_locked(db=db, id=payload.project_id, shared=True)
-        steps = ProjectFeatureService().planned_steps(
+        steps = planned_steps(
             doctype=payload.doctype,
             features=[Feature(f) for f in project.enabled_features],
         )
