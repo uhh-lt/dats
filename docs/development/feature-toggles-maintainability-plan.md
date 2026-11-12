@@ -154,6 +154,20 @@ endpoint, which M5 integrates.
 - The full backend suite, lint, typecheck and `just alembic check` pass; the migration runs up and down on 300,000 documents in about the time it takes now.
 - The browser review scenarios of the final review pass again.
 
+## Results (M5)
+
+| Task                                    | Files it touches now                                                                                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add a pipeline step                     | `job_type_enum.py`, the step file, the project doctor's step copy (`doctor_stores.py`); `artefact_enum.py` for a new artefact; the regenerated client |
+| Add a toggleable feature without a page | `feature_enum.py`, `<module>_feature.py`, `features.ts`; the gating of its routes and entry points; the regenerated client                            |
+| Add a page to a feature                 | the route file (`staticData.feature` and `icon`), one entry in `navigationEntries.ts`; the generated `routeTree.gen.ts`                               |
+| Change a display title                  | `features.ts` for a feature page, the navigation entry otherwise                                                                                      |
+
+- The full backend suite (1,668 tests), lint, typecheck, `just alembic check` and the pre-commit hooks pass.
+- Migration on 300,000 documents: 13.3 s up, 23.2 s down (M1: 13.6 s and 20.9 s).
+- Enabling a feature whose step no document has plans 300,000 rows in 35 s (143 s before planning inserted only the missing rows with one `INSERT ... SELECT` per batch).
+- `grep` finds step names outside their step files, `JobType` and the feature files only in `ENTRY_POINTS` (`EXTRACT_HTML`), the artefact `image_caption` and the archive field `image_embedding`.
+
 ## Decisions (the recommended option of each is approved)
 
 1. **Overall status derived by query** (recommended) or kept as a stored column maintained by the status module.
