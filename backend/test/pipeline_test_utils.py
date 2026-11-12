@@ -1,6 +1,9 @@
 """The pipeline steps per doctype, taken from the step declarations, and the step
 statuses of documents, read and written through crud_sdoc_step_status."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
+
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -9,9 +12,11 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from job_test_utils import HeldJobs
+from modules.doc_processing import step_run
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import planned_steps
+from systems.job_system.job_dto import JobInputBase
 
 
 def all_steps(doctype: DocType) -> list[JobType]:
@@ -71,3 +76,27 @@ def started_steps(held_jobs: HeldJobs) -> dict[int, list[JobType]]:
         if isinstance(payload, SdocProcessingJobInput) and payload.steps:
             result.setdefault(payload.sdoc_id, []).extend(payload.steps)
     return result
+
+
+@contextmanager
+def failing_started_hook() -> Generator[None, None, None]:
+    """While the context is open, the started hook of every step job raises as
+    it sets the steps processing, as if the database failed, so the job fails
+    and its steps become erroneous."""
+    set_status = step_run._set_status
+
+    def fail_to_set_processing(
+        job_type: JobType,
+        input: JobInputBase,
+        status: SDocStatus,
+        steps: list[JobType] | None = None,
+    ) -> None:
+        if status == SDocStatus.processing:
+            raise RuntimeError("cannot set the steps processing")
+        set_status(job_type, input, status, steps)
+
+    step_run._set_status = fail_to_set_processing
+    try:
+        yield
+    finally:
+        step_run._set_status = set_status

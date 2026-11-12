@@ -1,5 +1,3 @@
-import pytest
-
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -7,7 +5,6 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
-from modules.doc_processing import step_run
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocInitJobInput,
@@ -18,8 +15,7 @@ from modules.doc_processing.step_run import (
     handle_job_started,
     start_steps,
 )
-from pipeline_test_utils import read_step_status
-from systems.job_system.job_dto import JobInputBase
+from pipeline_test_utils import failing_started_hook, read_step_status
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 
@@ -136,27 +132,10 @@ def test_a_job_drops_its_steps_that_are_not_planned(
     assert _statuses(db_session, sdoc_id, steps) == [0, None]
 
 
-_set_status = step_run._set_status
-
-
-def _fail_to_set_processing(
-    job_type: JobType,
-    input: JobInputBase,
-    status: SDocStatus,
-    steps: list[JobType] | None = None,
-) -> None:
-    """Set the status of the steps of a run, but fail to set them processing,
-    as if the database failed in the started hook."""
-    if status == SDocStatus.processing:
-        raise RuntimeError("cannot set the steps processing")
-    _set_status(job_type, input, status, steps)
-
-
 def test_a_job_whose_started_hook_fails_fails_its_steps(
     db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
-    monkeypatch: pytest.MonkeyPatch,
 ):
     """A language detection job of text_running whose started hook raises fails:
     its step and the pending steps after it (spaCy and the HTML mapping) become
@@ -170,9 +149,9 @@ def test_a_job_whose_started_hook_fails_fails_its_steps(
     )
     job = started[JobType.TEXT_LANGUAGE_DETECTION]
     assert job is not None
-    monkeypatch.setattr(step_run, "_set_status", _fail_to_set_processing)
 
-    held_jobs.run(JobType.TEXT_LANGUAGE_DETECTION)
+    with failing_started_hook():
+        held_jobs.run(JobType.TEXT_LANGUAGE_DETECTION)
 
     assert JobService().get_job(job.get_id()).get_status() == JobStatus.FAILED
     steps = [
