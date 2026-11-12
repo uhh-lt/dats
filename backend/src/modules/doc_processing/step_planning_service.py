@@ -25,12 +25,11 @@ from systems.job_system.job_service import JobService
 
 class StepPlanningService(metaclass=SingletonMeta):
     """Step planning: which pipeline steps the documents of a project get a step
-    status for, from the features the project enables. The four operations are
-    the only code that plans steps (adds or changes the status rows of a
-    planning, the `crud_sdoc_step_status` planning methods) and changes
-    `project.enabled_features`, besides the project import, which adds the
-    archive's features without planning (`import_project_details.py`); the
-    steps they plan are computed when the call returns.
+    status for, from the features the project enables. Its operations are the
+    only code that plans steps (adds or changes the status rows of a planning,
+    the `crud_sdoc_step_status` planning methods) and changes
+    `project.enabled_features`; the steps they plan are computed when the call
+    returns.
 
     Lock order: every operation first locks the project row (FOR NO KEY UPDATE
     to change the features, FOR SHARE to plan a new document), then the
@@ -140,6 +139,21 @@ class StepPlanningService(metaclass=SingletonMeta):
                 doctype=doctype,
                 steps=[s for s in graph.steps(doctype) if s not in plan],
             )
+
+    def add_features(
+        self, *, db: Session, project_id: int, features: list[Feature]
+    ) -> list[Feature]:
+        """Enable the features and the features they require in addition to the
+        enabled ones, without planning any step (a project import: features whose
+        data is missing are partly available until a user completes them).
+        Returns the enabled features."""
+        project = crud_project.read_locked(db=db, id=project_id)
+        current = {Feature(f) for f in project.enabled_features}
+        enabled = self.fs.resolve_enabled_features(
+            requested=current | set(features), current=current
+        )
+        crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+        return enabled
 
     def plan_new_document(
         self, *, db: Session, project_id: int, sdoc_id: int, doctype: DocType
