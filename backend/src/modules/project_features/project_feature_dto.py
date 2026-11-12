@@ -28,6 +28,9 @@ class ProjectFeatureRead(BaseModel):
     not_planned_documents: int = Field(
         description="Number of documents the Feature applies to with a step of it not planned, and none processing or erroneous"
     )
+    lacking_documents: int = Field(
+        description="Number of documents the Feature applies to that lack its data and for which nothing runs (failed plus not planned)"
+    )
     total_documents: int = Field(
         description="Number of documents the Feature applies to"
     )

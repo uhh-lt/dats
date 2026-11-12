@@ -72,7 +72,7 @@ export const ProjectFeatureListItem = memo(
       tabNavigate({ to: "/project/$projectId/tools/health", params: { projectId } });
     }, [closeSettings, projectId, tabNavigate]);
 
-    const lacking = state.failed_documents + state.not_planned_documents;
+    const lacking = state.lacking_documents;
     const lackingDetails = [
       state.failed_documents > 0 ? `${formatCount(state.failed_documents)} failed` : null,
       state.not_planned_documents > 0 ? `${formatCount(state.not_planned_documents)} not computed` : null,
