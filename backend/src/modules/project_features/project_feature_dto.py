@@ -11,7 +11,7 @@ class ProjectFeatureRead(BaseModel):
     feature: Feature = Field(description="ID of the Feature")
     enabled: bool = Field(description="Whether the Feature is enabled in the Project")
     status: FeatureStatus = Field(
-        description="State of the Feature: disabled, computing (documents are processing), partly available (documents lack its data and nothing runs for them) or fully available"
+        description="State of the Feature: disabled, computing (documents are processing or being planned), partly available (documents lack its data and nothing runs for them) or fully available"
     )
     ready: bool = Field(
         description="Whether all documents the Feature applies to have its data"

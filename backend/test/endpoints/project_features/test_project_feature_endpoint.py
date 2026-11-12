@@ -231,6 +231,58 @@ def test_activate_feature_makes_it_computing(
     assert (read.processing_documents, read.total_documents) == (2, 2)
 
 
+def test_activate_feature_is_computing_before_its_documents_are_planned(
+    client: TestClient,
+    partly_project: PartlyProject,
+    held_jobs: HeldJobs,
+):
+    """No document of partly_project processes. Right after the request the
+    activation job has planned nothing yet, but RAG chat and sentence similarity
+    search, which it requires, are computing already."""
+    project_id = partly_project["project"].id
+
+    _activate(client, project_id, Feature.RAG_CHAT)
+
+    features = _features(client, project_id)
+    for feature in (Feature.RAG_CHAT, Feature.SENTENCE_SIMILARITY_SEARCH):
+        assert features[feature].status == FeatureStatus.COMPUTING, feature
+        assert features[feature].processing_documents == 0, feature
+
+
+def test_activate_feature_twice_starts_one_activation(
+    client: TestClient,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """Activating a feature whose activation is still pending starts no second
+    activation job: the pending one plans all documents."""
+    project_id = feature_project["project"].id
+
+    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+
+    assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 1
+
+
+def test_activate_two_features_sharing_a_step_starts_it_once(
+    client: TestClient,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """Full-text search and search & auto-annotate both need the index: of their
+    two activations, only the first plans and starts it."""
+    p = feature_project
+
+    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
+
+    assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 2
+    assert plan_activations(held_jobs) == {
+        p["text_done"].id: [JobType.TEXT_ES_INDEX],
+        p["text_running"].id: [JobType.TEXT_ES_INDEX],
+    }
+
+
 def test_activate_image_captions_plans_the_text_steps_of_images(
     client: TestClient,
     db_session,

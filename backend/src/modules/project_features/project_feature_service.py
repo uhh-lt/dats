@@ -10,6 +10,7 @@ from core.project.project_crud import crud_project
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import feature_steps
 from modules.project_features.project_feature_dto import ProjectFeatureRead
+from systems.feature_system.feature_registry import feature_registry
 
 
 class ProjectFeatureService(metaclass=SingletonMeta):
@@ -28,9 +29,14 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         """The state of every feature in the project. Per feature, each document
         it applies to counts once, by the status of the feature's steps
         (`step_set_status`: processing, else failed, else not planned, else
-        ready). The counts are computed in one aggregate query."""
+        ready). The counts are computed in one aggregate query. A feature with a
+        pending activation, or required by one, is computing until the
+        activation job has planned all documents."""
         project = crud_project.read(db=db, id=project_id)
         enabled = {Feature(f) for f in project.enabled_features}
+        activating = feature_registry.closure(
+            Feature(f) for f in project.feature_activations
+        )
 
         # 1) the steps of each feature per doctype it applies to
         steps = {
@@ -79,6 +85,7 @@ class ProjectFeatureService(metaclass=SingletonMeta):
                     enabled=feature in enabled,
                     status=_status(
                         enabled=feature in enabled,
+                        activating=feature in activating,
                         processing=processing,
                         lacking=failed + not_planned,
                     ),
@@ -94,11 +101,14 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         return result
 
 
-def _status(*, enabled: bool, processing: int, lacking: int) -> FeatureStatus:
-    """The status of a feature from the counts of its documents."""
+def _status(
+    *, enabled: bool, activating: bool, processing: int, lacking: int
+) -> FeatureStatus:
+    """The status of a feature from its pending activation and the counts of
+    its documents."""
     if not enabled:
         return FeatureStatus.DISABLED
-    if processing > 0:
+    if activating or processing > 0:
         return FeatureStatus.COMPUTING
     if lacking > 0:
         return FeatureStatus.PARTLY_AVAILABLE
