@@ -217,10 +217,6 @@ class PipelineGraph:
         """The steps started when this step finished (empty for non-pipeline jobs)."""
         return self._successors.get(job_type, [])
 
-    def edges(self) -> set[tuple[JobType, JobType]]:
-        """All (step, successor) pairs."""
-        return {(jt, s) for jt, succ in self._successors.items() for s in succ}
-
     def job(self, step: JobType) -> JobType:
         """The job that computes this step (the step itself for most steps)."""
         return self._job_of.get(step, step)
