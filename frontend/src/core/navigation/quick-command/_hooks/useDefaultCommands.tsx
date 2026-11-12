@@ -22,7 +22,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const tabNavigate = useTabNavigate();
   const entries = useEnabledNavigationEntries();
 
-  const featureCommands = useMemo(
+  const navigationCommands = useMemo(
     () =>
       [...entries].sort(byCategory).map(
         (entry: ResolvedNavigationEntry): CommandItem => ({
@@ -78,7 +78,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["new", "document", "create", "add", "upload"],
       },
 
-      ...featureCommands,
+      ...navigationCommands,
       // Settings commands
       {
         id: "project-settings",
@@ -92,6 +92,6 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["settings", "config", "configuration", "project"],
       },
     ],
-    [openCodeCreate, openTagCreate, openDocumentUpload, openProjectSettings, featureCommands],
+    [openCodeCreate, openTagCreate, openDocumentUpload, openProjectSettings, navigationCommands],
   );
 };
