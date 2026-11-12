@@ -15,18 +15,22 @@ from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
     hooks = JobService().hooks
-    run_input = hooks.started(jobtype, payload)
-    if run_input is None:
-        # e.g. its pipeline steps are not planned anymore: nothing to compute
-        job.update(
-            status_message="Skipped: nothing to compute anymore.",
-            finished=datetime.now(UTC),
-            publish=False,
-        )
-        publish_job_update(job, status_override=JobStatus.FINISHED)
-        return None
-    publish_job_update(job)
+    # the failed hook gets the stored input if the started hook raises
+    run_input = payload
     try:
+        started = hooks.started(jobtype, payload)
+        if started is None:
+            # e.g. its pipeline steps are not planned anymore: nothing to compute
+            job.update(
+                status_message="Skipped: nothing to compute anymore.",
+                finished=datetime.now(UTC),
+                publish=False,
+            )
+            publish_job_update(job, status_override=JobStatus.FINISHED)
+            return None
+        run_input = started
+        publish_job_update(job)
+
         # figure whether to run the job on gpu
         if job.job.origin.startswith("gpu"):
             import torch
@@ -50,8 +54,9 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
         else:
             output = handler(payload=run_input, job=job)
 
-        # successfully finished job (a failing finish hook, e.g. enqueueing the next
-        # pipeline step, fails the job, so it is handled like a failing handler):
+        # successfully finished job (a failing finish hook fails the job, so it is
+        # handled like a failing handler; e.g. enqueueing the job after an entry
+        # point, as a pipeline step that cannot start fails its steps instead):
         job.update(finished=datetime.now(UTC), publish=False)
         hooks.finished(jobtype, run_input, output)
     except Exception as e:
