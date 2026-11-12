@@ -1,7 +1,6 @@
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import TypedDict
-from unittest.mock import patch
 
 import pytest
 from loguru import logger
@@ -10,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
-from common.job_type_enum import JobType
 from common.meta_type_enum import MetaType
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
@@ -70,8 +68,6 @@ from provenance_test_utils import (
 )
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import JobInputBase
-from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
 
@@ -652,16 +648,3 @@ def feature_toggle_eximport_projects(
         "image": image,
         "sentence_embeddings": sentence_embeddings,
     }
-
-
-@pytest.fixture(scope="function")
-def started_jobs() -> Generator[list[tuple[JobType, JobInputBase]], None, None]:
-    """Captures the jobs started while the fixture is active instead of enqueueing
-    them, to check that an import starts no processing."""
-    started: list[tuple[JobType, JobInputBase]] = []
-
-    def _start_job(job_type: JobType, payload: JobInputBase, priority=None) -> None:
-        started.append((job_type, payload))
-
-    with patch.object(JobService, "start_job", side_effect=_start_job):
-        yield started

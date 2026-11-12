@@ -5,7 +5,7 @@ import wave
 from enum import Enum
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Generator, TypedDict, TypeVar
+from typing import Generator, TypedDict, TypeVar
 from unittest.mock import patch
 
 import ffmpeg
@@ -35,7 +35,7 @@ from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService
 
@@ -316,6 +316,23 @@ class PairedSteps(TypedDict):
     ran: dict[JobType, list[int]]
 
 
+# the documents each paired step ran for, by step; module-level functions, as
+# RQ pickles a job's handler by reference
+_PAIRED_RAN: dict[str, list[int]] = {"test_producer_step": [], "test_consumer_step": []}
+
+
+def _pass_on(payload: SdocProcessingJobInput) -> SdocProcessingJobInput:
+    return payload
+
+
+def _handle_producer(payload: SdocProcessingJobInput, job: Job) -> None:
+    _PAIRED_RAN["test_producer_step"].append(payload.sdoc_id)
+
+
+def _handle_consumer(payload: SdocProcessingJobInput, job: Job) -> None:
+    _PAIRED_RAN["test_consumer_step"].append(payload.sdoc_id)
+
+
 @pytest.fixture(scope="function")
 def paired_steps() -> Generator[PairedSteps, None, None]:
     """
@@ -354,20 +371,13 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     for p in patches:
         p.start()
 
-    ran: dict[JobType, list[int]] = {producer: [], consumer: []}
+    for documents in _PAIRED_RAN.values():
+        documents.clear()
+    ran = {producer: _PAIRED_RAN[producer.value], consumer: _PAIRED_RAN[consumer.value]}
 
-    def enrich(payload: SdocProcessingJobInput) -> SdocProcessingJobInput:
-        return payload
-
-    def recorder(step: JobType) -> Callable[[SdocProcessingJobInput, Job], None]:
-        def handle(payload: SdocProcessingJobInput, job: Job) -> None:
-            ran[step].append(payload.sdoc_id)
-
-        return handle
-
-    for step, requires, produces in (
-        (producer, {Artefact.CONTENT}, {artefacts[0], artefacts[1]}),
-        (consumer, {artefacts[0], artefacts[1]}, {artefacts[2]}),
+    for step, requires, produces, handler in (
+        (producer, {Artefact.CONTENT}, {artefacts[0], artefacts[1]}, _handle_producer),
+        (consumer, {artefacts[0], artefacts[1]}, {artefacts[2]}, _handle_consumer),
     ):
         pipeline_step(
             requires=requires,
@@ -375,8 +385,8 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
             doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
         )(
             register_job(
-                job_type=step, input_type=SdocProcessingJobInput, enricher=enrich
-            )(recorder(step))
+                job_type=step, input_type=SdocProcessingJobInput, enricher=_pass_on
+            )(handler)
         )
 
     yield {"producer": producer, "consumer": consumer, "ran": ran}
@@ -443,19 +453,6 @@ def dummy_step_projects(
         src_file=fsr.write_text_to_temp_file(DUMMY_UPLOAD_TEXT),
     )
     return {"project": project, "target_project": target_project, "upload": upload}
-
-
-@pytest.fixture(scope="function")
-def started_jobs() -> Generator[list[tuple[JobType, JobInputBase]], None, None]:
-    """Captures the jobs started while the fixture is active instead of enqueueing
-    them, so the test runs the step jobs itself."""
-    started: list[tuple[JobType, JobInputBase]] = []
-
-    def _start_job(job_type: JobType, payload: JobInputBase, priority=None) -> None:
-        started.append((job_type, payload))
-
-    with patch.object(JobService, "start_job", side_effect=_start_job):
-        yield started
 
 
 # --- uploads of every doctype that needs no hosted model to start ------------

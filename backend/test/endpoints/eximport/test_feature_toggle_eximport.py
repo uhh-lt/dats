@@ -9,12 +9,12 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
+from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from pipeline_test_utils import read_all_step_status
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import JobInputBase
 
 from .conftest import FeatureToggleEximportProjects
 
@@ -65,7 +65,7 @@ def test_project_import_merges_the_enabled_features(
 def test_project_import_plans_and_starts_nothing(
     db_session: Session,
     feature_toggle_eximport_projects: FeatureToggleEximportProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ) -> None:
     """Keyword statistics is enabled in the target, but the import neither plans
     its steps for the imported documents nor starts a job: no step is processing
@@ -81,7 +81,7 @@ def test_project_import_plans_and_starts_nothing(
     for sdoc in imported:
         assert 0 not in _step_status(db_session, sdoc).values(), sdoc.filename
         assert JobType.TEXT_KEYWORDS.value not in _step_status(db_session, sdoc)
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
 
 
 def test_project_round_trip_keeps_step_statuses(

@@ -10,6 +10,7 @@ from common.languages_enum import Language
 from core.annotation.annotation_document_crud import crud_adoc
 from core.project.project_crud import crud_project
 from core.user.user_orm import UserORM
+from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
@@ -17,7 +18,6 @@ from modules.doc_processing.doc_processing_dto import (
 from modules.doc_processing.step_planning_service import StepPlanningService
 from pipeline_test_utils import read_all_step_status, read_step_status
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import JobInputBase
 
 from .conftest import PlanningProjects
 
@@ -37,11 +37,11 @@ SETTINGS = ProcessingSettings(
 )
 
 
-def _activation_job(
-    started_jobs: list[tuple[JobType, JobInputBase]],
-) -> FeatureActivationJobInput:
-    assert len(started_jobs) == 1, started_jobs
-    job_type, payload = started_jobs[0]
+def _activation_job(held_jobs: HeldJobs) -> FeatureActivationJobInput:
+    """The input of the one held job, a feature activation."""
+    jobs = held_jobs.jobs()
+    assert len(jobs) == 1, jobs
+    job_type, payload = jobs[0]
     assert job_type == JobType.FEATURE_ACTIVATION
     assert isinstance(payload, FeatureActivationJobInput)
     return payload
@@ -55,7 +55,7 @@ def _activation_job(
 def test_enable_feature_plans_only_the_documents_of_the_project(
     db_session: Session,
     planning_projects: PlanningProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Enabling full-text search in project plans the index of its two text
     documents and starts it where its input is finished; the finished steps of
@@ -88,7 +88,7 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
     assert read_step_status(db_session, p["indexing"].id, JobType.TEXT_ES_INDEX) == 0
-    assert _activation_job(started_jobs).sdoc_steps == {
+    assert _activation_job(held_jobs).sdoc_steps == {
         p["done"].id: [JobType.TEXT_ES_INDEX],
         p["language_failed"].id: [JobType.TEXT_ES_INDEX],
     }
@@ -97,7 +97,7 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
 def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     db_session: Session,
     planning_projects: PlanningProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Enabling full-text search plans the core steps text_spacy and
     text_html_mapping for language_failed: text_spacy is erroneous as its input
@@ -128,7 +128,7 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
     db_session: Session,
     planning_projects: PlanningProjects,
     test_user: UserORM,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """While a planning holds its document locks, another transaction can still
     insert a row that references a planned document (an annotation document):
@@ -168,7 +168,7 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
 def test_disable_feature_unplans_only_the_processing_steps_of_the_project(
     db_session: Session,
     planning_projects: PlanningProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """After enabling full-text search in project, disabling it unplans the
     processing index of done; its finished steps stay, and the processing index
@@ -208,7 +208,7 @@ def test_disable_feature_unplans_only_the_processing_steps_of_the_project(
 def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
     db_session: Session,
     planning_projects: PlanningProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Adding RAG chat to the other project, as an import does, keeps full-text
     search and enables sentence similarity search, which RAG chat requires; the
@@ -237,7 +237,7 @@ def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
         "text_es_index": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
 
 
 # ===========================================================================
@@ -248,7 +248,7 @@ def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
 def test_plan_new_document_plans_the_steps_of_the_enabled_features(
     db_session: Session,
     planning_projects: PlanningProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """A new text document of the other project, which enables full-text
     search, gets the minimal text steps and the index as processing, and no
@@ -271,4 +271,4 @@ def test_plan_new_document_plans_the_steps_of_the_enabled_features(
         "text_html_mapping": 0,
         "text_es_index": 0,
     }
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
