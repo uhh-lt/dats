@@ -1,10 +1,16 @@
+import threading
+
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
+from core.annotation.annotation_document_crud import crud_adoc
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
+from core.user.user_orm import UserORM
+from repos.db.sql_repo import SQLRepo
 
 from .conftest import StepStatusProject
 
@@ -69,6 +75,44 @@ def test_read_sdoc_ids_to_plan_selects_missing_and_redo_steps(
 
     assert missing == [p["failed"].id]
     assert redo == [p["failed"].id]
+
+
+def test_read_sdoc_ids_to_plan_does_not_block_rows_that_reference_the_documents(
+    db_session: Session, step_status_project: StepStatusProject, test_user: UserORM
+):
+    """While a planning holds its document locks, another transaction can still
+    insert a row that references a locked document (an annotation document): the
+    planning locks FOR NO KEY UPDATE, which does not conflict with the FOR KEY
+    SHARE lock of a foreign key check."""
+    p = step_status_project
+    locked = crud_sdoc_step_status.read_sdoc_ids_to_plan(
+        db=db_session,
+        project_id=p["project"].id,
+        doctype=DocType.text,
+        missing_steps=[JobType.TEXT_SPACY],
+        redo_steps=[],
+        redo_statuses=[],
+    )
+    assert p["failed"].id in locked
+    errors: list[Exception] = []
+
+    def _annotate() -> None:
+        try:
+            with SQLRepo().transaction() as db:
+                db.execute(text("SET LOCAL lock_timeout = '1500ms'"))
+                crud_adoc.exists_or_create(
+                    db=db, user_id=test_user.id, sdoc_id=p["failed"].id
+                )
+        except Exception as e:
+            errors.append(e)
+
+    thread = threading.Thread(target=_annotate)
+    thread.start()
+    thread.join(timeout=10)
+    db_session.rollback()
+
+    assert not thread.is_alive()
+    assert errors == []
 
 
 def test_count_by_project_groups_the_documents_by_step_status(
