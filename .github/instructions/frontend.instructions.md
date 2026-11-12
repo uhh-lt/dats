@@ -94,7 +94,7 @@ Rules:
 
 - `FEATURES` in `core/feature/features.ts` holds the one title, description and area of every feature (`tsc` enforces one entry per `Feature`); never write a feature's title anywhere else.
 - `NAVIGATION_ENTRIES` in `core/navigation/navigationEntries.ts` lists every page of a project once, with its group, route, shortcut and command, and takes the feature and the icon from the page's route; the sidebar, the analysis dashboard, the command palette, the shortcuts and the tab titles are generated from it through `useNavigationEntries`.
-- A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from `FEATURES`, and a page heading uses `useNavigationTitle()`.
+- A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from `FEATURES`, and a page heading uses `useNavigationTitle()` (lint: `local/navigation-entries`, which also checks that `to` is a page route with `staticData.tab`).
 - The feature of a page is declared only on its route or a parent route (`staticData.feature`, see [frontend-route](frontend-route.instructions.md)), never in its navigation entry.
 - Gate an embedded entry point (menu item, button, search box) with `useFeature(Feature.X)` from `@core/feature`, which reads `ProjectRead.enabled_features`.
 - Never gate on the feature states (`projectQueries.features`): they are an aggregate over all documents, loaded only by `useFeatureCoverage` and the Features tab.
