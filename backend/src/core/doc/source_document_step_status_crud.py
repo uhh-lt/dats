@@ -70,17 +70,11 @@ class CRUDSourceDocumentStepStatus(
     Every write first locks the documents' rows (`_lock_sdocs`), except the
     planning writes (`create_missing`, `update_to_processing`,
     `update_blocked_to_erroneous`), which run after `read_sdoc_ids_to_plan`
-    locked the documents to plan: a status change and a planning of the same
-    document run one after the other, so the planning never misses a step that
-    finishes while it plans.
-
-    Known gaps, accepted for now (docs/development/feature-toggles-plan.md):
-    - A step that commits finished just before a planning can start a successor
-      that the planning starts too; it computes twice.
-    - If the activation job cannot be enqueued after the planning committed, its
-      rows stay processing without a job until a user restarts the feature.
-    - `handle_job_started` reads and sets a job's steps in two transactions, so
-      a disable in between is undone for that document."""
+    locked the documents to plan. Only `StepPlanningService`
+    (`modules/doc_processing`) calls the planning methods
+    (`read_sdoc_ids_to_plan`, `create_missing`, `update_to_processing`,
+    `update_blocked_to_erroneous`, `read_startable`, `delete_pending_by_project`);
+    it states the lock order and the accepted gaps of the locking."""
 
     ### CREATE OPERATIONS ###
     # Inherited from SQLCRUDBase (create_multi: the statuses of new documents)
@@ -91,8 +85,9 @@ class CRUDSourceDocumentStepStatus(
         """
         Plan the steps for the documents of the project and doctype: insert a
         processing row for every (document, step) that has no row; existing rows
-        keep their status. The caller has locked the documents that lack a step
-        (`read_sdoc_ids_to_plan` with these steps as `missing_steps`).
+        keep their status. `StepPlanningService` has locked the documents that
+        lack a step (`read_sdoc_ids_to_plan` with these steps as
+        `missing_steps`).
 
         Args:
             project_id: The project of the documents.
@@ -380,8 +375,8 @@ class CRUDSourceDocumentStepStatus(
     ) -> StepRows:
         """
         Plan the given steps of the documents again: set those with one of
-        `statuses` to processing. The caller has locked the documents
-        (`read_sdoc_ids_to_plan`).
+        `statuses` to processing. `StepPlanningService` has locked the
+        documents (`read_sdoc_ids_to_plan`).
 
         Args:
             sdoc_ids: The documents.
@@ -420,8 +415,8 @@ class CRUDSourceDocumentStepStatus(
         Set the given rows that are processing to erroneous if one of their input
         steps is erroneous or not planned: they cannot run. The steps are handled
         in the order of `rows`, which must be the pipeline order, so a failed
-        step fails the given steps after it. The caller has locked the documents
-        (`read_sdoc_ids_to_plan`).
+        step fails the given steps after it. `StepPlanningService` has locked
+        the documents (`read_sdoc_ids_to_plan`).
 
         Args:
             rows: The documents per step to check, in pipeline order.
@@ -608,8 +603,8 @@ class CRUDSourceDocumentStepStatus(
         )
 
     def _lock_sdocs(self, *, db: Session, sdoc_ids: list[int]) -> None:
-        """Lock the documents' rows, in id order (no deadlocks), for a change of
-        their step statuses."""
+        """Lock the documents' rows for a change of their step statuses, in the
+        lock order of `StepPlanningService`."""
         ids = sorted(set(sdoc_ids))
         for i in range(0, len(ids), BATCH_SIZE):
             db.execute(
