@@ -4,6 +4,7 @@ run on demand in this process through the real job handler."""
 import signal
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Any
 
 import rq
 from redis import Redis
@@ -116,17 +117,33 @@ def hold_jobs() -> Generator[HeldJobs, None, None]:
         held_jobs.empty()
 
 
+class _CutQueue(rq.Queue):
+    """A queue that enqueues while the shared budget of starts lasts, and then
+    on a Redis that cannot be reached."""
+
+    def __init__(self, queue: rq.Queue, down: Redis, budget: list[int]) -> None:
+        super().__init__(name=queue.name, connection=queue.connection)
+        self._down = rq.Queue(name=queue.name, connection=down)
+        self._budget = budget
+
+    def enqueue(self, *args: Any, **kwargs: Any) -> rq.job.Job:
+        if self._budget[0] <= 0:
+            return self._down.enqueue(*args, **kwargs)
+        self._budget[0] -= 1
+        return super().enqueue(*args, **kwargs)
+
+
 @contextmanager
-def unreachable_redis() -> Generator[None, None, None]:
+def unreachable_redis(after_starts: int = 0) -> Generator[None, None, None]:
     """Point `JobService().queues` at a Redis that cannot be reached while the
-    context is open, so every `start_job` fails like when Redis is down."""
+    context is open, so every `start_job` fails like when Redis is down; the
+    first `after_starts` starts still reach the queues (e.g. those of
+    `held_jobs`), to cut the queue in the middle of a run."""
     js = JobService()
     original = js.queues
     down = Redis(host="localhost", port=1, socket_connect_timeout=1)
-    js.queues = {
-        key: rq.Queue(name=queue.name, connection=down)
-        for key, queue in original.items()
-    }
+    budget = [after_starts]
+    js.queues = {key: _CutQueue(queue, down, budget) for key, queue in original.items()}
     try:
         yield
     finally:

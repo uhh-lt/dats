@@ -32,6 +32,7 @@ from systems.feature_system.feature_exceptions import (
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
+from systems.job_system.job_exceptions import JobQueueUnavailableError
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
 
@@ -234,9 +235,14 @@ class StepPlanningService(metaclass=SingletonMeta):
         (`_plan_activation_batch`), on the low-priority queue with the settings
         chosen by the user. After each batch commits, its steps whose inputs are
         finished start, enriched like a recompute; the steps after them start
-        through the normal advancing. A step job that cannot be started (its
-        input data is missing) sets its steps and the pending steps after them
-        to erroneous, like a failed job, and the other documents still start.
+        through the normal advancing. A step job whose input data is missing
+        sets its steps and the pending steps after them to erroneous, like a
+        failed job, and the other documents still start.
+
+        If the queue cannot be reached, the activation stops and fails with
+        that cause: the batch undoes its own change for the steps it could not
+        start and the batch's steps after them (`_undo_batch`), so the feature
+        reads partly available and Complete plans them again.
 
         The activation stops when the feature is disabled or another activation
         of it replaces this one. At the end, also when it fails, it removes the
@@ -248,6 +254,7 @@ class StepPlanningService(metaclass=SingletonMeta):
             f"Planning {payload.feature.value} for the documents of project "
             f"{payload.project_id} up to {payload.last_sdoc_id}..."
         )
+        graph = pipeline_registry.graph()
         after_sdoc_id = 0
         documents = 0
         failed = 0
@@ -259,15 +266,31 @@ class StepPlanningService(metaclass=SingletonMeta):
                     )
                 if batch is None:
                     break
-                after_sdoc_id, sdoc_steps = batch
-                for sdoc_id, steps in sdoc_steps.items():
-                    started = start_steps(
-                        project_id=payload.project_id,
-                        sdoc_id=sdoc_id,
-                        steps=steps,
-                        settings=payload.settings,
-                        priority=JobPriority.LOW,
-                    )
+                after_sdoc_id, sdoc_steps, change = batch
+                # one start per job, so a failure knows which steps did not start
+                starts = [
+                    (sdoc_id, job_steps)
+                    for sdoc_id, steps in sdoc_steps.items()
+                    for job_steps in graph.group_by_job(steps).values()
+                ]
+                for i, (sdoc_id, job_steps) in enumerate(starts):
+                    try:
+                        started = start_steps(
+                            project_id=payload.project_id,
+                            sdoc_id=sdoc_id,
+                            steps=job_steps,
+                            settings=payload.settings,
+                            priority=JobPriority.LOW,
+                        )
+                    except JobQueueUnavailableError:
+                        with self.sqlr.transaction() as db:
+                            self._undo_batch(
+                                db=db,
+                                activation=payload,
+                                change=change,
+                                unstarted=starts[i:],
+                            )
+                        raise
                     failed += sum(job is None for job in started.values())
                 documents += len(sdoc_steps)
                 job.update(
@@ -322,7 +345,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         db: Session,
         activation: FeatureActivationJobInput,
         after_sdoc_id: int,
-    ) -> tuple[int, dict[int, list[JobType]]] | None:
+    ) -> tuple[int, dict[int, list[JobType]], statements.PlanningChange] | None:
         """Plan the next batch of a feature activation: the documents after
         `after_sdoc_id` up to the activation's last document, at most
         `ACTIVATION_BATCH_SIZE`, with the features the project enables now (see
@@ -330,8 +353,9 @@ class StepPlanningService(metaclass=SingletonMeta):
         SHARE), so it waits for a request that changes the features and reads
         the committed state.
 
-        Returns the end of the batch and the steps whose inputs are finished per
-        document (start them once the transaction commits), or None if the
+        Returns the end of the batch, the steps whose inputs are finished per
+        document (start them once the transaction commits) and the rows the
+        batch can undo (`_undo_batch`), or None if the
         activation is over: no document is left, the feature is disabled, or
         the feature's pending activation has another id (a restart or a request
         that rolled back)."""
@@ -352,7 +376,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         )
         if until is None:
             return None
-        sdoc_steps = self._plan_missing_steps(
+        sdoc_steps, change = self._plan_missing_steps(
             db=db,
             project_id=activation.project_id,
             feature=feature,
@@ -360,7 +384,7 @@ class StepPlanningService(metaclass=SingletonMeta):
             sdoc_ids=(after_sdoc_id, until),
             restart=activation.restart,
         )
-        return until, sdoc_steps
+        return until, sdoc_steps, change
 
     def _finish_activation(
         self, *, db: Session, activation: FeatureActivationJobInput
@@ -378,6 +402,48 @@ class StepPlanningService(metaclass=SingletonMeta):
             project_id=activation.project_id,
             feature=activation.feature,
             activation_id=None,
+        )
+
+    def _undo_batch(
+        self,
+        *,
+        db: Session,
+        activation: FeatureActivationJobInput,
+        change: statements.PlanningChange,
+        unstarted: list[tuple[int, list[JobType]]],
+    ) -> None:
+        """Undo the change of a committed batch for the steps it could not start
+        (the queue cannot be reached), per document, and for the batch's rows
+        after them: a row the batch created is removed, a row it set from
+        erroneous to processing is erroneous again (it may be a core step, which
+        must not read finished), and a row a restart planned again stays
+        processing, as it was before. A row of the batch that waits for an input
+        step outside the batch stays as it is: that input starts it. Only rows
+        that are still processing change. Takes the project lock (FOR SHARE)
+        and then the documents, like a batch, and does nothing if the
+        activation is not the feature's pending one anymore."""
+        project = statements.read_project_locked(
+            db=db, project_id=activation.project_id, shared=True
+        )
+        if not self._is_pending(project=project, activation=activation):
+            return
+        graph = pipeline_registry.graph()
+        undo: dict[int, set[JobType]] = {}
+        for sdoc_id, steps in unstarted:
+            undo.setdefault(sdoc_id, set()).update(steps, graph.descendants(steps))
+
+        def unstarted_rows(rows: statements.StepRows) -> statements.StepRows:
+            return {
+                step: [i for i in sdoc_ids if step in undo.get(i, set())]
+                for step, sdoc_ids in rows.items()
+            }
+
+        statements.undo_planning(
+            db=db,
+            change=statements.PlanningChange(
+                created=unstarted_rows(change.created),
+                redone=unstarted_rows(change.redone),
+            ),
         )
 
     def _is_pending(
@@ -400,7 +466,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         enabled: list[Feature],
         sdoc_ids: tuple[int, int],
         restart: bool,
-    ) -> dict[int, list[JobType]]:
+    ) -> tuple[dict[int, list[JobType]], statements.PlanningChange]:
         """Plan for the documents of the project in the id range (after, until]
         the steps that the feature (with
         the features it requires) adds to the enabled plan, its own steps and the
@@ -425,12 +491,14 @@ class StepPlanningService(metaclass=SingletonMeta):
            recomputed (the input then starts it).
 
         Returns the steps of 1) and 2) whose inputs are finished, per document:
-        they can start now, the others start when their inputs finish."""
+        they can start now, the others start when their inputs finish; and the
+        rows of 1) and of 2) without the restart, to undo them."""
         graph = pipeline_registry.graph()
         features = self.registry.closure([feature])
         others = [f for f in enabled if f not in features]
 
         sdoc_steps: dict[int, list[JobType]] = {}
+        change = statements.PlanningChange(created={}, redone={})
         for doctype in DocType:
             plan = planned_steps(doctype=doctype, features=enabled)
             without = set(planned_steps(doctype=doctype, features=others))
@@ -482,6 +550,9 @@ class StepPlanningService(metaclass=SingletonMeta):
                 steps=to_restart,
                 statuses=[SDocStatus.processing],
             )
+            for rows, changed in ((change.created, planned), (change.redone, redone)):
+                for step, step_ids in changed.items():
+                    rows.setdefault(step, []).extend(step_ids)
             # a restart also matches the rows it has just planned (processing)
             rows = {
                 step: step_ids
@@ -502,4 +573,4 @@ class StepPlanningService(metaclass=SingletonMeta):
             statements.update_blocked_to_erroneous(db=db, rows=rows, inputs=inputs)
             sdoc_steps |= statements.read_startable(db=db, rows=rows, inputs=inputs)
 
-        return sdoc_steps
+        return sdoc_steps, change
