@@ -115,7 +115,8 @@ register_feature(
 
 - The title, description and area of a feature live in the frontend feature map (`FEATURES`), not in the backend.
 - `systems/feature_system` holds the generic part: the declarations, the registry, the requirement resolution, the `require_feature` dependencies and `GET /feature`.
-- `modules/project_features` holds what knows projects and documents: `ProjectFeatureService` plans the steps of a document and of an activation, and computes the state of every feature of a project.
+- The planner lives in the `pipeline` package of `modules/doc_processing`: `PipelineGraph` answers the plan of a doctype for the needed artefacts and every question about which step feeds which (input steps, the steps after a step, the steps some artefacts need), and `step_planning.py` answers the steps of enabled features (`planned_steps`, `feature_steps`) with the feature registry.
+- `modules/project_features` holds what knows projects and documents: `ProjectFeatureService` plans the steps of an activation and computes the state of every feature of a project.
 - A startup check fails on undeclared artefacts, artefacts nobody produces, and cycles.
 
 ### Pipeline
