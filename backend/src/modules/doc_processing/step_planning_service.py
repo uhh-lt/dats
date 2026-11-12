@@ -1,5 +1,7 @@
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -21,10 +23,17 @@ from modules.doc_processing.pipeline.step_planning import (
     feature_steps,
     planned_steps,
 )
+from modules.doc_processing.step_run import start_steps
+from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_exceptions import FeatureDisabledError
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
+from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import JobPriority
+
+if TYPE_CHECKING:
+    from core.project.project_orm import ProjectORM
 
 # documents a feature activation plans per transaction (the longest lock hold)
 ACTIVATION_BATCH_SIZE = conf.feature_activation.batch_size
@@ -40,11 +49,12 @@ class StepPlanningService(metaclass=SingletonMeta):
     own, in `step_planning_statements.py`, which only this service imports.
 
     Enabling, completing and restarting a feature only change the project and
-    start a feature activation job, which plans and starts the steps of the
-    project's documents in batches (`plan_activation_batch`), one transaction
-    each. The request stores the activation's id as the feature's pending
-    activation, which shows the feature as computing until the job removes it
-    (`finish_activation`), and starts the job before it commits: the job's
+    start a feature activation job, which runs the activation
+    (`handle_feature_activation_job`): it plans and starts the steps of the
+    project's documents in batches, one transaction each. The request stores
+    the activation's id as the feature's pending activation, which shows the
+    feature as computing until the activation removes it, and starts the job
+    before it commits: the job's
     first statement in every batch is a share lock on the project, which waits
     until the request's lock is released, so the job reads the committed
     state. If the enqueue fails, the request rolls back; if the request rolls
@@ -73,6 +83,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         cls.registry = feature_registry
         cls.fs = FeatureService()
         cls.js = JobService()
+        cls.sqlr = SQLRepo()
         return super(StepPlanningService, cls).__new__(cls)
 
     def enable_feature(
@@ -86,7 +97,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         """Enable the feature, or complete it if it is enabled already: enable it
         and the features it requires, and start a feature activation job that
         computes their data for the documents that lack it (see
-        `plan_activation_batch`) on the low-priority queue with these settings.
+        `_plan_activation_batch`) on the low-priority queue with these settings.
         A feature with a pending activation gets no second job. Returns the
         project."""
         project = statements.read_project_locked(db=db, project_id=project_id)
@@ -209,69 +220,65 @@ class StepPlanningService(metaclass=SingletonMeta):
             status=SDocStatus.processing,
         )
 
-    def plan_activation_batch(
-        self,
-        *,
-        db: Session,
-        activation: FeatureActivationJobInput,
-        after_sdoc_id: int,
-    ) -> tuple[int, dict[int, list[JobType]]] | None:
-        """Plan the next batch of a feature activation: the documents after
-        `after_sdoc_id` up to the activation's last document, at most
-        `ACTIVATION_BATCH_SIZE`, with the features the project enables now (see
-        `_plan_missing_steps`). Its first statement locks the project (FOR
-        SHARE), so it waits for a request that changes the features and reads
-        the committed state.
-
-        Returns the end of the batch and the steps whose inputs are finished per
-        document (start them once the transaction commits), or None if the
-        activation is over: no document is left, the feature is disabled, or
-        the feature's pending activation has another id (a restart or a request
-        that rolled back)."""
-        project = statements.read_project_locked(
-            db=db, project_id=activation.project_id, shared=True
-        )
-        feature = activation.feature
-        if (
-            feature.value not in project.enabled_features
-            or project.feature_activations.get(feature.value)
-            != activation.activation_id
-        ):
-            return None
-        until = statements.read_batch_end(
-            db=db,
-            project_id=activation.project_id,
-            after_sdoc_id=after_sdoc_id,
-            last_sdoc_id=activation.last_sdoc_id,
-            batch_size=ACTIVATION_BATCH_SIZE,
-        )
-        if until is None:
-            return None
-        sdoc_steps = self._plan_missing_steps(
-            db=db,
-            project_id=activation.project_id,
-            feature=feature,
-            enabled=[Feature(f) for f in project.enabled_features],
-            sdoc_ids=(after_sdoc_id, until),
-            restart=activation.restart,
-        )
-        return until, sdoc_steps
-
-    def finish_activation(
-        self, *, db: Session, activation: FeatureActivationJobInput
+    def handle_feature_activation_job(
+        self, *, job: Job, payload: FeatureActivationJobInput
     ) -> None:
-        """End a feature activation, done or failed: remove the feature's
-        pending activation if it is still this one, so the feature is computing
-        only while its documents process."""
-        project = statements.read_project_locked(
-            db=db, project_id=activation.project_id
+        """Run a feature activation: plan and start the steps that enabling,
+        completing or restarting a feature needs for the project's documents up
+        to its last document, in batches of documents with one transaction each
+        (`_plan_activation_batch`), on the low-priority queue with the settings
+        chosen by the user. After each batch commits, its steps whose inputs are
+        finished start, enriched like a recompute; the steps after them start
+        through the normal advancing. A step job that cannot be started (its
+        input data is missing) sets its steps and the pending steps after them
+        to erroneous, like a failed job, and the other documents still start.
+
+        The activation stops when the feature is disabled or another activation
+        of it replaces this one. At the end, also when it fails, it removes the
+        feature's pending activation (`_finish_activation`), so the feature
+        reads partly available and Complete plans the documents it did not
+        reach. It opens its transactions itself: one commit per batch, so no
+        lock is held longer than a batch."""
+        logger.info(
+            f"Planning {payload.feature.value} for the documents of project "
+            f"{payload.project_id} up to {payload.last_sdoc_id}..."
         )
-        feature = activation.feature
-        if project.feature_activations.get(feature.value) != activation.activation_id:
-            return
-        statements.update_feature_activation(
-            db=db, project_id=activation.project_id, feature=feature, activation_id=None
-        )
+        after_sdoc_id = 0
+        documents = 0
+        failed = 0
+        try:
+            while True:
+                with self.sqlr.transaction() as db:
+                    batch = self._plan_activation_batch(
+                        db=db, activation=payload, after_sdoc_id=after_sdoc_id
+                    )
+                if batch is None:
+                    break
+                after_sdoc_id, sdoc_steps = batch
+                for sdoc_id, steps in sdoc_steps.items():
+                    started = start_steps(
+                        project_id=payload.project_id,
+                        sdoc_id=sdoc_id,
+                        steps=steps,
+                        settings=payload.settings,
+                        raise_on_failure=False,
+                        priority=JobPriority.LOW,
+                    )
+                    failed += sum(job is None for job in started.values())
+                documents += len(sdoc_steps)
+                job.update(
+                    status_message=f"Planned the documents up to {after_sdoc_id} "
+                    f"of {payload.last_sdoc_id}; started the steps of {documents} "
+                    f"documents"
+                )
+        finally:
+            with self.sqlr.transaction() as db:
+                self._finish_activation(db=db, activation=payload)
+        if failed:
+            job.update(
+                status_message=f"Started the steps of {documents} documents; "
+                f"{failed} step jobs could not start, their steps are erroneous"
+            )
 
     def _start_activation(
         self,
@@ -303,6 +310,81 @@ class StepPlanningService(metaclass=SingletonMeta):
                 activation_id=activation_id,
                 last_sdoc_id=last_sdoc_id,
             ),
+        )
+
+    def _plan_activation_batch(
+        self,
+        *,
+        db: Session,
+        activation: FeatureActivationJobInput,
+        after_sdoc_id: int,
+    ) -> tuple[int, dict[int, list[JobType]]] | None:
+        """Plan the next batch of a feature activation: the documents after
+        `after_sdoc_id` up to the activation's last document, at most
+        `ACTIVATION_BATCH_SIZE`, with the features the project enables now (see
+        `_plan_missing_steps`). Its first statement locks the project (FOR
+        SHARE), so it waits for a request that changes the features and reads
+        the committed state.
+
+        Returns the end of the batch and the steps whose inputs are finished per
+        document (start them once the transaction commits), or None if the
+        activation is over: no document is left, the feature is disabled, or
+        the feature's pending activation has another id (a restart or a request
+        that rolled back)."""
+        project = statements.read_project_locked(
+            db=db, project_id=activation.project_id, shared=True
+        )
+        feature = activation.feature
+        if feature.value not in project.enabled_features or not self._is_pending(
+            project=project, activation=activation
+        ):
+            return None
+        until = statements.read_batch_end(
+            db=db,
+            project_id=activation.project_id,
+            after_sdoc_id=after_sdoc_id,
+            last_sdoc_id=activation.last_sdoc_id,
+            batch_size=ACTIVATION_BATCH_SIZE,
+        )
+        if until is None:
+            return None
+        sdoc_steps = self._plan_missing_steps(
+            db=db,
+            project_id=activation.project_id,
+            feature=feature,
+            enabled=[Feature(f) for f in project.enabled_features],
+            sdoc_ids=(after_sdoc_id, until),
+            restart=activation.restart,
+        )
+        return until, sdoc_steps
+
+    def _finish_activation(
+        self, *, db: Session, activation: FeatureActivationJobInput
+    ) -> None:
+        """End a feature activation, done or failed: remove the feature's
+        pending activation if it is still this one, so the feature is computing
+        only while its documents process."""
+        project = statements.read_project_locked(
+            db=db, project_id=activation.project_id
+        )
+        if not self._is_pending(project=project, activation=activation):
+            return
+        statements.update_feature_activation(
+            db=db,
+            project_id=activation.project_id,
+            feature=activation.feature,
+            activation_id=None,
+        )
+
+    def _is_pending(
+        self, *, project: "ProjectORM", activation: FeatureActivationJobInput
+    ) -> bool:
+        """Whether the activation is the feature's pending activation: not
+        replaced by a restart, removed by a disable, or never committed (the
+        request rolled back after the enqueue)."""
+        return (
+            project.feature_activations.get(activation.feature.value)
+            == activation.activation_id
         )
 
     def _plan_missing_steps(

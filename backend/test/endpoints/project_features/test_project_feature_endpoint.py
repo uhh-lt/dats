@@ -1,4 +1,5 @@
 import threading
+import time
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,7 +20,7 @@ from modules.project_features.project_feature_dto import (
     FeatureActivation,
     ProjectFeatureRead,
 )
-from pipeline_test_utils import plan_activations, read_step_status
+from pipeline_test_utils import plan_activations, read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
 
 from .conftest import ImageTextProject, UploadingProject
@@ -326,49 +327,46 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
 
 
 def test_activate_feature_job_waits_for_the_request_to_commit(
-    db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
     """The request starts the activation job before it commits; the job's first
     batch waits for the request's lock on the project and then plans with the
-    committed state. Calls the planning operations the endpoint and the job
-    delegate to, to hold the request's transaction open."""
-    service = StepPlanningService()
-    service.enable_feature(
-        db=db_session,
-        project_id=feature_project["project"].id,
-        feature=Feature.FULL_TEXT_SEARCH,
-        settings=SETTINGS,
-    )
-    (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
-    assert isinstance(activation, FeatureActivationJobInput)
-    batches: list[tuple[int, dict[int, list[JobType]]] | None] = []
+    committed state. The request (the planning operation the endpoint delegates
+    to) runs in a thread, as RQ's worker needs the main thread for its signal
+    handlers; it holds its transaction open for a second after the enqueue, and
+    the job starts meanwhile. The started steps prove the wait: a job that read
+    before the commit would find the feature disabled and start nothing."""
+    enqueued = threading.Event()
+    errors: list[Exception] = []
 
-    def _job() -> None:
-        with SQLRepo().transaction() as db:
-            batches.append(
-                service.plan_activation_batch(
-                    db=db, activation=activation, after_sdoc_id=0
+    def _request() -> None:
+        try:
+            with SQLRepo().transaction() as db:
+                StepPlanningService().enable_feature(
+                    db=db,
+                    project_id=feature_project["project"].id,
+                    feature=Feature.FULL_TEXT_SEARCH,
+                    settings=SETTINGS,
                 )
-            )
+                enqueued.set()
+                time.sleep(1)
+        except Exception as e:
+            errors.append(e)
+        finally:
+            enqueued.set()
 
-    job = threading.Thread(target=_job)
-    job.start()
-    job.join(timeout=1)
-    assert job.is_alive(), "the job did not wait for the request"
-    db_session.commit()
-    job.join(timeout=30)
+    request = threading.Thread(target=_request)
+    request.start()
+    enqueued.wait()
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    request.join()
 
-    assert batches == [
-        (
-            activation.last_sdoc_id,
-            {
-                feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
-                feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
-            },
-        )
-    ]
+    assert errors == []
+    assert started_steps(held_jobs) == {
+        feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
+        feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
+    }
 
 
 def test_activate_feature_with_redis_down_changes_nothing(
