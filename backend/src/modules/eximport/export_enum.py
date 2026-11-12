@@ -28,3 +28,15 @@ class ExportJobType(str, Enum):
     SELECTED_WHITEBOARDS = "SELECTED_WHITEBOARDS"
     SELECTED_TIMELINE_ANALYSES = "SELECTED_TIMELINE_ANALYSES"
     SELECTED_COTA = "SELECTED_COTA"
+
+
+class ArchivePart(str, Enum):
+    """A part of a project archive that carries an artefact of a source document
+    which has no archive module (`sdocs/artefact_archive.py`)."""
+
+    # the columns of the document's row in the documents file
+    DATA_ROW = "data_row"
+    # the document's metadata values
+    METADATA = "metadata"
+    # the annotations files (span, sentence and bbox annotations of every user)
+    ANNOTATIONS = "annotations"

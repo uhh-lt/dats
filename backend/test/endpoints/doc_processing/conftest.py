@@ -34,6 +34,8 @@ from feature_test_utils import (
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
+from modules.eximport.export_enum import ArchivePart
+from modules.eximport.sdocs.artefact_archive import ARTEFACT_ARCHIVE
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
@@ -259,8 +261,9 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     """
     Declares a new pipeline step the way a developer adds one: a `JobType` value
     (`test_dummy_step`), a core artefact it produces (`test_dummy_artefact`, in
-    `Artefact` and `CORE_ARTEFACTS`) and one `@pipeline_step` declaration on a job registered
-    with an enricher. Nothing else is registered.
+    `Artefact` and `CORE_ARTEFACTS`) with its archive entry (carried by the data
+    row) and one `@pipeline_step` declaration on a job registered with an
+    enricher. Nothing else is registered.
 
     The step requires the content of a document, so it follows `text_extraction`
     and runs for all doctypes that have content. Its enricher loads the content from the document data;
@@ -268,6 +271,9 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     """
     step = _add_enum_member(JobType, "TEST_DUMMY_STEP", "test_dummy_step")
     artefact = _add_enum_member(Artefact, "TEST_DUMMY_ARTEFACT", "test_dummy_artefact")
+    # its archive entry: the step reads the content of the data row
+    archive_entry = patch.dict(ARTEFACT_ARCHIVE, {artefact: (ArchivePart.DATA_ROW,)})
+    archive_entry.start()
     # every module that imported CORE_ARTEFACTS sees the new core artefact
     core = artefact_enum.CORE_ARTEFACTS | {artefact}
     importers = [
@@ -296,6 +302,7 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     pipeline_registry.unregister(step)
     for p in patches:
         p.stop()
+    archive_entry.stop()
     _remove_enum_member(Artefact, artefact)
     _remove_enum_member(JobType, step)
 
@@ -327,7 +334,8 @@ def _handle_consumer(payload: SdocProcessingJobInput, job: Job) -> None:
 @pytest.fixture(scope="function")
 def paired_steps() -> Generator[PairedSteps, None, None]:
     """
-    Declares two new pipeline steps with core artefacts, nothing else registered:
+    Declares two new pipeline steps with core artefacts (each with its archive
+    entry, carried by the data row), nothing else registered:
 
     - `test_producer_step` requires the content and produces the two artefacts
       `test_first_artefact` and `test_second_artefact`.
@@ -352,6 +360,11 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
         )
         for name in ("first", "second", "third")
     ]
+    # their archive entries: the steps store nothing
+    archive_entries = patch.dict(
+        ARTEFACT_ARCHIVE, dict.fromkeys(artefacts, (ArchivePart.DATA_ROW,))
+    )
+    archive_entries.start()
     core = artefact_enum.CORE_ARTEFACTS | set(artefacts)
     importers = [
         module
@@ -387,6 +400,7 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
         pipeline_registry.unregister(step)
     for p in patches:
         p.stop()
+    archive_entries.stop()
     for artefact in artefacts:
         _remove_enum_member(Artefact, artefact)
     for step in (consumer, producer):
