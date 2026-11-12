@@ -15901,6 +15901,11 @@
             "title": "Not Planned Documents",
             "description": "Number of documents the Feature applies to with a step of it not planned, and none processing or erroneous"
           },
+          "lacking_documents": {
+            "type": "integer",
+            "title": "Lacking Documents",
+            "description": "Number of documents the Feature applies to that lack its data and for which nothing runs (failed plus not planned)"
+          },
           "total_documents": {
             "type": "integer",
             "title": "Total Documents",
@@ -15923,6 +15928,7 @@
           "processing_documents",
           "failed_documents",
           "not_planned_documents",
+          "lacking_documents",
           "total_documents",
           "missing_steps"
         ],

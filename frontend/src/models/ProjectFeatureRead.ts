@@ -42,6 +42,10 @@ export type ProjectFeatureRead = {
    */
   not_planned_documents: number;
   /**
+   * Number of documents the Feature applies to that lack its data and for which nothing runs (failed plus not planned)
+   */
+  lacking_documents: number;
+  /**
    * Number of documents the Feature applies to
    */
   total_documents: number;

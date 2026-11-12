@@ -59,11 +59,7 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
     mutate({ projectId, feature: feature.feature, requestBody: { settings } }, { onSuccess: handleSuccess });
   }, [activateFeatureMutation, feature, handleSuccess, isRestart, projectId, restartFeatureMutation, settings]);
 
-  const count = !state
-    ? 0
-    : isRestart
-      ? state.processing_documents
-      : state.failed_documents + state.not_planned_documents;
+  const count = !state ? 0 : isRestart ? state.processing_documents : state.lacking_documents;
   const requiredTitles = (feature?.requires_features ?? [])
     .filter((f) => !states[f]?.enabled)
     .map((f) => FEATURES[f].title);

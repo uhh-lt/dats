@@ -78,6 +78,7 @@ class ProjectFeatureService(metaclass=SingletonMeta):
             processing = sum(c.processing for c in per_doctype)
             failed = sum(c.failed for c in per_doctype)
             not_planned = sum(c.not_planned for c in per_doctype)
+            lacking = failed + not_planned
             missing = {s for c in per_doctype for s in c.missing_steps}
             result.append(
                 ProjectFeatureRead(
@@ -87,13 +88,14 @@ class ProjectFeatureService(metaclass=SingletonMeta):
                         enabled=feature in enabled,
                         activating=feature in activating,
                         processing=processing,
-                        lacking=failed + not_planned,
+                        lacking=lacking,
                     ),
                     ready=ready == total,
                     covered_documents=ready,
                     processing_documents=processing,
                     failed_documents=failed,
                     not_planned_documents=not_planned,
+                    lacking_documents=lacking,
                     total_documents=total,
                     missing_steps=[s for s in JobType if s in missing],
                 )

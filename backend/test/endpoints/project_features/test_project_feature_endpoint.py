@@ -130,9 +130,10 @@ def test_project_features_count_the_documents_by_the_status_of_their_steps(
         read.processing_documents,
         read.failed_documents,
         read.not_planned_documents,
+        read.lacking_documents,
         read.total_documents,
     )
-    assert counts == (1, 0, 2, 2, 5)
+    assert counts == (1, 0, 2, 2, 4, 5)
 
 
 def test_project_features_count_the_documents_of_a_disabled_feature(
