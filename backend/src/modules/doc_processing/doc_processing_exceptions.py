@@ -45,3 +45,13 @@ class PipelineNotRegisteredError(Exception):
             "No pipeline steps are registered. Register the jobs first "
             "(bootstrap.register_jobs)."
         )
+
+
+class StepNotComputedError(Exception):
+    """Raised by a job that computes several steps when it is asked for a step
+    of its `further_steps` that its handler does not compute."""
+
+    def __init__(self, job_type: str, steps: list[str]) -> None:
+        super().__init__(
+            f"Job '{job_type}' has no branch that computes the steps {steps}."
+        )
