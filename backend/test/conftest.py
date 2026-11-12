@@ -33,6 +33,7 @@ from sqlalchemy.orm import Session
 import dats_test_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
+from job_test_utils import HeldJobs, hold_jobs
 
 # Never touch the developer's data: check before any fixture resets a data store
 try:
@@ -155,3 +156,14 @@ def test_project(db_session, test_user) -> ProjectORM:
 def project_with_sdoc(db_session, test_project) -> dats_test_utils.ProjectWithSdoc:
     """Create a project for the test user with a source document."""
     return dats_test_utils.create_project_with_sdoc(db_session, test_project)
+
+
+# ---------------------------------------------------------------------------
+# JOBS
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="function")
+def held_jobs(clean_data_stores) -> Generator[HeldJobs, Any, None]:
+    """Holds the jobs started during the test on queues no background worker
+    listens to (`start_job` validates, enriches and enqueues as usual); the test
+    lists them and runs them in-process through the real job handler."""
+    yield from hold_jobs()

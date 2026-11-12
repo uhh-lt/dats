@@ -146,6 +146,21 @@ class DummyJobInput(SdocProcessingJobInput):
     text: str
 
 
+# what the dummy step computed, by document id; its enricher and handler are
+# module-level functions, as RQ pickles a job's handler by reference
+_DUMMY_COMPUTED: dict[int, str] = {}
+
+
+def _enrich_dummy(payload: SdocProcessingJobInput) -> DummyJobInput:
+    with SQLRepo().transaction() as db:
+        content = crud_sdoc_data.read(db=db, id=payload.sdoc_id).content
+    return DummyJobInput(**payload.model_dump(), text=content)
+
+
+def _handle_dummy_job(payload: DummyJobInput, job: Job) -> None:
+    _DUMMY_COMPUTED[payload.sdoc_id] = payload.text
+
+
 # the str enums a new step adds a value to
 E = TypeVar("E", JobType, Artefact)
 
@@ -192,27 +207,18 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     for p in patches:
         p.start()
 
-    computed: dict[int, str] = {}
-
-    def enrich(payload: SdocProcessingJobInput) -> DummyJobInput:
-        with SQLRepo().transaction() as db:
-            content = crud_sdoc_data.read(db=db, id=payload.sdoc_id).content
-        return DummyJobInput(**payload.model_dump(), text=content)
-
-    def handle_dummy_job(payload: DummyJobInput, job: Job) -> None:
-        computed[payload.sdoc_id] = payload.text
-
+    _DUMMY_COMPUTED.clear()
     pipeline_step(
         requires={Artefact.CONTENT},
         produces={artefact},
         doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
     )(
-        register_job(job_type=step, input_type=DummyJobInput, enricher=enrich)(
-            handle_dummy_job
+        register_job(job_type=step, input_type=DummyJobInput, enricher=_enrich_dummy)(
+            _handle_dummy_job
         )
     )
 
-    yield {"step": step, "artefact": artefact, "computed": computed}
+    yield {"step": step, "artefact": artefact, "computed": _DUMMY_COMPUTED}
 
     JobService().job_registry.pop(step)
     pipeline_registry.unregister(step)
