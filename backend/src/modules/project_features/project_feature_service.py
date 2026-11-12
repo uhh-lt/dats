@@ -437,9 +437,14 @@ def _producers(graph: PipelineGraph, steps: list[JobType]) -> dict[Artefact, Job
 
 def _inputs(graph: PipelineGraph, steps: list[JobType]) -> dict[JobType, list[JobType]]:
     """The input steps of each of these steps of one doctype: the producers of
-    the artefacts it requires."""
+    the artefacts it requires, each once (a step may require several artefacts
+    of one producer)."""
     producers = _producers(graph, steps)
     return {
-        step: [producers[a] for a in graph.declaration(step).requires if a in producers]
+        step: list(
+            dict.fromkeys(
+                producers[a] for a in graph.declaration(step).requires if a in producers
+            )
+        )
         for step in steps
     }

@@ -207,6 +207,82 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     _remove_enum_member(JobType, step)
 
 
+class PairedSteps(TypedDict):
+    producer: JobType
+    consumer: JobType
+    # the documents each step ran for, by step
+    ran: dict[JobType, list[int]]
+
+
+@pytest.fixture(scope="function")
+def paired_steps() -> Generator[PairedSteps, None, None]:
+    """
+    Declares two new pipeline steps with core artefacts, nothing else registered:
+
+    - `test_producer_step` requires the content and produces the two artefacts
+      `test_first_artefact` and `test_second_artefact`.
+    - `test_consumer_step` requires both artefacts of `test_producer_step` and
+      produces `test_third_artefact`.
+
+    Both run for text documents only; their enrichers pass the input on as it
+    is, their handlers record the document in `ran`. The fixture removes both
+    steps again.
+
+    Non-obvious derived behavior:
+
+    - The consumer's only input step is the producer, although it requires two
+      artefacts.
+    """
+    producer = _add_enum_member(JobType, "TEST_PRODUCER_STEP", "test_producer_step")
+    consumer = _add_enum_member(JobType, "TEST_CONSUMER_STEP", "test_consumer_step")
+    artefacts = [
+        _add_enum_member(
+            Artefact, f"TEST_{name.upper()}_ARTEFACT", f"test_{name}_artefact"
+        )
+        for name in ("first", "second", "third")
+    ]
+    core = artefact_enum.CORE_ARTEFACTS | set(artefacts)
+    importers = [
+        module
+        for module in list(sys.modules.values())
+        if getattr(module, "CORE_ARTEFACTS", None) is artefact_enum.CORE_ARTEFACTS
+    ]
+    patches = [patch.object(module, "CORE_ARTEFACTS", core) for module in importers]
+    for p in patches:
+        p.start()
+
+    ran: dict[JobType, list[int]] = {producer: [], consumer: []}
+
+    def enrich(payload: SdocProcessingJobInput) -> SdocProcessingJobInput:
+        return payload
+
+    for step, requires, produces in (
+        (producer, {Artefact.CONTENT}, {artefacts[0], artefacts[1]}),
+        (consumer, {artefacts[0], artefacts[1]}, {artefacts[2]}),
+    ):
+
+        def handle(payload: SdocProcessingJobInput, job: Job, step=step) -> None:
+            ran[step].append(payload.sdoc_id)
+
+        pipeline_step(requires=requires, produces=produces, doctypes={DocType.text})(
+            register_job(
+                job_type=step, input_type=SdocProcessingJobInput, enricher=enrich
+            )(handle)
+        )
+
+    yield {"producer": producer, "consumer": consumer, "ran": ran}
+
+    for step in (consumer, producer):
+        JobService().job_registry.pop(step)
+        pipeline_registry.unregister(step)
+    for p in patches:
+        p.stop()
+    for artefact in artefacts:
+        _remove_enum_member(Artefact, artefact)
+    for step in (consumer, producer):
+        _remove_enum_member(JobType, step)
+
+
 # long enough for the HTML cleaning (readability), which drops a short text
 DUMMY_UPLOAD_TEXT = (
     "A new pipeline step needs only its declaration. The pipeline derives its "
