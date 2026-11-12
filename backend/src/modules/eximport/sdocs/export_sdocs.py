@@ -13,6 +13,7 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_status_rules import document_status
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
@@ -201,7 +202,7 @@ def __export_sdocs(
             filename=sdoc.filename,
             name=sdoc.name,
             doctype=sdoc.doctype,
-            status=SDocStatus.of_steps(planned.values()),
+            status=document_status(planned.values()),
             step_status=step_status,
             folder_name=sdoc.folder.name,
             folder_parent_name=sdoc.folder.parent.name if sdoc.folder.parent else None,

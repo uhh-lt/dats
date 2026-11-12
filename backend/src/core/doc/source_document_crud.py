@@ -1,4 +1,4 @@
-from sqlalchemy import ColumnElement, and_, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from common.sdoc_status_enum import SDocStatus
@@ -14,8 +14,11 @@ from core.doc.source_document_exceptions import (
     SourceDocumentPreprocessingUnfinishedError,
 )
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_status_rules import (
+    document_status,
+    document_status_filter,
+)
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
-from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
@@ -62,7 +65,7 @@ class CRUDSourceDocument(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
         self.exists(db=db, id=sdoc_id, raise_error=True)
-        status = SDocStatus.of_steps(
+        status = document_status(
             crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id).values()
         )
         if status != SDocStatus.finished and raise_error_on_unfinished:
@@ -76,7 +79,7 @@ class CRUDSourceDocument(
             db.query(self.model)
             .filter(
                 self.model.project_id == project_id,
-                self._status_filter(status),
+                document_status_filter(status),
             )
             .all()
         )
@@ -95,7 +98,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == project_id,
-                self._status_filter(SDocStatus.finished),
+                document_status_filter(SDocStatus.finished),
                 TagORM.id == tag_id,
             )
         else:
@@ -124,7 +127,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == project_id,
-                self._status_filter(SDocStatus.finished),
+                document_status_filter(SDocStatus.finished),
             )
         else:
             query = query.filter(self.model.project_id == project_id)
@@ -154,7 +157,7 @@ class CRUDSourceDocument(
             query = query.filter(
                 self.model.project_id == project_id,
                 self.model.filename == filename,
-                self._status_filter(SDocStatus.finished),
+                document_status_filter(SDocStatus.finished),
             )
         else:
             query = query.filter(
@@ -279,31 +282,11 @@ class CRUDSourceDocument(
         if status is not None:
             query = query.filter(
                 self.model.project_id == project_id,
-                self._status_filter(status),
+                document_status_filter(status),
             )
         else:
             query = query.filter(self.model.project_id == project_id)
         return query.with_entities(func.count()).scalar()
-
-    def _status_filter(self, status: SDocStatus) -> ColumnElement[bool]:
-        """Documents with this overall status (see `SDocStatus.of_steps`), as
-        (NOT) EXISTS over their unfinished steps: finished means no step is
-        erroneous or processing. Every condition repeats `status <> finished`,
-        the predicate of the partial index on the unfinished steps."""
-        steps = self.model.step_statuses
-        step_status = SourceDocumentStepStatusORM.status
-        unfinished = step_status != SDocStatus.finished
-
-        def has_step(status: SDocStatus) -> ColumnElement[bool]:
-            return steps.any(and_(unfinished, step_status == status))
-
-        match status:
-            case SDocStatus.finished:
-                return ~steps.any(unfinished)
-            case SDocStatus.erroneous:
-                return has_step(SDocStatus.erroneous)
-            case SDocStatus.processing:
-                return ~has_step(SDocStatus.erroneous) & has_step(SDocStatus.processing)
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

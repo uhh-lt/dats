@@ -7,6 +7,7 @@ from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
+from core.doc.source_document_status_rules import document_status
 from systems.job_system.job_dto import JobInputBase
 from systems.search_system.sorting import SortDirection
 
@@ -74,7 +75,7 @@ class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
             project_id=sdoc.project_id,
             processed_jobs=sum(s == SDocStatus.finished for s in step_status.values()),
             total_jobs=len(step_status),
-            processed_status=SDocStatus.of_steps(step_status.values()),
+            processed_status=document_status(step_status.values()),
         )
 
 
