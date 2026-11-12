@@ -5,7 +5,7 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.doc_processing_pipeline import (
+from modules.doc_processing.step_run import (
     handle_job_error,
     handle_job_started,
 )

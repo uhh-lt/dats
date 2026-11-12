@@ -1,12 +1,8 @@
 from loguru import logger
 
 from common.job_type_enum import JobType
-from modules.doc_processing.doc_processing_dto import (
-    FeatureActivationJobInput,
-    SdocProcessingJobInput,
-)
-from modules.doc_processing.doc_processing_pipeline import start_step_job
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
+from modules.doc_processing.step_run import start_steps
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import JobPriority, JobTiming
@@ -25,7 +21,6 @@ def handle_feature_activation_job(payload: FeatureActivationJobInput, job: Job) 
     start through the normal advancing. A step job that cannot be started (its
     input data is missing) sets its steps and the pending steps after them to
     erroneous, like a failed job, and the other documents still start."""
-    graph = pipeline_registry.graph()
     total = len(payload.sdoc_steps)
     failed = 0
     logger.info(
@@ -33,15 +28,15 @@ def handle_feature_activation_job(payload: FeatureActivationJobInput, job: Job) 
         f"{payload.project_id}..."
     )
     for idx, (sdoc_id, steps) in enumerate(payload.sdoc_steps.items()):
-        for job_type, job_steps in graph.group_by_job(steps).items():
-            job_input = SdocProcessingJobInput(
-                project_id=payload.project_id,
-                sdoc_id=sdoc_id,
-                settings=payload.settings,
-                steps=job_steps,
-            )
-            if not start_step_job(job_type, job_input, priority=JobPriority.LOW):
-                failed += 1
+        started = start_steps(
+            project_id=payload.project_id,
+            sdoc_id=sdoc_id,
+            steps=steps,
+            settings=payload.settings,
+            raise_on_failure=False,
+            priority=JobPriority.LOW,
+        )
+        failed += sum(job is None for job in started.values())
         if idx % 1000 == 0:
             job.update(status_message=f"Started the steps of {idx}/{total} documents")
     if failed:

@@ -12,12 +12,12 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.doc_processing_pipeline import handle_job_finished
 from modules.doc_processing.entrypoints.init_sdoc_job import (
     SdocInitJobInput,
     handle_init_sdoc_job,
 )
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.step_run import handle_job_finished
 from modules.doc_processing.video.video_utils import audio_stream_path
 from pipeline_test_utils import (
     enrich_job_input,

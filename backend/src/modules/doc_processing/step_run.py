@@ -1,3 +1,16 @@
+"""Step runs: the start, the skip, the finish and the failure of the jobs that
+compute pipeline steps of a document. A step run is one run of a job for some of
+the steps of one document.
+
+- `start_steps` is the only start of a step job: the advancing (here), the
+  feature activation job and recompute call it. A retry requeues the stored job
+  (`DocProcessingService.retry_jobs`), which re-enters through the hooks.
+- `handle_job_started`, `handle_job_finished` and `handle_job_error` are the job
+  lifecycle hooks the job handler calls around every job
+  (`bootstrap.register_jobs`): they track the step statuses and start what
+  follows a finished job, the entry points included.
+"""
+
 from loguru import logger
 
 from common.job_type_enum import JobType
@@ -5,6 +18,7 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
     ProcessingJobInput,
+    ProcessingSettings,
     SdocProcessingJobInput,
 )
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobOutput
@@ -12,10 +26,7 @@ from modules.doc_processing.pipeline import pipeline_transitions as t
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import (
-    JobInputBase,
-    JobOutputBase,
-)
+from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
 
@@ -26,7 +37,7 @@ from systems.job_system.job_system_enum import JobPriority
 # successors with a bare SdocProcessingJobInput, and the enricher of each
 # successor loads its input from the data the steps before it stored.
 # fmt: off
-ENTRY_POINTS = {
+_ENTRY_POINTS = {
     JobType.CRAWLER: [
         (t.crawler_to_extract_archive, JobType.EXTRACT_ARCHIVE),
     ],
@@ -81,24 +92,39 @@ def _pending_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
     return [step for step in steps if status.get(step) == SDocStatus.processing]
 
 
-def start_step_job(
-    job_type: JobType,
-    input: SdocProcessingJobInput,
+def start_steps(
+    *,
+    project_id: int,
+    sdoc_id: int,
+    steps: list[JobType],
+    settings: ProcessingSettings,
+    raise_on_failure: bool,
     priority: JobPriority | None = None,
-) -> bool:
-    """Start the job of pipeline steps with a bare input, which the job's enricher
-    completes from the document's stored data. A job that cannot start (its input
-    data is missing) sets its steps and the pending steps after them to erroneous,
-    like a failed job; returns whether the job started."""
-    try:
-        js.start_job(job_type, input, priority=priority)
-    except Exception as e:
-        logger.warning(
-            f"Cannot start {job_type.value} of document {input.sdoc_id}: {e}"
+) -> dict[JobType, Job | None]:
+    """Start the steps of the document: one job per job type that computes some
+    of them, with a bare input, which the job's enricher completes from the
+    document's stored data. Returns the started job per job type.
+
+    A job that cannot start (e.g. its input data is missing) raises if
+    `raise_on_failure`, and nothing is marked (recompute). Otherwise its steps
+    and the pending steps after them become erroneous, like a failed job, its
+    job type maps to None, and the other jobs still start (advancing, feature
+    activation)."""
+    started: dict[JobType, Job | None] = {}
+    for job_type, job_steps in pipeline_registry.graph().group_by_job(steps).items():
+        job_input = SdocProcessingJobInput(
+            project_id=project_id, sdoc_id=sdoc_id, settings=settings, steps=job_steps
         )
-        handle_job_error(job_type, input)
-        return False
-    return True
+        if raise_on_failure:
+            started[job_type] = js.start_job(job_type, job_input, priority=priority)
+            continue
+        try:
+            started[job_type] = js.start_job(job_type, job_input, priority=priority)
+        except Exception as e:
+            logger.warning(f"Cannot start {job_type.value} of document {sdoc_id}: {e}")
+            handle_job_error(job_type, job_input)
+            started[job_type] = None
+    return started
 
 
 def _start_planned(
@@ -110,22 +136,20 @@ def _start_planned(
         return
     with sqlr.transaction() as db:
         status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
-    for job_type, steps in jobs.items():
+    for steps in jobs.values():
         planned = [step for step in steps if step in status]
         if not planned:
             continue
-        start_step_job(
-            job_type,
-            SdocProcessingJobInput(
-                project_id=input.project_id,
-                sdoc_id=sdoc_id,
-                settings=input.settings,
-                steps=planned,
-            ),
+        start_steps(
+            project_id=input.project_id,
+            sdoc_id=sdoc_id,
+            steps=planned,
+            settings=input.settings,
+            raise_on_failure=False,
         )
 
 
-def execute_pipeline_step(
+def _start_next(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ) -> None:
     """Start what follows a finished job: the planned successors of the steps it
@@ -143,14 +167,12 @@ def execute_pipeline_step(
         others = [s for s in graph.job_steps(job_type) if s not in finished_steps]
         pending = _pending_steps(input.sdoc_id, others) if others else []
         if pending:
-            start_step_job(
-                job_type,
-                SdocProcessingJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    settings=input.settings,
-                    steps=pending,
-                ),
+            start_steps(
+                project_id=input.project_id,
+                sdoc_id=input.sdoc_id,
+                steps=pending,
+                settings=input.settings,
+                raise_on_failure=False,
             )
 
     if job_type == JobType.SDOC_INIT:
@@ -159,7 +181,7 @@ def execute_pipeline_step(
         roots = graph.group_by_job(graph.roots(output.doctype))
         _start_planned(roots, input, output.sdoc_id)
 
-    for step in ENTRY_POINTS.get(job_type, []):
+    for step in _ENTRY_POINTS.get(job_type, []):
         if isinstance(step, LoopBranchOperator):
             jobs = step.get_next_jobs(input, output)
             for transition_fn, next_job_type, idx in jobs:
@@ -211,10 +233,10 @@ def handle_job_started(jobtype: JobType, input: JobInputBase) -> JobInputBase | 
     return input
 
 
-def handle_job_error(job_type: JobType, input: JobInputBase):
+def handle_job_error(job_type: JobType, input: JobInputBase) -> None:
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.
-    Recomputing the input starts them again (see `execute_pipeline_step`)."""
+    Recomputing the input starts them again (see `_start_next`)."""
     if not isinstance(input, SdocProcessingJobInput):
         return
     # a step unplanned while the job ran (its feature was disabled) stays unplanned
@@ -232,6 +254,7 @@ def handle_job_error(job_type: JobType, input: JobInputBase):
 
 def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
-):
+) -> None:
+    """Set the steps of the run to finished and start what follows the job."""
     _set_status(job_type, input, SDocStatus.finished)
-    execute_pipeline_step(job_type=job_type, input=input, output=output)
+    _start_next(job_type=job_type, input=input, output=output)
