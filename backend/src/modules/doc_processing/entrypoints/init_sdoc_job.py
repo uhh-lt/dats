@@ -3,9 +3,7 @@ from pathlib import Path
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
-from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
@@ -13,11 +11,9 @@ from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
 )
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from core.project.project_crud import crud_project
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
-from modules.doc_processing.pipeline.step_planning import planned_steps
+from modules.doc_processing.step_planning_service import StepPlanningService
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -57,20 +53,12 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
-        # plan the steps the project's features need for the doctype, so the sdoc
-        # is never seen as finished; the other steps stay not planned. The
-        # share lock makes a concurrent feature activation wait for this upload,
-        # so it plans its steps for this document too, or this upload for it.
-        project = crud_project.read_locked(db=db, id=payload.project_id, shared=True)
-        steps = planned_steps(
-            doctype=payload.doctype,
-            features=[Feature(f) for f in project.enabled_features],
-        )
-        crud_sdoc_step_status.update_status(
+        # plan the steps the project's features need for the new document
+        StepPlanningService().plan_new_document(
             db=db,
-            sdoc_ids=[sdoc_db_obj.id],
-            steps=steps,
-            status=SDocStatus.processing,
+            project_id=payload.project_id,
+            sdoc_id=sdoc_db_obj.id,
+            doctype=payload.doctype,
         )
 
         # find repo path
