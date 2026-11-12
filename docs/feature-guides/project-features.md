@@ -64,7 +64,7 @@ A feature that another enabled feature needs cannot be disabled; hover over its 
 
 A project archive is imported into an existing project (**Project Settings** → **Import**). The import only ever adds features: afterwards the project enables its own features plus the features of the exported project. It never disables a feature and never starts processing. If the archive lacks the data of an enabled feature, the feature is partly available until you click **Complete**. This also holds for documents that were still being processed when the project was exported: their unfinished data is not imported. To get exactly the features of the exported project, create the target project with **Minimal**.
 
-Archives exported with a DATS version before project features do not say which features the project used. Importing such an archive enables **all** features in the target project. Disable the ones you do not need afterwards.
+Archives exported with a DATS version before project features cannot be imported: they do not say which processing steps of their documents finished.
 
 ## 3\. Opening a Disabled Feature
 

@@ -177,9 +177,10 @@ Add a step:
 
 1. Add its `JobType` value (`common/job_type_enum.py`); its position breaks ties in the derived step order.
 2. Add new artefacts to `Artefact` (`common/artefact_enum.py`), and to `CORE_ARTEFACTS` only if every document needs them whatever features its project enables.
-3. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`modules/doc_processing/pipeline/pipeline_step_decorator.py`).
-4. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
-5. Regenerate the API client (`just update-api`), which adds the value to `JobType.ts`.
+3. Add the artefact's archive entry to `ARTEFACT_ARCHIVE` (`modules/eximport/sdocs/artefact_archive.py`): an archive module if it has its own store, else the parts of the archive that carry it; `test_artefact_archive.py` fails otherwise.
+4. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`modules/doc_processing/pipeline/pipeline_step_decorator.py`).
+5. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
+6. Regenerate the API client (`just update-api`), which adds the value to `JobType.ts`.
 
 Rules:
 
@@ -193,10 +194,12 @@ Rules:
 - A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
 - A step has one direct predecessor: the steps producing its required artefacts must depend on each other (`NER_SPANS` and `SENTENCE_EMBEDDINGS` together are rejected), as no step waits for several inputs (the startup check fails otherwise).
 - Only jobs that create documents or fan out over files (`_ENTRY_POINTS` in `step_run.py`) build the input of the next job by hand.
-- A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
+- A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts), computes only the steps in `SdocProcessingJobInput.steps` and fails on a step it has no branch for (`_STEP_WRITERS` in `spacy_job.py`).
 - The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` (the generic reads and writes), `core/doc/source_document_status_rules.py` and the planning statements of `StepPlanningService` (`modules/doc_processing/step_planning_statements.py`) touch these rows.
 - The overall status of a document is derived from its step rows (erroneous, else processing, else finished) and the status of a feature's steps from theirs (processing, else failed, else not planned, else ready), both only in `source_document_status_rules.py`; never store them.
-- The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
+- `export_sdocs.py` and `import_sdocs.py` name no artefact: they iterate over the archive modules of `ARTEFACT_ARCHIVE`, the export reads an artefact only if its step finished and keeps it only if its module says it is complete, the import writes it only if its step was imported as finished.
+- A new archive module needs its round-trip case in `test_feature_toggle_eximport.py` and the doctor's check of its store or an entry in `UNCHECKED_STORES` (`tools/project_doctor/doctor_stores.py`); both tests fail otherwise.
+- The import rejects document archives without `step_status` (exported before the feature toggles).
 - A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
 - Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).
 - `test_new_pipeline_step.py` declares a step in a test and follows it through the pipeline; keep it passing when the pipeline changes.
