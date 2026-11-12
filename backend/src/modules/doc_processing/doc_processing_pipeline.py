@@ -239,7 +239,7 @@ def handle_job_error(job_type: JobType, input: JobInputBase):
         crud_sdoc_step_status.update_pending_to_erroneous(
             db=db,
             sdoc_id=input.sdoc_id,
-            steps=_descendants(computed),
+            steps=pipeline_registry.graph().descendants(computed),
         )
 
 

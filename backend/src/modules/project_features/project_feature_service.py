@@ -19,6 +19,10 @@ from modules.doc_processing.pipeline.pipeline_graph import (
     PipelineGraph,
     pipeline_registry,
 )
+from modules.doc_processing.pipeline.step_planning import (
+    feature_steps,
+    planned_steps,
+)
 from modules.project_features.project_feature_dto import (
     FeatureActivationJobInput,
     ProjectFeatureRead,
@@ -30,13 +34,9 @@ from systems.job_system.job_service import JobService
 
 
 class ProjectFeatureService(metaclass=SingletonMeta):
-    """The features of the projects: which features a project enables, which
-    pipeline steps its documents need for them, and how far they are computed.
-
-    Planning: a document gets the steps that produce the core artefacts and the
-    artefacts of the enabled features, plus the steps these require. A step whose
-    required artefacts cannot be produced for the document's doctype is not planned
-    (e.g. the text steps of an image without image captions)."""
+    """The features of the projects: which features a project enables, plans
+    the pipeline steps its documents need for them (see `step_planning`), and
+    how far they are computed."""
 
     def __new__(cls, *args, **kwargs):
         cls.registry = feature_registry
@@ -68,7 +68,7 @@ class ProjectFeatureService(metaclass=SingletonMeta):
 
         graph = pipeline_registry.graph()
         for doctype in DocType:
-            plan = set(self.planned_steps(doctype=doctype, features=enabled))
+            plan = set(planned_steps(doctype=doctype, features=enabled))
             crud_sdoc_step_status.delete_pending_by_project(
                 db=db,
                 project_id=project_id,
@@ -189,7 +189,7 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         enabled = {Feature(f) for f in project.enabled_features}
 
         steps = {
-            (feature, doctype): self.feature_steps(
+            (feature, doctype): feature_steps(
                 doctype=doctype, feature=feature, enabled=enabled
             )
             for feature in Feature
@@ -332,16 +332,14 @@ class ProjectFeatureService(metaclass=SingletonMeta):
 
         sdoc_steps: dict[int, list[JobType]] = {}
         for doctype in DocType:
-            plan = self.planned_steps(doctype=doctype, features=enabled)
-            without = set(self.planned_steps(doctype=doctype, features=others))
+            plan = planned_steps(doctype=doctype, features=enabled)
+            without = set(planned_steps(doctype=doctype, features=others))
             own = {
                 step
                 for f in features
-                for step in self.feature_steps(
-                    doctype=doctype, feature=f, enabled=enabled
-                )
+                for step in feature_steps(doctype=doctype, feature=f, enabled=enabled)
             }
-            core = set(self.planned_steps(doctype=doctype, features=[]))
+            core = set(planned_steps(doctype=doctype, features=[]))
             to_plan = [s for s in plan if s not in without or s in own | core]
             to_redo = [s for s in plan if s in own]
             # a restart runs the feature's own processing steps again, never the
@@ -388,7 +386,7 @@ class ProjectFeatureService(metaclass=SingletonMeta):
             }
 
             # 3) fail the steps that cannot run, then read those that can start
-            inputs = _inputs(graph, plan)
+            inputs = {step: graph.inputs(doctype, step) for step in plan}
             crud_sdoc_step_status.update_blocked_to_erroneous(
                 db=db, rows=rows, inputs=inputs
             )
