@@ -197,8 +197,11 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         }
 
         # 1) the documents per doctype and combination of step statuses
+        graph = pipeline_registry.graph()
         combinations = crud_sdoc_step_status.count_by_project(
-            db=db, project_id=project_id
+            db=db,
+            project_id=project_id,
+            steps=[s for s in JobType if s in graph.all_steps()],
         )
         processing = SDocStatus.processing
         finished = SDocStatus.finished
