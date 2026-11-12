@@ -1,6 +1,6 @@
 # Feature toggles: maintainability rework
 
-Status: approved on 2026-11-11 with the recommended option of each decision. Builds on `feature-toggles-plan.md` and on the branch
+Status: implemented (phases M1 to M5, 2026-11-12); approved on 2026-11-11 with the recommended option of each decision. Builds on `feature-toggles-plan.md` and on the branch
 `agentic/feature-toggles-review-fixes-15b54a`. Nothing of the feature toggle work is released, so
 this rework changes the one existing migration instead of adding new ones.
 
@@ -8,7 +8,7 @@ this rework changes the one existing migration instead of adding new ones.
 
 | Task                                    | Today                                   | After the rework                                                                                 |
 | --------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Add a pipeline step                     | about 15 places (see below)             | a `JobType` value and one step file                                                              |
+| Add a pipeline step                     | about 15 places (see below)             | a `JobType` value and one step file (plus the project doctor's step copy)                        |
 | Add a toggleable feature without a page | 3 places                                | a `Feature` value, one `*_feature.py`, one entry in the frontend feature map (enforced by `tsc`) |
 | Add a page to a feature                 | 3 places per route, nothing checks them | `staticData.feature` on the route and one navigation entry                                       |
 | Change a display title                  | up to 4 places                          | 1 place                                                                                          |
@@ -36,7 +36,7 @@ Only 1 and 6 carry information that cannot be derived.
 
 ### 1. Step statuses in their own table
 
-New table `sdoc_step_status`, modelled after the existing `sourcedocumentjobstatus` table of the ML
+New table `sourcedocumentstepstatus`, modelled after the existing `sourcedocumentjobstatus` table of the ML
 jobs:
 
 | Column    | Type    | Notes                                                   |
@@ -84,7 +84,7 @@ the downgrade stay.
   - Cost: each step reads its input from the database instead of receiving it in memory.
   - Precondition to verify: every step persists its output before it finishes. All 19 step jobs already have an enricher.
 - **Export and import** validate status keys against `graph.steps(doctype)`; the embedding steps in `import_sdocs.py` are looked up through the artefact a step produces.
-- **Project doctor** reads the statuses from the table rows and has no step copy. If the doctor cannot import the pipeline registry on the released image, one mapping stays and the existing test keeps it equal to the graph.
+- **Project doctor** reads the statuses from the table rows and has no step copy. The doctor cannot import the pipeline registry on the released image, so one mapping stays in `doctor_stores.py` and `test_project_doctor_steps.py` keeps it equal to the graph.
 - **Tests** take step lists from the graph or from two fixtures; no hard-coded lists per doctype.
 - **Stale comments** in `job_type_enum.py` and the ORM that name files which do not exist are removed.
 
@@ -95,6 +95,7 @@ the downgrade stay.
 ```
 to_plan = (plan(enabled) - plan(enabled without the feature))   # what the feature adds
           | steps(feature)                                       # its own steps
+          | plan(no features)                                    # the core steps
 ```
 
 1. Insert a processing row for every `(document, step in to_plan)` that has no row (`ON CONFLICT DO NOTHING`).
@@ -108,7 +109,7 @@ another feature.
 
 - **Rename and move.** `FeatureEntry` / `FEATURE_ENTRIES` become `NavigationEntry` / `NAVIGATION_ENTRIES` in `core/navigation` (18 of 25 entries have no feature). `core/feature` keeps only the toggle code.
 - **The feature of a page is declared once, on the route** (`staticData.feature`).
-  - The navigation entry has no `feature` field; consumers read it from the route the entry points to.
+  - The navigation entry has no `feature` and no `icon` field; consumers read both from the route the entry points to.
   - Loaders call `ensureRouteFeatureEnabled(ctx)`, which reads the feature from the route itself, so the literal is not repeated.
   - The existing lint rule `local/route-options` requires that call in every loader of a route with `staticData.feature`.
 - **One feature map.** `FEATURES: Record<Feature, { title, description, area }>` in `core/feature` holds the display text and the area (Search / Analysis / Automatic annotation) of all 14 features. `tsc` fails when a feature is missing.
@@ -123,7 +124,7 @@ another feature.
 - **The job system knows no pipeline.** Step declarations move to a decorator `@pipeline_step(requires, produces, doctypes, further_steps)` in `modules/doc_processing`, next to `@register_job`. `pipeline_graph.py` moves to `modules/doc_processing/pipeline`. The job handler calls lifecycle hooks (started, finished, failed) that document processing registers at bootstrap, instead of importing the pipeline.
 - **The feature system is split.**
   - `systems/feature_system` keeps what is generic: declarations, registry, requirement resolution, the `require_feature` dependencies.
-  - `modules/project_features` (new) gets what knows projects and documents: `FeatureService`, the endpoints, `ProjectFeatureRead` and the activation DTOs. `GET /project/{id}/features` moves to `GET /feature/project/{id}`.
+  - `modules/project_features` (new) gets what knows projects and documents: `ProjectFeatureService`, the endpoints, `ProjectFeatureRead` and the activation DTOs. `GET /project/{id}/features` moves to `GET /feature/project/{id}`.
 - **New lint rule:** `systems` never imports from `modules`, next to the existing "`core` never imports from `modules`".
 
 ### 6. Documentation
