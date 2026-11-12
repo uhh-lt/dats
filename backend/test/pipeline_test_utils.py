@@ -87,9 +87,10 @@ def run_job(job_type: JobType, payload: JobInputBase) -> None:
     pipeline hooks (which start the next jobs)."""
     job_info = JobService().job_registry[job_type]
     job_input = enrich_job_input(job_type, payload)
-    assert handle_job_started(job_type, job_input)
-    output = job_info["handler"](payload=job_input, job=MagicMock())
-    handle_job_finished(job_type, job_input, output)
+    run_input = handle_job_started(job_type, job_input)
+    assert run_input is not None
+    output = job_info["handler"](payload=run_input, job=MagicMock())
+    handle_job_finished(job_type, run_input, output)
 
 
 def last_started(

@@ -85,7 +85,7 @@ def test_a_job_whose_steps_are_not_planned_is_skipped(
     set the step to processing."""
     sdoc_id = feature_project["text_done"].id
 
-    started = handle_job_started(
+    run_input = handle_job_started(
         JobType.TEXT_SENTENCE_EMBEDDING,
         SdocProcessingJobInput(
             project_id=feature_project["project"].id,
@@ -94,7 +94,7 @@ def test_a_job_whose_steps_are_not_planned_is_skipped(
         ),
     )
 
-    assert started is False
+    assert run_input is None
     assert _statuses(db_session, sdoc_id, [JobType.TEXT_SENTENCE_EMBEDDING]) == [None]
 
 
@@ -102,7 +102,9 @@ def test_a_job_drops_its_steps_that_are_not_planned(
     db_session, feature_project: FeatureProject
 ):
     """A recompute of tokens and keywords of text_done, where the keywords are not
-    planned, runs for the tokens only: the keywords stay not planned."""
+    planned, runs for the tokens only: the input to run is a copy narrowed to the
+    tokens, the stored input keeps both steps, and the keywords stay not
+    planned."""
     sdoc_id = feature_project["text_done"].id
     payload = SdocProcessingJobInput(
         project_id=feature_project["project"].id,
@@ -111,9 +113,10 @@ def test_a_job_drops_its_steps_that_are_not_planned(
         steps=[JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS],
     )
 
-    started = handle_job_started(JobType.TEXT_SPACY, payload)
+    run_input = handle_job_started(JobType.TEXT_SPACY, payload)
 
-    assert started is True
-    assert payload.steps == [JobType.TEXT_SPACY]
+    assert isinstance(run_input, SdocProcessingJobInput)
+    assert run_input.steps == [JobType.TEXT_SPACY]
+    assert payload.steps == [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
     steps = [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
     assert _statuses(db_session, sdoc_id, steps) == [0, None]

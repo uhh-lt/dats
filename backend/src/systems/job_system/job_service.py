@@ -51,8 +51,9 @@ class RegisteredJob(TypedDict):
 class JobHooks(NamedTuple):
     """Called by the job handler around every job (see `JobService.register_hooks`)."""
 
-    # before the handler; returns False to skip the job
-    started: Callable[[JobType, JobInputBase], bool]
+    # before the handler; returns the input the handler, `finished` and `failed`
+    # get (the stored input or a narrowed copy of it), or None to skip the job
+    started: Callable[[JobType, JobInputBase], JobInputBase | None]
     # after the handler returned; a failing hook fails the job
     finished: Callable[[JobType, JobInputBase, JobOutputBase | None], None]
     # after the handler or the `finished` hook raised
@@ -60,7 +61,7 @@ class JobHooks(NamedTuple):
 
 
 _NO_HOOKS = JobHooks(
-    started=lambda job_type, input: True,
+    started=lambda job_type, input: input,
     finished=lambda job_type, input, output: None,
     failed=lambda job_type, input: None,
 )
