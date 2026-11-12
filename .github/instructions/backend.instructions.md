@@ -53,6 +53,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 | Exception classes only in `*_exceptions.py`                                        | `lint/check_exceptions.py` |
 | Enum classes only in `*_enum.py`, with a str or int value type                     | `lint/check_enums.py`      |
 | `core` never imports from `modules`                                                | `lint/check_core.py`       |
+| `systems` never imports from `modules`, also not inside a function                 | `lint/check_core.py`       |
 | `*_endpoint.py` imports `*_dto` modules from its own folder only                   | `lint/check_endpoints.py`  |
 | `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only  | `lint/check_repos.py`      |
 
