@@ -192,8 +192,8 @@ Rules:
 - A step has one direct predecessor: the steps producing its required artefacts must depend on each other (`NER_SPANS` and `SENTENCE_EMBEDDINGS` together are rejected), as no step waits for several inputs (the startup check fails otherwise).
 - Only jobs that create documents or fan out over files (`ENTRY_POINTS` in `doc_processing_pipeline.py`) build the input of the next job by hand.
 - A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
-- The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` reads or writes these rows.
-- The overall status of a document is derived from its step rows (erroneous, else processing, else finished); never store it.
+- The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` and `core/doc/source_document_status_rules.py` touch these rows.
+- The overall status of a document is derived from its step rows (erroneous, else processing, else finished) and the status of a feature's steps from theirs (processing, else failed, else not planned, else ready), both only in `source_document_status_rules.py`; never store them.
 - The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
 - A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
 - Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).

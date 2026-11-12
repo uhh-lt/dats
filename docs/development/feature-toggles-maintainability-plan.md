@@ -124,7 +124,7 @@ another feature.
 - **The job system knows no pipeline.** Step declarations move to a decorator `@pipeline_step(requires, produces, doctypes, further_steps)` in `modules/doc_processing`, next to `@register_job`. `pipeline_graph.py` moves to `modules/doc_processing/pipeline`. The job handler calls lifecycle hooks (started, finished, failed) that document processing registers at bootstrap, instead of importing the pipeline.
 - **The feature system is split.**
   - `systems/feature_system` keeps what is generic: declarations, registry, requirement resolution, the `require_feature` dependencies.
-  - `modules/project_features` (new) gets what knows projects and documents: `ProjectFeatureService`, the endpoints, `ProjectFeatureRead` and the activation DTOs. `GET /project/{id}/features` moves to `GET /feature/project/{id}`.
+  - `modules/project_features` (new) gets what knows projects and documents: `ProjectFeatureService`, the endpoints, `ProjectFeatureRead` and `FeatureActivation` (the job input `FeatureActivationJobInput` lives in `modules/doc_processing/doc_processing_dto.py`). `GET /project/{id}/features` moves to `GET /feature/project/{id}`.
 - **New lint rule:** `systems` never imports from `modules`, next to the existing "`core` never imports from `modules`".
 
 ### 6. Documentation

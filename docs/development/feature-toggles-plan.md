@@ -130,8 +130,8 @@ register_feature(
 ### Status model
 
 - The status of a step per document is a row `(sdoc_id, step, status)` of `sourcedocumentstepstatus` with the primary key `(sdoc_id, step)` and an index on `(step, status)`; no row means not planned. Status values: `0` = processing, `1` = finished, `-100` = erroneous.
-- Only `crud_sdoc_step_status` (`core/doc`) reads or writes the rows: `plan`, `set_status`, `unplan_pending`, `fail_pending`, `read` / `read_many` and the aggregate of the feature states.
-- `processed_status`, `processed_jobs` and `total_jobs` are query expressions on `SourceDocumentORM` over the rows: erroneous if any row is erroneous, processing if any is processing, finished otherwise. Nothing stores them.
+- Only `crud_sdoc_step_status` and `source_document_status_rules` (both `core/doc`) touch the rows; the CRUD reads and writes them: `plan`, `set_status`, `unplan_pending`, `fail_pending`, `read` / `read_many` and the aggregate of the feature states.
+- The overall status of a document is derived from the rows, never stored: erroneous if any row is erroneous, processing if any is processing, finished otherwise. `core/doc/source_document_status_rules.py` states this rule in Python (`document_status`, from which `SourceDocumentStatusSimple` computes `processed_status`; `processed_jobs` and `total_jobs` count its rows) and in SQL (`document_status_filter`, the status filters of `crud_sdoc`), and beside it the rule for the steps of a feature (processing, else failed, else not planned, else ready) by which `read_project_features` counts the documents.
 - `SourceDocumentUpdate` carries no step statuses, so the public `PATCH /sdoc/{id}` cannot write them.
 - New steps: `text_keywords`, `text_word_frequency`, `text_ner`, `text_document_embedding`.
 
