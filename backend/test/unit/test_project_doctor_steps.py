@@ -12,6 +12,7 @@ from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.eximport.sdocs.artefact_archive import archive_modules
 
 register_jobs()
 
@@ -73,6 +74,17 @@ def test_doctor_index_and_thumbnail_steps_produce_them() -> None:
     assert doctor.IMAGE_THUMBNAIL_STEP == graph.producer(
         DocType.image, Artefact.THUMBNAIL
     )
+
+
+def test_doctor_checks_the_store_of_each_archive_module_or_lists_it() -> None:
+    """Each artefact with an archive module of the export has its store checked
+    by the doctor (the embeddings, the index, the image thumbnail, see the tests
+    above) or is listed as not checked, and not both."""
+    doctor = _doctor_stores()
+    checked = {*COLLECTION_ARTEFACTS.values(), Artefact.ES_INDEX, Artefact.THUMBNAIL}
+    unchecked = {Artefact(artefact) for artefact in doctor.UNCHECKED_STORES}
+    assert checked.isdisjoint(unchecked)
+    assert checked | unchecked == set(archive_modules())
 
 
 def test_doctor_reads_the_step_status_table() -> None:
