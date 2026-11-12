@@ -130,6 +130,16 @@ def feature_project(db_session, test_user: UserORM) -> FeatureProject:
     return create_feature_project(db_session, test_user)
 
 
+@pytest.fixture(scope="function")
+def ner_pending_project(db_session, test_user: UserORM) -> FeatureProject:
+    """The project described in `FeatureProject`, where text_ner of text_done is
+    processing as well: planned, its job not run yet."""
+    project = create_feature_project(db_session, test_user)
+    set_step_status(db_session, project["text_done"].id, {"text_ner": 0})
+    db_session.commit()
+    return project
+
+
 # --- step planning ------------------------------------------------------------
 
 

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Counter
 from uuid import uuid4
 
@@ -18,6 +19,7 @@ from core.doc.source_document_data_dto import (
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.doc_processing_exceptions import StepNotComputedError
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
@@ -97,6 +99,9 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # the outputs to write: tokens and sentences (text_spacy), keywords, word
     # frequencies, named entities; spacy is called once for all of them
     steps = pipeline_registry.graph().job_steps(JobType.TEXT_SPACY, payload.steps)
+    not_computed = [step.value for step in steps if step not in _STEP_WRITERS]
+    if not_computed:
+        raise StepNotComputedError(JobType.TEXT_SPACY.value, not_computed)
 
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
@@ -110,28 +115,8 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
 
     with sqlr.transaction() as trans:
-        if JobType.TEXT_SPACY in steps:
-            _store_tokens_sentences(trans, payload, sdoc_data)
-        if JobType.TEXT_KEYWORDS in steps:
-            crud_sdoc_meta.update_multi_with_doctype(
-                db=trans,
-                project_id=payload.project_id,
-                sdoc_id=payload.sdoc_id,
-                doctype=payload.doctype,
-                keys=["keywords"],
-                values=[extract_keywords(payload, spacy_output)],
-            )
-        if JobType.TEXT_WORD_FREQUENCY in steps:
-            crud_word_frequency.delete_by_sdoc_id(
-                db=trans,
-                sdoc_id=payload.sdoc_id,
-            )
-            crud_word_frequency.create_multi(
-                db=trans,
-                create_dtos=extract_word_frequencies(payload, spacy_output),
-            )
-        if JobType.TEXT_NER in steps:
-            _store_named_entities(trans, payload, spacy_output)
+        for step in steps:
+            _STEP_WRITERS[step](trans, payload, spacy_output, sdoc_data)
 
     return SpacyJobOutput(
         sentence_starts=sdoc_data["sentence_starts"],
@@ -146,7 +131,10 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
 
 
 def _store_tokens_sentences(
-    db: Session, payload: SpacyJobInput, sdoc_data: dict
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
 ) -> None:
     if payload.doctype in {DocType.text, DocType.image}:
         crud_sdoc_data.update(
@@ -174,8 +162,39 @@ def _store_tokens_sentences(
         )
 
 
+def _store_keywords(
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
+) -> None:
+    crud_sdoc_meta.update_multi_with_doctype(
+        db=db,
+        project_id=payload.project_id,
+        sdoc_id=payload.sdoc_id,
+        doctype=payload.doctype,
+        keys=["keywords"],
+        values=[extract_keywords(payload, spacy_output)],
+    )
+
+
+def _store_word_frequencies(
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
+) -> None:
+    crud_word_frequency.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
+    crud_word_frequency.create_multi(
+        db=db, create_dtos=extract_word_frequencies(payload, spacy_output)
+    )
+
+
 def _store_named_entities(
-    db: Session, payload: SpacyJobInput, spacy_output: SpacyPipelineOutput
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
 ) -> None:
     system_codes = crud_code.read_system_codes_by_project(
         db=db, project_id=payload.project_id
@@ -207,6 +226,18 @@ def _store_named_entities(
             payload, spacy_output, system_code_ids, adoc.id
         ),
     )
+
+
+# What each step of the job writes. A step of its `further_steps` without an
+# entry fails the job instead of being set to finished without being computed.
+_STEP_WRITERS: dict[
+    JobType, Callable[[Session, SpacyJobInput, SpacyPipelineOutput, dict], None]
+] = {
+    JobType.TEXT_SPACY: _store_tokens_sentences,
+    JobType.TEXT_KEYWORDS: _store_keywords,
+    JobType.TEXT_WORD_FREQUENCY: _store_word_frequencies,
+    JobType.TEXT_NER: _store_named_entities,
+}
 
 
 def extract_keywords(
