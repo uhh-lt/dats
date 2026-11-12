@@ -273,7 +273,6 @@ class DocProcessingService(metaclass=SingletonMeta):
                 sdoc_id=sdoc_id,
                 steps=[step],
                 settings=settings,
-                raise_on_failure=True,
             )
             jobs.extend(job for job in started.values() if job is not None)
 

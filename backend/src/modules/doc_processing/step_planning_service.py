@@ -266,7 +266,6 @@ class StepPlanningService(metaclass=SingletonMeta):
                         sdoc_id=sdoc_id,
                         steps=steps,
                         settings=payload.settings,
-                        raise_on_failure=False,
                         priority=JobPriority.LOW,
                     )
                     failed += sum(job is None for job in started.values())

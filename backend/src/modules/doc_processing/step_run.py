@@ -27,6 +27,7 @@ from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
+from systems.job_system.job_exceptions import JobInputError
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
 
@@ -98,29 +99,26 @@ def start_steps(
     sdoc_id: int,
     steps: list[JobType],
     settings: ProcessingSettings,
-    raise_on_failure: bool,
     priority: JobPriority | None = None,
 ) -> dict[JobType, Job | None]:
     """Start the steps of the document: one job per job type that computes some
     of them, with a bare input, which the job's enricher completes from the
     document's stored data. Returns the started job per job type.
 
-    A job that cannot start (e.g. its input data is missing) raises if
-    `raise_on_failure`, and nothing is marked (recompute). Otherwise its steps
-    and the pending steps after them become erroneous, like a failed job, its
-    job type maps to None, and the other jobs still start (advancing, feature
-    activation)."""
+    A job whose input cannot be built (the document's input data is missing or
+    invalid) does not start: its steps and the pending steps after them become
+    erroneous, like after a failed job, its job type maps to None, and the
+    other jobs still start. If the queue cannot be reached, nothing is marked
+    and `JobQueueUnavailableError` raises to the caller; the jobs after it are
+    not started. Anything else raises as it is."""
     started: dict[JobType, Job | None] = {}
     for job_type, job_steps in pipeline_registry.graph().group_by_job(steps).items():
         job_input = SdocProcessingJobInput(
             project_id=project_id, sdoc_id=sdoc_id, settings=settings, steps=job_steps
         )
-        if raise_on_failure:
-            started[job_type] = js.start_job(job_type, job_input, priority=priority)
-            continue
         try:
             started[job_type] = js.start_job(job_type, job_input, priority=priority)
-        except Exception as e:
+        except JobInputError as e:
             logger.warning(f"Cannot start {job_type.value} of document {sdoc_id}: {e}")
             handle_job_error(job_type, job_input)
             started[job_type] = None
@@ -145,7 +143,6 @@ def _start_planned(
             sdoc_id=sdoc_id,
             steps=planned,
             settings=input.settings,
-            raise_on_failure=False,
         )
 
 
@@ -172,7 +169,6 @@ def _start_next(
                 sdoc_id=input.sdoc_id,
                 steps=pending,
                 settings=input.settings,
-                raise_on_failure=False,
             )
 
     if job_type == JobType.SDOC_INIT:
