@@ -28,8 +28,9 @@ class StepPlanningService(metaclass=SingletonMeta):
     status for, from the features the project enables. The four operations are
     the only code that plans steps (adds or changes the status rows of a
     planning, the `crud_sdoc_step_status` planning methods) and changes
-    `project.enabled_features`; the steps they plan are computed when the call
-    returns.
+    `project.enabled_features`, besides the project import, which adds the
+    archive's features without planning (`import_project_details.py`); the
+    steps they plan are computed when the call returns.
 
     Lock order: every operation first locks the project row (FOR NO KEY UPDATE
     to change the features, FOR SHARE to plan a new document), then the
