@@ -70,6 +70,7 @@ class ExampleService(metaclass=SingletonMeta):
 ### Database Session and Transactions
 
 - **Session is a parameter**: Every method that touches SQL takes `db: Session` as an argument. Services never create sessions: endpoints inject one and job handlers open `sqlr.transaction()` and pass it in.
+- **The one exception**: `StepPlanningService.handle_feature_activation_job` opens its own transactions, one commit per batch, so no lock is held longer than a batch; this is no general permission.
 - **No commits**: Services never call `db.commit()`, `db.rollback()` or `db.add()`. Writes go through CRUD methods, which only flush; the session owner (`SQLRepo.transaction()`, used by `get_db_session` and job handlers) commits or rolls back.
 - **Direct queries only for reads**: `db.query(...)` / `db.execute(select(...))` inside a service is allowed only for read/aggregate queries that no CRUD provides (statistics, health tables, timeline analysis). Look for a CRUD read first; a query that other code could use too (an entity by a field, by project, with its relations) becomes a read method on the entity's CRUD.
 - **Keyword arguments**: Call CRUDs and other services with keyword arguments (`db=db, id=..., create_dto=...`). Multi-step methods number their steps in comments (`# 1) create the project`).
