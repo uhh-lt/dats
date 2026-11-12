@@ -1,4 +1,6 @@
 import { DialogSection } from "@components/DialogSection";
+import { FEATURES } from "@core/feature";
+import { Feature } from "@models/Feature";
 import { ImportJobType } from "@models/ImportJobType";
 import { PlayCircle } from "@mui/icons-material";
 import {
@@ -29,7 +31,7 @@ const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.PROJECT_METADATA]: "Import project metadata from a project metadata export file",
   [ImportJobType.WHITEBOARDS]: "Import whiteboards from a whiteboard export file",
   [ImportJobType.TIMELINE_ANALYSES]: "Import timeline analyses from a timeline analyses export file",
-  [ImportJobType.COTA]: "Import Concept Over Time Analyses from a COTA export file",
+  [ImportJobType.COTA]: `Import the analyses of ${FEATURES[Feature.CONCEPTS_OVER_TIME].title} from a COTA export file`,
   [ImportJobType.MEMOS]: "Import memos from a memos export file",
   [ImportJobType.PROMPTS]: "Import prompts with all their versions from a prompts export file",
   [ImportJobType.EXPERIMENTS]:

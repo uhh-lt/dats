@@ -6,7 +6,7 @@ export function CotaExportButton({ analysisIds }: ExportAnalysisButtonProps) {
   const exportAll = analysisIds.length === 0;
   return (
     <ExportButton
-      title={exportAll ? "Export all Concept Over Time Analyses" : "Export selected Concept Over Time Analyses"}
+      title={exportAll ? "Export all analyses" : "Export selected analyses"}
       export_job_type={exportAll ? ExportJobType.ALL_COTA : ExportJobType.SELECTED_COTA}
       specific_export_job_parameters={
         exportAll

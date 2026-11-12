@@ -1,7 +1,11 @@
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
+import { FEATURES } from "@core/feature";
 import { COTARead } from "@models/COTARead";
+import { Feature } from "@models/Feature";
 import { useMutation } from "@tanstack/react-query";
 import { cotaQueries } from "./cotaQueries";
+
+const COTA_TITLE = FEATURES[Feature.CONCEPTS_OVER_TIME].title;
 
 const useCreateCota = () =>
   useMutation({
@@ -9,7 +13,7 @@ const useCreateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.create,
     meta: {
       datsEvent: "COTA_CREATED",
-      successMessage: (cota: COTARead) => `Created new Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Created new ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
@@ -19,7 +23,7 @@ const useDuplicateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     meta: {
       datsEvent: "COTA_CREATED",
-      successMessage: (cota: COTARead) => `Duplicated Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Duplicated ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
@@ -29,7 +33,7 @@ const useUpdateCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.updateById,
     meta: {
       datsEvent: "COTA_UPDATED",
-      successMessage: (cota: COTARead) => `Updated Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Updated ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
@@ -39,7 +43,7 @@ const useAnnotateCotaSentences = () =>
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
     meta: {
       datsEvent: "COTA_UPDATED",
-      successMessage: (cota: COTARead) => `Updated annotations in Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Updated annotations in ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
@@ -49,7 +53,7 @@ const useRemoveCotaSentences = () =>
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
     meta: {
       datsEvent: "COTA_UPDATED",
-      successMessage: (cota: COTARead) => `Removed sentences from Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Removed sentences from ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
@@ -59,7 +63,7 @@ const useResetCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
     meta: {
       datsEvent: "COTA_UPDATED",
-      successMessage: (cota: COTARead) => `Reset Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Reset ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
@@ -69,7 +73,7 @@ const useDeleteCota = () =>
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
     meta: {
       datsEvent: "COTA_DELETED",
-      successMessage: (cota: COTARead) => `Deleted Concept Over Time Analysis "${cota.name}"`,
+      successMessage: (cota: COTARead) => `Deleted ${COTA_TITLE} "${cota.name}"`,
     },
   });
 
