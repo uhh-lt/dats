@@ -21,7 +21,6 @@ from modules.doc_processing.doc_processing_dto import (
 from modules.doc_processing.step_planning_service import StepPlanningService
 from modules.doc_processing.step_run import start_steps
 from pipeline_test_utils import (
-    plan_activations,
     read_all_step_status,
     read_step_status,
     started_steps,
@@ -82,7 +81,8 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     p = planning_projects
 
     _enable_full_text_search(db_session, p["project"].id)
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
 
     assert crud_project.read(db=db_session, id=p["project"].id).enabled_features == [
         Feature.FULL_TEXT_SEARCH
@@ -120,7 +120,7 @@ def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     sdoc_id = planning_projects["language_failed"].id
 
     _enable_full_text_search(db_session, planning_projects["project"].id)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     assert read_all_step_status(db_session, sdoc_id) == {
         "extract_html": 1,
@@ -186,7 +186,8 @@ def test_activation_plans_in_batches_like_in_one(
     monkeypatch.setattr(step_planning_service, "ACTIVATION_BATCH_SIZE", 1)
 
     _enable_full_text_search(db_session, p["project"].id)
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
 
     assert started == {
         p["done"].id: [JobType.TEXT_ES_INDEX],
@@ -259,7 +260,9 @@ def test_activation_leaves_the_documents_after_its_last_document_alone(
         activation.model_copy(update={"last_sdoc_id": p["done"].id}),
     )
 
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+
+    started = started_steps(held_jobs)
 
     assert started == {p["done"].id: [JobType.TEXT_ES_INDEX]}
     assert (
@@ -313,7 +316,7 @@ def test_disable_feature_unplans_only_the_processing_steps_of_the_project(
     p = planning_projects
     service = StepPlanningService()
     _enable_full_text_search(db_session, p["project"].id)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     service.disable_feature(
         db=db_session, project_id=p["project"].id, feature=Feature.FULL_TEXT_SEARCH
