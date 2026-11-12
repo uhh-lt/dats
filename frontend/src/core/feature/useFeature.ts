@@ -12,7 +12,7 @@ export interface FeatureCoverage {
   coverage: number;
 }
 
-/** Features without a backend id (`undefined`) need core data only and are always enabled. */
+/** A page or entry point without a feature (`undefined`) needs core data only and is always available. */
 function isEnabled(project: ProjectRead | undefined, feature: Feature | undefined): boolean {
   if (feature === undefined) return true;
   return project?.enabled_features.includes(feature) ?? false;
