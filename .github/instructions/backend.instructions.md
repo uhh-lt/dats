@@ -177,18 +177,19 @@ Add a step:
 
 1. Add its `JobType` value (`common/job_type_enum.py`); its position breaks ties in the derived step order.
 2. Add new artefacts to `Artefact` (`common/artefact_enum.py`), and to `CORE_ARTEFACTS` only if every document needs them whatever features its project enables.
-3. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher, requires, produces, doctypes)`.
+3. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`modules/doc_processing/pipeline/pipeline_step_decorator.py`).
 4. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
 
 Rules:
 
-- The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations; never list steps by hand.
+- The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations (`modules/doc_processing/pipeline/pipeline_graph.py`); never list steps by hand.
+- The job system knows no pipeline: the job handler calls the lifecycle hooks (started, finished, failed) that `bootstrap.register_jobs` registers with the functions of `doc_processing_pipeline.py`.
 - A finished step starts each planned successor with a bare `SdocProcessingJobInput` (project, document, settings, steps), and the successor's enricher loads the rest of its input from the database or filesystem, so a step stores all its output before its handler returns and never passes data to the next step in memory.
-- Every step registers an enricher (`register_job` rejects a step without one); the same enricher serves the advancing, recompute and feature activation.
+- Every step registers an enricher (`@pipeline_step` rejects a step without one); the same enricher serves the advancing, recompute and feature activation.
 - A step job that cannot start (its enricher fails) sets its steps and the pending steps after them to erroneous (`start_step_job`).
 - A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
 - Only jobs that create documents or fan out over files (`ENTRY_POINTS` in `doc_processing_pipeline.py`) build the input of the next job by hand.
-- A job that computes several steps in one run declares the others in `further_steps` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
+- A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
 - The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` reads or writes these rows.
 - The overall status of a document is derived from its step rows (erroneous, else processing, else finished); never store it.
 - The project export writes an optional artefact only if its step finished, and the import writes it only if the archive holds it (`export_sdocs.py`, `import_sdocs.py`).
@@ -201,8 +202,9 @@ Rules:
 - A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
 - A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
 - The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
-- Only `FeatureService` plans steps (adds their status rows): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
+- `systems/feature_system` holds the generic part (declarations, registry, requirement resolution, `FeatureService.assert_enabled` and the `require_feature` dependencies, `GET /feature`); `modules/project_features` holds what knows projects and documents (`ProjectFeatureService`, the `/feature/project/...` endpoints, `ProjectFeatureRead` and the activation DTOs).
+- Only `ProjectFeatureService` plans steps (adds their status rows): `planned_steps` at upload and `activate_feature` when a user enables or completes a feature; never plan steps by hand.
 - Enabling or completing a feature plans `(plan(enabled) - plan(enabled without the feature)) | steps(feature) | core steps` and never the missing data of another feature.
-- The enabled features change only through `FeatureService.activate_feature` and `disable_feature` (the `/feature/project/...` endpoints), never through `ProjectUpdate`.
+- The enabled features change only through `ProjectFeatureService.activate_feature` and `disable_feature` (the `/feature/project/...` endpoints), never through `ProjectUpdate`.
 - Disabling a feature sets its processing steps that no remaining feature plans to not planned, and `handle_job_started` skips steps that are not planned, so a disabled feature leaves no document processing.
 - An import restores only what the archive holds, adds the archive's features to the project's (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.
