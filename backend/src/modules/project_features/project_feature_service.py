@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
@@ -8,6 +6,7 @@ from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
+from core.doc.source_document_status_rules import count_step_sets
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
@@ -137,84 +136,65 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         self, *, db: Session, project_id: int
     ) -> list[ProjectFeatureRead]:
         """The state of every feature in the project. Per feature, each document
-        it applies to counts once, by the status of the feature's steps: processing
-        if one is processing, else failed if one is erroneous, else not planned if
-        one is not planned, else ready. The counts are computed in one aggregate
-        query."""
+        it applies to counts once, by the status of the feature's steps
+        (`step_set_status`: processing, else failed, else not planned, else
+        ready). The counts are computed in one aggregate query."""
         project = crud_project.read(db=db, id=project_id)
         enabled = {Feature(f) for f in project.enabled_features}
 
+        # 1) the steps of each feature per doctype it applies to
         steps = {
-            (feature, doctype): feature_steps(
-                doctype=doctype, feature=feature, enabled=enabled
-            )
+            feature: {
+                doctype: step_set
+                for doctype in DocType
+                if (
+                    step_set := frozenset(
+                        feature_steps(doctype=doctype, feature=feature, enabled=enabled)
+                    )
+                )
+            }
             for feature in Feature
-            for doctype in DocType
         }
 
-        # 1) the documents per doctype and combination of step statuses
+        # 2) the documents per doctype by the status of these steps
         graph = pipeline_registry.graph()
-        combinations = crud_sdoc_step_status.count_by_project(
-            db=db,
-            project_id=project_id,
-            steps=[s for s in JobType if s in graph.all_steps()],
+        counts = count_step_sets(
+            combinations=crud_sdoc_step_status.count_by_project(
+                db=db,
+                project_id=project_id,
+                steps=[s for s in JobType if s in graph.all_steps()],
+            ),
+            step_sets={
+                doctype: {s[doctype] for s in steps.values() if doctype in s}
+                for doctype in DocType
+            },
         )
-        processing = SDocStatus.processing
-        finished = SDocStatus.finished
-        erroneous = SDocStatus.erroneous
-        step_sets = {
-            (d, tuple(step_set)) for (_, d), step_set in steps.items() if step_set
-        }
-        counts: dict[tuple, int] = defaultdict(int)
-        for doctype, step_status, count in combinations:
-            counts[("total", doctype)] += count
-            for d, step_set in step_sets:
-                if d != doctype:
-                    continue
-                key = (doctype, step_set)
-                status = [step_status.get(step) for step in step_set]
-                if all(st == finished for st in status):
-                    counts[("ready", *key)] += count
-                if processing in status:
-                    counts[("processing", *key)] += count
-                elif erroneous in status:
-                    counts[("failed", *key)] += count
-                elif None in status:
-                    counts[("not_planned", *key)] += count
-            for step in {
-                s for d, step_set in step_sets if d == doctype for s in step_set
-            }:
-                if step_status.get(step) != finished:
-                    counts[("missing", doctype, step)] += count
 
-        # 2) sum up per feature
+        # 3) sum up per feature
         result: list[ProjectFeatureRead] = []
         for feature in Feature:
-            total = ready = running = failed = not_planned = 0
-            missing: set[JobType] = set()
-            for doctype in DocType:
-                step_set = steps[(feature, doctype)]
-                if not step_set:
-                    continue
-                key = (doctype, tuple(step_set))
-                total += counts[("total", doctype)]
-                ready += counts[("ready", *key)]
-                running += counts[("processing", *key)]
-                failed += counts[("failed", *key)]
-                not_planned += counts[("not_planned", *key)]
-                missing |= {s for s in step_set if counts[("missing", doctype, s)] > 0}
+            per_doctype = [
+                counts[doctype][step_set]
+                for doctype, step_set in steps[feature].items()
+            ]
+            total = sum(c.total for c in per_doctype)
+            ready = sum(c.ready for c in per_doctype)
+            processing = sum(c.processing for c in per_doctype)
+            failed = sum(c.failed for c in per_doctype)
+            not_planned = sum(c.not_planned for c in per_doctype)
+            missing = {s for c in per_doctype for s in c.missing_steps}
             result.append(
                 ProjectFeatureRead(
                     feature=feature,
                     enabled=feature in enabled,
                     status=_status(
                         enabled=feature in enabled,
-                        processing=running,
+                        processing=processing,
                         lacking=failed + not_planned,
                     ),
                     ready=ready == total,
                     covered_documents=ready,
-                    processing_documents=running,
+                    processing_documents=processing,
                     failed_documents=failed,
                     not_planned_documents=not_planned,
                     total_documents=total,
