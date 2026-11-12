@@ -1447,6 +1447,39 @@ const containsCallOf = (node, name) => {
   });
 };
 
+// a route file that declares a feature (`staticData: { feature: Feature.X }`)
+const ROUTE_FEATURE_PATTERN = /\bfeature\s*:\s*Feature\.[A-Z_]+/;
+
+const readFileOrNull = (file) => {
+  try {
+    return fs.readFileSync(file, "utf-8");
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The file of the nearest parent route of the route file `file` that declares a feature, if any: the routes below a
+ * feature's route inherit its feature (`getRouteFeature`). Parents are the `route.tsx` and `<folder>.tsx` files of the
+ * folders above the route.
+ */
+function findFeatureParentRouteFile(file) {
+  const index = file.lastIndexOf("/src/routes/");
+  if (index === -1) return undefined;
+  const root = file.slice(0, index + "/src/routes".length);
+  let dir = path.posix.dirname(file);
+  if (path.posix.basename(file) === "route.tsx") dir = path.posix.dirname(dir);
+  while (dir.length > root.length) {
+    for (const candidate of [`${dir}/route.tsx`, `${dir}.tsx`]) {
+      if (candidate === file) continue;
+      const content = readFileOrNull(candidate);
+      if (content !== null && ROUTE_FEATURE_PATTERN.test(content)) return candidate;
+    }
+    dir = path.posix.dirname(dir);
+  }
+  return undefined;
+}
+
 /** Whether the function starts with `if (!(await ensureRouteFeatureEnabled(...))) return;`. */
 const startsWithFeatureGuard = (fn) => {
   if (fn.body.type !== "BlockStatement") return false;
@@ -1504,12 +1537,15 @@ const routeOptionsRule = {
       beforeLoadReturn: "`beforeLoad` is only for guards (throw redirect / notFound); it never returns context.",
       validateSearch: "`validateSearch` uses `zodValidator(<page>SearchSchema)`.",
       featureLoader:
-        "The `loader` of a route with `staticData.feature` starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;` (its queries fail with 403 while the feature is disabled).",
+        "The `loader` of a route with a feature (its own `staticData.feature` or a parent's) starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;` (its queries fail with 403 while the feature is disabled).",
       featureLoaderInline:
         "The `loader` of a route with a feature is an inline function, so its feature guard can be checked.",
       staticDataInline:
         "`staticData` is an inline object literal without spreads, so its keys (`feature`, `tab`, `icon`) can be checked.",
-      featureCallWithoutFeature: "`ensureRouteFeatureEnabled` is only for routes with `staticData.feature`.",
+      featureRepeated:
+        "This route inherits the feature of its parent route ({{parent}}); do not declare `staticData.feature` again.",
+      featureCallWithoutFeature:
+        "`ensureRouteFeatureEnabled` is only for routes with a feature (`staticData.feature` on the route or a parent route).",
       tabStaticData: "A page route of a project needs `staticData: { tab: true, icon }` (missing: {{missing}}).",
       staticTitle:
         "A static tab title comes from the page's navigation entry (`NAVIGATION_ENTRIES`); `getTitle` is only for dynamic titles.",
@@ -1563,7 +1599,16 @@ const routeOptionsRule = {
           context.report({ node: staticData, messageId: "staticDataInline" });
         }
 
-        if (staticDataKeys.includes("feature")) {
+        const ownFeature = staticDataKeys.includes("feature");
+        const parentFeatureFile = findFeatureParentRouteFile(filename);
+        if (ownFeature && parentFeatureFile) {
+          context.report({
+            node: options.staticData,
+            messageId: "featureRepeated",
+            data: { parent: path.posix.relative(path.posix.dirname(filename), parentFeatureFile) },
+          });
+        }
+        if (ownFeature || parentFeatureFile) {
           if (options.loader && !loader) {
             context.report({ node: options.loader, messageId: "featureLoaderInline" });
           } else if (loader && !startsWithFeatureGuard(loader)) {
