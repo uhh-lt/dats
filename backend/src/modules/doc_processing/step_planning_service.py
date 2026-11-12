@@ -396,12 +396,19 @@ class StepPlanningService(metaclass=SingletonMeta):
                 steps=to_restart,
                 statuses=[SDocStatus.processing],
             )
+            # a restart also matches the rows it has just planned (processing)
             rows = {
-                step: planned.get(step, [])
-                + redone.get(step, [])
-                + restarted.get(step, [])
+                step: step_ids
                 for step in plan
-                if planned.get(step) or redone.get(step) or restarted.get(step)
+                if (
+                    step_ids := sorted(
+                        {
+                            *planned.get(step, []),
+                            *redone.get(step, []),
+                            *restarted.get(step, []),
+                        }
+                    )
+                )
             }
 
             # 3) fail the steps that cannot run, then read those that can start

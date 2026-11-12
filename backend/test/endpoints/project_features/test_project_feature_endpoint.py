@@ -535,6 +535,30 @@ def test_restart_feature_starts_its_processing_steps_again(
     )
 
 
+def test_restart_feature_replaces_its_pending_activation(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """Restarting keyword statistics while its activation is still pending
+    replaces it: the first activation stops before it plans anything, the
+    restart plans and starts the keywords of text_done, and no activation is
+    pending afterwards."""
+    p = feature_project
+    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+
+    response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+
+    assert response.status_code == 200, response.text
+    assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 2
+    assert plan_activations(held_jobs) == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
+    project = crud_project.read(db=db_session, id=p["project"].id)
+    assert project.feature_activations == {}
+    read = _features(client, p["project"].id)[Feature.KEYWORD_STATISTICS]
+    assert read.status == FeatureStatus.COMPUTING
+
+
 def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
     client: TestClient,
     db_session,
