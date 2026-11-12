@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from loguru import logger
 from pydantic import Field, create_model
 from redis import Redis
+from redis.exceptions import RedisError
 from rq.registry import (
     BaseRegistry,
     CanceledJobRegistry,
@@ -21,6 +22,7 @@ from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from repos.redis_repo import RedisRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
+from systems.job_system.job_exceptions import JobInputError, JobQueueUnavailableError
 from systems.job_system.job_system_enum import EndpointGeneration, JobPriority
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -191,13 +193,15 @@ class JobService(metaclass=SingletonMeta):
         priority: JobPriority | None = None,
     ) -> Job:
         """Enqueue a job on the queue of its device, with its registered priority
-        unless `priority` overrides it (e.g. low for bulk work in the background)."""
-        from systems.job_system.job_handler import rq_job_handler
+        unless `priority` overrides it (e.g. low for bulk work in the background).
 
+        Raises `JobInputError` if the input cannot be built (it does not
+        validate and the enricher cannot complete it), and
+        `JobQueueUnavailableError` if the queue (Redis) cannot be reached.
+        Anything else, e.g. an unknown job type, raises as it is."""
         job_info = self.job_registry.get(job_type)
         if not job_info:
             raise ValueError(f"Unknown job type: {job_type}")
-        retry = job_info["retry"]
 
         # Validate payload is of correct subclass type
         input_type = job_info["input_type"]
@@ -206,43 +210,46 @@ class JobService(metaclass=SingletonMeta):
         except Exception as e:
             # Use the enricher if available
             enricher = job_info.get("enricher")
-            if enricher:
-                try:
-                    input_obj = enricher(payload)
-                    input_obj = input_type.model_validate(input_obj.model_dump())
-                except Exception as enrich_e:
-                    raise ValueError(
-                        f"Invalid payload for job type {job_type}, even after enrichment: {enrich_e}"
-                    ) from enrich_e
-            else:
-                raise ValueError(f"Invalid payload for job type {job_type}: {e}")
+            if not enricher:
+                raise JobInputError(job_type, e) from e
+            try:
+                input_obj = enricher(payload)
+                input_obj = input_type.model_validate(input_obj.model_dump())
+            except Exception as enrich_e:
+                raise JobInputError(job_type, enrich_e) from enrich_e
 
         # Enqueue the job
+        from systems.job_system.job_handler import rq_job_handler
+
+        retry = job_info["retry"]
         queue = self.queues[(job_info["device"], priority or job_info["priority"])]
-        rq_job = queue.enqueue(
-            rq_job_handler,
-            # Our function parameters
-            kwargs={
-                "jobtype": job_type,
-                "handler": job_info["handler"],
-                "payload": input_obj,
-            },
-            # RQ Parameters
-            meta={
-                "type": job_type,
-                "status_message": "Job enqueued",
-                "project_id": input_obj.project_id,
-                "current_step": 0,
-                "steps": ["Initial step"],
-                "created": datetime.now(UTC),
-                "finished": None,
-                "device": job_info["device"],
-                "publish_updates": job_info["publish_updates"],
-            },
-            result_ttl=job_info["result_ttl"],
-            retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
-            job_timeout=job_info["timeout"],
-        )
+        try:
+            rq_job = queue.enqueue(
+                rq_job_handler,
+                # Our function parameters
+                kwargs={
+                    "jobtype": job_type,
+                    "handler": job_info["handler"],
+                    "payload": input_obj,
+                },
+                # RQ Parameters
+                meta={
+                    "type": job_type,
+                    "status_message": "Job enqueued",
+                    "project_id": input_obj.project_id,
+                    "current_step": 0,
+                    "steps": ["Initial step"],
+                    "created": datetime.now(UTC),
+                    "finished": None,
+                    "device": job_info["device"],
+                    "publish_updates": job_info["publish_updates"],
+                },
+                result_ttl=job_info["result_ttl"],
+                retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
+                job_timeout=job_info["timeout"],
+            )
+        except RedisError as e:
+            raise JobQueueUnavailableError(job_type) from e
         job = Job(rq_job)
 
         from systems.job_system.job_events import publish_job_update
