@@ -184,13 +184,15 @@ Add a step:
 Rules:
 
 - The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations (`modules/doc_processing/pipeline/pipeline_graph.py`); never list steps by hand.
-- The job system knows no pipeline: the job handler calls the lifecycle hooks (started, finished, failed) that `bootstrap.register_jobs` registers with the functions of `doc_processing_pipeline.py`.
+- The job system knows no pipeline: the job handler calls the lifecycle hooks (started, finished, failed) that `bootstrap.register_jobs` registers with the functions of `step_run.py` (`handle_job_started`, `handle_job_finished`, `handle_job_error`).
+- `handle_job_started` returns the input to run, a copy narrowed to the planned steps, or None to skip the job; never change a job input in place.
+- Start step jobs only with `step_run.start_steps` (document, steps, settings, `raise_on_failure`), which groups the steps by job and builds the bare input; never build an `SdocProcessingJobInput` or name a step's job to start it.
 - A finished step starts each planned successor with a bare `SdocProcessingJobInput` (project, document, settings, steps), and the successor's enricher loads the rest of its input from the database or filesystem, so a step stores all its output before its handler returns and never passes data to the next step in memory.
 - Every step registers an enricher (`@pipeline_step` rejects a step without one); the same enricher serves the advancing, recompute and feature activation.
-- A step job that cannot start (its enricher fails) sets its steps and the pending steps after them to erroneous (`start_step_job`).
+- A step job that cannot start (its enricher fails) sets its steps and the pending steps after them to erroneous, unless the caller asks `start_steps` to raise (recompute).
 - A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
 - A step has one direct predecessor: the steps producing its required artefacts must depend on each other (`NER_SPANS` and `SENTENCE_EMBEDDINGS` together are rejected), as no step waits for several inputs (the startup check fails otherwise).
-- Only jobs that create documents or fan out over files (`ENTRY_POINTS` in `doc_processing_pipeline.py`) build the input of the next job by hand.
+- Only jobs that create documents or fan out over files (`_ENTRY_POINTS` in `step_run.py`) build the input of the next job by hand.
 - A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
 - The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` (the generic reads and writes), `core/doc/source_document_status_rules.py` and the planning statements of `StepPlanningService` (`modules/doc_processing/step_planning_statements.py`) touch these rows.
 - The overall status of a document is derived from its step rows (erroneous, else processing, else finished) and the status of a feature's steps from theirs (processing, else failed, else not planned, else ready), both only in `source_document_status_rules.py`; never store them.
