@@ -18,7 +18,7 @@ export type ProjectFeatureRead = {
    */
   enabled: boolean;
   /**
-   * State of the Feature: disabled, computing (documents are processing), partly available (documents lack its data and nothing runs for them) or fully available
+   * State of the Feature: disabled, computing (documents are processing or being planned), partly available (documents lack its data and nothing runs for them) or fully available
    */
   status: FeatureStatus;
   /**
