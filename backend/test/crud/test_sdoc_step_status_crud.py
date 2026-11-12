@@ -61,16 +61,14 @@ def test_read_sdoc_ids_to_plan_selects_missing_and_redo_steps(
         project_id=p["project"].id,
         doctype=DocType.text,
         missing_steps=[JobType.TEXT_SPACY],
-        redo_steps=[],
-        redo_statuses=[],
+        redo_steps={},
     )
     redo = crud_sdoc_step_status.read_sdoc_ids_to_plan(
         db=db_session,
         project_id=p["project"].id,
         doctype=DocType.text,
         missing_steps=[],
-        redo_steps=[JobType.TEXT_EXTRACTION],
-        redo_statuses=[ERRONEOUS],
+        redo_steps={ERRONEOUS: [JobType.TEXT_EXTRACTION]},
     )
 
     assert missing == [p["failed"].id]
@@ -90,8 +88,7 @@ def test_read_sdoc_ids_to_plan_does_not_block_rows_that_reference_the_documents(
         project_id=p["project"].id,
         doctype=DocType.text,
         missing_steps=[JobType.TEXT_SPACY],
-        redo_steps=[],
-        redo_statuses=[],
+        redo_steps={},
     )
     assert p["failed"].id in locked
     errors: list[Exception] = []

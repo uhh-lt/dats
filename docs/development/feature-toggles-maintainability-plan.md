@@ -99,7 +99,7 @@ to_plan = (plan(enabled) - plan(enabled without the feature))   # what the featu
 ```
 
 1. Insert a processing row for every `(document, step in to_plan)` that has no row (`ON CONFLICT DO NOTHING`).
-2. Set the feature's erroneous rows back to processing (and its processing rows on Restart).
+2. Set the feature's erroneous rows back to processing (and, on Restart, its processing rows of steps that are not core steps).
 3. Mark rows whose input row is erroneous as erroneous; return the rows whose inputs are all finished, which can start now.
 
 Behaviour stays as agreed: enabling or completing a feature never computes the missing data of

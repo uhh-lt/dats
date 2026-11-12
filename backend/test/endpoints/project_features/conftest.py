@@ -21,6 +21,7 @@ from feature_test_utils import (
     minimal_text_steps,
     set_step_status,
 )
+from modules.project_features.project_feature_service import ProjectFeatureService
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
 
@@ -82,6 +83,52 @@ def image_text_project(db_session, test_user: UserORM) -> ImageTextProject:
     db_session.refresh(project)
     db_session.refresh(image)
     return {"project": project, "image": image}
+
+
+class UploadingProject(TypedDict):
+    """
+    This fixture sets up the following project:
+
+    - project: "Uploading Project" of `test_user`, with keyword statistics
+      enabled
+    - uploading: text document "uploading.txt", still being uploaded: all steps
+      a text document of this project gets (extract_html, text_extraction,
+      text_language_detection, text_spacy, text_html_mapping, text_keywords)
+      are processing, and the job of extract_html runs
+
+    Non-obvious derived behavior:
+
+    - Every processing step of uploading is a core step except text_keywords,
+      which waits for the language detection.
+    """
+
+    project: ProjectORM
+    uploading: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
+    """The project described in `UploadingProject`."""
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Uploading Project",
+        features=[Feature.KEYWORD_STATISTICS],
+    )
+    steps = ProjectFeatureService().planned_steps(
+        doctype=DocType.text, features=[Feature.KEYWORD_STATISTICS]
+    )
+    uploading = _create_sdoc(
+        db_session,
+        project,
+        name="uploading.txt",
+        doctype=DocType.text,
+        status={step.value: 0 for step in steps},
+    )
+    db_session.commit()
+    db_session.refresh(project)
+    db_session.refresh(uploading)
+    return {"project": project, "uploading": uploading}
 
 
 class ActivationProject(TypedDict):

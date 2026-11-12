@@ -115,8 +115,9 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         settings: ProcessingSettings,
     ) -> ProjectRead:
         """Restart the processing of an enabled feature: plan its processing steps
-        again and start those whose inputs are finished, like `activate_feature`
-        does for missing steps. For steps left processing without a job (a crashed
+        again, except the core steps (an upload in progress keeps its jobs), and
+        start those whose inputs are finished, like `activate_feature` does for
+        missing steps. For steps left processing without a job (a crashed
         worker); a step whose job still runs computes twice. Returns the
         project."""
         project = crud_project.read_locked(db=db, id=project_id)
@@ -314,7 +315,8 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         1) A step of `to_plan` without a row is planned; existing rows keep their
            status.
         2) The feature's erroneous steps are planned again; with `restart`, its
-           processing steps too.
+           processing steps too, except the core steps (an upload in progress
+           keeps its jobs).
         3) A step of 1) or 2) whose input step is erroneous or not planned is set
            to erroneous: it cannot run, and shows up as failed until its input is
            recomputed (the input then starts it).
@@ -324,9 +326,6 @@ class ProjectFeatureService(metaclass=SingletonMeta):
         graph = pipeline_registry.graph()
         features = self.registry.closure([feature])
         others = [f for f in enabled if f not in features]
-        redo = [SDocStatus.erroneous]
-        if restart:
-            redo.append(SDocStatus.processing)
 
         sdoc_steps: dict[int, list[JobType]] = {}
         for doctype in DocType:
@@ -342,6 +341,10 @@ class ProjectFeatureService(metaclass=SingletonMeta):
             core = set(self.planned_steps(doctype=doctype, features=[]))
             to_plan = [s for s in plan if s not in without or s in own | core]
             to_redo = [s for s in plan if s in own]
+            # a restart runs the feature's own processing steps again, never the
+            # core ones: a document still being uploaded keeps its jobs (a
+            # second extract_html would extract its images twice)
+            to_restart = [s for s in to_redo if s not in core] if restart else []
             if not to_plan:
                 continue
 
@@ -351,8 +354,10 @@ class ProjectFeatureService(metaclass=SingletonMeta):
                 project_id=project_id,
                 doctype=doctype,
                 missing_steps=to_plan,
-                redo_steps=to_redo,
-                redo_statuses=redo,
+                redo_steps={
+                    SDocStatus.erroneous: to_redo,
+                    SDocStatus.processing: to_restart,
+                },
             )
 
             # 1) plan the missing steps, 2) and the feature's steps to redo
@@ -360,12 +365,20 @@ class ProjectFeatureService(metaclass=SingletonMeta):
                 db=db, sdoc_ids=sdoc_ids, steps=to_plan
             )
             redone = crud_sdoc_step_status.update_to_processing(
-                db=db, sdoc_ids=sdoc_ids, steps=to_redo, statuses=redo
+                db=db, sdoc_ids=sdoc_ids, steps=to_redo, statuses=[SDocStatus.erroneous]
+            )
+            restarted = crud_sdoc_step_status.update_to_processing(
+                db=db,
+                sdoc_ids=sdoc_ids,
+                steps=to_restart,
+                statuses=[SDocStatus.processing],
             )
             rows = {
-                step: planned.get(step, []) + redone.get(step, [])
+                step: planned.get(step, [])
+                + redone.get(step, [])
+                + restarted.get(step, [])
                 for step in plan
-                if planned.get(step) or redone.get(step)
+                if planned.get(step) or redone.get(step) or restarted.get(step)
             }
 
             # 3) fail the steps that cannot run, then read those that can start
