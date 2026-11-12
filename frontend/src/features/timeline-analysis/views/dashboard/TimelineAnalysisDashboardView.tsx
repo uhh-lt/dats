@@ -1,3 +1,4 @@
+import { useNavigationTitle } from "@core/navigation";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -31,6 +32,7 @@ const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
 ];
 
 export function TimelineAnalysisDashboardView() {
+  const title = useNavigationTitle() ?? "";
   // global client state
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
@@ -185,8 +187,8 @@ export function TimelineAnalysisDashboardView() {
 
   return (
     <AnalysisDashboard
-      pageTitle="Timeline Analysis Dashboard"
-      headerTitle="Timeline Analysis Dashboard"
+      pageTitle={title}
+      headerTitle={title}
       subheaderTitle="Manage your timeline analysis"
       table={table}
     />

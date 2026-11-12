@@ -1,6 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
-import { useFeature } from "@core/feature";
+import { FEATURES, useFeature } from "@core/feature";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { Feature } from "@models/Feature";
 import { MLJobType } from "@models/MLJobType";
@@ -185,7 +185,7 @@ export function MlAutomationView() {
                   <Avatar>{getIconComponent(Icon.TAG)}</Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary="Document Tag Recommendations"
+                  primary={FEATURES[Feature.TAG_RECOMMENDATION].title}
                   secondary={
                     "Based on currently applied tags, recommend new tags for documents. Use the corresponding analysis feature to view recommendations."
                   }

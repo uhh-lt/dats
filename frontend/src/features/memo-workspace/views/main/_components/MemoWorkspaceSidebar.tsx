@@ -2,7 +2,7 @@ import { EmojiGlyph } from "@components/emoji";
 import { getIconComponent, Icon } from "@components/icons";
 import { MyFilter } from "@core/filter";
 import { MemoHooks, memoQueries } from "@core/memo";
-import { LinkListItemButton } from "@core/navigation";
+import { LinkListItemButton, useNavigationTitle } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
 import { BooleanOperator } from "@models/BooleanOperator";
@@ -67,6 +67,7 @@ interface MemoWorkspaceSidebarProps {
 }
 
 export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSidebarProps) => {
+  const title = useNavigationTitle() ?? "";
   const dispatch = useAppDispatch();
   const createMemo = MemoHooks.useCreateMemo();
   const recentMemos = useQuery(memoQueries.recent(projectId));
@@ -113,7 +114,7 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
         sx={{ flex: "0 0 49px", minWidth: 0, overflow: "hidden", borderBottom: 1, borderColor: "divider" }}
       >
         <ListItemIcon sx={{ flexShrink: 0 }}>{getIconComponent(Icon.HOME)}</ListItemIcon>
-        <ListItemText sx={{ minWidth: 0 }} primary={<Typography noWrap>Memo Workspace</Typography>} />
+        <ListItemText sx={{ minWidth: 0 }} primary={<Typography noWrap>{title}</Typography>} />
       </LinkListItemButton>
       <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
         <Stack>

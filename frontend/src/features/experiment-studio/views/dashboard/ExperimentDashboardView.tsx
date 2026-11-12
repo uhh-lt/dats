@@ -1,3 +1,4 @@
+import { useNavigationTitle } from "@core/navigation";
 import { AnalysisDashboard, AnalysisDashboardRow, useAnalysisDashboardTable } from "@components/analysis-dashboard";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { TASK_TYPE_LABELS } from "@core/prompt";
@@ -42,6 +43,7 @@ const initialColumnVisibility = { updated: false };
 
 /** The experiments of the project: all project members see and work on them. */
 export function ExperimentDashboardView() {
+  const title = useNavigationTitle() ?? "";
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
   const { experimentsByProjectOptions } = routeApi.useRouteContext();
   const { data: experiments } = useSuspenseQuery({
@@ -123,8 +125,8 @@ export function ExperimentDashboardView() {
 
   return (
     <AnalysisDashboard
-      pageTitle="Experiment Studio"
-      headerTitle="Experiment Studio"
+      pageTitle={title}
+      headerTitle={title}
       subheaderTitle={
         "Compare prompt versions and models on a fixed set of documents. Every run writes into its own virtual user " +
         "and is evaluated against the gold annotator."
