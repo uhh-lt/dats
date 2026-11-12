@@ -52,7 +52,9 @@ class PlanningProjects(TypedDict):
     This fixture sets up two projects of `test_user`; the minimal text steps are
     extract_html, text_extraction, text_language_detection, text_spacy and
     text_html_mapping, the minimal image steps image_metadata_extraction and
-    image_thumbnail; steps not listed are not planned:
+    image_thumbnail; steps not listed are not planned. Every text document has
+    the text of `SDOC_SENTENCES` and the language "en", the image an 8x8 red
+    PNG as its file:
 
     - project: "Planning Project", without any enabled feature
       - done: text document "done.txt"; the minimal text steps are finished
