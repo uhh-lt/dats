@@ -31,6 +31,12 @@ from modules.eximport.sdocs.sdoc_export_schema import (
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 
+# archives of versions before the feature toggles hold one status per document
+ARCHIVE_WITHOUT_STEP_STATUS = (
+    "The archive was exported by a version of DATS before the feature toggles "
+    "(it holds no status per processing step) and cannot be imported."
+)
+
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
 
@@ -39,8 +45,7 @@ def archived_step_status(
     sdoc_export: SourceDocumentExportSchema,
 ) -> dict[str, int | None]:
     """The status of each pipeline step of the document's doctype, as in the
-    archive (None = not planned). Archives exported before the feature toggles
-    hold one status per document: every step of the doctype gets it.
+    archive (None = not planned).
 
     A step that was processing when the archive was exported is not planned: the
     import starts no job, so it would stay processing forever. A step whose
@@ -50,10 +55,8 @@ def archived_step_status(
     graph = pipeline_registry.graph()
     doctype = DocType(sdoc_export.doctype)
     steps = graph.steps(doctype)
-    archived = sdoc_export.step_status
     step_status: dict[str, int | None] = {
-        step.value: sdoc_export.status if archived is None else archived.get(step.value)
-        for step in steps
+        step.value: sdoc_export.step_status.get(step.value) for step in steps
     }
     for step, status in step_status.items():
         if status == SDocStatus.processing.value:
@@ -102,6 +105,8 @@ def import_sdocs_to_proj(
         )
 
     df = read_import_csv(data_file)
+    if "step_status" not in df.columns:
+        raise ImportSourceDocumentsError(errors=[ARCHIVE_WITHOUT_STEP_STATUS])
 
     # Validate input data with our schema
     try:

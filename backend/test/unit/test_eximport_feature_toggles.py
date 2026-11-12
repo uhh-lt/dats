@@ -1,5 +1,5 @@
 """Export/import of the feature toggles: the per-step statuses of a document and the
-enabled features of a project, including archives exported before the toggles."""
+enabled features of a project."""
 
 from io import StringIO
 
@@ -51,15 +51,10 @@ def _sdoc(**kwargs) -> SourceDocumentExportSchema:
         sentence_ends=[12],
         document_embedding=[0.1, 0.2],
         sentence_embeddings=[[0.1, 0.2]],
+        step_status={step.value: FINISHED for step in TEXT_STEPS},
     )
     values.update(kwargs)
     return SourceDocumentExportSchema.model_validate(values)
-
-
-def test_legacy_archive_sets_all_steps_from_the_status() -> None:
-    """An archive without per-step statuses sets every step of the doctype to the document status."""
-    status = archived_step_status(_sdoc())
-    assert status == {step.value: FINISHED for step in TEXT_STEPS}
 
 
 def test_legacy_archive_without_embeddings_does_not_plan_their_steps() -> None:
@@ -113,13 +108,6 @@ def test_processing_steps_are_imported_as_not_planned() -> None:
     assert status[JobType.TEXT_SPACY.value] == FINISHED
 
 
-def test_legacy_archive_of_a_processing_document_plans_no_step() -> None:
-    """A legacy archive holds one status per document: a document archived while
-    it processed gets every step not planned."""
-    status = archived_step_status(_sdoc(status=PROCESSING))
-    assert status == {step.value: None for step in TEXT_STEPS}
-
-
 def test_steps_missing_in_the_archive_are_not_planned() -> None:
     """Steps of the doctype that the archived statuses do not list are not planned."""
     status = archived_step_status(
@@ -168,16 +156,6 @@ def test_step_status_survives_the_csv_round_trip() -> None:
     collection = SourceDocumentExportCollection.from_dataframe(df)
 
     assert collection.source_documents[0].step_status == archived
-
-
-def test_legacy_csv_without_step_status_imports() -> None:
-    """A CSV without the step_status column (old archives) still loads."""
-    df = SourceDocumentExportCollection(source_documents=[_sdoc()]).to_dataframe()
-    df = df.drop(columns=["step_status"])
-
-    collection = SourceDocumentExportCollection.from_dataframe(df)
-
-    assert collection.source_documents[0].step_status is None
 
 
 def test_archive_without_project_details_enables_all_features() -> None:

@@ -1,6 +1,8 @@
 import zipfile
 from pathlib import Path
 
+import pandas as pd
+import pytest
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
@@ -16,8 +18,14 @@ from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from modules.doc_processing.step_run import start_steps
 from modules.doc_processing.video.video_utils import audio_stream_path
+from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
+from modules.eximport.sdocs.export_sdocs import export_all_sdocs
+from modules.eximport.sdocs.import_sdocs import (
+    ARCHIVE_WITHOUT_STEP_STATUS,
+    import_sdocs_to_proj,
+)
 from pipeline_test_utils import read_all_step_status
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -215,3 +223,29 @@ def test_project_round_trip_writes_the_thumbnail_of_a_video_again(
         webp=True,
         thumbnail=True,
     )
+
+
+def test_archive_without_step_status_is_rejected(
+    db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
+) -> None:
+    """A documents archive without the status of each step (exported by a version
+    before the feature toggles) is rejected with a message that says so."""
+    projects = feature_toggle_eximport_projects
+    fsr = FilesystemRepo()
+    archive = export_all_sdocs(
+        db=db_session, fsr=fsr, project_id=projects["project"].id
+    )
+    import_dir = fsr.create_temp_dir("archive_without_step_status")
+    with zipfile.ZipFile(archive) as zip_file:
+        zip_file.extractall(import_dir)
+    (data_file,) = import_dir.glob("*.csv")
+    pd.read_csv(data_file).drop(columns=["step_status"]).to_csv(data_file, index=False)
+
+    with pytest.raises(ImportSourceDocumentsError) as error:
+        import_sdocs_to_proj(
+            db=db_session,
+            path_to_dir=import_dir,
+            project_id=projects["target_project"].id,
+        )
+
+    assert ARCHIVE_WITHOUT_STEP_STATUS in str(error.value)

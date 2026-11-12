@@ -14,11 +14,8 @@ class SourceDocumentExportSchema(BaseModel):
     name: str = Field(description="Name of the source document (default is filename)")
     doctype: str = Field(description="Document type of the source document")
     status: int = Field(description="Status of the source document")
-    step_status: dict[str, int | None] | None = Field(
-        description="Status of each pipeline step of the doctype, null = not planned. "
-        "Missing in archives exported before the feature toggles: then every step "
-        "of the doctype has the status of the document.",
-        default=None,
+    step_status: dict[str, int | None] = Field(
+        description="Status of each pipeline step of the doctype, null = not planned"
     )
 
     # Info about the folder that contains the source document
@@ -128,7 +125,7 @@ class SourceDocumentExportSchema(BaseModel):
         """Validate that the values are statuses, and drop the keys that are no
         pipeline step of the doctype: an archive of another version may name a
         step this version does not have (renamed or removed)."""
-        if v is None or "doctype" not in info.data:
+        if "doctype" not in info.data:
             return v
         steps = {
             s.value
