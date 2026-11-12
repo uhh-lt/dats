@@ -5,10 +5,28 @@ from fastapi.testclient import TestClient
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
+from common.languages_enum import Language
 from feature_test_utils import FeatureProject
-from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocHealthSort
-from pipeline_test_utils import all_steps, step_names
+from job_test_utils import HeldJobs, unreachable_redis
+from modules.doc_processing.doc_processing_dto import (
+    ProcessingSettings,
+    SdocHealthResult,
+    SdocHealthSort,
+)
+from pipeline_test_utils import all_steps, read_step_status, started_steps, step_names
 from systems.search_system.sorting import SortDirection
+
+from .conftest import RecomputeProject
+
+SETTINGS = ProcessingSettings(
+    extract_images=False,
+    pages_per_chunk=10,
+    keyword_number=5,
+    keyword_deduplication_threshold=0.5,
+    keyword_max_ngram_size=2,
+    language=Language.auto,
+    model="default",
+)
 
 # ===========================================================================
 # UPLOAD (/docprocessing/project/{project_id}) TESTS
@@ -126,3 +144,96 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
 
     assert response.status_code == 200, response.text
     assert response.json() == step_names(all_steps(doctype))
+
+
+# ===========================================================================
+# RECOMPUTE (/docprocessing/project/{project_id}/recompute) TESTS
+# ===========================================================================
+
+
+def _recompute(client: TestClient, project_id: int, step: JobType, sdoc_ids: list[int]):
+    return client.post(
+        f"/docprocessing/project/{project_id}/recompute",
+        params={"processing_step": step.value},
+        json={"sdoc_ids": sdoc_ids, "settings": SETTINGS.model_dump(mode="json")},
+    )
+
+
+def test_recompute_starts_the_step_of_each_document(
+    client: TestClient,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """Recomputing the language detection of text_done starts one job for that
+    step only and answers with the number of started jobs."""
+    p = recompute_project
+    sdoc_id = p["text_done"].id
+
+    response = _recompute(
+        client, p["project"].id, JobType.TEXT_LANGUAGE_DETECTION, [sdoc_id]
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == 1
+    assert started_steps(held_jobs) == {sdoc_id: [JobType.TEXT_LANGUAGE_DETECTION]}
+
+
+def test_recompute_of_a_document_without_input_data_marks_it_erroneous(
+    client: TestClient,
+    db_session,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """The language detection of no_data cannot start: it and the pending
+    steps after it (spaCy and the HTML mapping) become erroneous, text_done
+    after it in the list still starts, and the answer counts the one started
+    job."""
+    p = recompute_project
+    no_data = p["no_data"].id
+
+    response = _recompute(
+        client,
+        p["project"].id,
+        JobType.TEXT_LANGUAGE_DETECTION,
+        [no_data, p["text_done"].id],
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == 1
+    assert started_steps(held_jobs) == {
+        p["text_done"].id: [JobType.TEXT_LANGUAGE_DETECTION]
+    }
+    steps = [
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+        JobType.TEXT_SPACY,
+        JobType.TEXT_HTML_MAPPING,
+    ]
+    assert [read_step_status(db_session, no_data, s) for s in steps] == [
+        1,
+        -100,
+        -100,
+        -100,
+    ]
+
+
+def test_recompute_with_an_unreachable_queue_fails_and_marks_nothing(
+    client: TestClient,
+    db_session,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """If the queue cannot be reached, the request answers 503 and no step
+    changes its status."""
+    p = recompute_project
+    sdoc_id = p["text_done"].id
+
+    with unreachable_redis():
+        response = _recompute(
+            client, p["project"].id, JobType.TEXT_LANGUAGE_DETECTION, [sdoc_id]
+        )
+
+    assert response.status_code == 503, response.text
+    assert "The job queue cannot be reached" in response.text
+    assert held_jobs.jobs() == []
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_LANGUAGE_DETECTION) == 1

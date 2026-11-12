@@ -16,7 +16,9 @@ from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
@@ -27,6 +29,7 @@ from feature_test_utils import (
     create_project_with_features,
     minimal_image_steps,
     minimal_text_steps,
+    set_step_status,
 )
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
@@ -132,6 +135,73 @@ def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjec
         "indexing": created["indexing"],
         "new": created["new"],
     }
+
+
+# --- recompute ----------------------------------------------------------------
+
+
+class RecomputeProject(TypedDict):
+    """
+    This fixture sets up the following project:
+
+    - project: "Recompute Project" of `test_user`, without any enabled feature
+    - text_done: text document "text_done.txt" with the text of
+      `SDOC_SENTENCES` and the language "en"; the steps of a project without
+      features are finished (extract_html, text_extraction,
+      text_language_detection, text_spacy, text_html_mapping)
+    - no_data: text document "no_data.txt" without any content (no
+      SourceDocumentData); extract_html, text_extraction and
+      text_language_detection are finished, text_spacy and text_html_mapping
+      are processing (its spaCy job waits in the queue)
+
+    Non-obvious derived behavior:
+
+    - No step job of no_data can start: the enricher of the language
+      detection finds no content.
+    """
+
+    project: ProjectORM
+    text_done: SourceDocumentORM
+    no_data: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def recompute_project(db_session: Session, test_user: UserORM) -> RecomputeProject:
+    """The project described in `RecomputeProject`."""
+    project = create_project_with_features(
+        db_session, test_user, title="Recompute Project", features=[]
+    )
+    text_done = _create_sdoc(
+        db_session,
+        project,
+        name="text_done.txt",
+        doctype=DocType.text,
+        status=dict.fromkeys(minimal_text_steps(), 1),
+    )
+    no_data = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="no_data.txt",
+            name="no_data.txt",
+            doctype=DocType.text,
+            project_id=project.id,
+        ),
+    )
+    set_step_status(
+        db_session,
+        no_data.id,
+        {
+            "extract_html": 1,
+            "text_extraction": 1,
+            "text_language_detection": 1,
+            "text_spacy": 0,
+            "text_html_mapping": 0,
+        },
+    )
+    db_session.commit()
+    for obj in (project, text_done, no_data):
+        db_session.refresh(obj)
+    return {"project": project, "text_done": text_done, "no_data": no_data}
 
 
 # --- a new pipeline step, declared in the test -------------------------------
