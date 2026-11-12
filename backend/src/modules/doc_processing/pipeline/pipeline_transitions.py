@@ -5,6 +5,7 @@ a bare `SdocProcessingJobInput`, which their enrichers complete."""
 
 from common.doc_type_enum import DocType
 from modules.crawler.crawler_job import CrawlerJobInput, CrawlerJobOutput
+from modules.doc_processing.doc_processing_dto import SdocInitJobInput
 from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
     ArchiveExtractionJobOutput,
@@ -13,7 +14,6 @@ from modules.doc_processing.entrypoints.doc_chunking_job import (
     DocChunkingJobInput,
     DocChunkingJobOutput,
 )
-from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from modules.doc_processing.text.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,

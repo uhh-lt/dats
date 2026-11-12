@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -43,6 +44,14 @@ class SdocProcessingJobInput(ProcessingJobInput):
     steps: list[JobType] | None = Field(
         default=None,
         description="The pipeline steps this job computes, for jobs with several steps (e.g. text_spacy); null = all steps of the job",
+    )
+
+
+class SdocInitJobInput(ProcessingJobInput):
+    filepath: Path = Field(description="Path to the file of the new SourceDocument")
+    doctype: DocType = Field(description="DocType of the new SourceDocument")
+    folder_id: int | None = Field(
+        description="ID of the folder of the new SourceDocument, if any"
     )
 
 

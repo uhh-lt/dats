@@ -16,9 +16,9 @@ from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
+    SdocInitJobInput,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
