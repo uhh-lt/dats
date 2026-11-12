@@ -14,6 +14,12 @@ from common.meta_type_enum import MetaType
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
+from core.doc.document_embedding_crud import crud_document_embedding
+from core.doc.document_embedding_dto import DocumentObjectIdentifier
+from core.doc.image_embedding_crud import crud_image_embedding
+from core.doc.image_embedding_dto import ImageObjectIdentifier
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
+from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
@@ -47,6 +53,9 @@ from feature_test_utils import (
 )
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
+from modules.doc_processing.image.image_thumbnail_generation_job import (
+    generate_thumbnails,
+)
 from modules.doc_processing.video.video_audio_extraction_job import (
     extract_audio_stream,
 )
@@ -62,6 +71,8 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from pipeline_test_utils import core_steps, step_names
 from prompt_test_utils import (
     PromptEximportProjects,
@@ -74,6 +85,7 @@ from provenance_test_utils import (
     create_provenance_copies,
     create_provenance_project,
 )
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_system_enum import JobStatus
@@ -604,7 +616,18 @@ def minimal_video_steps() -> list[str]:
 
 def toggled_text_steps() -> list[str]:
     """The steps of the text document of `feature_toggle_eximport_projects`."""
-    return [*minimal_text_steps(), "text_sentence_embedding"]
+    return [
+        *minimal_text_steps(),
+        "text_word_frequency",
+        "text_es_index",
+        "text_sentence_embedding",
+        "text_document_embedding",
+    ]
+
+
+def toggled_image_steps() -> list[str]:
+    """The steps of the image document of `feature_toggle_eximport_projects`."""
+    return [*minimal_image_steps(), "image_embedding"]
 
 
 @pytest.fixture(scope="function")
@@ -615,16 +638,22 @@ def feature_toggle_eximport_projects(
     This fixture sets up the following projects of the test user:
 
     - Project "Toggled Project" (`project`), which enables only sentence
-      similarity search (all other features are disabled), with two documents:
+      similarity search (all other features are disabled), with three documents
+      that hold the data of every archive module (`artefact_archive.py`):
       - "text.txt" (`text`), a text document with the 30 sentences "Sentence
         0." to "Sentence 29.", its raw file, and finished `toggled_text_steps()`
-        (the core steps and `text_sentence_embedding`); every other step is not
-        planned. Each sentence has its own embedding in Weaviate
+        (the core steps, `text_word_frequency`, `text_es_index`,
+        `text_sentence_embedding` and `text_document_embedding`); every other
+        step is not planned. Each sentence has its own embedding in Weaviate
         (`sentence_embeddings`, by sentence id): sentence i has 1.0 at position
-        i of 30.
-      - "image.png" (`image`), a 4x4 PNG image with its raw file, without caption
-        (empty content, HTML and raw HTML), and finished `minimal_image_steps()`;
-        every other step is not planned.
+        i of 30. Its document embedding is [0.1, 0.2, 0.3], its word
+        frequencies are ("sentence", 30) and ("29", 1), and it has its
+        Elasticsearch entry (filename and content).
+      - "image.png" (`image`), a 4x4 PNG image with its raw file, the WebP and
+        thumbnail that image_thumbnail writes, without caption (empty content,
+        HTML and raw HTML), the image embedding [0.4, 0.5] and finished
+        `toggled_image_steps()` (the core steps and `image_embedding`); every
+        other step is not planned.
       - "clip.mp4" (`video`), a video of one second (a 64x64 test picture with
         a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello
         world." (two tokens with their times, one sentence), finished
@@ -678,6 +707,7 @@ def feature_toggle_eximport_projects(
         SourceDocumentRead.model_validate(image)
     )
     Image.new("RGB", (4, 4)).save(image_path, "PNG")
+    generate_thumbnails(image_path)
     crud_sdoc_data.create(
         db=db_session,
         create_dto=SourceDocumentDataCreate(
@@ -697,8 +727,40 @@ def feature_toggle_eximport_projects(
 
     video = _create_video_document_with_file(db_session, project=project)
 
+    client = WeaviateRepo().get_client()
+    crud_document_embedding.create(
+        client=client,
+        project_id=project.id,
+        id=DocumentObjectIdentifier(sdoc_id=text.id),
+        embedding=[0.1, 0.2, 0.3],
+    )
+    crud_image_embedding.create(
+        client=client,
+        project_id=project.id,
+        id=ImageObjectIdentifier(sdoc_id=image.id),
+        embedding=[0.4, 0.5],
+    )
+    crud_word_frequency.create_multi(
+        db=db_session,
+        create_dtos=[
+            WordFrequencyCreate(sdoc_id=text.id, word=word, count=count)
+            for word, count in (("sentence", 30), ("29", 1))
+        ],
+    )
+    text_data = crud_sdoc_data.read(db=db_session, id=text.id)
+    crud_sdoc_elastic.create(
+        client=ElasticSearchRepo().get_client(),
+        project_id=project.id,
+        create_dto=ElasticSearchDocumentCreate(
+            project_id=project.id,
+            sdoc_id=text.id,
+            filename=text.filename,
+            content=text_data.content,
+        ),
+    )
+
     set_step_status(db_session, text.id, dict.fromkeys(toggled_text_steps(), 1))
-    set_step_status(db_session, image.id, dict.fromkeys(minimal_image_steps(), 1))
+    set_step_status(db_session, image.id, dict.fromkeys(toggled_image_steps(), 1))
     set_step_status(db_session, video.id, dict.fromkeys(minimal_video_steps(), 1))
     target_project = create_project_with_features(
         db_session,

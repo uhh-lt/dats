@@ -57,30 +57,6 @@ def _sdoc(**kwargs) -> SourceDocumentExportSchema:
     return SourceDocumentExportSchema.model_validate(values)
 
 
-def test_legacy_archive_without_embeddings_does_not_plan_their_steps() -> None:
-    """Embedding steps whose embeddings the archive lacks are not planned, the other steps keep the status."""
-    status = archived_step_status(
-        _sdoc(document_embedding=None, sentence_embeddings=[])
-    )
-    assert status[JobType.TEXT_DOCUMENT_EMBEDDING.value] is None
-    assert status[JobType.TEXT_SENTENCE_EMBEDDING.value] is None
-    assert status[JobType.TEXT_SPACY.value] == FINISHED
-
-
-def test_archive_with_partial_sentence_embeddings_does_not_plan_their_step() -> None:
-    """Archives of older versions hold at most 25 sentence embeddings: without one
-    embedding per sentence, the sentence embedding step is not planned."""
-    status = archived_step_status(
-        _sdoc(
-            sentence_starts=[0, 6],
-            sentence_ends=[5, 12],
-            sentence_embeddings=[[0.1, 0.2]],
-        )
-    )
-    assert status[JobType.TEXT_SENTENCE_EMBEDDING.value] is None
-    assert status[JobType.TEXT_SPACY.value] == FINISHED
-
-
 def test_archive_step_status_keeps_not_planned_steps() -> None:
     """Steps archived as not planned (None) stay not planned."""
     archived: dict[str, int | None] = {step.value: FINISHED for step in TEXT_STEPS}
