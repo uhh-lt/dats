@@ -126,9 +126,9 @@ def _doctypes_sql(column: str) -> str:
 
 
 def _unpivot_sql() -> str:
-    """The (step, status) pairs of a document `s`, as a VALUES list; a NULL
-    status is no row. A step that is not part of the document's doctype is not
-    planned; the spaCy steps copy text_spacy (the old step wrote all of them; every
+    """The (step, status) pairs of a document `s`, as a VALUES list; the CASE
+    yields NULL for a step the document does not get, and such a pair becomes no
+    row. A step that is not part of the document's doctype is not planned; the spaCy steps copy text_spacy (the old step wrote all of them; every
     doctype has it); the document embedding is finished where its ML job `j`
     finished."""
     pairs = [
@@ -154,7 +154,6 @@ def _create_constraints() -> None:
         ["id"],
         ondelete="CASCADE",
     )
-    op.create_index(op.f(f"ix_{TABLE}_sdoc_id"), TABLE, ["sdoc_id"], unique=False)
     op.create_index(f"ix_{TABLE}_step_status", TABLE, ["step", "status"], unique=False)
     op.create_index(
         f"ix_{TABLE}_unfinished",

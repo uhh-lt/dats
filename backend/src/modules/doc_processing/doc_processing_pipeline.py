@@ -227,7 +227,7 @@ def _descendants(steps: list[JobType]) -> list[JobType]:
 def handle_job_error(job_type: JobType, input: JobInputBase):
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.
-    Recomputing the input starts them again (see `_start_jobs`)."""
+    Recomputing the input starts them again (see `execute_pipeline_step`)."""
     if not isinstance(input, SdocProcessingJobInput):
         return
     # a step unplanned while the job ran (its feature was disabled) stays unplanned
