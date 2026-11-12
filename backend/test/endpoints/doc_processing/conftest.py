@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from common import artefact_enum
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
@@ -23,8 +24,11 @@ from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from feature_test_utils import (
     FeatureProject,
+    _create_sdoc,
     create_feature_project,
     create_project_with_features,
+    minimal_image_steps,
+    minimal_text_steps,
 )
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
@@ -119,6 +123,94 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
 def feature_project(db_session, test_user: UserORM) -> FeatureProject:
     """The project described in `FeatureProject`."""
     return create_feature_project(db_session, test_user)
+
+
+# --- step planning ------------------------------------------------------------
+
+
+class PlanningProjects(TypedDict):
+    """
+    This fixture sets up two projects of `test_user`; the minimal text steps are
+    extract_html, text_extraction, text_language_detection, text_spacy and
+    text_html_mapping, the minimal image steps image_metadata_extraction and
+    image_thumbnail; steps not listed are not planned:
+
+    - project: "Planning Project", without any enabled feature
+      - done: text document "done.txt"; the minimal text steps are finished
+      - language_failed: text document "language_failed.txt"; extract_html and
+        text_extraction are finished, text_language_detection is erroneous
+      - image: image document "image.png"; the minimal image steps are finished
+    - other_project: "Other Planning Project", with full-text search enabled
+      - indexing: text document "indexing.txt"; the minimal text steps are
+        finished, text_es_index is processing
+      - new: text document "new.txt" without any step, as an upload creates it
+        before it plans its steps
+
+    Non-obvious derived behavior:
+
+    - Full-text search needs extract_html, text_extraction and text_es_index;
+      text_spacy and text_html_mapping are core steps outside it, so enabling it
+      in project plans them for language_failed without planning its erroneous
+      language detection again.
+    - text_spacy needs text_language_detection, text_html_mapping needs
+      text_spacy.
+    """
+
+    project: ProjectORM
+    done: SourceDocumentORM
+    language_failed: SourceDocumentORM
+    image: SourceDocumentORM
+    other_project: ProjectORM
+    indexing: SourceDocumentORM
+    new: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjects:
+    """The projects described in `PlanningProjects`."""
+    project = create_project_with_features(
+        db_session, test_user, title="Planning Project", features=[]
+    )
+    other_project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Other Planning Project",
+        features=[Feature.FULL_TEXT_SEARCH],
+    )
+    done = dict.fromkeys(minimal_text_steps(), 1)
+    sdocs = {
+        "done": (project, DocType.text, done),
+        "language_failed": (
+            project,
+            DocType.text,
+            {"extract_html": 1, "text_extraction": 1, "text_language_detection": -100},
+        ),
+        "image": (project, DocType.image, dict.fromkeys(minimal_image_steps(), 1)),
+        "indexing": (other_project, DocType.text, {**done, "text_es_index": 0}),
+        "new": (other_project, DocType.text, {}),
+    }
+    created = {
+        key: _create_sdoc(
+            db_session,
+            owner,
+            name=f"{key}.{'png' if doctype == DocType.image else 'txt'}",
+            doctype=doctype,
+            status=status,
+        )
+        for key, (owner, doctype, status) in sdocs.items()
+    }
+    db_session.commit()
+    for obj in (project, other_project, *created.values()):
+        db_session.refresh(obj)
+    return {
+        "project": project,
+        "done": created["done"],
+        "language_failed": created["language_failed"],
+        "image": created["image"],
+        "other_project": other_project,
+        "indexing": created["indexing"],
+        "new": created["new"],
+    }
 
 
 # --- a new pipeline step, declared in the test -------------------------------
