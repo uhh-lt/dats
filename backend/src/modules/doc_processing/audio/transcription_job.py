@@ -102,20 +102,22 @@ def handle_transcription_job(
             ),
         )
 
-    assert (
-        sdoc_data.token_time_starts is not None
-        and sdoc_data.token_time_ends is not None
-    ), "Transcribed documents must have token timings"
-    return TranscriptionJobOutput(
-        token_starts=sdoc_data.token_starts,
-        token_ends=sdoc_data.token_ends,
-        token_time_starts=sdoc_data.token_time_starts,
-        token_time_ends=sdoc_data.token_time_ends,
-        content=sdoc_data.content,
-        raw_html=sdoc_data.raw_html,
-        language=transcription["language"],
-        language_probability=transcription["language_probability"],
-    )
+        # read the stored data before the transaction ends: the object is
+        # detached afterwards and cannot load its attributes anymore
+        assert (
+            sdoc_data.token_time_starts is not None
+            and sdoc_data.token_time_ends is not None
+        ), "Transcribed documents must have token timings"
+        return TranscriptionJobOutput(
+            token_starts=sdoc_data.token_starts,
+            token_ends=sdoc_data.token_ends,
+            token_time_starts=sdoc_data.token_time_starts,
+            token_time_ends=sdoc_data.token_time_ends,
+            content=sdoc_data.content,
+            raw_html=sdoc_data.raw_html,
+            language=transcription["language"],
+            language_probability=transcription["language_probability"],
+        )
 
 
 def convert_to_pcm(filepath: Path):
