@@ -4,13 +4,13 @@ Not every project needs every DATS feature. A project that only uses the LLM Ass
 
 Annotation, the analysis tools, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. The features below can be switched on and off per project.
 
-| Area                 | Features                                                                                                         |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Search               | Full-text search, Search & auto-annotate, Sentence similarity search, Image similarity search                    |
-| Analysis             | RAG chat, Concepts over time, Word frequency analysis, Keyword statistics and filter, Duplicate finder           |
-| Automatic annotation | Annotation scaling, Tag recommendation, Automatic entity annotations, Image captions, Automatic object detection |
+| Area                 | Features                                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Search               | Full-Text Search, Search & Auto-Annotate, Sentence Search, Image Search                                           |
+| Analysis             | RAG Chat, Concepts Over Time Analysis, Word Frequency Analysis, Keyword Statistics and Filter, Duplicate Finder   |
+| Automatic Annotation | Annotation Scaling, Tag Recommendations, Automatic Entity Annotations, Image Captions, Automatic Object Detection |
 
-Some features build on others: RAG chat, Annotation scaling and Concepts over time need **Sentence similarity search**.
+Some features build on others: RAG Chat, Annotation Scaling and Concepts Over Time Analysis need **Sentence Search**.
 
 ## 1\. Choosing Features When Creating a Project
 
@@ -33,7 +33,7 @@ Open the **Project Settings** (the cog icon in the bottom left navigation bar) a
 | **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete**, **Disable** |
 | **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**               |
 
-While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature (and of a partly available one) show a small hint such as "Full-text search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
+While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature (and of a partly available one) show a small hint such as "Full-Text Search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
 
 ### Enabling and Completing a Feature
 
