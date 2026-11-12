@@ -1,5 +1,5 @@
 """The inputs of the jobs that the entry points start (see `ENTRY_POINTS` in
-`doc_processing_pipeline.py`): they create documents and fan out over files. The
+`step_run.py`): they create documents and fan out over files. The
 pipeline steps need no such function: a finished step starts its successors with
 a bare `SdocProcessingJobInput`, which their enrichers complete."""
 

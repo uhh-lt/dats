@@ -11,12 +11,12 @@ from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
-from modules.doc_processing.doc_processing_pipeline import (
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.step_planning import planned_steps
+from modules.doc_processing.step_run import (
     handle_job_finished,
     handle_job_started,
 )
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-from modules.doc_processing.pipeline.step_planning import planned_steps
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
 

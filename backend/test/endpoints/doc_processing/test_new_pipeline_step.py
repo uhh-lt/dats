@@ -19,12 +19,12 @@ from modules.doc_processing.doc_processing_dto import (
     SdocHealthResult,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.doc_processing_pipeline import handle_job_finished
 from modules.doc_processing.entrypoints.init_sdoc_job import (
     SdocInitJobInput,
     handle_init_sdoc_job,
 )
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
+from modules.doc_processing.step_run import handle_job_finished
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from modules.project_features.project_feature_dto import FeatureActivation

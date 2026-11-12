@@ -28,6 +28,7 @@ from modules.doc_processing.entrypoints.archive_extraction_job import (
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.step_run import start_steps
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
@@ -264,20 +265,19 @@ class DocProcessingService(metaclass=SingletonMeta):
             )
 
         # Start recompute jobs for the specified processing step: the job that
-        # computes the step, for this step only (e.g. text_spacy for text_ner)
+        # computes the step, for this step only (e.g. text_spacy for text_ner).
+        # A job that cannot start raises to the request.
         step = JobType(processing_step)
-        jobs = []
+        jobs: list[Job] = []
         for sdoc_id in sdoc_ids:
-            job = self.js.start_job(
-                job_type=graph.job(step),
-                payload=SdocProcessingJobInput(
-                    project_id=project_id,
-                    sdoc_id=sdoc_id,
-                    settings=settings,
-                    steps=[step],
-                ),
+            started = start_steps(
+                project_id=project_id,
+                sdoc_id=sdoc_id,
+                steps=[step],
+                settings=settings,
+                raise_on_failure=True,
             )
-            jobs.append(job)
+            jobs.extend(job for job in started.values() if job is not None)
 
         return jobs
 

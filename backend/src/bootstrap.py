@@ -72,12 +72,12 @@ def register_jobs() -> None:
     on registration.
     """
     from common.dats_event import build_job_event_models
-    from modules.doc_processing.doc_processing_pipeline import (
+    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+    from modules.doc_processing.step_run import (
         handle_job_error,
         handle_job_finished,
         handle_job_started,
     )
-    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
     from systems.job_system.job_service import JobHooks, JobService
 
     import_by_suffix("_job.py")
