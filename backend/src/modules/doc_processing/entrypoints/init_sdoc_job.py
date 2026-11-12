@@ -12,11 +12,14 @@ from core.doc.source_document_dto import (
     SourceDocumentRead,
 )
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.doc_processing.doc_processing_dto import ProcessingJobInput
+from modules.doc_processing.doc_processing_dto import (
+    ProcessingJobInput,
+    SdocInitJobOutput,
+)
 from modules.doc_processing.step_planning_service import StepPlanningService
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, JobOutputBase
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -27,12 +30,6 @@ class SdocInitJobInput(ProcessingJobInput):
     filepath: Path
     doctype: DocType
     folder_id: int | None
-
-
-class SdocInitJobOutput(JobOutputBase):
-    sdoc_id: int
-    folder_id: int
-    doctype: DocType
 
 
 @register_job(
