@@ -1,17 +1,22 @@
 from typing import Iterable
 
 from sqlalchemy import (
+    ARRAY,
     BigInteger,
     CursorResult,
+    Integer,
     ScalarSelect,
+    String,
     and_,
     case,
     cast,
     delete,
     exists,
     func,
+    literal,
     or_,
     select,
+    true,
     update,
 )
 from sqlalchemy.dialects.postgresql import insert
@@ -77,19 +82,37 @@ class CRUDSourceDocumentStepStatus(
         if not sdoc_ids or not steps:
             return result
         self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
+        # the database builds the pairs from two arrays and skips the existing
+        # ones before inserting: VALUES lists and conflicting inserts cost most
+        # of the time for many documents
+        existing = aliased(self.model)
+        step_values = (
+            func.unnest(literal([step.value for step in steps], ARRAY(String)))
+            .table_valued("step")
+            .render_derived()
+        )
         for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_values = (
+                func.unnest(literal(sdoc_ids[i : i + BATCH_SIZE], ARRAY(Integer)))
+                .table_valued("sdoc_id")
+                .render_derived()
+            )
             stmt = (
                 insert(self.model)
-                .values(
-                    [
-                        {
-                            "sdoc_id": sdoc_id,
-                            "step": step.value,
-                            "status": SDocStatus.processing.value,
-                        }
-                        for sdoc_id in sdoc_ids[i : i + BATCH_SIZE]
-                        for step in steps
-                    ]
+                .from_select(
+                    ["sdoc_id", "step", "status"],
+                    select(
+                        batch_values.c.sdoc_id,
+                        step_values.c.step,
+                        literal(SDocStatus.processing.value),
+                    )
+                    .select_from(batch_values.join(step_values, true()))
+                    .where(
+                        ~exists().where(
+                            existing.sdoc_id == batch_values.c.sdoc_id,
+                            existing.step == step_values.c.step,
+                        )
+                    ),
                 )
                 .on_conflict_do_nothing(
                     index_elements=[self.model.sdoc_id, self.model.step]
