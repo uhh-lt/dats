@@ -61,12 +61,20 @@ def enrich_for_recompute(
 def create_and_store_audio_stream_file(
     payload: VideoAudioExtractionJobInput, job: Job
 ) -> VideoAudioExtractionJobOutput:
-    audio_filepath = audio_stream_path(payload.filepath)
+    return VideoAudioExtractionJobOutput(
+        filepath=extract_audio_stream(payload.filepath)
+    )
+
+
+def extract_audio_stream(video_path: Path) -> Path:
+    """Write the audio stream of the video to `audio_stream_path(video_path)` and
+    return that path."""
+    audio_filepath = audio_stream_path(video_path)
 
     try:
         # convert the video to an audio stream
         (
-            ffmpeg.input(str(payload.filepath))
+            ffmpeg.input(str(video_path))
             .output(
                 str(audio_filepath),
                 acodec="libmp3lame",
@@ -89,4 +97,4 @@ def create_and_store_audio_stream_file(
         logger.error(msg)
         raise IOError(msg)
 
-    return VideoAudioExtractionJobOutput(filepath=audio_filepath)
+    return audio_filepath

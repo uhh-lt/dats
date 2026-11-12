@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import TypedDict
 
+import ffmpeg
 import pytest
 from loguru import logger
 from PIL import Image
@@ -46,6 +47,9 @@ from feature_test_utils import (
 )
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
+from modules.doc_processing.video.video_audio_extraction_job import (
+    extract_audio_stream,
+)
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
@@ -55,6 +59,7 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
+from pipeline_test_utils import core_steps, step_names
 from prompt_test_utils import (
     PromptEximportProjects,
     create_prompt_eximport_projects,
@@ -364,6 +369,48 @@ def _create_text_document_with_file(
     return sdoc
 
 
+def _create_video_document_with_file(
+    db: Session, *, project: ProjectORM
+) -> SourceDocumentORM:
+    """The video "clip.mp4" of `feature_toggle_eximport_projects`: its file, its
+    transcript and the audio stream video_audio_extraction extracts from it."""
+    video = crud_sdoc.create(
+        db=db,
+        create_dto=SourceDocumentCreate(
+            filename="clip.mp4",
+            name="clip.mp4",
+            doctype=DocType.video,
+            project_id=project.id,
+        ),
+    )
+    video_path = FilesystemRepo().get_path_to_sdoc_file(
+        SourceDocumentRead.model_validate(video)
+    )
+    picture = ffmpeg.input("testsrc=duration=1:size=64x64:rate=10", f="lavfi")
+    tone = ffmpeg.input("sine=frequency=440:duration=1", f="lavfi")
+    ffmpeg.output(
+        picture, tone, str(video_path), pix_fmt="yuv420p"
+    ).overwrite_output().run(quiet=True)
+    crud_sdoc_data.create(
+        db=db,
+        create_dto=SourceDocumentDataCreate(
+            id=video.id,
+            content="Hello world.",
+            repo_url=str(video_path.relative_to(FilesystemRepo().root_dir)),
+            raw_html="<html><body><p>Hello world.</p></body></html>",
+            html="<p>Hello world.</p>",
+            token_starts=[0, 6],
+            token_ends=[5, 12],
+            sentence_starts=[0],
+            sentence_ends=[12],
+            token_time_starts=[0, 500],
+            token_time_ends=[400, 900],
+        ),
+    )
+    extract_audio_stream(video_path)
+    return video
+
+
 @pytest.fixture(scope="function")
 def experiment_eximport_projects(
     db_session: Session, test_project: ProjectORM, test_user: UserORM
@@ -540,7 +587,13 @@ class FeatureToggleEximportProjects(TypedDict):
     target_project: ProjectORM
     text: SourceDocumentORM
     image: SourceDocumentORM
+    video: SourceDocumentORM
     sentence_embeddings: list[list[float]]
+
+
+def minimal_video_steps() -> list[str]:
+    """The steps of a video document in a project without features."""
+    return step_names(core_steps(DocType.video))
 
 
 def toggled_text_steps() -> list[str]:
@@ -566,6 +619,11 @@ def feature_toggle_eximport_projects(
       - "image.png" (`image`), a 4x4 PNG image with its raw file, without caption
         (empty content, HTML and raw HTML), and finished `minimal_image_steps()`;
         every other step is not planned.
+      - "clip.mp4" (`video`), a video of one second (a 64x64 test picture with
+        a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello
+        world." (two tokens with their times, one sentence), finished
+        `minimal_video_steps()` and the audio stream that video_audio_extraction
+        extracted from it; every other step is not planned.
     - Project "Import Target" (`target_project`), which enables only keyword
       statistics, with no documents.
 
@@ -630,8 +688,11 @@ def feature_toggle_eximport_projects(
         ),
     )
 
+    video = _create_video_document_with_file(db_session, project=project)
+
     set_step_status(db_session, text.id, dict.fromkeys(toggled_text_steps(), 1))
     set_step_status(db_session, image.id, dict.fromkeys(minimal_image_steps(), 1))
+    set_step_status(db_session, video.id, dict.fromkeys(minimal_video_steps(), 1))
     target_project = create_project_with_features(
         db_session,
         test_user,
@@ -639,12 +700,13 @@ def feature_toggle_eximport_projects(
         features=[Feature.KEYWORD_STATISTICS],
     )
     db_session.commit()
-    for obj in (project, target_project, text, image):
+    for obj in (project, target_project, text, image, video):
         db_session.refresh(obj)
     return {
         "project": project,
         "target_project": target_project,
         "text": text,
         "image": image,
+        "video": video,
         "sentence_embeddings": sentence_embeddings,
     }

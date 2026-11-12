@@ -33,6 +33,9 @@ from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.video.video_audio_extraction_job import (
+    extract_audio_stream,
+)
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.sdocs.sdoc_export_schema import (
@@ -386,6 +389,17 @@ def import_sdocs_to_proj(
                     content=sdoc_export.content if sdoc_export.content else "",
                 ),
             )
+
+        # 7. Extract the audio stream of a video again (if it was extracted): the
+        # archive holds only the uploaded file
+        audio_step = pipeline_registry.graph().producer(
+            DocType(sdoc_export.doctype), Artefact.AUDIO
+        )
+        if (
+            audio_step is not None
+            and step_status.get(audio_step.value) == SDocStatus.finished
+        ):
+            extract_audio_stream(repo_path)
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"
