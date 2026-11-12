@@ -1,5 +1,4 @@
 import zipfile
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,27 +12,31 @@ from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from feature_test_utils import FeatureProject
+from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
     SdocHealthResult,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.entrypoints.init_sdoc_job import (
-    SdocInitJobInput,
-    handle_init_sdoc_job,
-)
+from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
-from modules.doc_processing.step_run import handle_job_finished
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from modules.project_features.project_feature_dto import FeatureActivation
-from pipeline_test_utils import last_started, read_step_status, run_job
+from pipeline_test_utils import read_step_status
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_service import JobService
 
-from .conftest import DUMMY_UPLOAD_TEXT, DummyStep, DummyStepProjects, PairedSteps
+from .conftest import (
+    DUMMY_UPLOAD_TEXT,
+    DummyJobInput,
+    DummyStep,
+    DummyStepProjects,
+    PairedSteps,
+)
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -48,9 +51,8 @@ SETTINGS = ProcessingSettings(
 # ===========================================================================
 # A NEW PIPELINE STEP, DECLARED ONCE
 # ===========================================================================
-# The step jobs are captured instead of enqueued (`started_jobs`), and the tests
-# run them like the worker does: enrich the input if needed, then the job's
-# handler between the pipeline hooks.
+# The jobs are held (`held_jobs`), and the tests run them in-process through the
+# real job handler and its hooks, as the worker does.
 
 
 def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
@@ -58,42 +60,44 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     db_session: Session,
     dummy_step: DummyStep,
     dummy_step_projects: DummyStepProjects,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """The step of `dummy_step` has only its declaration. An upload plans it; when
-    text_extraction finishes, the advancing starts it with a bare input, which
-    its enricher completes with the stored content; it finishes, the health view
+    text_extraction finishes, the advancing starts it, and its enricher
+    completes its input with the stored content; it finishes, the health view
     shows it, and a project export and import keep its status."""
     step = dummy_step["step"]
     p = dummy_step_projects
 
     # planned at upload
-    init_input = SdocInitJobInput(
-        project_id=p["project"].id,
-        filepath=p["upload"],
-        doctype=DocType.text,
-        folder_id=None,
-        settings=SETTINGS,
+    JobService().start_job(
+        JobType.SDOC_INIT,
+        SdocInitJobInput(
+            project_id=p["project"].id,
+            filepath=p["upload"],
+            doctype=DocType.text,
+            folder_id=None,
+            settings=SETTINGS,
+        ),
     )
-    init_output = handle_init_sdoc_job(init_input, MagicMock())
-    assert init_output is not None
-    sdoc_id = init_output.sdoc_id
+    held_jobs.run(JobType.SDOC_INIT)
+    (extract_html,) = held_jobs.inputs(JobType.EXTRACT_HTML)
+    assert isinstance(extract_html, SdocProcessingJobInput)
+    sdoc_id = extract_html.sdoc_id
     assert read_step_status(db_session, sdoc_id, step) == SDocStatus.processing
 
-    # started after its input step, with a bare input
-    handle_job_finished(JobType.SDOC_INIT, init_input, init_output)
-    run_job(JobType.EXTRACT_HTML, last_started(started_jobs, JobType.EXTRACT_HTML))
-    assert all(jt != step for jt, _ in started_jobs)
-    run_job(
-        JobType.TEXT_EXTRACTION, last_started(started_jobs, JobType.TEXT_EXTRACTION)
-    )
-    payload = last_started(started_jobs, step)
-    assert type(payload) is SdocProcessingJobInput
+    # started after its input step, its input completed by its enricher
+    held_jobs.run(JobType.EXTRACT_HTML)
+    assert held_jobs.inputs(step) == []
+    held_jobs.run(JobType.TEXT_EXTRACTION)
+    (payload,) = held_jobs.inputs(step)
+    assert isinstance(payload, DummyJobInput)
     assert payload.steps == [step]
     assert payload.settings == SETTINGS
+    assert payload.text == DUMMY_UPLOAD_TEXT
 
     # run and set finished
-    run_job(step, payload)
+    held_jobs.run(step)
     assert dummy_step["computed"] == {sdoc_id: DUMMY_UPLOAD_TEXT}
     assert read_step_status(db_session, sdoc_id, step) == SDocStatus.finished
 
@@ -127,17 +131,17 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     assert read_step_status(db_session, imported[0].id, step) == SDocStatus.finished
 
 
-def test_a_step_requiring_two_artefacts_of_one_step_is_planned_andlast_started(
+def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     client: TestClient,
     db_session: Session,
     paired_steps: PairedSteps,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Enabling a feature plans the two new core steps of `paired_steps` for
-    text_running, whose text extraction is finished: the producer starts at
-    once, the consumer waits for it (it is not failed for counting its one input
-    step twice) and starts once the producer finishes."""
+    text_running, whose text extraction is finished: the activation starts the
+    producer, the consumer waits for it (it is not failed for counting its one
+    input step twice) and starts once the producer finishes."""
     p = feature_project
     producer = paired_steps["producer"]
     consumer = paired_steps["consumer"]
@@ -149,24 +153,16 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_andlast_started(
     )
 
     assert response.status_code == 200, response.text
-    activation = last_started(started_jobs, JobType.FEATURE_ACTIVATION)
+    (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
     assert isinstance(activation, FeatureActivationJobInput)
     assert producer in activation.sdoc_steps[sdoc_id]
     assert consumer not in activation.sdoc_steps[sdoc_id]
     assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.processing
 
-    run_job(
-        producer,
-        SdocProcessingJobInput(
-            project_id=p["project"].id,
-            sdoc_id=sdoc_id,
-            settings=SETTINGS,
-            steps=[producer],
-        ),
-    )
-    run_job(consumer, last_started(started_jobs, consumer))
+    held_jobs.run(JobType.FEATURE_ACTIVATION, producer, consumer)
 
-    assert paired_steps["ran"] == {producer: [sdoc_id], consumer: [sdoc_id]}
+    assert paired_steps["ran"][producer].count(sdoc_id) == 1
+    assert paired_steps["ran"][consumer].count(sdoc_id) == 1
     assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.finished
 
 

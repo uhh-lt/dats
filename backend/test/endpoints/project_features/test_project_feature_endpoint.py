@@ -8,6 +8,7 @@ from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
 from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
+from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
@@ -19,7 +20,6 @@ from modules.project_features.project_feature_dto import (
 )
 from pipeline_test_utils import read_step_status
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import JobInputBase
 
 from .conftest import ImageTextProject, UploadingProject
 
@@ -171,11 +171,11 @@ def _activate(client: TestClient, project_id: int, feature: Feature) -> list[Fea
     return [Feature(f) for f in response.json()]
 
 
-def _activation_job(
-    started_jobs: list[tuple[JobType, JobInputBase]],
-) -> FeatureActivationJobInput:
-    assert len(started_jobs) == 1, started_jobs
-    job_type, payload = started_jobs[0]
+def _activation_job(held_jobs: HeldJobs) -> FeatureActivationJobInput:
+    """The input of the one held job, a feature activation."""
+    jobs = held_jobs.jobs()
+    assert len(jobs) == 1, jobs
+    job_type, payload = jobs[0]
     assert job_type == JobType.FEATURE_ACTIVATION
     assert isinstance(payload, FeatureActivationJobInput)
     return payload
@@ -187,7 +187,7 @@ def _activation_job(
 def test_activate_feature_enables_it_and_the_features_it_requires(
     client: TestClient,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Activating RAG chat enables sentence similarity search as well."""
     enabled = _activate(client, feature_project["project"].id, Feature.RAG_CHAT)
@@ -199,7 +199,7 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Activating keyword statistics plans text_keywords for both text documents
     and leaves the image and the steps of other features alone. One feature
@@ -216,7 +216,7 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) is None
     assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_SPACY) == 1
     assert read_step_status(db_session, p["image"].id, JobType.IMAGE_CAPTION) is None
-    payload = _activation_job(started_jobs)
+    payload = _activation_job(held_jobs)
     assert payload.settings == SETTINGS
     assert payload.sdoc_steps == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
 
@@ -224,7 +224,7 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
 def test_activate_feature_makes_it_computing(
     client: TestClient,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """After the activation, both text documents process full-text search."""
     project_id = feature_project["project"].id
@@ -240,7 +240,7 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """With a caption, an image has text: activating image captions plans the
     caption and the text steps after it, but starts only the caption."""
@@ -250,7 +250,7 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
 
     for step in (JobType.IMAGE_CAPTION, JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY):
         assert read_step_status(db_session, p["image"].id, step) == 0, step
-    payload = _activation_job(started_jobs)
+    payload = _activation_job(held_jobs)
     assert payload.sdoc_steps == {p["image"].id: [JobType.IMAGE_CAPTION]}
 
 
@@ -258,7 +258,7 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
     client: TestClient,
     db_session,
     image_text_project: ImageTextProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """With image captions an image has text: activating them plans the steps of
     the enabled text features for the image too (the index, sentence embeddings
@@ -280,7 +280,7 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
 def test_activate_feature_starts_its_job_only_after_the_commit(
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """The activation job starts once the request's transaction commits: a step
     job that started earlier would read its steps as not planned and skip them.
@@ -291,11 +291,11 @@ def test_activate_feature_starts_its_job_only_after_the_commit(
         feature=Feature.FULL_TEXT_SEARCH,
         settings=SETTINGS,
     )
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
 
     db_session.commit()
 
-    assert _activation_job(started_jobs).sdoc_steps == {
+    assert _activation_job(held_jobs).sdoc_steps == {
         feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
         feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
     }
@@ -304,7 +304,7 @@ def test_activate_feature_starts_its_job_only_after_the_commit(
 def test_activate_feature_waits_for_a_concurrent_activation(
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Two members enable a feature at the same time: the second activation waits
     until the first commits and keeps its feature, so both are enabled. Calls the
@@ -344,13 +344,13 @@ def test_activate_feature_waits_for_a_concurrent_activation(
 def test_activate_a_fully_available_feature_starts_nothing(
     client: TestClient,
     test_project,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """`test_project` has no documents: there is nothing to compute."""
     enabled = _activate(client, test_project.id, Feature.FULL_TEXT_SEARCH)
 
     assert enabled == list(Feature)
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
 
 
 def test_activate_feature_requires_membership(client: TestClient):
@@ -380,7 +380,7 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
     client: TestClient,
     db_session,
     partly_project: PartlyProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Completing full-text search plans the index again where it failed or was
     not planned, and the failed text extraction before it; the index of
@@ -401,7 +401,7 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
         == -100
     )
     assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
-    payload = _activation_job(started_jobs)
+    payload = _activation_job(held_jobs)
     assert payload.sdoc_steps == {
         p["index_failed"].id: [JobType.TEXT_ES_INDEX],
         p["not_indexed"].id: [JobType.TEXT_ES_INDEX],
@@ -414,7 +414,7 @@ def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     client: TestClient,
     db_session,
     partly_project: PartlyProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Completing full-text search plans the not planned HTML mapping of
     spacy_failed (a core step); its input text_spacy is erroneous and no step of
@@ -443,22 +443,22 @@ def test_restart_feature_starts_its_processing_steps_again(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Keyword statistics is computing after its activation, but its jobs never
-    ran (they are captured). Restarting it starts the keywords of text_done again;
+    ran (they are held). Restarting it starts the keywords of text_done again;
     the language detection of text_running, a core step that was processing
     before the activation, is not started again, and the keywords of
     text_running wait for it and stay processing."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    started_jobs.clear()
+    held_jobs.empty()
 
     response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert response.status_code == 200, response.text
     assert response.json() == [Feature.KEYWORD_STATISTICS]
-    assert _activation_job(started_jobs).sdoc_steps == {
+    assert _activation_job(held_jobs).sdoc_steps == {
         p["text_done"].id: [JobType.TEXT_KEYWORDS],
     }
     assert (
@@ -470,7 +470,7 @@ def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
     client: TestClient,
     db_session,
     uploading_project: UploadingProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Restarting keyword statistics while uploading.txt runs its extract_html
     starts nothing: extract_html is a core step and keeps its job (a second run
@@ -480,7 +480,7 @@ def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
     response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert response.status_code == 200, response.text
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
     sdoc_id = p["uploading"].id
     assert read_step_status(db_session, sdoc_id, JobType.EXTRACT_HTML) == 0
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_KEYWORDS) == 0
@@ -489,19 +489,19 @@ def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
 def test_restart_feature_leaves_the_steps_of_other_features_alone(
     client: TestClient,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Restarting full-text search starts only its own processing steps (the
     index), not the keywords another activation left processing."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-    started_jobs.clear()
+    held_jobs.empty()
 
     response = _restart(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
 
     assert response.status_code == 200, response.text
-    assert _activation_job(started_jobs).sdoc_steps == {
+    assert _activation_job(held_jobs).sdoc_steps == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
     }
@@ -510,13 +510,13 @@ def test_restart_feature_leaves_the_steps_of_other_features_alone(
 def test_restart_a_disabled_feature_is_rejected(
     client: TestClient,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Only an enabled feature can be restarted: a disabled one gets 403."""
     response = _restart(client, feature_project["project"].id, Feature.FULL_TEXT_SEARCH)
 
     assert_feature_disabled(response, Feature.FULL_TEXT_SEARCH)
-    assert started_jobs == []
+    assert held_jobs.jobs() == []
 
 
 def test_restart_feature_requires_membership(client: TestClient):
@@ -578,7 +578,7 @@ def test_disable_computing_feature_unplans_its_processing_steps(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Keyword statistics is computing after its activation: disabling it sets the
     processing keywords of both text documents to not planned, so no document
@@ -606,7 +606,7 @@ def test_disable_computing_feature_keeps_the_steps_other_features_need(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Activating RAG chat enables sentence similarity search too, and both are
     computing the sentence embeddings. Disabling RAG chat keeps them processing:
@@ -630,7 +630,7 @@ def test_disable_one_of_two_features_sharing_a_step_keeps_it_processing(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Full-text search and search & auto-annotate both need the index, without
     requiring each other. Disabling search & auto-annotate keeps the index
@@ -659,7 +659,7 @@ def test_enable_disable_enable_plans_the_steps_again(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
-    started_jobs: list[tuple[JobType, JobInputBase]],
+    held_jobs: HeldJobs,
 ):
     """Disabling a computing feature unplans its processing steps; enabling it
     again plans and starts them again."""
@@ -668,13 +668,13 @@ def test_enable_disable_enable_plans_the_steps_again(
     client.delete(
         f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
     )
-    started_jobs.clear()
+    held_jobs.empty()
 
     enabled = _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert enabled == [Feature.KEYWORD_STATISTICS]
     assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0
-    assert _activation_job(started_jobs).sdoc_steps == {
+    assert _activation_job(held_jobs).sdoc_steps == {
         p["text_done"].id: [JobType.TEXT_KEYWORDS]
     }
 
