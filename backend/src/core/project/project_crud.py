@@ -46,8 +46,9 @@ class CRUDProject(SQLCRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
     def update_enabled_features(
         self, db: Session, *, id: int, features: list[Feature]
     ) -> ProjectORM:
-        """Store the enabled features of the project. Only `FeatureService`
-        decides them (it adds the required features and rejects invalid changes)."""
+        """Store the enabled features of the project. Only
+        `FeatureService.resolve_enabled_features` decides them (it adds the
+        required features and rejects invalid changes)."""
         db_obj = self.read(db=db, id=id)
         db_obj.enabled_features = list(features)
         db.add(db_obj)

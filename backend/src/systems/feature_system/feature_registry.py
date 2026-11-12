@@ -2,7 +2,7 @@
 
 Every module declares its features with `register_feature` in a `*_feature.py`
 file, which `bootstrap.register_features` imports. A feature requires artefacts
-(preprocessed document data) and other features; the `FeatureService` derives
+(preprocessed document data) and other features; the `ProjectFeatureService` derives
 from these declarations which pipeline steps a project needs.
 """
 

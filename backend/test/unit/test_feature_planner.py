@@ -8,6 +8,7 @@ from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.project_features.project_feature_service import ProjectFeatureService
 from pipeline_test_utils import all_steps, core_steps
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
@@ -25,7 +26,7 @@ ALL_FEATURES = list(Feature)
 
 
 def _planned(doctype: DocType, features: list[Feature]) -> list[JobType]:
-    return FeatureService().planned_steps(doctype=doctype, features=features)
+    return ProjectFeatureService().planned_steps(doctype=doctype, features=features)
 
 
 # ===========================================================================
@@ -146,7 +147,7 @@ def test_image_text_steps_need_image_captions():
 def test_feature_steps_are_its_producers_and_the_steps_they_require():
     """The steps of RAG chat on a text document: the sentence embeddings and the
     steps before them; not the HTML mapping, which it does not need."""
-    steps = FeatureService().feature_steps(
+    steps = ProjectFeatureService().feature_steps(
         doctype=DocType.text, feature=Feature.RAG_CHAT, enabled=[]
     )
     assert steps == [
@@ -161,7 +162,7 @@ def test_feature_steps_are_its_producers_and_the_steps_they_require():
 def test_feature_steps_of_images_depend_on_the_enabled_image_captions():
     """Sentence similarity search applies to images only in projects that
     caption them."""
-    fs = FeatureService()
+    fs = ProjectFeatureService()
     feature = Feature.SENTENCE_SIMILARITY_SEARCH
     assert fs.feature_steps(doctype=DocType.image, feature=feature, enabled=[]) == []
     assert fs.feature_steps(
