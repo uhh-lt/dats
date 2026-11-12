@@ -144,6 +144,10 @@ register_feature(
 - `DELETE /feature/project/{id}/{feature}` disables a feature in every enabled state (computing, partly and fully available); it is rejected while an enabled feature requires it. It changes `enabled_features` and deletes the rows of the steps that are still processing and that the remaining features do not plan (not planned); finished and erroneous steps keep their status. A step job still in the queue for a step that is not planned anymore is skipped and a starting job drops it from its run (`handle_job_started`); a job that already runs sets it finished, or leaves it not planned if it fails, so a disabled feature leaves no document processing and plans nothing again. `ProjectUpdate` no longer carries `enabled_features`.
 - A failed step sets its pending successors to erroneous, so no step stays processing behind a failed input; recomputing the input starts them again.
 - Project creation still creates the Elasticsearch index and all Weaviate tenants; empty ones cost almost nothing.
+- Known gaps of the locking, accepted for now:
+  - A finishing step and a planning can start the same successor twice: the step commits finished, a planning then plans the successor and starts it as startable, and the finishing step's `_start_planned` starts it too (two transactions, a window of milliseconds); the successor computes twice.
+  - If enqueueing the activation job fails after the commit (Redis unreachable), the planned rows stay processing without a job and the request answers 500; Restart recovers the feature.
+  - `handle_job_started` reads the planned steps and sets them processing in two transactions, so a disable between the two is undone for that document (its rows come back as processing, then finished); a job that finishes after a disable writes a finished row, which is harmless as the data exists.
 
 ### Gating
 
