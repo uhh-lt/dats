@@ -50,6 +50,9 @@ from modules.agreement.agreement_enum import AgreementScoring
 from modules.doc_processing.video.video_audio_extraction_job import (
     extract_audio_stream,
 )
+from modules.doc_processing.video.video_thumbnail_generation_job import (
+    store_video_thumbnail,
+)
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
@@ -373,7 +376,7 @@ def _create_video_document_with_file(
     db: Session, *, project: ProjectORM
 ) -> SourceDocumentORM:
     """The video "clip.mp4" of `feature_toggle_eximport_projects`: its file, its
-    transcript and the audio stream video_audio_extraction extracts from it."""
+    transcript, and the audio stream and thumbnail its steps write."""
     video = crud_sdoc.create(
         db=db,
         create_dto=SourceDocumentCreate(
@@ -408,6 +411,9 @@ def _create_video_document_with_file(
         ),
     )
     extract_audio_stream(video_path)
+    store_video_thumbnail(
+        db=db, sdoc=SourceDocumentRead.model_validate(video), video_path=video_path
+    )
     return video
 
 
@@ -622,8 +628,9 @@ def feature_toggle_eximport_projects(
       - "clip.mp4" (`video`), a video of one second (a 64x64 test picture with
         a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello
         world." (two tokens with their times, one sentence), finished
-        `minimal_video_steps()` and the audio stream that video_audio_extraction
-        extracted from it; every other step is not planned.
+        `minimal_video_steps()`, the audio stream that video_audio_extraction
+        extracted from it and the thumbnail that video_thumbnail wrote (its
+        `repo_url` links the thumbnail); every other step is not planned.
     - Project "Import Target" (`target_project`), which enables only keyword
       statistics, with no documents.
 

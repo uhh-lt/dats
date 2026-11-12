@@ -21,7 +21,7 @@ from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
@@ -35,6 +35,9 @@ from modules.doc_processing.image.image_thumbnail_generation_job import (
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.video.video_audio_extraction_job import (
     extract_audio_stream,
+)
+from modules.doc_processing.video.video_thumbnail_generation_job import (
+    store_video_thumbnail,
 )
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
@@ -400,6 +403,22 @@ def import_sdocs_to_proj(
             and step_status.get(audio_step.value) == SDocStatus.finished
         ):
             extract_audio_stream(repo_path)
+
+        # 8. Write the thumbnail of a video again (if it was written): the archive
+        # holds only the uploaded file
+        thumbnail_step = pipeline_registry.graph().producer(
+            DocType(sdoc_export.doctype), Artefact.THUMBNAIL
+        )
+        if (
+            DocType(sdoc_export.doctype) == DocType.video
+            and thumbnail_step is not None
+            and step_status.get(thumbnail_step.value) == SDocStatus.finished
+        ):
+            store_video_thumbnail(
+                db=db,
+                sdoc=SourceDocumentRead.model_validate(created_sdoc),
+                video_path=repo_path,
+            )
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"

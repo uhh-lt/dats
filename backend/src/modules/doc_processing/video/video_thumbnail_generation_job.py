@@ -3,6 +3,7 @@ from pathlib import Path
 
 import ffmpeg
 from PIL import Image
+from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
@@ -56,14 +57,26 @@ def enrich_for_recompute(
     enricher=enrich_for_recompute,
 )
 def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> None:
+    with sqlr.transaction() as db:
+        sdoc = SourceDocumentRead.model_validate(
+            crud_sdoc.read(db=db, id=payload.sdoc_id)
+        )
+        store_video_thumbnail(db=db, sdoc=sdoc, video_path=payload.filepath)
+
+
+def store_video_thumbnail(
+    db: Session, sdoc: SourceDocumentRead, video_path: Path
+) -> None:
+    """Write the thumbnail of the video's first frame next to the video and link
+    it as the document's `repo_url`."""
     start_frame, err = (
-        ffmpeg.input(payload.filepath, ss=0)
+        ffmpeg.input(video_path, ss=0)
         .output("pipe:", vframes=1, format="image2", vcodec="png")
         .run(quiet=True)
     )
 
     thumbnail_filename = fsr.generate_sdoc_filename(
-        payload.filepath, webp=True, thumbnail=True
+        video_path, webp=True, thumbnail=True
     )
     with Image.open(BytesIO(start_frame)) as im:
         im.thumbnail((256, 256))
@@ -76,18 +89,9 @@ def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> Non
         )
 
     # Store link to thumbnail in DB
-    with sqlr.transaction() as db:
-        sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
-        )
-        repo_url = FilesystemRepo().get_sdoc_url(
-            sdoc=sdoc,
-            relative=True,
-            webp=True,
-            thumbnail=True,
-        )
-        crud_sdoc_data.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
-        )
+    repo_url = fsr.get_sdoc_url(sdoc=sdoc, relative=True, webp=True, thumbnail=True)
+    crud_sdoc_data.update(
+        db=db,
+        id=sdoc.id,
+        update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
+    )

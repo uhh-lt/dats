@@ -191,3 +191,27 @@ def test_project_round_trip_extracts_the_audio_of_a_video_again(
         settings=SETTINGS,
     )
     assert started[JobType.AUDIO_TRANSCRIPTION] is not None
+
+
+def test_project_round_trip_writes_the_thumbnail_of_a_video_again(
+    db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
+) -> None:
+    """The archive holds only the uploaded video: the import writes its thumbnail
+    again and links it as the document's `repo_url`, like the original."""
+    projects = feature_toggle_eximport_projects
+
+    _round_trip(db_session, projects)
+
+    video = _imported(db_session, projects, "clip.mp4")
+    fsr = FilesystemRepo()
+    thumbnail = Path(
+        fsr.generate_sdoc_filename(_file(video), webp=True, thumbnail=True)
+    )
+    assert thumbnail.exists()
+    assert video.data is not None
+    assert video.data.repo_url == fsr.get_sdoc_url(
+        sdoc=SourceDocumentRead.model_validate(video),
+        relative=True,
+        webp=True,
+        thumbnail=True,
+    )
