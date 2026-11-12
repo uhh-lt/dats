@@ -182,8 +182,10 @@ class TestJobUpdatedEmission:
 
         from common.doc_type_enum import DocType
         from common.languages_enum import Language
-        from modules.doc_processing.doc_processing_dto import ProcessingSettings
-        from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
+        from modules.doc_processing.doc_processing_dto import (
+            ProcessingSettings,
+            SdocInitJobInput,
+        )
 
         payload = SdocInitJobInput(
             project_id=test_project.id,

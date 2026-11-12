@@ -11,9 +11,9 @@ from job_test_utils import HeldJobs
 from modules.doc_processing.audio.transcription_job import TranscriptionJobInput
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
+    SdocInitJobInput,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.video.video_utils import audio_stream_path
 from pipeline_test_utils import read_all_step_status

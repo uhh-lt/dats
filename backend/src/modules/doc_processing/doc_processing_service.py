@@ -15,6 +15,7 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
     SdocHealthSort,
+    SdocInitJobInput,
     SdocProcessingJobInput,
     SdocStatusRow,
 )
@@ -26,7 +27,6 @@ from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
-from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.step_run import start_steps
 from repos.filesystem_repo import FilesystemRepo

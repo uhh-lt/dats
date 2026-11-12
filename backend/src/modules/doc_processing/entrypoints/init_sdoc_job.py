@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from loguru import logger
 
 from common.doc_type_enum import DocType
@@ -13,7 +11,7 @@ from core.doc.source_document_dto import (
 )
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import (
-    ProcessingJobInput,
+    SdocInitJobInput,
     SdocInitJobOutput,
 )
 from modules.doc_processing.step_planning_service import StepPlanningService
@@ -24,12 +22,6 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 fsr = FilesystemRepo()
-
-
-class SdocInitJobInput(ProcessingJobInput):
-    filepath: Path
-    doctype: DocType
-    folder_id: int | None
 
 
 @register_job(
