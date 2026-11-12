@@ -1,4 +1,5 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
+import { FeatureService } from "@api/services/FeatureService";
 import { ProjectService } from "@api/services/ProjectService";
 import type { Feature } from "@models/Feature";
 import { FeatureStatus } from "@models/FeatureStatus";
@@ -52,7 +53,7 @@ export const projectQueries = {
     queryOptions({
       queryKey: [...projectQueries.featuresScope(), projectId] as const,
       queryFn: async () => {
-        const states = await ProjectService.getFeatures({ projectId });
+        const states = await FeatureService.getProjectFeatures({ projectId });
         return states.reduce<ProjectFeatureMap>((acc, state) => {
           acc[state.feature] = state;
           return acc;

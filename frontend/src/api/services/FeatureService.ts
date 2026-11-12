@@ -5,6 +5,7 @@
 import type { Feature } from "@models/Feature";
 import type { FeatureActivation } from "@models/FeatureActivation";
 import type { FeatureRead } from "@models/FeatureRead";
+import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -18,6 +19,23 @@ export class FeatureService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/feature",
+    });
+  }
+  /**
+   * Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps
+   * @returns ProjectFeatureRead Successful Response
+   * @throws ApiError
+   */
+  public static getProjectFeatures({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectFeatureRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/feature/project/{project_id}",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**
