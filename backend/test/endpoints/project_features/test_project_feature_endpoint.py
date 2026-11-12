@@ -10,6 +10,7 @@ from common.languages_enum import Language
 from core.project.project_crud import crud_project
 from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
 from job_test_utils import HeldJobs, unreachable_redis
+from modules.doc_processing import step_planning_service
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
@@ -21,6 +22,7 @@ from modules.project_features.project_feature_dto import (
 )
 from pipeline_test_utils import read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
+from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import ImageTextProject, UploadingProject
 
@@ -425,6 +427,81 @@ def test_activate_feature_with_redis_down_changes_nothing(
     assert read.status == FeatureStatus.DISABLED
     assert read.processing_documents == 0
     assert held_jobs.jobs() == []
+
+
+def test_activate_feature_with_redis_down_in_a_batch_undoes_what_it_could_not_start(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """With batches of one document, the queue is reachable for the start of
+    the index of text_done (the first batch) only: the activation stops at the
+    batch of text_running, fails with the cause and removes the index it
+    planned for text_running. Once the index of text_done finished, full-text
+    search reads partly available, and Complete plans and starts the index of
+    text_running."""
+    monkeypatch.setattr(step_planning_service, "ACTIVATION_BATCH_SIZE", 1)
+    p = feature_project
+    project_id = p["project"].id
+    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+
+    with unreachable_redis(after_starts=1):
+        held_jobs.run(JobType.FEATURE_ACTIVATION)
+
+    (activation,) = held_jobs.ran(JobType.FEATURE_ACTIVATION)
+    assert activation.get_status() == JobStatus.FAILED
+    assert "The job queue cannot be reached" in activation.job.meta["status_message"]
+    assert started_steps(held_jobs) == {p["text_done"].id: [JobType.TEXT_ES_INDEX]}
+    assert (
+        read_step_status(db_session, p["text_running"].id, JobType.TEXT_ES_INDEX)
+        is None
+    )
+
+    held_jobs.run(JobType.TEXT_ES_INDEX)
+    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    assert read.status == FeatureStatus.PARTLY_AVAILABLE
+
+    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {p["text_running"].id: [JobType.TEXT_ES_INDEX]}
+
+
+def test_activate_feature_with_redis_down_sets_its_failed_steps_erroneous_again(
+    client: TestClient,
+    db_session,
+    partly_project: PartlyProject,
+    held_jobs: HeldJobs,
+):
+    """Completing full-text search while the queue cannot be reached starts
+    nothing, and the batch undoes its change: the index of index_failed and
+    the text extraction of extraction_failed, which it planned again, are
+    erroneous again, and the indexes it newly planned (not_indexed,
+    extraction_failed, spacy_failed) are not planned. The feature stays
+    partly available."""
+    p = partly_project
+    project_id = p["project"].id
+    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+
+    with unreachable_redis():
+        held_jobs.run(JobType.FEATURE_ACTIVATION)
+
+    assert held_jobs.jobs() == []
+    assert (
+        read_step_status(db_session, p["index_failed"].id, JobType.TEXT_ES_INDEX)
+        == -100
+    )
+    assert (
+        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
+        == -100
+    )
+    for key in ("not_indexed", "extraction_failed", "spacy_failed"):
+        assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) is None, (
+            key
+        )
+    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
 
 def test_activate_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(

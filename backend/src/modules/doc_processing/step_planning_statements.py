@@ -6,6 +6,8 @@ project (`project.feature_activations`). Besides the status CRUD and
 `source_document_status_rules.py`, this is the only code that touches the step
 status rows."""
 
+from typing import NamedTuple
+
 from sqlalchemy import (
     ARRAY,
     ColumnElement,
@@ -40,6 +42,15 @@ from repos.db.sql_exceptions import NoSuchElementError
 
 # Documents per step: the rows (sdoc id, step) a planning touched
 StepRows = dict[JobType, list[int]]
+
+
+class PlanningChange(NamedTuple):
+    """The rows a planning changed in a way it can undo: those it created
+    (`create_missing`) and those it set from erroneous to processing
+    (`update_to_processing`)."""
+
+    created: StepRows
+    redone: StepRows
 
 
 def _id_values(sdoc_ids: list[int]) -> TableValuedAlias:
@@ -313,6 +324,57 @@ def read_startable(
         for sdoc_id in startable:
             result.setdefault(sdoc_id, []).append(step)
     return result
+
+
+def undo_planning(db: Session, *, change: PlanningChange) -> None:
+    """
+    Undo the given rows of a planning that are still processing: delete the
+    created ones (not planned again) and set the redone ones to erroneous
+    again; rows with another status keep it. Locks the documents (FOR NO KEY
+    UPDATE) in ascending id order first; the caller has locked the project.
+
+    Args:
+        change: The rows to undo.
+    """
+    sdoc_ids = sorted(
+        {sdoc_id for rows in change for ids in rows.values() for sdoc_id in ids}
+    )
+    if not sdoc_ids:
+        return
+    sdoc = SourceDocumentORM
+    db.scalars(
+        select(sdoc.id)
+        .where(sdoc.id.in_(select(_id_values(sdoc_ids).c.sdoc_id)))
+        .order_by(sdoc.id)
+        .with_for_update(of=sdoc, key_share=True)
+    ).all()
+    row = SourceDocumentStepStatusORM
+    for step, step_ids in change.created.items():
+        if not step_ids:
+            continue
+        db.execute(
+            delete(row)
+            .where(
+                row.sdoc_id.in_(select(_id_values(step_ids).c.sdoc_id)),
+                row.step == step,
+                row.status == SDocStatus.processing,
+            )
+            .execution_options(synchronize_session=False)
+        )
+    for step, step_ids in change.redone.items():
+        if not step_ids:
+            continue
+        db.execute(
+            update(row)
+            .where(
+                row.sdoc_id.in_(select(_id_values(step_ids).c.sdoc_id)),
+                row.step == step,
+                row.status == SDocStatus.processing,
+            )
+            .values(status=SDocStatus.erroneous)
+            .execution_options(synchronize_session=False)
+        )
+    db.flush()
 
 
 def delete_pending_by_project(
