@@ -174,7 +174,7 @@ class CRUDSourceDocumentStepStatus(
         redo_statuses: list[SDocStatus],
     ) -> list[int]:
         """
-        Read and lock (FOR UPDATE) the documents of the project and doctype that
+        Read and lock (FOR NO KEY UPDATE) the documents of the project and doctype that
         lack one of `missing_steps`, or have one of `redo_steps` with a status in
         `redo_statuses`.
 
@@ -220,7 +220,7 @@ class CRUDSourceDocumentStepStatus(
                     or_(*conditions),
                 )
                 .order_by(sdoc.id)
-                .with_for_update(of=sdoc)
+                .with_for_update(of=sdoc, key_share=True)
             )
         )
 
