@@ -166,6 +166,7 @@ endpoint, which M5 integrates.
 - The full backend suite (1,668 tests), lint, typecheck, `just alembic check` and the pre-commit hooks pass.
 - Migration on 300,000 documents: 13.3 s up, 23.2 s down (M1: 13.6 s and 20.9 s).
 - Enabling a feature whose step no document has plans 300,000 rows in 35 s (143 s before planning inserted only the missing rows with one `INSERT ... SELECT` per batch).
+- After the re-review fixes (no repeated document locks, one `INSERT ... SELECT` over the project's documents, one statement per step for the other planning writes, no redundant `sdoc_id` index): 24.2 s with all rows missing and 1.2 s with the rows present, against 54.3 s and 0.8 s before these fixes on the same machine; the rest is the insert itself (index upkeep and the per-row foreign key check).
 - `grep` finds step names outside their step files, `JobType` and the feature files only in `ENTRY_POINTS` (`EXTRACT_HTML`), the artefact `image_caption` and the archive field `image_embedding`.
 
 ## Decisions (the recommended option of each is approved)
