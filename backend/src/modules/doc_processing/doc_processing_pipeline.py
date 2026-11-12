@@ -210,20 +210,6 @@ def handle_job_started(jobtype: JobType, input: JobInputBase) -> bool:
     return True
 
 
-def _descendants(steps: list[JobType]) -> list[JobType]:
-    """The steps that need the output of these steps, directly or transitively."""
-    graph = pipeline_registry.graph()
-    found: list[JobType] = []
-    todo = [s for step in steps for s in graph.successors(step)]
-    while todo:
-        step = todo.pop()
-        if step in found or step in steps:
-            continue
-        found.append(step)
-        todo.extend(graph.successors(step))
-    return found
-
-
 def handle_job_error(job_type: JobType, input: JobInputBase):
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.

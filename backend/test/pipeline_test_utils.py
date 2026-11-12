@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import CORE_ARTEFACTS
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
@@ -16,10 +15,8 @@ from modules.doc_processing.doc_processing_pipeline import (
     handle_job_finished,
     handle_job_started,
 )
-from modules.doc_processing.pipeline.pipeline_graph import (
-    UPLOADED_ARTEFACTS,
-    pipeline_registry,
-)
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.step_planning import planned_steps
 from systems.job_system.job_dto import JobInputBase
 from systems.job_system.job_service import JobService
 
@@ -30,18 +27,8 @@ def all_steps(doctype: DocType) -> list[JobType]:
 
 
 def core_steps(doctype: DocType) -> list[JobType]:
-    """The steps of a project without features, in pipeline order: the steps that
-    produce core artefacts only and whose inputs a document of the doctype has
-    (an image has no text without a caption, so no text steps)."""
-    graph = pipeline_registry.graph()
-    available = set(UPLOADED_ARTEFACTS.get(doctype, frozenset()))
-    steps: list[JobType] = []
-    for step in graph.steps(doctype):
-        declaration = graph.declaration(step)
-        if declaration.produces <= CORE_ARTEFACTS and declaration.requires <= available:
-            steps.append(step)
-            available |= declaration.produces
-    return steps
+    """The steps of a project without features, in pipeline order."""
+    return planned_steps(doctype=doctype, features=[])
 
 
 def step_names(steps: list[JobType]) -> list[str]:

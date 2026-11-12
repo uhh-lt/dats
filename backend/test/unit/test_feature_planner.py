@@ -3,7 +3,7 @@
 import pytest
 
 from bootstrap import register_jobs
-from common.artefact_enum import Artefact
+from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
@@ -42,11 +42,29 @@ def test_all_features_plan_the_steps_documents_get_today(doctype: DocType):
 
 
 @pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
-def test_minimal_project_plans_only_the_core_steps(doctype: DocType):
-    """A project without features plans only the steps of the core artefacts;
-    no Elasticsearch index, embeddings, keywords, word frequencies, entities,
-    captions or object detection."""
-    assert _planned(doctype, []) == core_steps(doctype)
+def test_minimal_project_plans_no_step_of_optional_artefacts_only(doctype: DocType):
+    """A project without features plans no Elasticsearch index, embeddings,
+    keywords, word frequencies, entities, captions or object detection."""
+    graph = pipeline_registry.graph()
+    for step in _planned(doctype, []):
+        assert graph.declaration(step).produces & CORE_ARTEFACTS, step
+
+
+@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
+def test_minimal_project_produces_every_core_artefact_a_document_can_have(
+    doctype: DocType,
+):
+    """Every core artefact whose steps produce core artefacts only is produced
+    in a project without features (an image has no text without a caption)."""
+    graph = pipeline_registry.graph()
+    planned = _planned(doctype, [])
+    for artefact in CORE_ARTEFACTS:
+        producer = graph.producer(doctype, artefact)
+        if producer is None:
+            continue
+        steps = graph.needed_steps(doctype, graph.steps(doctype), frozenset({artefact}))
+        if all(graph.declaration(s).produces <= CORE_ARTEFACTS for s in steps):
+            assert producer in planned, artefact
 
 
 @pytest.mark.parametrize(
