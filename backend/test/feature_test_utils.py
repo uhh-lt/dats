@@ -2,21 +2,27 @@
 
 from typing import Protocol, TypedDict
 
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
 from core.user.user_orm import UserORM
+from dats_test_utils import create_text_document
 from pipeline_test_utils import core_steps, set_step_status, step_names
+from repos.filesystem_repo import FilesystemRepo
 
 FEATURE_PROJECT_TITLE = "Feature Project"
+
+# the text of every text document of the projects below
+SDOC_SENTENCES = ["Hello world.", "The cat sits on the mat."]
 
 
 def minimal_text_steps() -> list[str]:
@@ -35,6 +41,10 @@ class FeatureProject(TypedDict):
     (which enables all features and has no documents):
 
     - project: "Feature Project" of `test_user`, without any enabled feature
+    Every text document has the text of `SDOC_SENTENCES` ("Hello world." and
+    "The cat sits on the mat.") and the language "en", the image an 8x8 red PNG
+    as its file, so the step jobs an activation starts can be enriched.
+
     - text_done: text document "text_done.txt"; the steps of a project without
       features are finished (extract_html, text_extraction,
       text_language_detection, text_spacy, text_html_mapping), all other steps
@@ -86,14 +96,33 @@ def _create_sdoc(
     doctype: DocType,
     status: dict[str, int],
 ) -> SourceDocumentORM:
-    sdoc = crud_sdoc.create(
-        db=db,
-        create_dto=SourceDocumentCreate(
-            filename=name, name=name, doctype=doctype, project_id=project.id
-        ),
-    )
+    """A document with the data its step jobs read, so they can start: a text
+    document has the text of `SDOC_SENTENCES` (data row, tokens, sentences)
+    and the language "en", an image an 8x8 red PNG as its file. The given
+    steps get the given status, the others are not planned."""
+    if doctype == DocType.text:
+        sdoc = create_text_document(
+            db, project=project, filename=name, name=name, sentences=SDOC_SENTENCES
+        )
+    else:
+        sdoc = crud_sdoc.create(
+            db=db,
+            create_dto=SourceDocumentCreate(
+                filename=name, name=name, doctype=doctype, project_id=project.id
+            ),
+        )
+        _write_image_file(sdoc)
     set_step_status(db, sdoc.id, status)
     return sdoc
+
+
+def _write_image_file(sdoc: SourceDocumentORM) -> None:
+    """Store a small PNG as the file of the image document."""
+    path = FilesystemRepo().get_path_to_sdoc_file(
+        SourceDocumentRead.model_validate(sdoc)
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (8, 8), (255, 0, 0)).save(path, format="PNG")
 
 
 def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
@@ -148,7 +177,8 @@ class PartlyProject(TypedDict):
 
     - project: "Partly Available Project" of `test_user`, with only full-text
       search enabled
-    - five text documents; the minimal text steps are extract_html,
+    - five text documents with the text of `SDOC_SENTENCES` and the language
+      "en"; the minimal text steps are extract_html,
       text_extraction, text_language_detection, text_spacy, text_html_mapping;
       steps not listed are not planned:
       - indexed: minimal steps and text_es_index finished
@@ -222,6 +252,14 @@ FEATURELESS_PROJECT_TITLE = "Featureless Project"
 
 
 class FeaturelessProject(TypedDict):
+    """
+    This fixture sets up the following project:
+
+    - project: "Featureless Project" of `test_user`, without any enabled feature
+    - sdoc: text document "text_done.txt" with the text of `SDOC_SENTENCES` and
+      the language "en"; the steps of a project without features are finished
+    """
+
     project: ProjectORM
     sdoc: SourceDocumentORM
 

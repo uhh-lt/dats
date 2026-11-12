@@ -4,6 +4,8 @@ import pytest
 
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
@@ -41,8 +43,9 @@ class ImageTextProject(TypedDict):
     - project: "Image Text Project" of `test_user`, with full-text search,
       sentence similarity search and keyword statistics enabled (no image
       captions)
-    - image: image document "image.png"; image_metadata_extraction and
-      image_thumbnail are finished, all other steps are not planned
+    - image: image document "image.png" (an 8x8 red PNG);
+      image_metadata_extraction and image_thumbnail are finished, all other
+      steps are not planned
 
     Non-obvious derived behavior:
 
@@ -87,7 +90,8 @@ class UploadingProject(TypedDict):
 
     - project: "Uploading Project" of `test_user`, with keyword statistics
       enabled
-    - uploading: text document "uploading.txt", still being uploaded: all steps
+    - uploading: text document "uploading.txt" with the text of
+      `SDOC_SENTENCES` and the language "en", still being uploaded: all steps
       a text document of this project gets (extract_html, text_extraction,
       text_language_detection, text_spacy, text_html_mapping, text_keywords)
       are processing, and the job of extract_html runs
@@ -180,13 +184,16 @@ def activation_project(db_session, test_user: UserORM) -> ActivationProject:
     db_session.flush()
     set_step_status(db_session, tokenized.id, dict.fromkeys(minimal_text_steps(), 1))
     set_step_status(db_session, extracted.id, {"extract_html": 1, "text_extraction": 1})
-    no_data = _create_sdoc(
-        db_session,
-        project,
-        name="no_data.txt",
-        doctype=DocType.text,
-        status=dict.fromkeys(minimal_text_steps(), 1),
+    no_data = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="no_data.txt",
+            name="no_data.txt",
+            doctype=DocType.text,
+            project_id=project.id,
+        ),
     )
+    set_step_status(db_session, no_data.id, dict.fromkeys(minimal_text_steps(), 1))
     db_session.commit()
     for obj in (project, tokenized, extracted, no_data):
         db_session.refresh(obj)
