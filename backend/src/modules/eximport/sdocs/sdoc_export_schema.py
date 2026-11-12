@@ -125,23 +125,19 @@ class SourceDocumentExportSchema(BaseModel):
     @field_validator("step_status")
     @classmethod
     def validate_step_status(cls, v, info: ValidationInfo):
-        """Validate that the keys are pipeline steps of the doctype and the values
-        statuses."""
+        """Validate that the values are statuses, and drop the keys that are no
+        pipeline step of the doctype: an archive of another version may name a
+        step this version does not have (renamed or removed)."""
         if v is None or "doctype" not in info.data:
             return v
-        steps = [
+        steps = {
             s.value
             for s in pipeline_registry.graph().steps(DocType(info.data["doctype"]))
-        ]
-        for step, status in v.items():
-            if step not in steps:
-                raise ValueError(
-                    f"Unknown pipeline step '{step}' of doctype "
-                    f"'{info.data['doctype']}', must be one of {steps}"
-                )
+        }
+        for status in v.values():
             if status is not None:
                 SDocStatus(status)
-        return v
+        return {step: status for step, status in v.items() if step in steps}
 
     @field_validator("tags")
     @classmethod
