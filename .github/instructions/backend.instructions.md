@@ -189,6 +189,7 @@ Rules:
 - Every step registers an enricher (`@pipeline_step` rejects a step without one); the same enricher serves the advancing, recompute and feature activation.
 - A step job that cannot start (its enricher fails) sets its steps and the pending steps after them to erroneous (`start_step_job`).
 - A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
+- A step has one direct predecessor: the steps producing its required artefacts must depend on each other (`NER_SPANS` and `SENTENCE_EMBEDDINGS` together are rejected), as no step waits for several inputs (the startup check fails otherwise).
 - Only jobs that create documents or fan out over files (`ENTRY_POINTS` in `doc_processing_pipeline.py`) build the input of the next job by hand.
 - A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts) and computes only the steps in `SdocProcessingJobInput.steps` (`spacy_job.py`).
 - The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` reads or writes these rows.
