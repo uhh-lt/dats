@@ -1,5 +1,11 @@
 import pandas as pd
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
@@ -156,11 +162,13 @@ class SourceDocumentExportSchema(BaseModel):
                 raise ValueError(f"{item} must be a tuple of length 2")
         return v
 
-    @classmethod
     @field_validator("sentence_embeddings")
-    def validate_sentence_embeddings_consistency(cls, sentence_embeddings):
+    @classmethod
+    def validate_sentence_embeddings_consistency(
+        cls, sentence_embeddings: list[list[float]]
+    ) -> list[list[float]]:
         """Validate that all embedding vectors in sentence_embeddings have the same length."""
-        if not sentence_embeddings or len(sentence_embeddings) == 0:
+        if len(sentence_embeddings) == 0:
             return sentence_embeddings
 
         # Get the length of the first embedding vector
@@ -176,59 +184,44 @@ class SourceDocumentExportSchema(BaseModel):
 
         return sentence_embeddings
 
-    @classmethod
-    @field_validator("__all__", mode="after")
-    def validate_arrays_consistency(cls, values, info):
-        """Validate that related arrays have the same length."""
-        # Skip validation if this isn't the whole model
-        if not isinstance(values, dict):
-            return values
-
+    @model_validator(mode="after")
+    def validate_arrays_consistency(self) -> "SourceDocumentExportSchema":
+        """Validate that related arrays have the same length. Whether the sentence
+        embeddings are complete (one per sentence) is the archive module's
+        question (`artefact_archive.py`): an incomplete archive imports with the
+        step not planned."""
         # Validate token arrays
-        token_starts = values.get("token_starts")
-        token_ends = values.get("token_ends")
-        if token_starts is None or token_ends is None:
-            raise ValueError(
-                "token_starts and token_ends must be present for all source documents"
-            )
-
-        if len(token_starts) != len(token_ends):
+        if len(self.token_starts) != len(self.token_ends):
             raise ValueError(
                 f"token_starts and token_ends must have the same length. "
-                f"Got {len(token_starts)} and {len(token_ends)}"
+                f"Got {len(self.token_starts)} and {len(self.token_ends)}"
             )
 
         # Validate sentence arrays
-        sentence_starts = values.get("sentence_starts")
-        sentence_ends = values.get("sentence_ends")
-        if sentence_starts is None or sentence_ends is None:
-            raise ValueError("sentence_starts and sentence_ends must be present")
-
-        if len(sentence_starts) != len(sentence_ends):
+        if len(self.sentence_starts) != len(self.sentence_ends):
             raise ValueError(
                 f"sentence_starts and sentence_ends must have the same length. "
-                f"Got {len(sentence_starts)} and {len(sentence_ends)}"
+                f"Got {len(self.sentence_starts)} and {len(self.sentence_ends)}"
             )
 
-        # Validate token time arrays
-        token_time_starts = values.get("token_time_starts")
-        token_time_ends = values.get("token_time_ends")
-
-        # Check if one is None and the other isn't
-        if (token_time_starts is None) != (token_time_ends is None):
+        # Validate token time arrays: either both are None or both are present
+        if (self.token_time_starts is None) != (self.token_time_ends is None):
             raise ValueError(
                 "token_time_starts and token_time_ends must either both be None or both be present"
             )
 
         # If both are present, check lengths
-        if token_time_starts and token_time_ends:
-            if len(token_time_starts) != len(token_time_ends):
-                raise ValueError(
-                    f"token_time_starts and token_time_ends must have the same length. "
-                    f"Got {len(token_time_starts)} and {len(token_time_ends)}"
-                )
+        if (
+            self.token_time_starts is not None
+            and self.token_time_ends is not None
+            and len(self.token_time_starts) != len(self.token_time_ends)
+        ):
+            raise ValueError(
+                f"token_time_starts and token_time_ends must have the same length. "
+                f"Got {len(self.token_time_starts)} and {len(self.token_time_ends)}"
+            )
 
-        return values
+        return self
 
 
 class SourceDocumentExportCollection(BaseModel):
