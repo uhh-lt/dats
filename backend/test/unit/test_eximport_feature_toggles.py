@@ -129,17 +129,29 @@ def test_steps_missing_in_the_archive_are_not_planned() -> None:
     assert status[JobType.TEXT_SPACY.value] is None
 
 
-def test_unknown_step_is_rejected() -> None:
-    """An archived status of an unknown pipeline step fails the validation with its name."""
-    with pytest.raises(ValueError, match="Unknown pipeline step 'nope'"):
-        _sdoc(step_status={"nope": FINISHED})
+def test_unknown_step_is_ignored() -> None:
+    """An archived status of a step this version does not have (renamed or
+    removed since the export) is dropped; the other statuses are imported."""
+    sdoc = _sdoc(
+        step_status={"removed_step": FINISHED, JobType.EXTRACT_HTML.value: FINISHED}
+    )
+
+    assert sdoc.step_status == {JobType.EXTRACT_HTML.value: FINISHED}
+    assert archived_step_status(sdoc)[JobType.EXTRACT_HTML.value] == FINISHED
 
 
-def test_step_of_another_doctype_is_rejected() -> None:
-    """The archived statuses are validated against the steps of the document's
-    doctype: a text document has no image caption."""
-    with pytest.raises(ValueError, match="Unknown pipeline step 'image_caption'"):
-        _sdoc(step_status={JobType.IMAGE_CAPTION.value: FINISHED})
+def test_step_of_another_doctype_is_ignored() -> None:
+    """The archived statuses are read for the steps of the document's doctype: the
+    image caption of a text document is dropped."""
+    sdoc = _sdoc(step_status={JobType.IMAGE_CAPTION.value: FINISHED})
+
+    assert sdoc.step_status == {}
+
+
+def test_invalid_step_status_is_rejected() -> None:
+    """An archived status that is no step status fails the validation."""
+    with pytest.raises(ValueError, match="is not a valid SDocStatus"):
+        _sdoc(step_status={JobType.EXTRACT_HTML.value: 7})
 
 
 def test_step_status_survives_the_csv_round_trip() -> None:
