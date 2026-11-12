@@ -203,27 +203,30 @@ def test_read_startable_returns_processing_rows_whose_inputs_are_finished(
 def test_create_missing_plans_only_steps_without_a_row(
     db_session: Session, step_status_project: StepStatusProject
 ):
-    """Planning spaCy and the index for running and image inserts a processing
-    row where none exists and returns the inserted rows per step; the processing
-    spaCy row of running stays as it is."""
+    """Planning spaCy and the index for the text documents of the project inserts
+    a processing row where none exists and returns the inserted rows per step:
+    spaCy for failed only (done and running have one), the index for all three;
+    the image and the document of the other project get no row."""
     p = step_status_project
 
     planned = crud_sdoc_step_status.create_missing(
         db=db_session,
-        sdoc_ids=[p["running"].id, p["image"].id],
+        project_id=p["project"].id,
+        doctype=DocType.text,
         steps=[JobType.TEXT_SPACY, JobType.TEXT_ES_INDEX],
     )
     db_session.commit()
 
+    text_ids = sorted([p["done"].id, p["running"].id, p["failed"].id])
     assert planned == {
-        JobType.TEXT_SPACY: [p["image"].id],
-        JobType.TEXT_ES_INDEX: sorted([p["running"].id, p["image"].id]),
+        JobType.TEXT_SPACY: [p["failed"].id],
+        JobType.TEXT_ES_INDEX: text_ids,
     }
-    assert _read(db_session, p["image"].id) == {
-        JobType.TEXT_SPACY: PROCESSING,
-        JobType.TEXT_ES_INDEX: PROCESSING,
-    }
+    assert _read(db_session, p["failed"].id)[JobType.TEXT_SPACY] == PROCESSING
     assert _read(db_session, p["running"].id)[JobType.TEXT_SPACY] == PROCESSING
+    assert _read(db_session, p["done"].id)[JobType.TEXT_SPACY] == FINISHED
+    assert _read(db_session, p["image"].id) == {}
+    assert JobType.TEXT_ES_INDEX not in _read(db_session, p["other_project_doc"].id)
 
 
 # ===========================================================================

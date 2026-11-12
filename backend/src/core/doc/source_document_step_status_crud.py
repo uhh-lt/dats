@@ -21,6 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql.selectable import TableValuedAlias
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
@@ -43,6 +44,17 @@ StepRows = dict[JobType, list[int]]
 MAX_COUNTED_STEPS = 63
 
 
+def _id_values(sdoc_ids: list[int]) -> TableValuedAlias:
+    """The documents as a derived table (`sdoc_id`) from one array parameter, to
+    join the planning statements with: one statement for all documents instead
+    of a batch of `IN` lists, which costs a scan of the step index each."""
+    return (
+        func.unnest(literal(sdoc_ids, ARRAY(Integer)))
+        .table_valued("sdoc_id")
+        .render_derived()
+    )
+
+
 class CRUDSourceDocumentStepStatus(
     SQLCRUDBase[
         SourceDocumentStepStatusORM,
@@ -53,72 +65,75 @@ class CRUDSourceDocumentStepStatus(
 ):
     """The only code that reads or writes the pipeline step statuses.
 
-    Every write first locks the documents' rows (`_lock_sdocs`), as the feature
-    planning does (`read_sdoc_ids_to_plan`, which runs before `create_missing`,
-    `update_to_processing` and `update_blocked_to_erroneous`): a status change
-    and a planning of the same document run one after the other, so the planning
-    never misses a step that finishes while it plans."""
+    Every write first locks the documents' rows (`_lock_sdocs`), except the
+    planning writes (`create_missing`, `update_to_processing`,
+    `update_blocked_to_erroneous`), which run after `read_sdoc_ids_to_plan`
+    locked the documents to plan: a status change and a planning of the same
+    document run one after the other, so the planning never misses a step that
+    finishes while it plans."""
 
     ### CREATE OPERATIONS ###
     # Inherited from SQLCRUDBase (create_multi: the statuses of new documents)
 
     def create_missing(
-        self, db: Session, *, sdoc_ids: list[int], steps: list[JobType]
+        self, db: Session, *, project_id: int, doctype: DocType, steps: list[JobType]
     ) -> StepRows:
         """
-        Plan the steps for the documents: insert a processing row for every
-        (document, step) that has no row; existing rows keep their status.
+        Plan the steps for the documents of the project and doctype: insert a
+        processing row for every (document, step) that has no row; existing rows
+        keep their status. The caller has locked the documents that lack a step
+        (`read_sdoc_ids_to_plan` with these steps as `missing_steps`).
 
         Args:
-            sdoc_ids: The documents.
+            project_id: The project of the documents.
+            doctype: The doctype of the documents.
             steps: The steps to plan.
 
         Returns:
-            The planned documents per step, for the steps in the order of `steps`.
+            The planned documents per step (ascending), for the steps in the order
+            of `steps`.
         """
         result: StepRows = {step: [] for step in steps}
-        if not sdoc_ids or not steps:
+        if not steps:
             return result
-        self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
-        # the database builds the pairs from two arrays and skips the existing
-        # ones before inserting: VALUES lists and conflicting inserts cost most
-        # of the time for many documents
+        # one statement: the database pairs the documents with the steps and
+        # skips the existing rows, no ids are sent back and forth
+        sdoc = SourceDocumentORM
         existing = aliased(self.model)
         step_values = (
             func.unnest(literal([step.value for step in steps], ARRAY(String)))
             .table_valued("step")
             .render_derived()
         )
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_values = (
-                func.unnest(literal(sdoc_ids[i : i + BATCH_SIZE], ARRAY(Integer)))
-                .table_valued("sdoc_id")
-                .render_derived()
-            )
-            stmt = (
-                insert(self.model)
-                .from_select(
-                    ["sdoc_id", "step", "status"],
-                    select(
-                        batch_values.c.sdoc_id,
-                        step_values.c.step,
-                        literal(SDocStatus.processing.value),
-                    )
-                    .select_from(batch_values.join(step_values, true()))
-                    .where(
-                        ~exists().where(
-                            existing.sdoc_id == batch_values.c.sdoc_id,
-                            existing.step == step_values.c.step,
-                        )
+        stmt = (
+            insert(self.model)
+            .from_select(
+                ["sdoc_id", "step", "status"],
+                select(
+                    sdoc.id,
+                    step_values.c.step,
+                    literal(SDocStatus.processing.value),
+                )
+                .select_from(sdoc)
+                .join(step_values, true())
+                .where(
+                    sdoc.project_id == project_id,
+                    sdoc.doctype == doctype.value,
+                    ~exists().where(
+                        existing.sdoc_id == sdoc.id,
+                        existing.step == step_values.c.step,
                     ),
-                )
-                .on_conflict_do_nothing(
-                    index_elements=[self.model.sdoc_id, self.model.step]
-                )
-                .returning(self.model.sdoc_id, self.model.step)
+                ),
             )
-            for sdoc_id, step in db.execute(stmt).all():
-                result[JobType(step)].append(sdoc_id)
+            .on_conflict_do_nothing(
+                index_elements=[self.model.sdoc_id, self.model.step]
+            )
+            .returning(self.model.sdoc_id, self.model.step)
+        )
+        for sdoc_id, step in db.execute(stmt).all():
+            result[JobType(step)].append(sdoc_id)
+        for sdoc_ids in result.values():
+            sdoc_ids.sort()
         db.flush()
         return result
 
@@ -238,18 +253,22 @@ class CRUDSourceDocumentStepStatus(
         """
         result: dict[int, list[JobType]] = {}
         for step, sdoc_ids in rows.items():
-            for i in range(0, len(sdoc_ids), BATCH_SIZE):
-                startable = db.scalars(
-                    select(self.model.sdoc_id).where(
-                        self.model.sdoc_id.in_(sdoc_ids[i : i + BATCH_SIZE]),
-                        self.model.step == step,
-                        self.model.status == SDocStatus.processing,
-                        self._count_inputs(inputs[step], [SDocStatus.finished])
-                        == len(inputs[step]),
-                    )
+            if not sdoc_ids:
+                continue
+            ids = _id_values(sdoc_ids)
+            startable = db.scalars(
+                select(self.model.sdoc_id)
+                .join(ids, ids.c.sdoc_id == self.model.sdoc_id)
+                .where(
+                    self.model.step == step,
+                    self.model.status == SDocStatus.processing,
+                    self._count_inputs(inputs[step], [SDocStatus.finished])
+                    == len(inputs[step]),
                 )
-                for sdoc_id in startable:
-                    result.setdefault(sdoc_id, []).append(step)
+                .order_by(self.model.sdoc_id)
+            )
+            for sdoc_id in startable:
+                result.setdefault(sdoc_id, []).append(step)
         return result
 
     ### UPDATE OPERATIONS ###
@@ -302,7 +321,8 @@ class CRUDSourceDocumentStepStatus(
     ) -> StepRows:
         """
         Plan the given steps of the documents again: set those with one of
-        `statuses` to processing.
+        `statuses` to processing. The caller has locked the documents
+        (`read_sdoc_ids_to_plan`).
 
         Args:
             sdoc_ids: The documents.
@@ -315,21 +335,22 @@ class CRUDSourceDocumentStepStatus(
         result: StepRows = {step: [] for step in steps}
         if not sdoc_ids or not steps or not statuses:
             return result
-        self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            changed = db.execute(
-                update(self.model)
-                .where(
-                    self.model.sdoc_id.in_(sdoc_ids[i : i + BATCH_SIZE]),
-                    self.model.step.in_(steps),
-                    self.model.status.in_(statuses),
-                )
-                .values(status=SDocStatus.processing)
-                .returning(self.model.sdoc_id, self.model.step)
-                .execution_options(synchronize_session=False)
-            ).all()
-            for sdoc_id, step in changed:
-                result[JobType(step)].append(sdoc_id)
+        ids = _id_values(sdoc_ids)
+        changed = db.execute(
+            update(self.model)
+            .where(
+                self.model.sdoc_id == ids.c.sdoc_id,
+                self.model.step.in_(steps),
+                self.model.status.in_(statuses),
+            )
+            .values(status=SDocStatus.processing)
+            .returning(self.model.sdoc_id, self.model.step)
+            .execution_options(synchronize_session=False)
+        ).all()
+        for sdoc_id, step in changed:
+            result[JobType(step)].append(sdoc_id)
+        for changed_ids in result.values():
+            changed_ids.sort()
         db.flush()
         return result
 
@@ -340,7 +361,8 @@ class CRUDSourceDocumentStepStatus(
         Set the given rows that are processing to erroneous if one of their input
         steps is erroneous or not planned: they cannot run. The steps are handled
         in the order of `rows`, which must be the pipeline order, so a failed
-        step fails the given steps after it.
+        step fails the given steps after it. The caller has locked the documents
+        (`read_sdoc_ids_to_plan`).
 
         Args:
             rows: The documents per step to check, in pipeline order.
@@ -349,22 +371,21 @@ class CRUDSourceDocumentStepStatus(
         for step, sdoc_ids in rows.items():
             if not sdoc_ids or not inputs[step]:
                 continue
-            self._lock_sdocs(db=db, sdoc_ids=sdoc_ids)
-            for i in range(0, len(sdoc_ids), BATCH_SIZE):
-                db.execute(
-                    update(self.model)
-                    .where(
-                        self.model.sdoc_id.in_(sdoc_ids[i : i + BATCH_SIZE]),
-                        self.model.step == step,
-                        self.model.status == SDocStatus.processing,
-                        self._count_inputs(
-                            inputs[step], [SDocStatus.processing, SDocStatus.finished]
-                        )
-                        < len(inputs[step]),
+            ids = _id_values(sdoc_ids)
+            db.execute(
+                update(self.model)
+                .where(
+                    self.model.sdoc_id == ids.c.sdoc_id,
+                    self.model.step == step,
+                    self.model.status == SDocStatus.processing,
+                    self._count_inputs(
+                        inputs[step], [SDocStatus.processing, SDocStatus.finished]
                     )
-                    .values(status=SDocStatus.erroneous)
-                    .execution_options(synchronize_session=False)
+                    < len(inputs[step]),
                 )
+                .values(status=SDocStatus.erroneous)
+                .execution_options(synchronize_session=False)
+            )
         db.flush()
 
     def update_pending_to_erroneous(
