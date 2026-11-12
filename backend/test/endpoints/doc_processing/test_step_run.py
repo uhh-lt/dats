@@ -162,7 +162,6 @@ def test_a_job_whose_started_hook_fails_fails_its_steps(
         sdoc_id=sdoc_id,
         steps=[JobType.TEXT_LANGUAGE_DETECTION],
         settings=SETTINGS,
-        raise_on_failure=True,
     )
     job = started[JobType.TEXT_LANGUAGE_DETECTION]
     assert job is not None
