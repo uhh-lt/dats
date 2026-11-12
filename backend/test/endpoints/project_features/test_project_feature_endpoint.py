@@ -3,7 +3,6 @@ import time
 
 import pytest
 from fastapi.testclient import TestClient
-from redis.exceptions import ConnectionError as RedisConnectionError
 
 from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
@@ -409,12 +408,18 @@ def test_activate_feature_with_redis_down_changes_nothing(
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """If the activation job cannot be enqueued, the request fails and rolls
-    back: the feature stays disabled and nothing is planned or pending."""
+    """If the activation job cannot be enqueued, the request fails with 503 and
+    rolls back: the feature stays disabled and nothing is planned or pending."""
     project_id = feature_project["project"].id
 
-    with unreachable_redis(), pytest.raises(RedisConnectionError):
-        _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    with unreachable_redis():
+        response = client.put(
+            f"/feature/project/{project_id}/{Feature.FULL_TEXT_SEARCH.value}",
+            json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+        )
+
+    assert response.status_code == 503, response.text
+    assert "The job queue cannot be reached" in response.text
 
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.DISABLED
