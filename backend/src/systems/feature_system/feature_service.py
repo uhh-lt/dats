@@ -16,8 +16,9 @@ from systems.feature_system.feature_registry import feature_registry
 class FeatureService(metaclass=SingletonMeta):
     """The toggleable features: which features exist, which features a set of
     features requires, and whether a project enables a feature. What the
-    features of a project mean for its documents is in `ProjectFeatureService`
-    (`modules/project_features`)."""
+    features of a project mean for its documents is in `StepPlanningService`
+    (`modules/doc_processing`, the planning) and `ProjectFeatureService`
+    (`modules/project_features`, the state of the features)."""
 
     def __new__(cls, *args, **kwargs):
         cls.registry = feature_registry
