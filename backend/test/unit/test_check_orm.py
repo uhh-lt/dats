@@ -278,6 +278,27 @@ def test_check_orm_accepts_deferrable_no_action() -> None:
     assert rules(source) == set()
 
 
+def test_check_orm_accepts_a_foreign_key_leading_the_primary_key_without_index() -> (
+    None
+):
+    """The primary key index covers its first column, so a foreign key there needs
+    no index of its own; the second key column still does."""
+    source = (
+        VALID_ORM
+        + """
+
+class CodeTagLinkTable(ORMBase):
+    code_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("code.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True
+    )
+"""
+    )
+    assert [(v.rule, v.attr) for v in run(source)] == [("fk-index", "tag_id")]
+
+
 # --- C. output and CLI ----------------------------------------------------------
 
 

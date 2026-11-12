@@ -16,7 +16,8 @@ Rules (the rule id is printed with every violation):
     fk-ondelete        Every ForeignKey(...) passes ondelete="CASCADE" ("SET NULL" is
                        allowed on a Mapped[T | None] column; "NO ACTION" only with
                        deferrable=True, initially="IMMEDIATE").
-    fk-index           Every column with a ForeignKey(...) passes index=True.
+    fk-index           Every column with a ForeignKey(...) passes index=True, except the
+                       first primary key column, which the primary key index covers.
     tz-datetime        DateTime columns are DateTime(timezone=True).
     no-native-enum     No native Enum(...) / ENUM(...) column type; store enums as String
                        or Integer annotated with the enum type.
@@ -165,6 +166,7 @@ def check_column(
     attr: str,
     annotation: ast.expr | None,
     call: ast.Call,
+    leads_primary_key: bool = False,
 ) -> list[Violation]:
     violations: list[Violation] = []
 
@@ -228,14 +230,30 @@ def check_column(
         ):
             add("tz-datetime", "Use DateTime(timezone=True).", arg.lineno)
 
-    if has_fk and not is_const(keyword(call, "index"), True):
+    if has_fk and not leads_primary_key and not is_const(keyword(call, "index"), True):
         add("fk-index", "Foreign key column must pass index=True.")
     return violations
+
+
+def _first_primary_key_column(node: ast.ClassDef) -> str | None:
+    """The attribute of the first mapped_column(..., primary_key=True) of the class."""
+    for stmt in node.body:
+        if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
+            continue
+        value = stmt.value
+        if (
+            isinstance(value, ast.Call)
+            and call_name(value) == "mapped_column"
+            and is_const(keyword(value, "primary_key"), True)
+        ):
+            return stmt.target.id
+    return None
 
 
 def check_class(p: str, node: ast.ClassDef) -> list[Violation]:
     violations: list[Violation] = []
     c = node.name
+    leading_key = _first_primary_key_column(node)
     for stmt in node.body:
         targets: list[ast.expr]
         annotation: ast.expr | None = None
@@ -281,7 +299,9 @@ def check_class(p: str, node: ast.ClassDef) -> list[Violation]:
                 )
             )
         if kind == "mapped_column":
-            violations.extend(check_column(p, c, attr, annotation, value))
+            violations.extend(
+                check_column(p, c, attr, annotation, value, attr == leading_key)
+            )
         elif keyword(value, "backref") is not None:
             violations.append(
                 Violation(

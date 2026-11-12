@@ -5,7 +5,7 @@ Every pipeline step declares in `@pipeline_step` the artefacts it `requires` and
 derives per doctype the steps, their order and which step starts which.
 
 A job can compute several steps in one run (`text_spacy` also computes keywords,
-word frequencies and named entities). Each step has its own status column and
+word frequencies and named entities). Each step has its own status row and
 artefacts; the job input says which of its steps to compute.
 """
 
