@@ -90,6 +90,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 - **`beforeLoad`** is only for guards: it throws `redirect(...)` (login, already authenticated) and never returns context or builds query options. It is synchronous. Protected pages live under `_auth`, public pages under `_public`.
 - **Toggleable features**: the feature of a page is declared only on its route, as `staticData.feature` (the project layout's `FeatureGuard` then shows the "not enabled" view); its navigation entry, the sidebar, the dashboard, the commands and the shortcuts read it from there.
 - **Disabled features**: the loader of such a page starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;`, as its queries would fail with 403 (lint: `local/route-options`).
+- **Checkable feature routes**: `staticData` is an inline object without spreads, the loader of a feature route is an inline function, and only a route with a feature calls `ensureRouteFeatureEnabled` (lint: `local/route-options`).
 
 ### Tabs (`staticData`)
 
