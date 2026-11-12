@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ProjectCreate } from "@models/ProjectCreate";
-import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { ProjectRead } from "@models/ProjectRead";
 import type { ProjectUpdate } from "@models/ProjectUpdate";
 import type { SDocStatus } from "@models/SDocStatus";
@@ -109,23 +108,6 @@ export class ProjectService {
       },
       query: {
         only_finished: onlyFinished,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps
-   * @returns ProjectFeatureRead Successful Response
-   * @throws ApiError
-   */
-  public static getFeatures({ projectId }: { projectId: number }): CancelablePromise<Array<ProjectFeatureRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{project_id}/features",
-      path: {
-        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
