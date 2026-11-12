@@ -7,62 +7,18 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_status_rules import count_step_sets
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
-from core.project.project_dto import ProjectRead
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import feature_steps
-from modules.doc_processing.step_planning_service import StepPlanningService
 from modules.project_features.project_feature_dto import ProjectFeatureRead
 
 
 class ProjectFeatureService(metaclass=SingletonMeta):
-    """The features of the projects: which features a project enables and how
-    far they are computed. Enabling, restarting and disabling a feature plan the
-    steps of its documents through `StepPlanningService`."""
+    """The state of the features of a project: which features it enables and
+    how far they are computed. `StepPlanningService` enables, restarts and
+    disables them."""
 
     def __new__(cls, *args, **kwargs):
-        cls.sps = StepPlanningService()
         return super(ProjectFeatureService, cls).__new__(cls)
-
-    # --- enabled features
-
-    def activate_feature(
-        self,
-        *,
-        db: Session,
-        project_id: int,
-        feature: Feature,
-        settings: ProcessingSettings,
-    ) -> ProjectRead:
-        """Enable the feature, or complete it if it is enabled already
-        (`StepPlanningService.enable_feature`). Returns the project."""
-        self.sps.enable_feature(
-            db=db, project_id=project_id, feature=feature, settings=settings
-        )
-        return self._read_project(db=db, project_id=project_id)
-
-    def restart_feature(
-        self,
-        *,
-        db: Session,
-        project_id: int,
-        feature: Feature,
-        settings: ProcessingSettings,
-    ) -> ProjectRead:
-        """Restart the processing of an enabled feature
-        (`StepPlanningService.restart_feature`). Returns the project."""
-        self.sps.restart_feature(
-            db=db, project_id=project_id, feature=feature, settings=settings
-        )
-        return self._read_project(db=db, project_id=project_id)
-
-    def disable_feature(
-        self, *, db: Session, project_id: int, feature: Feature
-    ) -> ProjectRead:
-        """Disable the feature in any enabled state
-        (`StepPlanningService.disable_feature`). Returns the project."""
-        self.sps.disable_feature(db=db, project_id=project_id, feature=feature)
-        return self._read_project(db=db, project_id=project_id)
 
     # --- state of the features
 
@@ -136,9 +92,6 @@ class ProjectFeatureService(metaclass=SingletonMeta):
                 )
             )
         return result
-
-    def _read_project(self, *, db: Session, project_id: int) -> ProjectRead:
-        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
 
 def _status(*, enabled: bool, processing: int, lacking: int) -> FeatureStatus:

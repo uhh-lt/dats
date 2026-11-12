@@ -8,6 +8,7 @@ from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
+from core.project.project_dto import ProjectRead
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
@@ -61,12 +62,12 @@ class StepPlanningService(metaclass=SingletonMeta):
         project_id: int,
         feature: Feature,
         settings: ProcessingSettings,
-    ) -> None:
+    ) -> ProjectRead:
         """Enable the feature, or complete it if it is enabled already: enable it
         and the features it requires, and compute their data for the documents
         that lack it (see `_plan_missing_steps`). A feature activation job on the
         low-priority queue starts the steps with these settings once the
-        transaction commits."""
+        transaction commits. Returns the project."""
         project = crud_project.read_locked(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.fs.resolve_enabled_features(
@@ -80,6 +81,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         self._start_steps_after_commit(
             db=db, project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
         )
+        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def restart_feature(
         self,
@@ -88,13 +90,13 @@ class StepPlanningService(metaclass=SingletonMeta):
         project_id: int,
         feature: Feature,
         settings: ProcessingSettings,
-    ) -> None:
+    ) -> ProjectRead:
         """Restart the processing of an enabled feature: plan its processing steps
         again, except the core steps (an upload in progress keeps its jobs), and
         start those whose inputs are finished, like `enable_feature` does for
         missing steps. For steps left processing without a job (a crashed
         worker); a step whose job still runs computes twice. Rejects a disabled
-        feature."""
+        feature. Returns the project."""
         project = crud_project.read_locked(db=db, id=project_id)
         if feature.value not in project.enabled_features:
             raise FeatureDisabledError(project_id=project_id, feature=feature)
@@ -110,10 +112,11 @@ class StepPlanningService(metaclass=SingletonMeta):
         self._start_steps_after_commit(
             db=db, project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
         )
+        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def disable_feature(
         self, *, db: Session, project_id: int, feature: Feature
-    ) -> None:
+    ) -> ProjectRead:
         """Disable the feature in any enabled state: it is hidden and its data is
         not computed anymore; the stored data is kept. Rejects disabling a feature
         that another enabled feature requires.
@@ -122,7 +125,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         feature) and that the remaining features do not need are set to not
         planned: the documents do not stay processing, and step jobs still in the
         queue skip them (`handle_job_started`). Finished and erroneous steps keep
-        their status."""
+        their status. Returns the project."""
         project = crud_project.read_locked(db=db, id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.fs.resolve_enabled_features(
@@ -139,6 +142,7 @@ class StepPlanningService(metaclass=SingletonMeta):
                 doctype=doctype,
                 steps=[s for s in graph.steps(doctype) if s not in plan],
             )
+        return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def add_features(
         self, *, db: Session, project_id: int, features: list[Feature]

@@ -12,11 +12,11 @@ from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
 )
+from modules.doc_processing.step_planning_service import StepPlanningService
 from modules.project_features.project_feature_dto import (
     FeatureActivation,
     ProjectFeatureRead,
 )
-from modules.project_features.project_feature_service import ProjectFeatureService
 from pipeline_test_utils import read_step_status
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import JobInputBase
@@ -284,8 +284,8 @@ def test_activate_feature_starts_its_job_only_after_the_commit(
 ):
     """The activation job starts once the request's transaction commits: a step
     job that started earlier would read its steps as not planned and skip them.
-    Calls the service the endpoint delegates to, to commit by hand."""
-    ProjectFeatureService().activate_feature(
+    Calls the planning operation the endpoint delegates to, to commit by hand."""
+    StepPlanningService().enable_feature(
         db=db_session,
         project_id=feature_project["project"].id,
         feature=Feature.FULL_TEXT_SEARCH,
@@ -308,10 +308,10 @@ def test_activate_feature_waits_for_a_concurrent_activation(
 ):
     """Two members enable a feature at the same time: the second activation waits
     until the first commits and keeps its feature, so both are enabled. Calls the
-    service the endpoint delegates to, to hold the first transaction open."""
+    planning operation the endpoint delegates to, to hold the first transaction open."""
     project_id = feature_project["project"].id
-    service = ProjectFeatureService()
-    service.activate_feature(
+    service = StepPlanningService()
+    service.enable_feature(
         db=db_session,
         project_id=project_id,
         feature=Feature.KEYWORD_STATISTICS,
@@ -320,7 +320,7 @@ def test_activate_feature_waits_for_a_concurrent_activation(
 
     def _other_member() -> None:
         with SQLRepo().transaction() as db:
-            service.activate_feature(
+            service.enable_feature(
                 db=db,
                 project_id=project_id,
                 feature=Feature.WORD_FREQUENCY,
