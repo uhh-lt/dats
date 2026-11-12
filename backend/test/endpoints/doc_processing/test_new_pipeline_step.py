@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
@@ -19,10 +18,7 @@ from modules.doc_processing.doc_processing_dto import (
     SdocHealthResult,
     SdocProcessingJobInput,
 )
-from modules.doc_processing.doc_processing_pipeline import (
-    handle_job_finished,
-    handle_job_started,
-)
+from modules.doc_processing.doc_processing_pipeline import handle_job_finished
 from modules.doc_processing.entrypoints.init_sdoc_job import (
     SdocInitJobInput,
     handle_init_sdoc_job,
@@ -34,11 +30,10 @@ from modules.project_features.project_feature_dto import (
     FeatureActivation,
     FeatureActivationJobInput,
 )
-from pipeline_test_utils import read_step_status
+from pipeline_test_utils import last_started, read_step_status, run_job
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
-from systems.job_system.job_service import JobService
 
 from .conftest import DUMMY_UPLOAD_TEXT, DummyStep, DummyStepProjects, PairedSteps
 
@@ -58,27 +53,6 @@ SETTINGS = ProcessingSettings(
 # The step jobs are captured instead of enqueued (`started_jobs`), and the tests
 # run them like the worker does: enrich the input if needed, then the job's
 # handler between the pipeline hooks.
-
-
-def _run(job_type: JobType, payload: JobInputBase) -> None:
-    """Run the job like the worker: the input is enriched as `start_job` does."""
-    job_info = JobService().job_registry[job_type]
-    try:
-        job_input = job_info["input_type"].model_validate(payload.model_dump())
-    except ValidationError:
-        enricher = job_info["enricher"]
-        assert enricher is not None
-        job_input = enricher(payload)
-    assert handle_job_started(job_type, job_input)
-    output = job_info["handler"](payload=job_input, job=MagicMock())
-    handle_job_finished(job_type, job_input, output)
-
-
-def _started(
-    started_jobs: list[tuple[JobType, JobInputBase]], job_type: JobType
-) -> JobInputBase:
-    """The input of the last captured job of this type."""
-    return [payload for jt, payload in started_jobs if jt == job_type][-1]
 
 
 def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
@@ -110,16 +84,18 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
 
     # started after its input step, with a bare input
     handle_job_finished(JobType.SDOC_INIT, init_input, init_output)
-    _run(JobType.EXTRACT_HTML, _started(started_jobs, JobType.EXTRACT_HTML))
+    run_job(JobType.EXTRACT_HTML, last_started(started_jobs, JobType.EXTRACT_HTML))
     assert all(jt != step for jt, _ in started_jobs)
-    _run(JobType.TEXT_EXTRACTION, _started(started_jobs, JobType.TEXT_EXTRACTION))
-    payload = _started(started_jobs, step)
+    run_job(
+        JobType.TEXT_EXTRACTION, last_started(started_jobs, JobType.TEXT_EXTRACTION)
+    )
+    payload = last_started(started_jobs, step)
     assert type(payload) is SdocProcessingJobInput
     assert payload.steps == [step]
     assert payload.settings == SETTINGS
 
     # run and set finished
-    _run(step, payload)
+    run_job(step, payload)
     assert dummy_step["computed"] == {sdoc_id: DUMMY_UPLOAD_TEXT}
     assert read_step_status(db_session, sdoc_id, step) == SDocStatus.finished
 
@@ -153,7 +129,7 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     assert read_step_status(db_session, imported[0].id, step) == SDocStatus.finished
 
 
-def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
+def test_a_step_requiring_two_artefacts_of_one_step_is_planned_andlast_started(
     client: TestClient,
     db_session: Session,
     paired_steps: PairedSteps,
@@ -175,13 +151,13 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     )
 
     assert response.status_code == 200, response.text
-    activation = _started(started_jobs, JobType.FEATURE_ACTIVATION)
+    activation = last_started(started_jobs, JobType.FEATURE_ACTIVATION)
     assert isinstance(activation, FeatureActivationJobInput)
     assert producer in activation.sdoc_steps[sdoc_id]
     assert consumer not in activation.sdoc_steps[sdoc_id]
     assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.processing
 
-    _run(
+    run_job(
         producer,
         SdocProcessingJobInput(
             project_id=p["project"].id,
@@ -190,7 +166,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
             steps=[producer],
         ),
     )
-    _run(consumer, _started(started_jobs, consumer))
+    run_job(consumer, last_started(started_jobs, consumer))
 
     assert paired_steps["ran"] == {producer: [sdoc_id], consumer: [sdoc_id]}
     assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.finished

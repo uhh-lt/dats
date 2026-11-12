@@ -1,10 +1,14 @@
+import base64
 import sys
 from enum import Enum
+from io import BytesIO
 from pathlib import Path
 from typing import Callable, Generator, TypedDict, TypeVar
 from unittest.mock import patch
 
+import ffmpeg
 import pytest
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from common import artefact_enum
@@ -272,3 +276,65 @@ def started_jobs() -> Generator[list[tuple[JobType, JobInputBase]], None, None]:
 
     with patch.object(JobService, "start_job", side_effect=_start_job):
         yield started
+
+
+# --- uploads of every doctype that needs no hosted model to start ------------
+
+
+class MediaUploads(TypedDict):
+    project: ProjectORM
+    audio: Path
+    video: Path
+    html_with_image: Path
+
+
+@pytest.fixture(scope="function")
+def media_uploads(db_session: Session, test_user: UserORM) -> MediaUploads:
+    """
+    This fixture sets up the project "Media Project" of the test user without any
+    feature enabled (core steps only) and no documents yet. Its file directory
+    holds three uploads, as an upload puts them there before `sdoc_init`
+    creates their documents:
+
+    - `audio`: "tone.mp3", one second of a 440 Hz sine tone (made with ffmpeg)
+    - `video`: "clip.mp4", one second of a test picture with the same tone
+    - `html_with_image`: "page.html", a paragraph and one embedded base64 PNG
+      image (8x8 pixels, red)
+
+    Non-obvious derived behavior:
+
+    - With `extract_images`, extract_html of page.html stores the image next to
+      the page and starts an `sdoc_init` for it, which creates an image document.
+    - The transcription (whisper) of audio and video runs on the hosted Ray
+      service, so the tests only build its input.
+    """
+    project = create_project_with_features(
+        db_session, test_user, title="Media Project", features=[]
+    )
+    fsr = FilesystemRepo()
+    tmp = Path(fsr.create_temp_dir("media_uploads"))
+    tone = ffmpeg.input("sine=frequency=440:duration=1", f="lavfi")
+    ffmpeg.output(tone, str(tmp / "tone.mp3")).overwrite_output().run(quiet=True)
+    picture = ffmpeg.input("testsrc=duration=1:size=64x64:rate=10", f="lavfi")
+    ffmpeg.output(
+        picture, tone, str(tmp / "clip.mp4"), pix_fmt="yuv420p"
+    ).overwrite_output().run(quiet=True)
+    png = BytesIO()
+    Image.new("RGB", (8, 8), (255, 0, 0)).save(png, format="PNG")
+    image_src = "data:image/png;base64," + base64.b64encode(png.getvalue()).decode()
+    (tmp / "page.html").write_text(
+        f'<html><body><p>{DUMMY_UPLOAD_TEXT}</p><img src="{image_src}"></body></html>',
+        encoding="utf-8",
+    )
+
+    def store(filename: str) -> Path:
+        return fsr.move_file_to_project_sdoc_files(
+            project_id=project.id, src_file=tmp / filename
+        )
+
+    return {
+        "project": project,
+        "audio": store("tone.mp3"),
+        "video": store("clip.mp4"),
+        "html_with_image": store("page.html"),
+    }
