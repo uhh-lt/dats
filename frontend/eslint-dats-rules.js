@@ -1447,6 +1447,25 @@ const containsCallOf = (node, name) => {
   });
 };
 
+/** Whether the function starts with `if (!(await ensureRouteFeatureEnabled(...))) return;`. */
+const startsWithFeatureGuard = (fn) => {
+  if (fn.body.type !== "BlockStatement") return false;
+  const first = fn.body.body[0];
+  if (!first || first.type !== "IfStatement" || first.alternate) return false;
+  const test = first.test;
+  const call =
+    test.type === "UnaryExpression" && test.operator === "!" && test.argument.type === "AwaitExpression"
+      ? test.argument.argument
+      : undefined;
+  if (!call || call.type !== "CallExpression" || call.callee.type !== "Identifier") return false;
+  if (call.callee.name !== "ensureRouteFeatureEnabled") return false;
+  const consequent =
+    first.consequent.type === "BlockStatement" && first.consequent.body.length === 1
+      ? first.consequent.body[0]
+      : first.consequent;
+  return consequent.type === "ReturnStatement" && !consequent.argument;
+};
+
 /** Finds return statements with a value that belong to the function itself (not to nested functions). */
 const findValueReturns = (fn) => {
   if (fn.type === "ArrowFunctionExpression" && fn.body.type !== "BlockStatement") return [fn.body];
@@ -1485,7 +1504,12 @@ const routeOptionsRule = {
       beforeLoadReturn: "`beforeLoad` is only for guards (throw redirect / notFound); it never returns context.",
       validateSearch: "`validateSearch` uses `zodValidator(<page>SearchSchema)`.",
       featureLoader:
-        "The `loader` of a route with `staticData.feature` returns early when `await ensureRouteFeatureEnabled({ context, params, route })` is false (its queries fail with 403 while the feature is disabled).",
+        "The `loader` of a route with `staticData.feature` starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;` (its queries fail with 403 while the feature is disabled).",
+      featureLoaderInline:
+        "The `loader` of a route with a feature is an inline function, so its feature guard can be checked.",
+      staticDataInline:
+        "`staticData` is an inline object literal without spreads, so its keys (`feature`, `tab`, `icon`) can be checked.",
+      featureCallWithoutFeature: "`ensureRouteFeatureEnabled` is only for routes with `staticData.feature`.",
       tabStaticData: "A page route of a project needs `staticData: { tab: true, icon }` (missing: {{missing}}).",
       staticTitle:
         "A static tab title comes from the page's navigation entry (`NAVIGATION_ENTRIES`); `getTitle` is only for dynamic titles.",
@@ -1532,8 +1556,21 @@ const routeOptionsRule = {
           staticData && staticData.type === "ObjectExpression"
             ? staticData.properties.filter((p) => p.type === "Property").map(propertyName)
             : [];
-        if (loader && staticDataKeys.includes("feature") && !containsCallOf(loader.body, "ensureRouteFeatureEnabled")) {
-          context.report({ node: options.loader, messageId: "featureLoader" });
+        if (
+          staticData &&
+          (staticData.type !== "ObjectExpression" || staticData.properties.some((p) => p.type !== "Property"))
+        ) {
+          context.report({ node: staticData, messageId: "staticDataInline" });
+        }
+
+        if (staticDataKeys.includes("feature")) {
+          if (options.loader && !loader) {
+            context.report({ node: options.loader, messageId: "featureLoaderInline" });
+          } else if (loader && !startsWithFeatureGuard(loader)) {
+            context.report({ node: options.loader, messageId: "featureLoader" });
+          }
+        } else if (containsCallOf(node, "ensureRouteFeatureEnabled")) {
+          context.report({ node, messageId: "featureCallWithoutFeature" });
         }
 
         const getTitle =
