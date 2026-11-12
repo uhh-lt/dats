@@ -52,11 +52,12 @@ class JobHooks(NamedTuple):
     """Called by the job handler around every job (see `JobService.register_hooks`)."""
 
     # before the handler; returns the input the handler, `finished` and `failed`
-    # get (the stored input or a narrowed copy of it), or None to skip the job
+    # get (the stored input or a narrowed copy of it), or None to skip the job; a
+    # failing hook fails the job, and `failed` gets the stored input
     started: Callable[[JobType, JobInputBase], JobInputBase | None]
     # after the handler returned; a failing hook fails the job
     finished: Callable[[JobType, JobInputBase, JobOutputBase | None], None]
-    # after the handler or the `finished` hook raised
+    # after the `started` hook, the handler or the `finished` hook raised
     failed: Callable[[JobType, JobInputBase], None]
 
 
