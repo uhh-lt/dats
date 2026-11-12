@@ -1,10 +1,8 @@
 from collections import defaultdict
-from typing import Iterable
 
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
@@ -17,11 +15,7 @@ from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
 )
-from modules.doc_processing.pipeline.pipeline_graph import (
-    UPLOADED_ARTEFACTS,
-    PipelineGraph,
-    pipeline_registry,
-)
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import (
     feature_steps,
     planned_steps,
@@ -136,44 +130,6 @@ class ProjectFeatureService(metaclass=SingletonMeta):
             db=db, project_id=project_id, sdoc_steps=sdoc_steps, settings=settings
         )
         return self._read_project(db=db, project_id=project_id)
-
-    # --- planning
-
-    def planned_steps(
-        self, *, doctype: DocType, features: Iterable[Feature]
-    ) -> list[JobType]:
-        """The steps to run for a document of this doctype in a project with these
-        enabled features, in pipeline order."""
-        graph = pipeline_registry.graph()
-        return _plan(graph, doctype, self.registry.required_artefacts(features))
-
-    def feature_steps(
-        self, *, doctype: DocType, feature: Feature, enabled: Iterable[Feature]
-    ) -> list[JobType]:
-        """The steps a document of this doctype needs for the feature, in a project
-        with these enabled features (with the feature enabled): the producers of
-        the feature's artefacts and the steps they require. Empty if the feature
-        does not apply to the doctype (e.g. object detection to text documents)."""
-        graph = pipeline_registry.graph()
-        features = self.registry.closure([feature])
-        plan = _plan(
-            graph, doctype, self.registry.required_artefacts(set(enabled) | features)
-        )
-        artefacts = self.registry.required_artefacts(features) - CORE_ARTEFACTS
-        producers = _producers(graph, plan)
-        if not artefacts or not artefacts <= producers.keys():
-            return []
-        needed: set[JobType] = set()
-        todo = [producers[a] for a in artefacts]
-        while todo:
-            step = todo.pop()
-            if step in needed:
-                continue
-            needed.add(step)
-            todo.extend(
-                producers[a] for a in graph.declaration(step).requires if a in producers
-            )
-        return [s for s in plan if s in needed]
 
     # --- state of the features
 
@@ -406,62 +362,3 @@ def _status(*, enabled: bool, processing: int, lacking: int) -> FeatureStatus:
     if lacking > 0:
         return FeatureStatus.PARTLY_AVAILABLE
     return FeatureStatus.FULLY_AVAILABLE
-
-
-def _plan(
-    graph: PipelineGraph, doctype: DocType, needed: frozenset[Artefact]
-) -> list[JobType]:
-    """The steps of the doctype that produce the needed artefacts, plus the steps
-    they require. A step that produces optional artefacts runs only if one of them
-    is needed; core artefacts it also produces do not make it run (the image
-    caption also produces the raw HTML of an image)."""
-    order = graph.steps(doctype)
-
-    # 1) select the steps of needed artefacts; optional artefacts that a selected
-    # step requires are needed too
-    wanted = set(needed)
-    while True:
-        selected = [s for s in order if _is_selected(graph, s, wanted)]
-        more = {
-            a for s in selected for a in graph.declaration(s).requires
-        } - CORE_ARTEFACTS
-        if more <= wanted:
-            break
-        wanted |= more
-
-    # 2) drop the steps whose required artefacts are not produced, in pipeline
-    # order, so the steps after a dropped step are dropped as well
-    available = set(UPLOADED_ARTEFACTS.get(doctype, frozenset()))
-    planned: list[JobType] = []
-    for step in selected:
-        declaration = graph.declaration(step)
-        if declaration.requires <= available:
-            planned.append(step)
-            available |= declaration.produces
-    return planned
-
-
-def _is_selected(graph: PipelineGraph, step: JobType, wanted: set[Artefact]) -> bool:
-    produces = graph.declaration(step).produces
-    optional = produces - CORE_ARTEFACTS
-    return bool((optional or produces) & wanted)
-
-
-def _producers(graph: PipelineGraph, steps: list[JobType]) -> dict[Artefact, JobType]:
-    """The step producing each artefact, among these steps of one doctype."""
-    return {a: s for s in steps for a in graph.declaration(s).produces}
-
-
-def _inputs(graph: PipelineGraph, steps: list[JobType]) -> dict[JobType, list[JobType]]:
-    """The input steps of each of these steps of one doctype: the producers of
-    the artefacts it requires, each once (a step may require several artefacts
-    of one producer)."""
-    producers = _producers(graph, steps)
-    return {
-        step: list(
-            dict.fromkeys(
-                producers[a] for a in graph.declaration(step).requires if a in producers
-            )
-        )
-        for step in steps
-    }
