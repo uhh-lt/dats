@@ -83,12 +83,24 @@ interface FeatureRouteLoaderArgs {
 }
 
 /**
- * For the loader of a page that declares `staticData.feature`: tells whether the feature of the loader's own route is
- * enabled. The loader skips its queries for a disabled feature (they would fail with 403); the project layout then shows
- * the "not enabled" view instead of the page.
+ * The feature of a route: the one it declares (`staticData.feature`), else the one of its nearest parent route that
+ * declares one, so the routes below a feature's route (its detail pages) need not repeat it.
+ */
+export function getRouteFeature(route: AnyRoute): Feature | undefined {
+  for (let current: AnyRoute | undefined = route; current; current = current.parentRoute) {
+    const feature = current.options.staticData?.feature;
+    if (feature !== undefined) return feature;
+  }
+  return undefined;
+}
+
+/**
+ * For the loader of a page with a feature (`getRouteFeature`): tells whether that feature is enabled. The loader skips
+ * its queries for a disabled feature (they would fail with 403); the project layout then shows the "not enabled" view
+ * instead of the page.
  */
 export async function ensureRouteFeatureEnabled({ context, params, route }: FeatureRouteLoaderArgs): Promise<boolean> {
-  const feature = route.options.staticData?.feature;
+  const feature = getRouteFeature(route);
   if (feature === undefined) return true;
   return ensureFeatureEnabled(context.queryClient, params.projectId, feature);
 }

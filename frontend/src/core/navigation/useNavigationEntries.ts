@@ -1,26 +1,26 @@
-import { FEATURES, useIsFeatureEnabled } from "@core/feature";
+import { FEATURES, getRouteFeature, useIsFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
-import { AnyRouter, StaticDataRouteOption, useMatches, useRouter } from "@tanstack/react-router";
+import { AnyRoute, AnyRouter, useMatches, useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { NAVIGATION_ENTRIES } from "./navigationEntries";
 import { NavigationEntry, NavigationGroup, NavigationRoute, ResolvedNavigationEntry } from "./navigationTypes";
 
-/** The static data that the page at `to` declares on its route (the layout route of a path declares none). */
-function getRouteStaticData(router: AnyRouter, to: NavigationRoute): StaticDataRouteOption {
-  for (const route of Object.values(router.looseRoutesById)) {
-    const staticData = route.options.staticData;
-    if (route.to === to && staticData?.tab) return staticData;
-  }
-  throw new Error(`No page route declares \`staticData.tab\` for '${to}'.`);
+/** The page route at `to`: the one that declares `staticData.tab` (the layout route of a path declares none). */
+function getPageRoute(router: AnyRouter, to: NavigationRoute): AnyRoute {
+  const route = Object.values(router.looseRoutesById).find((route) => route.to === to && route.options.staticData?.tab);
+  if (!route) throw new Error(`No page route declares \`staticData.tab\` for '${to}'.`);
+  return route;
 }
 
 /**
- * An entry with the feature and the icon of its route; the page of a feature takes its title and description from
+ * An entry with the feature (`getRouteFeature`) and the icon of its route; the page of a feature takes its title and description from
  * `FEATURES`. Throws for an entry that names a title although its route declares a feature, or none although it
  * declares none.
  */
 function resolveNavigationEntry(router: AnyRouter, entry: NavigationEntry): ResolvedNavigationEntry {
-  const { feature, icon = Icon.PROJECT } = getRouteStaticData(router, entry.to);
+  const route = getPageRoute(router, entry.to);
+  const icon = route.options.staticData?.icon ?? Icon.PROJECT;
+  const feature = getRouteFeature(route);
   if (feature === undefined) {
     if (entry.title === undefined) throw new Error(`Navigation entry '${entry.id}' needs a title.`);
     return { ...entry, feature, icon, title: entry.title };
