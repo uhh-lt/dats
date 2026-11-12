@@ -32,8 +32,12 @@ StepStatus = dict[JobType, SDocStatus]
 # Documents per step: the rows (sdoc id, step) a planning touched
 StepRows = dict[JobType, list[int]]
 
-# A bit per step, to aggregate the steps of a document per status as bit masks
-_STEP_BITS: dict[JobType, int] = {step: 1 << i for i, step in enumerate(JobType)}
+
+def _step_bits() -> dict[JobType, int]:
+    """A bit per step, to aggregate the steps of a document per status as bit
+    masks. Built per query, so it knows every `JobType` value (also one added
+    after this module was imported)."""
+    return {step: 1 << i for i, step in enumerate(JobType)}
 
 
 class CRUDSourceDocumentStepStatus(
@@ -436,7 +440,8 @@ class CRUDSourceDocumentStepStatus(
         # per document, one bit mask of its steps per status (cheaper than
         # aggregating the statuses themselves), then count the masks
         sdoc = SourceDocumentORM
-        bit = cast(case(_STEP_BITS, value=self.model.step, else_=0), BigInteger)
+        step_bits = _step_bits()
+        bit = cast(case(step_bits, value=self.model.step, else_=0), BigInteger)
         masks = {
             status: func.bit_or(case((self.model.status == status, bit), else_=0))
             for status in SDocStatus
@@ -470,7 +475,7 @@ class CRUDSourceDocumentStepStatus(
                 {
                     step: status
                     for status, mask in zip(SDocStatus, row[1:-1])
-                    for step, step_bit in _STEP_BITS.items()
+                    for step, step_bit in step_bits.items()
                     if mask & step_bit
                 },
                 row[-1],
