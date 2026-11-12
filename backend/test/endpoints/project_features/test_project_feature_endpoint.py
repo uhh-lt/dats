@@ -20,7 +20,7 @@ from modules.project_features.project_feature_dto import (
     FeatureActivation,
     ProjectFeatureRead,
 )
-from pipeline_test_utils import plan_activations, read_step_status, started_steps
+from pipeline_test_utils import read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
 
 from .conftest import ImageTextProject, UploadingProject
@@ -202,7 +202,8 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
 
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
     (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
 
     for sdoc in (p["text_done"], p["text_running"]):
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) == 0, (
@@ -225,7 +226,7 @@ def test_activate_feature_makes_it_computing(
     project_id = feature_project["project"].id
 
     _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.COMPUTING
@@ -278,7 +279,8 @@ def test_activate_two_features_sharing_a_step_starts_it_once(
     _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
 
     assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 2
-    assert plan_activations(held_jobs) == {
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
     }
@@ -295,7 +297,8 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
     p = feature_project
 
     _activate(client, p["project"].id, Feature.IMAGE_CAPTIONS)
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
 
     for step in (JobType.IMAGE_CAPTION, JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY):
         assert read_step_status(db_session, p["image"].id, step) == 0, step
@@ -314,7 +317,7 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
     image_id = image_text_project["image"].id
 
     _activate(client, image_text_project["project"].id, Feature.IMAGE_CAPTIONS)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     for step in (
         JobType.IMAGE_CAPTION,
@@ -506,7 +509,8 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
     p = partly_project
 
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
 
     for key in ("index_failed", "not_indexed", "extraction_failed", "spacy_failed"):
         assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == 0, key
@@ -539,7 +543,7 @@ def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     sdoc_id = partly_project["spacy_failed"].id
 
     _activate(client, partly_project["project"].id, Feature.FULL_TEXT_SEARCH)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
@@ -570,14 +574,15 @@ def test_restart_feature_starts_its_processing_steps_again(
     text_running wait for it and stay processing."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
     held_jobs.empty()
 
     response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert response.status_code == 200, response.text
     assert response.json() == [Feature.KEYWORD_STATISTICS]
-    assert plan_activations(held_jobs) == {
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_KEYWORDS],
     }
     assert (
@@ -602,7 +607,8 @@ def test_restart_feature_replaces_its_pending_activation(
 
     assert response.status_code == 200, response.text
     assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 2
-    assert plan_activations(held_jobs) == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
     project = crud_project.read(db=db_session, id=p["project"].id)
     assert project.feature_activations == {}
     read = _features(client, p["project"].id)[Feature.KEYWORD_STATISTICS]
@@ -623,7 +629,8 @@ def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
     response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
 
     assert response.status_code == 200, response.text
-    assert plan_activations(held_jobs) == {}
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {}
     sdoc_id = p["uploading"].id
     assert read_step_status(db_session, sdoc_id, JobType.EXTRACT_HTML) == 0
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_KEYWORDS) == 0
@@ -639,13 +646,14 @@ def test_restart_feature_leaves_the_steps_of_other_features_alone(
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
     held_jobs.empty()
 
     response = _restart(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
 
     assert response.status_code == 200, response.text
-    assert plan_activations(held_jobs) == {
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
     }
@@ -730,7 +738,7 @@ def test_disable_computing_feature_unplans_its_processing_steps(
     processing, and the feature is disabled, not re-enabled."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
@@ -758,7 +766,7 @@ def test_disable_computing_feature_keeps_the_steps_other_features_need(
     sentence similarity search still needs them."""
     p = feature_project
     _activate(client, p["project"].id, Feature.RAG_CHAT)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.RAG_CHAT.value}"
@@ -785,7 +793,7 @@ def test_disable_one_of_two_features_sharing_a_step_keeps_it_processing(
     p = feature_project
     _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
     _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     response = client.delete(
         f"/feature/project/{p['project'].id}/{Feature.SEARCH_ANNOTATE.value}"
@@ -812,14 +820,15 @@ def test_enable_disable_enable_plans_the_steps_again(
     again plans and starts them again."""
     p = feature_project
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
     client.delete(
         f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
     )
     held_jobs.empty()
 
     enabled = _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    started = plan_activations(held_jobs)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    started = started_steps(held_jobs)
 
     assert enabled == [Feature.KEYWORD_STATISTICS]
     assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0

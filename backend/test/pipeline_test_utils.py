@@ -71,10 +71,3 @@ def started_steps(held_jobs: HeldJobs) -> dict[int, list[JobType]]:
         if isinstance(payload, SdocProcessingJobInput) and payload.steps:
             result.setdefault(payload.sdoc_id, []).extend(payload.steps)
     return result
-
-
-def plan_activations(held_jobs: HeldJobs) -> dict[int, list[JobType]]:
-    """Run the held feature activations. Returns the steps they started, per
-    document."""
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    return started_steps(held_jobs)
