@@ -24,7 +24,11 @@ UPLOADED_ARTEFACTS: dict[DocType, frozenset[Artefact]] = {
     DocType.audio: frozenset({Artefact.AUDIO}),
 }
 
-_JOB_TYPE_ORDER = {job_type: idx for idx, job_type in enumerate(JobType)}
+
+def _job_type_order(job_type: JobType) -> int:
+    """The position of the job type in `JobType`, which breaks ties in the step
+    order. Read when the graph is built, so it knows every `JobType` value."""
+    return list(JobType).index(job_type)
 
 
 @dataclass(frozen=True)
@@ -44,7 +48,7 @@ class PipelineGraph:
         self._declarations = dict(steps)
         self._job_of = {jt: s.job or jt for jt, s in steps.items()}
         self._steps_of_job: dict[JobType, list[JobType]] = {}
-        for job_type in sorted(steps, key=lambda jt: _JOB_TYPE_ORDER[jt]):
+        for job_type in sorted(steps, key=_job_type_order):
             self._steps_of_job.setdefault(self._job_of[job_type], []).append(job_type)
         self._steps_by_doctype: dict[DocType, list[JobType]] = {}
         self._roots_by_doctype: dict[DocType, list[JobType]] = {}
@@ -236,7 +240,7 @@ def _order(
         ready = [jt for jt, d in remaining.items() if d.issubset(order)]
         if not ready:
             return None
-        nxt = min(ready, key=lambda jt: (len(steps[jt].doctypes), _JOB_TYPE_ORDER[jt]))
+        nxt = min(ready, key=lambda jt: (len(steps[jt].doctypes), _job_type_order(jt)))
         order.append(nxt)
         del remaining[nxt]
     return order
