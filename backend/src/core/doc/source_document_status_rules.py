@@ -1,8 +1,9 @@
 """How the statuses of the pipeline steps of a document combine.
 
 A step of a document is erroneous, processing or finished (a row of
-`sourcedocumentstepstatus`), or not planned (no row). Only this module and
-`crud_sdoc_step_status` touch the status table.
+`sourcedocumentstepstatus`), or not planned (no row). Only this module,
+`crud_sdoc_step_status` and the planning statements of `StepPlanningService`
+(`modules/doc_processing/step_planning_statements.py`) touch the status table.
 
 The document rule: a document is erroneous if one of its planned steps is
 erroneous, else processing if one is processing, else finished (also if no

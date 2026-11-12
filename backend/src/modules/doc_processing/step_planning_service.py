@@ -9,6 +9,7 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
+from modules.doc_processing import step_planning_statements as statements
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
     ProcessingSettings,
@@ -27,10 +28,11 @@ from systems.job_system.job_service import JobService
 class StepPlanningService(metaclass=SingletonMeta):
     """Step planning: which pipeline steps the documents of a project get a step
     status for, from the features the project enables. Its operations are the
-    only code that plans steps (adds or changes the status rows of a planning,
-    the `crud_sdoc_step_status` planning methods) and changes
-    `project.enabled_features`; the steps they plan are computed when the call
-    returns.
+    only code that plans steps (adds or changes the status rows of a planning)
+    and changes `project.enabled_features`; the steps they plan are computed
+    when the call returns. The SQL statements of the planning (the project and
+    document locks, the planning rows, `enabled_features`) are its own, in
+    `step_planning_statements.py`, which only this service imports.
 
     Lock order: every operation first locks the project row (FOR NO KEY UPDATE
     to change the features, FOR SHARE to plan a new document), then the
@@ -68,12 +70,14 @@ class StepPlanningService(metaclass=SingletonMeta):
         that lack it (see `_plan_missing_steps`). A feature activation job on the
         low-priority queue starts the steps with these settings once the
         transaction commits. Returns the project."""
-        project = crud_project.read_locked(db=db, id=project_id)
+        project = statements.read_project_locked(db=db, project_id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.fs.resolve_enabled_features(
             requested=current | {feature}, current=current
         )
-        crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+        statements.update_enabled_features(
+            db=db, project_id=project_id, features=enabled
+        )
 
         sdoc_steps = self._plan_missing_steps(
             db=db, project_id=project_id, feature=feature, enabled=enabled
@@ -97,7 +101,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         missing steps. For steps left processing without a job (a crashed
         worker); a step whose job still runs computes twice. Rejects a disabled
         feature. Returns the project."""
-        project = crud_project.read_locked(db=db, id=project_id)
+        project = statements.read_project_locked(db=db, project_id=project_id)
         if feature.value not in project.enabled_features:
             raise FeatureDisabledError(project_id=project_id, feature=feature)
         enabled = [Feature(f) for f in project.enabled_features]
@@ -126,17 +130,19 @@ class StepPlanningService(metaclass=SingletonMeta):
         planned: the documents do not stay processing, and step jobs still in the
         queue skip them (`handle_job_started`). Finished and erroneous steps keep
         their status. Returns the project."""
-        project = crud_project.read_locked(db=db, id=project_id)
+        project = statements.read_project_locked(db=db, project_id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.fs.resolve_enabled_features(
             requested=current - {feature}, current=current
         )
-        crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+        statements.update_enabled_features(
+            db=db, project_id=project_id, features=enabled
+        )
 
         graph = pipeline_registry.graph()
         for doctype in DocType:
             plan = set(planned_steps(doctype=doctype, features=enabled))
-            crud_sdoc_step_status.delete_pending_by_project(
+            statements.delete_pending_by_project(
                 db=db,
                 project_id=project_id,
                 doctype=doctype,
@@ -151,12 +157,14 @@ class StepPlanningService(metaclass=SingletonMeta):
         enabled ones, without planning any step (a project import: features whose
         data is missing are partly available until a user completes them).
         Returns the enabled features."""
-        project = crud_project.read_locked(db=db, id=project_id)
+        project = statements.read_project_locked(db=db, project_id=project_id)
         current = {Feature(f) for f in project.enabled_features}
         enabled = self.fs.resolve_enabled_features(
             requested=current | set(features), current=current
         )
-        crud_project.update_enabled_features(db=db, id=project_id, features=enabled)
+        statements.update_enabled_features(
+            db=db, project_id=project_id, features=enabled
+        )
         return enabled
 
     def plan_new_document(
@@ -167,7 +175,9 @@ class StepPlanningService(metaclass=SingletonMeta):
         not planned. The share lock on the project makes a concurrent feature
         change wait for this upload, so it plans its steps for this document too,
         or this upload plans them for it."""
-        project = crud_project.read_locked(db=db, id=project_id, shared=True)
+        project = statements.read_project_locked(
+            db=db, project_id=project_id, shared=True
+        )
         steps = planned_steps(
             doctype=doctype,
             features=[Feature(f) for f in project.enabled_features],
@@ -259,7 +269,7 @@ class StepPlanningService(metaclass=SingletonMeta):
                 continue
 
             # lock the documents with steps to plan
-            sdoc_ids = crud_sdoc_step_status.read_sdoc_ids_to_plan(
+            sdoc_ids = statements.read_sdoc_ids_to_plan(
                 db=db,
                 project_id=project_id,
                 doctype=doctype,
@@ -274,13 +284,13 @@ class StepPlanningService(metaclass=SingletonMeta):
                 continue
 
             # 1) plan the missing steps, 2) and the feature's steps to redo
-            planned = crud_sdoc_step_status.create_missing(
+            planned = statements.create_missing(
                 db=db, project_id=project_id, doctype=doctype, steps=to_plan
             )
-            redone = crud_sdoc_step_status.update_to_processing(
+            redone = statements.update_to_processing(
                 db=db, sdoc_ids=sdoc_ids, steps=to_redo, statuses=[SDocStatus.erroneous]
             )
-            restarted = crud_sdoc_step_status.update_to_processing(
+            restarted = statements.update_to_processing(
                 db=db,
                 sdoc_ids=sdoc_ids,
                 steps=to_restart,
@@ -296,11 +306,7 @@ class StepPlanningService(metaclass=SingletonMeta):
 
             # 3) fail the steps that cannot run, then read those that can start
             inputs = {step: graph.inputs(doctype, step) for step in plan}
-            crud_sdoc_step_status.update_blocked_to_erroneous(
-                db=db, rows=rows, inputs=inputs
-            )
-            sdoc_steps |= crud_sdoc_step_status.read_startable(
-                db=db, rows=rows, inputs=inputs
-            )
+            statements.update_blocked_to_erroneous(db=db, rows=rows, inputs=inputs)
+            sdoc_steps |= statements.read_startable(db=db, rows=rows, inputs=inputs)
 
         return sdoc_steps
