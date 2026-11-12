@@ -1,33 +1,34 @@
 import { FEATURES, useIsFeatureEnabled } from "@core/feature";
-import { Feature } from "@models/Feature";
-import { AnyRouter, useMatches, useRouter } from "@tanstack/react-router";
+import { Icon } from "@components/icons";
+import { AnyRouter, StaticDataRouteOption, useMatches, useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { NAVIGATION_ENTRIES } from "./navigationEntries";
 import { NavigationEntry, NavigationGroup, NavigationRoute, ResolvedNavigationEntry } from "./navigationTypes";
 
-/** The feature that the page at `to` declares on its route (`staticData.feature`). */
-function getRouteFeature(router: AnyRouter, to: NavigationRoute): Feature | undefined {
+/** The static data that the page at `to` declares on its route (the layout route of a path declares none). */
+function getRouteStaticData(router: AnyRouter, to: NavigationRoute): StaticDataRouteOption {
   for (const route of Object.values(router.looseRoutesById)) {
-    const feature = route.options.staticData?.feature;
-    if (route.to === to && feature !== undefined) return feature;
+    const staticData = route.options.staticData;
+    if (route.to === to && staticData?.tab) return staticData;
   }
-  return undefined;
+  throw new Error(`No page route declares \`staticData.tab\` for '${to}'.`);
 }
 
 /**
- * An entry with the feature of its route; the page of a feature takes its title and description from `FEATURES`.
- * Throws for an entry that names a title although its route declares a feature, or none although it declares none.
+ * An entry with the feature and the icon of its route; the page of a feature takes its title and description from
+ * `FEATURES`. Throws for an entry that names a title although its route declares a feature, or none although it
+ * declares none.
  */
 function resolveNavigationEntry(router: AnyRouter, entry: NavigationEntry): ResolvedNavigationEntry {
-  const feature = getRouteFeature(router, entry.to);
+  const { feature, icon = Icon.PROJECT } = getRouteStaticData(router, entry.to);
   if (feature === undefined) {
     if (entry.title === undefined) throw new Error(`Navigation entry '${entry.id}' needs a title.`);
-    return { ...entry, feature, title: entry.title };
+    return { ...entry, feature, icon, title: entry.title };
   }
   if (entry.title !== undefined || entry.description !== undefined) {
     throw new Error(`Navigation entry '${entry.id}' takes its title and description from FEATURES['${feature}'].`);
   }
-  return { ...entry, feature, title: FEATURES[feature].title, description: FEATURES[feature].description };
+  return { ...entry, feature, icon, title: FEATURES[feature].title, description: FEATURES[feature].description };
 }
 
 /** Every navigation entry with the feature of its page, also the entries of disabled features. */

@@ -1,4 +1,3 @@
-import { Icon } from "@components/icons";
 import { NavigationCommandCategory, NavigationEntry, NavigationGroup, NavigationShortcut } from "./navigationTypes";
 
 /**
@@ -13,7 +12,6 @@ export const NAVIGATION_ENTRIES = [
     id: "document-search",
     group: "search",
     title: "Document Search",
-    icon: Icon.DOCUMENT_SEARCH,
     to: "/project/$projectId/search",
     shortcut: "s",
     command: {
@@ -24,7 +22,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "image-search",
     group: "search",
-    icon: Icon.IMAGE_SEARCH,
     to: "/project/$projectId/imagesearch",
     shortcut: { after: "s", key: "i" },
     command: {
@@ -35,7 +32,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "sentence-search",
     group: "search",
-    icon: Icon.SENTENCE_SEARCH,
     to: "/project/$projectId/sentencesearch",
     shortcut: { after: "s", key: "s" },
     command: {
@@ -49,7 +45,6 @@ export const NAVIGATION_ENTRIES = [
     id: "perspectives",
     group: "main",
     title: "Perspectives",
-    icon: Icon.PERSPECTIVES,
     to: "/project/$projectId/perspectives",
     shortcut: "e",
     command: {
@@ -61,7 +56,6 @@ export const NAVIGATION_ENTRIES = [
     id: "annotation",
     group: "main",
     title: "Annotation",
-    icon: Icon.ANNOTATION,
     to: "/project/$projectId/annotation",
     shortcut: "a",
     command: {
@@ -73,7 +67,6 @@ export const NAVIGATION_ENTRIES = [
     id: "analysis",
     group: "main",
     title: "Analysis",
-    icon: Icon.ANALYSIS,
     to: "/project/$projectId/analysis",
     shortcut: "y",
     command: {
@@ -86,7 +79,6 @@ export const NAVIGATION_ENTRIES = [
     id: "classifier",
     group: "main",
     title: "Classifier",
-    icon: Icon.CLASSIFIER,
     to: "/project/$projectId/classifier",
     shortcut: "c",
     command: {
@@ -98,7 +90,6 @@ export const NAVIGATION_ENTRIES = [
     id: "prompts",
     group: "main",
     title: "Prompts",
-    icon: Icon.PROMPT,
     to: "/project/$projectId/prompts",
     shortcut: { after: "c", key: "p" },
     command: {
@@ -110,7 +101,6 @@ export const NAVIGATION_ENTRIES = [
     id: "experiments",
     group: "main",
     title: "Experiments",
-    icon: Icon.EXPERIMENT,
     to: "/project/$projectId/experiments",
     shortcut: { after: "c", key: "x" },
     command: {
@@ -122,7 +112,6 @@ export const NAVIGATION_ENTRIES = [
     id: "whiteboard",
     group: "main",
     title: "Whiteboard",
-    icon: Icon.WHITEBOARD,
     to: "/project/$projectId/whiteboard",
     shortcut: "b",
     command: {
@@ -134,7 +123,6 @@ export const NAVIGATION_ENTRIES = [
     id: "memo-workspace",
     group: "main",
     title: "Memo Workspace",
-    icon: Icon.LOGBOOK,
     to: "/project/$projectId/memo-workspace",
     shortcut: "m",
     command: {
@@ -149,7 +137,6 @@ export const NAVIGATION_ENTRIES = [
     group: "analysis",
     title: "Code Frequency Analysis",
     description: "Analyse the frequencies and occurrences of all codes in this project.",
-    icon: Icon.CODE_FREQUENCY,
     to: "/project/$projectId/analysis/code-frequency",
     shortcut: { after: "y", key: "c" },
     command: {
@@ -162,7 +149,6 @@ export const NAVIGATION_ENTRIES = [
     group: "analysis",
     title: "Annotator Agreement",
     description: "Compare two annotators: scores, confusion matrix and disagreements.",
-    icon: Icon.AGREEMENT,
     to: "/project/$projectId/analysis/agreement",
     shortcut: { after: "y", key: "a" },
     command: {
@@ -175,7 +161,6 @@ export const NAVIGATION_ENTRIES = [
     group: "analysis",
     title: "Timeline Analysis",
     description: "Analyse the occurrence of concepts over time.",
-    icon: Icon.TIMELINE_ANALYSIS,
     to: "/project/$projectId/analysis/timeline",
     shortcut: { after: "y", key: "t" },
     command: {
@@ -188,7 +173,6 @@ export const NAVIGATION_ENTRIES = [
     group: "analysis",
     title: "Span Annotation Table",
     description: "View, search, edit span annotations in a table.",
-    icon: Icon.SPAN_ANNOTATION_TABLE,
     to: "/project/$projectId/analysis/span-annotations",
     shortcut: { after: "y", key: "s" },
     command: {
@@ -201,7 +185,6 @@ export const NAVIGATION_ENTRIES = [
     group: "analysis",
     title: "Sentence Annotation Table",
     description: "View, search, edit sentence annotations in a table.",
-    icon: Icon.SENTENCE_ANNOTATION_TABLE,
     to: "/project/$projectId/analysis/sentence-annotations",
     shortcut: { after: "y", key: "e" },
     command: {
@@ -214,7 +197,6 @@ export const NAVIGATION_ENTRIES = [
     group: "analysis",
     title: "Bounding-Box Annotation Table",
     description: "View, search, edit bbox annotations in a table.",
-    icon: Icon.BBOX_ANNOTATION_TABLE,
     to: "/project/$projectId/analysis/bbox-annotations",
     shortcut: { after: "y", key: "b" },
     command: {
@@ -225,7 +207,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "word-frequency",
     group: "analysis",
-    icon: Icon.WORD_FREQUENCY,
     to: "/project/$projectId/analysis/word-frequency",
     shortcut: { after: "y", key: "w" },
     command: {
@@ -236,7 +217,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "concept-over-time-analysis",
     group: "analysis",
-    icon: Icon.COTA,
     to: "/project/$projectId/analysis/concepts-over-time-analysis",
     shortcut: { after: "y", key: "o" },
     command: {
@@ -247,7 +227,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "annotation-scaling",
     group: "analysis",
-    icon: Icon.ANNOTATION_SCALING,
     to: "/project/$projectId/analysis/annotation-scaling",
     shortcut: { after: "y", key: "l" },
     command: {
@@ -258,7 +237,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "tag-recommendations",
     group: "analysis",
-    icon: Icon.TAG_RECOMMENDATION,
     to: "/project/$projectId/analysis/tag-recommendations",
     shortcut: { after: "y", key: "r" },
     command: {
@@ -272,7 +250,6 @@ export const NAVIGATION_ENTRIES = [
     id: "ml-automation",
     group: "tools",
     title: "ML Automation",
-    icon: Icon.ML_AUTOMATION,
     to: "/project/$projectId/tools/ml-automation",
     shortcut: { after: "h", key: "m" },
     command: {
@@ -283,7 +260,6 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "duplicate-finder",
     group: "tools",
-    icon: Icon.DUPLICATE_FINDER,
     to: "/project/$projectId/tools/duplicate-finder",
     shortcut: { after: "h", key: "d" },
     command: {
@@ -295,7 +271,6 @@ export const NAVIGATION_ENTRIES = [
     id: "document-sampler",
     group: "tools",
     title: "Document Sampler",
-    icon: Icon.DOCUMENT_SAMPLER,
     to: "/project/$projectId/tools/document-sampler",
     shortcut: { after: "h", key: "s" },
     command: {
@@ -307,7 +282,6 @@ export const NAVIGATION_ENTRIES = [
     id: "health",
     group: "tools",
     title: "Document Health",
-    icon: Icon.HEALTH,
     to: "/project/$projectId/tools/health",
     shortcut: "h",
     command: {

@@ -29,7 +29,6 @@ export interface NavigationEntry {
   title?: string;
   /** Shown on the analysis dashboard card. */
   description?: string;
-  icon: Icon;
   to: NavigationRoute;
   /** Navigation shortcut; every entry has one. */
   shortcut: NavigationShortcut;
@@ -42,9 +41,10 @@ export interface NavigationEntry {
   };
 }
 
-/** A navigation entry with the feature its route declares (`staticData.feature`) and its title. */
+/** A navigation entry with the feature and the icon its route declares (`staticData`) and its title. */
 export interface ResolvedNavigationEntry extends Omit<NavigationEntry, "title"> {
   /** The toggleable feature of the page; pages without one need core data only and are always available. */
   feature: Feature | undefined;
+  icon: Icon;
   title: string;
 }
