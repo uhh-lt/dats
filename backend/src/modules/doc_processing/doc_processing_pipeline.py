@@ -190,11 +190,12 @@ def _set_status(
         )
 
 
-def handle_job_started(jobtype: JobType, input: JobInputBase) -> bool:
-    """Set the steps of the run to processing. Steps that are not planned for the
-    document anymore (their feature was disabled while the job waited in the
-    queue) are dropped from the run; returns False if no step is left, and the
-    job is skipped."""
+def handle_job_started(jobtype: JobType, input: JobInputBase) -> JobInputBase | None:
+    """Set the steps of the run to processing and return the input to run. Steps
+    that are not planned for the document anymore (their feature was disabled
+    while the job waited in the queue) are dropped from the run: the returned
+    input is a copy narrowed to the planned steps, the stored input is never
+    changed. Returns None if no step is left, and the job is skipped."""
     if isinstance(input, SdocProcessingJobInput):
         computed = _computed_steps(jobtype, input)
         planned = _planned_steps(input.sdoc_id, computed)
@@ -203,11 +204,11 @@ def handle_job_started(jobtype: JobType, input: JobInputBase) -> bool:
                 f"Skipping job {jobtype.value} of document {input.sdoc_id}: "
                 f"its steps are not planned anymore."
             )
-            return False
+            return None
         if len(planned) < len(computed):
-            input.steps = planned
+            input = input.model_copy(update={"steps": planned})
     _set_status(jobtype, input, SDocStatus.processing)
-    return True
+    return input
 
 
 def handle_job_error(job_type: JobType, input: JobInputBase):

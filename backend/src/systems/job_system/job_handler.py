@@ -15,7 +15,8 @@ from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
     hooks = JobService().hooks
-    if not hooks.started(jobtype, payload):
+    run_input = hooks.started(jobtype, payload)
+    if run_input is None:
         # e.g. its pipeline steps are not planned anymore: nothing to compute
         job.update(
             status_message="Skipped: nothing to compute anymore.",
@@ -45,19 +46,19 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
                 )
             logger.info(f"Running job {jobtype} on GPU {gpu_uuid or 'cuda:0'}")
             set_cuda_memory_limit(conf.rq.gpu_memory_limit)
-            output = handler(payload=payload, job=job)
+            output = handler(payload=run_input, job=job)
         else:
-            output = handler(payload=payload, job=job)
+            output = handler(payload=run_input, job=job)
 
         # successfully finished job (a failing finish hook, e.g. enqueueing the next
         # pipeline step, fails the job, so it is handled like a failing handler):
         job.update(finished=datetime.now(UTC), publish=False)
-        hooks.finished(jobtype, payload, output)
+        hooks.finished(jobtype, run_input, output)
     except Exception as e:
         # erroneous job:
         job.update(status_message=str(e), finished=datetime.now(UTC), publish=False)
         try:
-            hooks.failed(jobtype, payload)
+            hooks.failed(jobtype, run_input)
         finally:
             # RQ marks the job as FAILED only after this handler raised,
             # so the final event has to carry the terminal status explicitly
