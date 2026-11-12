@@ -161,13 +161,13 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     started_jobs: list[tuple[JobType, JobInputBase]],
 ):
     """Enabling a feature plans the two new core steps of `paired_steps` for
-    text_done: the producer starts at once, the consumer waits for it (it is not
-    failed for counting its one input step twice) and starts once the producer
-    finishes."""
+    text_running, whose text extraction is finished: the producer starts at
+    once, the consumer waits for it (it is not failed for counting its one input
+    step twice) and starts once the producer finishes."""
     p = feature_project
     producer = paired_steps["producer"]
     consumer = paired_steps["consumer"]
-    sdoc_id = p["text_done"].id
+    sdoc_id = p["text_running"].id
 
     response = client.put(
         f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}",

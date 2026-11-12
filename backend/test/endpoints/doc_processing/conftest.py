@@ -3,7 +3,7 @@ import sys
 import wave
 from enum import Enum
 from pathlib import Path
-from typing import Generator, TypedDict, TypeVar
+from typing import Callable, Generator, TypedDict, TypeVar
 from unittest.mock import patch
 
 import pytest
@@ -224,8 +224,9 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     - `test_consumer_step` requires both artefacts of `test_producer_step` and
       produces `test_third_artefact`.
 
-    Both run for text documents only; their enrichers pass the input on as it
-    is, their handlers record the document in `ran`. The fixture removes both
+    Both follow `text_extraction`, so they run for every doctype with content;
+    their enrichers pass the input on as it is, their handlers record the
+    document in `ran`. The fixture removes both
     steps again.
 
     Non-obvious derived behavior:
@@ -256,18 +257,24 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     def enrich(payload: SdocProcessingJobInput) -> SdocProcessingJobInput:
         return payload
 
+    def recorder(step: JobType) -> Callable[[SdocProcessingJobInput, Job], None]:
+        def handle(payload: SdocProcessingJobInput, job: Job) -> None:
+            ran[step].append(payload.sdoc_id)
+
+        return handle
+
     for step, requires, produces in (
         (producer, {Artefact.CONTENT}, {artefacts[0], artefacts[1]}),
         (consumer, {artefacts[0], artefacts[1]}, {artefacts[2]}),
     ):
-
-        def handle(payload: SdocProcessingJobInput, job: Job, step=step) -> None:
-            ran[step].append(payload.sdoc_id)
-
-        pipeline_step(requires=requires, produces=produces, doctypes={DocType.text})(
+        pipeline_step(
+            requires=requires,
+            produces=produces,
+            doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+        )(
             register_job(
                 job_type=step, input_type=SdocProcessingJobInput, enricher=enrich
-            )(handle)
+            )(recorder(step))
         )
 
     yield {"producer": producer, "consumer": consumer, "ran": ran}
