@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
 from modules.doc_processing.doc_processing_dto import ProcessingSettings
-from systems.job_system.job_dto import JobInputBase
 
 
 class ProjectFeatureRead(BaseModel):
@@ -42,13 +41,4 @@ class FeatureActivation(BaseModel):
 
     settings: ProcessingSettings = Field(
         description="The processing settings of the computed steps"
-    )
-
-
-class FeatureActivationJobInput(JobInputBase):
-    sdoc_steps: dict[int, list[JobType]] = Field(
-        description="The newly planned steps to start per SourceDocument ID; their inputs are finished"
-    )
-    settings: ProcessingSettings = Field(
-        description="The processing settings of the started steps"
     )

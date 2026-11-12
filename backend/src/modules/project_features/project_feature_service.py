@@ -13,7 +13,10 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
+from modules.doc_processing.doc_processing_dto import (
+    FeatureActivationJobInput,
+    ProcessingSettings,
+)
 from modules.doc_processing.pipeline.pipeline_graph import (
     UPLOADED_ARTEFACTS,
     PipelineGraph,
@@ -23,10 +26,7 @@ from modules.doc_processing.pipeline.step_planning import (
     feature_steps,
     planned_steps,
 )
-from modules.project_features.project_feature_dto import (
-    FeatureActivationJobInput,
-    ProjectFeatureRead,
-)
+from modules.project_features.project_feature_dto import ProjectFeatureRead
 from systems.feature_system.feature_exceptions import FeatureDisabledError
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
