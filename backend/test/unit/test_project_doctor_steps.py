@@ -1,6 +1,6 @@
 """The project doctor (tools/project_doctor) imports no DATS code, so it runs on
-the released backend image, and keeps its own copy of the pipeline steps; these
-tests keep the copy in sync with the backend."""
+the released backend image, and keeps its own copy of the pipeline steps and
+the status values; these tests keep the copy in sync with the backend."""
 
 import importlib.util
 from pathlib import Path
@@ -9,6 +9,7 @@ from types import ModuleType
 from bootstrap import register_jobs
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 
@@ -78,3 +79,17 @@ def test_doctor_reads_the_step_status_table() -> None:
     """The doctor reads the step statuses from the table of the backend."""
     doctor = _doctor_stores()
     assert doctor.STEP_STATUS_TABLE == SourceDocumentStepStatusORM.__tablename__
+
+
+def test_doctor_status_values_match_the_step_statuses() -> None:
+    """The doctor's status integers are the values of `SDocStatus`."""
+    doctor = _doctor_stores()
+    assert (
+        doctor.STATUS_ERRONEOUS,
+        doctor.STATUS_PROCESSING,
+        doctor.STATUS_FINISHED,
+    ) == (
+        SDocStatus.erroneous.value,
+        SDocStatus.processing.value,
+        SDocStatus.finished.value,
+    )
