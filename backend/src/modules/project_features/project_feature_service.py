@@ -363,9 +363,12 @@ class ProjectFeatureService(metaclass=SingletonMeta):
                 },
             )
 
+            if not sdoc_ids:
+                continue
+
             # 1) plan the missing steps, 2) and the feature's steps to redo
             planned = crud_sdoc_step_status.create_missing(
-                db=db, sdoc_ids=sdoc_ids, steps=to_plan
+                db=db, project_id=project_id, doctype=doctype, steps=to_plan
             )
             redone = crud_sdoc_step_status.update_to_processing(
                 db=db, sdoc_ids=sdoc_ids, steps=to_redo, statuses=[SDocStatus.erroneous]
