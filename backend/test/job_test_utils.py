@@ -9,11 +9,17 @@ from typing import Any
 import rq
 from redis import Redis
 from rq import SimpleWorker
-from rq.registry import FailedJobRegistry, FinishedJobRegistry
+from rq.registry import (
+    BaseRegistry,
+    FailedJobRegistry,
+    FinishedJobRegistry,
+    StartedJobRegistry,
+)
 
 from common.job_type_enum import JobType
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import JobPriority
 
 # no held queue starts with "gpu": the job handler would take its GPU branch
 _HELD_PREFIX = "held"
@@ -26,9 +32,19 @@ class HeldJobs:
     worker listens to, so the jobs wait until the test runs them."""
 
     def __init__(self, queues: list[rq.Queue]) -> None:
-        self._queues = queues
         conn = queues[0].connection
         self._run_queue = rq.Queue(name=_RUN_QUEUE, connection=conn)
+        # a retried job is requeued on the queue it ran on: it is held there
+        self._queues = [*queues, self._run_queue]
+
+    def registries(self) -> dict[str, BaseRegistry]:
+        """The registries of the jobs `run` ran, by name as in
+        `JobService.registries`, so `JobService` finds e.g. the failed ones."""
+        return {
+            "started": StartedJobRegistry(queue=self._run_queue),
+            "finished": FinishedJobRegistry(queue=self._run_queue),
+            "failed": FailedJobRegistry(queue=self._run_queue),
+        }
 
     def jobs(
         self, job_type: JobType | None = None
@@ -96,24 +112,31 @@ class HeldJobs:
                 signal.signal(s, handler)
 
     def empty(self) -> None:
-        for queue in (*self._queues, self._run_queue):
+        for queue in self._queues:
             queue.empty()
 
 
 def hold_jobs() -> Generator[HeldJobs, None, None]:
-    """Point `JobService().queues` at held queues while the generator is open."""
+    """Point `JobService().queues` at held queues while the generator is open,
+    and add the registries of the jobs it ran to `JobService().registries`."""
     js = JobService()
     original = js.queues
+    original_registries = js.registries
     held = {
         key: rq.Queue(name=f"{_HELD_PREFIX}-{queue.name}", connection=queue.connection)
         for key, queue in original.items()
     }
     held_jobs = HeldJobs(list(held.values()))
     js.queues = held
+    js.registries = {
+        **original_registries,
+        (_RUN_QUEUE, JobPriority.DEFAULT): held_jobs.registries(),
+    }
     try:
         yield held_jobs
     finally:
         js.queues = original
+        js.registries = original_registries
         held_jobs.empty()
 
 

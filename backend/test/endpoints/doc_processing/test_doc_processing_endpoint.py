@@ -16,7 +16,14 @@ from modules.doc_processing.doc_processing_dto import (
     SdocHealthResult,
     SdocHealthSort,
 )
-from pipeline_test_utils import all_steps, read_step_status, started_steps, step_names
+from pipeline_test_utils import (
+    all_steps,
+    failing_started_hook,
+    read_step_status,
+    started_steps,
+    step_names,
+)
+from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.sorting import SortDirection
 
 from .conftest import RecomputeProject
@@ -185,6 +192,42 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
 
     assert response.status_code == 200, response.text
     assert response.json() == step_names(all_steps(doctype))
+
+
+# ===========================================================================
+# RETRY (/docprocessing/project/{project_id}/retry) TESTS
+# ===========================================================================
+
+
+def test_retry_requeues_a_failed_step_job_which_runs(
+    client: TestClient,
+    db_session,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """A recomputed text extraction of text_done fails (its started hook
+    raises) and its step becomes erroneous. Retrying the document requeues the
+    stored job, which runs and sets the step finished."""
+    p = recompute_project
+    sdoc_id = p["text_done"].id
+    response = _recompute(client, p["project"].id, JobType.TEXT_EXTRACTION, [sdoc_id])
+    assert response.status_code == 200, response.text
+    with failing_started_hook():
+        held_jobs.run(JobType.TEXT_EXTRACTION)
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_EXTRACTION) == -100
+
+    response = client.post(
+        f"/docprocessing/project/{p['project'].id}/retry",
+        params={"doctype": DocType.text.value},
+        json=[sdoc_id],
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json().startswith("Retried 1 / 1 jobs")
+    held_jobs.run(JobType.TEXT_EXTRACTION)
+    (job,) = held_jobs.ran(JobType.TEXT_EXTRACTION)
+    assert job.get_status() == JobStatus.FINISHED
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_EXTRACTION) == 1
 
 
 # ===========================================================================
