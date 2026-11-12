@@ -59,6 +59,8 @@ Stop uploads and processing in the affected projects while you heal them. `check
 
 A project only computes the data of the features it enables. The steps of the other features are not planned for its documents (their status is `NULL` in the database), and their data is missing on purpose: the doctor checks no data of a step that is not planned, and prints the steps it skipped per project ("Not checked, as the feature is not enabled"). Enable the feature in the project settings to compute the data. The doctor also runs on databases of DATS versions before the feature toggles, where every step of a document's type is planned.
 
+The doctor does not check the word frequencies, the thumbnail of a video or the audio stream extracted from a video: recompute their steps in the document health view if they are missing.
+
 DATS keeps some files that no document references, so `orphaned_file` skips them: the original of an upload that the chunking split into several documents (named like the folder of its chunks) and uploaded `.zip` archives, whose content became documents.
 
 If the file of a document is missing, but a file exists whose name differs only in case or unicode normalization, the doctor proposes to rename that file instead of deleting the document.
