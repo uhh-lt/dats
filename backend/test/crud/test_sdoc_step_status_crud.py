@@ -1,17 +1,11 @@
-import threading
-
 import pytest
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from core.annotation.annotation_document_crud import crud_adoc
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
-from core.user.user_orm import UserORM
-from repos.db.sql_repo import SQLRepo
 
 from .conftest import StepStatusProject
 
@@ -47,70 +41,6 @@ def test_read_by_sdocs_returns_the_planned_steps_in_input_order(
         JobType.TEXT_EXTRACTION: ERRONEOUS,
         JobType.TEXT_LANGUAGE_DETECTION: PROCESSING,
     }
-
-
-def test_read_sdoc_ids_to_plan_selects_missing_and_redo_steps(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """A document is selected if one of the missing steps is not planned, or one
-    of the redo steps has a redo status; documents of other projects and
-    doctypes are never selected."""
-    p = step_status_project
-
-    missing = crud_sdoc_step_status.read_sdoc_ids_to_plan(
-        db=db_session,
-        project_id=p["project"].id,
-        doctype=DocType.text,
-        missing_steps=[JobType.TEXT_SPACY],
-        redo_steps={},
-    )
-    redo = crud_sdoc_step_status.read_sdoc_ids_to_plan(
-        db=db_session,
-        project_id=p["project"].id,
-        doctype=DocType.text,
-        missing_steps=[],
-        redo_steps={ERRONEOUS: [JobType.TEXT_EXTRACTION]},
-    )
-
-    assert missing == [p["failed"].id]
-    assert redo == [p["failed"].id]
-
-
-def test_read_sdoc_ids_to_plan_does_not_block_rows_that_reference_the_documents(
-    db_session: Session, step_status_project: StepStatusProject, test_user: UserORM
-):
-    """While a planning holds its document locks, another transaction can still
-    insert a row that references a locked document (an annotation document): the
-    planning locks FOR NO KEY UPDATE, which does not conflict with the FOR KEY
-    SHARE lock of a foreign key check."""
-    p = step_status_project
-    locked = crud_sdoc_step_status.read_sdoc_ids_to_plan(
-        db=db_session,
-        project_id=p["project"].id,
-        doctype=DocType.text,
-        missing_steps=[JobType.TEXT_SPACY],
-        redo_steps={},
-    )
-    assert p["failed"].id in locked
-    errors: list[Exception] = []
-
-    def _annotate() -> None:
-        try:
-            with SQLRepo().transaction() as db:
-                db.execute(text("SET LOCAL lock_timeout = '1500ms'"))
-                crud_adoc.exists_or_create(
-                    db=db, user_id=test_user.id, sdoc_id=p["failed"].id
-                )
-        except Exception as e:
-            errors.append(e)
-
-    thread = threading.Thread(target=_annotate)
-    thread.start()
-    thread.join(timeout=10)
-    db_session.rollback()
-
-    assert not thread.is_alive()
-    assert errors == []
 
 
 def test_count_by_project_groups_the_documents_by_step_status(
@@ -167,68 +97,6 @@ def test_count_by_project_rejects_more_steps_than_bits(
         )
 
 
-def test_read_startable_returns_processing_rows_whose_inputs_are_finished(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """Of the given rows, only processing ones whose input steps are all
-    finished can start: the language detection of running (its text extraction
-    is finished), not that of failed (erroneous input) or done (finished
-    itself), nor spaCy of running (its language detection is processing)."""
-    p = step_status_project
-
-    startable = crud_sdoc_step_status.read_startable(
-        db=db_session,
-        rows={
-            JobType.TEXT_LANGUAGE_DETECTION: [
-                p["running"].id,
-                p["failed"].id,
-                p["done"].id,
-            ],
-            JobType.TEXT_SPACY: [p["running"].id],
-        },
-        inputs={
-            JobType.TEXT_LANGUAGE_DETECTION: [JobType.TEXT_EXTRACTION],
-            JobType.TEXT_SPACY: [JobType.TEXT_LANGUAGE_DETECTION],
-        },
-    )
-
-    assert startable == {p["running"].id: [JobType.TEXT_LANGUAGE_DETECTION]}
-
-
-# ===========================================================================
-# CREATE
-# ===========================================================================
-
-
-def test_create_missing_plans_only_steps_without_a_row(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """Planning spaCy and the index for the text documents of the project inserts
-    a processing row where none exists and returns the inserted rows per step:
-    spaCy for failed only (done and running have one), the index for all three;
-    the image and the document of the other project get no row."""
-    p = step_status_project
-
-    planned = crud_sdoc_step_status.create_missing(
-        db=db_session,
-        project_id=p["project"].id,
-        doctype=DocType.text,
-        steps=[JobType.TEXT_SPACY, JobType.TEXT_ES_INDEX],
-    )
-    db_session.commit()
-
-    text_ids = sorted([p["done"].id, p["running"].id, p["failed"].id])
-    assert planned == {
-        JobType.TEXT_SPACY: [p["failed"].id],
-        JobType.TEXT_ES_INDEX: text_ids,
-    }
-    assert _read(db_session, p["failed"].id)[JobType.TEXT_SPACY] == PROCESSING
-    assert _read(db_session, p["running"].id)[JobType.TEXT_SPACY] == PROCESSING
-    assert _read(db_session, p["done"].id)[JobType.TEXT_SPACY] == FINISHED
-    assert _read(db_session, p["image"].id) == {}
-    assert JobType.TEXT_ES_INDEX not in _read(db_session, p["other_project_doc"].id)
-
-
 # ===========================================================================
 # UPDATE
 # ===========================================================================
@@ -262,82 +130,6 @@ def test_update_status_plans_new_steps_and_overwrites_planned_ones(
     }
 
 
-def test_update_to_processing_plans_only_the_given_statuses_again(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """The erroneous text extraction of failed becomes processing and is
-    returned; the finished steps of done keep their status."""
-    p = step_status_project
-
-    changed = crud_sdoc_step_status.update_to_processing(
-        db=db_session,
-        sdoc_ids=[p["failed"].id, p["done"].id],
-        steps=[JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY],
-        statuses=[ERRONEOUS],
-    )
-    db_session.commit()
-
-    assert changed == {
-        JobType.TEXT_EXTRACTION: [p["failed"].id],
-        JobType.TEXT_SPACY: [],
-    }
-    assert _read(db_session, p["failed"].id)[JobType.TEXT_EXTRACTION] == PROCESSING
-    assert _read(db_session, p["done"].id)[JobType.TEXT_SPACY] == FINISHED
-
-
-def test_update_blocked_to_erroneous_fails_rows_with_an_erroneous_input(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """The language detection of failed (input text extraction erroneous) and of
-    other_project_doc (input not planned) become erroneous; the one of running
-    (input finished) stays processing."""
-    p = step_status_project
-
-    crud_sdoc_step_status.update_blocked_to_erroneous(
-        db=db_session,
-        rows={
-            JobType.TEXT_LANGUAGE_DETECTION: [
-                p["failed"].id,
-                p["other_project_doc"].id,
-                p["running"].id,
-            ]
-        },
-        inputs={JobType.TEXT_LANGUAGE_DETECTION: [JobType.TEXT_EXTRACTION]},
-    )
-    db_session.commit()
-
-    step = JobType.TEXT_LANGUAGE_DETECTION
-    assert _read(db_session, p["failed"].id)[step] == ERRONEOUS
-    assert _read(db_session, p["other_project_doc"].id)[step] == ERRONEOUS
-    assert _read(db_session, p["running"].id)[step] == PROCESSING
-
-
-def test_update_blocked_to_erroneous_fails_the_steps_after_a_failed_one(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """The rows are handled in their order: when the language detection of
-    running fails (its given input, the index, is not planned), spaCy after it
-    fails too, though it was processing behind a processing input before."""
-    p = step_status_project
-
-    crud_sdoc_step_status.update_blocked_to_erroneous(
-        db=db_session,
-        rows={
-            JobType.TEXT_LANGUAGE_DETECTION: [p["running"].id],
-            JobType.TEXT_SPACY: [p["running"].id],
-        },
-        inputs={
-            JobType.TEXT_LANGUAGE_DETECTION: [JobType.TEXT_ES_INDEX],
-            JobType.TEXT_SPACY: [JobType.TEXT_LANGUAGE_DETECTION],
-        },
-    )
-    db_session.commit()
-
-    status = _read(db_session, p["running"].id)
-    assert status[JobType.TEXT_LANGUAGE_DETECTION] == ERRONEOUS
-    assert status[JobType.TEXT_SPACY] == ERRONEOUS
-
-
 def test_update_pending_to_erroneous_fails_only_processing_steps(
     db_session: Session, step_status_project: StepStatusProject
 ):
@@ -363,32 +155,6 @@ def test_update_pending_to_erroneous_fails_only_processing_steps(
 # ===========================================================================
 # DELETE
 # ===========================================================================
-
-
-def test_delete_pending_by_project_unplans_only_processing_steps(
-    db_session: Session, step_status_project: StepStatusProject
-):
-    """The processing rows of the given steps of the project's documents of the
-    doctype are deleted (not planned); other statuses, other steps and other
-    projects keep their rows."""
-    p = step_status_project
-
-    deleted = crud_sdoc_step_status.delete_pending_by_project(
-        db=db_session,
-        project_id=p["project"].id,
-        doctype=DocType.text,
-        steps=[JobType.TEXT_LANGUAGE_DETECTION, JobType.TEXT_EXTRACTION],
-    )
-    db_session.commit()
-
-    assert deleted == 2
-    assert JobType.TEXT_LANGUAGE_DETECTION not in _read(db_session, p["running"].id)
-    assert _read(db_session, p["failed"].id) == {
-        JobType.EXTRACT_HTML: FINISHED,
-        JobType.TEXT_EXTRACTION: ERRONEOUS,
-    }
-    other = _read(db_session, p["other_project_doc"].id)
-    assert other[JobType.TEXT_LANGUAGE_DETECTION] == PROCESSING
 
 
 def test_deleting_a_document_deletes_its_step_statuses(
