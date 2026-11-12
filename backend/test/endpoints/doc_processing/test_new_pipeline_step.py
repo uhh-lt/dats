@@ -8,10 +8,12 @@ from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
+from feature_test_utils import FeatureProject
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
@@ -28,13 +30,17 @@ from modules.doc_processing.entrypoints.init_sdoc_job import (
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
+from modules.project_features.project_feature_dto import (
+    FeatureActivation,
+    FeatureActivationJobInput,
+)
 from pipeline_test_utils import read_step_status
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService
 
-from .conftest import DUMMY_UPLOAD_TEXT, DummyStep, DummyStepProjects
+from .conftest import DUMMY_UPLOAD_TEXT, DummyStep, DummyStepProjects, PairedSteps
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -145,6 +151,49 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     )
     assert len(imported) == 1
     assert read_step_status(db_session, imported[0].id, step) == SDocStatus.finished
+
+
+def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
+    client: TestClient,
+    db_session: Session,
+    paired_steps: PairedSteps,
+    feature_project: FeatureProject,
+    started_jobs: list[tuple[JobType, JobInputBase]],
+):
+    """Enabling a feature plans the two new core steps of `paired_steps` for
+    text_done: the producer starts at once, the consumer waits for it (it is not
+    failed for counting its one input step twice) and starts once the producer
+    finishes."""
+    p = feature_project
+    producer = paired_steps["producer"]
+    consumer = paired_steps["consumer"]
+    sdoc_id = p["text_done"].id
+
+    response = client.put(
+        f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}",
+        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+    )
+
+    assert response.status_code == 200, response.text
+    activation = _started(started_jobs, JobType.FEATURE_ACTIVATION)
+    assert isinstance(activation, FeatureActivationJobInput)
+    assert producer in activation.sdoc_steps[sdoc_id]
+    assert consumer not in activation.sdoc_steps[sdoc_id]
+    assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.processing
+
+    _run(
+        producer,
+        SdocProcessingJobInput(
+            project_id=p["project"].id,
+            sdoc_id=sdoc_id,
+            settings=SETTINGS,
+            steps=[producer],
+        ),
+    )
+    _run(consumer, _started(started_jobs, consumer))
+
+    assert paired_steps["ran"] == {producer: [sdoc_id], consumer: [sdoc_id]}
+    assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.finished
 
 
 def test_a_step_without_an_enricher_is_rejected(unregistered_job_type: JobType):
