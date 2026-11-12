@@ -16,6 +16,7 @@ from core.doc.source_document_data_dto import (
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
+from modules.doc_processing.video.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
@@ -56,7 +57,7 @@ def enrich_for_recompute(
     audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
     if sdoc.doctype == DocType.video:
         # the audio stream extracted by the video_audio_extraction step
-        audio_path = audio_path.with_suffix(".mp3")
+        audio_path = audio_stream_path(audio_path)
         assert audio_path.exists(), (
             f"The audio stream of the video with {payload.sdoc_id=} was not extracted!"
         )
