@@ -15874,7 +15874,7 @@
           },
           "status": {
             "$ref": "#/components/schemas/FeatureStatus",
-            "description": "State of the Feature: disabled, computing (documents are processing), partly available (documents lack its data and nothing runs for them) or fully available"
+            "description": "State of the Feature: disabled, computing (documents are processing or being planned), partly available (documents lack its data and nothing runs for them) or fully available"
           },
           "ready": {
             "type": "boolean",
@@ -17095,7 +17095,12 @@
         "required": ["perspectives_job_type"],
         "title": "ResetModelParams"
       },
-      "SDocStatus": { "type": "integer", "enum": [-100, 0, 1], "title": "SDocStatus" },
+      "SDocStatus": {
+        "type": "integer",
+        "enum": [-100, 0, 1],
+        "title": "SDocStatus",
+        "description": "The status of a pipeline step of a document, and the overall status of a\ndocument derived from them (`source_document_status_rules`)."
+      },
       "SampledSdocsResults": {
         "properties": {
           "tags": {
