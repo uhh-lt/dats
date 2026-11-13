@@ -45,7 +45,7 @@ export const queryClient = new QueryClient({
       const title = messageFromStringOrFunction(mutation.meta?.errorMessage, error, variables);
       let text = "An unknown error occurred. This is a bug. Please report it to the developers!";
       if (error instanceof ApiError) {
-        if (error.body === undefined) {
+        if (error.body === undefined || error.message.startsWith("Generic Error")) {
           text = error.message;
         } else {
           text = `${error.message}: ${renderApiErrorBody(error.body)}`;

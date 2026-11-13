@@ -22,6 +22,9 @@ const useActivateFeature = () =>
     mutationKey: [...featureQueries.all(), "activateFeature"],
     mutationFn: FeatureService.activateFeature,
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
+    // a 409 (the feature is computing already) means the shown state is stale: refetch it to offer Restart
+    onError: (_error, { projectId }) =>
+      queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
         `Started computing ${FEATURES[feature].title}`,
