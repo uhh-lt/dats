@@ -29,7 +29,7 @@ from systems.job_system.job_service import JobService
 from .conftest import PlanningProjects
 
 # The planning operations at the interface of StepPlanningService, for what the
-# feature endpoint tests (`endpoints/project_features`) cannot see: other
+# feature endpoint tests (`endpoints/feature`) cannot see: other
 # projects and doctypes, a chain of blocked steps, the document locks, the
 # activation job, the features an import adds and the planning of a new
 # document.

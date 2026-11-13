@@ -22,9 +22,9 @@ from modules.doc_processing.doc_processing_dto import (
 from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
-from modules.project_features.project_feature_dto import FeatureActivation
 from pipeline_test_utils import read_step_status, started_steps
 from repos.filesystem_repo import FilesystemRepo
+from systems.feature_system.feature_dto import FeatureActivation
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService

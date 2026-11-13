@@ -24,11 +24,10 @@ from modules.doc_processing.pipeline.step_planning import (
     planned_steps,
 )
 from modules.doc_processing.step_run import start_steps
-from modules.project_features.project_feature_service import ProjectFeatureService
 from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_exceptions import FeatureActionNotAllowedError
 from systems.feature_system.feature_registry import feature_registry
-from systems.feature_system.feature_service import FeatureService
+from systems.feature_system.feature_service import ALLOWED_STATUSES, FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
@@ -39,16 +38,6 @@ if TYPE_CHECKING:
 # documents a feature activation plans per transaction (the longest lock hold)
 ACTIVATION_BATCH_SIZE = conf.feature_activation.batch_size
 
-# the feature statuses in which a user may take each action
-ALLOWED_STATUSES = {
-    FeatureAction.ENABLE: [FeatureStatus.DISABLED],
-    FeatureAction.COMPLETE: [FeatureStatus.PARTLY_AVAILABLE],
-    FeatureAction.DISABLE: [
-        FeatureStatus.PARTLY_AVAILABLE,
-        FeatureStatus.FULLY_AVAILABLE,
-    ],
-}
-
 
 class StepPlanningService(metaclass=SingletonMeta):
     """Step planning: which pipeline steps the documents of a project get a step
@@ -58,8 +47,8 @@ class StepPlanningService(metaclass=SingletonMeta):
     The SQL statements of the planning (the project and document locks, the
     planning rows, the enabled features and the pending activations) are its
     own, in `step_planning_statements.py`, which only this service imports.
-    The actions, the statuses and the failure rule are in
-    `modules/doc_processing/README.md`.
+    The statuses and the actions are in `systems/feature_system/README.md`,
+    the failure rule in `modules/doc_processing/README.md`.
 
     Enable and Complete only change the project and start a feature activation
     job, which runs the activation (`handle_feature_activation_job`): it plans
@@ -90,7 +79,6 @@ class StepPlanningService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.registry = feature_registry
         cls.fs = FeatureService()
-        cls.pfs = ProjectFeatureService()
         cls.js = JobService()
         cls.sqlr = SQLRepo()
         return super(StepPlanningService, cls).__new__(cls)
@@ -108,7 +96,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         lack it (see `_plan_missing_steps`) on the low-priority queue with these
         settings. Returns the project."""
         project = statements.read_project_locked(db=db, project_id=project_id)
-        self._assert_allowed(
+        self.fs.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.ENABLE
         )
         current = {Feature(f) for f in project.enabled_features}
@@ -135,7 +123,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         that computes its data for the documents that lack it, the erroneous
         steps included, like `enable_feature`. Returns the project."""
         statements.read_project_locked(db=db, project_id=project_id)
-        self._assert_allowed(
+        self.fs.assert_action_allowed(
             db=db,
             project_id=project_id,
             feature=feature,
@@ -157,7 +145,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         caption): no step is unplanned while its job may run. Returns the
         project."""
         project = statements.read_project_locked(db=db, project_id=project_id)
-        self._assert_allowed(
+        self.fs.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.DISABLE
         )
         current = {Feature(f) for f in project.enabled_features}
@@ -309,24 +297,6 @@ class StepPlanningService(metaclass=SingletonMeta):
             feature=activation.feature,
             activation_id=None,
         )
-
-    def _assert_allowed(
-        self, *, db: Session, project_id: int, feature: Feature, action: FeatureAction
-    ) -> None:
-        """Raise a `FeatureActionNotAllowedError` (409) if the action is not
-        allowed in the feature's status. The caller has locked the project."""
-        status = next(
-            f.status
-            for f in self.pfs.read_project_features(db=db, project_id=project_id)
-            if f.feature == feature
-        )
-        if status not in ALLOWED_STATUSES[action]:
-            raise FeatureActionNotAllowedError(
-                feature=feature,
-                action=action,
-                status=status,
-                allowed=ALLOWED_STATUSES[action],
-            )
 
     def _start_activation(
         self,
