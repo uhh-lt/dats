@@ -14524,56 +14524,14 @@
         "enum": ["queued", "finished", "failed", "started", "deferred", "scheduled", "stopped", "canceled"],
         "title": "JobStatus"
       },
-      "JobType": {
-        "type": "string",
-        "enum": [
-          "extract_archive",
-          "doc_chunking",
-          "sdoc_init",
-          "extract_html",
-          "text_extraction",
-          "text_language_detection",
-          "text_spacy",
-          "text_keywords",
-          "text_word_frequency",
-          "text_ner",
-          "text_es_index",
-          "text_sentence_embedding",
-          "text_document_embedding",
-          "text_html_mapping",
-          "image_caption",
-          "image_embedding",
-          "image_metadata_extraction",
-          "image_thumbnail",
-          "image_object_detection",
-          "audio_metadata",
-          "audio_thumbnail",
-          "audio_transcription",
-          "video_metadata",
-          "video_thumbnail",
-          "video_audio_extraction",
-          "duplicate_finder",
-          "export",
-          "import",
-          "ml",
-          "classifier",
-          "llm_assistant",
-          "experiment_run",
-          "crawler",
-          "feature_activation",
-          "cota_refinement",
-          "perspectives"
-        ],
-        "title": "JobType"
-      },
       "JobUpdatedEvent": {
         "properties": {
           "type": { "type": "string", "const": "JOB_UPDATED", "title": "Type", "default": "JOB_UPDATED" },
           "payload": {
             "anyOf": [
-              { "$ref": "#/components/schemas/CrawlerJobRead" },
               { "$ref": "#/components/schemas/ClassifierJobRead" },
               { "$ref": "#/components/schemas/COTARefinementJobRead" },
+              { "$ref": "#/components/schemas/CrawlerJobRead" },
               { "$ref": "#/components/schemas/DuplicateFinderJobRead" },
               { "$ref": "#/components/schemas/LlmAssistantJobRead" },
               { "$ref": "#/components/schemas/ExperimentRunJobRead" },
@@ -15911,12 +15869,6 @@
             "type": "integer",
             "title": "Total Documents",
             "description": "Number of documents the Feature applies to"
-          },
-          "missing_steps": {
-            "items": { "$ref": "#/components/schemas/JobType" },
-            "type": "array",
-            "title": "Missing Steps",
-            "description": "The steps of the Feature that are not finished for at least one document"
           }
         },
         "type": "object",
@@ -15930,8 +15882,7 @@
           "failed_documents",
           "not_planned_documents",
           "lacking_documents",
-          "total_documents",
-          "missing_steps"
+          "total_documents"
         ],
         "title": "ProjectFeatureRead",
         "description": "The state of a Feature in a Project."

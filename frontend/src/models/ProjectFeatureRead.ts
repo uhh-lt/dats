@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { Feature } from "./Feature";
 import type { FeatureStatus } from "./FeatureStatus";
-import type { JobType } from "./JobType";
 /**
  * The state of a Feature in a Project.
  */
@@ -49,8 +48,4 @@ export type ProjectFeatureRead = {
    * Number of documents the Feature applies to
    */
   total_documents: number;
-  /**
-   * The steps of the Feature that are not finished for at least one document
-   */
-  missing_steps: Array<JobType>;
 };

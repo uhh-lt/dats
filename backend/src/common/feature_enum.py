@@ -35,7 +35,7 @@ class FeatureStatus(str, Enum):
 
 class FeatureAction(str, Enum):
     """What a user can do with a feature of a project; each is allowed in some
-    feature statuses only (`StepPlanningService`)."""
+    feature statuses only (`FeatureService`)."""
 
     ENABLE = "enable"  # turn it on and compute its data for all documents
     COMPLETE = "complete"  # compute its data for the documents that lack it

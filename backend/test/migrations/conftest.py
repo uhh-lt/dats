@@ -510,3 +510,38 @@ def image_captions_toggle_database(
         db_session.rollback()
         db_session.close()
         command.upgrade(config, "head")
+
+
+ARTEFACT_COMPUTATIONS = "457909d274d4"
+
+
+@pytest.fixture(scope="function")
+def feature_activations_database(
+    db_session: Session, test_project: ProjectORM
+) -> Generator[int, None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `457909d274d4_rename_the_feature_activations_to_` and gives `test_project`
+    the pending feature activation {"full_text_search": "a1"}. It migrates the
+    database back to head afterwards.
+
+    Returns the id of `test_project`.
+    """
+    project_id = test_project.id
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, CAPTIONS_CORE)
+    try:
+        db_session.execute(
+            sa.text(
+                "UPDATE project SET feature_activations = "
+                "CAST(:activations AS jsonb) WHERE id = :id"
+            ),
+            {"activations": json.dumps({"full_text_search": "a1"}), "id": project_id},
+        )
+        db_session.commit()
+        yield project_id
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")

@@ -1,4 +1,4 @@
-"""Feature activations that run the real worker: the feature activation job, the
+"""Feature computations that run the real worker: the artefact computation job, the
 step jobs it starts and the advancing to the steps after them (Ray included)."""
 
 import time
@@ -38,18 +38,18 @@ def _activate(client: TestClient, project_id: int, feature: Feature) -> None:
 def _wait_until_nothing_processes(
     db_session, project_id: int, timeout: float = 180.0
 ) -> None:
-    """Wait until the project has no pending feature activation (its job has
+    """Wait until the project has no pending artefact computation (its job has
     planned all documents) and no step of its documents is processing."""
     deadline = time.monotonic() + timeout
     while True:
         db_session.expire_all()
-        pending = crud_project.read(db=db_session, id=project_id).feature_activations
+        pending = crud_project.read(db=db_session, id=project_id).artefact_computations
         db_session.commit()
         processing = count_processing_sdocs(db_session, project_id)
         if not pending and processing == 0:
             return
         assert time.monotonic() < deadline, (
-            f"pending activations {pending}, {processing} documents still process"
+            f"pending computations {pending}, {processing} documents still process"
         )
         time.sleep(1)
 
@@ -59,7 +59,7 @@ def test_activate_full_text_search_indexes_the_documents_and_fails_those_without
     db_session,
     activation_project: ActivationProject,
 ):
-    """The activation job starts the index of every document; the index of
+    """The computation job starts the index of every document; the index of
     no_data cannot start, so it is erroneous, and the other documents are indexed
     anyway."""
     p = activation_project
@@ -76,7 +76,7 @@ def test_activate_keyword_statistics_advances_through_the_planned_steps(
     db_session,
     activation_project: ActivationProject,
 ):
-    """For extracted, the activation starts the language detection only; when it
+    """For extracted, the computation starts the language detection only; when it
     finishes, the advancing starts spaCy for tokens and keywords, and then the
     HTML mapping. tokenized gets the keywords from a spaCy run for the keywords
     alone, which leaves its finished steps alone."""

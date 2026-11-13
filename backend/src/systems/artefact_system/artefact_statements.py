@@ -1,8 +1,8 @@
-"""The SQL statements of `StepPlanningService`, private to it: only
-`step_planning_service.py` imports this file. They lock the project and the
-documents to plan, write the planning rows and `project.enabled_features`, in
-the lock order the service states, and the pending feature activations of the
-project (`project.feature_activations`). Besides the status CRUD and
+"""The SQL statements of `ArtefactService`, private to it: only
+`artefact_service.py` imports this file. They lock the documents to plan and
+write the planning rows, in the lock order of the README next to this file,
+and the pending artefact computations of the project
+(`project.artefact_computations`). Besides the status CRUD and
 `source_document_status_rules.py`, this is the only code that touches the step
 status rows."""
 
@@ -25,13 +25,11 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.selectable import TableValuedAlias
 
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
-from repos.db.sql_exceptions import NoSuchElementError
 from systems.artefact_system.source_document_step_status_orm import (
     SourceDocumentStepStatusORM,
 )
@@ -124,7 +122,7 @@ def create_missing(
     """
     Plan the steps for the documents of the project and doctype in the id
     range: insert a processing row for every (document, step) that has no row;
-    existing rows keep their status. `StepPlanningService` has locked the
+    existing rows keep their status. `ArtefactService` has locked the
     documents that lack a step (`read_sdoc_ids_to_plan` with these steps as
     `missing_steps`).
 
@@ -202,7 +200,7 @@ def update_to_processing(
 ) -> StepRows:
     """
     Plan the given steps of the documents again: set the erroneous ones to
-    processing. `StepPlanningService` has locked the documents
+    processing. `ArtefactService` has locked the documents
     (`read_sdoc_ids_to_plan`).
 
     Args:
@@ -244,7 +242,7 @@ def update_blocked_to_erroneous(
     Set the given rows that are processing to erroneous if one of their input
     steps is erroneous or not planned: they cannot run. The steps are handled
     in the order of `rows`, which must be the pipeline order, so a failed
-    step fails the given steps after it. `StepPlanningService` has locked
+    step fails the given steps after it. `ArtefactService` has locked
     the documents (`read_sdoc_ids_to_plan`).
 
     Args:
@@ -308,43 +306,9 @@ def read_startable(
     return result
 
 
-def exists_processing(
-    db: Session, *, project_id: int, doctype: DocType, steps: list[JobType]
-) -> bool:
-    """
-    Whether one of the given steps is processing for a document of the project
-    and doctype.
-
-    Args:
-        project_id: The project of the documents.
-        doctype: The doctype of the documents.
-        steps: The steps to check.
-
-    Returns:
-        True if one of the steps is processing.
-    """
-    if not steps:
-        return False
-    sdoc = SourceDocumentORM
-    row = SourceDocumentStepStatusORM
-    return bool(
-        db.scalar(
-            select(
-                exists().where(
-                    row.sdoc_id == sdoc.id,
-                    sdoc.project_id == project_id,
-                    sdoc.doctype == doctype.value,
-                    row.step.in_(steps),
-                    row.status == SDocStatus.processing,
-                )
-            )
-        )
-    )
-
-
 def _in_range(sdoc_ids: list[int]) -> ColumnElement[bool]:
     """The rows of the documents' id range (`sdoc_ids` ascending), next to the
-    join with the documents: during an activation the statistics count few
+    join with the documents: during a computation the statistics count few
     rows of a newly planned step, so the planner may read all its rows by an
     index on the step; this cheap condition comes before the correlated input
     count, which then runs for the given rows only."""
@@ -368,57 +332,23 @@ def _count_inputs(
     )
 
 
-def read_project_locked(
-    db: Session, *, project_id: int, shared: bool = False
+def update_artefact_computation(
+    db: Session,
+    *,
+    project_id: int,
+    computation_id: str,
+    artefacts: list[str] | None,
 ) -> ProjectORM:
-    """
-    Read the project's current row and lock it until the transaction ends.
-
-    Args:
-        project_id: The project.
-        shared: Lock it for reading only (FOR SHARE), so others can read it
-            locked too, instead of for an update (FOR NO KEY UPDATE).
-
-    Returns:
-        The project.
-    """
-    db_obj = (
-        db.query(ProjectORM)
-        .filter(ProjectORM.id == project_id)
-        .with_for_update(read=shared, key_share=not shared)
-        .populate_existing()
-        .first()
-    )
-    if db_obj is None:
-        raise NoSuchElementError(ProjectORM, id=project_id)
-    return db_obj
-
-
-def update_enabled_features(
-    db: Session, *, project_id: int, features: list[Feature]
-) -> ProjectORM:
-    """Store the enabled features of the project. Only
-    `FeatureService.resolve_enabled_features` decides them (it adds the
-    required features and rejects invalid changes)."""
+    """Store the pending artefact computation with its artefacts in the
+    project, or remove it (None). The caller has locked the project (FOR NO
+    KEY UPDATE)."""
     db_obj = crud_project.read(db=db, id=project_id)
-    db_obj.enabled_features = list(features)
-    db.add(db_obj)
-    db.flush()
-    return db_obj
-
-
-def update_feature_activation(
-    db: Session, *, project_id: int, feature: Feature, activation_id: str | None
-) -> ProjectORM:
-    """Store the id of the feature's pending activation in the project, or
-    remove it (None). The caller has locked the project (FOR NO KEY UPDATE)."""
-    db_obj = crud_project.read(db=db, id=project_id)
-    activations = dict(db_obj.feature_activations)
-    if activation_id is None:
-        activations.pop(feature.value, None)
+    computations = dict(db_obj.artefact_computations)
+    if artefacts is None:
+        computations.pop(computation_id, None)
     else:
-        activations[feature.value] = activation_id
-    db_obj.feature_activations = activations
+        computations[computation_id] = artefacts
+    db_obj.artefact_computations = computations
     db.add(db_obj)
     db.flush()
     return db_obj

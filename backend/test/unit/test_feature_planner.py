@@ -1,15 +1,10 @@
-"""The feature registry and the planner: features -> artefacts -> steps per doctype."""
+"""The feature registry: features -> the features and artefacts they require."""
 
 import pytest
 
 from bootstrap import register_jobs
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
-from common.doc_type_enum import DocType
 from common.feature_enum import Feature
-from common.job_type_enum import JobType
-from modules.doc_processing.pipeline.step_planning import feature_steps, planned_steps
-from pipeline_test_utils import all_steps, core_steps
-from systems.artefact_system.artefact_registry import artefact_registry
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
     FeatureStillRequiredError,
@@ -17,164 +12,50 @@ from systems.feature_system.feature_exceptions import (
 from systems.feature_system.feature_registry import (
     FeatureDeclaration,
     FeatureRegistry,
+    feature_registry,
 )
 from systems.feature_system.feature_service import FeatureService
 
 register_jobs()
 
-ALL_FEATURES = list(Feature)
-
-
-def _planned(doctype: DocType, features: list[Feature]) -> list[JobType]:
-    return planned_steps(doctype=doctype, features=features)
-
 
 # ===========================================================================
-# PLANNER: STEPS PER DOCTYPE
+# REQUIRED ARTEFACTS
 # ===========================================================================
 
 
-@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
-def test_all_features_plan_the_steps_documents_get_today(doctype: DocType):
-    """A project with all features enabled (every existing project) plans every
-    step of the doctype, in pipeline order, as before the feature toggles."""
-    assert _planned(doctype, ALL_FEATURES) == artefact_registry.graph().steps(doctype)
+def test_required_artefacts_are_those_of_the_closure_without_core_artefacts():
+    """RAG chat requires sentence similarity search: both need the sentence
+    embeddings, and no core artefact is named."""
+    artefacts = feature_registry.required_artefacts([Feature.RAG_CHAT])
+
+    assert artefacts == {Artefact.SENTENCE_EMBEDDINGS}
+    assert not artefacts & CORE_ARTEFACTS
 
 
-@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
-def test_minimal_project_plans_no_step_of_optional_artefacts_only(doctype: DocType):
-    """A project without features plans no Elasticsearch index, embeddings,
-    keywords, word frequencies, entities, captions or object detection."""
-    graph = artefact_registry.graph()
-    for step in _planned(doctype, []):
-        assert graph.declaration(step).produces & CORE_ARTEFACTS, step
+def test_required_artefacts_of_no_feature_are_none():
+    """A project without features demands no artefact; the core artefacts are
+    computed anyway."""
+    assert feature_registry.required_artefacts([]) == frozenset()
 
 
-@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
-def test_minimal_project_produces_every_core_artefact_a_document_can_have(
-    doctype: DocType,
-):
-    """Every core artefact whose steps produce core artefacts only is produced
-    in a project without features (an image has no text without a caption)."""
-    graph = artefact_registry.graph()
-    planned = _planned(doctype, [])
-    for artefact in CORE_ARTEFACTS:
-        producer = graph.producer(doctype, artefact)
-        if producer is None:
-            continue
-        steps = graph.needed_steps(doctype, graph.steps(doctype), frozenset({artefact}))
-        if all(graph.declaration(s).produces <= CORE_ARTEFACTS for s in steps):
-            assert producer in planned, artefact
+def test_every_feature_requires_an_artefact():
+    """Every feature needs at least one artefact besides the core artefacts, so
+    its status counts the documents its artefacts apply to."""
+    for feature in Feature:
+        assert feature_registry.required_artefacts([feature]), feature
 
 
-@pytest.mark.parametrize(
-    "doctype,feature,added_steps",
-    [
-        # the spaCy outputs are steps of their own
-        pytest.param(
-            DocType.text,
-            Feature.KEYWORD_STATISTICS,
-            [JobType.TEXT_KEYWORDS],
-            id="text-keywords",
-        ),
-        pytest.param(
-            DocType.text,
-            Feature.ENTITY_ANNOTATIONS,
-            [JobType.TEXT_NER],
-            id="text-entities",
-        ),
-        # word frequency analysis and the duplicate finder share one artefact
-        pytest.param(
-            DocType.audio,
-            Feature.DUPLICATE_FINDER,
-            [JobType.TEXT_WORD_FREQUENCY],
-            id="audio-duplicate-finder",
-        ),
-        pytest.param(
-            DocType.text,
-            Feature.FULL_TEXT_SEARCH,
-            [JobType.TEXT_ES_INDEX],
-            id="text-full-text-search",
-        ),
-        pytest.param(
-            DocType.video,
-            Feature.TAG_RECOMMENDATION,
-            [JobType.TEXT_DOCUMENT_EMBEDDING],
-            id="video-tag-recommendation",
-        ),
-        pytest.param(
-            DocType.image,
-            Feature.OBJECT_DETECTION,
-            [JobType.IMAGE_OBJECT_DETECTION],
-            id="image-object-detection",
-        ),
-        pytest.param(
-            DocType.image,
-            Feature.IMAGE_SIMILARITY_SEARCH,
-            [JobType.IMAGE_EMBEDDING],
-            id="image-similarity-search",
-        ),
-        # a feature-to-feature requirement: RAG chat needs sentence embeddings
-        pytest.param(
-            DocType.text,
-            Feature.RAG_CHAT,
-            [JobType.TEXT_SENTENCE_EMBEDDING],
-            id="text-rag-chat",
-        ),
-        # features of another doctype add nothing
-        pytest.param(DocType.text, Feature.OBJECT_DETECTION, [], id="text-objects"),
-    ],
-)
-def test_a_feature_adds_the_steps_of_its_artefacts(
-    doctype: DocType, feature: Feature, added_steps: list[JobType]
-):
-    """Enabling one feature in a minimal project adds exactly the steps that
-    produce its artefacts."""
-    planned = _planned(doctype, [feature])
-    assert set(planned) - set(core_steps(doctype)) == set(added_steps)
-    assert set(core_steps(doctype)) <= set(planned)
-
-
-def test_the_text_steps_of_an_image_are_always_planned():
-    """Every image gets a caption, so a project without features plans the
-    caption and the core text steps of an image, and a text feature plans its
-    steps for images too."""
-    text_core_steps = [
-        s for s in core_steps(DocType.text) if s in all_steps(DocType.image)
-    ]
-    assert JobType.IMAGE_CAPTION in core_steps(DocType.image)
-    assert set(text_core_steps) <= set(core_steps(DocType.image))
-    assert JobType.TEXT_SENTENCE_EMBEDDING in _planned(
-        DocType.image, [Feature.SENTENCE_SIMILARITY_SEARCH]
-    )
-
-
-# ===========================================================================
-# PLANNER: STEPS PER FEATURE (COVERAGE)
-# ===========================================================================
-
-
-def test_feature_steps_are_its_producers_and_the_steps_they_require():
-    """The steps of RAG chat on a text document: the sentence embeddings and the
-    steps before them; not the HTML mapping, which it does not need."""
-    steps = feature_steps(doctype=DocType.text, feature=Feature.RAG_CHAT, enabled=[])
-    assert steps == [
-        JobType.EXTRACT_HTML,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
-        JobType.TEXT_SENTENCE_EMBEDDING,
-    ]
-
-
-def test_feature_steps_of_images_include_the_caption():
-    """Sentence similarity search applies to images: its steps start with the
-    caption, which gives the image its text."""
-    steps = feature_steps(
-        doctype=DocType.image, feature=Feature.SENTENCE_SIMILARITY_SEARCH, enabled=[]
-    )
-    assert steps[0] == JobType.IMAGE_CAPTION
-    assert steps[-1] == JobType.TEXT_SENTENCE_EMBEDDING
+def test_closure_adds_the_required_features_transitively():
+    """RAG chat requires sentence similarity search; full-text search requires
+    nothing."""
+    assert feature_registry.closure([Feature.RAG_CHAT]) == {
+        Feature.RAG_CHAT,
+        Feature.SENTENCE_SIMILARITY_SEARCH,
+    }
+    assert feature_registry.closure([Feature.FULL_TEXT_SEARCH]) == {
+        Feature.FULL_TEXT_SEARCH
+    }
 
 
 # ===========================================================================

@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
-from systems.artefact_system.artefact_dto import ProcessingJobInput, ProcessingSettings
+from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.artefact_system.source_document_status_rules import document_status
-from systems.job_system.job_dto import JobInputBase, JobOutputBase
+from systems.job_system.job_dto import JobOutputBase
 from systems.search_system.sorting import SortDirection
 
 if TYPE_CHECKING:
@@ -29,19 +28,6 @@ class SdocInitJobOutput(JobOutputBase):
     sdoc_id: int = Field(description="ID of the created SourceDocument")
     folder_id: int = Field(description="ID of the folder of the SourceDocument")
     doctype: DocType = Field(description="DocType of the SourceDocument")
-
-
-class FeatureActivationJobInput(JobInputBase):
-    feature: Feature = Field(description="The enabled or completed Feature")
-    settings: ProcessingSettings = Field(
-        description="The processing settings of the started steps"
-    )
-    activation_id: str = Field(
-        description="ID of this activation; the job stops if the Project's pending activation of the Feature has another ID (the request rolled back)"
-    )
-    last_sdoc_id: int = Field(
-        description="The highest SourceDocument ID of the Project at the request; later documents plan their steps on upload"
-    )
 
 
 class SourceDocumentStatusSimple(SourceDocumentBaseDTO):

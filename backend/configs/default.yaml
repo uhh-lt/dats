@@ -160,8 +160,8 @@ promptembedder:
 chunking:
   characters_per_page: ${oc.env:CHUNKING_CHARACTERS_PER_PAGE, 2000}
 
-feature_activation:
-  # documents a feature activation plans per transaction (the longest lock hold)
+artefact_computation:
+  # documents an artefact computation plans per transaction (the longest lock hold)
   batch_size: 10000
 
 mail:

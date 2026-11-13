@@ -4,7 +4,7 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus, StepSetStatus
 from systems.artefact_system.source_document_status_rules import (
-    StepSetCounts,
+    Availability,
     count_step_sets,
     document_status,
     step_set_status,
@@ -79,8 +79,8 @@ def test_step_set_status_is_processing_else_failed_else_not_planned_else_ready(
 def test_count_step_sets_counts_each_document_once_per_set():
     """Text documents: 3 finished (HTML, LANG), 2 with LANG processing, 1 with
     LANG erroneous, 4 with only HTML; 7 images without steps. The set {HTML}
-    is ready for all text documents; {HTML, LANG} counts each status, and LANG
-    is missing. A doctype without documents counts zero."""
+    is ready for all text documents; {HTML, LANG} counts each status. A doctype
+    without documents counts zero. None is pending."""
     combinations = [
         (DocType.text, {HTML: FINISHED, LANG: FINISHED}, 3),
         (DocType.text, {HTML: FINISHED, LANG: PROCESSING}, 2),
@@ -98,15 +98,21 @@ def test_count_step_sets_counts_each_document_once_per_set():
 
     assert counts == {
         DocType.text: {
-            both: StepSetCounts(
+            both: Availability(
                 total=10,
                 ready=3,
                 processing=2,
                 failed=1,
                 not_planned=4,
-                missing_steps={LANG},
+                pending=False,
             ),
-            html: StepSetCounts(total=10, ready=10),
+            html: Availability(
+                total=10, ready=10, processing=0, failed=0, not_planned=0, pending=False
+            ),
         },
-        DocType.audio: {html: StepSetCounts()},
+        DocType.audio: {
+            html: Availability(
+                total=0, ready=0, processing=0, failed=0, not_planned=0, pending=False
+            )
+        },
     }

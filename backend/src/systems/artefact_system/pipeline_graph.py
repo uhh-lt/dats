@@ -3,9 +3,9 @@
 Every pipeline step declares in `@pipeline_step` the artefacts it `requires` and
 `produces` and the doctypes it applies to. From these declarations, this module
 derives per doctype the steps, their order and which step feeds which, and
-answers every question about that relation: the plan of a doctype for the
-needed artefacts, the input steps of a step, the steps after a step and the
-steps some artefacts need.
+answers every question about that relation: the steps some artefacts need,
+whether they apply to a doctype, the input steps of a step and the steps after
+a step.
 
 A job can compute several steps in one run (`text_spacy` also computes keywords,
 word frequencies and named entities). Each step has its own status row and
@@ -14,7 +14,7 @@ artefacts; the job input says which of its steps to compute.
 
 from dataclasses import dataclass
 
-from common.artefact_enum import CORE_ARTEFACTS, Artefact
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
@@ -127,44 +127,35 @@ class PipelineGraph:
                 return step
         return None
 
-    def plan(self, doctype: DocType, needed: frozenset[Artefact]) -> list[JobType]:
-        """The steps of the doctype for these needed artefacts, in pipeline order:
-        the steps that produce them, plus the steps they require. A step that
-        produces optional artefacts runs only if one of them is needed; core
-        artefacts it also produces do not make it run (the image caption also
-        produces the raw HTML of an image). A step whose required artefacts
-        cannot be produced is not planned, nor are the steps after it."""
-        order = self.steps(doctype)
+    def steps_for(
+        self, doctype: DocType, artefacts: frozenset[Artefact]
+    ) -> list[JobType]:
+        """The steps of the doctype these artefacts need, in pipeline order:
+        their producers and the input steps of these, transitively. An
+        artefact without a producer for the doctype adds no step."""
+        deps = self._dependencies[doctype]
+        needed: set[JobType] = set()
+        todo = [
+            step
+            for step in (self.producer(doctype, a) for a in artefacts)
+            if step is not None
+        ]
+        while todo:
+            step = todo.pop()
+            if step in needed:
+                continue
+            needed.add(step)
+            todo.extend(deps[step])
+        return [s for s in self.steps(doctype) if s in needed]
 
-        # 1) select the steps of needed artefacts; optional artefacts that a
-        # selected step requires are needed too
-        wanted = set(needed)
-        while True:
-            selected = [s for s in order if self._selects(s, wanted)]
-            more = {
-                a for s in selected for a in self._declarations[s].requires
-            } - CORE_ARTEFACTS
-            if more <= wanted:
-                break
-            wanted |= more
-
-        # 2) drop the steps whose required artefacts are not produced, in
-        # pipeline order, so the steps after a dropped step are dropped as well
-        available = set(UPLOADED_ARTEFACTS.get(doctype, frozenset()))
-        planned: list[JobType] = []
-        for step in selected:
-            declaration = self._declarations[step]
-            if declaration.requires <= available:
-                planned.append(step)
-                available |= declaration.produces
-        return planned
-
-    def _selects(self, step: JobType, wanted: set[Artefact]) -> bool:
-        """Whether the plan selects the step for the wanted artefacts: by its
-        optional artefacts if it produces any, else by its core artefacts."""
-        produces = self._declarations[step].produces
-        optional = produces - CORE_ARTEFACTS
-        return bool((optional or produces) & wanted)
+    def applies(self, doctype: DocType, artefacts: frozenset[Artefact]) -> bool:
+        """Whether these artefacts apply to a document of this doctype: every
+        artefact has a producer for the doctype or is uploaded with it (e.g.
+        image embeddings do not apply to a text document)."""
+        uploaded = UPLOADED_ARTEFACTS.get(doctype, frozenset())
+        return all(
+            a in uploaded or self.producer(doctype, a) is not None for a in artefacts
+        )
 
     def inputs(self, doctype: DocType, step: JobType) -> list[JobType]:
         """The input steps of this step for the doctype: the producers of the
@@ -185,26 +176,6 @@ class PipelineGraph:
             found.append(step)
             todo.extend(self.successors(step))
         return found
-
-    def needed_steps(
-        self, doctype: DocType, plan: list[JobType], artefacts: frozenset[Artefact]
-    ) -> list[JobType]:
-        """The steps of this plan of the doctype that these artefacts need: their
-        producers and the input steps of these, transitively, in plan order."""
-        deps = self._dependencies[doctype]
-        needed: set[JobType] = set()
-        todo = [
-            step
-            for step in (self.producer(doctype, a) for a in artefacts)
-            if step is not None
-        ]
-        while todo:
-            step = todo.pop()
-            if step in needed:
-                continue
-            needed.add(step)
-            todo.extend(deps[step])
-        return [s for s in plan if s in needed]
 
     def roots(self, doctype: DocType) -> list[JobType]:
         """The steps that start when a document of this doctype is created."""

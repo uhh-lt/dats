@@ -137,7 +137,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     held_jobs: HeldJobs,
 ):
     """Enabling a feature plans the two new core steps of `paired_steps` for
-    text_running, whose text extraction is finished: the activation starts the
+    text_running, whose text extraction is finished: the computation starts the
     producer, the consumer waits for it (it is not failed for counting its one
     input step twice) and starts once the producer finishes."""
     p = feature_project
@@ -151,7 +151,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     )
 
     assert response.status_code == 200, response.text
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
     assert producer in started[sdoc_id]
     assert consumer not in started[sdoc_id]

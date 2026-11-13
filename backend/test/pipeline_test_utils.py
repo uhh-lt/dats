@@ -6,18 +6,20 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import Session
 
+from common.artefact_enum import CORE_ARTEFACTS
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from job_test_utils import HeldJobs
-from modules.doc_processing.pipeline.step_planning import planned_steps
 from systems.artefact_system import step_run
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
+from systems.feature_system.feature_registry import feature_registry
 from systems.job_system.job_dto import JobInputBase
 
 
@@ -26,9 +28,21 @@ def all_steps(doctype: DocType) -> list[JobType]:
     return artefact_registry.graph().steps(doctype)
 
 
+def planned_steps(doctype: DocType, features: list[Feature]) -> list[JobType]:
+    """The steps a new document of the doctype gets in a project with these
+    enabled features, in pipeline order: the steps of the core artefacts and
+    of the artefacts the features require (`ArtefactService.plan_document`)."""
+    graph = artefact_registry.graph()
+    needed = {
+        *graph.steps_for(doctype, CORE_ARTEFACTS),
+        *graph.steps_for(doctype, feature_registry.required_artefacts(features)),
+    }
+    return [s for s in graph.steps(doctype) if s in needed]
+
+
 def core_steps(doctype: DocType) -> list[JobType]:
     """The steps of a project without features, in pipeline order."""
-    return planned_steps(doctype=doctype, features=[])
+    return planned_steps(doctype, [])
 
 
 def step_names(steps: list[JobType]) -> list[str]:

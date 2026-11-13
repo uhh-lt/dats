@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
@@ -13,25 +14,28 @@ from core.project.project_crud import crud_project
 from core.user.user_orm import UserORM
 from feature_test_utils import minimal_image_steps
 from job_test_utils import HeldJobs
-from modules.doc_processing import step_planning_service
-from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
-from modules.doc_processing.step_planning_service import StepPlanningService
 from pipeline_test_utils import (
     read_all_step_status,
     read_step_status,
     started_steps,
 )
 from repos.db.sql_repo import SQLRepo
-from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system import artefact_service
+from systems.artefact_system.artefact_dto import (
+    ArtefactComputationJobInput,
+    ProcessingSettings,
+)
+from systems.artefact_system.artefact_service import ArtefactService
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_service import JobService
 
 from .conftest import PlanningProjects
 
-# The planning operations at the interface of StepPlanningService, for what the
-# feature endpoint tests (`endpoints/feature`) cannot see: other
-# projects and doctypes, a chain of blocked steps, the document locks, the
-# activation job, the features an import adds and the planning of a new
-# document.
+# The planning operations of ArtefactService (and the actions of FeatureService
+# that call them), for what the feature endpoint tests (`endpoints/feature`)
+# cannot see: other projects and doctypes, a chain of blocked steps, the
+# document locks, the computation job, the features an import adds and the
+# planning of a new document.
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -44,15 +48,15 @@ SETTINGS = ProcessingSettings(
 )
 
 
-def _activation(held_jobs: HeldJobs) -> FeatureActivationJobInput:
-    """The input of the one held feature activation job."""
-    (activation,) = held_jobs.inputs(JobType.FEATURE_ACTIVATION)
-    assert isinstance(activation, FeatureActivationJobInput)
-    return activation
+def _computation(held_jobs: HeldJobs) -> ArtefactComputationJobInput:
+    """The input of the one held artefact computation job."""
+    (computation,) = held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)
+    assert isinstance(computation, ArtefactComputationJobInput)
+    return computation
 
 
 def _enable_full_text_search(db: Session, project_id: int) -> None:
-    StepPlanningService().enable_feature(
+    FeatureService().enable_feature(
         db=db,
         project_id=project_id,
         feature=Feature.FULL_TEXT_SEARCH,
@@ -78,7 +82,7 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     p = planning_projects
 
     _enable_full_text_search(db_session, p["project"].id)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
 
     assert crud_project.read(db=db_session, id=p["project"].id).enabled_features == [
@@ -118,7 +122,7 @@ def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     sdoc_id = planning_projects["language_failed"].id
 
     _enable_full_text_search(db_session, planning_projects["project"].id)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     assert read_all_step_status(db_session, sdoc_id) == {
         "extract_html": 1,
@@ -136,16 +140,16 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
     test_user: UserORM,
     held_jobs: HeldJobs,
 ):
-    """While a batch of an activation holds its document locks, another
+    """While a batch of a computation holds its document locks, another
     transaction can still insert a row that references a planned document (an
     annotation document): the planning locks FOR NO KEY UPDATE, which does not
     conflict with the FOR KEY SHARE lock of a foreign key check. Calls the
-    private batch operation of the activation, to hold a batch's transaction
+    private batch operation of the computation, to hold a batch's transaction
     open."""
     sdoc_id = planning_projects["done"].id
     _enable_full_text_search(db_session, planning_projects["project"].id)
-    batch = StepPlanningService()._plan_activation_batch(
-        db=db_session, activation=_activation(held_jobs), after_sdoc_id=0
+    batch = ArtefactService()._plan_batch(
+        db=db_session, computation=_computation(held_jobs), after_sdoc_id=0
     )
     assert batch is not None and sdoc_id in batch[1]
     errors: list[Exception] = []
@@ -168,7 +172,7 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
 
 
 # ===========================================================================
-# FEATURE ACTIVATION JOB
+# ARTEFACT COMPUTATION JOB
 # ===========================================================================
 
 
@@ -181,10 +185,10 @@ def test_activation_plans_in_batches_like_in_one(
     """With one document per batch, enabling full-text search plans and starts
     the same steps as in one batch (`test_enable_feature_plans_only_the_documents_of_the_project`)."""
     p = planning_projects
-    monkeypatch.setattr(step_planning_service, "ACTIVATION_BATCH_SIZE", 1)
+    monkeypatch.setattr(artefact_service, "COMPUTATION_BATCH_SIZE", 1)
 
     _enable_full_text_search(db_session, p["project"].id)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
 
     assert started == {
@@ -202,7 +206,7 @@ def test_activation_plans_in_batches_like_in_one(
         "text_es_index": 0,
     }
     assert (
-        crud_project.read(db=db_session, id=p["project"].id).feature_activations == {}
+        crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
     )
 
 
@@ -211,20 +215,20 @@ def test_activation_leaves_the_documents_after_its_last_document_alone(
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
-    """An activation plans the documents up to the highest id at its request;
+    """A computation plans the documents up to the highest id at its request;
     later documents plan their steps on upload. With its last document set to
     done (as if language_failed and image were uploaded after the request), it
     plans done only."""
     p = planning_projects
     _enable_full_text_search(db_session, p["project"].id)
-    activation = _activation(held_jobs)
+    computation = _computation(held_jobs)
     held_jobs.empty()
     JobService().start_job(
-        JobType.FEATURE_ACTIVATION,
-        activation.model_copy(update={"last_sdoc_id": p["done"].id}),
+        JobType.ARTEFACT_COMPUTATION,
+        computation.model_copy(update={"last_sdoc_id": p["done"].id}),
     )
 
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     started = started_steps(held_jobs)
 
@@ -245,28 +249,28 @@ def test_a_failing_activation_removes_the_pending_activation(
     held_jobs: HeldJobs,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """An activation job that fails (here its steps cannot be started) ends
-    through its failure callback: the feature's pending activation is removed,
+    """A computation job that fails (here its steps cannot be started) ends
+    through its failure callback: the feature's pending computation is removed,
     so the feature does not stay computing for it. The index of done, which
     the committed batch planned before the failure, stays processing without
     a job: the accepted gap of a process that dies between writing processing
     and queueing; Recompute starts it."""
     p = planning_projects
     _enable_full_text_search(db_session, p["project"].id)
-    monkeypatch.setattr(step_planning_service, "start_steps", _fail)
+    monkeypatch.setattr(artefact_service, "start_steps", _fail)
 
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     assert started_steps(held_jobs) == {}
     db_session.expire_all()
     assert (
-        crud_project.read(db=db_session, id=p["project"].id).feature_activations == {}
+        crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
     )
     assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) == 0
 
 
 # ===========================================================================
-# ADD FEATURES
+# ADD FEATURES (FeatureService, for an import)
 # ===========================================================================
 
 
@@ -280,7 +284,7 @@ def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
     steps of its documents stay as they are and no job starts."""
     p = planning_projects
 
-    enabled = StepPlanningService().add_features(
+    enabled = FeatureService().add_features(
         db=db_session, project_id=p["other_project"].id, features=[Feature.RAG_CHAT]
     )
     db_session.commit()
@@ -306,27 +310,30 @@ def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
 
 
 # ===========================================================================
-# PLAN NEW DOCUMENT
+# PLAN DOCUMENT
 # ===========================================================================
 
 
-def test_plan_new_document_plans_the_steps_of_the_enabled_features(
+def test_plan_document_plans_the_steps_of_the_artefact_demand(
     db_session: Session,
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
     """A new text document of the other project, which enables full-text
     search, gets the minimal text steps and the index as processing, and no
-    activation job: the upload starts its first step itself."""
+    computation job: the upload starts the returned root step itself."""
     p = planning_projects
 
-    StepPlanningService().plan_new_document(
-        db=db_session,
-        project_id=p["other_project"].id,
-        sdoc_id=p["new"].id,
-        doctype=DocType.text,
+    demand = FeatureService().read_artefact_demand(
+        db=db_session, project_id=p["other_project"].id
+    )
+    roots = ArtefactService().plan_document(
+        db=db_session, sdoc_id=p["new"].id, doctype=DocType.text, demand=demand
     )
     db_session.commit()
+
+    assert demand == {Artefact.ES_INDEX}
+    assert roots == [JobType.EXTRACT_HTML]
 
     assert read_all_step_status(db_session, p["new"].id) == {
         "extract_html": 0,

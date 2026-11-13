@@ -3,7 +3,7 @@ compute pipeline steps of a document. A step run is one run of a job for some of
 the steps of one document.
 
 - `start_steps` is the only start of a step job: the advancing (here), the
-  feature activation job and recompute call it. A retry requeues the stored job
+  upload, the artefact computation job and recompute call it. A retry requeues the stored job
   (`DocProcessingService.retry_jobs`), which re-enters through the hooks.
 - `handle_job_started`, `handle_job_finished` and `handle_job_error` are the job
   lifecycle hooks the job system calls around every job
@@ -21,9 +21,9 @@ from loguru import logger
 
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import (
+    ArtefactComputationJobInput,
     ProcessingSettings,
     SdocProcessingJobInput,
 )
@@ -114,7 +114,7 @@ def _start_next(job_type: JobType, input: JobInputBase) -> None:
         finished_steps = _computed_steps(job_type, input)
         _start_planned(graph.next_jobs(finished_steps), input, input.sdoc_id)
 
-        # steps of this job that were planned while it ran (a feature activation
+        # steps of this job that were planned while it ran (an artefact computation
         # plans e.g. the keywords while the spaCy job runs for tokens only): run
         # the job again for them
         others = [s for s in graph.job_steps(job_type) if s not in finished_steps]
@@ -152,13 +152,13 @@ def handle_job_error(job_type: JobType, input: JobInputBase) -> None:
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.
     Recomputing the input starts them again (see `_start_next`). A failed
-    feature activation ends (`StepPlanningService.end_activation`)."""
-    if isinstance(input, FeatureActivationJobInput):
-        # imported here: the step planning starts its steps with `start_steps`
-        from modules.doc_processing.step_planning_service import StepPlanningService
+    artefact computation ends (`ArtefactService.end_computation`)."""
+    if isinstance(input, ArtefactComputationJobInput):
+        # imported here: the artefact service starts its steps with `start_steps`
+        from systems.artefact_system.artefact_service import ArtefactService
 
         with sqlr.transaction() as db:
-            StepPlanningService().end_activation(db=db, activation=input)
+            ArtefactService().end_computation(db=db, computation=input)
         return
     if not isinstance(input, SdocProcessingJobInput):
         return

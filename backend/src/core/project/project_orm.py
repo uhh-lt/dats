@@ -36,9 +36,9 @@ class ProjectORM(ORMBase):
     enabled_features: Mapped[list[Feature]] = mapped_column(
         ARRAY(String), nullable=False
     )
-    # the pending feature activations: Feature value -> activation id; written and
-    # removed only by StepPlanningService
-    feature_activations: Mapped[dict[str, str]] = mapped_column(
+    # the pending artefact computations: computation id -> artefact values;
+    # written and removed only by ArtefactService
+    artefact_computations: Mapped[dict[str, list[str]]] = mapped_column(
         JSONB(none_as_null=True),
         nullable=False,
         server_default=text("'{}'::jsonb"),

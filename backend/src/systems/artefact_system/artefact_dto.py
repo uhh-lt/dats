@@ -33,3 +33,18 @@ class SdocProcessingJobInput(ProcessingJobInput):
         default=None,
         description="The pipeline steps this job computes, for jobs with several steps (e.g. text_spacy); null = all steps of the job",
     )
+
+
+class ArtefactComputationJobInput(JobInputBase):
+    artefacts: list[str] = Field(
+        description="Values of the Artefacts to compute (Artefact), fixed at the request"
+    )
+    settings: ProcessingSettings = Field(
+        description="The processing settings of the started steps"
+    )
+    computation_id: str = Field(
+        description="ID of this computation; the job stops if the Project has no pending computation with this ID (the request rolled back)"
+    )
+    last_sdoc_id: int = Field(
+        description="The highest SourceDocument ID of the Project at the request; later documents plan their steps on upload"
+    )

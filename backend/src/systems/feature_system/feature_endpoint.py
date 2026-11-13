@@ -5,7 +5,6 @@ from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
-from modules.doc_processing.step_planning_service import StepPlanningService
 from systems.feature_system.feature_dto import (
     FeatureActivation,
     FeatureRead,
@@ -69,7 +68,7 @@ def enable_feature(
 ) -> list[Feature]:
     authz_user.assert_in_project(project_id)
 
-    project = StepPlanningService().enable_feature(
+    project = FeatureService().enable_feature(
         db=db, project_id=project_id, feature=feature, settings=activation.settings
     )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, project, project_id=project_id)
@@ -91,7 +90,7 @@ def complete_feature(
 ) -> list[Feature]:
     authz_user.assert_in_project(project_id)
 
-    project = StepPlanningService().complete_feature(
+    project = FeatureService().complete_feature(
         db=db, project_id=project_id, feature=feature, settings=activation.settings
     )
     return project.enabled_features
@@ -112,7 +111,7 @@ def disable_feature(
 ) -> list[Feature]:
     authz_user.assert_in_project(project_id)
 
-    project = StepPlanningService().disable_feature(
+    project = FeatureService().disable_feature(
         db=db, project_id=project_id, feature=feature
     )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, project, project_id=project_id)

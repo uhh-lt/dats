@@ -6,11 +6,11 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from common.feature_enum import Feature
-from modules.doc_processing.step_planning_service import StepPlanningService
 from modules.eximport.import_exceptions import ImportProjectDetailsError
 from modules.eximport.project.project_export_schema import (
     ProjectDetailsExportSchema,
 )
+from systems.feature_system.feature_service import FeatureService
 
 # The feature DATS no longer has: image captions are always computed. Archives
 # of an earlier version may still enable it.
@@ -58,8 +58,8 @@ def import_project_details_to_proj(
     features they require, in addition to the features the project enables already: an import
     never disables a feature. The import plans no steps: features whose data the
     archive lacks are partly available until a user completes them in the project
-    settings (`StepPlanningService.add_features`)."""
-    enabled = StepPlanningService().add_features(
+    settings (`FeatureService.add_features`)."""
+    enabled = FeatureService().add_features(
         db=db, project_id=project_id, features=features
     )
     logger.info(

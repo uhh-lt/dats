@@ -2,10 +2,12 @@
 
 import pytest
 
+from bootstrap import register_jobs
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
+from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.pipeline_graph import PipelineGraph, PipelineStep
 
 ALL_DOCTYPES = frozenset(DocType)
@@ -134,7 +136,7 @@ def test_pipeline_graph_uploaded_audio_satisfies_the_audio_requirement():
 
 
 # ===========================================================================
-# PIPELINE GRAPH: PLAN AND STEP RELATIONS
+# PIPELINE GRAPH: STEPS FOR ARTEFACTS AND STEP RELATIONS
 # ===========================================================================
 
 TEXT = frozenset({DocType.text})
@@ -171,32 +173,56 @@ def _planning_graph() -> PipelineGraph:
     )
 
 
-def test_plan_selects_the_producers_of_the_needed_artefacts():
-    """The core artefacts select their producers; a step of optional artefacts
-    runs only if one of them is needed."""
+def test_steps_for_are_the_producers_of_the_artefacts_and_their_inputs():
+    """The keywords need the steps before them, not the document embeddings;
+    an image gets its text from the caption."""
     graph = _planning_graph()
 
-    assert graph.plan(DocType.text, CORE_ARTEFACTS) == [
+    assert graph.steps_for(DocType.text, frozenset({Artefact.KEYWORDS})) == [
         JobType.EXTRACT_HTML,
         JobType.TEXT_EXTRACTION,
         JobType.TEXT_LANGUAGE_DETECTION,
+        JobType.TEXT_KEYWORDS,
     ]
-    assert graph.plan(DocType.text, CORE_ARTEFACTS | {Artefact.KEYWORDS}) == [
-        JobType.EXTRACT_HTML,
+    assert graph.steps_for(DocType.image, frozenset({Artefact.KEYWORDS})) == [
+        JobType.IMAGE_CAPTION,
         JobType.TEXT_EXTRACTION,
         JobType.TEXT_LANGUAGE_DETECTION,
         JobType.TEXT_KEYWORDS,
     ]
 
 
-def test_plan_pulls_in_an_optional_artefact_a_selected_step_requires():
-    """The document embeddings require the keywords, so their step is planned
-    although the keywords are not needed themselves."""
+def test_steps_for_pull_in_the_artefacts_a_step_requires():
+    """The document embeddings require the keywords, so their step is needed
+    although the keywords are not asked for themselves."""
     graph = _planning_graph()
 
-    plan = graph.plan(DocType.text, CORE_ARTEFACTS | {Artefact.DOCUMENT_EMBEDDINGS})
+    steps = graph.steps_for(DocType.text, frozenset({Artefact.DOCUMENT_EMBEDDINGS}))
 
-    assert plan[-2:] == [JobType.TEXT_KEYWORDS, JobType.TEXT_DOCUMENT_EMBEDDING]
+    assert steps[-2:] == [JobType.TEXT_KEYWORDS, JobType.TEXT_DOCUMENT_EMBEDDING]
+
+
+def test_steps_for_skip_an_artefact_without_producer_for_the_doctype():
+    """The thumbnail has a producer for images only: for a text document it
+    adds no step, the keywords still do."""
+    graph = _planning_graph()
+
+    assert graph.steps_for(
+        DocType.text, frozenset({Artefact.THUMBNAIL, Artefact.KEYWORDS})
+    ) == graph.steps_for(DocType.text, frozenset({Artefact.KEYWORDS}))
+
+
+def test_artefacts_apply_if_each_has_a_producer_or_is_uploaded():
+    """The thumbnail applies to images only; the uploaded audio stream to audio
+    documents; a set applies only if all its artefacts do."""
+    graph = _planning_graph()
+    thumbnail = frozenset({Artefact.THUMBNAIL})
+
+    assert graph.applies(DocType.image, thumbnail)
+    assert not graph.applies(DocType.text, thumbnail)
+    assert not graph.applies(DocType.text, thumbnail | {Artefact.KEYWORDS})
+    assert graph.applies(DocType.audio, frozenset({Artefact.AUDIO}))
+    assert not graph.applies(DocType.video, frozenset({Artefact.AUDIO}))
 
 
 def test_inputs_are_the_producers_of_the_required_artefacts_per_doctype():
@@ -219,31 +245,6 @@ def test_descendants_are_the_steps_after_a_step_transitively():
         JobType.TEXT_DOCUMENT_EMBEDDING,
     ]
     assert graph.descendants([JobType.TEXT_DOCUMENT_EMBEDDING]) == []
-
-
-def test_needed_steps_are_the_producers_of_the_artefacts_and_their_inputs():
-    """The keywords need the steps before them, not the document embeddings;
-    only steps of the given plan count."""
-    graph = _planning_graph()
-    text_plan = graph.steps(DocType.text)
-    image_plan = graph.plan(DocType.image, CORE_ARTEFACTS)
-
-    assert graph.needed_steps(
-        DocType.text, text_plan, frozenset({Artefact.KEYWORDS})
-    ) == [
-        JobType.EXTRACT_HTML,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_KEYWORDS,
-    ]
-    # the core plan of an image has the steps before the keywords only
-    assert graph.needed_steps(
-        DocType.image, image_plan, frozenset({Artefact.KEYWORDS})
-    ) == [
-        JobType.IMAGE_CAPTION,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-    ]
 
 
 # ===========================================================================
@@ -439,3 +440,118 @@ def test_pipeline_graph_fails_on_further_step_with_other_inputs():
     assert any(
         "'text_keywords' must have the requires and doctypes" in p for p in problems
     ), problems
+
+
+# ===========================================================================
+# THE REGISTERED PIPELINE: STEPS PER ARTEFACT
+# ===========================================================================
+# The registered steps of DATS (`bootstrap.register_jobs`), asked the way the
+# artefact service asks them: the core artefacts, plus the artefacts of a
+# feature or of the artefact demand.
+
+
+@pytest.fixture(scope="module")
+def graph() -> PipelineGraph:
+    register_jobs()
+    return artefact_registry.graph()
+
+
+@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
+def test_every_artefact_needs_every_step_of_the_doctype(
+    graph: PipelineGraph, doctype: DocType
+):
+    """All artefacts together (a project with all features, every existing
+    project) need every step of the doctype, in pipeline order."""
+    assert graph.steps_for(doctype, graph.artefacts()) == graph.steps(doctype)
+
+
+@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
+def test_the_core_steps_produce_core_artefacts(graph: PipelineGraph, doctype: DocType):
+    """The steps of the core artefacts compute no index, embeddings, keywords,
+    word frequencies, entities or object boxes alone."""
+    for step in graph.steps_for(doctype, CORE_ARTEFACTS):
+        assert graph.declaration(step).produces & CORE_ARTEFACTS, step
+
+
+@pytest.mark.parametrize(
+    "doctype,artefact,added_steps",
+    [
+        # the spaCy outputs are steps of their own
+        pytest.param(
+            DocType.text, Artefact.KEYWORDS, [JobType.TEXT_KEYWORDS], id="text-keywords"
+        ),
+        pytest.param(
+            DocType.text, Artefact.NER_SPANS, [JobType.TEXT_NER], id="text-entities"
+        ),
+        pytest.param(
+            DocType.audio,
+            Artefact.WORD_FREQUENCIES,
+            [JobType.TEXT_WORD_FREQUENCY],
+            id="audio-word-frequencies",
+        ),
+        pytest.param(
+            DocType.text, Artefact.ES_INDEX, [JobType.TEXT_ES_INDEX], id="text-index"
+        ),
+        pytest.param(
+            DocType.video,
+            Artefact.DOCUMENT_EMBEDDINGS,
+            [JobType.TEXT_DOCUMENT_EMBEDDING],
+            id="video-document-embeddings",
+        ),
+        pytest.param(
+            DocType.image,
+            Artefact.OBJECT_BBOXES,
+            [JobType.IMAGE_OBJECT_DETECTION],
+            id="image-object-boxes",
+        ),
+        pytest.param(
+            DocType.image,
+            Artefact.IMAGE_EMBEDDINGS,
+            [JobType.IMAGE_EMBEDDING],
+            id="image-embeddings",
+        ),
+        # every image has text: its caption
+        pytest.param(
+            DocType.image,
+            Artefact.SENTENCE_EMBEDDINGS,
+            [JobType.TEXT_SENTENCE_EMBEDDING],
+            id="image-sentence-embeddings",
+        ),
+    ],
+)
+def test_an_artefact_adds_its_producer_to_the_core_steps(
+    graph: PipelineGraph,
+    doctype: DocType,
+    artefact: Artefact,
+    added_steps: list[JobType],
+):
+    """An optional artefact needs its producer besides the core steps."""
+    core = set(graph.steps_for(doctype, CORE_ARTEFACTS))
+    steps = set(graph.steps_for(doctype, frozenset({artefact})))
+    assert steps - core == set(added_steps)
+
+
+def test_the_steps_of_sentence_embeddings_are_the_text_chain(graph: PipelineGraph):
+    """The sentence embeddings of a text document need the steps before them,
+    not the HTML mapping; those of an image start with its caption."""
+    embeddings = frozenset({Artefact.SENTENCE_EMBEDDINGS})
+
+    assert graph.steps_for(DocType.text, embeddings) == [
+        JobType.EXTRACT_HTML,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+        JobType.TEXT_SPACY,
+        JobType.TEXT_SENTENCE_EMBEDDING,
+    ]
+    assert graph.steps_for(DocType.image, embeddings)[0] == JobType.IMAGE_CAPTION
+
+
+def test_image_artefacts_do_not_apply_to_text(graph: PipelineGraph):
+    """Object boxes apply to images, not to text documents; text artefacts
+    apply to every doctype."""
+    boxes = frozenset({Artefact.OBJECT_BBOXES})
+
+    assert graph.applies(DocType.image, boxes)
+    assert not graph.applies(DocType.text, boxes)
+    for doctype in DocType:
+        assert graph.applies(doctype, frozenset({Artefact.ES_INDEX})), doctype

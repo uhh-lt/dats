@@ -42,7 +42,7 @@ class FeatureProject(TypedDict):
     - project: "Feature Project" of `test_user`, without any enabled feature
     Every text document has the text of `SDOC_SENTENCES` ("Hello world." and
     "The cat sits on the mat.") and the language "en", the image an 8x8 red PNG
-    as its file, so the step jobs an activation starts can be enriched.
+    as its file, so the step jobs a computation starts can be enriched.
 
     - text_done: text document "text_done.txt"; the steps of a project without
       features are finished (extract_html, text_extraction,

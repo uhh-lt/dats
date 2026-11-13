@@ -35,7 +35,6 @@ ALLOWED_MODULE_IMPORTS = {
     "systems/feature_system/feature_dto.py": "modules.doc_processing",
     "systems/feature_system/feature_endpoint.py": "modules.doc_processing",
     "systems/feature_system/feature_service.py": "modules.doc_processing",
-    "systems/artefact_system/step_run.py": "modules.doc_processing",  # until B3
 }
 
 

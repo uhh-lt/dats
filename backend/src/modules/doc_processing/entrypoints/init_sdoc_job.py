@@ -14,14 +14,11 @@ from modules.doc_processing.doc_processing_dto import (
     SdocInitJobInput,
     SdocInitJobOutput,
 )
-from modules.doc_processing.step_planning_service import StepPlanningService
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.artefact_system.artefact_registry import artefact_registry
-from systems.artefact_system.source_document_step_status_crud import (
-    crud_sdoc_step_status,
-)
+from systems.artefact_system.artefact_service import ArtefactService
 from systems.artefact_system.step_run import start_steps
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
@@ -47,12 +44,13 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
-        # plan the steps the project's features need for the new document
-        StepPlanningService().plan_new_document(
-            db=db,
-            project_id=payload.project_id,
-            sdoc_id=sdoc_db_obj.id,
-            doctype=payload.doctype,
+        # plan the steps of the core artefacts and of the project's artefact
+        # demand, read under the project share lock
+        demand = FeatureService().read_artefact_demand(
+            db=db, project_id=payload.project_id
+        )
+        roots = ArtefactService().plan_document(
+            db=db, sdoc_id=sdoc_db_obj.id, doctype=payload.doctype, demand=demand
         )
 
         # find repo path
@@ -91,13 +89,10 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         )
 
     # start the planned root steps of the new document
-    with sqlr.transaction() as db:
-        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=output.sdoc_id)
-    roots = artefact_registry.graph().roots(output.doctype)
     start_steps(
         project_id=payload.project_id,
         sdoc_id=output.sdoc_id,
-        steps=[step for step in roots if step in status],
+        steps=roots,
         settings=payload.settings,
     )
     return output

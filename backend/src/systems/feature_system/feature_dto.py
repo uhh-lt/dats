@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 
 from common.feature_enum import Feature, FeatureStatus
-from common.job_type_enum import JobType
 from systems.artefact_system.artefact_dto import ProcessingSettings
 
 
@@ -40,9 +39,6 @@ class ProjectFeatureRead(BaseModel):
     )
     total_documents: int = Field(
         description="Number of documents the Feature applies to"
-    )
-    missing_steps: list[JobType] = Field(
-        description="The steps of the Feature that are not finished for at least one document"
     )
 
 

@@ -20,7 +20,7 @@ from feature_test_utils import (
     minimal_text_steps,
     set_step_status,
 )
-from modules.doc_processing.pipeline.step_planning import planned_steps
+from pipeline_test_utils import planned_steps
 
 
 @pytest.fixture(scope="function")
@@ -33,6 +33,49 @@ def feature_project(db_session, test_user: UserORM) -> FeatureProject:
 def partly_project(db_session, test_user: UserORM) -> PartlyProject:
     """The project described in `PartlyProject`."""
     return create_partly_project(db_session, test_user)
+
+
+class DuplicateFinderProject(TypedDict):
+    """
+    This fixture sets up the following project:
+
+    - project: "Duplicate Finder Project" of `test_user`, with only the
+      duplicate finder enabled
+    - text: text document "text.txt" with the text of `SDOC_SENTENCES` and the
+      language "en"; the minimal text steps are finished, all other steps
+      (text_word_frequency among them) are not planned
+
+    Non-obvious derived behavior:
+
+    - The duplicate finder and word frequency analysis need the same artefact,
+      the word frequencies: the duplicate finder is partly available, word
+      frequency analysis is disabled.
+    """
+
+    project: ProjectORM
+    text: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def duplicate_finder_project(db_session, test_user: UserORM) -> DuplicateFinderProject:
+    """The project described in `DuplicateFinderProject`."""
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Duplicate Finder Project",
+        features=[Feature.DUPLICATE_FINDER],
+    )
+    text = _create_sdoc(
+        db_session,
+        project,
+        name="text.txt",
+        doctype=DocType.text,
+        status=dict.fromkeys(minimal_text_steps(), 1),
+    )
+    db_session.commit()
+    db_session.refresh(project)
+    db_session.refresh(text)
+    return {"project": project, "text": text}
 
 
 class UploadingProject(TypedDict):
@@ -66,7 +109,7 @@ def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
         title="Uploading Project",
         features=[Feature.KEYWORD_STATISTICS],
     )
-    steps = planned_steps(doctype=DocType.text, features=[Feature.KEYWORD_STATISTICS])
+    steps = planned_steps(DocType.text, [Feature.KEYWORD_STATISTICS])
     uploading = _create_sdoc(
         db_session,
         project,
@@ -82,7 +125,7 @@ def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
 
 class ActivationProject(TypedDict):
     """
-    This fixture sets up the following project, for activations that run the
+    This fixture sets up the following project, for computations that run the
     real worker (Ray included):
 
     - project: "Activation Project" of `test_user`, without any enabled feature
@@ -100,8 +143,8 @@ class ActivationProject(TypedDict):
     Non-obvious derived behavior:
 
     - No step job of no_data can start: its enricher finds no content, so every
-      step an activation plans for it becomes erroneous.
-    - An activation plans the not planned core steps of extracted too, so it
+      step a computation plans for it becomes erroneous.
+    - A computation plans the not planned core steps of extracted too, so it
       runs the whole text chain from the language detection on.
     """
 

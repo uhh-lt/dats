@@ -2,9 +2,9 @@
 
 Every module declares its features with `register_feature` in a `*_feature.py`
 file, which `bootstrap.register_features` imports. A feature requires artefacts
-(preprocessed document data) and other features; `step_planning.py` (the
-`pipeline` package of `modules/doc_processing`) derives from these declarations
-which pipeline steps a project needs.
+(preprocessed document data) and other features; the feature system passes the
+artefacts of a feature to the artefact system, which derives the pipeline steps
+they need.
 """
 
 from dataclasses import dataclass
@@ -77,13 +77,16 @@ class FeatureRegistry:
 
     def required_artefacts(self, features: Iterable[Feature]) -> frozenset[Artefact]:
         """The artefacts the features (and the features they require) need,
-        plus the core artefacts every document gets."""
-        return CORE_ARTEFACTS.union(
-            *(
-                self._declarations[f].requires_artefacts
-                for f in self.closure(features)
-                if f in self._declarations
+        without the core artefacts, which every document gets anyway."""
+        return (
+            frozenset().union(
+                *(
+                    self._declarations[f].requires_artefacts
+                    for f in self.closure(features)
+                    if f in self._declarations
+                )
             )
+            - CORE_ARTEFACTS
         )
 
     def _required_features(self, features: Iterable[Feature]) -> frozenset[Feature]:
