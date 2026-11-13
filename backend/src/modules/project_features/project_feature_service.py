@@ -15,7 +15,7 @@ from systems.feature_system.feature_registry import feature_registry
 
 class ProjectFeatureService(metaclass=SingletonMeta):
     """The state of the features of a project: which features it enables and
-    how far they are computed. `StepPlanningService` enables, restarts and
+    how far they are computed. `StepPlanningService` enables, completes and
     disables them."""
 
     def __new__(cls, *args, **kwargs):

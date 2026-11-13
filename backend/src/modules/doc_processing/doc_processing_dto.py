@@ -62,15 +62,12 @@ class SdocInitJobOutput(JobOutputBase):
 
 
 class FeatureActivationJobInput(JobInputBase):
-    feature: Feature = Field(description="The enabled, completed or restarted Feature")
-    restart: bool = Field(
-        description="Whether to plan the Feature's processing steps again (restart) or only its missing and erroneous ones"
-    )
+    feature: Feature = Field(description="The enabled or completed Feature")
     settings: ProcessingSettings = Field(
         description="The processing settings of the started steps"
     )
     activation_id: str = Field(
-        description="ID of this activation; the job stops once the Project's pending activation of the Feature has another ID"
+        description="ID of this activation; the job stops if the Project's pending activation of the Feature has another ID (the request rolled back)"
     )
     last_sdoc_id: int = Field(
         description="The highest SourceDocument ID of the Project at the request; later documents plan their steps on upload"

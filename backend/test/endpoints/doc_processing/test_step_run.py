@@ -13,7 +13,6 @@ from modules.doc_processing.doc_processing_dto import (
 from modules.doc_processing.step_run import (
     handle_job_error,
     handle_job_finished,
-    handle_job_started,
     start_steps,
 )
 from modules.doc_processing.text.html_extraction_job import (
@@ -70,73 +69,6 @@ def test_a_failed_step_fails_the_pending_steps_after_it(
     assert _statuses(db_session, sdoc_id, steps) == [1, 1, -100, -100, -100, None]
 
 
-def test_a_failed_job_leaves_its_steps_that_are_not_planned_unplanned(
-    db_session, feature_project: FeatureProject
-):
-    """A spaCy job of text_running for tokens and keywords fails after the
-    keywords were unplanned (their feature was disabled while it ran): tokens
-    become erroneous, the keywords stay not planned."""
-    sdoc_id = feature_project["text_running"].id
-
-    handle_job_error(
-        JobType.TEXT_SPACY,
-        SdocProcessingJobInput(
-            project_id=feature_project["project"].id,
-            sdoc_id=sdoc_id,
-            settings=SETTINGS,
-            steps=[JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS],
-        ),
-    )
-
-    steps = [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
-    assert _statuses(db_session, sdoc_id, steps) == [-100, None]
-
-
-def test_a_job_whose_steps_are_not_planned_is_skipped(
-    db_session, feature_project: FeatureProject
-):
-    """A queued sentence embedding job of text_done, whose step is not planned
-    (its feature was disabled while the job waited), is skipped and does not
-    set the step to processing."""
-    sdoc_id = feature_project["text_done"].id
-
-    run_input = handle_job_started(
-        JobType.TEXT_SENTENCE_EMBEDDING,
-        SdocProcessingJobInput(
-            project_id=feature_project["project"].id,
-            sdoc_id=sdoc_id,
-            settings=SETTINGS,
-        ),
-    )
-
-    assert run_input is None
-    assert _statuses(db_session, sdoc_id, [JobType.TEXT_SENTENCE_EMBEDDING]) == [None]
-
-
-def test_a_job_drops_its_steps_that_are_not_planned(
-    db_session, feature_project: FeatureProject
-):
-    """A recompute of tokens and keywords of text_done, where the keywords are not
-    planned, runs for the tokens only: the input to run is a copy narrowed to the
-    tokens, the stored input keeps both steps, and the keywords stay not
-    planned."""
-    sdoc_id = feature_project["text_done"].id
-    payload = SdocProcessingJobInput(
-        project_id=feature_project["project"].id,
-        sdoc_id=sdoc_id,
-        settings=SETTINGS,
-        steps=[JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS],
-    )
-
-    run_input = handle_job_started(JobType.TEXT_SPACY, payload)
-
-    assert isinstance(run_input, SdocProcessingJobInput)
-    assert run_input.steps == [JobType.TEXT_SPACY]
-    assert payload.steps == [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
-    steps = [JobType.TEXT_SPACY, JobType.TEXT_KEYWORDS]
-    assert _statuses(db_session, sdoc_id, steps) == [0, None]
-
-
 def test_a_job_whose_started_hook_fails_fails_its_steps(
     db_session,
     feature_project: FeatureProject,
@@ -167,15 +99,15 @@ def test_a_job_whose_started_hook_fails_fails_its_steps(
     assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
 
 
-def test_a_finished_job_leaves_its_successors_processing_if_the_queue_is_unreachable(
+def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
     db_session,
     dummy_step_projects: DummyStepProjects,
     held_jobs: HeldJobs,
 ):
     """The upload of `dummy_step_projects` runs up to extract_html, which
-    finishes while the queue cannot be reached: the job is finished, its step
-    is finished, and the steps after it stay processing (none is erroneous),
-    as the failure to start them is only logged."""
+    finishes while the queue cannot be reached: the job and its step are
+    finished, and the steps after it cannot start, so they are erroneous
+    instead of processing without a job."""
     JobService().start_job(
         JobType.SDOC_INIT,
         SdocInitJobInput(
@@ -200,7 +132,34 @@ def test_a_finished_job_leaves_its_successors_processing_if_the_queue_is_unreach
     status = crud_sdoc_step_status.read_by_sdoc(db=db_session, sdoc_id=sdoc_id)
     assert status.pop(JobType.EXTRACT_HTML) == SDocStatus.finished
     assert JobType.TEXT_EXTRACTION in status
-    assert set(status.values()) == {SDocStatus.processing}
+    assert set(status.values()) == {SDocStatus.erroneous}
+
+
+def test_a_step_job_whose_worker_dies_fails_its_steps(
+    db_session,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """The worker running the language detection of text_running dies: RQ's
+    cleanup of the started jobs fails the job and runs its failure callback,
+    so the step and the pending steps after it (spaCy and the HTML mapping)
+    become erroneous, like after any failed job."""
+    sdoc_id = feature_project["text_running"].id
+    start_steps(
+        project_id=feature_project["project"].id,
+        sdoc_id=sdoc_id,
+        steps=[JobType.TEXT_LANGUAGE_DETECTION],
+        settings=SETTINGS,
+    )
+
+    held_jobs.abandon(JobType.TEXT_LANGUAGE_DETECTION)
+
+    steps = [
+        JobType.TEXT_LANGUAGE_DETECTION,
+        JobType.TEXT_SPACY,
+        JobType.TEXT_HTML_MAPPING,
+    ]
+    assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
 
 
 def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entry_points(

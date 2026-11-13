@@ -12,12 +12,9 @@ from common.languages_enum import Language
 from core.project.project_crud import crud_project
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
-    SdocProcessingJobInput,
 )
 from modules.project_features.project_feature_dto import FeatureActivation
 from pipeline_test_utils import count_processing_sdocs, read_step_status
-from systems.job_system.job_service import JobService
-from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import ActivationProject
 
@@ -33,8 +30,8 @@ SETTINGS = ProcessingSettings(
 
 
 def _activate(client: TestClient, project_id: int, feature: Feature) -> None:
-    response = client.put(
-        f"/feature/project/{project_id}/{feature.value}",
+    response = client.post(
+        f"/feature/project/{project_id}/{feature.value}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
@@ -122,35 +119,3 @@ def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
     ).scalars()
     assert {"cat", "mat"} <= set(words)
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == 1
-
-
-def test_step_job_of_a_step_that_is_not_planned_is_skipped(
-    db_session,
-    activation_project: ActivationProject,
-):
-    """A step job whose steps are not planned for the document (the index of
-    tokenized, no feature needs it) is skipped by the worker: it finishes without
-    computing anything, and the step stays not planned."""
-    p = activation_project
-    js = JobService()
-
-    job = js.start_job(
-        JobType.TEXT_ES_INDEX,
-        SdocProcessingJobInput(
-            project_id=p["project"].id,
-            sdoc_id=p["tokenized"].id,
-            settings=SETTINGS,
-            steps=None,
-        ),
-    )
-
-    deadline = time.monotonic() + 60
-    while job.get_status() not in (JobStatus.FINISHED, JobStatus.FAILED):
-        assert time.monotonic() < deadline, "the job did not end"
-        time.sleep(0.5)
-        job = js.get_job(job.get_id())
-    assert job.get_status() == JobStatus.FINISHED
-    assert job.job.meta["status_message"].startswith("Skipped")
-    assert (
-        read_step_status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) is None
-    )

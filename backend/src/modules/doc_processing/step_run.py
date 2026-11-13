@@ -6,9 +6,14 @@ the steps of one document.
   feature activation job and recompute call it. A retry requeues the stored job
   (`DocProcessingService.retry_jobs`), which re-enters through the hooks.
 - `handle_job_started`, `handle_job_finished` and `handle_job_error` are the job
-  lifecycle hooks the job handler calls around every job
+  lifecycle hooks the job system calls around every job
   (`bootstrap.register_jobs`): they track the step statuses and start what
-  follows a finished job, the entry points included.
+  follows a finished job, the entry points included. `handle_job_error` runs
+  for every failed job, also when its worker died (RQ's failure callback).
+
+One failure rule: whatever goes wrong, the step becomes erroneous, with the
+pending steps after it, and Complete or Recompute starts it again. See
+`modules/doc_processing/README.md`.
 """
 
 from loguru import logger
@@ -17,6 +22,7 @@ from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
+    FeatureActivationJobInput,
     ProcessingJobInput,
     ProcessingSettings,
     SdocInitJobOutput,
@@ -79,13 +85,6 @@ def _computed_steps(job_type: JobType, input: SdocProcessingJobInput) -> list[Jo
     return pipeline_registry.graph().job_steps(job_type, input.steps)
 
 
-def _planned_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
-    """The steps that are planned for the document (they have a status)."""
-    with sqlr.transaction() as db:
-        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
-    return [step for step in steps if step in status]
-
-
 def _pending_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
     """The steps that are planned for the document and not computed yet."""
     with sqlr.transaction() as db:
@@ -105,12 +104,11 @@ def start_steps(
     of them, with a bare input, which the job's enricher completes from the
     document's stored data. Returns the started job per job type.
 
-    A job whose input cannot be built (the document's input data is missing or
-    invalid) does not start: its steps and the pending steps after them become
+    A job that cannot be queued, because its input cannot be built (the
+    document's input data is missing) or the queue (Redis) cannot be reached,
+    does not start: its steps and the pending steps after them become
     erroneous, like after a failed job, its job type maps to None, and the
-    other jobs still start. If the queue cannot be reached, nothing is marked
-    and `JobQueueUnavailableError` raises to the caller; the jobs after it are
-    not started. Anything else raises as it is."""
+    other jobs still start. Anything else raises as it is."""
     started: dict[JobType, Job | None] = {}
     for job_type, job_steps in pipeline_registry.graph().group_by_job(steps).items():
         job_input = SdocProcessingJobInput(
@@ -118,7 +116,7 @@ def start_steps(
         )
         try:
             started[job_type] = js.start_job(job_type, job_input, priority=priority)
-        except JobInputError as e:
+        except (JobInputError, JobQueueUnavailableError) as e:
             logger.warning(f"Cannot start {job_type.value} of document {sdoc_id}: {e}")
             handle_job_error(job_type, job_input)
             started[job_type] = None
@@ -129,34 +127,20 @@ def _start_planned(
     jobs: dict[JobType, list[JobType]], input: ProcessingJobInput, sdoc_id: int
 ) -> None:
     """Start each job for its steps that are planned for the document, with the
-    settings of the run.
-
-    If the queue cannot be reached, the failure is logged and the steps not
-    started stay processing (Restart or Recompute starts them again): the job
-    that finished stays finished, as failing it would mark its own steps
-    erroneous although their data is stored, and unplanning the steps would
-    make the document read finished without their data."""
+    settings of the run. The job that finished stays finished: a step that
+    cannot start becomes erroneous itself (`start_steps`)."""
     if not jobs:
         return
     with sqlr.transaction() as db:
         status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
-    for steps in jobs.values():
-        planned = [step for step in steps if step in status]
-        if not planned:
-            continue
-        try:
-            start_steps(
-                project_id=input.project_id,
-                sdoc_id=sdoc_id,
-                steps=planned,
-                settings=input.settings,
-            )
-        except JobQueueUnavailableError as e:
-            logger.error(
-                f"Cannot start the steps after a finished job of document {sdoc_id}, "
-                f"they stay processing: {e}"
-            )
-            return
+    planned = [step for steps in jobs.values() for step in steps if step in status]
+    if planned:
+        start_steps(
+            project_id=input.project_id,
+            sdoc_id=sdoc_id,
+            steps=planned,
+            settings=input.settings,
+        )
 
 
 def _start_next(
@@ -222,43 +206,34 @@ def _set_status(
         )
 
 
-def handle_job_started(jobtype: JobType, input: JobInputBase) -> JobInputBase | None:
-    """Set the steps of the run to processing and return the input to run. Steps
-    that are not planned for the document anymore (their feature was disabled
-    while the job waited in the queue) are dropped from the run: the returned
-    input is a copy narrowed to the planned steps, the stored input is never
-    changed. Returns None if no step is left, and the job is skipped."""
-    if isinstance(input, SdocProcessingJobInput):
-        computed = _computed_steps(jobtype, input)
-        planned = _planned_steps(input.sdoc_id, computed)
-        if not planned:
-            logger.info(
-                f"Skipping job {jobtype.value} of document {input.sdoc_id}: "
-                f"its steps are not planned anymore."
-            )
-            return None
-        if len(planned) < len(computed):
-            input = input.model_copy(update={"steps": planned})
+def handle_job_started(jobtype: JobType, input: JobInputBase) -> None:
+    """Set the steps of the run to processing (a retried job's steps are
+    erroneous until then)."""
     _set_status(jobtype, input, SDocStatus.processing)
-    return input
 
 
 def handle_job_error(job_type: JobType, input: JobInputBase) -> None:
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.
-    Recomputing the input starts them again (see `_start_next`)."""
+    Recomputing the input starts them again (see `_start_next`). A failed
+    feature activation ends (`StepPlanningService.end_activation`)."""
+    if isinstance(input, FeatureActivationJobInput):
+        # imported here: the step planning starts its steps with `start_steps`
+        from modules.doc_processing.step_planning_service import StepPlanningService
+
+        with sqlr.transaction() as db:
+            StepPlanningService().end_activation(db=db, activation=input)
+        return
     if not isinstance(input, SdocProcessingJobInput):
         return
-    # a step unplanned while the job ran (its feature was disabled) stays unplanned
-    computed = _computed_steps(job_type, input)
-    _set_status(
-        job_type, input, SDocStatus.erroneous, _planned_steps(input.sdoc_id, computed)
-    )
+    _set_status(job_type, input, SDocStatus.erroneous)
     with sqlr.transaction() as db:
         crud_sdoc_step_status.update_pending_to_erroneous(
             db=db,
             sdoc_id=input.sdoc_id,
-            steps=pipeline_registry.graph().descendants(computed),
+            steps=pipeline_registry.graph().descendants(
+                _computed_steps(job_type, input)
+            ),
         )
 
 

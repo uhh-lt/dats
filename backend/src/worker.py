@@ -2,10 +2,13 @@ import multiprocessing as mp
 import os
 import signal
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from os import environ
 
 from loguru import logger
 from rq import SimpleWorker, Worker
+from rq.exceptions import AbandonedJobError
 from rq.worker_pool import WorkerPool
 
 from bootstrap import (
@@ -15,6 +18,7 @@ from bootstrap import (
     init_services,
     register_jobs,
 )
+from repos.db.sql_repo import SQLRepo
 from repos.redis_repo import RedisRepo
 from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
@@ -44,6 +48,17 @@ def _preload_modules() -> None:
     import modules.doc_processing.step_run  # noqa: F401
 
 
+@contextmanager
+def _sql_connection() -> Iterator[None]:
+    """Connect the SQL repo for the duration of the block and close it again."""
+    sqlr = SQLRepo()
+    sqlr.connect()
+    try:
+        yield
+    finally:
+        sqlr.close_connection()
+
+
 class DATSWorker(Worker):
     """Custom standard worker (forks per job - used for GPU).
 
@@ -52,7 +67,28 @@ class DATSWorker(Worker):
     would copy them into every horse, letting the real connection count exceed
     the configured pool size. Instead, each horse connects its own repos on
     entry and disposes them on exit, so the parent holds zero connections.
+    The parent runs the failure callback of a job whose horse died, and of the
+    jobs of dead workers in its maintenance; it connects the database only for
+    them.
     """
+
+    def handle_work_horse_killed(self, job, retpid, ret_val, rusage):
+        """RQ fails the job of a dead horse without its failure callback: run
+        it here, so the job's `failed` hook runs like for any failed job."""
+        super().handle_work_horse_killed(job, retpid, ret_val, rusage)
+        with _sql_connection():
+            job.execute_failure_callback(
+                self.death_penalty_class,
+                AbandonedJobError,
+                AbandonedJobError(f"The job process died ({ret_val})"),
+                None,
+            )
+
+    def clean_registries(self):
+        """The cleanup of the started jobs runs the failure callback of the jobs
+        whose worker died."""
+        with _sql_connection():
+            super().clean_registries()
 
     def main_work_horse(self, job, queue):
         """Horse entry point: connect its own repos, then run the job.

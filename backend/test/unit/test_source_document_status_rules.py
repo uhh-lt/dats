@@ -71,8 +71,8 @@ def test_step_set_status_is_processing_else_failed_else_not_planned_else_ready(
     statuses: dict[JobType, SDocStatus], expected: StepSetStatus
 ):
     """The status of the steps {HTML, LANG} of a document. With an erroneous and
-    a processing step it is processing: a feature that still computes offers
-    Restart, not Complete."""
+    a processing step it is processing: a feature that still computes allows no
+    action, not Complete."""
     assert step_set_status([HTML, LANG], statuses) == expected
 
 

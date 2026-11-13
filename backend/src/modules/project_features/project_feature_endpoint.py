@@ -43,12 +43,12 @@ def get_project_features(
 # --- update operations
 
 
-@router.put(
-    "/project/{project_id}/{feature}",
+@router.post(
+    "/project/{project_id}/{feature}/enable",
     response_model=list[Feature],
-    summary="Enables the Feature in the Project, or completes it: computes its data for the documents that lack it. Returns the enabled Features",
+    summary="Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features",
 )
-def activate_feature(
+def enable_feature(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -67,11 +67,11 @@ def activate_feature(
 
 
 @router.post(
-    "/project/{project_id}/{feature}/restart",
+    "/project/{project_id}/{feature}/complete",
     response_model=list[Feature],
-    summary="Restarts the processing of the enabled Feature: plans and starts its processing steps again (steps whose job still runs compute twice). Returns the enabled Features",
+    summary="Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
 )
-def restart_feature(
+def complete_feature(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -81,16 +81,16 @@ def restart_feature(
 ) -> list[Feature]:
     authz_user.assert_in_project(project_id)
 
-    project = StepPlanningService().restart_feature(
+    project = StepPlanningService().complete_feature(
         db=db, project_id=project_id, feature=feature, settings=activation.settings
     )
     return project.enabled_features
 
 
-@router.delete(
-    "/project/{project_id}/{feature}",
+@router.post(
+    "/project/{project_id}/{feature}/disable",
     response_model=list[Feature],
-    summary="Disables the Feature in the Project; its data is kept. Returns the enabled Features",
+    summary="Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
 )
 def disable_feature(
     *,

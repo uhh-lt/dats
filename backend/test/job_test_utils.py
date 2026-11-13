@@ -76,6 +76,21 @@ class HeldJobs:
             self._run_queue.enqueue_job(job)
             self._work()
 
+    def abandon(self, job_type: JobType) -> None:
+        """Let the held jobs of `job_type` die with their worker: they are taken
+        as started by a worker that is gone, and RQ's cleanup of the started
+        jobs (run by a live worker's maintenance) fails them and runs their
+        failure callback."""
+        registry = StartedJobRegistry(queue=self._run_queue)
+        for queue in self._queues:
+            for job in queue.get_jobs():
+                if job.kwargs["jobtype"] != job_type:
+                    continue
+                queue.remove(job)
+                # expired: the dead worker stopped renewing its heartbeat
+                self._run_queue.connection.zadd(registry.key, {f"{job.id}:dead": 1})
+        registry.cleanup()
+
     def ran(self, job_type: JobType) -> list[Job]:
         """The jobs of `job_type` that `run` ran to the end, finished or
         failed."""

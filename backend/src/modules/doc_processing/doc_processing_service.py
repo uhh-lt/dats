@@ -266,9 +266,9 @@ class DocProcessingService(metaclass=SingletonMeta):
 
         # Start recompute jobs for the specified processing step: the job that
         # computes the step, for this step only (e.g. text_spacy for text_ner).
-        # A document whose input data is missing gets the step and the pending
-        # steps after it erroneous, and the other documents still start; an
-        # unreachable queue fails the request (503) and marks nothing.
+        # A document whose job cannot be queued (its input data is missing or
+        # the queue cannot be reached) gets the step and the pending steps
+        # after it erroneous, and the other documents still start.
         step = JobType(processing_step)
         jobs: list[Job] = []
         for sdoc_id in sdoc_ids:

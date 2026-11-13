@@ -40,7 +40,7 @@ class ProjectFeatureRead(BaseModel):
 
 
 class FeatureActivation(BaseModel):
-    """Enable a Feature, or complete it: compute its data for the documents that lack it."""
+    """The settings to enable or complete a Feature with."""
 
     settings: ProcessingSettings = Field(
         description="The processing settings of the computed steps"

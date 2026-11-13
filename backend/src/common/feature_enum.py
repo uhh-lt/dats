@@ -32,3 +32,12 @@ class FeatureStatus(str, Enum):
     COMPUTING = "computing"  # enabled, some documents are still processing
     PARTLY_AVAILABLE = "partly_available"  # enabled, some documents lack the data and nothing runs for them
     FULLY_AVAILABLE = "fully_available"  # enabled, all documents have the data
+
+
+class FeatureAction(str, Enum):
+    """What a user can do with a feature of a project; each is allowed in some
+    feature statuses only (`StepPlanningService`)."""
+
+    ENABLE = "enable"  # turn it on and compute its data for all documents
+    COMPLETE = "complete"  # compute its data for the documents that lack it
+    DISABLE = "disable"  # turn it off; its computed data stays

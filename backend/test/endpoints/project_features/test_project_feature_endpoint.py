@@ -4,11 +4,11 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature, FeatureStatus
+from common.feature_enum import Feature, FeatureAction, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
-from feature_test_utils import FeatureProject, PartlyProject, assert_feature_disabled
+from feature_test_utils import FeatureProject, PartlyProject
 from job_test_utils import HeldJobs, unreachable_redis
 from modules.doc_processing import step_planning_service
 from modules.doc_processing.doc_processing_dto import (
@@ -24,7 +24,7 @@ from pipeline_test_utils import read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_system_enum import JobStatus
 
-from .conftest import ImageTextProject, UploadingProject
+from .conftest import CaptionedImageProject, ImageTextProject
 
 # ===========================================================================
 # GET PROJECT FEATURES (/feature/project/{project_id}) TESTS
@@ -152,7 +152,7 @@ def test_project_features_count_the_documents_of_a_disabled_feature(
 
 
 # ===========================================================================
-# ACTIVATE FEATURE (/feature/project/{project_id}/{feature}) TESTS
+# FEATURE ACTIONS: ALLOWED STATUSES TESTS
 # ===========================================================================
 
 SETTINGS = ProcessingSettings(
@@ -166,19 +166,130 @@ SETTINGS = ProcessingSettings(
 )
 
 
-def _activate(client: TestClient, project_id: int, feature: Feature) -> list[Feature]:
-    response = client.put(
-        f"/feature/project/{project_id}/{feature.value}",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+def _act(client: TestClient, project_id: int, feature: Feature, action: FeatureAction):
+    """Send the action (`/enable`, `/complete` or `/disable`) for the feature."""
+    url = f"/feature/project/{project_id}/{feature.value}/{action.value}"
+    if action == FeatureAction.DISABLE:
+        return client.post(url)
+    return client.post(
+        url, json=FeatureActivation(settings=SETTINGS).model_dump(mode="json")
     )
+
+
+def _activate(client: TestClient, project_id: int, feature: Feature) -> list[Feature]:
+    response = _act(client, project_id, feature, FeatureAction.ENABLE)
     assert response.status_code == 200, response.text
     return [Feature(f) for f in response.json()]
 
 
-# --- A. enable --------------------------------------------------------------
+def _complete(client: TestClient, project_id: int, feature: Feature) -> None:
+    response = _act(client, project_id, feature, FeatureAction.COMPLETE)
+    assert response.status_code == 200, response.text
 
 
-def test_activate_feature_enables_it_and_the_features_it_requires(
+# one project per status of keyword statistics or full-text search
+_STATUS_PROJECTS = {
+    FeatureStatus.DISABLED: ("feature_project", Feature.KEYWORD_STATISTICS),
+    FeatureStatus.COMPUTING: ("uploading_project", Feature.KEYWORD_STATISTICS),
+    FeatureStatus.PARTLY_AVAILABLE: ("partly_project", Feature.FULL_TEXT_SEARCH),
+    FeatureStatus.FULLY_AVAILABLE: ("test_project", Feature.KEYWORD_STATISTICS),
+}
+
+
+@pytest.mark.parametrize(
+    "status,action,allowed",
+    [
+        # Disabled: only Enable
+        pytest.param(FeatureStatus.DISABLED, FeatureAction.ENABLE, True, id="disabled-enable"),
+        pytest.param(FeatureStatus.DISABLED, FeatureAction.COMPLETE, False, id="disabled-complete"),
+        pytest.param(FeatureStatus.DISABLED, FeatureAction.DISABLE, False, id="disabled-disable"),
+        # Computing: nothing
+        pytest.param(FeatureStatus.COMPUTING, FeatureAction.ENABLE, False, id="computing-enable"),
+        pytest.param(FeatureStatus.COMPUTING, FeatureAction.COMPLETE, False, id="computing-complete"),
+        pytest.param(FeatureStatus.COMPUTING, FeatureAction.DISABLE, False, id="computing-disable"),
+        # Partly available: Complete and Disable
+        pytest.param(FeatureStatus.PARTLY_AVAILABLE, FeatureAction.ENABLE, False, id="partly-enable"),
+        pytest.param(FeatureStatus.PARTLY_AVAILABLE, FeatureAction.COMPLETE, True, id="partly-complete"),
+        pytest.param(FeatureStatus.PARTLY_AVAILABLE, FeatureAction.DISABLE, True, id="partly-disable"),
+        # Fully available: only Disable
+        pytest.param(FeatureStatus.FULLY_AVAILABLE, FeatureAction.ENABLE, False, id="fully-enable"),
+        pytest.param(FeatureStatus.FULLY_AVAILABLE, FeatureAction.COMPLETE, False, id="fully-complete"),
+        pytest.param(FeatureStatus.FULLY_AVAILABLE, FeatureAction.DISABLE, True, id="fully-disable"),
+    ],
+)  # fmt: skip
+def test_feature_action_is_allowed_only_in_its_statuses(
+    request: pytest.FixtureRequest,
+    client: TestClient,
+    held_jobs: HeldJobs,
+    status: FeatureStatus,
+    action: FeatureAction,
+    allowed: bool,
+):
+    """Each action in each status, on a project whose feature has that status:
+    an allowed action answers 200, any other 409 naming the action, the feature
+    and its status, and changes nothing."""
+    fixture, feature = _STATUS_PROJECTS[status]
+    project = request.getfixturevalue(fixture)
+    project_id = project.id if fixture == "test_project" else project["project"].id
+    assert _features(client, project_id)[feature].status == status
+
+    response = _act(client, project_id, feature, action)
+
+    if allowed:
+        assert response.status_code == 200, response.text
+        return
+    assert response.status_code == 409, response.text
+    assert (
+        f"Cannot {action.value} the feature '{feature.value}': it is '{status.value}'"
+        in response.text
+    )
+    assert _features(client, project_id)[feature].status == status
+    assert held_jobs.jobs() == []
+
+
+def test_feature_actions_are_rejected_while_its_activation_is_pending(
+    client: TestClient,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """Right after Enable, full-text search is computing before its activation
+    job planned anything: a second Enable, Complete and Disable answer 409, and
+    no second activation starts."""
+    project_id = feature_project["project"].id
+    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+
+    for action in FeatureAction:
+        response = _act(client, project_id, Feature.FULL_TEXT_SEARCH, action)
+        assert response.status_code == 409, (action, response.text)
+        assert "it is 'computing'" in response.text, action
+    assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 1
+
+
+def test_feature_actions_require_membership(client: TestClient):
+    """A non-member gets 403 for every action."""
+    for action in FeatureAction:
+        response = _act(client, 123456, Feature.FULL_TEXT_SEARCH, action)
+        assert response.status_code == 403, (action, response.text)
+
+
+def test_feature_action_on_an_unknown_feature_is_rejected(
+    client: TestClient, test_project
+):
+    """An unknown feature is a validation error."""
+    response = client.post(
+        f"/feature/project/{test_project.id}/no_such_feature/enable",
+        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+    )
+
+    assert response.status_code == 422, response.text
+
+
+# ===========================================================================
+# ENABLE FEATURE (/feature/project/{project_id}/{feature}/enable) TESTS
+# ===========================================================================
+
+
+def test_enable_feature_enables_it_and_the_features_it_requires(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -189,7 +300,7 @@ def test_activate_feature_enables_it_and_the_features_it_requires(
     assert enabled == [Feature.SENTENCE_SIMILARITY_SEARCH, Feature.RAG_CHAT]
 
 
-def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
+def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
@@ -219,7 +330,7 @@ def test_activate_feature_plans_its_steps_and_starts_them_with_the_settings(
     assert started == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
 
 
-def test_activate_feature_makes_it_computing(
+def test_enable_feature_makes_it_computing(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -235,7 +346,7 @@ def test_activate_feature_makes_it_computing(
     assert (read.processing_documents, read.total_documents) == (2, 2)
 
 
-def test_activate_feature_is_computing_before_its_documents_are_planned(
+def test_enable_feature_is_computing_before_its_documents_are_planned(
     client: TestClient,
     partly_project: PartlyProject,
     held_jobs: HeldJobs,
@@ -253,31 +364,7 @@ def test_activate_feature_is_computing_before_its_documents_are_planned(
         assert features[feature].processing_documents == 0, feature
 
 
-def test_activate_feature_twice_starts_one_activation(
-    client: TestClient,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Activating a feature whose activation is still pending is rejected with
-    409, which names the feature and tells to restart it: the pending activation
-    plans all documents, and a second one would drop the new settings."""
-    project_id = feature_project["project"].id
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
-
-    response = client.put(
-        f"/feature/project/{project_id}/{Feature.FULL_TEXT_SEARCH.value}",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
-    )
-
-    assert response.status_code == 409, response.text
-    assert f"The feature '{Feature.FULL_TEXT_SEARCH.value}' is being computed" in (
-        response.text
-    )
-    assert "Restart it" in response.text
-    assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 1
-
-
-def test_activate_feature_that_requires_a_computing_feature_starts_its_activation(
+def test_enable_feature_that_requires_a_computing_feature_starts_its_activation(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -299,7 +386,7 @@ def test_activate_feature_that_requires_a_computing_feature_starts_its_activatio
     ]
 
 
-def test_activate_two_features_sharing_a_step_starts_it_once(
+def test_enable_two_features_sharing_a_step_starts_it_once(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -319,7 +406,7 @@ def test_activate_two_features_sharing_a_step_starts_it_once(
     }
 
 
-def test_activate_image_captions_plans_the_text_steps_of_images(
+def test_enable_image_captions_plans_the_text_steps_of_images(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
@@ -338,7 +425,7 @@ def test_activate_image_captions_plans_the_text_steps_of_images(
     assert started == {p["image"].id: [JobType.IMAGE_CAPTION]}
 
 
-def test_activate_image_captions_plans_the_text_features_it_makes_possible(
+def test_enable_image_captions_plans_the_text_features_it_makes_possible(
     client: TestClient,
     db_session,
     image_text_project: ImageTextProject,
@@ -362,7 +449,7 @@ def test_activate_image_captions_plans_the_text_features_it_makes_possible(
         assert read_step_status(db_session, image_id, step) == 0, step
 
 
-def test_activate_feature_job_waits_for_the_request_to_commit(
+def test_enable_feature_job_waits_for_the_request_to_commit(
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
@@ -405,7 +492,7 @@ def test_activate_feature_job_waits_for_the_request_to_commit(
     }
 
 
-def test_activate_feature_with_redis_down_changes_nothing(
+def test_enable_feature_with_redis_down_changes_nothing(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -415,9 +502,8 @@ def test_activate_feature_with_redis_down_changes_nothing(
     project_id = feature_project["project"].id
 
     with unreachable_redis():
-        response = client.put(
-            f"/feature/project/{project_id}/{Feature.FULL_TEXT_SEARCH.value}",
-            json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+        response = _act(
+            client, project_id, Feature.FULL_TEXT_SEARCH, FeatureAction.ENABLE
         )
 
     assert response.status_code == 503, response.text
@@ -429,7 +515,7 @@ def test_activate_feature_with_redis_down_changes_nothing(
     assert held_jobs.jobs() == []
 
 
-def test_activate_feature_with_redis_down_in_a_batch_undoes_what_it_could_not_start(
+def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_start(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
@@ -437,11 +523,10 @@ def test_activate_feature_with_redis_down_in_a_batch_undoes_what_it_could_not_st
     monkeypatch: pytest.MonkeyPatch,
 ):
     """With batches of one document, the queue is reachable for the start of
-    the index of text_done (the first batch) only: the activation stops at the
-    batch of text_running, fails with the cause and removes the index it
-    planned for text_running. Once the index of text_done finished, full-text
-    search reads partly available, and Complete plans and starts the index of
-    text_running."""
+    the index of text_done (the first batch) only: the index of text_running
+    cannot start and becomes erroneous, and the activation still ends. Once
+    the index of text_done finished, full-text search reads partly available,
+    and Complete starts the index of text_running again."""
     monkeypatch.setattr(step_planning_service, "ACTIVATION_BATCH_SIZE", 1)
     p = feature_project
     project_id = p["project"].id
@@ -451,60 +536,53 @@ def test_activate_feature_with_redis_down_in_a_batch_undoes_what_it_could_not_st
         held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     (activation,) = held_jobs.ran(JobType.FEATURE_ACTIVATION)
-    assert activation.get_status() == JobStatus.FAILED
-    assert "The job queue cannot be reached" in activation.job.meta["status_message"]
+    assert activation.get_status() == JobStatus.FINISHED
+    assert "1 step jobs could not start" in activation.job.meta["status_message"]
     assert started_steps(held_jobs) == {p["text_done"].id: [JobType.TEXT_ES_INDEX]}
     assert (
         read_step_status(db_session, p["text_running"].id, JobType.TEXT_ES_INDEX)
-        is None
+        == -100
     )
 
     held_jobs.run(JobType.TEXT_ES_INDEX)
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
     held_jobs.run(JobType.FEATURE_ACTIVATION)
     assert started_steps(held_jobs) == {p["text_running"].id: [JobType.TEXT_ES_INDEX]}
 
 
-def test_activate_feature_with_redis_down_sets_its_failed_steps_erroneous_again(
+def test_enable_feature_whose_activation_dies_with_its_worker_stops_computing(
     client: TestClient,
     db_session,
-    partly_project: PartlyProject,
+    feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Completing full-text search while the queue cannot be reached starts
-    nothing, and the batch undoes its change: the index of index_failed and
-    the text extraction of extraction_failed, which it planned again, are
-    erroneous again, and the indexes it newly planned (not_indexed,
-    extraction_failed, spacy_failed) are not planned. The feature stays
-    partly available."""
-    p = partly_project
+    """The worker running the activation of full-text search dies before the
+    first batch: RQ's cleanup of the started jobs runs the failure callback,
+    which removes the pending activation. Nothing was planned, so full-text
+    search reads partly available, and Complete starts the indexes."""
+    p = feature_project
     project_id = p["project"].id
     _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
 
-    with unreachable_redis():
-        held_jobs.run(JobType.FEATURE_ACTIVATION)
+    held_jobs.abandon(JobType.FEATURE_ACTIVATION)
 
-    assert held_jobs.jobs() == []
-    assert (
-        read_step_status(db_session, p["index_failed"].id, JobType.TEXT_ES_INDEX)
-        == -100
-    )
-    assert (
-        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
-        == -100
-    )
-    for key in ("not_indexed", "extraction_failed", "spacy_failed"):
-        assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) is None, (
-            key
-        )
+    db_session.expire_all()
+    assert crud_project.read(db=db_session, id=project_id).feature_activations == {}
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
+    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {
+        p["text_done"].id: [JobType.TEXT_ES_INDEX],
+        p["text_running"].id: [JobType.TEXT_ES_INDEX],
+    }
 
-def test_activate_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
+
+def test_enable_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -535,7 +613,7 @@ def test_activate_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     )
 
 
-def test_activate_feature_waits_for_a_concurrent_activation(
+def test_enable_feature_waits_for_a_concurrent_activation(
     db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -575,42 +653,29 @@ def test_activate_feature_waits_for_a_concurrent_activation(
     ]
 
 
-def test_activate_a_fully_available_feature_starts_nothing(
+def test_enable_feature_in_a_project_without_documents_starts_nothing(
     client: TestClient,
     test_project,
     held_jobs: HeldJobs,
 ):
-    """`test_project` has no documents: there is nothing to compute."""
-    enabled = _activate(client, test_project.id, Feature.FULL_TEXT_SEARCH)
+    """`test_project` has no documents: after disabling keyword statistics,
+    enabling it again has nothing to compute and starts no activation."""
+    _act(client, test_project.id, Feature.KEYWORD_STATISTICS, FeatureAction.DISABLE)
+
+    enabled = _activate(client, test_project.id, Feature.KEYWORD_STATISTICS)
 
     assert enabled == list(Feature)
     assert held_jobs.jobs() == []
+    read = _features(client, test_project.id)[Feature.KEYWORD_STATISTICS]
+    assert read.status == FeatureStatus.FULLY_AVAILABLE
 
 
-def test_activate_feature_requires_membership(client: TestClient):
-    """A non-member gets 403."""
-    response = client.put(
-        f"/feature/project/123456/{Feature.FULL_TEXT_SEARCH.value}",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
-    )
-
-    assert response.status_code == 403, response.text
+# ===========================================================================
+# COMPLETE FEATURE (/feature/project/{project_id}/{feature}/complete) TESTS
+# ===========================================================================
 
 
-def test_activate_unknown_feature_is_rejected(client: TestClient, test_project):
-    """An unknown feature is a validation error."""
-    response = client.put(
-        f"/feature/project/{test_project.id}/no_such_feature",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
-    )
-
-    assert response.status_code == 422, response.text
-
-
-# --- B. complete ------------------------------------------------------------
-
-
-def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
+def test_complete_feature_plans_failed_and_not_planned_documents(
     client: TestClient,
     db_session,
     partly_project: PartlyProject,
@@ -622,7 +687,7 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
     alone, and the other failed steps start once their input is recomputed."""
     p = partly_project
 
-    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
     held_jobs.run(JobType.FEATURE_ACTIVATION)
     started = started_steps(held_jobs)
 
@@ -645,7 +710,7 @@ def test_activate_enabled_feature_completes_failed_and_not_planned_documents(
     }
 
 
-def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
+def test_complete_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     client: TestClient,
     db_session,
     partly_project: PartlyProject,
@@ -656,145 +721,85 @@ def test_activate_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     full-text search, so the mapping is erroneous instead of processing forever."""
     sdoc_id = partly_project["spacy_failed"].id
 
-    _activate(client, partly_project["project"].id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, partly_project["project"].id, Feature.FULL_TEXT_SEARCH)
     held_jobs.run(JobType.FEATURE_ACTIVATION)
 
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
 
 
-# ===========================================================================
-# RESTART FEATURE (/feature/project/{project_id}/{feature}/restart) TESTS
-# ===========================================================================
-
-
-def _restart(client: TestClient, project_id: int, feature: Feature):
-    return client.post(
-        f"/feature/project/{project_id}/{feature.value}/restart",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
-    )
-
-
-def test_restart_feature_starts_its_processing_steps_again(
+def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
     client: TestClient,
     db_session,
-    feature_project: FeatureProject,
+    partly_project: PartlyProject,
     held_jobs: HeldJobs,
 ):
-    """Keyword statistics is computing after its activation, but its jobs never
-    ran (they are held). Restarting it starts the keywords of text_done again;
-    the language detection of text_running, a core step that was processing
-    before the activation, is not started again, and the keywords of
-    text_running wait for it and stay processing."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    held_jobs.empty()
+    """Completing full-text search while the queue cannot be reached for the
+    step jobs starts nothing: every step it planned again or newly is
+    erroneous, the feature reads partly available, and a Complete once the
+    queue is back starts the same steps as without the outage."""
+    p = partly_project
+    project_id = p["project"].id
+    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
 
-    response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    with unreachable_redis():
+        held_jobs.run(JobType.FEATURE_ACTIVATION)
 
-    assert response.status_code == 200, response.text
-    assert response.json() == [Feature.KEYWORD_STATISTICS]
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    assert started_steps(held_jobs) == {
-        p["text_done"].id: [JobType.TEXT_KEYWORDS],
-    }
-    assert (
-        read_step_status(db_session, p["text_running"].id, JobType.TEXT_KEYWORDS) == 0
-    )
-
-
-def test_restart_feature_replaces_its_pending_activation(
-    client: TestClient,
-    db_session,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Restarting keyword statistics while its activation is still pending
-    replaces it: the first activation stops before it plans anything, the
-    restart plans and starts the keywords of text_done, and no activation is
-    pending afterwards."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-
-    response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-
-    assert response.status_code == 200, response.text
-    assert len(held_jobs.inputs(JobType.FEATURE_ACTIVATION)) == 2
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    assert started_steps(held_jobs) == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
-    project = crud_project.read(db=db_session, id=p["project"].id)
-    assert project.feature_activations == {}
-    read = _features(client, p["project"].id)[Feature.KEYWORD_STATISTICS]
-    assert read.status == FeatureStatus.COMPUTING
-
-
-def test_restart_feature_leaves_the_core_steps_of_an_upload_running(
-    client: TestClient,
-    db_session,
-    uploading_project: UploadingProject,
-    held_jobs: HeldJobs,
-):
-    """Restarting keyword statistics while uploading.txt runs its extract_html
-    starts nothing: extract_html is a core step and keeps its job (a second run
-    would extract the document's images twice), and the keywords wait for it."""
-    p = uploading_project
-
-    response = _restart(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-
-    assert response.status_code == 200, response.text
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    assert started_steps(held_jobs) == {}
-    sdoc_id = p["uploading"].id
-    assert read_step_status(db_session, sdoc_id, JobType.EXTRACT_HTML) == 0
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_KEYWORDS) == 0
-
-
-def test_restart_feature_leaves_the_steps_of_other_features_alone(
-    client: TestClient,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Restarting full-text search starts only its own processing steps (the
-    index), not the keywords another activation left processing."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    held_jobs.empty()
-
-    response = _restart(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-
-    assert response.status_code == 200, response.text
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    assert started_steps(held_jobs) == {
-        p["text_done"].id: [JobType.TEXT_ES_INDEX],
-        p["text_running"].id: [JobType.TEXT_ES_INDEX],
-    }
-
-
-def test_restart_a_disabled_feature_is_rejected(
-    client: TestClient,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Only an enabled feature can be restarted: a disabled one gets 403."""
-    response = _restart(client, feature_project["project"].id, Feature.FULL_TEXT_SEARCH)
-
-    assert_feature_disabled(response, Feature.FULL_TEXT_SEARCH)
     assert held_jobs.jobs() == []
+    for key in ("index_failed", "not_indexed", "extraction_failed", "spacy_failed"):
+        assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == -100, (
+            key
+        )
+    assert (
+        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
+        == -100
+    )
+    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    assert read.status == FeatureStatus.PARTLY_AVAILABLE
+
+    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {
+        p["index_failed"].id: [JobType.TEXT_ES_INDEX],
+        p["not_indexed"].id: [JobType.TEXT_ES_INDEX],
+        p["extraction_failed"].id: [JobType.TEXT_EXTRACTION],
+        p["spacy_failed"].id: [JobType.TEXT_ES_INDEX],
+    }
 
 
-def test_restart_feature_requires_membership(client: TestClient):
-    """A non-member gets 403."""
-    response = _restart(client, 123456, Feature.FULL_TEXT_SEARCH)
+def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed(
+    client: TestClient,
+    db_session,
+    partly_project: PartlyProject,
+    held_jobs: HeldJobs,
+):
+    """Completing full-text search starts the text extraction of
+    extraction_failed; it finishes while the queue cannot be reached, so its
+    index, which it would start next, becomes erroneous. Once the other
+    indexes finished, full-text search reads partly available, and Complete
+    starts the index of extraction_failed."""
+    p = partly_project
+    project_id = p["project"].id
+    sdoc_id = p["extraction_failed"].id
+    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
 
-    assert response.status_code == 403, response.text
-    assert "not enabled" not in response.text
+    with unreachable_redis():
+        held_jobs.run(JobType.TEXT_EXTRACTION)
+
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_EXTRACTION) == 1
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_ES_INDEX) == -100
+    held_jobs.run(JobType.TEXT_ES_INDEX)
+    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    assert read.status == FeatureStatus.PARTLY_AVAILABLE
+
+    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    assert started_steps(held_jobs) == {sdoc_id: [JobType.TEXT_ES_INDEX]}
 
 
 # ===========================================================================
-# DISABLE FEATURE (/feature/project/{project_id}/{feature}) TESTS
+# DISABLE FEATURE (/feature/project/{project_id}/{feature}/disable) TESTS
 # ===========================================================================
 
 
@@ -806,8 +811,8 @@ def test_disable_feature_keeps_its_steps(
     """Disabling only changes the enabled features: the steps stay."""
     p = partly_project
 
-    response = client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.FULL_TEXT_SEARCH.value}"
+    response = _act(
+        client, p["project"].id, Feature.FULL_TEXT_SEARCH, FeatureAction.DISABLE
     )
 
     assert response.status_code == 200, response.text
@@ -826,8 +831,8 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     finished index; the not indexed document stays not planned."""
     p = partly_project
 
-    response = client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.FULL_TEXT_SEARCH.value}"
+    response = _act(
+        client, p["project"].id, Feature.FULL_TEXT_SEARCH, FeatureAction.DISABLE
     )
 
     assert response.status_code == 200, response.text
@@ -840,113 +845,29 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     )
 
 
-def test_disable_computing_feature_unplans_its_processing_steps(
+def test_disable_feature_is_rejected_while_steps_it_makes_possible_process(
     client: TestClient,
     db_session,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
+    captioned_image_project: CaptionedImageProject,
 ):
-    """Keyword statistics is computing after its activation: disabling it sets the
-    processing keywords of both text documents to not planned, so no document
-    stays processing for it. The processing core steps of text_running stay
-    processing, and the feature is disabled, not re-enabled."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
+    """Image captions are fully available, but the index of the captioned
+    image, which full-text search needs and only its caption makes possible,
+    is processing: disabling image captions would unplan it while its job may
+    run, so it answers 409 and changes nothing."""
+    p = captioned_image_project
+    project_id = p["project"].id
+    read = _features(client, project_id)[Feature.IMAGE_CAPTIONS]
+    assert read.status == FeatureStatus.FULLY_AVAILABLE
 
-    response = client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
-    )
+    response = _act(client, project_id, Feature.IMAGE_CAPTIONS, FeatureAction.DISABLE)
 
-    assert response.status_code == 200, response.text
-    assert response.json() == []
-    for sdoc in (p["text_done"], p["text_running"]):
-        assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) is None, (
-            sdoc.name
-        )
-    assert read_step_status(db_session, p["text_running"].id, JobType.TEXT_SPACY) == 0
-    read = _features(client, p["project"].id)[Feature.KEYWORD_STATISTICS]
-    assert read.status == FeatureStatus.DISABLED
-
-
-def test_disable_computing_feature_keeps_the_steps_other_features_need(
-    client: TestClient,
-    db_session,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Activating RAG chat enables sentence similarity search too, and both are
-    computing the sentence embeddings. Disabling RAG chat keeps them processing:
-    sentence similarity search still needs them."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.RAG_CHAT)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-
-    response = client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.RAG_CHAT.value}"
-    )
-
-    assert response.status_code == 200, response.text
-    assert response.json() == [Feature.SENTENCE_SIMILARITY_SEARCH]
-    step = JobType.TEXT_SENTENCE_EMBEDDING
-    assert read_step_status(db_session, p["text_done"].id, step) == 0
-    read = _features(client, p["project"].id)[Feature.SENTENCE_SIMILARITY_SEARCH]
-    assert read.status == FeatureStatus.COMPUTING
-
-
-def test_disable_one_of_two_features_sharing_a_step_keeps_it_processing(
-    client: TestClient,
-    db_session,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Full-text search and search & auto-annotate both need the index, without
-    requiring each other. Disabling search & auto-annotate keeps the index
-    processing for full-text search; disabling full-text search as well
-    unplans it."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-    _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-
-    response = client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.SEARCH_ANNOTATE.value}"
-    )
-
-    assert response.status_code == 200, response.text
-    assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) == 0
-    response = client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.FULL_TEXT_SEARCH.value}"
-    )
-    assert response.status_code == 200, response.text
+    assert response.status_code == 409, response.text
+    assert "it is 'computing'" in response.text
     assert (
-        read_step_status(db_session, p["text_done"].id, JobType.TEXT_ES_INDEX) is None
+        Feature.IMAGE_CAPTIONS.value
+        in crud_project.read(db=db_session, id=project_id).enabled_features
     )
-
-
-def test_enable_disable_enable_plans_the_steps_again(
-    client: TestClient,
-    db_session,
-    feature_project: FeatureProject,
-    held_jobs: HeldJobs,
-):
-    """Disabling a computing feature unplans its processing steps; enabling it
-    again plans and starts them again."""
-    p = feature_project
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    client.delete(
-        f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}"
-    )
-    held_jobs.empty()
-
-    enabled = _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    started = started_steps(held_jobs)
-
-    assert enabled == [Feature.KEYWORD_STATISTICS]
-    assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_KEYWORDS) == 0
-    assert started == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
+    assert read_step_status(db_session, p["image"].id, JobType.TEXT_ES_INDEX) == 0
 
 
 def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
@@ -954,18 +875,12 @@ def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
 ):
     """RAG chat requires sentence similarity search: disabling the latter fails
     with 400 and names RAG chat."""
-    response = client.delete(
-        f"/feature/project/{test_project.id}/{Feature.SENTENCE_SIMILARITY_SEARCH.value}"
+    response = _act(
+        client,
+        test_project.id,
+        Feature.SENTENCE_SIMILARITY_SEARCH,
+        FeatureAction.DISABLE,
     )
 
     assert response.status_code == 400, response.text
     assert "rag_chat" in response.text
-
-
-def test_disable_feature_requires_membership(client: TestClient):
-    """A non-member gets 403."""
-    response = client.delete(
-        f"/feature/project/123456/{Feature.FULL_TEXT_SEARCH.value}"
-    )
-
-    assert response.status_code == 403, response.text

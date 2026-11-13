@@ -1,6 +1,4 @@
 import threading
-import time
-from typing import Any
 
 import pytest
 from sqlalchemy import text
@@ -13,7 +11,6 @@ from common.languages_enum import Language
 from core.annotation.annotation_document_crud import crud_adoc
 from core.project.project_crud import crud_project
 from core.user.user_orm import UserORM
-from feature_test_utils import _create_sdoc, create_project_with_features
 from job_test_utils import HeldJobs
 from modules.doc_processing import step_planning_service
 from modules.doc_processing.doc_processing_dto import (
@@ -21,15 +18,12 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
 )
 from modules.doc_processing.step_planning_service import StepPlanningService
-from modules.doc_processing.step_planning_statements import PlanningChange
-from modules.doc_processing.step_run import start_steps
 from pipeline_test_utils import (
     read_all_step_status,
     read_step_status,
     started_steps,
 )
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 
 from .conftest import PlanningProjects
@@ -37,7 +31,8 @@ from .conftest import PlanningProjects
 # The planning operations at the interface of StepPlanningService, for what the
 # feature endpoint tests (`endpoints/project_features`) cannot see: other
 # projects and doctypes, a chain of blocked steps, the document locks, the
-# features an import adds and the planning of a new document.
+# activation job, the features an import adds and the planning of a new
+# document.
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -172,61 +167,6 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
     assert errors == []
 
 
-def test_undo_of_a_batch_locks_the_documents_in_the_order_of_a_batch(
-    db_session: Session, test_user: UserORM, held_jobs: HeldJobs
-):
-    """A batch locks the documents per doctype (text before image), ascending
-    within a doctype; the undo of another batch locks them in the same order,
-    so the two never deadlock. The image has the lower id: a batch holds the
-    text document and then locks the image, while the undo of both waits for
-    the text document without holding the image. Calls the private undo of
-    the activation, which a failing start runs."""
-    project = create_project_with_features(
-        db_session, test_user, title="Lock Order Project", features=[]
-    )
-    image = _create_sdoc(
-        db_session, project, name="image.png", doctype=DocType.image, status={}
-    )
-    text_sdoc = _create_sdoc(
-        db_session, project, name="text.txt", doctype=DocType.text, status={}
-    )
-    db_session.commit()
-    assert image.id < text_sdoc.id
-    _enable_full_text_search(db_session, project.id)
-    activation = _activation(held_jobs)
-    sdoc_ids = [image.id, text_sdoc.id]
-    lock = text("SELECT id FROM sourcedocument WHERE id = :id FOR NO KEY UPDATE")
-    errors: list[Exception] = []
-
-    def _undo() -> None:
-        try:
-            with SQLRepo().transaction() as db:
-                db.execute(text("SET LOCAL lock_timeout = '5s'"))
-                StepPlanningService()._undo_batch(
-                    db=db,
-                    activation=activation,
-                    change=PlanningChange(
-                        created={JobType.TEXT_ES_INDEX: sdoc_ids}, redone={}
-                    ),
-                    unstarted=[(i, [JobType.TEXT_ES_INDEX]) for i in sdoc_ids],
-                )
-        except Exception as e:
-            errors.append(e)
-
-    # the batch: the text documents first, then the image
-    db_session.execute(lock, {"id": text_sdoc.id})
-    thread = threading.Thread(target=_undo)
-    thread.start()
-    time.sleep(0.5)
-    db_session.execute(text("SET LOCAL lock_timeout = '5s'"))
-    db_session.execute(lock, {"id": image.id})
-    db_session.commit()
-    thread.join(timeout=10)
-
-    assert not thread.is_alive()
-    assert errors == []
-
-
 # ===========================================================================
 # FEATURE ACTIVATION JOB
 # ===========================================================================
@@ -262,41 +202,6 @@ def test_activation_plans_in_batches_like_in_one(
     }
     assert (
         crud_project.read(db=db_session, id=p["project"].id).feature_activations == {}
-    )
-
-
-def _start_then_disable(**kwargs: Any) -> dict[JobType, Job | None]:
-    """Start the steps, then disable full-text search, as a user between two
-    batches of the activation."""
-    started = start_steps(**kwargs)
-    with SQLRepo().transaction() as db:
-        StepPlanningService().disable_feature(
-            db=db, project_id=kwargs["project_id"], feature=Feature.FULL_TEXT_SEARCH
-        )
-    return started
-
-
-def test_activation_stops_when_the_feature_is_disabled_between_batches(
-    db_session: Session,
-    planning_projects: PlanningProjects,
-    held_jobs: HeldJobs,
-    monkeypatch: pytest.MonkeyPatch,
-):
-    """With one document per batch, a disable after the first batch (done) has
-    started its steps makes the next batch stop the activation: language_failed
-    is never planned, and the disable unplanned the index of done."""
-    p = planning_projects
-    monkeypatch.setattr(step_planning_service, "ACTIVATION_BATCH_SIZE", 1)
-    monkeypatch.setattr(step_planning_service, "start_steps", _start_then_disable)
-    _enable_full_text_search(db_session, p["project"].id)
-
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-
-    assert started_steps(held_jobs) == {p["done"].id: [JobType.TEXT_ES_INDEX]}
-    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) is None
-    assert (
-        read_step_status(db_session, p["language_failed"].id, JobType.TEXT_ES_INDEX)
-        is None
     )
 
 
@@ -339,11 +244,12 @@ def test_a_failing_activation_removes_the_pending_activation(
     held_jobs: HeldJobs,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """An activation job that fails for another reason than the queue (its
-    steps cannot be started) removes the feature's pending activation, so the
-    feature does not stay computing for it, and undoes the batch it could not
-    start, like for an unreachable queue: the index of done is not planned, so
-    no step stays processing without a job."""
+    """An activation job that fails (here its steps cannot be started) ends
+    through its failure callback: the feature's pending activation is removed,
+    so the feature does not stay computing for it. The index of done, which
+    the committed batch planned before the failure, stays processing without
+    a job: the accepted gap of a process that dies between writing processing
+    and queueing; Recompute starts it."""
     p = planning_projects
     _enable_full_text_search(db_session, p["project"].id)
     monkeypatch.setattr(step_planning_service, "start_steps", _fail)
@@ -355,42 +261,7 @@ def test_a_failing_activation_removes_the_pending_activation(
     assert (
         crud_project.read(db=db_session, id=p["project"].id).feature_activations == {}
     )
-    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) is None
-
-
-# ===========================================================================
-# DISABLE FEATURE
-# ===========================================================================
-
-
-def test_disable_feature_unplans_only_the_processing_steps_of_the_project(
-    db_session: Session,
-    planning_projects: PlanningProjects,
-    held_jobs: HeldJobs,
-):
-    """After enabling full-text search in project, disabling it unplans the
-    processing index of done; its finished steps stay, and the processing index
-    of the other project, which enables full-text search too, stays
-    processing."""
-    p = planning_projects
-    service = StepPlanningService()
-    _enable_full_text_search(db_session, p["project"].id)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-
-    service.disable_feature(
-        db=db_session, project_id=p["project"].id, feature=Feature.FULL_TEXT_SEARCH
-    )
-    db_session.commit()
-
-    assert crud_project.read(db=db_session, id=p["project"].id).enabled_features == []
-    assert read_all_step_status(db_session, p["done"].id) == {
-        "extract_html": 1,
-        "text_extraction": 1,
-        "text_language_detection": 1,
-        "text_spacy": 1,
-        "text_html_mapping": 1,
-    }
-    assert read_step_status(db_session, p["indexing"].id, JobType.TEXT_ES_INDEX) == 0
+    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) == 0
 
 
 # ===========================================================================

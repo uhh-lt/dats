@@ -303,14 +303,14 @@ def test_recompute_of_a_document_without_input_data_marks_it_erroneous(
     ]
 
 
-def test_recompute_with_an_unreachable_queue_fails_and_marks_nothing(
+def test_recompute_with_an_unreachable_queue_fails_the_step(
     client: TestClient,
     db_session,
     recompute_project: RecomputeProject,
     held_jobs: HeldJobs,
 ):
-    """If the queue cannot be reached, the request answers 503 and no step
-    changes its status."""
+    """If the queue cannot be reached, the step cannot start: like any step
+    that cannot start, it becomes erroneous, and the request starts no job (it answers 0)."""
     p = recompute_project
     sdoc_id = p["text_done"].id
 
@@ -319,7 +319,9 @@ def test_recompute_with_an_unreachable_queue_fails_and_marks_nothing(
             client, p["project"].id, JobType.TEXT_LANGUAGE_DETECTION, [sdoc_id]
         )
 
-    assert response.status_code == 503, response.text
-    assert "The job queue cannot be reached" in response.text
+    assert response.status_code == 200, response.text
+    assert response.json() == 0
     assert held_jobs.jobs() == []
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_LANGUAGE_DETECTION) == 1
+    assert (
+        read_step_status(db_session, sdoc_id, JobType.TEXT_LANGUAGE_DETECTION) == -100
+    )

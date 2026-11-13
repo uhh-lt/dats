@@ -13,6 +13,6 @@ from systems.job_system.job_system_enum import JobPriority, JobTiming
     timeout=JobTiming.ONE_DAY,
 )
 def handle_feature_activation_job(payload: FeatureActivationJobInput, job: Job) -> None:
-    """Run the feature activation that enabling, completing or restarting a
+    """Run the feature activation that enabling or completing a
     feature started (`StepPlanningService.handle_feature_activation_job`)."""
     StepPlanningService().handle_feature_activation_job(job=job, payload=payload)

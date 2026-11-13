@@ -30,7 +30,7 @@ from core.user.user_orm import UserORM
 from modules.eximport.export_enum import ExportJobType
 from modules.eximport.export_job_dto import ExportJobInput
 from systems.job_system.job_dto import Job, JobRead
-from systems.job_system.job_handler import rq_job_handler
+from systems.job_system.job_handler import rq_job_failed, rq_job_handler
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 from systems.websocket_system.websocket_dto import WebSocketEnvelope
@@ -91,6 +91,17 @@ def _payload(envelope: WebSocketEnvelope) -> JobRead:
 
 
 @pytest.mark.usefixtures("client")
+def _run_like_rq(job: Job, handler) -> None:
+    """Run the job's handler through the job handler, and call the failure
+    callback with the error if it raises, as RQ's worker does."""
+    try:
+        rq_job_handler(
+            jobtype=job.get_type(), handler=handler, payload=job.job.kwargs["payload"]
+        )
+    except Exception as e:
+        rq_job_failed(job.job, job.job.connection, type(e), e, e.__traceback__)
+
+
 class TestJobUpdatedEmission:
     """JOB_UPDATED emission across job lifecycle transitions.
 
@@ -248,8 +259,9 @@ class TestJobUpdatedEmission:
     ):
         """The last JOB_UPDATED of a raising job carries FAILED and the error message.
 
-        RQ sets FAILED only after rq_job_handler raised, so the handler must publish
-        the terminal status explicitly; otherwise clients never see the job fail.
+        RQ sets FAILED only after its failure callback (rq_job_failed) ran, so the
+        callback must publish the terminal status explicitly; otherwise clients
+        never see the job fail.
         """
         with patch("systems.job_system.job_events._publish_envelope_sync"):
             job = _start_export_job(test_project)
@@ -264,13 +276,8 @@ class TestJobUpdatedEmission:
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"
             ) as mock_publish,
-            pytest.raises(RuntimeError, match="export exploded"),
         ):
-            rq_job_handler(
-                jobtype=JobType.EXPORT,
-                handler=failing_handler,
-                payload=job.job.kwargs["payload"],
-            )
+            _run_like_rq(job, failing_handler)
 
         payload = _payload(_captured_envelopes(mock_publish)[-1])
         assert payload.job_id == job.get_id()
@@ -301,13 +308,8 @@ class TestJobUpdatedEmission:
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"
             ) as mock_publish,
-            pytest.raises(RuntimeError, match="enqueue failed"),
         ):
-            rq_job_handler(
-                jobtype=JobType.EXPORT,
-                handler=lambda payload, job: None,
-                payload=job.job.kwargs["payload"],
-            )
+            _run_like_rq(job, lambda payload, job: None)
 
         statuses = [_payload(e).status for e in _captured_envelopes(mock_publish)]
         assert JobStatus.FINISHED not in statuses
@@ -339,13 +341,8 @@ class TestJobUpdatedEmission:
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"
             ) as mock_publish,
-            pytest.raises(RuntimeError),
         ):
-            rq_job_handler(
-                jobtype=JobType.EXPORT,
-                handler=failing_handler,
-                payload=job.job.kwargs["payload"],
-            )
+            _run_like_rq(job, failing_handler)
 
         payload = _payload(_captured_envelopes(mock_publish)[-1])
         assert payload.status == JobStatus.FAILED

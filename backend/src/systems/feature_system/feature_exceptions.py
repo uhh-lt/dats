@@ -1,7 +1,7 @@
 from fastapi import status
 
 from common.exception_handler import exception_handler
-from common.feature_enum import Feature
+from common.feature_enum import Feature, FeatureAction, FeatureStatus
 
 
 class FeatureDeclarationError(Exception):
@@ -37,11 +37,19 @@ class FeatureStillRequiredError(Exception):
 
 
 @exception_handler(status.HTTP_409_CONFLICT)
-class FeatureActivationPendingError(Exception):
-    """Raised when a feature is enabled or completed while its activation runs."""
+class FeatureActionNotAllowedError(Exception):
+    """Raised when a feature action is not allowed in the feature's status."""
 
-    def __init__(self, project_id: int, feature: Feature) -> None:
+    def __init__(
+        self,
+        feature: Feature,
+        action: FeatureAction,
+        status: FeatureStatus,
+        allowed: list[FeatureStatus],
+    ) -> None:
+        names = " or ".join(f"'{s.value}'" for s in allowed)
         super().__init__(
-            f"The feature '{feature.value}' is being computed in project "
-            f"{project_id}. Restart it to compute it with other settings."
+            f"Cannot {action.value} the feature '{feature.value}': it is "
+            f"'{status.value}'. {action.value.capitalize()} is allowed only when it "
+            f"is {names}."
         )

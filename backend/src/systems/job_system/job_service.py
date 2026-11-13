@@ -16,6 +16,7 @@ from rq.registry import (
     FinishedJobRegistry,
     StartedJobRegistry,
 )
+from rq.timeouts import TimerDeathPenalty
 from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
@@ -51,20 +52,20 @@ class RegisteredJob(TypedDict):
 
 
 class JobHooks(NamedTuple):
-    """Called by the job handler around every job (see `JobService.register_hooks`)."""
+    """Called around every job (see `JobService.register_hooks`): `started` and
+    `finished` by the job handler, `failed` by RQ's failure callback."""
 
-    # before the handler; returns the input the handler, `finished` and `failed`
-    # get (the stored input or a narrowed copy of it), or None to skip the job; a
-    # failing hook fails the job, and `failed` gets the stored input
-    started: Callable[[JobType, JobInputBase], JobInputBase | None]
+    # before the handler; a failing hook fails the job
+    started: Callable[[JobType, JobInputBase], None]
     # after the handler returned; a failing hook fails the job
     finished: Callable[[JobType, JobInputBase, JobOutputBase | None], None]
-    # after the `started` hook, the handler or the `finished` hook raised
+    # once the job failed: the `started` hook, the handler or the `finished`
+    # hook raised, or its worker died (`job_handler.rq_job_failed`)
     failed: Callable[[JobType, JobInputBase], None]
 
 
 _NO_HOOKS = JobHooks(
-    started=lambda job_type, input: input,
+    started=lambda job_type, input: None,
     finished=lambda job_type, input, output: None,
     failed=lambda job_type, input: None,
 )
@@ -88,7 +89,14 @@ class JobService(metaclass=SingletonMeta):
                 qn = f"{device}-{priority.value}"  # queue name
                 self.queues[qk] = rq.Queue(name=qn, connection=self.redis_conn)
                 self.registries[qk] = {
-                    "started": StartedJobRegistry(name=qn, connection=self.redis_conn),
+                    # its cleanup runs the failure callback of a job whose worker
+                    # died, also in a request thread, where no signal can time
+                    # the callback out (RQ's default)
+                    "started": StartedJobRegistry(
+                        name=qn,
+                        connection=self.redis_conn,
+                        death_penalty_class=TimerDeathPenalty,
+                    ),
                     "finished": FinishedJobRegistry(
                         name=qn, connection=self.redis_conn
                     ),
@@ -219,7 +227,7 @@ class JobService(metaclass=SingletonMeta):
                 raise JobInputError(job_type, enrich_e) from enrich_e
 
         # Enqueue the job
-        from systems.job_system.job_handler import rq_job_handler
+        from systems.job_system.job_handler import rq_job_failed, rq_job_handler
 
         retry = job_info["retry"]
         queue = self.queues[(job_info["device"], priority or job_info["priority"])]
@@ -247,6 +255,8 @@ class JobService(metaclass=SingletonMeta):
                 result_ttl=job_info["result_ttl"],
                 retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
                 job_timeout=job_info["timeout"],
+                # RQ calls it once the job failed, also if its worker died
+                on_failure=rq.Callback(rq_job_failed),
             )
         except RedisError as e:
             raise JobQueueUnavailableError(job_type) from e

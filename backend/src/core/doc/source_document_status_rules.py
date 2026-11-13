@@ -17,8 +17,8 @@ else not planned if one is not planned, else ready (`step_set_status`).
 `count_step_sets` counts the documents of a project by it.
 
 The two orders differ on purpose: a document with a failed step needs attention
-whatever else runs, while a feature that still computes offers Restart, not
-Complete.
+whatever else runs, while a feature that still computes allows no action
+until it stops computing.
 """
 
 from dataclasses import dataclass, field

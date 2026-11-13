@@ -6,17 +6,12 @@ project (`project.feature_activations`). Besides the status CRUD and
 `source_document_status_rules.py`, this is the only code that touches the step
 status rows."""
 
-from typing import NamedTuple
-
 from sqlalchemy import (
     ARRAY,
     ColumnElement,
-    CursorResult,
     Integer,
     ScalarSelect,
     String,
-    and_,
-    delete,
     exists,
     func,
     literal,
@@ -37,20 +32,10 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
-from repos.db.crud_base import BATCH_SIZE
 from repos.db.sql_exceptions import NoSuchElementError
 
 # Documents per step: the rows (sdoc id, step) a planning touched
 StepRows = dict[JobType, list[int]]
-
-
-class PlanningChange(NamedTuple):
-    """The rows a planning changed in a way it can undo: those it created
-    (`create_missing`) and those it set from erroneous to processing
-    (`update_to_processing`)."""
-
-    created: StepRows
-    redone: StepRows
 
 
 def _id_values(sdoc_ids: list[int]) -> TableValuedAlias:
@@ -71,20 +56,19 @@ def read_sdoc_ids_to_plan(
     doctype: DocType,
     sdoc_ids: tuple[int, int],
     missing_steps: list[JobType],
-    redo_steps: dict[SDocStatus, list[JobType]],
+    redo_steps: list[JobType],
 ) -> list[int]:
     """
     Read and lock (FOR NO KEY UPDATE) the documents of the project and doctype
     in the id range that lack one of `missing_steps`, or have one of the
-    `redo_steps` of a status with that status.
+    `redo_steps` erroneous.
 
     Args:
         project_id: The project of the documents.
         doctype: The doctype of the documents.
         sdoc_ids: The range of the document ids (after, until]: the batch.
         missing_steps: Steps a document is selected for if one is not planned.
-        redo_steps: Per status, the steps a document is selected for if one
-            has this status.
+        redo_steps: Steps a document is selected for if one is erroneous.
 
     Returns:
         The ids of the selected documents, ascending.
@@ -101,14 +85,12 @@ def read_sdoc_ids_to_plan(
             .scalar_subquery()
         )
         conditions.append(planned < len(missing_steps))
-    for status, steps in redo_steps.items():
-        if not steps:
-            continue
+    if redo_steps:
         conditions.append(
             exists().where(
                 SourceDocumentStepStatusORM.sdoc_id == sdoc.id,
-                SourceDocumentStepStatusORM.step.in_(steps),
-                SourceDocumentStepStatusORM.status == status,
+                SourceDocumentStepStatusORM.step.in_(redo_steps),
+                SourceDocumentStepStatusORM.status == SDocStatus.erroneous,
             )
         )
     if not conditions:
@@ -215,23 +197,21 @@ def update_to_processing(
     *,
     sdoc_ids: list[int],
     steps: list[JobType],
-    statuses: list[SDocStatus],
 ) -> StepRows:
     """
-    Plan the given steps of the documents again: set those with one of
-    `statuses` to processing. `StepPlanningService` has locked the
-    documents (`read_sdoc_ids_to_plan`).
+    Plan the given steps of the documents again: set the erroneous ones to
+    processing. `StepPlanningService` has locked the documents
+    (`read_sdoc_ids_to_plan`).
 
     Args:
         sdoc_ids: The documents.
         steps: The steps to plan again.
-        statuses: The statuses to set to processing.
 
     Returns:
         The changed documents per step, for the steps in the order of `steps`.
     """
     result: StepRows = {step: [] for step in steps}
-    if not sdoc_ids or not steps or not statuses:
+    if not sdoc_ids or not steps:
         return result
     ids = _id_values(sdoc_ids)
     changed = db.execute(
@@ -239,7 +219,7 @@ def update_to_processing(
         .where(
             SourceDocumentStepStatusORM.sdoc_id == ids.c.sdoc_id,
             SourceDocumentStepStatusORM.step.in_(steps),
-            SourceDocumentStepStatusORM.status.in_(statuses),
+            SourceDocumentStepStatusORM.status == SDocStatus.erroneous,
         )
         .values(status=SDocStatus.processing)
         .returning(
@@ -326,108 +306,38 @@ def read_startable(
     return result
 
 
-def undo_planning(db: Session, *, change: PlanningChange) -> None:
-    """
-    Undo the given rows of a planning that are still processing: delete the
-    created ones (not planned again) and set the redone ones to erroneous
-    again; rows with another status keep it. Locks the documents (FOR NO KEY
-    UPDATE) first in the order of a batch (per doctype, ascending id within
-    it); the caller has locked the project.
-
-    Args:
-        change: The rows to undo.
-    """
-    sdoc_ids = sorted(
-        {sdoc_id for rows in change for ids in rows.values() for sdoc_id in ids}
-    )
-    if not sdoc_ids:
-        return
-    sdoc = SourceDocumentORM
-    for doctype in DocType:
-        db.scalars(
-            select(sdoc.id)
-            .where(
-                sdoc.id.in_(select(_id_values(sdoc_ids).c.sdoc_id)),
-                sdoc.doctype == doctype.value,
-            )
-            .order_by(sdoc.id)
-            .with_for_update(of=sdoc, key_share=True)
-        ).all()
-    row = SourceDocumentStepStatusORM
-    for step, step_ids in change.created.items():
-        if not step_ids:
-            continue
-        db.execute(
-            delete(row)
-            .where(
-                row.sdoc_id.in_(select(_id_values(step_ids).c.sdoc_id)),
-                row.step == step,
-                row.status == SDocStatus.processing,
-            )
-            .execution_options(synchronize_session=False)
-        )
-    for step, step_ids in change.redone.items():
-        if not step_ids:
-            continue
-        db.execute(
-            update(row)
-            .where(
-                row.sdoc_id.in_(select(_id_values(step_ids).c.sdoc_id)),
-                row.step == step,
-                row.status == SDocStatus.processing,
-            )
-            .values(status=SDocStatus.erroneous)
-            .execution_options(synchronize_session=False)
-        )
-    db.flush()
-
-
-def delete_pending_by_project(
+def exists_processing(
     db: Session, *, project_id: int, doctype: DocType, steps: list[JobType]
-) -> int:
+) -> bool:
     """
-    Unplan the given steps of the project's documents of this doctype that
-    are pending (processing); steps with another status keep it.
+    Whether one of the given steps is processing for a document of the project
+    and doctype.
 
     Args:
         project_id: The project of the documents.
         doctype: The doctype of the documents.
-        steps: The steps to unplan.
+        steps: The steps to check.
 
     Returns:
-        The number of unplanned steps.
+        True if one of the steps is processing.
     """
     if not steps:
-        return 0
+        return False
     sdoc = SourceDocumentORM
-    pending = and_(
-        SourceDocumentStepStatusORM.step.in_(steps),
-        SourceDocumentStepStatusORM.status == SDocStatus.processing,
-    )
-    sdoc_ids = list(
-        db.scalars(
-            select(sdoc.id)
-            .where(
-                sdoc.project_id == project_id,
-                sdoc.doctype == doctype.value,
-                exists().where(SourceDocumentStepStatusORM.sdoc_id == sdoc.id, pending),
+    row = SourceDocumentStepStatusORM
+    return bool(
+        db.scalar(
+            select(
+                exists().where(
+                    row.sdoc_id == sdoc.id,
+                    sdoc.project_id == project_id,
+                    sdoc.doctype == doctype.value,
+                    row.step.in_(steps),
+                    row.status == SDocStatus.processing,
+                )
             )
-            .order_by(sdoc.id)
-            .with_for_update(of=sdoc, key_share=True)
         )
     )
-    deleted = 0
-    for i in range(0, len(sdoc_ids), BATCH_SIZE):
-        batch_ids = sdoc_ids[i : i + BATCH_SIZE]
-        result = db.execute(
-            delete(SourceDocumentStepStatusORM)
-            .where(SourceDocumentStepStatusORM.sdoc_id.in_(batch_ids), pending)
-            .execution_options(synchronize_session=False)
-        )
-        assert isinstance(result, CursorResult)
-        deleted += result.rowcount
-    db.flush()
-    return deleted
 
 
 def _in_range(sdoc_ids: list[int]) -> ColumnElement[bool]:
