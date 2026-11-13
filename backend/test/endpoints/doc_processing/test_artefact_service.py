@@ -176,7 +176,7 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
 # ===========================================================================
 
 
-def test_activation_plans_in_batches_like_in_one(
+def test_computation_plans_in_batches_like_in_one(
     db_session: Session,
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
@@ -210,7 +210,7 @@ def test_activation_plans_in_batches_like_in_one(
     )
 
 
-def test_activation_leaves_the_documents_after_its_last_document_alone(
+def test_computation_leaves_the_documents_after_its_last_document_alone(
     db_session: Session,
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
@@ -243,7 +243,7 @@ def _fail(*args: object, **kwargs: object) -> None:
     raise RuntimeError("cannot start the steps")
 
 
-def test_a_failing_activation_removes_the_pending_activation(
+def test_a_failing_computation_removes_the_pending_computation(
     db_session: Session,
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,

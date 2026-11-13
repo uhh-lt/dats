@@ -25,7 +25,7 @@ STATUS_PROCESSING = 0
 STATUS_FINISHED = 1
 
 # The processing steps per doctype, in pipeline order
-# (pipeline_registry.graph().steps(doctype) of the backend), and the steps that
+# (artefact_registry.graph().steps(doctype) of the backend), and the steps that
 # write the embeddings of a Weaviate collection, the Elasticsearch index and the
 # thumbnail of an image. A copy: the doctor imports no
 # DATS code, so it runs on the released backend image.

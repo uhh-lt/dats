@@ -6,12 +6,12 @@ The feature system talks to the artefact system (`systems/artefact_system`) in a
 
 ## Feature status
 
-`FeatureService.read_project_features` derives the status from the step statuses and the pending feature activations. Nothing stores it.
+`FeatureService.read_project_features` derives the status from the availability of the feature's artefacts (`ArtefactService.read_availability`): the step statuses of the documents they apply to and the pending artefact computations. Nothing stores it.
 
 | Status           | Meaning                                                                                                                                             |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Disabled         | The project does not use the feature.                                                                                                               |
-| Computing        | Work for the feature is queued or running: a step of it is processing, or a feature activation of it (or of a feature that requires it) is pending. |
+| Computing        | Work for the feature is queued or running: a step of it is processing, or an artefact computation of one of its artefacts is pending.               |
 | Partly available | Nothing is running, and some documents lack the feature's data.                                                                                     |
 | Fully available  | Every document has the feature's data.                                                                                                              |
 
@@ -25,9 +25,9 @@ One endpoint per action: `POST /feature/project/{project_id}/{feature}/{enable|c
 | Complete | Computes the data for the documents that lack it, failed steps too. | Partly available          |
 | Disable  | Turns the feature off. The computed data stays.                     | Partly or fully available |
 
-`StepPlanningService` (`modules/doc_processing`) carries out Enable and Complete: it starts a feature activation job, which plans and starts the steps in batches. The feature is computing from the request on.
+`FeatureService` carries out the actions after it locked the project. Enable and Complete pass the feature's artefacts (those of the features it requires included) to `ArtefactService.compute`, which starts an artefact computation job that plans and starts the steps in batches. The feature is computing from the request on; so is every feature that needs one of these artefacts. Disable only changes the enabled features and calls nothing in the artefact system. The upload of a document plans with the project's artefact demand (`FeatureService.read_artefact_demand`).
 
-Disable is also rejected (400) while an enabled feature requires the feature, and (409) while a step that only this feature makes possible is processing. So no step is ever unplanned while its job may run.
+Disable is also rejected (400) while an enabled feature requires the feature. Disable never unplans a step, as it is rejected while the feature is computing.
 
 There is no Restart and no cancel.
 
@@ -40,6 +40,6 @@ There is no Restart and no cancel.
 | Partly available | 409    | yes      | yes     |
 | Fully available  | 409    | 409      | yes     |
 
-`ALLOWED_STATUSES` in `feature_service.py` is this table, and `FeatureService.assert_action_allowed` checks it after `StepPlanningService` has locked the project. The Features tab shows only the allowed actions.
+`ALLOWED_STATUSES` in `feature_service.py` is this table, and `FeatureService.assert_action_allowed` checks it after the action has locked the project. The Features tab shows only the allowed actions.
 
 When a step fails, it becomes erroneous and the feature partly available: see the failure rule in [`systems/artefact_system/README.md`](../artefact_system/README.md).

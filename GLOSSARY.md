@@ -50,8 +50,16 @@ A capability of DATS that a project can enable or disable, and that needs certai
 _Avoid_: Feature toggle, feature flag, module
 
 **Artefact**:
-A named piece of data that preprocessing computes for a source document, such as its sentence embeddings. Core artefacts are computed for every document; the caption of an image is one, as DATS turns every modality into text.
+A named piece of data that preprocessing computes for a source document, such as its sentence embeddings.
 _Avoid_: Output, result, preprocessed data
+
+**Core Artefact**:
+An artefact computed for every source document, whatever features its project enables, such as the content, the tokens and sentences, or the caption of an image (DATS turns every modality into text). All other artefacts are computed only while a feature needs them.
+_Avoid_: Default artefact, base data
+
+**Artefact Demand**:
+The artefacts the enabled features of a project require, besides the core artefacts. It is derived from the enabled features and never stored; a new source document gets the pipeline steps of the core artefacts and of the artefact demand.
+_Avoid_: Needed artefacts, project artefacts
 
 **Pipeline Step**:
 One unit of preprocessing for a source document, which requires some artefacts and produces others. Short: "step".
@@ -70,16 +78,16 @@ The overall state of a source document, derived from the step statuses of its pl
 _Avoid_: Processed status, sdoc status, health
 
 **Feature Status**:
-The state of a feature in a project: disabled (the project does not use it), computing (work for it is queued or running: a step of it is processing for some document, or a feature activation is pending), partly available (nothing runs, and some documents lack its data) or fully available (every document has its data). It decides which feature actions are allowed: Enable when disabled, Complete when partly available, Disable when partly or fully available, none while computing.
+The state of a feature in a project: disabled (the project does not use it), computing (work for its artefacts is queued or running: a step of them is processing for some document, or an artefact computation of one of them is pending), partly available (nothing runs, and some documents lack its data) or fully available (every document has its data). It decides which feature actions are allowed: Enable when disabled, Complete when partly available, Disable when partly or fully available, none while computing.
 _Avoid_: Feature state, readiness, coverage (coverage is the share of documents that are ready)
 
 **Step Planning**:
-Deciding which pipeline steps a source document gets a step status for, from the features its project has enabled.
-_Avoid_: Scheduling, activation (a feature activation triggers step planning)
+Deciding which pipeline steps a source document gets a step status for: on upload from the core artefacts and the artefact demand of its project, in an artefact computation from the core artefacts and the computed artefacts.
+_Avoid_: Scheduling, activation (an artefact computation triggers step planning)
 
-**Feature Activation**:
-The background work that plans and starts a feature's pipeline steps for the existing source documents of a project, in batches, after a user enables or completes the feature.
-_Avoid_: Enabling (enabling is the user's action), planning job
+**Artefact Computation**:
+The background work that plans and starts the pipeline steps of some artefacts for the existing source documents of a project, in batches, after a user enables or completes a feature that needs them. Its artefacts are fixed when it starts.
+_Avoid_: Feature activation (its former name), enabling (enabling is the user's action), planning job
 
 **Step Run**:
 One execution of a job for some of the pipeline steps of one source document.

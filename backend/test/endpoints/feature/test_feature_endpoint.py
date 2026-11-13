@@ -243,7 +243,7 @@ def test_feature_action_is_allowed_only_in_its_statuses(
     assert held_jobs.jobs() == []
 
 
-def test_feature_actions_are_rejected_while_its_activation_is_pending(
+def test_feature_actions_are_rejected_while_its_computation_is_pending(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -386,7 +386,7 @@ def test_a_feature_that_shares_an_artefact_of_a_pending_computation_is_computing
         assert features[feature].processing_documents == 0, feature
 
 
-def test_enable_feature_that_requires_a_computing_feature_starts_its_activation(
+def test_enable_feature_that_requires_a_computing_feature_starts_its_computation(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
@@ -551,7 +551,7 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
     }
 
 
-def test_enable_feature_whose_activation_dies_with_its_worker_stops_computing(
+def test_enable_feature_whose_computation_dies_with_its_worker_stops_computing(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
@@ -612,7 +612,7 @@ def test_enable_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     )
 
 
-def test_enable_feature_waits_for_a_concurrent_activation(
+def test_enable_feature_waits_for_a_concurrent_computation(
     db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,

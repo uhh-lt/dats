@@ -41,12 +41,11 @@ class CRUDSourceDocumentStepStatus(
 ):
     """The generic reads and writes of the pipeline step statuses. The status
     rows are touched in three places: this CRUD, `source_document_status_rules`
-    (the status filters) and the planning statements of `StepPlanningService`
-    (`modules/doc_processing/step_planning_statements.py`), which plan the steps
-    of a project's documents.
+    (the status filters) and the planning statements of `ArtefactService`
+    (`artefact_statements.py`), which plan the steps of a project's documents.
 
     Every write first locks the documents' rows (`_lock_sdocs`), in the lock
-    order of `StepPlanningService`."""
+    order of the artefact system (`README.md` next to this file)."""
 
     ### CREATE OPERATIONS ###
     # Inherited from SQLCRUDBase (create_multi: the statuses of new documents)
@@ -276,7 +275,7 @@ class CRUDSourceDocumentStepStatus(
 
     def _lock_sdocs(self, *, db: Session, sdoc_ids: list[int]) -> None:
         """Lock the documents' rows for a change of their step statuses, in the
-        lock order of `StepPlanningService`."""
+        lock order of the artefact system."""
         ids = sorted(set(sdoc_ids))
         for i in range(0, len(ids), BATCH_SIZE):
             db.execute(

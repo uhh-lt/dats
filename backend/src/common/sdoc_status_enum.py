@@ -11,7 +11,7 @@ class SDocStatus(int, Enum):
 
 
 class StepSetStatus(str, Enum):
-    """The status of a set of steps (the steps of a feature) for one document
+    """The status of a set of steps (the steps some artefacts need) for one document
     (`source_document_status_rules.step_set_status`)."""
 
     processing = "processing"
