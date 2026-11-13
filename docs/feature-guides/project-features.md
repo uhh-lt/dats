@@ -4,11 +4,11 @@ Not every project needs every DATS feature. A project that only uses the LLM Ass
 
 Annotation, the analysis tools, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. The features below can be switched on and off per project.
 
-| Area                 | Features                                                                                                          |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Search               | Full-Text Search, Search & Auto-Annotate, Sentence Search, Image Search                                           |
-| Analysis             | RAG Chat, Concepts Over Time Analysis, Word Frequency Analysis, Keyword Statistics and Filter, Duplicate Finder   |
-| Automatic Annotation | Annotation Scaling, Tag Recommendations, Automatic Entity Annotations, Image Captions, Automatic Object Detection |
+| Area                 | Features                                                                                                        |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Search               | Full-Text Search, Search & Auto-Annotate, Sentence Search, Image Search                                         |
+| Analysis             | RAG Chat, Concepts Over Time Analysis, Word Frequency Analysis, Keyword Statistics and Filter, Duplicate Finder |
+| Automatic Annotation | Annotation Scaling, Tag Recommendations, Automatic Entity Annotations, Automatic Object Detection               |
 
 Some features build on others: RAG Chat, Annotation Scaling and Concepts Over Time Analysis need **Sentence Search**.
 
@@ -17,7 +17,7 @@ Some features build on others: RAG Chat, Annotation Scaling and Concepts Over Ti
 The **Create new project** dialog lists all features below the project name and description, grouped by area.
 
 - **Everything** (the default) enables all features. The project behaves like every DATS project before project features existed.
-- **Minimal** enables none of them. Uploads only compute what every document needs (text, sentences, thumbnails, metadata) and are processed fastest.
+- **Minimal** enables none of them. Uploads only compute what every document needs (text, sentences, image captions, thumbnails, metadata) and are processed fastest.
 - Check or uncheck single features to build your own selection (shown as **Custom**). Checking a feature also checks the features it needs; unchecking a feature also unchecks the features that need it.
 
 You can change your choice at any time later.

@@ -4,7 +4,6 @@ import pytest
 
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
-from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -18,7 +17,6 @@ from feature_test_utils import (
     create_feature_project,
     create_partly_project,
     create_project_with_features,
-    minimal_image_steps,
     minimal_text_steps,
     set_step_status,
 )
@@ -35,54 +33,6 @@ def feature_project(db_session, test_user: UserORM) -> FeatureProject:
 def partly_project(db_session, test_user: UserORM) -> PartlyProject:
     """The project described in `PartlyProject`."""
     return create_partly_project(db_session, test_user)
-
-
-class ImageTextProject(TypedDict):
-    """
-    This fixture sets up the following project:
-
-    - project: "Image Text Project" of `test_user`, with full-text search,
-      sentence similarity search and keyword statistics enabled (no image
-      captions)
-    - image: image document "image.png" (an 8x8 red PNG);
-      image_metadata_extraction and image_thumbnail are finished, all other
-      steps are not planned
-
-    Non-obvious derived behavior:
-
-    - Without image captions an image has no text, so the three enabled text
-      features do not apply to it; enabling image captions makes their steps
-      possible for the image.
-    """
-
-    project: ProjectORM
-    image: SourceDocumentORM
-
-
-@pytest.fixture(scope="function")
-def image_text_project(db_session, test_user: UserORM) -> ImageTextProject:
-    """The project described in `ImageTextProject`."""
-    project = create_project_with_features(
-        db_session,
-        test_user,
-        title="Image Text Project",
-        features=[
-            Feature.FULL_TEXT_SEARCH,
-            Feature.SENTENCE_SIMILARITY_SEARCH,
-            Feature.KEYWORD_STATISTICS,
-        ],
-    )
-    image = _create_sdoc(
-        db_session,
-        project,
-        name="image.png",
-        doctype=DocType.image,
-        status=dict.fromkeys(minimal_image_steps(), 1),
-    )
-    db_session.commit()
-    db_session.refresh(project)
-    db_session.refresh(image)
-    return {"project": project, "image": image}
 
 
 class UploadingProject(TypedDict):
@@ -128,47 +78,6 @@ def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
     db_session.refresh(project)
     db_session.refresh(uploading)
     return {"project": project, "uploading": uploading}
-
-
-class CaptionedImageProject(TypedDict):
-    """
-    This fixture sets up the following project:
-    - project: "Captioned Image Project" of `test_user`, with image captions and
-      full-text search enabled
-    - image: image document "image.png" (an 8x8 red PNG); all steps an image of
-      this project gets are finished (the image steps, its caption and the text
-      steps after it), except text_es_index, which is processing
-    Non-obvious derived behavior:
-    - Image captions are fully available (their steps end at the caption), and
-      full-text search is computing: the index of the image is a step of full-text
-      search that only the caption makes possible.
-    """
-
-    project: ProjectORM
-    image: SourceDocumentORM
-
-
-@pytest.fixture(scope="function")
-def captioned_image_project(db_session, test_user: UserORM) -> CaptionedImageProject:
-    """The project described in `CaptionedImageProject`."""
-    features = [Feature.IMAGE_CAPTIONS, Feature.FULL_TEXT_SEARCH]
-    project = create_project_with_features(
-        db_session, test_user, title="Captioned Image Project", features=features
-    )
-    steps = planned_steps(doctype=DocType.image, features=features)
-    image = _create_sdoc(
-        db_session,
-        project,
-        name="image.png",
-        doctype=DocType.image,
-        status={
-            step.value: 0 if step == JobType.TEXT_ES_INDEX else 1 for step in steps
-        },
-    )
-    db_session.commit()
-    db_session.refresh(project)
-    db_session.refresh(image)
-    return {"project": project, "image": image}
 
 
 class ActivationProject(TypedDict):

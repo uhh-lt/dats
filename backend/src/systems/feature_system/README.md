@@ -27,7 +27,7 @@ One endpoint per action: `POST /feature/project/{project_id}/{feature}/{enable|c
 
 `StepPlanningService` (`modules/doc_processing`) carries out Enable and Complete: it starts a feature activation job, which plans and starts the steps in batches. The feature is computing from the request on.
 
-Disable is also rejected (400) while an enabled feature requires the feature, and (409) while a step that only this feature makes possible is processing (e.g. the text steps of an image need its caption). So no step is ever unplanned while its job may run.
+Disable is also rejected (400) while an enabled feature requires the feature, and (409) while a step that only this feature makes possible is processing. So no step is ever unplanned while its job may run.
 
 There is no Restart and no cancel.
 

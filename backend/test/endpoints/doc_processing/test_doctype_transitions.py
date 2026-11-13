@@ -146,15 +146,15 @@ def test_an_image_extracted_from_a_document_runs_its_roots(
 ):
     """extract_html of page.html stores its embedded image and creates an image
     document for it (an entry point); the image document starts and finishes its
-    metadata extraction and thumbnail, whose enrichers find the stored image."""
+    metadata extraction and thumbnail, whose enrichers find the stored image,
+    and starts its caption, which stays processing (its model is hosted)."""
     p = media_uploads
 
     held = _follow(held_jobs, p["project"].id, p["html_with_image"], DocType.text)
 
     image_id = _sdoc_id(db_session, p["project"].id, DocType.image)
-    assert all(payload.sdoc_id != image_id for payload in held.values())
+    assert held[JobType.IMAGE_CAPTION].sdoc_id == image_id
     status = read_all_step_status(db_session, image_id)
-    assert status == {
-        JobType.IMAGE_METADATA_EXTRACTION.value: FINISHED,
-        JobType.IMAGE_THUMBNAIL.value: FINISHED,
-    }
+    assert status[JobType.IMAGE_METADATA_EXTRACTION.value] == FINISHED
+    assert status[JobType.IMAGE_THUMBNAIL.value] == FINISHED
+    assert status[JobType.IMAGE_CAPTION.value] == PROCESSING

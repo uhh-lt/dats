@@ -50,7 +50,7 @@ A capability of DATS that a project can enable or disable, and that needs certai
 _Avoid_: Feature toggle, feature flag, module
 
 **Artefact**:
-A named piece of data that preprocessing computes for a source document, such as its sentence embeddings. Core artefacts are computed for every document.
+A named piece of data that preprocessing computes for a source document, such as its sentence embeddings. Core artefacts are computed for every document; the caption of an image is one, as DATS turns every modality into text.
 _Avoid_: Output, result, preprocessed data
 
 **Pipeline Step**:

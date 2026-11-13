@@ -420,8 +420,11 @@ def create_text_document(
     name: str,
     sentences: list[str],
     initialize_metadata: bool = True,
+    doctype: DocType = DocType.text,
 ) -> SourceDocumentORM:
-    """Create a fully tokenized text document with one sentence per entry."""
+    """Create a fully tokenized document with one sentence per entry: a text
+    document, or a document of another doctype with this text (e.g. the
+    caption of an image)."""
     from core.doc.source_document_crud import crud_sdoc
     from core.doc.source_document_data_crud import crud_sdoc_data
     from core.doc.source_document_data_dto import SourceDocumentDataCreate
@@ -435,7 +438,7 @@ def create_text_document(
         create_dto=SourceDocumentCreate(
             filename=filename,
             name=name,
-            doctype=DocType.text,
+            doctype=doctype,
             project_id=project.id,
         ),
     )
@@ -462,7 +465,7 @@ def create_text_document(
             db=db,
             project_id=project.id,
             sdoc_id=sdoc.id,
-            doctype=DocType.text,
+            doctype=doctype,
         )
         language = crud_sdoc_meta.read_by_sdoc_and_key(
             db=db, sdoc_id=sdoc.id, key="language"

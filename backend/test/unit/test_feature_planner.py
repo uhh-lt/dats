@@ -135,25 +135,17 @@ def test_a_feature_adds_the_steps_of_its_artefacts(
     assert set(core_steps(doctype)) <= set(planned)
 
 
-def test_image_text_steps_need_image_captions():
-    """An image has text only with a caption: without image captions, the text
-    steps a feature needs are not planned, with them they are."""
-    assert _planned(DocType.image, [Feature.SENTENCE_SIMILARITY_SEARCH]) == (
-        core_steps(DocType.image)
-    )
-    # the caption, then the core steps of the image and of the caption's text
+def test_the_text_steps_of_an_image_are_always_planned():
+    """Every image gets a caption, so a project without features plans the
+    caption and the core text steps of an image, and a text feature plans its
+    steps for images too."""
     text_core_steps = [
         s for s in core_steps(DocType.text) if s in all_steps(DocType.image)
     ]
-    assert _planned(DocType.image, [Feature.IMAGE_CAPTIONS]) == [
-        s
-        for s in all_steps(DocType.image)
-        if s == JobType.IMAGE_CAPTION
-        or s in core_steps(DocType.image)
-        or s in text_core_steps
-    ]
+    assert JobType.IMAGE_CAPTION in core_steps(DocType.image)
+    assert set(text_core_steps) <= set(core_steps(DocType.image))
     assert JobType.TEXT_SENTENCE_EMBEDDING in _planned(
-        DocType.image, [Feature.IMAGE_CAPTIONS, Feature.SENTENCE_SIMILARITY_SEARCH]
+        DocType.image, [Feature.SENTENCE_SIMILARITY_SEARCH]
     )
 
 
@@ -175,14 +167,14 @@ def test_feature_steps_are_its_producers_and_the_steps_they_require():
     ]
 
 
-def test_feature_steps_of_images_depend_on_the_enabled_image_captions():
-    """Sentence similarity search applies to images only in projects that
-    caption them."""
-    feature = Feature.SENTENCE_SIMILARITY_SEARCH
-    assert feature_steps(doctype=DocType.image, feature=feature, enabled=[]) == []
-    assert feature_steps(
-        doctype=DocType.image, feature=feature, enabled=[Feature.IMAGE_CAPTIONS]
-    )[-1] == (JobType.TEXT_SENTENCE_EMBEDDING)
+def test_feature_steps_of_images_include_the_caption():
+    """Sentence similarity search applies to images: its steps start with the
+    caption, which gives the image its text."""
+    steps = feature_steps(
+        doctype=DocType.image, feature=Feature.SENTENCE_SIMILARITY_SEARCH, enabled=[]
+    )
+    assert steps[0] == JobType.IMAGE_CAPTION
+    assert steps[-1] == JobType.TEXT_SENTENCE_EMBEDDING
 
 
 # ===========================================================================

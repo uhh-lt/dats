@@ -194,8 +194,8 @@ def test_project_round_trip_keeps_step_statuses(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> None:
     """Every imported document has the step statuses of its original: finished
-    steps stay finished and not planned steps stay not planned. The image without
-    caption (empty HTML) is imported as well."""
+    steps stay finished and not planned steps stay not planned. The image with
+    an empty caption (empty HTML) is imported as well."""
     projects = feature_toggle_eximport_projects
     expected = {
         sdoc.filename: _step_status(db_session, sdoc)

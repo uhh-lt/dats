@@ -11,6 +11,7 @@ from common.languages_enum import Language
 from core.annotation.annotation_document_crud import crud_adoc
 from core.project.project_crud import crud_project
 from core.user.user_orm import UserORM
+from feature_test_utils import minimal_image_steps
 from job_test_utils import HeldJobs
 from modules.doc_processing import step_planning_service
 from modules.doc_processing.doc_processing_dto import (
@@ -73,9 +74,9 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     held_jobs: HeldJobs,
 ):
     """Enabling full-text search in project plans the index of its two text
-    documents and starts it where its input is finished; the finished steps of
-    done keep their status, and the image and the documents of the other
-    project are left alone."""
+    documents and its image (which has a caption) and starts it where its
+    input is finished; the finished steps of done and the image keep their
+    status, and the documents of the other project are left alone."""
     p = planning_projects
 
     _enable_full_text_search(db_session, p["project"].id)
@@ -94,14 +95,15 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
         "text_es_index": 0,
     }
     assert read_all_step_status(db_session, p["image"].id) == {
-        "image_metadata_extraction": 1,
-        "image_thumbnail": 1,
+        **dict.fromkeys(minimal_image_steps(), 1),
+        "text_es_index": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
     assert read_step_status(db_session, p["indexing"].id, JobType.TEXT_ES_INDEX) == 0
     assert started == {
         p["done"].id: [JobType.TEXT_ES_INDEX],
         p["language_failed"].id: [JobType.TEXT_ES_INDEX],
+        p["image"].id: [JobType.TEXT_ES_INDEX],
     }
 
 
@@ -190,6 +192,7 @@ def test_activation_plans_in_batches_like_in_one(
     assert started == {
         p["done"].id: [JobType.TEXT_ES_INDEX],
         p["language_failed"].id: [JobType.TEXT_ES_INDEX],
+        p["image"].id: [JobType.TEXT_ES_INDEX],
     }
     assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) == 0
     assert read_all_step_status(db_session, p["language_failed"].id) == {

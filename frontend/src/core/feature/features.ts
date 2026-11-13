@@ -75,12 +75,6 @@ export const FEATURES: Record<Feature, FeatureInfo> = {
     description: "Annotate named entities (persons, organizations, places, ...) in all text automatically.",
     area: "Automatic Annotation",
   },
-  [Feature.IMAGE_CAPTIONS]: {
-    title: "Image Captions",
-    description:
-      "Describe every image with a generated caption, which makes the images searchable and annotatable as text.",
-    area: "Automatic Annotation",
-  },
   [Feature.OBJECT_DETECTION]: {
     title: "Automatic Object Detection",
     description: "Annotate the objects in all images automatically with bounding boxes.",

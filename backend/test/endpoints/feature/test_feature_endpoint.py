@@ -25,8 +25,6 @@ from systems.feature_system.feature_dto import (
 )
 from systems.job_system.job_system_enum import JobStatus
 
-from .conftest import CaptionedImageProject, ImageTextProject
-
 # ===========================================================================
 # GET ALL FEATURES (/feature) TESTS
 # ===========================================================================
@@ -81,17 +79,18 @@ def test_project_features_of_a_project_without_documents_are_ready(
 @pytest.mark.parametrize(
     "feature,total,missing",
     [
-        # both text documents, text_running also lacks language detection
+        # every document (the image has a caption), text_running also lacks
+        # language detection
         pytest.param(
             Feature.KEYWORD_STATISTICS,
-            2,
+            3,
             [JobType.TEXT_LANGUAGE_DETECTION, JobType.TEXT_KEYWORDS],
             id="keywords",
         ),
         # needs tokens and sentences, which text_running is still computing
         pytest.param(
             Feature.RAG_CHAT,
-            2,
+            3,
             [
                 JobType.TEXT_LANGUAGE_DETECTION,
                 JobType.TEXT_SPACY,
@@ -101,7 +100,7 @@ def test_project_features_of_a_project_without_documents_are_ready(
         ),
         # needs only the content
         pytest.param(
-            Feature.FULL_TEXT_SEARCH, 2, [JobType.TEXT_ES_INDEX], id="full-text"
+            Feature.FULL_TEXT_SEARCH, 3, [JobType.TEXT_ES_INDEX], id="full-text"
         ),
         # image features apply to the image only
         pytest.param(
@@ -109,9 +108,6 @@ def test_project_features_of_a_project_without_documents_are_ready(
             1,
             [JobType.IMAGE_OBJECT_DETECTION],
             id="object-detection",
-        ),
-        pytest.param(
-            Feature.IMAGE_CAPTIONS, 1, [JobType.IMAGE_CAPTION], id="image-captions"
         ),
     ],
 )
@@ -166,14 +162,14 @@ def test_project_features_count_the_documents_of_a_disabled_feature(
     client: TestClient, feature_project: FeatureProject
 ):
     """A disabled feature is disabled whatever its documents: sentence
-    similarity search counts text_running as processing (language detection) and
-    text_done as not planned (no sentence embeddings)."""
+    similarity search counts text_running as processing (language detection),
+    text_done and the image as not planned (no sentence embeddings)."""
     read = _features(client, feature_project["project"].id)[
         Feature.SENTENCE_SIMILARITY_SEARCH
     ]
 
     assert read.status == FeatureStatus.DISABLED
-    assert (read.processing_documents, read.not_planned_documents) == (1, 1)
+    assert (read.processing_documents, read.not_planned_documents) == (1, 2)
 
 
 # ===========================================================================
@@ -332,10 +328,10 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     held_jobs: HeldJobs,
 ):
     """Activating keyword statistics starts one feature activation job with the
-    chosen settings, which plans text_keywords for both text documents and
-    leaves the image and the steps of other features alone; it starts the steps
-    whose inputs are finished (text_done), text_running gets them when its
-    inputs finish."""
+    chosen settings, which plans text_keywords for every document (the image
+    has a caption) and leaves the steps of other features alone; it starts the
+    steps whose inputs are finished (text_done and the image), text_running
+    gets them when its inputs finish."""
     p = feature_project
 
     _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
@@ -343,16 +339,22 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     held_jobs.run(JobType.FEATURE_ACTIVATION)
     started = started_steps(held_jobs)
 
-    for sdoc in (p["text_done"], p["text_running"]):
+    for sdoc in (p["text_done"], p["text_running"], p["image"]):
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) == 0, (
             sdoc.name
         )
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) is None
     assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_SPACY) == 1
-    assert read_step_status(db_session, p["image"].id, JobType.IMAGE_CAPTION) is None
+    assert (
+        read_step_status(db_session, p["image"].id, JobType.IMAGE_OBJECT_DETECTION)
+        is None
+    )
     assert isinstance(activation, FeatureActivationJobInput)
     assert activation.settings == SETTINGS
-    assert started == {p["text_done"].id: [JobType.TEXT_KEYWORDS]}
+    assert started == {
+        p["text_done"].id: [JobType.TEXT_KEYWORDS],
+        p["image"].id: [JobType.TEXT_KEYWORDS],
+    }
 
 
 def test_enable_feature_makes_it_computing(
@@ -360,7 +362,7 @@ def test_enable_feature_makes_it_computing(
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """After the activation, both text documents process full-text search."""
+    """After the activation, every document processes full-text search."""
     project_id = feature_project["project"].id
 
     _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
@@ -368,7 +370,7 @@ def test_enable_feature_makes_it_computing(
 
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
     assert read.status == FeatureStatus.COMPUTING
-    assert (read.processing_documents, read.total_documents) == (2, 2)
+    assert (read.processing_documents, read.total_documents) == (3, 3)
 
 
 def test_enable_feature_is_computing_before_its_documents_are_planned(
@@ -428,50 +430,26 @@ def test_enable_two_features_sharing_a_step_starts_it_once(
     assert started_steps(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
+        p["image"].id: [JobType.TEXT_ES_INDEX],
     }
 
 
-def test_enable_image_captions_plans_the_text_steps_of_images(
+def test_enable_text_feature_plans_its_steps_for_images(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """With a caption, an image has text: activating image captions plans the
-    caption and the text steps after it, but starts only the caption."""
+    """The text steps of an image are always planned, as every image gets a
+    caption: activating full-text search plans and starts the index of the
+    image too."""
     p = feature_project
 
-    _activate(client, p["project"].id, Feature.IMAGE_CAPTIONS)
-    held_jobs.run(JobType.FEATURE_ACTIVATION)
-    started = started_steps(held_jobs)
-
-    for step in (JobType.IMAGE_CAPTION, JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY):
-        assert read_step_status(db_session, p["image"].id, step) == 0, step
-    assert started == {p["image"].id: [JobType.IMAGE_CAPTION]}
-
-
-def test_enable_image_captions_plans_the_text_features_it_makes_possible(
-    client: TestClient,
-    db_session,
-    image_text_project: ImageTextProject,
-    held_jobs: HeldJobs,
-):
-    """With image captions an image has text: activating them plans the steps of
-    the enabled text features for the image too (the index, sentence embeddings
-    and keywords), not only the caption and the core text steps."""
-    image_id = image_text_project["image"].id
-
-    _activate(client, image_text_project["project"].id, Feature.IMAGE_CAPTIONS)
+    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
     held_jobs.run(JobType.FEATURE_ACTIVATION)
 
-    for step in (
-        JobType.IMAGE_CAPTION,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_ES_INDEX,
-        JobType.TEXT_SENTENCE_EMBEDDING,
-        JobType.TEXT_KEYWORDS,
-    ):
-        assert read_step_status(db_session, image_id, step) == 0, step
+    assert read_step_status(db_session, p["image"].id, JobType.TEXT_ES_INDEX) == 0
+    assert started_steps(held_jobs)[p["image"].id] == [JobType.TEXT_ES_INDEX]
 
 
 def test_enable_feature_job_waits_for_the_request_to_commit(
@@ -514,6 +492,7 @@ def test_enable_feature_job_waits_for_the_request_to_commit(
     assert started_steps(held_jobs) == {
         feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
         feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
+        feature_project["image"].id: [JobType.TEXT_ES_INDEX],
     }
 
 
@@ -549,9 +528,9 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
 ):
     """With batches of one document, the queue is reachable for the start of
     the index of text_done (the first batch) only: the index of text_running
-    cannot start and becomes erroneous, and the activation still ends. Once
-    the index of text_done finished, full-text search reads partly available,
-    and Complete starts the index of text_running again."""
+    and of the image cannot start and become erroneous, and the activation
+    still ends. Once the index of text_done finished, full-text search reads
+    partly available, and Complete starts the two other indexes again."""
     monkeypatch.setattr(step_planning_service, "ACTIVATION_BATCH_SIZE", 1)
     p = feature_project
     project_id = p["project"].id
@@ -562,12 +541,10 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
 
     (activation,) = held_jobs.ran(JobType.FEATURE_ACTIVATION)
     assert activation.get_status() == JobStatus.FINISHED
-    assert "1 step jobs could not start" in activation.job.meta["status_message"]
+    assert "2 step jobs could not start" in activation.job.meta["status_message"]
     assert started_steps(held_jobs) == {p["text_done"].id: [JobType.TEXT_ES_INDEX]}
-    assert (
-        read_step_status(db_session, p["text_running"].id, JobType.TEXT_ES_INDEX)
-        == -100
-    )
+    for sdoc in (p["text_running"], p["image"]):
+        assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) == -100
 
     held_jobs.run(JobType.TEXT_ES_INDEX)
     read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
@@ -575,7 +552,10 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
 
     _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
     held_jobs.run(JobType.FEATURE_ACTIVATION)
-    assert started_steps(held_jobs) == {p["text_running"].id: [JobType.TEXT_ES_INDEX]}
+    assert started_steps(held_jobs) == {
+        p["text_running"].id: [JobType.TEXT_ES_INDEX],
+        p["image"].id: [JobType.TEXT_ES_INDEX],
+    }
 
 
 def test_enable_feature_whose_activation_dies_with_its_worker_stops_computing(
@@ -604,6 +584,7 @@ def test_enable_feature_whose_activation_dies_with_its_worker_stops_computing(
     assert started_steps(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
+        p["image"].id: [JobType.TEXT_ES_INDEX],
     }
 
 
@@ -868,31 +849,6 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     assert (
         read_step_status(db_session, p["not_indexed"].id, JobType.TEXT_ES_INDEX) is None
     )
-
-
-def test_disable_feature_is_rejected_while_steps_it_makes_possible_process(
-    client: TestClient,
-    db_session,
-    captioned_image_project: CaptionedImageProject,
-):
-    """Image captions are fully available, but the index of the captioned
-    image, which full-text search needs and only its caption makes possible,
-    is processing: disabling image captions would unplan it while its job may
-    run, so it answers 409 and changes nothing."""
-    p = captioned_image_project
-    project_id = p["project"].id
-    read = _features(client, project_id)[Feature.IMAGE_CAPTIONS]
-    assert read.status == FeatureStatus.FULLY_AVAILABLE
-
-    response = _act(client, project_id, Feature.IMAGE_CAPTIONS, FeatureAction.DISABLE)
-
-    assert response.status_code == 409, response.text
-    assert "it is 'computing'" in response.text
-    assert (
-        Feature.IMAGE_CAPTIONS.value
-        in crud_project.read(db=db_session, id=project_id).enabled_features
-    )
-    assert read_step_status(db_session, p["image"].id, JobType.TEXT_ES_INDEX) == 0
 
 
 def test_disable_feature_that_an_enabled_feature_requires_is_rejected(

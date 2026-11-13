@@ -650,9 +650,10 @@ def feature_toggle_eximport_projects(
         frequencies are ("sentence", 30) and ("29", 1), and it has its
         Elasticsearch entry (filename and content).
       - "image.png" (`image`), a 4x4 PNG image with its raw file, the WebP and
-        thumbnail that image_thumbnail writes, without caption (empty content,
-        HTML and raw HTML), the image embedding [0.4, 0.5] and finished
-        `toggled_image_steps()` (the core steps and `image_embedding`); every
+        thumbnail that image_thumbnail writes, an empty caption (empty
+        content, HTML and raw HTML), the image embedding [0.4, 0.5] and
+        finished `toggled_image_steps()` (the core steps, among them the
+        caption and the text steps after it, and `image_embedding`); every
         other step is not planned.
       - "clip.mp4" (`video`), a video of one second (a 64x64 test picture with
         a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello

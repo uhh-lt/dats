@@ -17,6 +17,7 @@ class Artefact(str, Enum):
     # the audio stream: the uploaded file of an audio document, extracted from a video
     AUDIO = "audio"
     TRANSCRIPT = "transcript"
+    IMAGE_CAPTION = "image_caption"
 
     # optional
     ES_INDEX = "es_index"
@@ -26,7 +27,6 @@ class Artefact(str, Enum):
     KEYWORDS = "keywords"
     WORD_FREQUENCIES = "word_frequencies"
     NER_SPANS = "ner_spans"
-    IMAGE_CAPTION = "image_caption"
     OBJECT_BBOXES = "object_bboxes"
 
 
@@ -43,5 +43,6 @@ CORE_ARTEFACTS: frozenset[Artefact] = frozenset(
         Artefact.FILE_METADATA,
         Artefact.AUDIO,
         Artefact.TRANSCRIPT,
+        Artefact.IMAGE_CAPTION,
     }
 )

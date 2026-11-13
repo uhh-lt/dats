@@ -22,6 +22,5 @@ export enum Feature {
   DUPLICATE_FINDER = "duplicate_finder",
   KEYWORD_STATISTICS = "keyword_statistics",
   ENTITY_ANNOTATIONS = "entity_annotations",
-  IMAGE_CAPTIONS = "image_captions",
   OBJECT_DETECTION = "object_detection",
 }

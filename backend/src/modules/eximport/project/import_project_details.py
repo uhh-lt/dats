@@ -12,6 +12,10 @@ from modules.eximport.project.project_export_schema import (
     ProjectDetailsExportSchema,
 )
 
+# The feature DATS no longer has: image captions are always computed. Archives
+# of an earlier version may still enable it.
+_REMOVED_FEATURE = "image_captions"
+
 
 def read_project_details(path: Path) -> ProjectDetailsExportSchema:
     """Read and validate the project details file of a project archive."""
@@ -25,13 +29,15 @@ def read_project_details(path: Path) -> ProjectDetailsExportSchema:
 def archived_features(details: ProjectDetailsExportSchema | None) -> list[Feature]:
     """The features to enable for the archive's project details. Archives exported
     before the feature toggles have no project details: all features are enabled,
-    as in a project of that time. Rejects features this DATS version does not know
-    (e.g. of an archive exported by a newer version)."""
+    as in a project of that time. Drops features DATS no longer has and rejects
+    features this DATS version does not know (e.g. of an archive exported by a
+    newer version)."""
     if details is None:
         return list(Feature)
 
+    archived = [f for f in details.enabled_features if f != _REMOVED_FEATURE]
     known = {f.value for f in Feature}
-    unknown = [f for f in details.enabled_features if f not in known]
+    unknown = [f for f in archived if f not in known]
     if unknown:
         raise ImportProjectDetailsError(
             errors=[
@@ -40,7 +46,7 @@ def archived_features(details: ProjectDetailsExportSchema | None) -> list[Featur
                 f"{', '.join(sorted(known))}."
             ]
         )
-    return [Feature(f) for f in details.enabled_features]
+    return [Feature(f) for f in archived]
 
 
 def import_project_details_to_proj(

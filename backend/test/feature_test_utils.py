@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
+from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
@@ -52,9 +51,11 @@ class FeatureProject(TypedDict):
     - text_running: text document "text_running.txt"; extract_html and
       text_extraction are finished, text_language_detection, text_spacy and
       text_html_mapping are processing, all other steps are not planned
-    - image: image document "image.png"; image_metadata_extraction and
-      image_thumbnail are finished, all other steps are not planned (no caption,
-      so no text steps)
+    - image: image document "image.png"; the steps of an image in a project
+      without features are finished (image_metadata_extraction,
+      image_thumbnail, image_caption and the text steps after it:
+      text_extraction, text_language_detection, text_spacy,
+      text_html_mapping), all other steps are not planned
 
     Non-obvious derived behavior:
 
@@ -62,9 +63,9 @@ class FeatureProject(TypedDict):
       text needs extract_html, text_extraction, text_language_detection and
       text_keywords (not text_spacy, keywords need no tokens), so
       text_running misses text_language_detection.
-    - Features that need text apply to the two text documents only; image
-      features (object detection, image captions, image similarity search) to
-      the image only.
+    - Every image has a caption, so features that need text apply to the
+      image too; image features (object detection, image similarity search)
+      apply to the image only.
     """
 
     project: ProjectORM
@@ -96,21 +97,20 @@ def _create_sdoc(
     doctype: DocType,
     status: dict[str, int],
 ) -> SourceDocumentORM:
-    """A document with the data its step jobs read, so they can start: a text
+    """A document with the data its step jobs read, so they can start: every
     document has the text of `SDOC_SENTENCES` (data row, tokens, sentences)
-    and the language "en", an image an 8x8 red PNG as its file. The given
+    and the language "en" (for an image: its caption), an image an 8x8 red
+    PNG as its file. The given
     steps get the given status, the others are not planned."""
-    if doctype == DocType.text:
-        sdoc = create_text_document(
-            db, project=project, filename=name, name=name, sentences=SDOC_SENTENCES
-        )
-    else:
-        sdoc = crud_sdoc.create(
-            db=db,
-            create_dto=SourceDocumentCreate(
-                filename=name, name=name, doctype=doctype, project_id=project.id
-            ),
-        )
+    sdoc = create_text_document(
+        db,
+        project=project,
+        filename=name,
+        name=name,
+        sentences=SDOC_SENTENCES,
+        doctype=doctype,
+    )
+    if doctype == DocType.image:
         _write_image_file(sdoc)
     set_step_status(db, sdoc.id, status)
     return sdoc

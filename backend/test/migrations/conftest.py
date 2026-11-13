@@ -466,3 +466,47 @@ def old_status_database(
         db_session.rollback()
         db_session.close()
         command.upgrade(config, "head")
+
+
+BEFORE_CAPTIONS_CORE = "f0bfbe883d73"
+CAPTIONS_CORE = "41c2d56be9f3"
+
+
+@pytest.fixture(scope="function")
+def image_captions_toggle_database(
+    db_session: Session, test_project: ProjectORM
+) -> Generator[int, None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `41c2d56be9f3_drop_the_image_captions_toggle` and sets up `test_project`
+    as it was then: it enables the features "full_text_search" and
+    "image_captions", and has the pending feature activations
+    {"image_captions": "a1", "full_text_search": "a2"}. It migrates the
+    database back to head afterwards.
+
+    Returns the id of `test_project`.
+    """
+    project_id = test_project.id
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, BEFORE_CAPTIONS_CORE)
+    try:
+        db_session.execute(
+            sa.text(
+                "UPDATE project SET enabled_features = :features, "
+                "feature_activations = CAST(:activations AS jsonb) WHERE id = :id"
+            ),
+            {
+                "features": ["full_text_search", "image_captions"],
+                "activations": json.dumps(
+                    {"image_captions": "a1", "full_text_search": "a2"}
+                ),
+                "id": project_id,
+            },
+        )
+        db_session.commit()
+        yield project_id
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")

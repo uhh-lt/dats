@@ -9,12 +9,6 @@ register_feature(
 )
 
 register_feature(
-    Feature.IMAGE_CAPTIONS,
-    requires_artefacts={Artefact.IMAGE_CAPTION},
-    requires_features=set(),
-)
-
-register_feature(
     Feature.OBJECT_DETECTION,
     requires_artefacts={Artefact.OBJECT_BBOXES},
     requires_features=set(),

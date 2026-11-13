@@ -144,7 +144,7 @@ TEXT_IMAGE = frozenset({DocType.text, DocType.image})
 
 def _planning_graph() -> PipelineGraph:
     """Text gets its raw HTML from extract_html, an image from its caption,
-    which produces the optional caption and the core raw HTML. Keywords are
+    which produces the core caption and the core raw HTML. Keywords are
     optional and the document embeddings require them."""
     return PipelineGraph(
         _producing_all_other_artefacts(
@@ -199,23 +199,6 @@ def test_plan_pulls_in_an_optional_artefact_a_selected_step_requires():
     assert plan[-2:] == [JobType.TEXT_KEYWORDS, JobType.TEXT_DOCUMENT_EMBEDDING]
 
 
-def test_plan_drops_a_step_whose_input_is_not_produced_and_the_steps_after_it():
-    """The image caption also produces the core raw HTML, but only its optional
-    caption selects it: without the caption, an image has no raw HTML, so text
-    extraction and the steps after it are dropped."""
-    graph = _planning_graph()
-
-    assert graph.plan(DocType.image, CORE_ARTEFACTS | {Artefact.KEYWORDS}) == [
-        JobType.IMAGE_THUMBNAIL
-    ]
-    assert graph.plan(DocType.image, CORE_ARTEFACTS | {Artefact.IMAGE_CAPTION}) == [
-        JobType.IMAGE_CAPTION,
-        JobType.IMAGE_THUMBNAIL,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-    ]
-
-
 def test_inputs_are_the_producers_of_the_required_artefacts_per_doctype():
     """Text extraction reads the raw HTML of extract_html in a text document and
     of the caption in an image."""
@@ -253,10 +236,14 @@ def test_needed_steps_are_the_producers_of_the_artefacts_and_their_inputs():
         JobType.TEXT_LANGUAGE_DETECTION,
         JobType.TEXT_KEYWORDS,
     ]
-    assert (
-        graph.needed_steps(DocType.image, image_plan, frozenset({Artefact.KEYWORDS}))
-        == []
-    )
+    # the core plan of an image has the steps before the keywords only
+    assert graph.needed_steps(
+        DocType.image, image_plan, frozenset({Artefact.KEYWORDS})
+    ) == [
+        JobType.IMAGE_CAPTION,
+        JobType.TEXT_EXTRACTION,
+        JobType.TEXT_LANGUAGE_DETECTION,
+    ]
 
 
 # ===========================================================================

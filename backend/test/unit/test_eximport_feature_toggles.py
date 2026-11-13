@@ -158,3 +158,19 @@ def test_unknown_feature_is_rejected() -> None:
     )
     with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):
         archived_features(details)
+
+
+def test_removed_image_captions_feature_is_dropped() -> None:
+    """An archive of an earlier version that enables the removed feature
+    "image_captions" imports: the name is dropped, the other features are
+    restored, and an unknown name next to it is still rejected."""
+    details = ProjectDetailsExportSchema(
+        title="p",
+        description="d",
+        enabled_features=["image_captions", Feature.RAG_CHAT.value],
+    )
+    assert archived_features(details) == [Feature.RAG_CHAT]
+
+    details.enabled_features.append("time_travel")
+    with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):
+        archived_features(details)
