@@ -5,7 +5,6 @@ from uuid import uuid4
 import yake
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
@@ -18,8 +17,16 @@ from core.doc.source_document_data_dto import (
 )
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
+from modules.doc_processing.artefacts import (
+    CONTENT,
+    LANGUAGE,
+    TOKENS_SENTENCES,
+    WORD_FREQUENCIES,
+)
 from modules.doc_processing.doc_processing_exceptions import StepNotComputedError
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
+from modules.doc_processing.html.keywords_artefact import KEYWORDS
+from modules.doc_processing.html.ner_artefact import NER_SPANS
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo
@@ -80,13 +87,13 @@ def enrich_for_recompute(
 
 
 @pipeline_step(
-    requires={Artefact.CONTENT, Artefact.LANGUAGE},
-    produces={Artefact.TOKENS_SENTENCES},
+    requires={CONTENT, LANGUAGE},
+    produces={TOKENS_SENTENCES},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
     further_steps={
-        JobType.TEXT_KEYWORDS: {Artefact.KEYWORDS},
-        JobType.TEXT_WORD_FREQUENCY: {Artefact.WORD_FREQUENCIES},
-        JobType.TEXT_NER: {Artefact.NER_SPANS},
+        JobType.TEXT_KEYWORDS: {KEYWORDS},
+        JobType.TEXT_WORD_FREQUENCY: {WORD_FREQUENCIES},
+        JobType.TEXT_NER: {NER_SPANS},
     },
 )
 @register_job(

@@ -4,12 +4,12 @@ from uuid import uuid4
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
 from config import conf
+from core.code.code_crud import crud_code
 from core.project.project_crud import crud_project
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system import artefact_statements as statements
@@ -17,7 +17,7 @@ from systems.artefact_system.artefact_dto import (
     ArtefactComputationJobInput,
     ProcessingSettings,
 )
-from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.artefact_system.source_document_status_rules import (
     Availability,
     count_step_sets,
@@ -65,6 +65,29 @@ class ArtefactService(metaclass=SingletonMeta):
         cls.sqlr = SQLRepo()
         return super(ArtefactService, cls).__new__(cls)
 
+    def set_up(
+        self, *, db: Session, project_id: int, artefacts: frozenset[Artefact]
+    ) -> None:
+        """Create the system codes a project needs before these artefacts are
+        produced: the codes the artefacts declare (`Artefact.codes`), those of
+        the artefacts their steps require and those of the always-computed
+        artefacts. Idempotent: it creates what is missing; without declared
+        codes it does nothing. Called by Enable, the project creation and the
+        project import, each with the artefacts of its features."""
+        graph = artefact_registry.graph()
+        needed = set(artefacts) | artefact_registry.always()
+        for doctype in DocType:
+            for step in graph.steps_for(doctype, frozenset(needed)):
+                needed |= graph.declaration(step).requires
+        codes = [
+            code
+            for artefact in sorted(needed, key=lambda a: a.name)
+            for code in artefact.codes
+        ]
+        if not codes:
+            return
+        crud_code.create_system_codes(db=db, project_id=project_id, codes=codes)
+
     def compute(
         self,
         *,
@@ -85,7 +108,7 @@ class ArtefactService(metaclass=SingletonMeta):
             return
         computation = ArtefactComputationJobInput(
             project_id=project_id,
-            artefacts=sorted(a.value for a in artefacts),
+            artefacts=sorted(a.name for a in artefacts),
             settings=settings,
             computation_id=uuid4().hex,
             last_sdoc_id=last_sdoc_id,
@@ -152,7 +175,7 @@ class ArtefactService(metaclass=SingletonMeta):
                 processing=sum(c.processing for c in per_doctype),
                 failed=sum(c.failed for c in per_doctype),
                 not_planned=sum(c.not_planned for c in per_doctype),
-                pending=any(a.value in pending for a in artefacts),
+                pending=any(a.name in pending for a in artefacts),
             )
         return result
 
@@ -175,7 +198,7 @@ class ArtefactService(metaclass=SingletonMeta):
         upload plans them for it."""
         graph = artefact_registry.graph()
         needed = {
-            *graph.steps_for(doctype, CORE_ARTEFACTS),
+            *graph.steps_for(doctype, artefact_registry.always()),
             *graph.steps_for(doctype, demand),
         }
         steps = [s for s in graph.steps(doctype) if s in needed]
@@ -295,7 +318,11 @@ class ArtefactService(metaclass=SingletonMeta):
         sdoc_steps = self._plan_missing_steps(
             db=db,
             project_id=computation.project_id,
-            artefacts=frozenset(Artefact(a) for a in computation.artefacts),
+            artefacts=frozenset(
+                a
+                for name in computation.artefacts
+                if (a := artefact_registry.artefact(name)) is not None
+            ),
             sdoc_ids=(after_sdoc_id, until),
         )
         return until, sdoc_steps
@@ -343,7 +370,7 @@ class ArtefactService(metaclass=SingletonMeta):
                 if graph.applies(doctype, artefacts)
                 else set()
             )
-            core = set(graph.steps_for(doctype, CORE_ARTEFACTS))
+            core = set(graph.steps_for(doctype, artefact_registry.always()))
             to_plan = [s for s in graph.steps(doctype) if s in own | core]
             to_redo = [s for s in to_plan if s in own]
             if not to_plan:

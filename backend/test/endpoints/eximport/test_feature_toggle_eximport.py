@@ -7,7 +7,6 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -28,13 +27,12 @@ from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.project import import_project as import_project_module
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
-from modules.eximport.sdocs.artefact_archive import archive_modules
 from modules.eximport.sdocs.export_sdocs import export_all_sdocs
 from modules.eximport.sdocs.import_sdocs import (
     ARCHIVE_WITHOUT_STEP_STATUS,
     import_sdocs_to_proj,
 )
-from pipeline_test_utils import read_all_step_status
+from pipeline_test_utils import artefact_named, read_all_step_status
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -257,9 +255,9 @@ def test_archive_without_step_status_is_rejected(
 
 
 # ===========================================================================
-# ROUND TRIP OF EACH ARCHIVE MODULE (eximport/sdocs/artefact_archive.py)
+# ROUND TRIP OF EACH ARTEFACT ARCHIVE (artefact_registry.archives())
 # ===========================================================================
-# Each archive module has one case: it reads the module's artefact of a document
+# Each artefact archive has one case: it reads the artefact of a document
 # from its store. After the project export and import, every imported document
 # whose producing step finished has the data of its original.
 
@@ -330,18 +328,18 @@ def _audio_stream(db: Session, sdoc: SourceDocumentORM) -> object:
     )
 
 
-ROUND_TRIP_CASES: dict[Artefact, Callable[[Session, SourceDocumentORM], object]] = {
-    Artefact.DOCUMENT_EMBEDDINGS: _document_embedding,
-    Artefact.SENTENCE_EMBEDDINGS: _sentence_embeddings,
-    Artefact.IMAGE_EMBEDDINGS: _image_embedding,
-    Artefact.WORD_FREQUENCIES: _word_frequencies,
-    Artefact.ES_INDEX: _index_entry,
-    Artefact.THUMBNAIL: _thumbnails,
-    Artefact.AUDIO: _audio_stream,
+ROUND_TRIP_CASES: dict[str, Callable[[Session, SourceDocumentORM], object]] = {
+    "document_embeddings": _document_embedding,
+    "sentence_embeddings": _sentence_embeddings,
+    "image_embeddings": _image_embedding,
+    "word_frequencies": _word_frequencies,
+    "es_index": _index_entry,
+    "thumbnail": _thumbnails,
+    "audio": _audio_stream,
 }
 
 
-def _artefact_data(db: Session, project_id: int, artefact: Artefact) -> dict:
+def _artefact_data(db: Session, project_id: int, artefact: str) -> dict:
     """The artefact's data of each document of the project whose step producing
     it finished, by filename."""
     graph = artefact_registry.graph()
@@ -350,7 +348,7 @@ def _artefact_data(db: Session, project_id: int, artefact: Artefact) -> dict:
     for sdoc in crud_sdoc.read_by_project(
         db=db, project_id=project_id, only_finished=False
     ):
-        step = graph.producer(DocType(sdoc.doctype), artefact)
+        step = graph.producer(DocType(sdoc.doctype), artefact_named(artefact))
         if (
             step is None
             or _step_status(db, sdoc).get(step.value) != SDocStatus.finished
@@ -361,20 +359,20 @@ def _artefact_data(db: Session, project_id: int, artefact: Artefact) -> dict:
 
 
 @pytest.mark.parametrize(
-    "artefact", [pytest.param(a, id=a.value) for a in archive_modules()]
+    "artefact", [pytest.param(name, id=name) for name in ROUND_TRIP_CASES]
 )
 def test_project_round_trip_keeps_the_data_of_each_archive_module(
     db_session: Session,
     feature_toggle_eximport_projects: FeatureToggleEximportProjects,
     held_jobs: HeldJobs,
-    artefact: Artefact,
+    artefact: str,
 ) -> None:
     """Each imported document has the artefact data of its original: the
     embeddings of the text (one per sentence, by sentence id) and of the image,
     the word frequencies and the index entry of the text, the WebP and thumbnail
     of the image, the thumbnail of the video (linked as `repo_url`), and the
     audio stream of the video, from which the transcription can be recomputed.
-    An archive module without a case fails."""
+    An artefact archive without a case fails."""
     projects = feature_toggle_eximport_projects
     original = _artefact_data(db_session, projects["project"].id, artefact)
 
@@ -387,6 +385,6 @@ def test_project_round_trip_keeps_the_data_of_each_archive_module(
 
 
 def test_every_archive_module_has_a_round_trip_case() -> None:
-    """The round trip covers each archive module, and no case names an artefact
+    """The round trip covers each artefact archive, and no case names an artefact
     without one."""
-    assert set(ROUND_TRIP_CASES) == set(archive_modules())
+    assert set(ROUND_TRIP_CASES) == {a.name for a, _ in artefact_registry.archives()}

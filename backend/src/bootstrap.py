@@ -82,8 +82,9 @@ def register_jobs() -> None:
     from systems.job_system.job_service import JobHooks, JobService
 
     import_by_suffix("_job.py")
-    # fails on artefacts nobody produces, cycles and too many steps
-    artefact_registry.graph()
+    # fails on artefacts nobody produces, cycles, too many steps and system
+    # codes declared differently
+    artefact_registry.check()
     # the pipeline tracks the step statuses and starts the next steps
     JobService().register_hooks(
         JobHooks(

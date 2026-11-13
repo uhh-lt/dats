@@ -74,10 +74,10 @@ EMBEDDING_STEPS = {
 }
 ES_INDEX_STEP = "text_es_index"
 IMAGE_THUMBNAIL_STEP = "image_thumbnail"
-# The artefacts with their own store in the project export (the archive modules
-# of backend/src/modules/eximport/sdocs/artefact_archive.py) that the doctor does
+# The artefacts with their own store in the project export (the artefacts with
+# an archive, backend/src/systems/artefact_system/artefact_registry.py) that the doctor does
 # not check: the word frequencies and the audio stream extracted from a video.
-# test_project_doctor_steps.py fails when an archive module is neither checked
+# test_project_doctor_steps.py fails when an artefact archive is neither checked
 # nor listed here.
 UNCHECKED_STORES = ["word_frequencies", "audio"]
 ALL_STEPS = sorted({step for steps in PROCESSING_STEPS.values() for step in steps})

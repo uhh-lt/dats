@@ -6,7 +6,6 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import CORE_ARTEFACTS
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
@@ -14,12 +13,20 @@ from core.doc.source_document_crud import crud_sdoc
 from job_test_utils import HeldJobs
 from systems.artefact_system import step_run
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
-from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
 from systems.feature_system.feature_registry import feature_registry
 from systems.job_system.job_dto import JobInputBase
+
+
+def artefact_named(name: str) -> Artefact:
+    """The registered artefact of this name: tests name artefacts by text and
+    never import an artefact object from a module path."""
+    artefact = artefact_registry.artefact(name)
+    assert artefact is not None, f"no artefact '{name}' is registered"
+    return artefact
 
 
 def all_steps(doctype: DocType) -> list[JobType]:
@@ -38,7 +45,7 @@ def planned_steps(doctype: DocType, features: list[str]) -> list[JobType]:
     graph = artefact_registry.graph()
     demand = feature_registry.required_artefacts(feature_named(f) for f in features)
     needed = {
-        *graph.steps_for(doctype, CORE_ARTEFACTS),
+        *graph.steps_for(doctype, artefact_registry.always()),
         *graph.steps_for(doctype, demand),
     }
     return [s for s in graph.steps(doctype) if s in needed]

@@ -12,8 +12,8 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Iterable
 
-from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.feature_enum import FeatureArea
+from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.feature_system.feature_exceptions import FeatureDeclarationError
 
 
@@ -55,8 +55,8 @@ class FeatureRegistry:
         problems: list[str] = []
         for feature in self._features.values():
             problems += [
-                f"Feature '{feature.name}' requires artefact '{a.value}', which no step produces."
-                for a in sorted(feature.requires_artefacts, key=lambda a: a.value)
+                f"Feature '{feature.name}' requires artefact '{a.name}', which is not registered."
+                for a in sorted(feature.requires_artefacts, key=lambda a: a.name)
                 if a not in produced
             ]
             problems += [
@@ -101,7 +101,7 @@ class FeatureRegistry:
         without the core artefacts, which every document gets anyway."""
         return (
             frozenset().union(*(f.requires_artefacts for f in self.closure(features)))
-            - CORE_ARTEFACTS
+            - artefact_registry.always()
         )
 
     def _required_features(self, features: Iterable[Feature]) -> frozenset[Feature]:

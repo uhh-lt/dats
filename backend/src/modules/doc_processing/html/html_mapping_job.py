@@ -1,10 +1,10 @@
 from loguru import logger
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
+from modules.doc_processing.artefacts import HTML, RAW_HTML, TOKENS_SENTENCES
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper, StringBuilder
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -43,8 +43,8 @@ def enrich_for_recompute(
 
 
 @pipeline_step(
-    requires={Artefact.RAW_HTML, Artefact.TOKENS_SENTENCES},
-    produces={Artefact.HTML},
+    requires={RAW_HTML, TOKENS_SENTENCES},
+    produces={HTML},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(

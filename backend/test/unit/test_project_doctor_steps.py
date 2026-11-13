@@ -7,10 +7,9 @@ from pathlib import Path
 from types import ModuleType
 
 from bootstrap import register_jobs
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
-from modules.eximport.sdocs.artefact_archive import archive_modules
+from pipeline_test_utils import artefact_named
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_orm import (
     SourceDocumentStepStatusORM,
@@ -25,11 +24,11 @@ DOCTOR_STORES = (
     / "doctor_stores.py"
 )
 
-# The artefact the embeddings of each Weaviate collection are
+# The artefact the embeddings of each Weaviate collection are, by name
 COLLECTION_ARTEFACTS = {
-    "Document": Artefact.DOCUMENT_EMBEDDINGS,
-    "Sentence": Artefact.SENTENCE_EMBEDDINGS,
-    "Image": Artefact.IMAGE_EMBEDDINGS,
+    "Document": "document_embeddings",
+    "Sentence": "sentence_embeddings",
+    "Image": "image_embeddings",
 }
 
 
@@ -60,7 +59,7 @@ def test_doctor_embedding_steps_produce_the_embeddings() -> None:
         collection: {
             step.value
             for doctype in DocType
-            if (step := graph.producer(doctype, artefact)) is not None
+            if (step := graph.producer(doctype, artefact_named(artefact))) is not None
         }
         for collection, artefact in COLLECTION_ARTEFACTS.items()
     }
@@ -72,21 +71,23 @@ def test_doctor_index_and_thumbnail_steps_produce_them() -> None:
     documents, its thumbnail step the thumbnail of images."""
     doctor = _doctor_stores()
     graph = artefact_registry.graph()
-    assert doctor.ES_INDEX_STEP == graph.producer(DocType.text, Artefact.ES_INDEX)
+    assert doctor.ES_INDEX_STEP == graph.producer(
+        DocType.text, artefact_named("es_index")
+    )
     assert doctor.IMAGE_THUMBNAIL_STEP == graph.producer(
-        DocType.image, Artefact.THUMBNAIL
+        DocType.image, artefact_named("thumbnail")
     )
 
 
 def test_doctor_checks_the_store_of_each_archive_module_or_lists_it() -> None:
-    """Each artefact with an archive module of the export has its store checked
+    """Each artefact with an archive of the export has its store checked
     by the doctor (the embeddings, the index, the image thumbnail, see the tests
     above) or is listed as not checked, and not both."""
     doctor = _doctor_stores()
-    checked = {*COLLECTION_ARTEFACTS.values(), Artefact.ES_INDEX, Artefact.THUMBNAIL}
-    unchecked = {Artefact(artefact) for artefact in doctor.UNCHECKED_STORES}
+    checked = {*COLLECTION_ARTEFACTS.values(), "es_index", "thumbnail"}
+    unchecked = set(doctor.UNCHECKED_STORES)
     assert checked.isdisjoint(unchecked)
-    assert checked | unchecked == set(archive_modules())
+    assert checked | unchecked == {a.name for a, _ in artefact_registry.archives()}
 
 
 def test_doctor_reads_the_step_status_table() -> None:

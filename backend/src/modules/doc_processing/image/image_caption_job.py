@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -8,6 +7,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from modules.doc_processing.artefacts import IMAGE_CAPTION, RAW_HTML
 from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
@@ -55,7 +55,7 @@ def enrich_for_recompute(
 
 @pipeline_step(
     requires=set(),
-    produces={Artefact.IMAGE_CAPTION, Artefact.RAW_HTML},
+    produces={IMAGE_CAPTION, RAW_HTML},
     doctypes={DocType.image},
 )
 @register_job(

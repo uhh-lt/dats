@@ -1,9 +1,8 @@
 from typing import Callable, TypeVar
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
-from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.artefact_system.pipeline_graph import PipelineStep
 from systems.job_system.job_service import JobService
 

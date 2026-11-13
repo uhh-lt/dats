@@ -4,6 +4,8 @@ from typing import TypedDict
 import pytest
 
 from common.doc_type_enum import DocType
+from common.feature_enum import FeatureArea
+from core.code.system_codes import SystemCode
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -22,7 +24,13 @@ from feature_test_utils import (
     set_step_status,
 )
 from pipeline_test_utils import planned_steps
-from systems.feature_system.feature_registry import Feature
+from systems.artefact_system.artefact_registry import artefact, artefact_registry
+from systems.artefact_system.artefact_system_enum import StorageKind
+from systems.feature_system.feature_registry import (
+    Feature,
+    feature_registry,
+    register_feature,
+)
 
 
 @pytest.fixture(scope="function")
@@ -226,3 +234,46 @@ def removed_feature_project(db_session, test_user: UserORM) -> ProjectORM:
     db_session.commit()
     db_session.refresh(project)
     return project
+
+
+# the code tree the artefact of `coded_feature` declares
+CODED_TREE = SystemCode(
+    name="TEST_CODED_TREE",
+    description="The codes of the test artefact",
+    children=(SystemCode(name="TEST_CODED_LEAF", description="A leaf"),),
+)
+
+
+@pytest.fixture(scope="function")
+def coded_feature() -> Generator[Feature, None, None]:
+    """
+    Registers, for the test, the artefact "test_coded_artefact" (document data,
+    on demand, the uploaded file of an audio document, so no step needs to
+    produce it), which declares the code tree `CODED_TREE` (`TEST_CODED_TREE` >
+    `TEST_CODED_LEAF`), and the feature "test_coded_feature" (area Analysis,
+    `default_enabled=False`), which requires it. Both are removed afterwards.
+
+    Non-obvious derived behavior:
+
+    - A project has the two codes only once the set up ran for the feature
+      (Enable, a project creation or an import that enables it).
+    """
+    coded = artefact(
+        "test_coded_artefact",
+        kind=StorageKind.DOCUMENT_DATA,
+        uploaded_for={DocType.audio},
+        codes=(CODED_TREE,),
+    )
+    feature = register_feature(
+        "test_coded_feature",
+        title="Test Coded Feature",
+        description="A test feature whose artefact declares codes.",
+        area=FeatureArea.ANALYSIS,
+        requires_artefacts={coded},
+        default_enabled=False,
+    )
+    try:
+        yield feature
+    finally:
+        feature_registry.unregister_feature(feature.name)
+        artefact_registry.unregister_artefact(coded.name)

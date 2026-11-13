@@ -1,7 +1,8 @@
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
+from modules.doc_processing.artefacts import CONTENT
+from modules.doc_processing.html.document_embedding_artefact import DOCUMENT_EMBEDDINGS
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -32,8 +33,8 @@ def enrich_for_recompute(
 
 
 @pipeline_step(
-    requires={Artefact.CONTENT},
-    produces={Artefact.DOCUMENT_EMBEDDINGS},
+    requires={CONTENT},
+    produces={DOCUMENT_EMBEDDINGS},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(

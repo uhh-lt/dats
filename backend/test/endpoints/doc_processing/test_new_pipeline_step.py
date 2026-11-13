@@ -4,7 +4,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -15,7 +14,7 @@ from job_test_utils import HeldJobs
 from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocInitJobInput
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
-from pipeline_test_utils import read_step_status, started_steps
+from pipeline_test_utils import artefact_named, read_step_status, started_steps
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
@@ -172,7 +171,7 @@ def test_a_step_without_an_enricher_is_rejected(unregistered_job_type: JobType):
 
     with pytest.raises(ValueError, match="has no enricher"):
         pipeline_step(
-            requires={Artefact.CONTENT},
+            requires={artefact_named("content")},
             produces=set(),
             doctypes={DocType.text},
         )(

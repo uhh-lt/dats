@@ -4,7 +4,6 @@ from pathlib import Path
 import ffmpeg
 from loguru import logger
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -14,6 +13,7 @@ from core.doc.source_document_data_dto import (
     SourceDocumentDataUpdate,
 )
 from core.doc.source_document_dto import SourceDocumentRead
+from modules.doc_processing.artefacts import AUDIO, RAW_HTML, TRANSCRIPT
 from modules.doc_processing.video.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -69,8 +69,8 @@ def enrich_for_recompute(
 
 
 @pipeline_step(
-    requires={Artefact.AUDIO},
-    produces={Artefact.TRANSCRIPT, Artefact.RAW_HTML},
+    requires={AUDIO},
+    produces={TRANSCRIPT, RAW_HTML},
     doctypes={DocType.audio, DocType.video},
 )
 @register_job(

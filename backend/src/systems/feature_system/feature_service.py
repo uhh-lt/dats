@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING, Iterable
 
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.feature_enum import FeatureAction, FeatureStatus
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
 from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.artefact_registry import Artefact
 from systems.artefact_system.artefact_service import ArtefactService
 from systems.feature_system import feature_statements as statements
 from systems.feature_system.feature_dto import FeatureRead, ProjectFeatureRead
@@ -197,11 +197,10 @@ class FeatureService(metaclass=SingletonMeta):
         statements.update_enabled_features(
             db=db, project_id=project_id, features=enabled
         )
+        artefacts = self.registry.required_artefacts([feature])
+        ArtefactService().set_up(db=db, project_id=project_id, artefacts=artefacts)
         ArtefactService().compute(
-            db=db,
-            project_id=project_id,
-            artefacts=self.registry.required_artefacts([feature]),
-            settings=settings,
+            db=db, project_id=project_id, artefacts=artefacts, settings=settings
         )
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 

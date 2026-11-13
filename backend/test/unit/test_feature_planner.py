@@ -3,11 +3,11 @@
 import pytest
 
 from bootstrap import register_jobs
-from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import FeatureArea
 from feature_test_utils import feature_named
-from pipeline_test_utils import all_steps, planned_steps
+from pipeline_test_utils import all_steps, artefact_named, planned_steps
+from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
     FeatureStillRequiredError,
@@ -32,8 +32,8 @@ def test_required_artefacts_are_those_of_the_closure_without_core_artefacts():
     embeddings, and no core artefact is named."""
     artefacts = feature_registry.required_artefacts([feature_named("rag_chat")])
 
-    assert artefacts == {Artefact.SENTENCE_EMBEDDINGS}
-    assert not artefacts & CORE_ARTEFACTS
+    assert artefacts == {artefact_named("sentence_embeddings")}
+    assert not artefacts & artefact_registry.always()
 
 
 def test_required_artefacts_of_no_feature_are_none():
@@ -61,48 +61,56 @@ def test_all_features_plan_every_step_of_the_doctype(doctype: DocType):
     "feature,artefacts",
     [
         # the search index serves two features
-        pytest.param("full_text_search", {Artefact.ES_INDEX}, id="full-text"),
-        pytest.param("search_annotate", {Artefact.ES_INDEX}, id="search-annotate"),
+        pytest.param("full_text_search", {artefact_named("es_index")}, id="full-text"),
+        pytest.param(
+            "search_annotate", {artefact_named("es_index")}, id="search-annotate"
+        ),
         pytest.param(
             "sentence_similarity_search",
-            {Artefact.SENTENCE_EMBEDDINGS},
+            {artefact_named("sentence_embeddings")},
             id="sentence-search",
         ),
         pytest.param(
-            "image_similarity_search", {Artefact.IMAGE_EMBEDDINGS}, id="image-search"
+            "image_similarity_search",
+            {artefact_named("image_embeddings")},
+            id="image-search",
         ),
         # these require sentence similarity search and need only its artefact
-        pytest.param("rag_chat", {Artefact.SENTENCE_EMBEDDINGS}, id="rag-chat"),
+        pytest.param(
+            "rag_chat", {artefact_named("sentence_embeddings")}, id="rag-chat"
+        ),
         pytest.param(
             "annotation_scaling",
-            {Artefact.SENTENCE_EMBEDDINGS},
+            {artefact_named("sentence_embeddings")},
             id="annotation-scaling",
         ),
         pytest.param(
             "concepts_over_time",
-            {Artefact.SENTENCE_EMBEDDINGS},
+            {artefact_named("sentence_embeddings")},
             id="concepts-over-time",
         ),
         pytest.param(
             "tag_recommendation",
-            {Artefact.DOCUMENT_EMBEDDINGS},
+            {artefact_named("document_embeddings")},
             id="tag-recommendation",
         ),
         # the word frequencies serve two features
         pytest.param(
-            "word_frequency", {Artefact.WORD_FREQUENCIES}, id="word-frequency"
+            "word_frequency", {artefact_named("word_frequencies")}, id="word-frequency"
         ),
         pytest.param(
-            "duplicate_finder", {Artefact.WORD_FREQUENCIES}, id="duplicate-finder"
+            "duplicate_finder",
+            {artefact_named("word_frequencies")},
+            id="duplicate-finder",
         ),
         pytest.param(
-            "keyword_statistics", {Artefact.KEYWORDS}, id="keyword-statistics"
+            "keyword_statistics", {artefact_named("keywords")}, id="keyword-statistics"
         ),
         pytest.param(
-            "entity_annotations", {Artefact.NER_SPANS}, id="entity-annotations"
+            "entity_annotations", {artefact_named("ner_spans")}, id="entity-annotations"
         ),
         pytest.param(
-            "object_detection", {Artefact.OBJECT_BBOXES}, id="object-detection"
+            "object_detection", {artefact_named("object_bboxes")}, id="object-detection"
         ),
     ],
 )
@@ -212,9 +220,12 @@ def _problems(registry: FeatureRegistry, produced: set[Artefact]) -> list[str]:
 
 def test_registry_check_fails_on_an_artefact_no_step_produces():
     registry = FeatureRegistry()
-    registry.register(_feature("word_frequency", {Artefact.WORD_FREQUENCIES}))
-    assert _problems(registry, set(Artefact) - {Artefact.WORD_FREQUENCIES}) == [
-        "Feature 'word_frequency' requires artefact 'word_frequencies', which no step produces."
+    registry.register(_feature("word_frequency", {artefact_named("word_frequencies")}))
+    assert _problems(
+        registry,
+        set(artefact_registry.artefacts()) - {artefact_named("word_frequencies")},
+    ) == [
+        "Feature 'word_frequency' requires artefact 'word_frequencies', which is not registered."
     ]
 
 
@@ -228,7 +239,7 @@ def test_registry_check_fails_on_a_cycle():
     registry.register(rag)
     registry.register(scaling)
 
-    assert _problems(registry, set(Artefact)) == [
+    assert _problems(registry, set(artefact_registry.artefacts())) == [
         "Feature 'rag_chat' requires itself (cycle).",
         "Feature 'annotation_scaling' requires itself (cycle).",
     ]
@@ -240,7 +251,7 @@ def test_registry_check_fails_on_an_unregistered_required_feature():
     registry = FeatureRegistry()
     registry.register(_feature("rag_chat", features={_feature("word_frequency")}))
 
-    assert _problems(registry, set(Artefact)) == [
+    assert _problems(registry, set(artefact_registry.artefacts())) == [
         "Feature 'rag_chat' requires the undeclared feature 'word_frequency'."
     ]
 

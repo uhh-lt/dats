@@ -1,0 +1,121 @@
+"""The set up of the artefact system: the system codes the artefacts of a
+feature declare are created by Enable, by a project creation and by a project
+import that enable the feature, before anything needs them."""
+
+import zipfile
+
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from common.languages_enum import Language
+from core.code.code_crud import crud_code
+from core.project.project_orm import ProjectORM
+from core.user.user_orm import UserORM
+from feature_test_utils import create_project_with_features
+from modules.eximport.project.export_project import export_project
+from modules.eximport.project.import_project import import_project
+from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.feature_system.feature_dto import FeatureActivation
+from systems.feature_system.feature_registry import Feature
+from systems.feature_system.feature_service import FeatureService
+
+CODE_NAMES = ["TEST_CODED_TREE", "TEST_CODED_LEAF"]
+
+SETTINGS = ProcessingSettings(
+    extract_images=False,
+    pages_per_chunk=10,
+    keyword_number=5,
+    keyword_deduplication_threshold=0.5,
+    keyword_max_ngram_size=2,
+    language=Language.english,
+    model="default",
+)
+
+
+def _codes(db: Session, project_id: int) -> dict[str, bool]:
+    """The codes of `CODED_TREE` in the project, with whether each is a system
+    code."""
+    db.expire_all()
+    result = {}
+    for name in CODE_NAMES:
+        code = crud_code.read_by_name_and_project(
+            db=db, code_name=name, project_id=project_id
+        )
+        if code is not None:
+            result[name] = code.is_system
+    db.commit()
+    return result
+
+
+def _project(db: Session, user: UserORM, title: str, features: list[str]) -> ProjectORM:
+    return create_project_with_features(db, user, title=title, features=features)
+
+
+def test_enable_creates_the_codes_and_disable_keeps_them(
+    client: TestClient, db_session: Session, test_user: UserORM, coded_feature: Feature
+):
+    """Enable of the feature creates the code tree of its artefact as system
+    codes; Disable leaves them."""
+    project = _project(db_session, test_user, "Set Up Enable", [])
+    assert _codes(db_session, project.id) == {}
+
+    base = f"/feature/project/{project.id}/{coded_feature.name}"
+    enabled = client.post(
+        f"{base}/enable",
+        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+    )
+    assert enabled.status_code == 200, enabled.text
+    assert _codes(db_session, project.id) == dict.fromkeys(CODE_NAMES, True)
+
+    disabled = client.post(f"{base}/disable")
+    assert disabled.status_code == 200, disabled.text
+    assert _codes(db_session, project.id) == dict.fromkeys(CODE_NAMES, True)
+
+
+def test_project_creation_with_the_feature_creates_the_codes(
+    db_session: Session, test_user: UserORM, coded_feature: Feature
+):
+    """A project created with the feature has the code tree; one created
+    without it (the feature is off by default) does not."""
+    with_feature = _project(db_session, test_user, "With", [coded_feature.name])
+    without = _project(db_session, test_user, "Without", [])
+
+    assert _codes(db_session, with_feature.id) == dict.fromkeys(CODE_NAMES, True)
+    assert _codes(db_session, without.id) == {}
+
+
+def test_add_features_alone_creates_no_codes(
+    db_session: Session, test_user: UserORM, coded_feature: Feature
+):
+    """`add_features` (the last step of an import) only enables the feature:
+    the import sets up before it, so it creates no codes itself."""
+    project = _project(db_session, test_user, "Add Features", [])
+
+    FeatureService().add_features(
+        db=db_session, project_id=project.id, features=[coded_feature]
+    )
+    db_session.commit()
+
+    assert _codes(db_session, project.id) == {}
+
+
+def test_import_creates_the_codes_before_it_imports_the_archived_codes(
+    db_session: Session, test_user: UserORM, coded_feature: Feature
+):
+    """An archive of a project that enables the feature holds its code tree as
+    plain codes. The import sets up the feature first, so the archived codes
+    meet the system codes by name and stay system codes; without the set up
+    they would be imported as user codes."""
+    source = _project(db_session, test_user, "Import Source", [coded_feature.name])
+    target = _project(db_session, test_user, "Import Target", [])
+    fsr = FilesystemRepo()
+    archive = export_project(db=db_session, fsr=fsr, project_id=source.id)
+    import_dir = fsr.create_temp_dir("set_up_import")
+    with zipfile.ZipFile(archive) as zip_file:
+        zip_file.extractall(import_dir)
+
+    import_project(db=db_session, fsr=fsr, path_to_dir=import_dir, project_id=target.id)
+    db_session.commit()
+
+    assert _codes(db_session, target.id) == dict.fromkeys(CODE_NAMES, True)

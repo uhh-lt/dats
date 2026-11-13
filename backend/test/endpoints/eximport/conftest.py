@@ -52,13 +52,9 @@ from feature_test_utils import (
 )
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
-from modules.doc_processing.image.image_thumbnail_generation_job import (
-    generate_thumbnails,
-)
-from modules.doc_processing.video.video_audio_extraction_job import (
+from modules.doc_processing.image.image_thumbnail_utils import generate_thumbnails
+from modules.doc_processing.video.video_utils import (
     extract_audio_stream,
-)
-from modules.doc_processing.video.video_thumbnail_generation_job import (
     store_video_thumbnail,
 )
 from modules.experiment.experiment_crud import crud_experiment
@@ -638,7 +634,7 @@ def feature_toggle_eximport_projects(
 
     - Project "Toggled Project" (`project`), which enables only sentence
       similarity search (all other features are disabled), with three documents
-      that hold the data of every archive module (`artefact_archive.py`):
+      that hold the data of every artefact archive (`artefact_registry.archives()`):
       - "text.txt" (`text`), a text document with the 30 sentences "Sentence
         0." to "Sentence 29.", its raw file, and finished `toggled_text_steps()`
         (the core steps, `text_word_frequency`, `text_es_index`,

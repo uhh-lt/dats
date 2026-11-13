@@ -2,12 +2,12 @@ from pathlib import Path
 
 import ffmpeg
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from modules.doc_processing.artefacts import FILE_METADATA
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -53,7 +53,7 @@ def enrich_for_recompute(
 
 @pipeline_step(
     requires=set(),
-    produces={Artefact.FILE_METADATA},
+    produces={FILE_METADATA},
     doctypes={DocType.audio},
 )
 @register_job(

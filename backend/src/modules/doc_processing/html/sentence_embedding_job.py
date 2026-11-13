@@ -1,11 +1,11 @@
 from loguru import logger
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
+from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS, TOKENS_SENTENCES
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -37,8 +37,8 @@ def enrich_for_recompute(
 
 
 @pipeline_step(
-    requires={Artefact.TOKENS_SENTENCES},
-    produces={Artefact.SENTENCE_EMBEDDINGS},
+    requires={TOKENS_SENTENCES},
+    produces={SENTENCE_EMBEDDINGS},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(

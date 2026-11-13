@@ -7,7 +7,6 @@ from typing import Protocol, TypedDict
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import FeatureArea
 from core.doc.source_document_dto import SourceDocumentRead
@@ -18,7 +17,7 @@ from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
-from pipeline_test_utils import core_steps, set_step_status, step_names
+from pipeline_test_utils import artefact_named, core_steps, set_step_status, step_names
 from repos.filesystem_repo import FilesystemRepo
 from systems.feature_system.feature_registry import (
     Feature,
@@ -51,7 +50,7 @@ def off_by_default_feature() -> Generator[Feature, None, None]:
         title="Test Off By Default",
         description="A test feature that a new project does not enable.",
         area=FeatureArea.ANALYSIS,
-        requires_artefacts={Artefact.KEYWORDS},
+        requires_artefacts={artefact_named("keywords")},
         default_enabled=False,
     )
     try:

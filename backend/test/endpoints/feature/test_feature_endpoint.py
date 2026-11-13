@@ -4,7 +4,6 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from common.artefact_enum import Artefact
 from common.feature_enum import FeatureAction, FeatureArea, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -451,7 +450,7 @@ def test_enable_feature_that_requires_a_computing_feature_starts_its_computation
     computations = held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)
     assert [
         a.artefacts for a in computations if isinstance(a, ArtefactComputationJobInput)
-    ] == [[Artefact.SENTENCE_EMBEDDINGS.value], [Artefact.SENTENCE_EMBEDDINGS.value]]
+    ] == [["sentence_embeddings"], ["sentence_embeddings"]]
 
 
 def test_enable_two_features_sharing_a_step_starts_it_once(

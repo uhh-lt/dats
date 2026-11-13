@@ -1,5 +1,5 @@
-from common.artefact_enum import Artefact
 from common.feature_enum import FeatureArea
+from modules.doc_processing.artefacts import WORD_FREQUENCIES
 from systems.feature_system.feature_registry import register_feature
 
 DUPLICATE_FINDER = register_feature(
@@ -7,5 +7,5 @@ DUPLICATE_FINDER = register_feature(
     title="Duplicate Finder",
     description="Find documents with (almost) the same words.",
     area=FeatureArea.ANALYSIS,
-    requires_artefacts={Artefact.WORD_FREQUENCIES},
+    requires_artefacts={WORD_FREQUENCIES},
 )

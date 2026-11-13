@@ -20,7 +20,6 @@ from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
-from modules.eximport.sdocs.artefact_archive import archive_modules
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,
@@ -53,7 +52,7 @@ def archived_step_status(
 
     A step that was processing when the archive was exported is not planned: the
     import starts no job, so it would stay processing forever. A step whose
-    artefact the archive does not hold completely (its archive module says so) is
+    artefact the archive does not hold completely (its archive says so) is
     not planned either, whatever its status. The import plans no step: a feature
     whose steps are not planned is partly available until a user completes it."""
     graph = artefact_registry.graph()
@@ -66,9 +65,9 @@ def archived_step_status(
         if status == SDocStatus.processing.value:
             step_status[step] = None
 
-    for artefact, module in archive_modules().items():
+    for artefact, archive in artefact_registry.archives():
         step = graph.producer(doctype, artefact)
-        if step is not None and not module.is_complete(sdoc_export):
+        if step is not None and not archive.is_complete(sdoc_export.model_dump()):
             step_status[step.value] = None
     return step_status
 
@@ -307,13 +306,15 @@ def import_sdocs_to_proj(
             metadata_create_dtos.append(metadata_create)
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
-        # 5. Write the artefacts with an archive module to their stores, if
+        # 5. Write the artefacts with an archive to their stores, if
         # their step was imported as finished
         graph = artefact_registry.graph()
-        for artefact, module in archive_modules().items():
+        for artefact, archive in artefact_registry.archives():
             step = graph.producer(DocType(sdoc_export.doctype), artefact)
             if step is not None and step_status.get(step.value) == SDocStatus.finished:
-                module.write(db=db, sdoc=created_sdoc, archived=sdoc_export)
+                archive.write(
+                    db=db, sdoc=created_sdoc, archived=sdoc_export.model_dump()
+                )
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"

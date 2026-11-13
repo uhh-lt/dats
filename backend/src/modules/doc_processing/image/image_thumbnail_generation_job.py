@@ -1,14 +1,13 @@
 from pathlib import Path
 
-from PIL import Image
-
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
+from modules.doc_processing.artefacts import THUMBNAIL
+from modules.doc_processing.image.image_thumbnail_utils import generate_thumbnails
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -22,29 +21,6 @@ sqlr = SQLRepo()
 
 class ImageThumbnailJobInput(SdocProcessingJobInput):
     filepath: Path
-
-
-def generate_thumbnails(image_path: Path):
-    with Image.open(image_path) as im:
-        web_p_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=False)
-        # convert to webp
-        im.save(
-            web_p_fn,
-            "WEBP",
-            quality=50,
-            lossless=True,
-            method=6,
-        )
-        # create thumbnail
-        thumbnail_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=True)
-        im.thumbnail((256, 256))
-        im.save(
-            thumbnail_fn,
-            "WEBP",
-            quality=50,
-            lossless=True,
-            method=6,
-        )
 
 
 def enrich_for_recompute(
@@ -68,7 +44,7 @@ def enrich_for_recompute(
 
 @pipeline_step(
     requires=set(),
-    produces={Artefact.THUMBNAIL},
+    produces={THUMBNAIL},
     doctypes={DocType.image},
 )
 @register_job(

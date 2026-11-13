@@ -1,20 +1,16 @@
 import base64
 import os
-import sys
 import wave
 from enum import Enum
 from io import BytesIO
 from pathlib import Path
-from typing import Generator, TypedDict, TypeVar
-from unittest.mock import patch
+from typing import Generator, TypedDict
 
 import ffmpeg
 import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from common import artefact_enum
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -32,12 +28,16 @@ from feature_test_utils import (
     minimal_text_steps,
     set_step_status,
 )
-from modules.eximport.export_enum import ArchivePart
-from modules.eximport.sdocs.artefact_archive import ARTEFACT_ARCHIVE
+from pipeline_test_utils import artefact_named
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
-from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.artefact_registry import (
+    Artefact,
+    artefact,
+    artefact_registry,
+)
+from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
@@ -246,16 +246,22 @@ class RecomputeProject(TypedDict):
       SourceDocumentData); extract_html, text_extraction and
       text_language_detection are finished, text_spacy and text_html_mapping
       are processing (its spaCy job waits in the queue)
+    - keywords_done: text document "keywords_done.txt" with the text of
+      `SDOC_SENTENCES` and the language "en"; the steps of a project without
+      features and text_keywords are finished (as if keyword statistics was
+      enabled once)
 
     Non-obvious derived behavior:
 
     - No step job of no_data can start: the enricher of the language
       detection finds no content.
+    - text_keywords is planned for keywords_done only.
     """
 
     project: ProjectORM
     text_done: SourceDocumentORM
     no_data: SourceDocumentORM
+    keywords_done: SourceDocumentORM
 
 
 @pytest.fixture(scope="function")
@@ -291,10 +297,22 @@ def recompute_project(db_session: Session, test_user: UserORM) -> RecomputeProje
             "text_html_mapping": 0,
         },
     )
+    keywords_done = _create_sdoc(
+        db_session,
+        project,
+        name="keywords_done.txt",
+        doctype=DocType.text,
+        status={**dict.fromkeys(minimal_text_steps(), 1), "text_keywords": 1},
+    )
     db_session.commit()
-    for obj in (project, text_done, no_data):
+    for obj in (project, text_done, no_data, keywords_done):
         db_session.refresh(obj)
-    return {"project": project, "text_done": text_done, "no_data": no_data}
+    return {
+        "project": project,
+        "text_done": text_done,
+        "no_data": no_data,
+        "keywords_done": keywords_done,
+    }
 
 
 # --- a new pipeline step, declared in the test -------------------------------
@@ -326,11 +344,7 @@ def _handle_dummy_job(payload: DummyJobInput, job: Job) -> None:
     _DUMMY_COMPUTED[payload.sdoc_id] = payload.text
 
 
-# the str enums a new step adds a value to
-E = TypeVar("E", JobType, Artefact)
-
-
-def _add_enum_member(enum_cls: type[E], name: str, value: str) -> E:
+def _add_enum_member(enum_cls: type[JobType], name: str, value: str) -> JobType:
     """Add a member to an enum, as a new value in its source file would."""
     member = str.__new__(enum_cls, value)
     member._name_ = name
@@ -351,35 +365,24 @@ def _remove_enum_member(enum_cls: type[Enum], member: Enum) -> None:
 def dummy_step() -> Generator[DummyStep, None, None]:
     """
     Declares a new pipeline step the way a developer adds one: a `JobType` value
-    (`test_dummy_step`), a core artefact it produces (`test_dummy_artefact`, in
-    `Artefact` and `CORE_ARTEFACTS`) with its archive entry (carried by the data
-    row) and one `@pipeline_step` declaration on a job registered with an
-    enricher. Nothing else is registered.
+    (`test_dummy_step`), an always-computed artefact it produces
+    (`test_dummy_artefact`, declared with `artefact(...)` as document data) and
+    one `@pipeline_step` declaration on a job registered with an enricher.
+    Nothing else is registered.
 
     The step requires the content of a document, so it follows `text_extraction`
     and runs for all doctypes that have content. Its enricher loads the content from the document data;
     its handler records it in `computed`. The fixture removes the step again.
     """
     step = _add_enum_member(JobType, "TEST_DUMMY_STEP", "test_dummy_step")
-    artefact = _add_enum_member(Artefact, "TEST_DUMMY_ARTEFACT", "test_dummy_artefact")
-    # its archive entry: the step reads the content of the data row
-    archive_entry = patch.dict(ARTEFACT_ARCHIVE, {artefact: (ArchivePart.DATA_ROW,)})
-    archive_entry.start()
-    # every module that imported CORE_ARTEFACTS sees the new core artefact
-    core = artefact_enum.CORE_ARTEFACTS | {artefact}
-    importers = [
-        module
-        for module in list(sys.modules.values())
-        if getattr(module, "CORE_ARTEFACTS", None) is artefact_enum.CORE_ARTEFACTS
-    ]
-    patches = [patch.object(module, "CORE_ARTEFACTS", core) for module in importers]
-    for p in patches:
-        p.start()
+    test_artefact = artefact(
+        "test_dummy_artefact", kind=StorageKind.DOCUMENT_DATA, always=True
+    )
 
     _DUMMY_COMPUTED.clear()
     pipeline_step(
-        requires={Artefact.CONTENT},
-        produces={artefact},
+        requires={artefact_named("content")},
+        produces={test_artefact},
         doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
     )(
         register_job(job_type=step, input_type=DummyJobInput, enricher=_enrich_dummy)(
@@ -387,14 +390,11 @@ def dummy_step() -> Generator[DummyStep, None, None]:
         )
     )
 
-    yield {"step": step, "artefact": artefact, "computed": _DUMMY_COMPUTED}
+    yield {"step": step, "artefact": test_artefact, "computed": _DUMMY_COMPUTED}
 
     JobService().job_registry.pop(step)
     artefact_registry.unregister_step(step)
-    for p in patches:
-        p.stop()
-    archive_entry.stop()
-    _remove_enum_member(Artefact, artefact)
+    artefact_registry.unregister_artefact(test_artefact.name)
     _remove_enum_member(JobType, step)
 
 
@@ -425,8 +425,8 @@ def _handle_consumer(payload: SdocProcessingJobInput, job: Job) -> None:
 @pytest.fixture(scope="function")
 def paired_steps() -> Generator[PairedSteps, None, None]:
     """
-    Declares two new pipeline steps with core artefacts (each with its archive
-    entry, carried by the data row), nothing else registered:
+    Declares two new pipeline steps with always-computed artefacts (declared
+    with `artefact(...)` as document data), nothing else registered:
 
     - `test_producer_step` requires the content and produces the two artefacts
       `test_first_artefact` and `test_second_artefact`.
@@ -446,32 +446,21 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     producer = _add_enum_member(JobType, "TEST_PRODUCER_STEP", "test_producer_step")
     consumer = _add_enum_member(JobType, "TEST_CONSUMER_STEP", "test_consumer_step")
     artefacts = [
-        _add_enum_member(
-            Artefact, f"TEST_{name.upper()}_ARTEFACT", f"test_{name}_artefact"
-        )
+        artefact(f"test_{name}_artefact", kind=StorageKind.DOCUMENT_DATA, always=True)
         for name in ("first", "second", "third")
     ]
-    # their archive entries: the steps store nothing
-    archive_entries = patch.dict(
-        ARTEFACT_ARCHIVE, dict.fromkeys(artefacts, (ArchivePart.DATA_ROW,))
-    )
-    archive_entries.start()
-    core = artefact_enum.CORE_ARTEFACTS | set(artefacts)
-    importers = [
-        module
-        for module in list(sys.modules.values())
-        if getattr(module, "CORE_ARTEFACTS", None) is artefact_enum.CORE_ARTEFACTS
-    ]
-    patches = [patch.object(module, "CORE_ARTEFACTS", core) for module in importers]
-    for p in patches:
-        p.start()
 
     for documents in _PAIRED_RAN.values():
         documents.clear()
     ran = {producer: _PAIRED_RAN[producer.value], consumer: _PAIRED_RAN[consumer.value]}
 
     for step, requires, produces, handler in (
-        (producer, {Artefact.CONTENT}, {artefacts[0], artefacts[1]}, _handle_producer),
+        (
+            producer,
+            {artefact_named("content")},
+            {artefacts[0], artefacts[1]},
+            _handle_producer,
+        ),
         (consumer, {artefacts[0], artefacts[1]}, {artefacts[2]}, _handle_consumer),
     ):
         pipeline_step(
@@ -489,11 +478,8 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     for step in (consumer, producer):
         JobService().job_registry.pop(step)
         artefact_registry.unregister_step(step)
-    for p in patches:
-        p.stop()
-    archive_entries.stop()
-    for artefact in artefacts:
-        _remove_enum_member(Artefact, artefact)
+    for declared in artefacts:
+        artefact_registry.unregister_artefact(declared.name)
     for step in (consumer, producer):
         _remove_enum_member(JobType, step)
 

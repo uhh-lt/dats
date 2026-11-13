@@ -18,6 +18,7 @@ from modules.doc_processing.doc_processing_dto import (
 )
 from modules.doc_processing.doc_processing_exceptions import (
     NoFilesProcessedError,
+    StepNotPlannedError,
     UnsupportedMimeTypeError,
 )
 from modules.doc_processing.entrypoints.archive_extraction_job import (
@@ -268,12 +269,19 @@ class DocProcessingService(metaclass=SingletonMeta):
                 f"Processing step '{processing_step}' is not valid for doctype '{doctype}'"
             )
 
+        # 4. check that the step is planned for every document: Recompute never
+        # plans a step, as its set up may not have run
+        step = JobType(processing_step)
+        statuses = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
+        not_planned = sorted(i for i in sdoc_ids if step not in statuses.get(i, {}))
+        if not_planned:
+            raise StepNotPlannedError(step=processing_step, sdoc_ids=not_planned)
+
         # Start recompute jobs for the specified processing step: the job that
         # computes the step, for this step only (e.g. text_spacy for text_ner).
         # A document whose job cannot be queued (its input data is missing or
         # the queue cannot be reached) gets the step and the pending steps
         # after it erroneous, and the other documents still start.
-        step = JobType(processing_step)
         jobs: list[Job] = []
         for sdoc_id in sdoc_ids:
             started = start_steps(

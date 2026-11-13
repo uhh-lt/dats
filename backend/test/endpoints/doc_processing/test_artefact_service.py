@@ -4,7 +4,6 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -14,6 +13,7 @@ from core.user.user_orm import UserORM
 from feature_test_utils import feature_named, minimal_image_steps
 from job_test_utils import HeldJobs
 from pipeline_test_utils import (
+    artefact_named,
     read_all_step_status,
     read_step_status,
     started_steps,
@@ -329,7 +329,7 @@ def test_plan_document_plans_the_steps_of_the_artefact_demand(
     )
     db_session.commit()
 
-    assert demand == {Artefact.ES_INDEX}
+    assert demand == {artefact_named("es_index")}
     assert roots == [JobType.EXTRACT_HTML]
 
     assert read_all_step_status(db_session, p["new"].id) == {

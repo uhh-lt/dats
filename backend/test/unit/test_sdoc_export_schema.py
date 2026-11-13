@@ -44,7 +44,7 @@ VALID_SDOC: dict[str, Any] = {
         pytest.param({}, id="valid"),
         # documents without sentence embeddings
         pytest.param({"sentence_embeddings": []}, id="no-sentence-embeddings"),
-        # fewer embeddings than sentences: the archive module of the sentence
+        # fewer embeddings than sentences: the archive of the sentence
         # embeddings says they are incomplete, the import leaves the step not
         # planned
         pytest.param(

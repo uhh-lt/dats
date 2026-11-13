@@ -12,21 +12,21 @@ word frequencies and named entities). Each step has its own status row and
 artefacts; the job input says which of its steps to compute.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
+from systems.artefact_system.artefact_system_enum import StorageKind
+
+if TYPE_CHECKING:
+    from systems.artefact_system.artefact_registry import Artefact
 
 # The most steps `crud_sdoc_step_status.count_by_project` counts: one bit each in
 # a BIGINT, without the sign bit. The graph rejects more pipeline steps.
 MAX_COUNTED_STEPS = 63
-
-# Artefacts that the uploaded file itself provides, per doctype.
-UPLOADED_ARTEFACTS: dict[DocType, frozenset[Artefact]] = {
-    DocType.audio: frozenset({Artefact.AUDIO}),
-}
 
 
 def _job_type_order(job_type: JobType) -> int:
@@ -37,19 +37,23 @@ def _job_type_order(job_type: JobType) -> int:
 
 @dataclass(frozen=True)
 class PipelineStep:
-    requires: frozenset[Artefact]
-    produces: frozenset[Artefact]
+    requires: frozenset["Artefact"]
+    produces: frozenset["Artefact"]
     doctypes: frozenset[DocType]
     # the job that computes this step, if it is a further step of another job
     job: JobType | None = None
 
 
 class PipelineGraph:
-    """The pipeline derived from the step declarations. Raises a
-    `PipelineDeclarationError` listing all problems if the declarations are invalid."""
+    """The pipeline derived from the step declarations and the registered
+    artefacts. Raises a `PipelineDeclarationError` listing all problems if the
+    declarations are invalid."""
 
-    def __init__(self, steps: dict[JobType, PipelineStep]) -> None:
+    def __init__(
+        self, steps: dict[JobType, PipelineStep], artefacts: Iterable["Artefact"]
+    ) -> None:
         self._declarations = dict(steps)
+        self._artefacts = frozenset(artefacts)
         self._job_of = {jt: s.job or jt for jt, s in steps.items()}
         self._steps_of_job: dict[JobType, list[JobType]] = {}
         for job_type in sorted(steps, key=_job_type_order):
@@ -61,7 +65,11 @@ class PipelineGraph:
         self._dependencies: dict[DocType, dict[JobType, set[JobType]]] = {}
         successors_by_doctype: dict[DocType, dict[JobType, list[JobType]]] = {}
 
-        problems = _check_artefacts_produced(steps) + _check_jobs(steps)
+        problems = (
+            _check_artefacts(steps, self._artefacts)
+            + _check_jobs(steps)
+            + _check_always(steps)
+        )
         if len(steps) > MAX_COUNTED_STEPS:
             problems.append(
                 f"There are {len(steps)} pipeline steps, but the feature states "
@@ -70,7 +78,9 @@ class PipelineGraph:
             )
         for doctype in DocType:
             doctype_steps = {jt: s for jt, s in steps.items() if doctype in s.doctypes}
-            deps, dep_problems = _dependencies(doctype, doctype_steps)
+            deps, dep_problems = _dependencies(
+                doctype, doctype_steps, self._uploaded(doctype)
+            )
             problems.extend(dep_problems)
             order = _order(doctype_steps, deps)
             if order is None:
@@ -122,14 +132,16 @@ class PipelineGraph:
         """The declaration of this step: what it requires, produces and its doctypes."""
         return self._declarations[step]
 
-    def artefacts(self) -> frozenset[Artefact]:
-        """All artefacts a step produces or an uploaded file provides."""
-        return frozenset(
-            {a for s in self._declarations.values() for a in s.produces}
-            | {a for artefacts in UPLOADED_ARTEFACTS.values() for a in artefacts}
-        )
+    def artefacts(self) -> frozenset["Artefact"]:
+        """All registered artefacts: each is produced by a step or is the
+        uploaded file of a doctype."""
+        return self._artefacts
 
-    def producer(self, doctype: DocType, artefact: Artefact) -> JobType | None:
+    def _uploaded(self, doctype: DocType) -> frozenset["Artefact"]:
+        """The artefacts the uploaded file of this doctype provides."""
+        return frozenset(a for a in self._artefacts if doctype in a.uploaded_for)
+
+    def producer(self, doctype: DocType, artefact: "Artefact") -> JobType | None:
         """The step of this doctype that produces the artefact, None if no step
         of the doctype does (e.g. image embeddings of a text document)."""
         for step in self.steps(doctype):
@@ -138,7 +150,7 @@ class PipelineGraph:
         return None
 
     def steps_for(
-        self, doctype: DocType, artefacts: frozenset[Artefact]
+        self, doctype: DocType, artefacts: frozenset["Artefact"]
     ) -> list[JobType]:
         """The steps of the doctype these artefacts need, in pipeline order:
         their producers and the input steps of these, transitively. An
@@ -158,11 +170,11 @@ class PipelineGraph:
             todo.extend(deps[step])
         return [s for s in self.steps(doctype) if s in needed]
 
-    def applies(self, doctype: DocType, artefacts: frozenset[Artefact]) -> bool:
+    def applies(self, doctype: DocType, artefacts: frozenset["Artefact"]) -> bool:
         """Whether these artefacts apply to a document of this doctype: every
         artefact has a producer for the doctype or is uploaded with it (e.g.
         image embeddings do not apply to a text document)."""
-        uploaded = UPLOADED_ARTEFACTS.get(doctype, frozenset())
+        uploaded = self._uploaded(doctype)
         return all(
             a in uploaded or self.producer(doctype, a) is not None for a in artefacts
         )
@@ -231,14 +243,42 @@ class PipelineGraph:
         return jobs
 
 
-def _check_artefacts_produced(steps: dict[JobType, PipelineStep]) -> list[str]:
+def _check_artefacts(
+    steps: dict[JobType, PipelineStep], artefacts: frozenset["Artefact"]
+) -> list[str]:
+    """Every registered artefact is produced by a step or uploaded, and has an
+    archive exactly if it has an own store."""
     produced = {a for s in steps.values() for a in s.produces}
-    uploaded = {a for artefacts in UPLOADED_ARTEFACTS.values() for a in artefacts}
-    return [
-        f"Artefact '{a.value}' is produced by no step."
-        for a in Artefact
-        if a not in produced and a not in uploaded
-    ]
+    problems: list[str] = []
+    for a in sorted(artefacts, key=lambda a: a.name):
+        if a not in produced and not a.uploaded_for:
+            problems.append(f"Artefact '{a.name}' is produced by no step.")
+        if (a.kind == StorageKind.OWN_STORE) != (a.archive is not None):
+            problems.append(
+                f"Artefact '{a.name}' must declare an archive exactly if it has "
+                "its own store."
+            )
+    return problems
+
+
+def _check_always(steps: dict[JobType, PipelineStep]) -> list[str]:
+    """A step produces either always-computed or on-demand artefacts, and the
+    step of an always-computed artefact requires only always-computed ones: so
+    the always-computed steps never wait for an on-demand step."""
+    problems: list[str] = []
+    for job_type, step in steps.items():
+        always = {a.always for a in step.produces}
+        if len(always) > 1:
+            problems.append(
+                f"Step '{job_type.value}' produces always-computed and on-demand "
+                "artefacts."
+            )
+        if True in always and not all(a.always for a in step.requires):
+            problems.append(
+                f"Step '{job_type.value}' produces an always-computed artefact but "
+                "requires an on-demand one."
+            )
+    return problems
 
 
 def _check_jobs(steps: dict[JobType, PipelineStep]) -> list[str]:
@@ -263,21 +303,22 @@ def _check_jobs(steps: dict[JobType, PipelineStep]) -> list[str]:
 
 
 def _dependencies(
-    doctype: DocType, steps: dict[JobType, PipelineStep]
+    doctype: DocType,
+    steps: dict[JobType, PipelineStep],
+    uploaded: frozenset["Artefact"],
 ) -> tuple[dict[JobType, set[JobType]], list[str]]:
     """The steps each step depends on, i.e. the producers of its required artefacts."""
     problems: list[str] = []
-    producers: dict[Artefact, JobType] = {}
+    producers: dict["Artefact", JobType] = {}
     for job_type, step in steps.items():
         for artefact in step.produces:
             if artefact in producers:
                 problems.append(
-                    f"Artefact '{artefact.value}' of doctype '{doctype.value}' is produced "
+                    f"Artefact '{artefact.name}' of doctype '{doctype.value}' is produced "
                     f"by several steps: '{producers[artefact].value}', '{job_type.value}'."
                 )
             producers[artefact] = job_type
 
-    uploaded = UPLOADED_ARTEFACTS.get(doctype, frozenset())
     deps: dict[JobType, set[JobType]] = {jt: set() for jt in steps}
     for job_type, step in steps.items():
         for artefact in step.requires:
@@ -285,7 +326,7 @@ def _dependencies(
                 continue
             if artefact not in producers:
                 problems.append(
-                    f"Step '{job_type.value}' requires artefact '{artefact.value}', which "
+                    f"Step '{job_type.value}' requires artefact '{artefact.name}', which "
                     f"no step produces for doctype '{doctype.value}'."
                 )
                 continue

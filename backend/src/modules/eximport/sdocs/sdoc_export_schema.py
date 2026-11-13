@@ -189,8 +189,8 @@ class SourceDocumentExportSchema(BaseModel):
     @model_validator(mode="after")
     def validate_arrays_consistency(self) -> "SourceDocumentExportSchema":
         """Validate that related arrays have the same length. Whether the sentence
-        embeddings are complete (one per sentence) is the archive module's
-        question (`artefact_archive.py`): an incomplete archive imports with the
+        embeddings are complete (one per sentence) is the question of
+        its artefact archive (`ArtefactArchive.is_complete`): an incomplete archive imports with the
         step not planned."""
         # Validate token arrays
         if len(self.token_starts) != len(self.token_ends):

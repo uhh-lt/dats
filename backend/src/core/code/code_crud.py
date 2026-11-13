@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from config import conf
 from config_schema import SystemCodeConfig
 from core.code.code_dto import CodeCreate, CodeUpdate
+from core.code.code_exceptions import SystemCodeConflictError
 from core.code.code_orm import CodeORM
+from core.code.system_codes import ROOT, ROOT_DESCRIPTION, SystemCode
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from utils.color_utils import get_next_color
 
@@ -49,6 +51,71 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
         __create_recursively(conf.system_codes)
 
+        return created
+
+    def create_system_codes(
+        self, db: Session, *, project_id: int, codes: list[SystemCode]
+    ) -> list[CodeORM]:
+        """
+        Create the system code trees below the root `SYSTEM_CODE`, which is
+        created if missing. The trees may overlap. An existing system code of
+        the same name is reused if it has the declared parent.
+
+        Args:
+            project_id: The project to create the codes in.
+            codes: The code trees; without codes nothing is created.
+
+        Returns:
+            The created codes.
+
+        Raises:
+            SystemCodeConflictError: A user code has the name of a declared code,
+                or a system code of that name has another parent.
+        """
+        created: list[CodeORM] = []
+        if not codes:
+            return created
+
+        def ensure(
+            name: str, description: str, enabled: bool, parent_id: int | None
+        ) -> int:
+            existing = self.read_by_name_and_project(
+                db, code_name=name, project_id=project_id
+            )
+            if existing is None:
+                db_code = self.create(
+                    db=db,
+                    create_dto=CodeCreate(
+                        name=name,
+                        description=description,
+                        project_id=project_id,
+                        parent_id=parent_id,
+                        is_system=True,
+                        enabled=enabled,
+                    ),
+                )
+                created.append(db_code)
+                return db_code.id
+            if not existing.is_system:
+                raise SystemCodeConflictError(
+                    project_id=project_id, name=name, reason="a user code has the name"
+                )
+            if existing.parent_id != parent_id:
+                raise SystemCodeConflictError(
+                    project_id=project_id,
+                    name=name,
+                    reason="a system code of the name has another parent",
+                )
+            return existing.id
+
+        def create_tree(code: SystemCode, parent_id: int) -> None:
+            code_id = ensure(code.name, code.description, code.enabled, parent_id)
+            for child in code.children:
+                create_tree(child, code_id)
+
+        root_id = ensure(ROOT, ROOT_DESCRIPTION, True, None)
+        for tree in codes:
+            create_tree(tree, root_id)
         return created
 
     ### READ OPERATIONS ###

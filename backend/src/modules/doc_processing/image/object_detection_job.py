@@ -3,7 +3,6 @@ from uuid import uuid4
 
 from loguru import logger
 
-from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
@@ -13,6 +12,7 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.user.user_crud import SYSTEM_USER_ID
+from modules.doc_processing.image.object_detection_artefact import OBJECT_BBOXES
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.dto.detr import DETRImageInput
@@ -53,7 +53,7 @@ def enrich_for_recompute(
 
 @pipeline_step(
     requires=set(),
-    produces={Artefact.OBJECT_BBOXES},
+    produces={OBJECT_BBOXES},
     doctypes={DocType.image},
 )
 @register_job(

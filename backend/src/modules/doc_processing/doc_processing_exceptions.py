@@ -33,3 +33,15 @@ class StepNotComputedError(Exception):
         super().__init__(
             f"Job '{job_type}' has no branch that computes the steps {steps}."
         )
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class StepNotPlannedError(Exception):
+    """Raised when a step is recomputed for documents it is not planned for:
+    Recompute never plans a step; enabling or completing its feature does."""
+
+    def __init__(self, step: str, sdoc_ids: list[int]) -> None:
+        super().__init__(
+            f"Step '{step}' is not planned for the documents {sdoc_ids}. Enable or "
+            "complete the feature that needs it to compute it."
+        )

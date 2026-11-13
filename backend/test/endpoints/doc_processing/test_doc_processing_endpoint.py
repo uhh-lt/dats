@@ -322,3 +322,42 @@ def test_recompute_with_an_unreachable_queue_fails_the_step(
     assert (
         read_step_status(db_session, sdoc_id, JobType.TEXT_LANGUAGE_DETECTION) == -100
     )
+
+
+def test_recompute_of_a_step_that_is_not_planned_is_rejected(
+    client: TestClient,
+    db_session,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """The keywords are not planned for text_done (the project enables no
+    feature): Recompute never plans a step, so it answers 400, starts no job
+    and creates no status row."""
+    p = recompute_project
+    sdoc_id = p["text_done"].id
+
+    response = _recompute(client, p["project"].id, JobType.TEXT_KEYWORDS, [sdoc_id])
+
+    assert response.status_code == 400, response.text
+    assert "text_keywords" in response.text
+    assert held_jobs.jobs() == []
+    assert read_step_status(db_session, sdoc_id, JobType.TEXT_KEYWORDS) is None
+
+
+def test_recompute_is_rejected_as_a_whole_if_one_document_lacks_the_step(
+    client: TestClient,
+    db_session,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """The keywords are planned for keywords_done but not for text_done: a
+    request that names both is rejected as a whole, names text_done only, and
+    starts no job for keywords_done either."""
+    p = recompute_project
+    sdoc_ids = [p["keywords_done"].id, p["text_done"].id]
+
+    response = _recompute(client, p["project"].id, JobType.TEXT_KEYWORDS, sdoc_ids)
+
+    assert response.status_code == 400, response.text
+    assert f"[{p['text_done'].id}]" in response.text
+    assert held_jobs.jobs() == []

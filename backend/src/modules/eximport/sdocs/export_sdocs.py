@@ -11,7 +11,6 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
 from modules.eximport.export_exceptions import NoDataToExportError
-from modules.eximport.sdocs.artefact_archive import archive_modules
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,
@@ -70,8 +69,8 @@ def __export_sdocs(
     # 2.3. The source document's tags (sdoc tags) [TagORM]
     # 2.4. The source document's folder [FolderORM]
     # 3. Processed data of the source document (content, html, tokens, sentences, times) [SourceDocumentDataORM]
-    # 4. The artefacts with an archive module (embeddings, word frequencies, see
-    # artefact_archive.py), only if their step finished: a document of a project
+    # 4. The artefacts with an archive (embeddings, word frequencies, see
+    # artefact_registry.archives()), only if their step finished: a document of a project
     # without e.g. sentence similarity search has no sentence embeddings.
 
     # Collect all files to be included in the export
@@ -144,12 +143,12 @@ def __export_sdocs(
         # The artefacts with their own store: exported only if their step
         # finished and their data is complete, else the import leaves the step
         # not planned
-        for artefact, module in archive_modules().items():
+        for artefact, archive in artefact_registry.archives():
             step = graph.producer(doctype, artefact)
             if step is None or planned.get(step) != SDocStatus.finished:
                 continue
-            archived = export_schema.model_copy(update=module.read(sdoc))
-            if module.is_complete(archived):
+            archived = export_schema.model_copy(update=archive.read(sdoc))
+            if archive.is_complete(archived.model_dump()):
                 export_schema = archived
 
         export_collection.append(export_schema)
