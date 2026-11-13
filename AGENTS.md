@@ -64,21 +64,11 @@ Each worktree has its own isolated dev stack (own compose project, own port bloc
 
 ## Core Concepts
 
-We use the following terms throughout the project:
+**Required reading: read [`GLOSSARY.md`](GLOSSARY.md) before any work in this repository.** It defines the domain terms of DATS (project, source document, code, annotation, ...) and is their single source of truth.
 
-- **User**: An individual who uses the application.
-- **Project**: A collection of source documents, annotations, codes, tags, and memos related to a specific research endeavor.
-- **Source Document**: Any document (text, image, audio, video) data that is being analyzed. Short: "sdoc".
-- **Metadata**: Information about a source document, such as title, author, date created, etc.
-  - **Project Metadata**: Defines the metadata keys that exist within a project, their value types, document type, and description.
-  - **Source Document Metadata**: The actual metadata values of a specific document.
-- **Tag**: A label assigned to a source document for categorization.
-- **Code**: A category used for annotating source documents.
-- **Annotation**: A segment of a source document that has been assigned a code.
-  - **Span Annotation**: An annotation that applies to a specific span of text within a source document.
-  - **Sentence Annotation**: An annotation that applies to an entire sentence within a source document.
-  - **Bbox Annotation**: An annotation that applies to a bounding box within an image document.
-- **Memo**: A note or comment added to a source document or annotation.
+- Use the glossary's terms exactly in code, docs, issues and conversations.
+- Add or change a term in `GLOSSARY.md` only, never here.
+- Architecture decisions are recorded as ADRs in `specs/adr/`.
 
 ## Workflows
 
