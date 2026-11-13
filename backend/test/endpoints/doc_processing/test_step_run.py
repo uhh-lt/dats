@@ -12,8 +12,13 @@ from modules.doc_processing.doc_processing_dto import (
 )
 from modules.doc_processing.step_run import (
     handle_job_error,
+    handle_job_finished,
     handle_job_started,
     start_steps,
+)
+from modules.doc_processing.text.html_extraction_job import (
+    ExtractHTMLJobInput,
+    ExtractHTMLJobOutput,
 )
 from pipeline_test_utils import failing_started_hook, read_step_status
 from systems.job_system.job_service import JobService
@@ -196,3 +201,39 @@ def test_a_finished_job_leaves_its_successors_processing_if_the_queue_is_unreach
     assert status.pop(JobType.EXTRACT_HTML) == SDocStatus.finished
     assert JobType.TEXT_EXTRACTION in status
     assert set(status.values()) == {SDocStatus.processing}
+
+
+def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entry_points(
+    db_session,
+    dummy_step_projects: DummyStepProjects,
+    held_jobs: HeldJobs,
+):
+    """extract_html of the upload of `dummy_step_projects` finishes with an
+    extracted image while the queue cannot be reached: starting the image's
+    sdoc_init fails, which is only logged, and the step stays finished."""
+    JobService().start_job(
+        JobType.SDOC_INIT,
+        SdocInitJobInput(
+            project_id=dummy_step_projects["project"].id,
+            filepath=dummy_step_projects["upload"],
+            doctype=DocType.text,
+            folder_id=None,
+            settings=SETTINGS,
+        ),
+    )
+    held_jobs.run(JobType.SDOC_INIT)
+    (extract_html,) = held_jobs.inputs(JobType.EXTRACT_HTML)
+    assert isinstance(extract_html, ExtractHTMLJobInput)
+    output = ExtractHTMLJobOutput(
+        raw_html="<p>text</p>",
+        image_paths=[dummy_step_projects["upload"]],
+        folder_id=None,
+    )
+
+    with unreachable_redis():
+        handle_job_finished(JobType.EXTRACT_HTML, extract_html, output)
+
+    assert (
+        read_step_status(db_session, extract_html.sdoc_id, JobType.EXTRACT_HTML)
+        == SDocStatus.finished
+    )
