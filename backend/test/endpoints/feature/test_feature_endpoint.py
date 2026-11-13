@@ -5,11 +5,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from common.artefact_enum import Artefact
-from common.feature_enum import Feature, FeatureAction, FeatureStatus
+from common.feature_enum import FeatureAction, FeatureArea, FeatureStatus
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
-from feature_test_utils import FeatureProject, PartlyProject
+from core.project.project_orm import ProjectORM
+from feature_test_utils import FeatureProject, PartlyProject, feature_named
 from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
@@ -23,6 +24,7 @@ from systems.feature_system.feature_dto import (
     FeatureRead,
     ProjectFeatureRead,
 )
+from systems.feature_system.feature_registry import Feature, feature_registry
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_system_enum import JobStatus
 
@@ -33,23 +35,50 @@ from .conftest import DuplicateFinderProject
 # ===========================================================================
 
 
-def test_get_all_features_lists_every_feature_with_its_requirements(
+def _all_features(client: TestClient) -> dict[str, FeatureRead]:
+    """The response of `GET /feature`, in its order, by feature name."""
+    response = client.get("/feature")
+    assert response.status_code == 200, response.text
+    reads = [FeatureRead.model_validate(f) for f in response.json()]
+    return {r.feature: r for r in reads}
+
+
+def test_get_all_features_lists_every_feature_ordered_by_area_and_title(
     client: TestClient,
 ):
-    """Every toggleable feature, in enum order, with the features it
-    requires (RAG chat, annotation scaling and concepts over time require
-    sentence similarity search, no other feature requires one)."""
-    response = client.get("/feature")
+    """Every registered feature, ordered by the position of its area in
+    `FeatureArea`, then by title."""
+    features = _all_features(client)
 
-    assert response.status_code == 200, response.text
-    features = [FeatureRead.model_validate(f) for f in response.json()]
-    assert [f.feature for f in features] == list(Feature)
-    requires = {f.feature: f.requires_features for f in features if f.requires_features}
-    assert requires == {
-        Feature.RAG_CHAT: [Feature.SENTENCE_SIMILARITY_SEARCH],
-        Feature.ANNOTATION_SCALING: [Feature.SENTENCE_SIMILARITY_SEARCH],
-        Feature.CONCEPTS_OVER_TIME: [Feature.SENTENCE_SIMILARITY_SEARCH],
-    }
+    assert list(features) == feature_registry.names()
+    areas = list(FeatureArea)
+    keys = [(areas.index(f.area), f.title) for f in features.values()]
+    assert keys == sorted(keys)
+
+
+def test_get_all_features_reports_title_requirements_and_default(
+    client: TestClient,
+):
+    """RAG chat reads its title, description and area from its declaration,
+    requires sentence similarity search and is enabled in a new project."""
+    rag = _all_features(client)["rag_chat"]
+
+    assert rag.title == "RAG Chat"
+    assert rag.area == FeatureArea.ANALYSIS
+    assert rag.description
+    assert rag.requires_features == ["sentence_similarity_search"]
+    assert rag.default_enabled is True
+
+
+def test_get_all_features_reports_a_feature_off_by_default(
+    client: TestClient, off_by_default: Feature
+):
+    """A feature registered with `default_enabled=False` is listed with the
+    flag false."""
+    read = _all_features(client)[off_by_default.name]
+
+    assert read.default_enabled is False
+    assert read.title == off_by_default.title
 
 
 # ===========================================================================
@@ -57,7 +86,7 @@ def test_get_all_features_lists_every_feature_with_its_requirements(
 # ===========================================================================
 
 
-def _features(client: TestClient, project_id: int) -> dict[Feature, ProjectFeatureRead]:
+def _features(client: TestClient, project_id: int) -> dict[str, ProjectFeatureRead]:
     response = client.get(f"/feature/project/{project_id}")
     assert response.status_code == 200, response.text
     reads = [ProjectFeatureRead.model_validate(r) for r in response.json()]
@@ -71,7 +100,7 @@ def test_project_features_of_a_project_without_documents_are_ready(
     document."""
     features = _features(client, test_project.id)
 
-    assert list(features) == list(Feature)
+    assert list(features) == feature_registry.names()
     for read in features.values():
         assert read.enabled and read.ready, read
         assert read.status == FeatureStatus.FULLY_AVAILABLE, read
@@ -82,17 +111,17 @@ def test_project_features_of_a_project_without_documents_are_ready(
     "feature,total",
     [
         # text features apply to every document (the image has a caption)
-        pytest.param(Feature.KEYWORD_STATISTICS, 3, id="keywords"),
-        pytest.param(Feature.RAG_CHAT, 3, id="rag-chat"),
-        pytest.param(Feature.FULL_TEXT_SEARCH, 3, id="full-text"),
+        pytest.param("keyword_statistics", 3, id="keywords"),
+        pytest.param("rag_chat", 3, id="rag-chat"),
+        pytest.param("full_text_search", 3, id="full-text"),
         # image features apply to the image only
-        pytest.param(Feature.OBJECT_DETECTION, 1, id="object-detection"),
+        pytest.param("object_detection", 1, id="object-detection"),
     ],
 )
 def test_project_features_report_coverage(
     client: TestClient,
     feature_project: FeatureProject,
-    feature: Feature,
+    feature: str,
     total: int,
 ):
     """In a project without features, no feature is enabled or covers a
@@ -112,13 +141,33 @@ def test_project_features_requires_membership(client: TestClient):
     assert response.status_code == 403, response.text
 
 
+def test_project_features_ignore_a_stored_name_of_an_unregistered_feature(
+    client: TestClient, db_session, removed_feature_project: ProjectORM
+):
+    """The stored name "removed_feature" belongs to no registered feature: the
+    features of the project read without it, and the next change of the
+    enabled features drops it."""
+    project_id = removed_feature_project.id
+
+    features = _features(client, project_id)
+
+    assert "removed_feature" not in features
+    assert features["full_text_search"].enabled is True
+    _activate(client, project_id, "word_frequency")
+    db_session.expire_all()
+    assert crud_project.read(db=db_session, id=project_id).enabled_features == [
+        "full_text_search",
+        "word_frequency",
+    ]
+
+
 def test_project_features_count_the_documents_by_the_status_of_their_steps(
     client: TestClient, partly_project: PartlyProject
 ):
     """Full-text search covers one document; two failed (an erroneous index or
     text extraction), two lack a planned step and nothing runs: it is partly
     available."""
-    read = _features(client, partly_project["project"].id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, partly_project["project"].id)["full_text_search"]
 
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
     assert read.ready is False
@@ -140,7 +189,7 @@ def test_project_features_count_the_documents_of_a_disabled_feature(
     similarity search counts text_running as processing (language detection),
     text_done and the image as not planned (no sentence embeddings)."""
     read = _features(client, feature_project["project"].id)[
-        Feature.SENTENCE_SIMILARITY_SEARCH
+        "sentence_similarity_search"
     ]
 
     assert read.status == FeatureStatus.DISABLED
@@ -162,9 +211,9 @@ SETTINGS = ProcessingSettings(
 )
 
 
-def _act(client: TestClient, project_id: int, feature: Feature, action: FeatureAction):
+def _act(client: TestClient, project_id: int, feature: str, action: FeatureAction):
     """Send the action (`/enable`, `/complete` or `/disable`) for the feature."""
-    url = f"/feature/project/{project_id}/{feature.value}/{action.value}"
+    url = f"/feature/project/{project_id}/{feature}/{action.value}"
     if action == FeatureAction.DISABLE:
         return client.post(url)
     return client.post(
@@ -172,23 +221,23 @@ def _act(client: TestClient, project_id: int, feature: Feature, action: FeatureA
     )
 
 
-def _activate(client: TestClient, project_id: int, feature: Feature) -> list[Feature]:
+def _activate(client: TestClient, project_id: int, feature: str) -> list[str]:
     response = _act(client, project_id, feature, FeatureAction.ENABLE)
     assert response.status_code == 200, response.text
-    return [Feature(f) for f in response.json()]
+    return response.json()
 
 
-def _complete(client: TestClient, project_id: int, feature: Feature) -> None:
+def _complete(client: TestClient, project_id: int, feature: str) -> None:
     response = _act(client, project_id, feature, FeatureAction.COMPLETE)
     assert response.status_code == 200, response.text
 
 
 # one project per status of keyword statistics or full-text search
 _STATUS_PROJECTS = {
-    FeatureStatus.DISABLED: ("feature_project", Feature.KEYWORD_STATISTICS),
-    FeatureStatus.COMPUTING: ("uploading_project", Feature.KEYWORD_STATISTICS),
-    FeatureStatus.PARTLY_AVAILABLE: ("partly_project", Feature.FULL_TEXT_SEARCH),
-    FeatureStatus.FULLY_AVAILABLE: ("test_project", Feature.KEYWORD_STATISTICS),
+    FeatureStatus.DISABLED: ("feature_project", "keyword_statistics"),
+    FeatureStatus.COMPUTING: ("uploading_project", "keyword_statistics"),
+    FeatureStatus.PARTLY_AVAILABLE: ("partly_project", "full_text_search"),
+    FeatureStatus.FULLY_AVAILABLE: ("test_project", "keyword_statistics"),
 }
 
 
@@ -236,7 +285,7 @@ def test_feature_action_is_allowed_only_in_its_statuses(
         return
     assert response.status_code == 409, response.text
     assert (
-        f"Cannot {action.value} the feature '{feature.value}': it is '{status.value}'"
+        f"Cannot {action.value} the feature '{feature}': it is '{status.value}'"
         in response.text
     )
     assert _features(client, project_id)[feature].status == status
@@ -252,10 +301,10 @@ def test_feature_actions_are_rejected_while_its_computation_is_pending(
     job planned anything: a second Enable, Complete and Disable answer 409, and
     no second computation starts."""
     project_id = feature_project["project"].id
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, project_id, "full_text_search")
 
     for action in FeatureAction:
-        response = _act(client, project_id, Feature.FULL_TEXT_SEARCH, action)
+        response = _act(client, project_id, "full_text_search", action)
         assert response.status_code == 409, (action, response.text)
         assert "it is 'computing'" in response.text, action
     assert len(held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)) == 1
@@ -264,20 +313,19 @@ def test_feature_actions_are_rejected_while_its_computation_is_pending(
 def test_feature_actions_require_membership(client: TestClient):
     """A non-member gets 403 for every action."""
     for action in FeatureAction:
-        response = _act(client, 123456, Feature.FULL_TEXT_SEARCH, action)
+        response = _act(client, 123456, "full_text_search", action)
         assert response.status_code == 403, (action, response.text)
 
 
 def test_feature_action_on_an_unknown_feature_is_rejected(
     client: TestClient, test_project
 ):
-    """An unknown feature is a validation error."""
-    response = client.post(
-        f"/feature/project/{test_project.id}/no_such_feature/enable",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
-    )
+    """A feature name the backend does not know answers 404 for every action."""
+    for action in FeatureAction:
+        response = _act(client, test_project.id, "no_such_feature", action)
 
-    assert response.status_code == 422, response.text
+        assert response.status_code == 404, (action, response.text)
+        assert "no_such_feature" in response.text, action
 
 
 # ===========================================================================
@@ -291,9 +339,9 @@ def test_enable_feature_enables_it_and_the_features_it_requires(
     held_jobs: HeldJobs,
 ):
     """Enabling RAG chat enables sentence similarity search as well."""
-    enabled = _activate(client, feature_project["project"].id, Feature.RAG_CHAT)
+    enabled = _activate(client, feature_project["project"].id, "rag_chat")
 
-    assert enabled == [Feature.SENTENCE_SIMILARITY_SEARCH, Feature.RAG_CHAT]
+    assert enabled == ["rag_chat", "sentence_similarity_search"]
 
 
 def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
@@ -309,7 +357,7 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     gets them when its inputs finish."""
     p = feature_project
 
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    _activate(client, p["project"].id, "keyword_statistics")
     (computation,) = held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
@@ -340,10 +388,10 @@ def test_enable_feature_makes_it_computing(
     """After the computation, every document processes full-text search."""
     project_id = feature_project["project"].id
 
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
-    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.COMPUTING
     assert (read.processing_documents, read.total_documents) == (3, 3)
 
@@ -358,10 +406,10 @@ def test_enable_feature_is_computing_before_its_documents_are_planned(
     search, which it requires, are computing already."""
     project_id = partly_project["project"].id
 
-    _activate(client, project_id, Feature.RAG_CHAT)
+    _activate(client, project_id, "rag_chat")
 
     features = _features(client, project_id)
-    for feature in (Feature.RAG_CHAT, Feature.SENTENCE_SIMILARITY_SEARCH):
+    for feature in ("rag_chat", "sentence_similarity_search"):
         assert features[feature].status == FeatureStatus.COMPUTING, feature
         assert features[feature].processing_documents == 0, feature
 
@@ -375,13 +423,13 @@ def test_a_feature_that_shares_an_artefact_of_a_pending_computation_is_computing
     frequencies, which the enabled duplicate finder needs too: right after the
     request, before any document is planned, both are computing."""
     project_id = duplicate_finder_project["project"].id
-    before = _features(client, project_id)[Feature.DUPLICATE_FINDER]
+    before = _features(client, project_id)["duplicate_finder"]
     assert before.status == FeatureStatus.PARTLY_AVAILABLE
 
-    _activate(client, project_id, Feature.WORD_FREQUENCY)
+    _activate(client, project_id, "word_frequency")
 
     features = _features(client, project_id)
-    for feature in (Feature.WORD_FREQUENCY, Feature.DUPLICATE_FINDER):
+    for feature in ("word_frequency", "duplicate_finder"):
         assert features[feature].status == FeatureStatus.COMPUTING, feature
         assert features[feature].processing_documents == 0, feature
 
@@ -395,11 +443,11 @@ def test_enable_feature_that_requires_a_computing_feature_starts_its_computation
     has a pending computation still starts a computation for RAG chat, of the
     sentence embeddings both need."""
     project_id = feature_project["project"].id
-    _activate(client, project_id, Feature.SENTENCE_SIMILARITY_SEARCH)
+    _activate(client, project_id, "sentence_similarity_search")
 
-    enabled = _activate(client, project_id, Feature.RAG_CHAT)
+    enabled = _activate(client, project_id, "rag_chat")
 
-    assert enabled == [Feature.SENTENCE_SIMILARITY_SEARCH, Feature.RAG_CHAT]
+    assert enabled == ["rag_chat", "sentence_similarity_search"]
     computations = held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)
     assert [
         a.artefacts for a in computations if isinstance(a, ArtefactComputationJobInput)
@@ -415,8 +463,8 @@ def test_enable_two_features_sharing_a_step_starts_it_once(
     two computations, only the first plans and starts it."""
     p = feature_project
 
-    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
-    _activate(client, p["project"].id, Feature.SEARCH_ANNOTATE)
+    _activate(client, p["project"].id, "full_text_search")
+    _activate(client, p["project"].id, "search_annotate")
 
     assert len(held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)) == 2
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
@@ -438,7 +486,7 @@ def test_enable_text_feature_plans_its_steps_for_images(
     image too."""
     p = feature_project
 
-    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, p["project"].id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     assert read_step_status(db_session, p["image"].id, JobType.TEXT_ES_INDEX) == 0
@@ -465,7 +513,7 @@ def test_enable_feature_job_waits_for_the_request_to_commit(
                 FeatureService().enable_feature(
                     db=db,
                     project_id=feature_project["project"].id,
-                    feature=Feature.FULL_TEXT_SEARCH,
+                    feature=feature_named("full_text_search"),
                     settings=SETTINGS,
                 )
                 enqueued.set()
@@ -499,14 +547,12 @@ def test_enable_feature_with_redis_down_changes_nothing(
     project_id = feature_project["project"].id
 
     with unreachable_redis():
-        response = _act(
-            client, project_id, Feature.FULL_TEXT_SEARCH, FeatureAction.ENABLE
-        )
+        response = _act(client, project_id, "full_text_search", FeatureAction.ENABLE)
 
     assert response.status_code == 503, response.text
     assert "The job queue cannot be reached" in response.text
 
-    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.DISABLED
     assert read.processing_documents == 0
     assert held_jobs.jobs() == []
@@ -527,7 +573,7 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
     monkeypatch.setattr(artefact_service, "COMPUTATION_BATCH_SIZE", 1)
     p = feature_project
     project_id = p["project"].id
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, project_id, "full_text_search")
 
     with unreachable_redis(after_starts=1):
         held_jobs.run(JobType.ARTEFACT_COMPUTATION)
@@ -540,10 +586,10 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
         assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) == -100
 
     held_jobs.run(JobType.TEXT_ES_INDEX)
-    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
-    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
         p["text_running"].id: [JobType.TEXT_ES_INDEX],
@@ -563,16 +609,16 @@ def test_enable_feature_whose_computation_dies_with_its_worker_stops_computing(
     search reads partly available, and Complete starts the indexes."""
     p = feature_project
     project_id = p["project"].id
-    _activate(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, project_id, "full_text_search")
 
     held_jobs.abandon(JobType.ARTEFACT_COMPUTATION)
 
     db_session.expire_all()
     assert crud_project.read(db=db_session, id=project_id).artefact_computations == {}
-    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
-    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
         p["text_done"].id: [JobType.TEXT_ES_INDEX],
@@ -593,7 +639,7 @@ def test_enable_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     FeatureService().enable_feature(
         db=db_session,
         project_id=project_id,
-        feature=Feature.FULL_TEXT_SEARCH,
+        feature=feature_named("full_text_search"),
         settings=SETTINGS,
     )
     db_session.rollback()
@@ -625,7 +671,7 @@ def test_enable_feature_waits_for_a_concurrent_computation(
     service.enable_feature(
         db=db_session,
         project_id=project_id,
-        feature=Feature.KEYWORD_STATISTICS,
+        feature=feature_named("keyword_statistics"),
         settings=SETTINGS,
     )
 
@@ -634,7 +680,7 @@ def test_enable_feature_waits_for_a_concurrent_computation(
             service.enable_feature(
                 db=db,
                 project_id=project_id,
-                feature=Feature.WORD_FREQUENCY,
+                feature=feature_named("word_frequency"),
                 settings=SETTINGS,
             )
 
@@ -647,8 +693,8 @@ def test_enable_feature_waits_for_a_concurrent_computation(
 
     db_session.expire_all()
     assert crud_project.read(db=db_session, id=project_id).enabled_features == [
-        Feature.WORD_FREQUENCY,
-        Feature.KEYWORD_STATISTICS,
+        "keyword_statistics",
+        "word_frequency",
     ]
 
 
@@ -659,13 +705,13 @@ def test_enable_feature_in_a_project_without_documents_starts_nothing(
 ):
     """`test_project` has no documents: after disabling keyword statistics,
     enabling it again has nothing to compute and starts no computation."""
-    _act(client, test_project.id, Feature.KEYWORD_STATISTICS, FeatureAction.DISABLE)
+    _act(client, test_project.id, "keyword_statistics", FeatureAction.DISABLE)
 
-    enabled = _activate(client, test_project.id, Feature.KEYWORD_STATISTICS)
+    enabled = _activate(client, test_project.id, "keyword_statistics")
 
-    assert enabled == list(Feature)
+    assert enabled == sorted(feature_registry.names())
     assert held_jobs.jobs() == []
-    read = _features(client, test_project.id)[Feature.KEYWORD_STATISTICS]
+    read = _features(client, test_project.id)["keyword_statistics"]
     assert read.status == FeatureStatus.FULLY_AVAILABLE
 
 
@@ -686,7 +732,7 @@ def test_complete_feature_plans_failed_and_not_planned_documents(
     alone, and the other failed steps start once their input is recomputed."""
     p = partly_project
 
-    _complete(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, p["project"].id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
 
@@ -720,7 +766,7 @@ def test_complete_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     full-text search, so the mapping is erroneous instead of processing forever."""
     sdoc_id = partly_project["spacy_failed"].id
 
-    _complete(client, partly_project["project"].id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, partly_project["project"].id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
@@ -739,7 +785,7 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
     queue is back starts the same steps as without the outage."""
     p = partly_project
     project_id = p["project"].id
-    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, "full_text_search")
 
     with unreachable_redis():
         held_jobs.run(JobType.ARTEFACT_COMPUTATION)
@@ -753,10 +799,10 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
         read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
         == -100
     )
-    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
-    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
         p["index_failed"].id: [JobType.TEXT_ES_INDEX],
@@ -780,7 +826,7 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
     p = partly_project
     project_id = p["project"].id
     sdoc_id = p["extraction_failed"].id
-    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     with unreachable_redis():
@@ -789,10 +835,10 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_EXTRACTION) == 1
     assert read_step_status(db_session, sdoc_id, JobType.TEXT_ES_INDEX) == -100
     held_jobs.run(JobType.TEXT_ES_INDEX)
-    read = _features(client, project_id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
-    _complete(client, project_id, Feature.FULL_TEXT_SEARCH)
+    _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {sdoc_id: [JobType.TEXT_ES_INDEX]}
 
@@ -810,14 +856,12 @@ def test_disable_feature_keeps_its_steps(
     """Disabling only changes the enabled features: the steps stay."""
     p = partly_project
 
-    response = _act(
-        client, p["project"].id, Feature.FULL_TEXT_SEARCH, FeatureAction.DISABLE
-    )
+    response = _act(client, p["project"].id, "full_text_search", FeatureAction.DISABLE)
 
     assert response.status_code == 200, response.text
     assert response.json() == []
     assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
-    read = _features(client, p["project"].id)[Feature.FULL_TEXT_SEARCH]
+    read = _features(client, p["project"].id)["full_text_search"]
     assert read.status == FeatureStatus.DISABLED
 
 
@@ -830,9 +874,7 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     finished index; the not indexed document stays not planned."""
     p = partly_project
 
-    response = _act(
-        client, p["project"].id, Feature.FULL_TEXT_SEARCH, FeatureAction.DISABLE
-    )
+    response = _act(client, p["project"].id, "full_text_search", FeatureAction.DISABLE)
 
     assert response.status_code == 200, response.text
     assert (
@@ -852,7 +894,7 @@ def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
     response = _act(
         client,
         test_project.id,
-        Feature.SENTENCE_SIMILARITY_SEARCH,
+        "sentence_similarity_search",
         FeatureAction.DISABLE,
     )
 

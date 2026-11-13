@@ -4,7 +4,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 import dats_test_utils
-from common.feature_enum import Feature
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkRead,
@@ -121,7 +120,7 @@ def test_tag_recommendation_jobs_are_rejected_when_the_feature_is_disabled(
 ):
     response = client.get(f"/tagrecommendation/{featureless_project['project'].id}")
 
-    assert_feature_disabled(response, Feature.TAG_RECOMMENDATION)
+    assert_feature_disabled(response, "tag_recommendation")
 
 
 def test_tag_recommendation_jobs_of_a_project_with_the_feature_are_listed(

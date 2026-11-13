@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 from common import artefact_enum
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -193,7 +192,7 @@ def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjec
         db_session,
         test_user,
         title="Other Planning Project",
-        features=[Feature.FULL_TEXT_SEARCH],
+        features=["full_text_search"],
     )
     done = dict.fromkeys(minimal_text_steps(), 1)
     sdocs = {

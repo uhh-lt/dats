@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
@@ -146,7 +145,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     sdoc_id = p["text_running"].id
 
     response = client.post(
-        f"/feature/project/{p['project'].id}/{Feature.KEYWORD_STATISTICS.value}/enable",
+        f"/feature/project/{p['project'].id}/keyword_statistics/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
 

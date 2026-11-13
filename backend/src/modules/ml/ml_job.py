@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from modules.ml.ml_enum import MLJobStatus, MLJobType
+from modules.ml.ml_feature import TAG_RECOMMENDATION
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
@@ -26,7 +26,7 @@ def validate_ml_input(db: Session, payload: MLJobInput) -> None:
     """Tag recommendation needs its feature; the other ML jobs need core data only."""
     if payload.ml_job_type == MLJobType.TAG_RECOMMENDATION:
         FeatureService().assert_enabled(
-            db=db, project_id=payload.project_id, feature=Feature.TAG_RECOMMENDATION
+            db=db, project_id=payload.project_id, feature=TAG_RECOMMENDATION
         )
 
 

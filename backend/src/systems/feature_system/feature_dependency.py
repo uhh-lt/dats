@@ -1,12 +1,13 @@
 """FastAPI dependencies that gate the routes of a feature: a request to a route
 of a feature that is disabled in the project fails with 403.
 
-- `require_feature(Feature.X)`: for routes with a `project_id` path or query
+- `require_feature(FEATURE)`: for routes with a `project_id` path or query
   parameter.
-- `require_feature_of(Feature.X, Crud.Y, "y_id")`: for routes that identify an
+- `require_feature_of(FEATURE, Crud.Y, "y_id")`: for routes that identify an
   object of the project by a path parameter.
 
-Routes that carry the project id in the request body call
+`FEATURE` is the object `register_feature` returned, imported from the
+module's `*_feature.py`. Routes that carry the project id in the request body call
 `FeatureService().assert_enabled(...)` after their authorization check instead.
 Both dependencies check the project membership first, so a non-member never
 learns which features a project enables.
@@ -20,8 +21,8 @@ from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dependencies import get_db_session
-from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
+from systems.feature_system.feature_registry import Feature
 from systems.feature_system.feature_service import FeatureService
 
 

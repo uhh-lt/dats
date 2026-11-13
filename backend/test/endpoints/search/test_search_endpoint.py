@@ -17,7 +17,6 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from core.memo.memo_dto import MemoRead
 from core.memo.memo_enum import AttachedObjectType
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
@@ -3248,7 +3247,7 @@ def test_search_sdocs_with_a_text_query_is_rejected_without_full_text_search(
 ):
     response = _search_sdocs(client, featureless_project["project"].id, "alpha")
 
-    assert_feature_disabled(response, Feature.FULL_TEXT_SEARCH)
+    assert_feature_disabled(response, "full_text_search")
 
 
 def test_search_sdocs_without_a_text_query_works_without_full_text_search(

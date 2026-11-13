@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
@@ -15,7 +14,7 @@ def test_info_is_rejected_when_word_frequency_is_disabled(
 ):
     response = client.get(f"/word_frequency/info/{featureless_project['project'].id}")
 
-    assert_feature_disabled(response, Feature.WORD_FREQUENCY)
+    assert_feature_disabled(response, "word_frequency")
 
 
 # ===========================================================================
@@ -29,7 +28,7 @@ def test_sdoc_word_frequencies_are_rejected_when_word_frequency_is_disabled(
     """The project is resolved from the document."""
     response = client.get(f"/word_frequency/sdoc/{featureless_project['sdoc'].id}")
 
-    assert_feature_disabled(response, Feature.WORD_FREQUENCY)
+    assert_feature_disabled(response, "word_frequency")
 
 
 def test_sdoc_word_frequencies_of_a_project_with_word_frequency_are_returned(
@@ -62,7 +61,7 @@ def test_analysis_is_rejected_when_word_frequency_is_disabled(
         json={"filter": EMPTY_FILTER, "sorts": []},
     )
 
-    assert_feature_disabled(response, Feature.WORD_FREQUENCY)
+    assert_feature_disabled(response, "word_frequency")
 
 
 def test_export_is_rejected_when_word_frequency_is_disabled(
@@ -74,4 +73,4 @@ def test_export_is_rejected_when_word_frequency_is_disabled(
         json={"filter": EMPTY_FILTER, "sorts": []},
     )
 
-    assert_feature_disabled(response, Feature.WORD_FREQUENCY)
+    assert_feature_disabled(response, "word_frequency")

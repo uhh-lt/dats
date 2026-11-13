@@ -1,8 +1,11 @@
-from common.feature_enum import Feature
+from common.feature_enum import FeatureArea
+from modules.simsearch.simsearch_feature import SENTENCE_SIMILARITY_SEARCH
 from systems.feature_system.feature_registry import register_feature
 
-register_feature(
-    Feature.ANNOTATION_SCALING,
-    requires_artefacts=set(),
-    requires_features={Feature.SENTENCE_SIMILARITY_SEARCH},
+ANNOTATION_SCALING = register_feature(
+    "annotation_scaling",
+    title="Annotation Scaling",
+    description="Get suggestions for sentences similar to the ones you annotated and accept or reject them.",
+    area=FeatureArea.AUTOMATIC_ANNOTATION,
+    requires_features={SENTENCE_SIMILARITY_SEARCH},
 )

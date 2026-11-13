@@ -1,12 +1,13 @@
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
+from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
     ProjectRead,
     ProjectUpdate,
 )
 from experiment_test_utils import RunUserProject
+from systems.feature_system.feature_registry import Feature, feature_registry
 
 # ===========================================================================
 # CREATE PROJECT (/project) TESTS
@@ -88,32 +89,69 @@ def test_delete_nonexistent_project(client: TestClient):
 # ===========================================================================
 
 
-def test_create_project_enables_all_features_by_default(client: TestClient):
-    """A project created without `enabled_features` enables every feature, so
-    it behaves like every project before the feature toggles."""
+def test_create_project_enables_the_default_features(client: TestClient):
+    """A project created without `enabled_features` enables the features that
+    declare `default_enabled`, stored sorted by name."""
     response = client.put("/project", json={"title": "All", "description": ""})
 
     assert response.status_code == 200, response.text
     project = ProjectRead.model_validate(response.json())
-    assert project.enabled_features == list(Feature)
+    assert project.enabled_features == sorted(
+        f.name for f in feature_registry.defaults()
+    )
+
+
+def test_create_project_does_not_enable_a_feature_off_by_default(
+    client: TestClient, off_by_default: Feature
+):
+    """A feature with `default_enabled=False` is not enabled in a project
+    created without `enabled_features`, but can be requested by name."""
+    default = client.put("/project", json={"title": "Default", "description": ""})
+    requested = client.put(
+        "/project",
+        json=ProjectCreate(
+            title="Requested", description="", enabled_features=[off_by_default.name]
+        ).model_dump(mode="json"),
+    )
+
+    assert default.status_code == 200, default.text
+    assert (
+        off_by_default.name
+        not in ProjectRead.model_validate(default.json()).enabled_features
+    )
+    assert requested.status_code == 200, requested.text
+    assert ProjectRead.model_validate(requested.json()).enabled_features == [
+        off_by_default.name
+    ]
+
+
+def test_create_project_with_an_unknown_feature_is_rejected(
+    client: TestClient, db_session
+):
+    """A feature name the backend does not know answers 404, and no project is
+    created."""
+    create = ProjectCreate(
+        title="Unknown", description="", enabled_features=["no_such_feature"]
+    )
+
+    response = client.put("/project", json=create.model_dump(mode="json"))
+
+    assert response.status_code == 404, response.text
+    assert "no_such_feature" in response.text
+    assert crud_project.read_by_title(db=db_session, title="Unknown") is None
 
 
 def test_create_project_enables_the_features_the_requested_ones_require(
     client: TestClient,
 ):
     """Requesting RAG chat also enables sentence similarity search."""
-    create = ProjectCreate(
-        title="RAG", description="", enabled_features=[Feature.RAG_CHAT]
-    )
+    create = ProjectCreate(title="RAG", description="", enabled_features=["rag_chat"])
 
     response = client.put("/project", json=create.model_dump(mode="json"))
 
     assert response.status_code == 200, response.text
     project = ProjectRead.model_validate(response.json())
-    assert project.enabled_features == [
-        Feature.SENTENCE_SIMILARITY_SEARCH,
-        Feature.RAG_CHAT,
-    ]
+    assert project.enabled_features == ["rag_chat", "sentence_similarity_search"]
 
 
 # ===========================================================================
@@ -143,4 +181,4 @@ def test_update_project_changes_the_title(client: TestClient, test_project):
     assert response.status_code == 200, response.text
     project = ProjectRead.model_validate(response.json())
     assert project.title == "Renamed"
-    assert project.enabled_features == list(Feature)
+    assert project.enabled_features == sorted(feature_registry.names())

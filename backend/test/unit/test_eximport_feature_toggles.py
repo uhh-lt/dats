@@ -8,7 +8,6 @@ import pytest
 
 from bootstrap import register_jobs
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from modules.eximport.import_exceptions import ImportProjectDetailsError
@@ -22,6 +21,7 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportSchema,
 )
 from systems.artefact_system.artefact_registry import artefact_registry
+from systems.feature_system.feature_registry import Feature, feature_registry
 
 register_jobs()
 
@@ -134,9 +134,13 @@ def test_step_status_survives_the_csv_round_trip() -> None:
     assert collection.source_documents[0].step_status == archived
 
 
-def test_archive_without_project_details_enables_all_features() -> None:
-    """An archive without project details (old archives) enables all features."""
-    assert archived_features(None) == list(Feature)
+def test_archive_without_project_details_enables_the_default_features(
+    off_by_default: Feature,
+) -> None:
+    """An archive without project details (old archives) enables the features a
+    new project enables; a feature off by default is not among them."""
+    assert archived_features(None) == feature_registry.defaults()
+    assert off_by_default not in archived_features(None)
 
 
 def test_archived_features_are_restored() -> None:
@@ -144,9 +148,9 @@ def test_archived_features_are_restored() -> None:
     details = ProjectDetailsExportSchema(
         title="p",
         description="d",
-        enabled_features=[Feature.RAG_CHAT.value],
+        enabled_features=["rag_chat"],
     )
-    assert archived_features(details) == [Feature.RAG_CHAT]
+    assert [f.name for f in archived_features(details)] == ["rag_chat"]
 
 
 def test_unknown_feature_is_rejected() -> None:
@@ -154,7 +158,7 @@ def test_unknown_feature_is_rejected() -> None:
     details = ProjectDetailsExportSchema(
         title="p",
         description="d",
-        enabled_features=[Feature.RAG_CHAT.value, "time_travel"],
+        enabled_features=["rag_chat", "time_travel"],
     )
     with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):
         archived_features(details)
@@ -167,9 +171,9 @@ def test_removed_image_captions_feature_is_dropped() -> None:
     details = ProjectDetailsExportSchema(
         title="p",
         description="d",
-        enabled_features=["image_captions", Feature.RAG_CHAT.value],
+        enabled_features=["image_captions", "rag_chat"],
     )
-    assert archived_features(details) == [Feature.RAG_CHAT]
+    assert [f.name for f in archived_features(details)] == ["rag_chat"]
 
     details.enabled_features.append("time_travel")
     with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):

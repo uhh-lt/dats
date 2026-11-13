@@ -6,7 +6,6 @@ import time
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
@@ -27,9 +26,9 @@ SETTINGS = ProcessingSettings(
 )
 
 
-def _activate(client: TestClient, project_id: int, feature: Feature) -> None:
+def _activate(client: TestClient, project_id: int, feature: str) -> None:
     response = client.post(
-        f"/feature/project/{project_id}/{feature.value}/enable",
+        f"/feature/project/{project_id}/{feature}/enable",
         json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
@@ -64,7 +63,7 @@ def test_activate_full_text_search_indexes_the_documents_and_fails_those_without
     anyway."""
     p = activation_project
 
-    _activate(client, p["project"].id, Feature.FULL_TEXT_SEARCH)
+    _activate(client, p["project"].id, "full_text_search")
     _wait_until_nothing_processes(db_session, p["project"].id)
 
     assert read_step_status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) == 1
@@ -82,7 +81,7 @@ def test_activate_keyword_statistics_advances_through_the_planned_steps(
     alone, which leaves its finished steps alone."""
     p = activation_project
 
-    _activate(client, p["project"].id, Feature.KEYWORD_STATISTICS)
+    _activate(client, p["project"].id, "keyword_statistics")
     _wait_until_nothing_processes(db_session, p["project"].id)
 
     for step in (
@@ -106,7 +105,7 @@ def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
     (they stay finished, nothing processes)."""
     p = activation_project
 
-    _activate(client, p["project"].id, Feature.WORD_FREQUENCY)
+    _activate(client, p["project"].id, "word_frequency")
     _wait_until_nothing_processes(db_session, p["project"].id)
 
     sdoc_id = p["tokenized"].id

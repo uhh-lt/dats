@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 
 # ===========================================================================
@@ -17,7 +16,7 @@ def test_keyword_statistics_are_rejected_when_the_feature_is_disabled(
         json=[featureless_project["sdoc"].id],
     )
 
-    assert_feature_disabled(response, Feature.KEYWORD_STATISTICS)
+    assert_feature_disabled(response, "keyword_statistics")
 
 
 def test_keyword_statistics_of_a_project_with_the_feature_are_computed(

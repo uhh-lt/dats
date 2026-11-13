@@ -5,7 +5,6 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, func, text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from common.feature_enum import Feature
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -32,10 +31,9 @@ class ProjectORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     description: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    # the values of the enabled features (Feature)
-    enabled_features: Mapped[list[Feature]] = mapped_column(
-        ARRAY(String), nullable=False
-    )
+    # the names of the enabled features, sorted; read tolerantly (a name of a
+    # feature that is not registered is ignored)
+    enabled_features: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
     # the pending artefact computations: computation id -> artefact values;
     # written and removed only by ArtefactService
     artefact_computations: Mapped[dict[str, list[str]]] = mapped_column(

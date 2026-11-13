@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from modules.duplicate_finder.duplicate_finder_job import DuplicateFinderInput
 from modules.ml.ml_enum import MLJobType
@@ -24,7 +23,7 @@ def test_duplicate_finder_job_is_rejected_when_the_feature_is_disabled(
 
     response = client.post("/job/duplicate_finder", json=payload.model_dump())
 
-    assert_feature_disabled(response, Feature.DUPLICATE_FINDER)
+    assert_feature_disabled(response, "duplicate_finder")
 
 
 def test_tag_recommendation_ml_job_is_rejected_when_the_feature_is_disabled(
@@ -40,7 +39,7 @@ def test_tag_recommendation_ml_job_is_rejected_when_the_feature_is_disabled(
 
     response = client.post("/job/ml", json=payload.model_dump(mode="json"))
 
-    assert_feature_disabled(response, Feature.TAG_RECOMMENDATION)
+    assert_feature_disabled(response, "tag_recommendation")
 
 
 # ===========================================================================
@@ -55,4 +54,4 @@ def test_retry_job_is_rejected_when_the_feature_is_disabled(
     disabled in the job's project, so the job is not requeued."""
     response = client.post(f"/job/ml/{featureless_tag_recommendation_job}/retry")
 
-    assert_feature_disabled(response, Feature.TAG_RECOMMENDATION)
+    assert_feature_disabled(response, "tag_recommendation")

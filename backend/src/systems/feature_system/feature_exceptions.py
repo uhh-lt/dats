@@ -1,7 +1,8 @@
 from fastapi import status
 
+from common.common_exceptions import NotFoundError
 from common.exception_handler import exception_handler
-from common.feature_enum import Feature, FeatureAction, FeatureStatus
+from common.feature_enum import FeatureAction, FeatureStatus
 
 
 class FeatureDeclarationError(Exception):
@@ -17,9 +18,9 @@ class FeatureDeclarationError(Exception):
 class FeatureDisabledError(Exception):
     """Raised when a disabled feature of a project is used."""
 
-    def __init__(self, project_id: int, feature: Feature) -> None:
+    def __init__(self, project_id: int, feature: str) -> None:
         super().__init__(
-            f"The feature '{feature.value}' is not enabled in project {project_id}. "
+            f"The feature '{feature}' is not enabled in project {project_id}. "
             "Enable it in the project settings to use it."
         )
 
@@ -28,10 +29,10 @@ class FeatureDisabledError(Exception):
 class FeatureStillRequiredError(Exception):
     """Raised when a feature is disabled that another enabled feature requires."""
 
-    def __init__(self, feature: Feature, required_by: list[Feature]) -> None:
-        names = ", ".join(f"'{f.value}'" for f in required_by)
+    def __init__(self, feature: str, required_by: list[str]) -> None:
+        names = ", ".join(f"'{f}'" for f in required_by)
         super().__init__(
-            f"The feature '{feature.value}' cannot be disabled: the enabled features "
+            f"The feature '{feature}' cannot be disabled: the enabled features "
             f"{names} require it. Disable them as well."
         )
 
@@ -42,14 +43,21 @@ class FeatureActionNotAllowedError(Exception):
 
     def __init__(
         self,
-        feature: Feature,
+        feature: str,
         action: FeatureAction,
         status: FeatureStatus,
         allowed: list[FeatureStatus],
     ) -> None:
         names = " or ".join(f"'{s.value}'" for s in allowed)
         super().__init__(
-            f"Cannot {action.value} the feature '{feature.value}': it is "
+            f"Cannot {action.value} the feature '{feature}': it is "
             f"'{status.value}'. {action.value.capitalize()} is allowed only when it "
             f"is {names}."
         )
+
+
+class FeatureNotFoundError(NotFoundError):
+    """Raised when a request names a feature that is not registered (404)."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"There is no feature '{name}'.")

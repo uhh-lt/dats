@@ -1,20 +1,26 @@
 from pydantic import BaseModel, Field
 
-from common.feature_enum import Feature, FeatureStatus
+from common.feature_enum import FeatureArea, FeatureStatus
 from systems.artefact_system.artefact_dto import ProcessingSettings
 
 
 class FeatureRead(BaseModel):
-    feature: Feature = Field(description="ID of the Feature")
-    requires_features: list[Feature] = Field(
-        description="The Features this Feature requires (directly); enabling it enables them"
+    feature: str = Field(description="Name of the Feature")
+    title: str = Field(description="Title of the Feature")
+    description: str = Field(description="Description of the Feature")
+    area: FeatureArea = Field(description="Area of the Feature")
+    requires_features: list[str] = Field(
+        description="Names of the Features this Feature requires (directly); enabling it enables them"
+    )
+    default_enabled: bool = Field(
+        description="Whether a new Project enables the Feature unless the request names its Features"
     )
 
 
 class ProjectFeatureRead(BaseModel):
     """The state of a Feature in a Project."""
 
-    feature: Feature = Field(description="ID of the Feature")
+    feature: str = Field(description="Name of the Feature")
     enabled: bool = Field(description="Whether the Feature is enabled in the Project")
     status: FeatureStatus = Field(
         description="State of the Feature: disabled, computing (documents are processing or being planned), partly available (documents lack its data and nothing runs for them) or fully available"

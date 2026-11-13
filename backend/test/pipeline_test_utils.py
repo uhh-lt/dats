@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from common.artefact_enum import CORE_ARTEFACTS
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
@@ -28,14 +27,19 @@ def all_steps(doctype: DocType) -> list[JobType]:
     return artefact_registry.graph().steps(doctype)
 
 
-def planned_steps(doctype: DocType, features: list[Feature]) -> list[JobType]:
+def planned_steps(doctype: DocType, features: list[str]) -> list[JobType]:
     """The steps a new document of the doctype gets in a project with these
     enabled features, in pipeline order: the steps of the core artefacts and
-    of the artefacts the features require (`ArtefactService.plan_document`)."""
+    of the artefacts the features require (`ArtefactService.plan_document`).
+    The features are named by text."""
+    # imported here: feature_test_utils imports this module
+    from feature_test_utils import feature_named
+
     graph = artefact_registry.graph()
+    demand = feature_registry.required_artefacts(feature_named(f) for f in features)
     needed = {
         *graph.steps_for(doctype, CORE_ARTEFACTS),
-        *graph.steps_for(doctype, feature_registry.required_artefacts(features)),
+        *graph.steps_for(doctype, demand),
     }
     return [s for s in graph.steps(doctype) if s in needed]
 

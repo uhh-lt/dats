@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from modules.annoscaling.annoscaling_dto import (
     AnnoscalingConfirmSuggest,
@@ -28,7 +27,7 @@ def test_suggest_is_rejected_when_annotation_scaling_is_disabled(
 
     response = client.post("/annoscaling/suggest", json=dto.model_dump())
 
-    assert_feature_disabled(response, Feature.ANNOTATION_SCALING)
+    assert_feature_disabled(response, "annotation_scaling")
 
 
 # ===========================================================================
@@ -49,4 +48,4 @@ def test_confirm_suggestions_is_rejected_when_annotation_scaling_is_disabled(
 
     response = client.post("/annoscaling/confirm_suggestions", json=dto.model_dump())
 
-    assert_feature_disabled(response, Feature.ANNOTATION_SCALING)
+    assert_feature_disabled(response, "annotation_scaling")

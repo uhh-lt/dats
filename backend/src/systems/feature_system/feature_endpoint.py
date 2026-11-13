@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
-from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from systems.feature_system.feature_dto import (
     FeatureActivation,
@@ -54,22 +53,25 @@ def get_project_features(
 
 @router.post(
     "/project/{project_id}/{feature}/enable",
-    response_model=list[Feature],
+    response_model=list[str],
     summary="Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features",
 )
 def enable_feature(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    feature: Feature,
+    feature: str,
     activation: FeatureActivation,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
-) -> list[Feature]:
+) -> list[str]:
     authz_user.assert_in_project(project_id)
 
     project = FeatureService().enable_feature(
-        db=db, project_id=project_id, feature=feature, settings=activation.settings
+        db=db,
+        project_id=project_id,
+        feature=FeatureService().read_by_name(name=feature),
+        settings=activation.settings,
     )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, project, project_id=project_id)
     return project.enabled_features
@@ -77,42 +79,47 @@ def enable_feature(
 
 @router.post(
     "/project/{project_id}/{feature}/complete",
-    response_model=list[Feature],
+    response_model=list[str],
     summary="Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
 )
 def complete_feature(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    feature: Feature,
+    feature: str,
     activation: FeatureActivation,
     authz_user: AuthzUser = Depends(),
-) -> list[Feature]:
+) -> list[str]:
     authz_user.assert_in_project(project_id)
 
     project = FeatureService().complete_feature(
-        db=db, project_id=project_id, feature=feature, settings=activation.settings
+        db=db,
+        project_id=project_id,
+        feature=FeatureService().read_by_name(name=feature),
+        settings=activation.settings,
     )
     return project.enabled_features
 
 
 @router.post(
     "/project/{project_id}/{feature}/disable",
-    response_model=list[Feature],
+    response_model=list[str],
     summary="Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
 )
 def disable_feature(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    feature: Feature,
+    feature: str,
     authz_user: AuthzUser = Depends(),
     ws: WebsocketEmitter = Depends(),
-) -> list[Feature]:
+) -> list[str]:
     authz_user.assert_in_project(project_id)
 
     project = FeatureService().disable_feature(
-        db=db, project_id=project_id, feature=feature
+        db=db,
+        project_id=project_id,
+        feature=FeatureService().read_by_name(name=feature),
     )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, project, project_id=project_id)
     return project.enabled_features

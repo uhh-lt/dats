@@ -5,11 +5,11 @@ from loguru import logger
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from common.feature_enum import Feature
 from modules.eximport.import_exceptions import ImportProjectDetailsError
 from modules.eximport.project.project_export_schema import (
     ProjectDetailsExportSchema,
 )
+from systems.feature_system.feature_registry import Feature, feature_registry
 from systems.feature_system.feature_service import FeatureService
 
 # The feature DATS no longer has: image captions are always computed. Archives
@@ -27,16 +27,16 @@ def read_project_details(path: Path) -> ProjectDetailsExportSchema:
 
 
 def archived_features(details: ProjectDetailsExportSchema | None) -> list[Feature]:
-    """The features to enable for the archive's project details. Archives exported
-    before the feature toggles have no project details: all features are enabled,
-    as in a project of that time. Drops features DATS no longer has and rejects
-    features this DATS version does not know (e.g. of an archive exported by a
-    newer version)."""
+    """The features to enable for the archive's project details. Archives
+    exported before the feature toggles have no project details: the features a
+    new project enables are enabled (`default_enabled`). Drops features DATS no
+    longer has and rejects features this DATS version does not know (e.g. of an
+    archive exported by a newer version)."""
     if details is None:
-        return list(Feature)
+        return feature_registry.defaults()
 
     archived = [f for f in details.enabled_features if f != _REMOVED_FEATURE]
-    known = {f.value for f in Feature}
+    known = set(feature_registry.names())
     unknown = [f for f in archived if f not in known]
     if unknown:
         raise ImportProjectDetailsError(
@@ -46,7 +46,7 @@ def archived_features(details: ProjectDetailsExportSchema | None) -> list[Featur
                 f"{', '.join(sorted(known))}."
             ]
         )
-    return [Feature(f) for f in archived]
+    return [FeatureService().read_by_name(name=name) for name in archived]
 
 
 def import_project_details_to_proj(
@@ -63,5 +63,5 @@ def import_project_details_to_proj(
         db=db, project_id=project_id, features=features
     )
     logger.info(
-        f"Enabled the features {[f.value for f in enabled]} in project {project_id}"
+        f"Enabled the features {[f.name for f in enabled]} in project {project_id}"
     )

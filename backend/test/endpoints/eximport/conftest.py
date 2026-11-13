@@ -9,7 +9,6 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.meta_type_enum import MetaType
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
@@ -674,7 +673,7 @@ def feature_toggle_eximport_projects(
         db_session,
         test_user,
         title="Toggled Project",
-        features=[Feature.SENTENCE_SIMILARITY_SEARCH],
+        features=["sentence_similarity_search"],
     )
     text = _create_text_document_with_file(
         db_session,
@@ -767,7 +766,7 @@ def feature_toggle_eximport_projects(
         db_session,
         test_user,
         title="Import Target",
-        features=[Feature.KEYWORD_STATISTICS],
+        features=["keyword_statistics"],
     )
     db_session.commit()
     for obj in (project, target_project, text, image, video):

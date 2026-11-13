@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
-from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
+from modules.statistics.statistics_feature import KEYWORD_STATISTICS
 from modules.statistics.statistics_service import StatisticsService
 from systems.feature_system.feature_dependency import require_feature
 
@@ -47,7 +47,7 @@ def filter_code_stats(
 
 @router.post(
     "/keyword",
-    dependencies=[Depends(require_feature(Feature.KEYWORD_STATISTICS))],
+    dependencies=[Depends(require_feature(KEYWORD_STATISTICS))],
     response_model=list[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
 )

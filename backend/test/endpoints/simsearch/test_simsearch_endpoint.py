@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 
 EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
@@ -16,17 +15,17 @@ EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
     [
         pytest.param(
             "/simsearch/sentences",
-            Feature.SENTENCE_SIMILARITY_SEARCH,
+            "sentence_similarity_search",
             id="sentences",
         ),
-        pytest.param("/simsearch/images", Feature.IMAGE_SIMILARITY_SEARCH, id="images"),
+        pytest.param("/simsearch/images", "image_similarity_search", id="images"),
     ],
 )
 def test_similarity_search_is_rejected_when_its_feature_is_disabled(
     client: TestClient,
     featureless_project: FeaturelessProject,
     path: str,
-    feature: Feature,
+    feature: str,
 ):
     """A project without similarity search answers 403 naming the feature."""
     response = client.post(

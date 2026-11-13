@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
@@ -130,8 +129,8 @@ def test_project_import_merges_the_enabled_features(
 
     target = crud_project.read(db=db_session, id=projects["target_project"].id)
     assert target.enabled_features == [
-        Feature.SENTENCE_SIMILARITY_SEARCH,
-        Feature.KEYWORD_STATISTICS,
+        "keyword_statistics",
+        "sentence_similarity_search",
     ]
 
 

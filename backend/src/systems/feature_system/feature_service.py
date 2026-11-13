@@ -1,9 +1,9 @@
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
-from common.feature_enum import Feature, FeatureAction, FeatureStatus
+from common.feature_enum import FeatureAction, FeatureStatus
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
@@ -14,9 +14,13 @@ from systems.feature_system.feature_dto import FeatureRead, ProjectFeatureRead
 from systems.feature_system.feature_exceptions import (
     FeatureActionNotAllowedError,
     FeatureDisabledError,
+    FeatureNotFoundError,
     FeatureStillRequiredError,
 )
-from systems.feature_system.feature_registry import feature_registry
+from systems.feature_system.feature_registry import Feature, feature_registry
+
+if TYPE_CHECKING:
+    from core.project.project_orm import ProjectORM
 
 # the feature statuses in which a user may take each action
 ALLOWED_STATUSES = {
@@ -46,41 +50,54 @@ class FeatureService(metaclass=SingletonMeta):
         return super(FeatureService, cls).__new__(cls)
 
     def read_all(self) -> list[FeatureRead]:
-        """All toggleable features, in the order of the `Feature` enum."""
+        """All toggleable features, ordered by area and title."""
+        declarations = self.registry.declarations()
         return [
             FeatureRead(
-                feature=d.feature,
-                requires_features=[f for f in Feature if f in d.requires_features],
+                feature=f.name,
+                title=f.title,
+                description=f.description,
+                area=f.area,
+                requires_features=[
+                    r.name for r in declarations if r in f.requires_features
+                ],
+                default_enabled=f.default_enabled,
             )
-            for d in self.registry.declarations()
+            for f in declarations
         ]
+
+    def read_by_name(self, *, name: str) -> Feature:
+        """The registered feature of this name, the strict lookup of a name a
+        request names. Raises a `FeatureNotFoundError` (404) for an unknown
+        name. Stored names are read tolerantly instead (`_enabled`)."""
+        feature = self.registry.feature(name)
+        if feature is None:
+            raise FeatureNotFoundError(name)
+        return feature
 
     def resolve_enabled_features(
         self, *, requested: Iterable[Feature], current: Iterable[Feature] = ()
     ) -> list[Feature]:
         """The features to store as enabled when `requested` are asked for: they
-        and the features they require. Rejects disabling a feature of `current`
-        that a requested feature requires."""
+        and the features they require, sorted by name. Rejects disabling a
+        feature of `current` that a requested feature requires."""
         requested = frozenset(requested)
         for feature in frozenset(current) - requested:
-            required_by = [
-                f
-                for f in Feature
-                if f in requested and feature in self.registry.closure([f]) - {f}
-            ]
+            required_by = sorted(
+                f.name for f in requested if feature in self.registry.closure([f]) - {f}
+            )
             if required_by:
                 raise FeatureStillRequiredError(
-                    feature=feature, required_by=required_by
+                    feature=feature.name, required_by=required_by
                 )
-        enabled = self.registry.closure(requested)
-        return [f for f in Feature if f in enabled]
+        return sorted(self.registry.closure(requested), key=lambda f: f.name)
 
     def assert_enabled(self, *, db: Session, project_id: int, feature: Feature) -> None:
         """Raise a `FeatureDisabledError` (403) if the feature is not enabled in
         the project."""
         project = crud_project.read(db=db, id=project_id)
-        if feature.value not in project.enabled_features:
-            raise FeatureDisabledError(project_id=project_id, feature=feature)
+        if feature.name not in project.enabled_features:
+            raise FeatureDisabledError(project_id=project_id, feature=feature.name)
 
     # --- state of the features of a project
 
@@ -93,21 +110,22 @@ class FeatureService(metaclass=SingletonMeta):
         feature whose artefacts a pending artefact computation computes is
         computing until the computation has planned all documents."""
         project = crud_project.read(db=db, id=project_id)
-        enabled = {Feature(f) for f in project.enabled_features}
+        enabled = self._enabled(project)
+        features = self.registry.declarations()
         artefacts = {
-            feature: self.registry.required_artefacts([feature]) for feature in Feature
+            feature: self.registry.required_artefacts([feature]) for feature in features
         }
         availability = ArtefactService().read_availability(
             db=db, project_id=project_id, artefact_sets=set(artefacts.values())
         )
 
         result: list[ProjectFeatureRead] = []
-        for feature in Feature:
+        for feature in features:
             a = availability[artefacts[feature]]
             lacking = a.failed + a.not_planned
             result.append(
                 ProjectFeatureRead(
-                    feature=feature,
+                    feature=feature.name,
                     enabled=feature in enabled,
                     status=_status(
                         enabled=feature in enabled,
@@ -133,9 +151,7 @@ class FeatureService(metaclass=SingletonMeta):
         demand). Takes the project share lock (FOR SHARE), so the caller plans
         with a demand no concurrent action can change until it commits."""
         project = crud_project.read_locked(db=db, id=project_id, shared=True)
-        return self.registry.required_artefacts(
-            Feature(f) for f in project.enabled_features
-        )
+        return self.registry.required_artefacts(self._enabled(project))
 
     def assert_action_allowed(
         self, *, db: Session, project_id: int, feature: Feature, action: FeatureAction
@@ -146,11 +162,11 @@ class FeatureService(metaclass=SingletonMeta):
         status = next(
             f.status
             for f in self.read_project_features(db=db, project_id=project_id)
-            if f.feature == feature
+            if f.feature == feature.name
         )
         if status not in ALLOWED_STATUSES[action]:
             raise FeatureActionNotAllowedError(
-                feature=feature,
+                feature=feature.name,
                 action=action,
                 status=status,
                 allowed=ALLOWED_STATUSES[action],
@@ -174,7 +190,7 @@ class FeatureService(metaclass=SingletonMeta):
         self.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.ENABLE
         )
-        current = {Feature(f) for f in project.enabled_features}
+        current = self._enabled(project)
         enabled = self.resolve_enabled_features(
             requested=current | {feature}, current=current
         )
@@ -226,7 +242,7 @@ class FeatureService(metaclass=SingletonMeta):
         self.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.DISABLE
         )
-        current = {Feature(f) for f in project.enabled_features}
+        current = self._enabled(project)
         enabled = self.resolve_enabled_features(
             requested=current - {feature}, current=current
         )
@@ -243,7 +259,7 @@ class FeatureService(metaclass=SingletonMeta):
         features whose data is missing are partly available until a user
         completes them). Returns the enabled features."""
         project = crud_project.read_locked(db=db, id=project_id)
-        current = {Feature(f) for f in project.enabled_features}
+        current = self._enabled(project)
         enabled = self.resolve_enabled_features(
             requested=current | set(features), current=current
         )
@@ -251,6 +267,16 @@ class FeatureService(metaclass=SingletonMeta):
             db=db, project_id=project_id, features=enabled
         )
         return enabled
+
+    def _enabled(self, project: "ProjectORM") -> set[Feature]:
+        """The registered features among the project's stored names; a name
+        of a feature that is not registered (anymore) is ignored and dropped
+        at the next write."""
+        return {
+            feature
+            for name in project.enabled_features
+            if (feature := self.registry.feature(name)) is not None
+        }
 
 
 def _status(

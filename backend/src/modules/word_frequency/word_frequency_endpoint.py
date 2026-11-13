@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
-from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
 from modules.word_frequency.word_frequency_dto import (
     WordFrequencyRead,
     WordFrequencyResult,
 )
+from modules.word_frequency.word_frequency_feature import WORD_FREQUENCY
 from modules.word_frequency.word_frequency_service import WordFrequencyService
 from systems.feature_system.feature_dependency import (
     require_feature,
@@ -31,7 +31,7 @@ router = APIRouter(
 
 @router.get(
     "/info/{project_id}",
-    dependencies=[Depends(require_feature(Feature.WORD_FREQUENCY))],
+    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
     response_model=list[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
 )
@@ -52,9 +52,7 @@ def word_frequency_analysis_info(
 @router.get(
     "/sdoc/{sdoc_id}",
     dependencies=[
-        Depends(
-            require_feature_of(Feature.WORD_FREQUENCY, Crud.SOURCE_DOCUMENT, "sdoc_id")
-        )
+        Depends(require_feature_of(WORD_FREQUENCY, Crud.SOURCE_DOCUMENT, "sdoc_id"))
     ],
     response_model=list[WordFrequencyRead],
     summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
@@ -76,7 +74,7 @@ def get_word_frequencies(
 
 @router.post(
     "/analysis",
-    dependencies=[Depends(require_feature(Feature.WORD_FREQUENCY))],
+    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
     response_model=WordFrequencyResult,
     summary="Perform word frequency analysis.",
 )
@@ -104,7 +102,7 @@ def word_frequency_analysis(
 
 @router.post(
     "/export",
-    dependencies=[Depends(require_feature(Feature.WORD_FREQUENCY))],
+    dependencies=[Depends(require_feature(WORD_FREQUENCY))],
     response_model=str,
     summary="Export the word frequency analysis.",
 )

@@ -1,74 +1,95 @@
 """The feature declarations.
 
 Every module declares its features with `register_feature` in a `*_feature.py`
-file, which `bootstrap.register_features` imports. A feature requires artefacts
-(preprocessed document data) and other features; the feature system passes the
-artefacts of a feature to the artefact system, which derives the pipeline steps
-they need.
+file, which `bootstrap.register_features` imports. A feature has a text name,
+a title, a description and an area, requires artefacts (preprocessed document
+data) and other features, and declares whether a new project enables it. The
+feature system passes the artefacts of a feature to the artefact system, which
+derives the pipeline steps they need.
 """
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Iterable
 
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
-from common.feature_enum import Feature
+from common.feature_enum import FeatureArea
 from systems.feature_system.feature_exceptions import FeatureDeclarationError
 
 
-@dataclass(frozen=True)
-class FeatureDeclaration:
-    feature: Feature
+@dataclass(frozen=True, eq=False)
+class Feature:
+    """A user-facing capability that a project can enable or disable. Compared
+    by identity: the registry keeps the names unique."""
+
+    name: str
+    title: str
+    description: str
+    area: FeatureArea
     requires_artefacts: frozenset[Artefact]
-    requires_features: frozenset[Feature]
+    requires_features: frozenset["Feature"]
+    default_enabled: bool  # whether a new project enables it
 
 
 class FeatureRegistry:
-    """Collects the declarations of `register_feature`."""
+    """Collects the features of `register_feature`."""
 
     def __init__(self) -> None:
-        self._declarations: dict[Feature, FeatureDeclaration] = {}
+        self._features: dict[str, Feature] = {}
 
-    def register(self, declaration: FeatureDeclaration) -> None:
-        if declaration.feature in self._declarations:
+    def register(self, feature: Feature) -> None:
+        if feature.name in self._features:
             raise FeatureDeclarationError(
-                [f"Feature '{declaration.feature.value}' is declared twice."]
+                [f"Feature '{feature.name}' is declared twice."]
             )
-        self._declarations[declaration.feature] = declaration
+        self._features[feature.name] = feature
+
+    def unregister_feature(self, name: str) -> None:
+        """Remove the feature of this name (tests)."""
+        self._features.pop(name, None)
 
     def check(self, produced: frozenset[Artefact]) -> None:
-        """Raise a `FeatureDeclarationError` listing all problems: undeclared
-        features, artefacts not in `produced` (the artefacts of the pipeline),
-        unknown or cyclic feature requirements."""
-        problems = [
-            f"Feature '{f.value}' is not declared with register_feature."
-            for f in Feature
-            if f not in self._declarations
-        ]
-        for declaration in self._declarations.values():
-            name = declaration.feature.value
+        """Raise a `FeatureDeclarationError` listing all problems: artefacts not
+        in `produced` (the artefacts of the pipeline), unregistered or cyclic
+        feature requirements."""
+        problems: list[str] = []
+        for feature in self._features.values():
             problems += [
-                f"Feature '{name}' requires artefact '{a.value}', which no step produces."
-                for a in sorted(declaration.requires_artefacts, key=lambda a: a.value)
+                f"Feature '{feature.name}' requires artefact '{a.value}', which no step produces."
+                for a in sorted(feature.requires_artefacts, key=lambda a: a.value)
                 if a not in produced
             ]
             problems += [
-                f"Feature '{name}' requires the undeclared feature '{f.value}'."
-                for f in sorted(declaration.requires_features, key=lambda f: f.value)
-                if f not in self._declarations
+                f"Feature '{feature.name}' requires the undeclared feature '{f.name}'."
+                for f in sorted(feature.requires_features, key=lambda f: f.name)
+                if self._features.get(f.name) is not f
             ]
-            if declaration.feature in self._required_features(
-                declaration.requires_features
-            ):
-                problems.append(f"Feature '{name}' requires itself (cycle).")
+            if feature in self._required_features(feature.requires_features):
+                problems.append(f"Feature '{feature.name}' requires itself (cycle).")
         if problems:
             raise FeatureDeclarationError(problems)
 
-    def declarations(self) -> list[FeatureDeclaration]:
-        """All declarations, in the order of the `Feature` enum."""
-        return [self._declarations[f] for f in Feature if f in self._declarations]
+    def feature(self, name: str) -> Feature | None:
+        """The feature of this name, None if no feature of this name is
+        registered (e.g. a stored name of a removed feature)."""
+        return self._features.get(name)
 
-    def declaration(self, feature: Feature) -> FeatureDeclaration:
-        return self._declarations[feature]
+    def declarations(self) -> list[Feature]:
+        """All features, ordered by the position of their area in
+        `FeatureArea`, then by title."""
+        areas = list(FeatureArea)
+        return sorted(
+            self._features.values(), key=lambda f: (areas.index(f.area), f.title)
+        )
+
+    def names(self) -> list[str]:
+        """The names of all features, in the order of `declarations()`."""
+        return [f.name for f in self.declarations()]
+
+    def defaults(self) -> list[Feature]:
+        """The features a new project enables (`default_enabled`), in the order
+        of `declarations()`."""
+        return [f for f in self.declarations() if f.default_enabled]
 
     def closure(self, features: Iterable[Feature]) -> frozenset[Feature]:
         """The features with all the features they require, transitively."""
@@ -79,13 +100,7 @@ class FeatureRegistry:
         """The artefacts the features (and the features they require) need,
         without the core artefacts, which every document gets anyway."""
         return (
-            frozenset().union(
-                *(
-                    self._declarations[f].requires_artefacts
-                    for f in self.closure(features)
-                    if f in self._declarations
-                )
-            )
+            frozenset().union(*(f.requires_artefacts for f in self.closure(features)))
             - CORE_ARTEFACTS
         )
 
@@ -93,19 +108,13 @@ class FeatureRegistry:
         """The features required by the given ones, transitively (without them,
         unless one of them is required by another)."""
         result: set[Feature] = set()
-        todo = [
-            r
-            for f in features
-            if f in self._declarations
-            for r in self._declarations[f].requires_features
-        ]
+        todo = [r for f in features for r in f.requires_features]
         while todo:
             feature = todo.pop()
             if feature in result:
                 continue
             result.add(feature)
-            if feature in self._declarations:
-                todo.extend(self._declarations[feature].requires_features)
+            todo.extend(feature.requires_features)
         return frozenset(result)
 
 
@@ -113,18 +122,27 @@ feature_registry = FeatureRegistry()
 
 
 def register_feature(
-    feature: Feature,
+    name: str,
     *,
-    requires_artefacts: set[Artefact],
-    requires_features: set[Feature],
-) -> None:
+    title: str,
+    description: str,
+    area: FeatureArea,
+    requires_artefacts: Collection[Artefact] = (),
+    requires_features: Collection[Feature] = (),
+    default_enabled: bool = True,
+) -> Feature:
     """Declare a feature: a user-facing capability that a project can enable,
-    with the artefacts and the other features it requires. Its title and
-    description live in the frontend feature map (`FEATURES`)."""
-    feature_registry.register(
-        FeatureDeclaration(
-            feature=feature,
-            requires_artefacts=frozenset(requires_artefacts),
-            requires_features=frozenset(requires_features),
-        )
+    with the artefacts and the other features it requires and whether a new
+    project enables it. Returns the feature, which gated endpoints and jobs and
+    the `requires_features` of other features import."""
+    feature = Feature(
+        name=name,
+        title=title,
+        description=description,
+        area=area,
+        requires_artefacts=frozenset(requires_artefacts),
+        requires_features=frozenset(requires_features),
+        default_enabled=default_enabled,
     )
+    feature_registry.register(feature)
+    return feature

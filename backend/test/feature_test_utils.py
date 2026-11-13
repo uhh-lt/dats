@@ -1,12 +1,15 @@
 """Projects with features disabled, shared by the feature, project and gating tests."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Protocol, TypedDict
 
 from PIL import Image
 from sqlalchemy.orm import Session
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
+from common.feature_enum import FeatureArea
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
@@ -17,11 +20,44 @@ from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from pipeline_test_utils import core_steps, set_step_status, step_names
 from repos.filesystem_repo import FilesystemRepo
+from systems.feature_system.feature_registry import (
+    Feature,
+    feature_registry,
+    register_feature,
+)
 
 FEATURE_PROJECT_TITLE = "Feature Project"
 
 # the text of every text document of the projects below
 SDOC_SENTENCES = ["Hello world.", "The cat sits on the mat."]
+
+
+def feature_named(name: str) -> Feature:
+    """The registered feature of this name: tests name features by text and
+    never import a feature object from a module path."""
+    feature = feature_registry.feature(name)
+    assert feature is not None, f"no feature '{name}' is registered"
+    return feature
+
+
+@contextmanager
+def off_by_default_feature() -> Generator[Feature, None, None]:
+    """Register the test feature "test_off_by_default" (title "Test Off By
+    Default", area Analysis, requires the keywords) with
+    `default_enabled=False` while the context is open: a new project does not
+    enable it."""
+    feature = register_feature(
+        "test_off_by_default",
+        title="Test Off By Default",
+        description="A test feature that a new project does not enable.",
+        area=FeatureArea.ANALYSIS,
+        requires_artefacts={Artefact.KEYWORDS},
+        default_enabled=False,
+    )
+    try:
+        yield feature
+    finally:
+        feature_registry.unregister_feature(feature.name)
 
 
 def minimal_text_steps() -> list[str]:
@@ -75,9 +111,10 @@ class FeatureProject(TypedDict):
 
 
 def create_project_with_features(
-    db: Session, user: UserORM, *, title: str, features: list[Feature]
+    db: Session, user: UserORM, *, title: str, features: list[str]
 ) -> ProjectORM:
-    """Create a project of the user that enables only the given features."""
+    """Create a project of the user that enables only the given features (and
+    the features they require), named by text."""
     read = ProjectService().create_project(
         db=db,
         create_dto=ProjectCreate(
@@ -207,7 +244,7 @@ class PartlyProject(TypedDict):
 def create_partly_project(db: Session, user: UserORM) -> PartlyProject:
     """The project described in the fixtures that use `PartlyProject`."""
     project = create_project_with_features(
-        db, user, title=PARTLY_PROJECT_TITLE, features=[Feature.FULL_TEXT_SEARCH]
+        db, user, title=PARTLY_PROJECT_TITLE, features=["full_text_search"]
     )
     done = dict.fromkeys(minimal_text_steps(), 1)
     sdocs = {
@@ -289,7 +326,7 @@ class _Response(Protocol):
     def text(self) -> str: ...
 
 
-def assert_feature_disabled(response: _Response, feature: Feature) -> None:
+def assert_feature_disabled(response: _Response, feature: str) -> None:
     """The request was rejected because the feature is disabled in the project."""
     assert response.status_code == 403, response.text
-    assert f"The feature '{feature.value}' is not enabled" in response.text
+    assert f"The feature '{feature}' is not enabled" in response.text

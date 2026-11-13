@@ -1,9 +1,9 @@
+from collections.abc import Generator
 from typing import TypedDict
 
 import pytest
 
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
@@ -18,9 +18,11 @@ from feature_test_utils import (
     create_partly_project,
     create_project_with_features,
     minimal_text_steps,
+    off_by_default_feature,
     set_step_status,
 )
 from pipeline_test_utils import planned_steps
+from systems.feature_system.feature_registry import Feature
 
 
 @pytest.fixture(scope="function")
@@ -63,7 +65,7 @@ def duplicate_finder_project(db_session, test_user: UserORM) -> DuplicateFinderP
         db_session,
         test_user,
         title="Duplicate Finder Project",
-        features=[Feature.DUPLICATE_FINDER],
+        features=["duplicate_finder"],
     )
     text = _create_sdoc(
         db_session,
@@ -107,9 +109,9 @@ def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
         db_session,
         test_user,
         title="Uploading Project",
-        features=[Feature.KEYWORD_STATISTICS],
+        features=["keyword_statistics"],
     )
-    steps = planned_steps(DocType.text, [Feature.KEYWORD_STATISTICS])
+    steps = planned_steps(DocType.text, ["keyword_statistics"])
     uploading = _create_sdoc(
         db_session,
         project,
@@ -197,3 +199,30 @@ def activation_project(db_session, test_user: UserORM) -> ActivationProject:
         "extracted": extracted,
         "no_data": no_data,
     }
+
+
+@pytest.fixture(scope="function")
+def off_by_default() -> Generator[Feature, None, None]:
+    """The test feature of `off_by_default_feature`, registered for the test."""
+    with off_by_default_feature() as feature:
+        yield feature
+
+
+@pytest.fixture(scope="function")
+def removed_feature_project(db_session, test_user: UserORM) -> ProjectORM:
+    """
+    This fixture sets up the project "Removed Feature Project" of `test_user`,
+    without documents. Its stored enabled features are "full_text_search" and
+    "removed_feature", a name no registered feature has (as after a feature
+    was removed from DATS).
+    """
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Removed Feature Project",
+        features=["full_text_search"],
+    )
+    project.enabled_features = ["full_text_search", "removed_feature"]
+    db_session.commit()
+    db_session.refresh(project)
+    return project

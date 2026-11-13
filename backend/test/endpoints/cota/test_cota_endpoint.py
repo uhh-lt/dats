@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from common.feature_enum import Feature
 from feature_test_utils import assert_feature_disabled
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreate,
@@ -79,7 +78,7 @@ def test_cota_routes_are_rejected_when_concepts_over_time_is_disabled(
 
     response = client.request(method, url)
 
-    assert_feature_disabled(response, Feature.CONCEPTS_OVER_TIME)
+    assert_feature_disabled(response, "concepts_over_time")
 
 
 def test_create_cota_is_rejected_when_concepts_over_time_is_disabled(
@@ -92,7 +91,7 @@ def test_create_cota_is_rejected_when_concepts_over_time_is_disabled(
 
     response = client.put("/cota", json=create.model_dump())
 
-    assert_feature_disabled(response, Feature.CONCEPTS_OVER_TIME)
+    assert_feature_disabled(response, "concepts_over_time")
 
 
 def test_refine_cota_is_rejected_when_concepts_over_time_is_disabled(
@@ -103,7 +102,7 @@ def test_refine_cota_is_rejected_when_concepts_over_time_is_disabled(
 
     response = client.post("/cota/refine", json=payload.model_dump(mode="json"))
 
-    assert_feature_disabled(response, Feature.CONCEPTS_OVER_TIME)
+    assert_feature_disabled(response, "concepts_over_time")
 
 
 def test_cota_route_with_a_non_integer_id_is_a_validation_error(client: TestClient):

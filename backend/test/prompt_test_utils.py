@@ -322,6 +322,7 @@ def create_prompt_project(
         create_dto=ProjectCreate(
             title="Unauthorized project",
             description="Not associated with the test user",
+            enabled_features=[],
         ),
     )
     foreign_sdoc = dats_test_utils.create_text_document(

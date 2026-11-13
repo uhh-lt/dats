@@ -6,13 +6,12 @@ from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
-from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.annotation.annotation_document_crud import crud_adoc
 from core.project.project_crud import crud_project
 from core.user.user_orm import UserORM
-from feature_test_utils import minimal_image_steps
+from feature_test_utils import feature_named, minimal_image_steps
 from job_test_utils import HeldJobs
 from pipeline_test_utils import (
     read_all_step_status,
@@ -59,7 +58,7 @@ def _enable_full_text_search(db: Session, project_id: int) -> None:
     FeatureService().enable_feature(
         db=db,
         project_id=project_id,
-        feature=Feature.FULL_TEXT_SEARCH,
+        feature=feature_named("full_text_search"),
         settings=SETTINGS,
     )
     db.commit()
@@ -86,7 +85,7 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     started = started_steps(held_jobs)
 
     assert crud_project.read(db=db_session, id=p["project"].id).enabled_features == [
-        Feature.FULL_TEXT_SEARCH
+        "full_text_search"
     ]
     assert read_all_step_status(db_session, p["done"].id) == {
         "extract_html": 1,
@@ -285,16 +284,14 @@ def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
     p = planning_projects
 
     enabled = FeatureService().add_features(
-        db=db_session, project_id=p["other_project"].id, features=[Feature.RAG_CHAT]
+        db=db_session,
+        project_id=p["other_project"].id,
+        features=[feature_named("rag_chat")],
     )
     db_session.commit()
 
-    expected = [
-        Feature.FULL_TEXT_SEARCH,
-        Feature.SENTENCE_SIMILARITY_SEARCH,
-        Feature.RAG_CHAT,
-    ]
-    assert enabled == expected
+    expected = ["full_text_search", "rag_chat", "sentence_similarity_search"]
+    assert [f.name for f in enabled] == expected
     project = crud_project.read(db=db_session, id=p["other_project"].id)
     assert project.enabled_features == expected
     assert read_all_step_status(db_session, p["indexing"].id) == {
