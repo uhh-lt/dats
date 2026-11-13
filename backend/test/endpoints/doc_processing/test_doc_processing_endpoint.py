@@ -3,12 +3,10 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from core.doc.source_document_crud import crud_sdoc
-from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
+from core.doc.source_document_crud import crud_sdoc
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
 from modules.doc_processing.doc_processing_dto import (
@@ -23,6 +21,8 @@ from pipeline_test_utils import (
     started_steps,
     step_names,
 )
+from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.sorting import SortDirection
 
@@ -106,6 +106,8 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     )
     assert response.status_code == 200, response.text
     assert response.json() == 1
+
+
 # ===========================================================================
 # SEARCH SDOC HEALTH (/docprocessing/project/{project_id}/search) TESTS
 # ===========================================================================
