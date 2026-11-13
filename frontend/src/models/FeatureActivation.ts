@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { ProcessingSettings } from "./ProcessingSettings";
 /**
- * Enable a Feature, or complete it: compute its data for the documents that lack it.
+ * The settings to enable or complete a Feature with.
  */
 export type FeatureActivation = {
   /**

@@ -27,7 +27,7 @@ interface ProjectFeatureListItemProps {
   /** All features and their states, to tell which enabled features need this one. */
   features: FeatureRead[];
   states: ProjectFeatureMap;
-  /** Enable, complete or restart the feature (by its status). */
+  /** Enable or complete the feature (by its status). */
   onActivate: (feature: FeatureRead) => void;
 }
 
@@ -44,23 +44,14 @@ export const ProjectFeatureListItem = memo(
     const openConfirmationDialog = useOpenConfirmationDialog();
     const { mutate: disableFeatureMutation, isPending: isDisablePending } = FeatureHooks.useDisableFeature();
     const refreshHealthTable = useRefreshHealthTable();
-    const isComputing = state.status === FeatureStatus.COMPUTING;
     const { title, description } = FEATURES[feature.feature];
     const handleClickDisable = useCallback(() => {
       openConfirmationDialog({
-        text: `Do you really want to disable ${title}? It is hidden in this project and not computed for new uploads anymore.${isComputing ? " The computation in progress stops." : ""} Its data is kept, so enabling it again only computes the documents that lack it.`,
+        text: `Do you really want to disable ${title}? It is hidden in this project and not computed for new uploads anymore. Its data is kept, so enabling it again only computes the documents that lack it.`,
         onAccept: () =>
           disableFeatureMutation({ projectId, feature: feature.feature }, { onSuccess: refreshHealthTable }),
       });
-    }, [
-      disableFeatureMutation,
-      feature.feature,
-      title,
-      isComputing,
-      openConfirmationDialog,
-      projectId,
-      refreshHealthTable,
-    ]);
+    }, [disableFeatureMutation, feature.feature, title, openConfirmationDialog, projectId, refreshHealthTable]);
 
     const handleClickActivate = useCallback(() => onActivate(feature), [feature, onActivate]);
 
@@ -81,7 +72,7 @@ export const ProjectFeatureListItem = memo(
       .join(", ");
     const chip = STATUS_CHIP[state.status];
 
-    // every enabled feature can be disabled, unless an enabled feature needs it
+    // a partly or fully available feature can be disabled, unless an enabled feature needs it
     const disableButton = (
       <Tooltip
         title={
@@ -104,6 +95,7 @@ export const ProjectFeatureListItem = memo(
       </Tooltip>
     );
 
+    // only the actions allowed in the status; a computing feature allows none until it stops computing
     let action = null;
     switch (state.status) {
       case FeatureStatus.DISABLED:
@@ -119,18 +111,6 @@ export const ProjectFeatureListItem = memo(
             <Button variant="outlined" color="warning" onClick={handleClickActivate}>
               Complete
             </Button>
-            {disableButton}
-          </Stack>
-        );
-        break;
-      case FeatureStatus.COMPUTING:
-        action = (
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Compute the documents that are not done yet again, e.g. when the progress has not moved for a long time.">
-              <Button variant="outlined" color="warning" onClick={handleClickActivate}>
-                Restart
-              </Button>
-            </Tooltip>
             {disableButton}
           </Stack>
         );

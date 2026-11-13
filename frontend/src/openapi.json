@@ -3805,11 +3805,11 @@
         }
       }
     },
-    "/feature/project/{project_id}/{feature}": {
-      "put": {
+    "/feature/project/{project_id}/{feature}/enable": {
+      "post": {
         "tags": ["feature"],
-        "summary": "Enables the Feature in the Project, or completes it: computes its data for the documents that lack it. Returns the enabled Features",
-        "operationId": "activate_feature",
+        "summary": "Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features",
+        "operationId": "enable_feature",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3832,7 +3832,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/Feature" },
-                  "title": "Response Feature-Activate Feature"
+                  "title": "Response Feature-Enable Feature"
                 }
               }
             }
@@ -3842,10 +3842,51 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
+      }
+    },
+    "/feature/project/{project_id}/{feature}/complete": {
+      "post": {
         "tags": ["feature"],
-        "summary": "Disables the Feature in the Project; its data is kept. Returns the enabled Features",
+        "summary": "Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features",
+        "operationId": "complete_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeatureActivation" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Complete Feature"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/feature/project/{project_id}/{feature}/disable": {
+      "post": {
+        "tags": ["feature"],
+        "summary": "Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features",
         "operationId": "disable_feature",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3866,45 +3907,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/Feature" },
                   "title": "Response Feature-Disable Feature"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/feature/project/{project_id}/{feature}/restart": {
-      "post": {
-        "tags": ["feature"],
-        "summary": "Restarts the processing of the enabled Feature: plans and starts its processing steps again (steps whose job still runs compute twice). Returns the enabled Features",
-        "operationId": "restart_feature",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeatureActivation" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Feature" },
-                  "title": "Response Feature-Restart Feature"
                 }
               }
             }
@@ -13381,7 +13383,7 @@
         "type": "object",
         "required": ["settings"],
         "title": "FeatureActivation",
-        "description": "Enable a Feature, or complete it: compute its data for the documents that lack it."
+        "description": "The settings to enable or complete a Feature with."
       },
       "FeatureRead": {
         "properties": {

@@ -17,30 +17,35 @@ const refreshProjectFeatures = (projectId: number, enabledFeatures: Feature[]) =
   queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey });
 };
 
-const useActivateFeature = () =>
+// a 409 (the action is not allowed in the feature's status) means the shown state is stale: refetch it to show the
+// allowed actions
+const refetchProjectFeatures = (projectId: number) =>
+  queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey });
+
+const useEnableFeature = () =>
   useMutation({
-    mutationKey: [...featureQueries.all(), "activateFeature"],
-    mutationFn: FeatureService.activateFeature,
+    mutationKey: [...featureQueries.all(), "enableFeature"],
+    mutationFn: FeatureService.enableFeature,
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
-    // a 409 (the feature is computing already) means the shown state is stale: refetch it to offer Restart
-    onError: (_error, { projectId }) =>
-      queryClient.invalidateQueries({ queryKey: projectQueries.features(projectId).queryKey }),
+    onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
+    meta: {
+      successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
+        `Started computing ${FEATURES[feature].title}`,
+      errorMessage: (_error: Error, { feature }: { feature: Feature }) => `Could not enable ${FEATURES[feature].title}`,
+    },
+  });
+
+const useCompleteFeature = () =>
+  useMutation({
+    mutationKey: [...featureQueries.all(), "completeFeature"],
+    mutationFn: FeatureService.completeFeature,
+    onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
+    onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
         `Started computing ${FEATURES[feature].title}`,
       errorMessage: (_error: Error, { feature }: { feature: Feature }) =>
-        `Could not compute ${FEATURES[feature].title}`,
-    },
-  });
-
-const useRestartFeature = () =>
-  useMutation({
-    mutationKey: [...featureQueries.all(), "restartFeature"],
-    mutationFn: FeatureService.restartFeature,
-    onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
-    meta: {
-      successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
-        `Restarted computing ${FEATURES[feature].title}`,
+        `Could not complete ${FEATURES[feature].title}`,
     },
   });
 
@@ -49,13 +54,16 @@ const useDisableFeature = () =>
     mutationKey: [...featureQueries.all(), "disableFeature"],
     mutationFn: FeatureService.disableFeature,
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
+    onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
       successMessage: (_data: Feature[], { feature }: { feature: Feature }) => `Disabled ${FEATURES[feature].title}`,
+      errorMessage: (_error: Error, { feature }: { feature: Feature }) =>
+        `Could not disable ${FEATURES[feature].title}`,
     },
   });
 
 export const FeatureHooks = {
-  useActivateFeature,
-  useRestartFeature,
+  useEnableFeature,
+  useCompleteFeature,
   useDisableFeature,
 };

@@ -13,7 +13,7 @@ interface ProjectFeaturesProps {
   project: ProjectRead;
 }
 
-/** Every toggleable feature with its status in the project and its one action: enable, complete or disable. */
+/** Every toggleable feature with its status in the project and the actions allowed in it: enable, complete, disable. */
 export function ProjectFeatures({ project }: ProjectFeaturesProps) {
   const features = useQuery(featureQueries.list());
   const states = useQuery(projectQueries.features(project.id));

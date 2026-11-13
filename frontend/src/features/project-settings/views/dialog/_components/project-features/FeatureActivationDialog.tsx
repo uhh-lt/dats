@@ -10,8 +10,7 @@ import { FeatureStatus } from "@models/FeatureStatus";
 import { ProcessingSettings } from "@models/ProcessingSettings";
 import { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { closeOnEscape } from "@utils/dialogUtils";
 import { useCallback, useState } from "react";
@@ -19,7 +18,7 @@ import { useRefreshHealthTable } from "./_hooks/useRefreshHealthTable";
 
 interface FeatureActivationDialogProps {
   projectId: number;
-  /** The feature to enable, complete or restart; the dialog is open while it is set. */
+  /** The feature to enable or complete; the dialog is open while it is set. */
   feature: FeatureRead | null;
   state: ProjectFeatureRead | undefined;
   /** The states of all features, to name only the required features that are not enabled yet. */
@@ -28,9 +27,8 @@ interface FeatureActivationDialogProps {
 }
 
 /**
- * Enable a disabled feature, complete a partly available one or restart a computing one: states how many documents are
- * processed and lets the user choose the processing settings, like the upload. Restarting asks for a confirmation, as
- * it may repeat work that is still running.
+ * Enable a disabled feature or complete a partly available one: states how many documents are processed and lets the
+ * user choose the processing settings, like the upload.
  */
 export function FeatureActivationDialog({ projectId, feature, state, states, onClose }: FeatureActivationDialogProps) {
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -43,24 +41,22 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
   }, [onClose]);
 
   const isComplete = state?.status === FeatureStatus.PARTLY_AVAILABLE;
-  const isRestart = state?.status === FeatureStatus.COMPUTING;
-  const verb = isRestart ? "Restart" : isComplete ? "Complete" : "Enable";
+  const verb = isComplete ? "Complete" : "Enable";
 
   const refreshHealthTable = useRefreshHealthTable();
   const handleSuccess = useCallback(() => {
     refreshHealthTable();
     handleClose();
   }, [handleClose, refreshHealthTable]);
-  const { mutate: activateFeatureMutation, isPending: isActivatePending } = FeatureHooks.useActivateFeature();
-  const { mutate: restartFeatureMutation, isPending: isRestartPending } = FeatureHooks.useRestartFeature();
+  const { mutate: enableFeatureMutation, isPending: isEnablePending } = FeatureHooks.useEnableFeature();
+  const { mutate: completeFeatureMutation, isPending: isCompletePending } = FeatureHooks.useCompleteFeature();
   const handleActivate = useCallback(() => {
     if (!feature) return;
-    const mutate = isRestart ? restartFeatureMutation : activateFeatureMutation;
+    const mutate = isComplete ? completeFeatureMutation : enableFeatureMutation;
     mutate({ projectId, feature: feature.feature, requestBody: { settings } }, { onSuccess: handleSuccess });
-  }, [activateFeatureMutation, feature, handleSuccess, isRestart, projectId, restartFeatureMutation, settings]);
+  }, [completeFeatureMutation, enableFeatureMutation, feature, handleSuccess, isComplete, projectId, settings]);
 
-  // a restart also plans the documents a pending activation has not reached yet (they lack the data)
-  const count = !state ? 0 : (isRestart ? state.processing_documents : 0) + state.lacking_documents;
+  const count = state?.lacking_documents ?? 0;
   const requiredTitles = (feature?.requires_features ?? [])
     .filter((f) => !states[f]?.enabled)
     .map((f) => FEATURES[f].title);
@@ -82,24 +78,12 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
       <DialogContent>
         <Stack spacing={2}>
           <Typography>{feature && FEATURES[feature.feature].description}</Typography>
-          {isRestart ? (
-            <Typography>
-              {`${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} still computing or not computed yet. Restart computes ${count === 1 ? "it" : "them"} again in the background, for example when the progress has not moved for a long time.`}
-            </Typography>
-          ) : (
-            <Typography>
-              {count === 0
-                ? "No document needs to be processed."
-                : `${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} processed in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
-            </Typography>
-          )}
-          {isRestart && (
-            <Alert severity="warning">
-              Restart may repeat work that is still running: a document whose computation is only slow is computed
-              twice.
-            </Alert>
-          )}
-          {!isComplete && !isRestart && requiredTitles.length > 0 && (
+          <Typography>
+            {count === 0
+              ? "No document needs to be processed."
+              : `${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} processed in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
+          </Typography>
+          {!isComplete && requiredTitles.length > 0 && (
             <Typography color="text.secondary">This also enables {requiredTitles.join(", ")}.</Typography>
           )}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -122,10 +106,10 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
       <DialogActions>
         <Button
           variant="contained"
-          color={isRestart ? "warning" : "success"}
-          startIcon={isRestart ? <RestartAltIcon /> : <PlayCircleIcon />}
+          color="success"
+          startIcon={<PlayCircleIcon />}
           onClick={handleActivate}
-          loading={isActivatePending || isRestartPending}
+          loading={isEnablePending || isCompletePending}
           loadingPosition="start"
           fullWidth
         >

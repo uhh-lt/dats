@@ -39,11 +39,11 @@ export class FeatureService {
     });
   }
   /**
-   * Enables the Feature in the Project, or completes it: computes its data for the documents that lack it. Returns the enabled Features
+   * Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features
    * @returns Feature Successful Response
    * @throws ApiError
    */
-  public static activateFeature({
+  public static enableFeature({
     projectId,
     feature,
     requestBody,
@@ -53,8 +53,8 @@ export class FeatureService {
     requestBody: FeatureActivation;
   }): CancelablePromise<Array<Feature>> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/feature/project/{project_id}/{feature}",
+      method: "POST",
+      url: "/feature/project/{project_id}/{feature}/enable",
       path: {
         project_id: projectId,
         feature: feature,
@@ -67,7 +67,35 @@ export class FeatureService {
     });
   }
   /**
-   * Disables the Feature in the Project; its data is kept. Returns the enabled Features
+   * Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features
+   * @returns Feature Successful Response
+   * @throws ApiError
+   */
+  public static completeFeature({
+    projectId,
+    feature,
+    requestBody,
+  }: {
+    projectId: number;
+    feature: Feature;
+    requestBody: FeatureActivation;
+  }): CancelablePromise<Array<Feature>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/feature/project/{project_id}/{feature}/complete",
+      path: {
+        project_id: projectId,
+        feature: feature,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features
    * @returns Feature Successful Response
    * @throws ApiError
    */
@@ -79,40 +107,12 @@ export class FeatureService {
     feature: Feature;
   }): CancelablePromise<Array<Feature>> {
     return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/feature/project/{project_id}/{feature}",
-      path: {
-        project_id: projectId,
-        feature: feature,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Restarts the processing of the enabled Feature: plans and starts its processing steps again (steps whose job still runs compute twice). Returns the enabled Features
-   * @returns Feature Successful Response
-   * @throws ApiError
-   */
-  public static restartFeature({
-    projectId,
-    feature,
-    requestBody,
-  }: {
-    projectId: number;
-    feature: Feature;
-    requestBody: FeatureActivation;
-  }): CancelablePromise<Array<Feature>> {
-    return __request(OpenAPI, {
       method: "POST",
-      url: "/feature/project/{project_id}/{feature}/restart",
+      url: "/feature/project/{project_id}/{feature}/disable",
       path: {
         project_id: projectId,
         feature: feature,
       },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
