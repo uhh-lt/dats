@@ -62,6 +62,7 @@ import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import SubjectIcon from "@mui/icons-material/Subject";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
@@ -177,6 +178,9 @@ export enum Icon {
 
   // EXPERIMENT STUDIO
   EXPERIMENT = "experiment",
+
+  // AGENT
+  AGENT = "agent",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -320,6 +324,9 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // CLASSIFIER
   [Icon.CLASSIFIER]: (iconProps) => <SmartToyIcon {...iconProps} />,
+
+  // AGENT
+  [Icon.AGENT]: (iconProps) => <SupportAgentIcon {...iconProps} />,
 
   // PROMPTS
   [Icon.PROMPT]: (iconProps) => <TextSnippetIcon {...iconProps} />,

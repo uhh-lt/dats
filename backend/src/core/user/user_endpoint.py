@@ -18,10 +18,13 @@ from core.user.user_dto import (
     VirtualUserCreate,
 )
 from core.user.user_orm import UserORM
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
+# The routes that change or delete the logged-in user are not MCP tools, so MCP
+# clients and agents can never take over or delete an account.
 router = APIRouter(
-    prefix="/user", dependencies=[Depends(get_current_user)], tags=["user", "mcp"]
+    prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
 )
 
 
@@ -56,6 +59,7 @@ def create_virtual_user(
 
 @router.get(
     "/me",
+    tags=["mcp"],
     response_model=UserRead,
     summary="Returns the current (logged in) user",
 )
@@ -65,6 +69,7 @@ def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
 
 @router.get(
     "/by_id/{user_id}",
+    tags=["mcp"],
     response_model=PublicUserRead,
     summary="Returns the User with the given ID if it exists",
 )
@@ -75,6 +80,7 @@ def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicU
 
 @router.get(
     "/{project_id}/user",
+    tags=["mcp"],
     response_model=list[UserRead],
     summary=(
         "Returns all Users of the Project with the given ID: its members, then its "
@@ -97,6 +103,7 @@ def get_by_project(
 
 @router.get(
     "/all",
+    tags=["mcp"],
     response_model=list[PublicUserRead],
     summary="Returns all Users that exist in the system, without virtual users",
 )
@@ -163,6 +170,9 @@ def update_by_id(
 
 @router.patch(
     "/{project_id}/user",
+    tags=["mcp"],
+    # gives another user access to the project
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=ProjectUserLinks,
     summary="Associates an existing User to the Project with the given ID if it exists",
 )
@@ -249,6 +259,7 @@ def delete_by_id(
 
 @router.delete(
     "/{project_id}/user/{user_id}",
+    tags=["mcp"],
     response_model=ProjectUserLinks,
     summary="Dissociates the Users with the Project with the given ID if it exists",
 )

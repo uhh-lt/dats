@@ -15,6 +15,7 @@ from core.metadata.source_document_metadata_dto import (
 from core.metadata.source_document_metadata_service import (
     SourceDocumentMetadataService,
 )
+from systems.mcp_system.mcp_constants import MCP_DESTRUCTIVE_EXTENSION
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -115,6 +116,8 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
+    # overwrites many metadata values at once
+    openapi_extra={MCP_DESTRUCTIVE_EXTENSION: True},
     response_model=list[SourceDocumentMetadataRead],
     summary="Updates multiple metadata objects at once.",
 )

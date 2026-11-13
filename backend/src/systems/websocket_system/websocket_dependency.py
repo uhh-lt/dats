@@ -157,6 +157,24 @@ class WebsocketEmitter:
         )
         logger.debug(f"Queued event '{event_type}' for user {user_id}")
 
+    async def send_to_user_now(
+        self, event_type: DATSEvent, payload, *, user_id: int
+    ) -> None:
+        """Send an event to a single user right away, the actor included.
+
+        For streaming responses (agent runs): their background tasks run only
+        after the stream, and the actor's own client gets no mutation result to
+        cache. The caller must have committed the change already.
+
+        Args:
+            event_type: The event type.
+            payload: The changed entity's read DTO.
+            user_id: The target user.
+        """
+        event = self._build_event(event_type, payload)
+        await self._websocket_service.send_personal_event(user_id=user_id, event=event)
+        logger.debug(f"Sent event '{event_type}' to user {user_id}")
+
     def emit_to_users(
         self, event_type: DATSEvent, payload, *, user_ids: list[int]
     ) -> None:

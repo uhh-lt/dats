@@ -29,6 +29,7 @@ The bar is divided into a top section for core research features, and a bottom s
 - 🧠 **Classifier Training:** Access the interface to train, evaluate, and apply custom Machine Learning classifiers based on your manual annotations.
 - 🖼️ **Whiteboard:** Open the visual, Miro-like canvas to map out relationships, organize codes, and synthesize your interpretations.
 - 📓 **Logbook:** Access the project Logbook and the unified Memo Explorer to review your research notes.
+- 🤖 **Agent:** Chat with AI agents that answer questions about your project and work with its data, with your approval for destructive changes. See the [Agent View](feature-guides/agent-view.md).
 - 🧰 **Tools:** A dropdown menu containing utility features:
   - _Document Health:_ Check the status of your documents' preprocessing pipeline (e.g., if text extraction or entity recognition succeeded or failed).
   - _Duplicate Finder:_ Identify and manage duplicate documents within your corpus.

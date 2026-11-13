@@ -15,6 +15,7 @@ import { spanAnnotationQueries } from "@core/span-annotation/api/spanAnnotationQ
 import { tagQueries } from "@core/tag/api/tagQueries";
 import { userQueries } from "@core/user/api/userQueries";
 import { searchViewQueries } from "@core/workspace/api/searchViewQueries";
+import { agentQueries } from "@features/agent/api/agentQueries";
 import { classifierQueries } from "@features/classifier/api/classifierQueries";
 import { cotaQueries } from "@features/concept-over-time-analysis/api/cotaQueries";
 import { experimentQueries } from "@features/experiment-studio/api/experimentQueries";
@@ -354,6 +355,21 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       // the deleted user may be the gold annotator of experiments, which keep running without one
       queryClient.invalidateQueries({ queryKey: experimentQueries.byProjectScope() });
       invalidateMemoWorkspace();
+      break;
+
+    // ── Agent sessions ──────────────────────────────────────────────────────
+    case "AGENT_SESSION_UPDATED": {
+      // also announces new sessions (an agent run creates its session), and an
+      // updated session is the most recently updated one
+      const session = event.payload;
+      queryClient.setQueryData(agentQueries.byProject(session.project_id).queryKey, (sessions) =>
+        sessions ? [session, ...sessions.filter((s) => s.id !== session.id)] : sessions,
+      );
+      break;
+    }
+    case "AGENT_SESSION_DELETED":
+      removeListItem(agentQueries.byProject(event.payload.project_id).queryKey, event.payload.id);
+      queryClient.removeQueries({ queryKey: agentQueries.history(event.payload.session_id).queryKey });
       break;
 
     // ── API keys ────────────────────────────────────────────────────────────
