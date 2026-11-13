@@ -11,13 +11,11 @@ from core.project.project_crud import crud_project
 from feature_test_utils import FeatureProject, PartlyProject
 from job_test_utils import HeldJobs, unreachable_redis
 from modules.doc_processing import step_planning_service
-from modules.doc_processing.doc_processing_dto import (
-    FeatureActivationJobInput,
-    ProcessingSettings,
-)
+from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
 from modules.doc_processing.step_planning_service import StepPlanningService
 from pipeline_test_utils import read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import (
     FeatureActivation,
     FeatureRead,

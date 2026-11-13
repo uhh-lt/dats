@@ -13,25 +13,29 @@ the steps of one document.
 
 One failure rule: whatever goes wrong, the step becomes erroneous, with the
 pending steps after it, and Complete or Recompute starts it again. See
-`modules/doc_processing/README.md`.
+`systems/artefact_system/README.md`.
 """
 
 from loguru import logger
 
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
     FeatureActivationJobInput,
-    ProcessingJobInput,
-    ProcessingSettings,
     SdocInitJobOutput,
-    SdocProcessingJobInput,
 )
 from modules.doc_processing.pipeline import pipeline_transitions as t
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
 from repos.db.sql_repo import SQLRepo
+from systems.artefact_system.artefact_dto import (
+    ProcessingJobInput,
+    ProcessingSettings,
+    SdocProcessingJobInput,
+)
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_exceptions import JobInputError, JobQueueUnavailableError
 from systems.job_system.job_service import JobService
@@ -82,7 +86,7 @@ sqlr = SQLRepo()
 
 def _computed_steps(job_type: JobType, input: SdocProcessingJobInput) -> list[JobType]:
     """The pipeline steps this run of the job computes."""
-    return pipeline_registry.graph().job_steps(job_type, input.steps)
+    return artefact_registry.graph().job_steps(job_type, input.steps)
 
 
 def _pending_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
@@ -110,7 +114,7 @@ def start_steps(
     erroneous, like after a failed job, its job type maps to None, and the
     other jobs still start. Anything else raises as it is."""
     started: dict[JobType, Job | None] = {}
-    for job_type, job_steps in pipeline_registry.graph().group_by_job(steps).items():
+    for job_type, job_steps in artefact_registry.graph().group_by_job(steps).items():
         job_input = SdocProcessingJobInput(
             project_id=project_id, sdoc_id=sdoc_id, settings=settings, steps=job_steps
         )
@@ -148,7 +152,7 @@ def _start_next(
 ) -> None:
     """Start what follows a finished job: the planned successors of the steps it
     computed, the root steps of a new document, and the jobs of entry points."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     if isinstance(input, SdocProcessingJobInput):
         # only the steps this run computed start their successors, so recomputing
         # e.g. the named entities does not start the steps after tokens and sentences
@@ -231,7 +235,7 @@ def handle_job_error(job_type: JobType, input: JobInputBase) -> None:
         crud_sdoc_step_status.update_pending_to_erroneous(
             db=db,
             sdoc_id=input.sdoc_id,
-            steps=pipeline_registry.graph().descendants(
+            steps=artefact_registry.graph().descendants(
                 _computed_steps(job_type, input)
             ),
         )

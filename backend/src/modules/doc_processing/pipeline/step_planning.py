@@ -13,14 +13,14 @@ from common.artefact_enum import CORE_ARTEFACTS
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from systems.artefact_system.artefact_registry import artefact_registry
 from systems.feature_system.feature_registry import feature_registry
 
 
 def planned_steps(*, doctype: DocType, features: Iterable[Feature]) -> list[JobType]:
     """The steps to run for a document of this doctype in a project with these
     enabled features, in pipeline order."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     return graph.plan(doctype, feature_registry.required_artefacts(features))
 
 
@@ -31,7 +31,7 @@ def feature_steps(
     with these enabled features (with the feature enabled): the producers of the
     feature's artefacts and the steps they require. Empty if the feature does
     not apply to the doctype (e.g. object detection to text documents)."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     features = feature_registry.closure([feature])
     plan = planned_steps(doctype=doctype, features=set(enabled) | features)
     artefacts = feature_registry.required_artefacts(features) - CORE_ARTEFACTS

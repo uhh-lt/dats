@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 from common.feature_enum import Feature, FeatureStatus
 from common.job_type_enum import JobType
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
+from systems.artefact_system.artefact_dto import ProcessingSettings
 
 
 class FeatureRead(BaseModel):

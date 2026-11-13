@@ -10,10 +10,8 @@ from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
-from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
-)
 from pipeline_test_utils import count_processing_sdocs, read_step_status
+from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
 
 from .conftest import ActivationProject

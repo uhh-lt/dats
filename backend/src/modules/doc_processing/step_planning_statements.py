@@ -29,10 +29,12 @@ from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from repos.db.sql_exceptions import NoSuchElementError
+from systems.artefact_system.source_document_step_status_orm import (
+    SourceDocumentStepStatusORM,
+)
 
 # Documents per step: the rows (sdoc id, step) a planning touched
 StepRows = dict[JobType, list[int]]

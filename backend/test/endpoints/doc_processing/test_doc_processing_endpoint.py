@@ -9,11 +9,7 @@ from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
-from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
-    SdocHealthResult,
-    SdocHealthSort,
-)
+from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocHealthSort
 from pipeline_test_utils import (
     all_steps,
     failing_started_hook,
@@ -23,6 +19,7 @@ from pipeline_test_utils import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.sorting import SortDirection
 

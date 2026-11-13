@@ -10,18 +10,20 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from job_test_utils import HeldJobs
-from modules.doc_processing import step_run
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import planned_steps
+from systems.artefact_system import step_run
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
 from systems.job_system.job_dto import JobInputBase
 
 
 def all_steps(doctype: DocType) -> list[JobType]:
     """All steps of the doctype, in pipeline order (a project with all features)."""
-    return pipeline_registry.graph().steps(doctype)
+    return artefact_registry.graph().steps(doctype)
 
 
 def core_steps(doctype: DocType) -> list[JobType]:

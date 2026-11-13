@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
     from core.doc.folder_orm import FolderORM
     from core.doc.source_document_data_orm import SourceDocumentDataORM
-    from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
     from core.project.project_orm import ProjectORM
@@ -23,6 +22,9 @@ if TYPE_CHECKING:
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
     from modules.word_frequency.word_frequency_orm import WordFrequencyORM
+    from systems.artefact_system.source_document_step_status_orm import (
+        SourceDocumentStepStatusORM,
+    )
 
 
 class SourceDocumentORM(ORMBase):

@@ -7,12 +7,9 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.source_document_status_rules import document_status
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.sdocs.artefact_archive import archive_modules
 from modules.eximport.sdocs.sdoc_export_schema import (
@@ -20,6 +17,11 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportSchema,
 )
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_status_rules import document_status
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
 
 
 def export_selected_sdocs(
@@ -85,7 +87,7 @@ def __export_sdocs(
     all_files.extend(sdoc_files)
 
     # Create a collection of export data
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     stored_status = crud_sdoc_step_status.read_by_sdocs(
         db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
     )

@@ -7,10 +7,10 @@ from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from modules.doc_processing.html import spacy_job
-from modules.doc_processing.step_run import start_steps
 from pipeline_test_utils import read_step_status
+from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.step_run import start_steps
 from systems.job_system.job_system_enum import JobStatus
 
 SETTINGS = ProcessingSettings(

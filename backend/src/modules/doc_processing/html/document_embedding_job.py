@@ -2,10 +2,10 @@ from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 

@@ -18,16 +18,16 @@ from core.doc.source_document_data_dto import (
 )
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.doc_processing_exceptions import StepNotComputedError
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
@@ -98,7 +98,7 @@ def enrich_for_recompute(
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # the outputs to write: tokens and sentences (text_spacy), keywords, word
     # frequencies, named entities; spacy is called once for all of them
-    steps = pipeline_registry.graph().job_steps(JobType.TEXT_SPACY, payload.steps)
+    steps = artefact_registry.graph().job_steps(JobType.TEXT_SPACY, payload.steps)
     not_computed = [step.value for step in steps if step not in _STEP_WRITERS]
     if not_computed:
         raise StepNotComputedError(JobType.TEXT_SPACY.value, not_computed)

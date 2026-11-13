@@ -42,4 +42,4 @@ There is no Restart and no cancel.
 
 `ALLOWED_STATUSES` in `feature_service.py` is this table, and `FeatureService.assert_action_allowed` checks it after `StepPlanningService` has locked the project. The Features tab shows only the allowed actions.
 
-When a step fails, it becomes erroneous and the feature partly available: see the failure rule in [`modules/doc_processing/README.md`](../../modules/doc_processing/README.md).
+When a step fails, it becomes erroneous and the feature partly available: see the failure rule in [`systems/artefact_system/README.md`](../artefact_system/README.md).

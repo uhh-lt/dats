@@ -45,7 +45,7 @@ def _preload_modules() -> None:
     register_jobs()
     for suffix in ["_repo.py", "_service.py", "_orm.py", "_dto.py", "_crud.py"]:
         import_by_suffix(suffix)
-    import modules.doc_processing.step_run  # noqa: F401
+    import systems.artefact_system.step_run  # noqa: F401
 
 
 @contextmanager

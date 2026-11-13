@@ -10,13 +10,10 @@ from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
     SdocHealthResult,
     SdocHealthSort,
     SdocInitJobInput,
-    SdocProcessingJobInput,
     SdocStatusRow,
 )
 from modules.doc_processing.doc_processing_exceptions import (
@@ -27,9 +24,16 @@ from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-from modules.doc_processing.step_run import start_steps
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_dto import (
+    ProcessingSettings,
+    SdocProcessingJobInput,
+)
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
+from systems.artefact_system.step_run import start_steps
 from systems.job_system.job_dto import Job, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
 from systems.search_system.sorting import SortDirection
@@ -115,7 +119,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         page: int | None = None,
         page_size: int | None = None,
     ) -> SdocHealthResult:
-        graph = pipeline_registry.graph()
+        graph = artefact_registry.graph()
         steps = graph.steps(DocType(doctype))
 
         # sorting: by the status of a step or by a column of the document
@@ -198,7 +202,7 @@ class DocProcessingService(metaclass=SingletonMeta):
     ) -> str:
         # Retrieve information about failed jobs
         # 1. retrieve all failed jobs in this project
-        graph = pipeline_registry.graph()
+        graph = artefact_registry.graph()
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
             job_types=list(graph.group_by_job(graph.steps(doctype))),
@@ -258,7 +262,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                 )
 
         # 3. check that processing_step is valid for the doctype
-        graph = pipeline_registry.graph()
+        graph = artefact_registry.graph()
         if processing_step not in graph.steps(DocType(doctype)):
             raise ValueError(
                 f"Processing step '{processing_step}' is not valid for doctype '{doctype}'"

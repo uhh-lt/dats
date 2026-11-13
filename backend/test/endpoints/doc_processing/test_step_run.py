@@ -2,24 +2,26 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
-from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
-    SdocInitJobInput,
-    SdocProcessingJobInput,
-)
-from modules.doc_processing.step_run import (
-    handle_job_error,
-    handle_job_finished,
-    start_steps,
-)
+from modules.doc_processing.doc_processing_dto import SdocInitJobInput
 from modules.doc_processing.text.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,
 )
 from pipeline_test_utils import failing_started_hook, read_step_status
+from systems.artefact_system.artefact_dto import (
+    ProcessingSettings,
+    SdocProcessingJobInput,
+)
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
+from systems.artefact_system.step_run import (
+    handle_job_error,
+    handle_job_finished,
+    start_steps,
+)
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 

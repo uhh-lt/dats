@@ -4,10 +4,10 @@ from common.job_type_enum import JobType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 

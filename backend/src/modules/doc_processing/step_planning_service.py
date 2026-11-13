@@ -10,21 +10,21 @@ from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from common.singleton_meta import SingletonMeta
 from config import conf
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
 from modules.doc_processing import step_planning_statements as statements
-from modules.doc_processing.doc_processing_dto import (
-    FeatureActivationJobInput,
-    ProcessingSettings,
-)
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
 from modules.doc_processing.pipeline.step_planning import (
     feature_steps,
     planned_steps,
 )
-from modules.doc_processing.step_run import start_steps
 from repos.db.sql_repo import SQLRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
+from systems.artefact_system.step_run import start_steps
 from systems.feature_system.feature_exceptions import FeatureActionNotAllowedError
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import ALLOWED_STATUSES, FeatureService
@@ -48,7 +48,7 @@ class StepPlanningService(metaclass=SingletonMeta):
     planning rows, the enabled features and the pending activations) are its
     own, in `step_planning_statements.py`, which only this service imports.
     The statuses and the actions are in `systems/feature_system/README.md`,
-    the failure rule in `modules/doc_processing/README.md`.
+    the failure rule in `systems/artefact_system/README.md`.
 
     Enable and Complete only change the project and start a feature activation
     job, which runs the activation (`handle_feature_activation_job`): it plans
@@ -407,7 +407,7 @@ class StepPlanningService(metaclass=SingletonMeta):
 
         Returns the steps of 1) and 2) whose inputs are finished, per document:
         they can start now, the others start when their inputs finish."""
-        graph = pipeline_registry.graph()
+        graph = artefact_registry.graph()
         features = self.registry.closure([feature])
         others = [f for f in enabled if f not in features]
 

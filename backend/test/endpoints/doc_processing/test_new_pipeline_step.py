@@ -13,17 +13,16 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs
-from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
-    SdocHealthResult,
-    SdocInitJobInput,
-    SdocProcessingJobInput,
-)
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
+from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocInitJobInput
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from pipeline_test_utils import read_step_status, started_steps
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_dto import (
+    ProcessingSettings,
+    SdocProcessingJobInput,
+)
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.feature_system.feature_dto import FeatureActivation
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job

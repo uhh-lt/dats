@@ -3,10 +3,8 @@ from typing import Callable, TypeVar
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
-from modules.doc_processing.pipeline.pipeline_graph import (
-    PipelineStep,
-    pipeline_registry,
-)
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.pipeline_graph import PipelineStep
 from systems.job_system.job_service import JobService
 
 HandlerT = TypeVar("HandlerT", bound=Callable)
@@ -43,7 +41,7 @@ def pipeline_step(
                 "steps before it start it with a bare SdocProcessingJobInput, and "
                 "the enricher loads the rest of its input from the stored data."
             )
-        pipeline_registry.register(
+        artefact_registry.register_step(
             job_type,
             PipelineStep(
                 requires=frozenset(requires),
@@ -52,7 +50,7 @@ def pipeline_step(
             ),
         )
         for step, step_produces in (further_steps or {}).items():
-            pipeline_registry.register(
+            artefact_registry.register_step(
                 step,
                 PipelineStep(
                     requires=frozenset(requires),

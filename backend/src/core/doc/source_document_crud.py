@@ -14,14 +14,16 @@ from core.doc.source_document_exceptions import (
     SourceDocumentPreprocessingUnfinishedError,
 )
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.source_document_status_rules import (
-    document_status,
-    document_status_filter,
-)
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
+from systems.artefact_system.source_document_status_rules import (
+    document_status,
+    document_status_filter,
+)
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
 
 
 class CRUDSourceDocument(

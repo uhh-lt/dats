@@ -33,13 +33,13 @@ from feature_test_utils import (
     minimal_text_steps,
     set_step_status,
 )
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.eximport.export_enum import ArchivePart
 from modules.eximport.sdocs.artefact_archive import ARTEFACT_ARCHIVE
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_service import JobService
@@ -391,7 +391,7 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     yield {"step": step, "artefact": artefact, "computed": _DUMMY_COMPUTED}
 
     JobService().job_registry.pop(step)
-    pipeline_registry.unregister(step)
+    artefact_registry.unregister_step(step)
     for p in patches:
         p.stop()
     archive_entry.stop()
@@ -489,7 +489,7 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
 
     for step in (consumer, producer):
         JobService().job_registry.pop(step)
-        pipeline_registry.unregister(step)
+        artefact_registry.unregister_step(step)
     for p in patches:
         p.stop()
     archive_entries.stop()

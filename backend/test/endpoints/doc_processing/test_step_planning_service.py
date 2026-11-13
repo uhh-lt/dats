@@ -14,10 +14,7 @@ from core.user.user_orm import UserORM
 from feature_test_utils import minimal_image_steps
 from job_test_utils import HeldJobs
 from modules.doc_processing import step_planning_service
-from modules.doc_processing.doc_processing_dto import (
-    FeatureActivationJobInput,
-    ProcessingSettings,
-)
+from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
 from modules.doc_processing.step_planning_service import StepPlanningService
 from pipeline_test_utils import (
     read_all_step_status,
@@ -25,6 +22,7 @@ from pipeline_test_utils import (
     started_steps,
 )
 from repos.db.sql_repo import SQLRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_service import JobService
 
 from .conftest import PlanningProjects

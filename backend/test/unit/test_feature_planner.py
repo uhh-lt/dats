@@ -7,9 +7,9 @@ from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import feature_steps, planned_steps
 from pipeline_test_utils import all_steps, core_steps
+from systems.artefact_system.artefact_registry import artefact_registry
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
     FeatureStillRequiredError,
@@ -38,14 +38,14 @@ def _planned(doctype: DocType, features: list[Feature]) -> list[JobType]:
 def test_all_features_plan_the_steps_documents_get_today(doctype: DocType):
     """A project with all features enabled (every existing project) plans every
     step of the doctype, in pipeline order, as before the feature toggles."""
-    assert _planned(doctype, ALL_FEATURES) == pipeline_registry.graph().steps(doctype)
+    assert _planned(doctype, ALL_FEATURES) == artefact_registry.graph().steps(doctype)
 
 
 @pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
 def test_minimal_project_plans_no_step_of_optional_artefacts_only(doctype: DocType):
     """A project without features plans no Elasticsearch index, embeddings,
     keywords, word frequencies, entities, captions or object detection."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     for step in _planned(doctype, []):
         assert graph.declaration(step).produces & CORE_ARTEFACTS, step
 
@@ -56,7 +56,7 @@ def test_minimal_project_produces_every_core_artefact_a_document_can_have(
 ):
     """Every core artefact whose steps produce core artefacts only is produced
     in a project without features (an image has no text without a caption)."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     planned = _planned(doctype, [])
     for artefact in CORE_ARTEFACTS:
         producer = graph.producer(doctype, artefact)

@@ -11,7 +11,7 @@ from pydantic import (
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from systems.artefact_system.artefact_registry import artefact_registry
 
 
 class SourceDocumentExportSchema(BaseModel):
@@ -137,7 +137,7 @@ class SourceDocumentExportSchema(BaseModel):
             return v
         steps = {
             s.value
-            for s in pipeline_registry.graph().steps(DocType(info.data["doctype"]))
+            for s in artefact_registry.graph().steps(DocType(info.data["doctype"]))
         }
         for status in v.values():
             if status is not None:

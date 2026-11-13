@@ -11,7 +11,6 @@ from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.import_exceptions import ImportProjectDetailsError
 from modules.eximport.project.import_project_details import archived_features
 from modules.eximport.project.project_export_schema import (
@@ -22,13 +21,14 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,
 )
+from systems.artefact_system.artefact_registry import artefact_registry
 
 register_jobs()
 
 FINISHED = SDocStatus.finished.value
 PROCESSING = SDocStatus.processing.value
 ERRONEOUS = SDocStatus.erroneous.value
-TEXT_STEPS = pipeline_registry.graph().steps(DocType.text)
+TEXT_STEPS = artefact_registry.graph().steps(DocType.text)
 
 
 def _sdoc(**kwargs) -> SourceDocumentExportSchema:

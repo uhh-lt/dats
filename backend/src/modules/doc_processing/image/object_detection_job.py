@@ -13,12 +13,12 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.user.user_crud import SYSTEM_USER_ID
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.dto.detr import DETRImageInput
 from repos.ray.ray_repo import RayRepo
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image

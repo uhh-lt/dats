@@ -13,14 +13,11 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
-from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.sdocs.artefact_archive import archive_modules
@@ -30,6 +27,13 @@ from modules.eximport.sdocs.sdoc_export_schema import (
 )
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
+from systems.artefact_system.source_document_step_status_dto import (
+    SourceDocumentStepStatusCreate,
+)
 
 # archives of versions before the feature toggles hold one status per document
 ARCHIVE_WITHOUT_STEP_STATUS = (
@@ -52,7 +56,7 @@ def archived_step_status(
     artefact the archive does not hold completely (its archive module says so) is
     not planned either, whatever its status. The import plans no step: a feature
     whose steps are not planned is partly available until a user completes it."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     doctype = DocType(sdoc_export.doctype)
     steps = graph.steps(doctype)
     step_status: dict[str, int | None] = {
@@ -305,7 +309,7 @@ def import_sdocs_to_proj(
 
         # 5. Write the artefacts with an archive module to their stores, if
         # their step was imported as finished
-        graph = pipeline_registry.graph()
+        graph = artefact_registry.graph()
         for artefact, module in archive_modules().items():
             step = graph.producer(DocType(sdoc_export.doctype), artefact)
             if step is not None and step_status.get(step.value) == SDocStatus.finished:

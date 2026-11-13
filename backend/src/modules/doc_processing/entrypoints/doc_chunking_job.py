@@ -9,7 +9,6 @@ from config import conf
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
-from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from modules.doc_processing.entrypoints.html_chunking_utils import (
     split_html_into_chunks,
 )
@@ -21,6 +20,7 @@ from repos.filesystem_exceptions import (
 )
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
+from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 

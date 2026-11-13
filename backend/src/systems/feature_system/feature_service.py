@@ -6,11 +6,13 @@ from common.doc_type_enum import DocType
 from common.feature_enum import Feature, FeatureAction, FeatureStatus
 from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
-from core.doc.source_document_status_rules import count_step_sets
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.project.project_crud import crud_project
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.pipeline.step_planning import feature_steps
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_status_rules import count_step_sets
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
 from systems.feature_system.feature_dto import FeatureRead, ProjectFeatureRead
 from systems.feature_system.feature_exceptions import (
     FeatureActionNotAllowedError,
@@ -110,7 +112,7 @@ class FeatureService(metaclass=SingletonMeta):
         }
 
         # 2) the documents per doctype by the status of these steps
-        graph = pipeline_registry.graph()
+        graph = artefact_registry.graph()
         counts = count_step_sets(
             combinations=crud_sdoc_step_status.count_by_project(
                 db=db,

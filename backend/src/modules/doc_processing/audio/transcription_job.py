@@ -14,12 +14,12 @@ from core.doc.source_document_data_dto import (
     SourceDocumentDataUpdate,
 )
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.doc_processing.video.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
+from systems.artefact_system.artefact_dto import SdocProcessingJobInput
+from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 

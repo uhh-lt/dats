@@ -24,9 +24,6 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from job_test_utils import HeldJobs
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-from modules.doc_processing.step_run import start_steps
 from modules.doc_processing.video.video_utils import audio_stream_path
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.project import import_project as import_project_module
@@ -43,6 +40,9 @@ from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.step_run import start_steps
 
 from .conftest import FeatureToggleEximportProjects
 
@@ -345,7 +345,7 @@ ROUND_TRIP_CASES: dict[Artefact, Callable[[Session, SourceDocumentORM], object]]
 def _artefact_data(db: Session, project_id: int, artefact: Artefact) -> dict:
     """The artefact's data of each document of the project whose step producing
     it finished, by filename."""
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     db.expire_all()
     data = {}
     for sdoc in crud_sdoc.read_by_project(

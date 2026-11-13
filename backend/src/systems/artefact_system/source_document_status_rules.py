@@ -30,7 +30,9 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus, StepSetStatus
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
+from systems.artefact_system.source_document_step_status_orm import (
+    SourceDocumentStepStatusORM,
+)
 
 
 def document_status(statuses: Iterable[SDocStatus]) -> SDocStatus:

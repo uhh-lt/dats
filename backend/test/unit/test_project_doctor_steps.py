@@ -10,9 +10,11 @@ from bootstrap import register_jobs
 from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
-from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.sdocs.artefact_archive import archive_modules
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_orm import (
+    SourceDocumentStepStatusORM,
+)
 
 register_jobs()
 
@@ -42,7 +44,7 @@ def _doctor_stores() -> ModuleType:
 def test_doctor_steps_match_the_pipeline_graph() -> None:
     """The doctor knows the steps of every doctype, in pipeline order."""
     doctor = _doctor_stores()
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     assert doctor.PROCESSING_STEPS == {
         doctype.value: [step.value for step in graph.steps(doctype)]
         for doctype in DocType
@@ -53,7 +55,7 @@ def test_doctor_embedding_steps_produce_the_embeddings() -> None:
     """Each embedding step of the doctor produces the embeddings of its Weaviate
     collection."""
     doctor = _doctor_stores()
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     producers = {
         collection: {
             step.value
@@ -69,7 +71,7 @@ def test_doctor_index_and_thumbnail_steps_produce_them() -> None:
     """The doctor's Elasticsearch index step produces the index of text
     documents, its thumbnail step the thumbnail of images."""
     doctor = _doctor_stores()
-    graph = pipeline_registry.graph()
+    graph = artefact_registry.graph()
     assert doctor.ES_INDEX_STEP == graph.producer(DocType.text, Artefact.ES_INDEX)
     assert doctor.IMAGE_THUMBNAIL_STEP == graph.producer(
         DocType.image, Artefact.THUMBNAIL

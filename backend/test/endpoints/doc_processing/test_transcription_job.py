@@ -14,13 +14,13 @@ from modules.doc_processing.audio.transcription_job import (
     TranscriptionJobOutput,
     handle_transcription_job,
 )
-from modules.doc_processing.doc_processing_dto import ProcessingSettings
 from repos.ray.dto.whisper import (
     SegmentTranscription,
     WhisperTranscriptionOutput,
     WordTranscription,
 )
 from repos.ray.ray_repo import RayRepo
+from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 

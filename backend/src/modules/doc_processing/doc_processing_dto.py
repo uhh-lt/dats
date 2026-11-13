@@ -6,45 +6,15 @@ from pydantic import BaseModel, Field
 from common.doc_type_enum import DocType
 from common.feature_enum import Feature
 from common.job_type_enum import JobType
-from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
-from core.doc.source_document_status_rules import document_status
+from systems.artefact_system.artefact_dto import ProcessingJobInput, ProcessingSettings
+from systems.artefact_system.source_document_status_rules import document_status
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 from systems.search_system.sorting import SortDirection
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
-
-
-class ProcessingSettings(BaseModel):
-    extract_images: bool = Field(
-        description="Whether to extract images from the documents"
-    )
-    pages_per_chunk: int = Field(
-        description="Number of pages to chunk the documents into"
-    )
-    keyword_number: int = Field(description="Number of keywords to extract")
-    keyword_deduplication_threshold: float = Field(
-        description="Threshold for keyword deduplication (0.0 - 1.0)"
-    )
-    keyword_max_ngram_size: int = Field(
-        description="Maximum n-gram size for keyword extraction"
-    )
-    language: Language = Field(description="Language of the documents: 'de', 'en', ...")
-    model: str = Field(description="Large Language Model to use for processing")
-
-
-class ProcessingJobInput(JobInputBase):
-    settings: ProcessingSettings = Field(description="Processing settings")
-
-
-class SdocProcessingJobInput(ProcessingJobInput):
-    sdoc_id: int = Field(description="SDoc ID")
-    steps: list[JobType] | None = Field(
-        default=None,
-        description="The pipeline steps this job computes, for jobs with several steps (e.g. text_spacy); null = all steps of the job",
-    )
 
 
 class SdocInitJobInput(ProcessingJobInput):

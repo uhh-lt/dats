@@ -5,8 +5,8 @@ import pytest
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
-from modules.doc_processing.doc_processing_exceptions import PipelineDeclarationError
-from modules.doc_processing.pipeline.pipeline_graph import PipelineGraph, PipelineStep
+from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
+from systems.artefact_system.pipeline_graph import PipelineGraph, PipelineStep
 
 ALL_DOCTYPES = frozenset(DocType)
 

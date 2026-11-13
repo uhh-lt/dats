@@ -6,15 +6,17 @@ from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
     SdocHealthResult,
     SdocHealthSort,
     SourceDocumentStatusSimple,
 )
 from modules.doc_processing.doc_processing_service import DocProcessingService
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
 
 router = APIRouter(
     prefix="/docprocessing",
@@ -37,7 +39,7 @@ def get_search_columns_by_doctype(
     doctype: DocType,
     authz_user: AuthzUser = Depends(),
 ) -> list[str]:
-    return [step.value for step in pipeline_registry.graph().steps(doctype)]
+    return [step.value for step in artefact_registry.graph().steps(doctype)]
 
 
 @router.post(

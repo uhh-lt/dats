@@ -9,14 +9,14 @@ from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from job_test_utils import HeldJobs
 from modules.doc_processing.audio.transcription_job import TranscriptionJobInput
-from modules.doc_processing.doc_processing_dto import (
-    ProcessingSettings,
-    SdocInitJobInput,
-    SdocProcessingJobInput,
-)
-from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.doc_processing_dto import SdocInitJobInput
 from modules.doc_processing.video.video_utils import audio_stream_path
 from pipeline_test_utils import read_all_step_status
+from systems.artefact_system.artefact_dto import (
+    ProcessingSettings,
+    SdocProcessingJobInput,
+)
+from systems.artefact_system.artefact_registry import artefact_registry
 from systems.job_system.job_service import JobService
 
 from .conftest import MediaUploads
@@ -111,7 +111,7 @@ def test_audio_runs_its_roots_and_transcribes_the_uploaded_file(
     assert transcription.filepath.name == p["audio"].name
     status = read_all_step_status(db_session, sdoc_id)
     ran = {JobType(step) for step, value in status.items() if value == FINISHED}
-    assert ran | set(held) == set(pipeline_registry.graph().roots(DocType.audio))
+    assert ran | set(held) == set(artefact_registry.graph().roots(DocType.audio))
     assert status[JobType.AUDIO_METADATA_EXTRACTION.value] == FINISHED
     assert status[JobType.AUDIO_THUMBNAIL.value] == FINISHED
     assert status[JobType.AUDIO_TRANSCRIPTION.value] == PROCESSING

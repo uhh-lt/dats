@@ -16,9 +16,13 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_orm import SourceDocumentORM
-from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
-from core.doc.source_document_step_status_orm import SourceDocumentStepStatusORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
+from systems.artefact_system.source_document_step_status_dto import (
+    SourceDocumentStepStatusCreate,
+)
+from systems.artefact_system.source_document_step_status_orm import (
+    SourceDocumentStepStatusORM,
+)
 from systems.search_system.sorting import SortDirection
 
 # The status of each planned step of a document; a step without a status is not

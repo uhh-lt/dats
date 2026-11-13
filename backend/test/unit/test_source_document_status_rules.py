@@ -3,7 +3,7 @@ import pytest
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus, StepSetStatus
-from core.doc.source_document_status_rules import (
+from systems.artefact_system.source_document_status_rules import (
     StepSetCounts,
     count_step_sets,
     document_status,

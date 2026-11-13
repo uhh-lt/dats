@@ -72,8 +72,8 @@ def register_jobs() -> None:
     on registration.
     """
     from common.dats_event import build_job_event_models
-    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
-    from modules.doc_processing.step_run import (
+    from systems.artefact_system.artefact_registry import artefact_registry
+    from systems.artefact_system.step_run import (
         handle_job_error,
         handle_job_finished,
         handle_job_started,
@@ -82,7 +82,7 @@ def register_jobs() -> None:
 
     import_by_suffix("_job.py")
     # fails on artefacts nobody produces and cycles
-    pipeline_registry.graph()
+    artefact_registry.graph()
     # the pipeline tracks the step statuses and starts the next steps
     JobService().register_hooks(
         JobHooks(
@@ -91,7 +91,7 @@ def register_jobs() -> None:
             failed=handle_job_error,
         )
     )
-    _check_counted_steps(len(pipeline_registry.graph().all_steps()))
+    _check_counted_steps(len(artefact_registry.graph().all_steps()))
     register_features()
     build_job_event_models()
 
@@ -99,9 +99,9 @@ def register_jobs() -> None:
 def _check_counted_steps(steps: int) -> None:
     """Raise a `PipelineDeclarationError` if the feature states cannot count
     this many pipeline steps (`crud_sdoc_step_status.count_by_project`)."""
-    from core.doc.source_document_step_status_crud import MAX_COUNTED_STEPS
-    from modules.doc_processing.doc_processing_exceptions import (
-        PipelineDeclarationError,
+    from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
+    from systems.artefact_system.source_document_step_status_crud import (
+        MAX_COUNTED_STEPS,
     )
 
     if steps > MAX_COUNTED_STEPS:
@@ -119,11 +119,11 @@ def register_features() -> None:
     their declarations against the pipeline: fails on undeclared features,
     artefacts no step produces, unknown or cyclic feature requirements. Called by
     `register_jobs`, as the check needs the pipeline steps."""
-    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+    from systems.artefact_system.artefact_registry import artefact_registry
     from systems.feature_system.feature_registry import feature_registry
 
     import_by_suffix("_feature.py")
-    feature_registry.check(pipeline_registry.graph().artefacts())
+    feature_registry.check(artefact_registry.graph().artefacts())
 
 
 # ==============================================================================
