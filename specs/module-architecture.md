@@ -1,6 +1,6 @@
 # Design: features, artefacts and self-contained modules
 
-Status: draft for discussion. Nothing in this document is implemented yet. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
+Status: being built. PR A (the per-project feature toggles and the actions rework) and PR B (captions are core; the artefact system) are built; PR C to F are not. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
 
 ## Goal
 
@@ -54,7 +54,7 @@ Only the feature system and the upload talk to the artefact system:
 
 Disable calls nothing in the artefact system: the stored data and the step statuses stay.
 
-The feature system turns the counts into Disabled, Computing, Partly available or Fully available and applies the status-by-action table. The statuses, the three actions and the failure rule stay as documented in `backend/src/modules/doc_processing/README.md` on the rework branch.
+The feature system turns the counts into Disabled, Computing, Partly available or Fully available and applies the status-by-action table. The statuses and the three actions are documented in `backend/src/systems/feature_system/README.md`, the failure rule in `backend/src/systems/artefact_system/README.md`.
 
 The demand is not stored twice. It is always derived from the enabled features; only the upload passes it to the artefact system, read under the project share lock. Enable and Complete pass the artefacts of the feature only.
 

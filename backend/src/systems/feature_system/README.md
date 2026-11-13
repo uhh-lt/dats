@@ -27,7 +27,7 @@ One endpoint per action: `POST /feature/project/{project_id}/{feature}/{enable|c
 
 `FeatureService` carries out the actions after it locked the project. Enable and Complete pass the feature's artefacts (those of the features it requires included) to `ArtefactService.compute`, which starts an artefact computation job that plans and starts the steps in batches. The feature is computing from the request on; so is every feature that needs one of these artefacts. Disable only changes the enabled features and calls nothing in the artefact system. The upload of a document plans with the project's artefact demand (`FeatureService.read_artefact_demand`).
 
-Disable is also rejected (400) while an enabled feature requires the feature. Disable never unplans a step, as it is rejected while the feature is computing.
+Disable is also rejected (400) while an enabled feature requires the feature. Disable never unplans a step: it only changes the enabled features; the step statuses and the computed data stay.
 
 There is no Restart and no cancel.
 

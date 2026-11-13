@@ -3,8 +3,8 @@
 The pending feature activations (feature value -> activation id) become the
 pending artefact computations (computation id -> artefact values). The column
 is renamed and reset: a pending activation of the old form cannot be
-translated, and its job finds no pending computation and stops. The downgrade
-renames back and resets as well.
+translated (its job cannot be loaded either). The downgrade renames back and
+resets as well.
 
 Revision ID: 457909d274d4
 Revises: 41c2d56be9f3
