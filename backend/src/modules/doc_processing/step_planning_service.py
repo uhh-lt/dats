@@ -66,8 +66,9 @@ class StepPlanningService(metaclass=SingletonMeta):
 
     Lock order: every operation first locks the project row (FOR NO KEY UPDATE
     to change the features or the pending activations, FOR SHARE to plan a new
-    document or a batch of an activation), then the documents it plans, in
-    ascending id order (FOR NO KEY UPDATE). A change of the features waits for
+    document or a batch of an activation), then the documents it plans per
+    doctype in the order of `DocType`, ascending by id within a doctype (FOR NO
+    KEY UPDATE). A change of the features waits for
     the batch in progress, an upload and a batch plan side by side (the upload
     plans a new document, which is not in the batch), and a status change of a
     document waits for the planning of that document, so the planning never
