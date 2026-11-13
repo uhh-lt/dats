@@ -44,18 +44,18 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 
 ### Layer Rules
 
-| Rule                                                                               | Script                     |
-| ---------------------------------------------------------------------------------- | -------------------------- |
-| CRUD conventions (see the three CRUD instruction files)                            | `lint/check_crud.py`       |
-| DTO conventions (see backend-dto), incl. no ORM/CRUD/service/repo/endpoint imports | `lint/check_dtos.py`       |
-| ORM conventions (see backend-orm)                                                  | `lint/check_orm.py`        |
-| Service conventions (see backend-service)                                          | `lint/check_services.py`   |
-| Exception classes only in `*_exceptions.py`                                        | `lint/check_exceptions.py` |
-| Enum classes only in `*_enum.py`, with a str or int value type                     | `lint/check_enums.py`      |
-| `core` never imports from `modules`                                                | `lint/check_core.py`       |
-| `systems` never imports from `modules`, also not inside a function                 | `lint/check_core.py`       |
-| `*_endpoint.py` imports `*_dto` modules from its own folder only                   | `lint/check_endpoints.py`  |
-| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only  | `lint/check_repos.py`      |
+| Rule                                                                                                                                                                                                                       | Script                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| CRUD conventions (see the three CRUD instruction files)                                                                                                                                                                    | `lint/check_crud.py`       |
+| DTO conventions (see backend-dto), incl. no ORM/CRUD/service/repo/endpoint imports                                                                                                                                         | `lint/check_dtos.py`       |
+| ORM conventions (see backend-orm)                                                                                                                                                                                          | `lint/check_orm.py`        |
+| Service conventions (see backend-service)                                                                                                                                                                                  | `lint/check_services.py`   |
+| Exception classes only in `*_exceptions.py`                                                                                                                                                                                | `lint/check_exceptions.py` |
+| Enum classes only in `*_enum.py`, with a str or int value type                                                                                                                                                             | `lint/check_enums.py`      |
+| `core` never imports from `modules`                                                                                                                                                                                        | `lint/check_core.py`       |
+| `systems` never imports from `modules`, also not inside a function (temporary exemption: `feature_dto.py`, `feature_endpoint.py` and `feature_service.py` of `systems/feature_system` may import `modules.doc_processing`) | `lint/check_core.py`       |
+| `*_endpoint.py` imports `*_dto` modules from its own folder only                                                                                                                                                           | `lint/check_endpoints.py`  |
+| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only                                                                                                                                          | `lint/check_repos.py`      |
 
 All checks except `check_endpoints.py` and `check_repos.py` run automatically (`just lint backend` and pre-commit). Run those two by hand from `backend/` (`uv run python lint/check_endpoints.py`); they still report some existing violations, so make sure you add no new ones.
 
@@ -218,13 +218,13 @@ Rules:
 - A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
 - A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
 - The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
-- `systems/feature_system` holds the generic part (declarations, registry, requirement resolution, `FeatureService.assert_enabled` and the `require_feature` dependencies, `GET /feature`); `modules/project_features` holds what knows projects and documents (`ProjectFeatureService`, the `/feature/project/...` endpoints, `ProjectFeatureRead` and `FeatureActivation`).
+- `systems/feature_system` holds the declarations, the registry, the requirement resolution, `FeatureService.assert_enabled` and the `require_feature` dependencies, the status of the features of a project (`FeatureService.read_project_features`), the allowed actions (`ALLOWED_STATUSES`, `FeatureService.assert_action_allowed`) and all `/feature` endpoints with their DTOs (`ProjectFeatureRead`, `FeatureActivation`); the planning stays in `StepPlanningService` (`modules/doc_processing`).
 - The planner lives in the `pipeline` package: `PipelineGraph.plan` gives the steps of a doctype for the needed artefacts and `step_planning.py` the steps of enabled features (`planned_steps`, `feature_steps`).
 - Only `PipelineGraph` derives which step feeds which (`inputs`, `successors`, `descendants`, `needed_steps`); never walk the `requires` and `produces` of the declarations elsewhere.
 - Only the operations of `StepPlanningService` (`modules/doc_processing/step_planning_service.py`: `enable_feature`, `complete_feature`, `disable_feature`, `add_features` for an import, `plan_new_document` and `handle_feature_activation_job`, which the activation job calls) take the planning locks, write planning rows, `project.enabled_features` and `project.feature_activations`, and start the `FEATURE_ACTIVATION` job; their SQL lives in `step_planning_statements.py`, which only the service imports, and no CRUD offers it; never plan steps by hand.
 - Enabling or completing a feature plans `(plan(enabled) - plan(enabled without the feature)) | steps(feature) | core steps` and never the missing data of another feature.
 - Enable and Complete plan nothing in the request: they store a pending activation and start the `FEATURE_ACTIVATION` job before the commit, which plans the documents in batches (one transaction each, project share lock first) and removes the pending activation at the end or through its failure callback.
-- Each action is allowed only in the feature statuses of `StepPlanningService.ALLOWED_STATUSES` (Enable when disabled, Complete when partly available, Disable when partly or fully available) and answers 409 otherwise, so every action is rejected while a feature is computing.
+- Each action is allowed only in the feature statuses of `ALLOWED_STATUSES` (`systems/feature_system/feature_service.py`) (Enable when disabled, Complete when partly available, Disable when partly or fully available) and answers 409 otherwise, so every action is rejected while a feature is computing.
 - The enabled features change only through `StepPlanningService.enable_feature` and `disable_feature` (called by the `/feature/project/...` endpoints and the project import), never through `ProjectUpdate`.
 - Disabling a feature changes only the enabled features and never unplans a step: it is rejected while a step it would unplan is processing.
 - An import restores only what the archive holds, adds the archive's features to the project's with `StepPlanningService.add_features` (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.

@@ -1,44 +1,6 @@
-# Feature actions and failures
+# Step planning and failures
 
-A project enables features; a feature needs pipeline steps per document. This module plans the steps (`step_planning_service.py`) and runs them (`step_run.py`). The terms are in `GLOSSARY.md`.
-
-## Feature status
-
-`ProjectFeatureService` derives the status from the step statuses and the pending feature activations. Nothing stores it.
-
-| Status           | Meaning                                                                                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Disabled         | The project does not use the feature.                                                                                                               |
-| Computing        | Work for the feature is queued or running: a step of it is processing, or a feature activation of it (or of a feature that requires it) is pending. |
-| Partly available | Nothing is running, and some documents lack the feature's data.                                                                                     |
-| Fully available  | Every document has the feature's data.                                                                                                              |
-
-## Actions
-
-One endpoint per action: `POST /feature/project/{project_id}/{feature}/{enable|complete|disable}`.
-
-| Action   | What it does                                                        | Allowed when              |
-| -------- | ------------------------------------------------------------------- | ------------------------- |
-| Enable   | Turns the feature on and computes its data for all documents.       | Disabled                  |
-| Complete | Computes the data for the documents that lack it, failed steps too. | Partly available          |
-| Disable  | Turns the feature off. The computed data stays.                     | Partly or fully available |
-
-Enable and Complete start a feature activation job, which plans and starts the steps in batches. The feature is computing from the request on.
-
-Disable is also rejected (400) while an enabled feature requires the feature, and (409) while a step that only this feature makes possible is processing (e.g. the text steps of an image need its caption). So no step is ever unplanned while its job may run.
-
-There is no Restart and no cancel.
-
-## Status by action
-
-| Status \ Action  | Enable | Complete | Disable |
-| ---------------- | ------ | -------- | ------- |
-| Disabled         | yes    | 409      | 409     |
-| Computing        | 409    | 409      | 409     |
-| Partly available | 409    | yes      | yes     |
-| Fully available  | 409    | 409      | yes     |
-
-`StepPlanningService.ALLOWED_STATUSES` is this table. The Features tab shows only the allowed actions.
+A project enables features; a feature needs pipeline steps per document. This module plans the steps (`step_planning_service.py`) and runs them (`step_run.py`). The feature statuses and the actions Enable, Complete and Disable are in [`systems/feature_system/README.md`](../../systems/feature_system/README.md); this file holds what goes wrong while the steps run. The terms are in `GLOSSARY.md`.
 
 ## Failures
 
