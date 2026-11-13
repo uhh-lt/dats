@@ -287,7 +287,6 @@ class ElasticsearchConfig(BaseModel):
 class APIConnectionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # base URL of the OpenAI-compatible API, e.g. "https://llm.example.org/v1"
     url: str = Field(pattern=r"^https?://\S+$")
     api_key: str = Field()
 
