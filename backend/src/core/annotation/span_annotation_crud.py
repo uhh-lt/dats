@@ -355,6 +355,37 @@ class CRUDSpanAnnotation(
 
         return ids
 
+    def delete_by_adoc_and_codes(
+        self, db: Session, *, adoc_id: int, code_ids: list[int]
+    ) -> list[int]:
+        """
+        Delete the span annotations with these codes in an annotation document.
+
+        Args:
+            adoc_id: The annotation document.
+            code_ids: The codes of the span annotations to delete.
+
+        Returns:
+            The ids of the deleted span annotations.
+        """
+        if not code_ids:
+            return []
+
+        # find all span annotations to be removed
+        ids = list(
+            db.scalars(
+                select(self.model.id).where(
+                    self.model.annotation_document_id == adoc_id,
+                    self.model.code_id.in_(code_ids),
+                )
+            )
+        )
+
+        # delete them (updates the annotation document's timestamp)
+        self.delete_multi(db=db, ids=ids)
+
+        return ids
+
     def delete_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[int]:

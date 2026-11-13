@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
-from core.annotation.span_annotation_dto import SpanAnnotationRead
+from core.annotation.span_annotation_dto import (
+    SpanAnnotationCreateIntern,
+    SpanAnnotationRead,
+)
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import (
     SpanGroupCreate,
@@ -102,3 +105,68 @@ class SpanGroupService(metaclass=SingletonMeta):
             )
             for group in groups
         ]
+
+    def replace_groups(
+        self,
+        *,
+        db: Session,
+        annotation_document_id: int,
+        name: str,
+        code_ids: list[int],
+        groups: list[list[SpanAnnotationCreateIntern]],
+    ) -> None:
+        """
+        Replace the span annotations with these codes and the span groups of that
+        name in an annotation document, e.g. the result of a recomputation.
+
+        Args:
+            annotation_document_id: The annotation document to replace them in.
+            name: The name of the span groups.
+            code_ids: The codes of the span annotations to replace.
+            groups: One list of span annotations per span group to create.
+
+        Raises:
+            ValueError: If a span annotation is not in the annotation document or has
+                none of the codes, so that the next replacement would not remove it.
+        """
+        spans = [span for group in groups for span in group]
+        foreign = [
+            span.uuid
+            for span in spans
+            if span.annotation_document_id != annotation_document_id
+            or span.code_id not in code_ids
+        ]
+        if foreign:
+            raise ValueError(
+                f"Span annotations {foreign} are not in annotation document "
+                f"{annotation_document_id} or have none of the codes {code_ids}."
+            )
+
+        # 1) delete the span annotations with these codes and the groups of that name
+        crud_span_anno.delete_by_adoc_and_codes(
+            db=db, adoc_id=annotation_document_id, code_ids=code_ids
+        )
+        crud_span_group.delete_by_adoc_and_name(
+            db=db, annotation_document_id=annotation_document_id, name=name
+        )
+
+        # 2) create the span annotations and one span group per inner list
+        db_spans = iter(crud_span_anno.create_multi(db=db, create_dtos=spans))
+        db_groups = crud_span_group.create_multi(
+            db=db,
+            create_dtos=[
+                SpanGroupCreateIntern(
+                    name=name, annotation_document_id=annotation_document_id
+                )
+                for _ in groups
+            ],
+        )
+
+        # 3) link each group to its span annotations
+        crud_span_group.link_groups_spans_batch(
+            db=db,
+            links={
+                db_group.id: [next(db_spans).id for _ in group]
+                for db_group, group in zip(db_groups, groups, strict=True)
+            },
+        )

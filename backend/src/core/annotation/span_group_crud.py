@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -79,6 +79,27 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
             for group_id, span_id in rows:
                 results[group_id].append(span_id)
         return results
+
+    ### DELETE OPERATIONS ###
+
+    def delete_by_adoc_and_name(
+        self, db: Session, *, annotation_document_id: int, name: str
+    ) -> None:
+        """
+        Delete the span groups of that name in an annotation document. Their links to
+        span annotations go with them; the span annotations stay.
+
+        Args:
+            annotation_document_id: The annotation document of the span groups.
+            name: The name of the span groups.
+        """
+        db.execute(
+            delete(self.model).where(
+                self.model.annotation_document_id == annotation_document_id,
+                self.model.name == name,
+            )
+        )
+        db.flush()
 
     ### OTHER OPERATIONS ###
 
