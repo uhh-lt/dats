@@ -45,17 +45,17 @@ def archived_features(details: ProjectDetailsExportSchema | None) -> list[Featur
 
 def import_project_details_to_proj(
     db: Session,
-    details: ProjectDetailsExportSchema | None,
+    features: list[Feature],
     project_id: int,
 ) -> None:
-    """Enable the features of the archive's project, and the features they
-    require, in addition to the features the project enables already: an import
+    """Enable the features of the archive's project (`archived_features`), and the
+    features they require, in addition to the features the project enables already: an import
     never disables a feature. The import plans no steps: features whose data the
     archive lacks are partly available until a user completes them in the project
     settings (`StepPlanningService.add_features`)."""
-    features = StepPlanningService().add_features(
-        db=db, project_id=project_id, features=archived_features(details)
+    enabled = StepPlanningService().add_features(
+        db=db, project_id=project_id, features=features
     )
     logger.info(
-        f"Enabled the features {[f.value for f in features]} in project {project_id}"
+        f"Enabled the features {[f.value for f in enabled]} in project {project_id}"
     )

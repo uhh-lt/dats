@@ -20,6 +20,7 @@ from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_enum import ExportEntity
 from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project.import_project_details import (
+    archived_features,
     import_project_details_to_proj,
     read_project_details,
 )
@@ -44,7 +45,7 @@ from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.filesystem_repo import FilesystemRepo
 
-# The project details are imported first, see import_project.
+# The project details are imported last, see import_project.
 IMPORT_ORDER = [
     ExportEntity.PROJECT_METADATA,
     ExportEntity.USER,
@@ -157,12 +158,8 @@ def import_project(
             # read csv
             organized_data[entity] = read_import_csv(file_path)
 
-    # import the project details first: they validate the enabled features
-    import_project_details_to_proj(
-        db=db,
-        details=organized_data.get(ExportEntity.PROJECT_DETAILS),
-        project_id=project_id,
-    )
+    # validate the archived features before importing anything
+    features = archived_features(organized_data.get(ExportEntity.PROJECT_DETAILS))
 
     # import data
     for entity in IMPORT_ORDER:
@@ -171,3 +168,6 @@ def import_project(
 
         data = organized_data[entity]
         _import_entity(entity=entity, db=db, data=data, project_id=project_id)
+
+    # enable the features last: it locks the project until the import commits
+    import_project_details_to_proj(db=db, features=features, project_id=project_id)
