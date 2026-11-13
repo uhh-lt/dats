@@ -92,8 +92,6 @@ def handle_transcription_job(
             ),
         )
 
-    # The output is built from the transcription, not from the updated ORM object:
-    # it is detached once the transaction is closed.
     return TranscriptionJobOutput(
         token_starts=transcription["token_starts"],
         token_ends=transcription["token_ends"],
