@@ -1,2 +1,5 @@
 # Output of the Playwright MCP server used by the browser-check skill
 .playwright-mcp/
+
+# reports of the improve-codebase-architecture skill
+.architecture-reviews/
