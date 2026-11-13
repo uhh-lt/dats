@@ -331,7 +331,8 @@ def undo_planning(db: Session, *, change: PlanningChange) -> None:
     Undo the given rows of a planning that are still processing: delete the
     created ones (not planned again) and set the redone ones to erroneous
     again; rows with another status keep it. Locks the documents (FOR NO KEY
-    UPDATE) in ascending id order first; the caller has locked the project.
+    UPDATE) first in the order of a batch (per doctype, ascending id within
+    it); the caller has locked the project.
 
     Args:
         change: The rows to undo.
@@ -342,12 +343,16 @@ def undo_planning(db: Session, *, change: PlanningChange) -> None:
     if not sdoc_ids:
         return
     sdoc = SourceDocumentORM
-    db.scalars(
-        select(sdoc.id)
-        .where(sdoc.id.in_(select(_id_values(sdoc_ids).c.sdoc_id)))
-        .order_by(sdoc.id)
-        .with_for_update(of=sdoc, key_share=True)
-    ).all()
+    for doctype in DocType:
+        db.scalars(
+            select(sdoc.id)
+            .where(
+                sdoc.id.in_(select(_id_values(sdoc_ids).c.sdoc_id)),
+                sdoc.doctype == doctype.value,
+            )
+            .order_by(sdoc.id)
+            .with_for_update(of=sdoc, key_share=True)
+        ).all()
     row = SourceDocumentStepStatusORM
     for step, step_ids in change.created.items():
         if not step_ids:
