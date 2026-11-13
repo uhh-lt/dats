@@ -64,7 +64,7 @@ def enrich_for_recompute(
     doctypes={DocType.text},
 )
 @register_job(
-    job_type=JobType.EXTRACT_HTML,
+    job_type="extract_html",
     input_type=ExtractHTMLJobInput,
     output_type=ExtractHTMLJobOutput,
     enricher=enrich_for_recompute,
@@ -105,7 +105,7 @@ def handle_extract_html_job(
 
     # the extracted images become documents of their own
     start_followers(
-        JobType.EXTRACT_HTML,
+        "extract_html",
         [
             (
                 JobType.SDOC_INIT,

@@ -6,7 +6,6 @@ import time
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
 
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.project.project_crud import crud_project
 from pipeline_test_utils import count_processing_sdocs, read_step_status
@@ -66,8 +65,8 @@ def test_activate_full_text_search_indexes_the_documents_and_fails_those_without
     _activate(client, p["project"].id, "full_text_search")
     _wait_until_nothing_processes(db_session, p["project"].id)
 
-    assert read_step_status(db_session, p["tokenized"].id, JobType.TEXT_ES_INDEX) == 1
-    assert read_step_status(db_session, p["no_data"].id, JobType.TEXT_ES_INDEX) == -100
+    assert read_step_status(db_session, p["tokenized"].id, "text_es_index") == 1
+    assert read_step_status(db_session, p["no_data"].id, "text_es_index") == -100
 
 
 def test_activate_keyword_statistics_advances_through_the_planned_steps(
@@ -85,14 +84,14 @@ def test_activate_keyword_statistics_advances_through_the_planned_steps(
     _wait_until_nothing_processes(db_session, p["project"].id)
 
     for step in (
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
-        JobType.TEXT_HTML_MAPPING,
-        JobType.TEXT_KEYWORDS,
+        "text_language_detection",
+        "text_spacy",
+        "text_html_mapping",
+        "text_keywords",
     ):
         assert read_step_status(db_session, p["extracted"].id, step) == 1, step
         assert read_step_status(db_session, p["tokenized"].id, step) == 1, step
-    assert read_step_status(db_session, p["tokenized"].id, JobType.TEXT_NER) is None
+    assert read_step_status(db_session, p["tokenized"].id, "text_ner") is None
 
 
 def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
@@ -109,10 +108,10 @@ def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
     _wait_until_nothing_processes(db_session, p["project"].id)
 
     sdoc_id = p["tokenized"].id
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_WORD_FREQUENCY) == 1
+    assert read_step_status(db_session, sdoc_id, "text_word_frequency") == 1
     words = db_session.execute(
         sa.text("SELECT word FROM wordfrequency WHERE sdoc_id = :id"),
         {"id": sdoc_id},
     ).scalars()
     assert {"cat", "mat"} <= set(words)
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == 1
+    assert read_step_status(db_session, sdoc_id, "text_html_mapping") == 1

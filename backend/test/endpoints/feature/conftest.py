@@ -125,7 +125,7 @@ def uploading_project(db_session, test_user: UserORM) -> UploadingProject:
         project,
         name="uploading.txt",
         doctype=DocType.text,
-        status={step.value: 0 for step in steps},
+        status=dict.fromkeys(steps, 0),
     )
     db_session.commit()
     db_session.refresh(project)

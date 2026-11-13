@@ -16,7 +16,6 @@ from rq.registry import (
     StartedJobRegistry,
 )
 
-from common.job_type_enum import JobType
 from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
@@ -46,9 +45,7 @@ class HeldJobs:
             "failed": FailedJobRegistry(queue=self._run_queue),
         }
 
-    def jobs(
-        self, job_type: JobType | None = None
-    ) -> list[tuple[JobType, JobInputBase]]:
+    def jobs(self, job_type: str | None = None) -> list[tuple[str, JobInputBase]]:
         """The held jobs (of `job_type`) with their enriched input, in the order
         they were started."""
         held = sorted(
@@ -61,11 +58,11 @@ class HeldJobs:
             if job_type is None or job.kwargs["jobtype"] == job_type
         ]
 
-    def inputs(self, job_type: JobType) -> list[JobInputBase]:
+    def inputs(self, job_type: str) -> list[JobInputBase]:
         """The enriched inputs of the held jobs of `job_type`."""
         return [payload for _, payload in self.jobs(job_type)]
 
-    def run(self, *job_types: JobType) -> None:
+    def run(self, *job_types: str) -> None:
         """Run the held jobs of `job_types` (all if none is given) in an
         in-process worker through the real job handler, the hooks included,
         until none is held: jobs they start are held and run too if their type
@@ -76,7 +73,7 @@ class HeldJobs:
             self._run_queue.enqueue_job(job)
             self._work()
 
-    def abandon(self, job_type: JobType) -> None:
+    def abandon(self, job_type: str) -> None:
         """Let the held jobs of `job_type` die with their worker: they are taken
         as started by a worker that is gone, and RQ's cleanup of the started
         jobs (run by a live worker's maintenance) fails them and runs their
@@ -91,7 +88,7 @@ class HeldJobs:
                 self._run_queue.connection.zadd(registry.key, {f"{job.id}:dead": 1})
         registry.cleanup()
 
-    def ran(self, job_type: JobType) -> list[Job]:
+    def ran(self, job_type: str) -> list[Job]:
         """The jobs of `job_type` that `run` ran to the end, finished or
         failed."""
         conn = self._run_queue.connection
@@ -102,9 +99,7 @@ class HeldJobs:
         jobs = [rq.job.Job.fetch(job_id, connection=conn) for job_id in ids]
         return [Job(job) for job in jobs if job.kwargs["jobtype"] == job_type]
 
-    def _next(
-        self, job_types: tuple[JobType, ...]
-    ) -> tuple[rq.Queue, rq.job.Job] | None:
+    def _next(self, job_types: tuple[str, ...]) -> tuple[rq.Queue, rq.job.Job] | None:
         candidates = [
             (queue, job)
             for queue in self._queues

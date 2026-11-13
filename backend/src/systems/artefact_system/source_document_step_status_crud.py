@@ -13,7 +13,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import InstrumentedAttribute, Session, aliased
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
@@ -28,7 +27,7 @@ from systems.search_system.sorting import SortDirection
 
 # The status of each planned step of a document; a step without a status is not
 # planned.
-StepStatus = dict[JobType, SDocStatus]
+StepStatus = dict[str, SDocStatus]
 
 
 class CRUDSourceDocumentStepStatus(
@@ -86,7 +85,7 @@ class CRUDSourceDocumentStepStatus(
                 )
             ).all()
             for sdoc_id, step, status in rows:
-                result[sdoc_id][JobType(step)] = SDocStatus(status)
+                result[sdoc_id][step] = SDocStatus(status)
         return result
 
     def read_sdocs_sorted(
@@ -95,7 +94,7 @@ class CRUDSourceDocumentStepStatus(
         *,
         project_id: int,
         doctype: DocType,
-        order_by: list[tuple[JobType | InstrumentedAttribute, SortDirection]],
+        order_by: list[tuple[str | InstrumentedAttribute, SortDirection]],
         offset: int | None = None,
         limit: int | None = None,
     ) -> list[SourceDocumentORM]:
@@ -106,9 +105,9 @@ class CRUDSourceDocumentStepStatus(
         Args:
             project_id: The project of the documents.
             doctype: The doctype of the documents.
-            order_by: The sorts in order: a step sorts by its status (documents
-                without the step last), a column of `SourceDocumentORM` by its
-                value.
+            order_by: The sorts in order: a step (its name) sorts by its status
+                (documents without the step last), a column of
+                `SourceDocumentORM` by its value.
             offset: The number of documents to skip.
             limit: The most documents to return.
 
@@ -122,7 +121,7 @@ class CRUDSourceDocumentStepStatus(
         )
         order = []
         for key, direction in order_by:
-            if isinstance(key, JobType):
+            if isinstance(key, str):
                 status = aliased(self.model)
                 query = query.outerjoin(
                     status,
@@ -145,7 +144,7 @@ class CRUDSourceDocumentStepStatus(
         db: Session,
         *,
         sdoc_ids: list[int],
-        steps: Iterable[JobType],
+        steps: Iterable[str],
         status: SDocStatus,
     ) -> None:
         """
@@ -165,7 +164,7 @@ class CRUDSourceDocumentStepStatus(
             batch_ids = sdoc_ids[i : i + BATCH_SIZE]
             stmt = insert(self.model).values(
                 [
-                    {"sdoc_id": sdoc_id, "step": step.value, "status": status.value}
+                    {"sdoc_id": sdoc_id, "step": step, "status": status.value}
                     for sdoc_id in batch_ids
                     for step in steps
                 ]
@@ -179,7 +178,7 @@ class CRUDSourceDocumentStepStatus(
         db.flush()
 
     def update_pending_to_erroneous(
-        self, db: Session, *, sdoc_id: int, steps: list[JobType]
+        self, db: Session, *, sdoc_id: int, steps: list[str]
     ) -> None:
         """
         Set the given steps of the document that are pending (processing) to
@@ -207,7 +206,7 @@ class CRUDSourceDocumentStepStatus(
     ### OTHER OPERATIONS ###
 
     def count_by_project(
-        self, db: Session, *, project_id: int, steps: list[JobType]
+        self, db: Session, *, project_id: int, steps: list[str]
     ) -> list[tuple[DocType, StepStatus, int]]:
         """
         Count the documents of the project per doctype and status of the given

@@ -100,11 +100,11 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
         "text_es_index": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
-    assert read_step_status(db_session, p["indexing"].id, JobType.TEXT_ES_INDEX) == 0
+    assert read_step_status(db_session, p["indexing"].id, "text_es_index") == 0
     assert started == {
-        p["done"].id: [JobType.TEXT_ES_INDEX],
-        p["language_failed"].id: [JobType.TEXT_ES_INDEX],
-        p["image"].id: [JobType.TEXT_ES_INDEX],
+        p["done"].id: ["text_es_index"],
+        p["language_failed"].id: ["text_es_index"],
+        p["image"].id: ["text_es_index"],
     }
 
 
@@ -191,11 +191,11 @@ def test_computation_plans_in_batches_like_in_one(
     started = started_steps(held_jobs)
 
     assert started == {
-        p["done"].id: [JobType.TEXT_ES_INDEX],
-        p["language_failed"].id: [JobType.TEXT_ES_INDEX],
-        p["image"].id: [JobType.TEXT_ES_INDEX],
+        p["done"].id: ["text_es_index"],
+        p["language_failed"].id: ["text_es_index"],
+        p["image"].id: ["text_es_index"],
     }
-    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) == 0
+    assert read_step_status(db_session, p["done"].id, "text_es_index") == 0
     assert read_all_step_status(db_session, p["language_failed"].id) == {
         "extract_html": 1,
         "text_extraction": 1,
@@ -231,10 +231,9 @@ def test_computation_leaves_the_documents_after_its_last_document_alone(
 
     started = started_steps(held_jobs)
 
-    assert started == {p["done"].id: [JobType.TEXT_ES_INDEX]}
+    assert started == {p["done"].id: ["text_es_index"]}
     assert (
-        read_step_status(db_session, p["language_failed"].id, JobType.TEXT_ES_INDEX)
-        is None
+        read_step_status(db_session, p["language_failed"].id, "text_es_index") is None
     )
 
 
@@ -265,7 +264,7 @@ def test_a_failing_computation_removes_the_pending_computation(
     assert (
         crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
     )
-    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) == 0
+    assert read_step_status(db_session, p["done"].id, "text_es_index") == 0
 
 
 # ===========================================================================
@@ -330,7 +329,7 @@ def test_plan_document_plans_the_steps_of_the_artefact_demand(
     db_session.commit()
 
     assert demand == {artefact_named("es_index")}
-    assert roots == [JobType.EXTRACT_HTML]
+    assert roots == ["extract_html"]
 
     assert read_all_step_status(db_session, p["new"].id) == {
         "extract_html": 0,

@@ -68,7 +68,7 @@ from modules.experiment.experiment_run_dto import (
 )
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
-from pipeline_test_utils import core_steps, step_names
+from pipeline_test_utils import core_steps
 from prompt_test_utils import (
     PromptEximportProjects,
     create_prompt_eximport_projects,
@@ -606,7 +606,7 @@ class FeatureToggleEximportProjects(TypedDict):
 
 def minimal_video_steps() -> list[str]:
     """The steps of a video document in a project without features."""
-    return step_names(core_steps(DocType.video))
+    return core_steps(DocType.video)
 
 
 def toggled_text_steps() -> list[str]:

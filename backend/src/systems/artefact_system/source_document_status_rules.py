@@ -28,7 +28,6 @@ from typing import Iterable, Mapping
 from sqlalchemy import ColumnElement, and_
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus, StepSetStatus
 from core.doc.source_document_orm import SourceDocumentORM
 from systems.artefact_system.source_document_step_status_orm import (
@@ -71,7 +70,7 @@ def document_status_filter(status: SDocStatus) -> ColumnElement[bool]:
 
 
 def step_set_status(
-    steps: Iterable[JobType], statuses: Mapping[JobType, SDocStatus]
+    steps: Iterable[str], statuses: Mapping[str, SDocStatus]
 ) -> StepSetStatus:
     """The status of a set of steps for one document from the status of its
     planned steps (a step without a status is not planned): processing if one
@@ -102,9 +101,9 @@ class Availability:
 
 def count_step_sets(
     *,
-    combinations: Iterable[tuple[DocType, Mapping[JobType, SDocStatus], int]],
-    step_sets: Mapping[DocType, Iterable[frozenset[JobType]]],
-) -> dict[DocType, dict[frozenset[JobType], Availability]]:
+    combinations: Iterable[tuple[DocType, Mapping[str, SDocStatus], int]],
+    step_sets: Mapping[DocType, Iterable[frozenset[str]]],
+) -> dict[DocType, dict[frozenset[str], Availability]]:
     """
     Count the documents per doctype by the status of each set of steps
     (`step_set_status`).

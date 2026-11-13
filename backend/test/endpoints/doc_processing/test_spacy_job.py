@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from feature_test_utils import FeatureProject
@@ -39,7 +38,7 @@ def test_spacy_job_fails_on_a_further_step_it_does_not_compute(
     writers = {
         step: writer
         for step, writer in spacy_job._STEP_WRITERS.items()
-        if step != JobType.TEXT_NER
+        if step != "text_ner"
     }
 
     with (
@@ -49,17 +48,15 @@ def test_spacy_job_fails_on_a_further_step_it_does_not_compute(
         start_steps(
             project_id=ner_pending_project["project"].id,
             sdoc_id=sdoc_id,
-            steps=[JobType.TEXT_NER],
+            steps=["text_ner"],
             settings=SETTINGS,
         )
-        held_jobs.run(JobType.TEXT_SPACY)
+        held_jobs.run("text_spacy")
 
-    (job,) = held_jobs.ran(JobType.TEXT_SPACY)
+    (job,) = held_jobs.ran("text_spacy")
     assert job.get_status() == JobStatus.FAILED
     result = job.job.latest_result()
     assert result is not None and "'text_ner'" in str(result.exc_string)
     spacy.assert_not_called()
     db_session.expire_all()
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_NER) == (
-        SDocStatus.erroneous
-    )
+    assert read_step_status(db_session, sdoc_id, "text_ner") == (SDocStatus.erroneous)

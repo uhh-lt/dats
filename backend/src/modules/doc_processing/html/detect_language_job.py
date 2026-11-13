@@ -1,5 +1,4 @@
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
@@ -51,7 +50,7 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type=JobType.TEXT_LANGUAGE_DETECTION,
+    job_type="text_language_detection",
     input_type=TextLanguageDetectionJobInput,
     output_type=TextLanguageDetectionJobOutput,
     enricher=enrich_for_recompute,

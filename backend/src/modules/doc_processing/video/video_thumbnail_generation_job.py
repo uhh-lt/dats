@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.artefacts import THUMBNAIL
@@ -46,7 +45,7 @@ def enrich_for_recompute(
     doctypes={DocType.video},
 )
 @register_job(
-    job_type=JobType.VIDEO_THUMBNAIL,
+    job_type="video_thumbnail",
     input_type=VideoThumbnailJobInput,
     enricher=enrich_for_recompute,
 )

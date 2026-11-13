@@ -19,7 +19,6 @@ from rq.registry import (
 from rq.timeouts import TimerDeathPenalty
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from repos.redis_repo import RedisRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
@@ -56,12 +55,12 @@ class JobHooks(NamedTuple):
     `finished` by the job handler, `failed` by RQ's failure callback."""
 
     # before the handler; a failing hook fails the job
-    started: Callable[[JobType, JobInputBase], None]
+    started: Callable[[str, JobInputBase], None]
     # after the handler returned; a failing hook fails the job
-    finished: Callable[[JobType, JobInputBase, JobOutputBase | None], None]
+    finished: Callable[[str, JobInputBase, JobOutputBase | None], None]
     # once the job failed: the `started` hook, the handler or the `finished`
     # hook raised, or its worker died (`job_handler.rq_job_failed`)
-    failed: Callable[[JobType, JobInputBase], None]
+    failed: Callable[[str, JobInputBase], None]
 
 
 _NO_HOOKS = JobHooks(
@@ -76,7 +75,7 @@ class JobService(metaclass=SingletonMeta):
         self.redis_conn: Redis | None = None
         self.queues: Dict[tuple[str, JobPriority], rq.Queue] = {}
         self.registries: dict[tuple[str, JobPriority], dict[str, BaseRegistry]] = {}
-        self.job_registry: Dict[JobType, RegisteredJob] = {}
+        self.job_registry: Dict[str, RegisteredJob] = {}
         self.hooks: JobHooks = _NO_HOOKS
 
     def initialize(self) -> None:
@@ -113,7 +112,7 @@ class JobService(metaclass=SingletonMeta):
 
     def register_job(
         self,
-        job_type: JobType,
+        job_type: str,
         handler_func: Callable[[InputT, Job], OutputT | None],
         input_type: type[InputT],
         output_type: type[OutputT] | None,
@@ -129,6 +128,8 @@ class JobService(metaclass=SingletonMeta):
         read_model: type[JobRead] | None = None,
         validate_input: Callable[[Session, InputT], None] | None = None,
     ) -> None:
+        # a job type is text; a JobType member is stored as its plain value
+        job_type = str(job_type)
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
         params = list(sig.parameters.values())
@@ -143,7 +144,7 @@ class JobService(metaclass=SingletonMeta):
             )
 
         if self.job_registry.get(job_type) is not None:
-            raise ValueError(f"JobType {job_type} is already registered!")
+            raise ValueError(f"Job type {job_type} is already registered!")
 
         # The ONE concrete JobRead model for this job type. Modules with
         # hand-written endpoints pass their own subclass (e.g. ImportJobRead);
@@ -154,10 +155,10 @@ class JobService(metaclass=SingletonMeta):
                 f"{job_name}JobRead",
                 __base__=JobRead[input_type, output_type],
                 job_type=(
-                    Literal[job_type.value],
+                    Literal[job_type],
                     Field(
                         description="Type of the job",
-                        json_schema_extra={"enum": [job_type.value]},
+                        json_schema_extra={"enum": [job_type]},
                     ),
                 ),
             )
@@ -185,7 +186,7 @@ class JobService(metaclass=SingletonMeta):
         which tracks the pipeline step statuses and starts the next steps."""
         self.hooks = hooks
 
-    def read_job_type(self, handler: Callable) -> JobType:
+    def read_job_type(self, handler: Callable) -> str:
         """The job type registered with this handler. Raises if none is."""
         for job_type, job_info in self.job_registry.items():
             if job_info["handler"] is handler:
@@ -196,7 +197,7 @@ class JobService(metaclass=SingletonMeta):
 
     def start_job(
         self,
-        job_type: JobType,
+        job_type: str,
         payload: JobInputBase,
         priority: JobPriority | None = None,
     ) -> Job:
@@ -207,6 +208,8 @@ class JobService(metaclass=SingletonMeta):
         validate and the enricher cannot complete it), and
         `JobQueueUnavailableError` if the queue (Redis) cannot be reached.
         Anything else, e.g. an unknown job type, raises as it is."""
+        # stored and pickled as plain text, never as a JobType member
+        job_type = str(job_type)
         job_info = self.job_registry.get(job_type)
         if not job_info:
             raise ValueError(f"Unknown job type: {job_type}")
@@ -273,7 +276,7 @@ class JobService(metaclass=SingletonMeta):
 
     def get_jobs_by_project(
         self,
-        job_type: JobType,
+        job_type: str,
         project_id: int,
     ) -> list[Job]:
         # determine queue
@@ -333,7 +336,7 @@ class JobService(metaclass=SingletonMeta):
         return True
 
     def get_failed_jobs_by_project(
-        self, project_id: int, job_types: list[JobType] | None
+        self, project_id: int, job_types: list[str] | None
     ) -> list[Job]:
         jobs = []
 

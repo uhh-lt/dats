@@ -5,7 +5,6 @@ import rq
 from loguru import logger
 from redis import Redis
 
-from common.job_type_enum import JobType
 from config import conf
 from systems.job_system.cuda_utils import ensure_cuda_available
 from systems.job_system.job_dto import Job, JobInputBase
@@ -15,7 +14,7 @@ from systems.job_system.job_system_enum import JobStatus
 from utils.gpu_utils import pin_gpu, select_gpu, set_cuda_memory_limit
 
 
-def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
+def rq_job_handler(jobtype: str, handler, payload: JobInputBase):
     """Run a job between the `started` and `finished` hooks. A failing job
     raises: RQ then calls `rq_job_failed`."""
     job = Job()

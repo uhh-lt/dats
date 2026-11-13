@@ -1,7 +1,6 @@
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -42,7 +41,7 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type=JobType.TEXT_SENTENCE_EMBEDDING,
+    job_type="text_sentence_embedding",
     input_type=TextSentenceEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,

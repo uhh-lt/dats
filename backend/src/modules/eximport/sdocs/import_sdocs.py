@@ -4,7 +4,6 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
@@ -59,7 +58,7 @@ def archived_step_status(
     doctype = DocType(sdoc_export.doctype)
     steps = graph.steps(doctype)
     step_status: dict[str, int | None] = {
-        step.value: sdoc_export.step_status.get(step.value) for step in steps
+        step: sdoc_export.step_status.get(step) for step in steps
     }
     for step, status in step_status.items():
         if status == SDocStatus.processing.value:
@@ -68,7 +67,7 @@ def archived_step_status(
     for artefact, archive in artefact_registry.archives():
         step = graph.producer(doctype, artefact)
         if step is not None and not archive.is_complete(sdoc_export.model_dump()):
-            step_status[step.value] = None
+            step_status[step] = None
     return step_status
 
 
@@ -260,7 +259,7 @@ def import_sdocs_to_proj(
             create_dtos=[
                 SourceDocumentStepStatusCreate(
                     sdoc_id=created_sdoc.id,
-                    step=JobType(step),
+                    step=step,
                     status=SDocStatus(status),
                 )
                 for step, status in step_status.items()
@@ -311,7 +310,7 @@ def import_sdocs_to_proj(
         graph = artefact_registry.graph()
         for artefact, archive in artefact_registry.archives():
             step = graph.producer(DocType(sdoc_export.doctype), artefact)
-            if step is not None and step_status.get(step.value) == SDocStatus.finished:
+            if step is not None and step_status.get(step) == SDocStatus.finished:
                 archive.write(
                     db=db, sdoc=created_sdoc, archived=sdoc_export.model_dump()
                 )

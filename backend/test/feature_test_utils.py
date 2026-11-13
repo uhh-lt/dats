@@ -17,7 +17,7 @@ from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
-from pipeline_test_utils import artefact_named, core_steps, set_step_status, step_names
+from pipeline_test_utils import artefact_named, core_steps, set_step_status
 from repos.filesystem_repo import FilesystemRepo
 from systems.feature_system.feature_registry import (
     Feature,
@@ -61,12 +61,12 @@ def off_by_default_feature() -> Generator[Feature, None, None]:
 
 def minimal_text_steps() -> list[str]:
     """The steps of a text document in a project without features."""
-    return step_names(core_steps(DocType.text))
+    return core_steps(DocType.text)
 
 
 def minimal_image_steps() -> list[str]:
     """The steps of an image document in a project without features."""
-    return step_names(core_steps(DocType.image))
+    return core_steps(DocType.image)
 
 
 class FeatureProject(TypedDict):

@@ -8,7 +8,6 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.document_embedding_crud import crud_document_embedding
@@ -183,7 +182,7 @@ def test_project_import_plans_and_starts_nothing(
     assert len(imported) == 3
     for sdoc in imported:
         assert 0 not in _step_status(db_session, sdoc).values(), sdoc.filename
-        assert JobType.TEXT_KEYWORDS.value not in _step_status(db_session, sdoc)
+        assert "text_keywords" not in _step_status(db_session, sdoc)
     assert held_jobs.jobs() == []
 
 
@@ -231,8 +230,8 @@ def test_archive_without_one_embedding_per_sentence_imports_the_step_not_planned
     )
 
     status = _step_status(db_session, _imported(db_session, projects, "text.txt"))
-    assert JobType.TEXT_SENTENCE_EMBEDDING.value not in status
-    assert status[JobType.TEXT_DOCUMENT_EMBEDDING.value] == SDocStatus.finished
+    assert "text_sentence_embedding" not in status
+    assert status["text_document_embedding"] == SDocStatus.finished
 
 
 def test_archive_without_step_status_is_rejected(
@@ -319,12 +318,12 @@ def _audio_stream(db: Session, sdoc: SourceDocumentORM) -> object:
     started = start_steps(
         project_id=sdoc.project_id,
         sdoc_id=sdoc.id,
-        steps=[JobType.AUDIO_TRANSCRIPTION],
+        steps=["audio_transcription"],
         settings=SETTINGS,
     )
     return (
         audio_stream_path(_file(sdoc)).read_bytes(),
-        started[JobType.AUDIO_TRANSCRIPTION] is not None,
+        started["audio_transcription"] is not None,
     )
 
 
@@ -349,10 +348,7 @@ def _artefact_data(db: Session, project_id: int, artefact: str) -> dict:
         db=db, project_id=project_id, only_finished=False
     ):
         step = graph.producer(DocType(sdoc.doctype), artefact_named(artefact))
-        if (
-            step is None
-            or _step_status(db, sdoc).get(step.value) != SDocStatus.finished
-        ):
+        if step is None or _step_status(db, sdoc).get(step) != SDocStatus.finished:
             continue
         data[sdoc.filename] = ROUND_TRIP_CASES[artefact](db, sdoc)
     return data

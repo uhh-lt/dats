@@ -124,10 +124,10 @@ class DocProcessingService(metaclass=SingletonMeta):
         steps = graph.steps(DocType(doctype))
 
         # sorting: by the status of a step or by a column of the document
-        order_by: list[tuple[JobType | InstrumentedAttribute, SortDirection]] = []
+        order_by: list[tuple[str | InstrumentedAttribute, SortDirection]] = []
         for s in sorts:
             if s.column in steps:
-                order_by.append((JobType(s.column), s.direction))
+                order_by.append((s.column, s.direction))
                 continue
             assert hasattr(SourceDocumentORM, s.column), f"Invalid column: {s.column}"
             order_by.append((getattr(SourceDocumentORM, s.column), s.direction))
@@ -183,12 +183,15 @@ class DocProcessingService(metaclass=SingletonMeta):
         for row in results.data:
             if row.sdoc_id in failed_jobs_dict:
                 for failed_job in failed_jobs_dict[row.sdoc_id]:
+                    # a job of a step that is not registered (anymore) is skipped
+                    if failed_job.job_type not in graph.all_steps():
+                        continue
                     # a job with several steps failed all steps it computed
                     for step in graph.job_steps(
-                        JobType(failed_job.job_type), failed_job.input.steps
+                        failed_job.job_type, failed_job.input.steps
                     ):
-                        row.failed_job_uuids[step.value] = failed_job.job_id
-                        row.failed_job_status_msgs[step.value] = (
+                        row.failed_job_uuids[step] = failed_job.job_id
+                        row.failed_job_status_msgs[step] = (
                             failed_job.status_message or ""
                         )
 
@@ -271,7 +274,7 @@ class DocProcessingService(metaclass=SingletonMeta):
 
         # 4. check that the step is planned for every document: Recompute never
         # plans a step, as its set up may not have run
-        step = JobType(processing_step)
+        step = processing_step
         statuses = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
         not_planned = sorted(i for i in sdoc_ids if step not in statuses.get(i, {}))
         if not_planned:

@@ -38,7 +38,7 @@ SETTINGS = ProcessingSettings(
 )
 
 
-def _statuses(db_session, sdoc_id: int, steps: list[JobType]) -> list[int | None]:
+def _statuses(db_session, sdoc_id: int, steps: list[str]) -> list[int | None]:
     return [read_step_status(db_session, sdoc_id, s) for s in steps]
 
 
@@ -52,7 +52,7 @@ def test_a_failed_step_fails_the_pending_steps_after_it(
     sdoc_id = feature_project["text_running"].id
 
     handle_job_error(
-        JobType.TEXT_LANGUAGE_DETECTION,
+        "text_language_detection",
         SdocProcessingJobInput(
             project_id=feature_project["project"].id,
             sdoc_id=sdoc_id,
@@ -61,12 +61,12 @@ def test_a_failed_step_fails_the_pending_steps_after_it(
     )
 
     steps = [
-        JobType.EXTRACT_HTML,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
-        JobType.TEXT_HTML_MAPPING,
-        JobType.TEXT_SENTENCE_EMBEDDING,
+        "extract_html",
+        "text_extraction",
+        "text_language_detection",
+        "text_spacy",
+        "text_html_mapping",
+        "text_sentence_embedding",
     ]
     assert _statuses(db_session, sdoc_id, steps) == [1, 1, -100, -100, -100, None]
 
@@ -83,20 +83,20 @@ def test_a_job_whose_started_hook_fails_fails_its_steps(
     started = start_steps(
         project_id=feature_project["project"].id,
         sdoc_id=sdoc_id,
-        steps=[JobType.TEXT_LANGUAGE_DETECTION],
+        steps=["text_language_detection"],
         settings=SETTINGS,
     )
-    job = started[JobType.TEXT_LANGUAGE_DETECTION]
+    job = started["text_language_detection"]
     assert job is not None
 
     with failing_started_hook():
-        held_jobs.run(JobType.TEXT_LANGUAGE_DETECTION)
+        held_jobs.run("text_language_detection")
 
     assert JobService().get_job(job.get_id()).get_status() == JobStatus.FAILED
     steps = [
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
-        JobType.TEXT_HTML_MAPPING,
+        "text_language_detection",
+        "text_spacy",
+        "text_html_mapping",
     ]
     assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
 
@@ -121,19 +121,19 @@ def test_a_finished_job_fails_its_successors_if_the_queue_is_unreachable(
         ),
     )
     held_jobs.run(JobType.SDOC_INIT)
-    (extract_html,) = held_jobs.inputs(JobType.EXTRACT_HTML)
+    (extract_html,) = held_jobs.inputs("extract_html")
     assert isinstance(extract_html, SdocProcessingJobInput)
     sdoc_id = extract_html.sdoc_id
 
     with unreachable_redis():
-        held_jobs.run(JobType.EXTRACT_HTML)
+        held_jobs.run("extract_html")
 
-    (job,) = held_jobs.ran(JobType.EXTRACT_HTML)
+    (job,) = held_jobs.ran("extract_html")
     assert job.get_status() == JobStatus.FINISHED
     assert held_jobs.jobs() == []
     status = crud_sdoc_step_status.read_by_sdoc(db=db_session, sdoc_id=sdoc_id)
-    assert status.pop(JobType.EXTRACT_HTML) == SDocStatus.finished
-    assert JobType.TEXT_EXTRACTION in status
+    assert status.pop("extract_html") == SDocStatus.finished
+    assert "text_extraction" in status
     assert set(status.values()) == {SDocStatus.erroneous}
 
 
@@ -150,16 +150,16 @@ def test_a_step_job_whose_worker_dies_fails_its_steps(
     start_steps(
         project_id=feature_project["project"].id,
         sdoc_id=sdoc_id,
-        steps=[JobType.TEXT_LANGUAGE_DETECTION],
+        steps=["text_language_detection"],
         settings=SETTINGS,
     )
 
-    held_jobs.abandon(JobType.TEXT_LANGUAGE_DETECTION)
+    held_jobs.abandon("text_language_detection")
 
     steps = [
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
-        JobType.TEXT_HTML_MAPPING,
+        "text_language_detection",
+        "text_spacy",
+        "text_html_mapping",
     ]
     assert _statuses(db_session, sdoc_id, steps) == [-100, -100, -100]
 
@@ -183,7 +183,7 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
         ),
     )
     held_jobs.run(JobType.SDOC_INIT)
-    (extract_html,) = held_jobs.inputs(JobType.EXTRACT_HTML)
+    (extract_html,) = held_jobs.inputs("extract_html")
     assert isinstance(extract_html, ExtractHTMLJobInput)
     output = ExtractHTMLJobOutput(
         raw_html="<p>text</p>",
@@ -192,9 +192,9 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
     )
 
     with unreachable_redis():
-        handle_job_finished(JobType.EXTRACT_HTML, extract_html, output)
+        handle_job_finished("extract_html", extract_html, output)
 
     assert (
-        read_step_status(db_session, extract_html.sdoc_id, JobType.EXTRACT_HTML)
+        read_step_status(db_session, extract_html.sdoc_id, "extract_html")
         == SDocStatus.finished
     )

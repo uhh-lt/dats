@@ -1,5 +1,4 @@
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from modules.doc_processing.artefacts import CONTENT, RAW_HTML
@@ -46,7 +45,7 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type=JobType.TEXT_EXTRACTION,
+    job_type="text_extraction",
     input_type=TextExtractionJobInput,
     output_type=TextExtractionJobOutput,
     enricher=enrich_for_recompute,

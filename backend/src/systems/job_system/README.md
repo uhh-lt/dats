@@ -38,7 +38,7 @@ Key decorator arguments:
 
 | Argument             | Meaning                                                                                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `job_type`           | The `JobType` enum member identifying this job.                                                                                                  |
+| `job_type`           | The text name identifying this job: a `JobType` member for a job that is no pipeline step, the step name (e.g. `"text_es_index"`) for a step.     |
 | `input_type`         | Pydantic model of the job input (stored in the RQ job kwargs).                                                                                   |
 | `output_type`        | Pydantic model of the result (optional).                                                                                                         |
 | `device`             | Which queue the job lands on: `cpu`, `gpu`, or `api`.                                                                                            |
@@ -134,7 +134,7 @@ Two invariants make this safe:
 
 ### The `JOB_UPDATED` event model
 
-The event payload is a **per-JobType union** of concrete `JobRead` models,
+The event payload is a **per-job-type union** of concrete `JobRead` models,
 built lazily by `build_job_event_models()` in
 [common/dats_event.py](../../common/dats_event.py) (the static
 `_DATS_EVENT_PAYLOADS` table cannot express it). It is called once at
@@ -161,7 +161,7 @@ The job system does not reinvent delivery — it reuses the
 
 ## Adding a New Job
 
-1. Define `MyJobInput` / `MyJobOutput` pydantic models and a `JobType` member.
+1. Define `MyJobInput` / `MyJobOutput` pydantic models and a `JobType` member (a pipeline step names its job type as text in `@register_job` instead).
 2. Write the handler in a `*_job.py` module with `@register_job(...)`; set
    `publish_updates=True` if users should see live progress.
 3. Call `job.update(...)` inside the handler to report progress.

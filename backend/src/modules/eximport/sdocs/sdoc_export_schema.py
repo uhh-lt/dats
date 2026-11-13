@@ -135,10 +135,7 @@ class SourceDocumentExportSchema(BaseModel):
         step this version does not have (renamed or removed)."""
         if "doctype" not in info.data:
             return v
-        steps = {
-            s.value
-            for s in artefact_registry.graph().steps(DocType(info.data["doctype"]))
-        }
+        steps = set(artefact_registry.graph().steps(DocType(info.data["doctype"])))
         for status in v.values():
             if status is not None:
                 SDocStatus(status)

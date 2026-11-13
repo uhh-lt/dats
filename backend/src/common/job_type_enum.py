@@ -1,48 +1,16 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class JobType(str, Enum):
-    # The order of the pipeline steps breaks ties in the derived step order
-    # (systems/artefact_system/pipeline_graph.py); the jobs that are no steps
-    # (entry points, the artefact computation, on-demand jobs) follow them.
+class JobType(StrEnum):
+    """The jobs that are no pipeline steps. A job type is text: a pipeline step
+    names its job type itself in `@register_job` (e.g. "text_es_index"), as
+    its owner declares it. Members are `str`, so they serve wherever a job type
+    is expected."""
 
     # entrypoints
     EXTRACT_ARCHIVE = "extract_archive"
     DOC_CHUNKING = "doc_chunking"
     SDOC_INIT = "sdoc_init"
-
-    # text
-    EXTRACT_HTML = "extract_html"
-
-    # html
-    TEXT_EXTRACTION = "text_extraction"
-    TEXT_LANGUAGE_DETECTION = "text_language_detection"
-    TEXT_SPACY = "text_spacy"
-    # further steps of the text_spacy job (no jobs of their own)
-    TEXT_KEYWORDS = "text_keywords"
-    TEXT_WORD_FREQUENCY = "text_word_frequency"
-    TEXT_NER = "text_ner"
-    TEXT_ES_INDEX = "text_es_index"
-    TEXT_SENTENCE_EMBEDDING = "text_sentence_embedding"
-    TEXT_DOCUMENT_EMBEDDING = "text_document_embedding"
-    TEXT_HTML_MAPPING = "text_html_mapping"
-
-    # image
-    IMAGE_CAPTION = "image_caption"
-    IMAGE_EMBEDDING = "image_embedding"
-    IMAGE_METADATA_EXTRACTION = "image_metadata_extraction"
-    IMAGE_THUMBNAIL = "image_thumbnail"
-    IMAGE_OBJECT_DETECTION = "image_object_detection"
-
-    # audio
-    AUDIO_METADATA_EXTRACTION = "audio_metadata"
-    AUDIO_THUMBNAIL = "audio_thumbnail"
-    AUDIO_TRANSCRIPTION = "audio_transcription"
-
-    # video
-    VIDEO_METADATA_EXTRACTION = "video_metadata"
-    VIDEO_THUMBNAIL = "video_thumbnail"
-    VIDEO_AUDIO_EXTRACTION = "video_audio_extraction"
 
     # on-demand jobs (short-lived)
     DUPLICATE_FINDER = "duplicate_finder"

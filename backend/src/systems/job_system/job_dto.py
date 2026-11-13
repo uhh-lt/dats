@@ -4,7 +4,6 @@ from typing import Generic, TypeVar
 import rq
 from pydantic import BaseModel, Field
 
-from common.job_type_enum import JobType
 from systems.job_system.job_system_enum import JobStatus
 
 RUNNING_JOB_STATUS = [
@@ -50,8 +49,8 @@ class Job:
     def get_id(self) -> str:
         return self.job.id
 
-    def get_type(self) -> JobType:
-        return JobType(self.job.meta["type"])
+    def get_type(self) -> str:
+        return self.job.meta["type"]
 
     def get_project_id(self) -> int:
         return self.job.meta["project_id"]

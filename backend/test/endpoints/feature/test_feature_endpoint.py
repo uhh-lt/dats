@@ -362,20 +362,15 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     started = started_steps(held_jobs)
 
     for sdoc in (p["text_done"], p["text_running"], p["image"]):
-        assert read_step_status(db_session, sdoc.id, JobType.TEXT_KEYWORDS) == 0, (
-            sdoc.name
-        )
-        assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) is None
-    assert read_step_status(db_session, p["text_done"].id, JobType.TEXT_SPACY) == 1
-    assert (
-        read_step_status(db_session, p["image"].id, JobType.IMAGE_OBJECT_DETECTION)
-        is None
-    )
+        assert read_step_status(db_session, sdoc.id, "text_keywords") == 0, sdoc.name
+        assert read_step_status(db_session, sdoc.id, "text_es_index") is None
+    assert read_step_status(db_session, p["text_done"].id, "text_spacy") == 1
+    assert read_step_status(db_session, p["image"].id, "image_object_detection") is None
     assert isinstance(computation, ArtefactComputationJobInput)
     assert computation.settings == SETTINGS
     assert started == {
-        p["text_done"].id: [JobType.TEXT_KEYWORDS],
-        p["image"].id: [JobType.TEXT_KEYWORDS],
+        p["text_done"].id: ["text_keywords"],
+        p["image"].id: ["text_keywords"],
     }
 
 
@@ -468,9 +463,9 @@ def test_enable_two_features_sharing_a_step_starts_it_once(
     assert len(held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)) == 2
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
-        p["text_done"].id: [JobType.TEXT_ES_INDEX],
-        p["text_running"].id: [JobType.TEXT_ES_INDEX],
-        p["image"].id: [JobType.TEXT_ES_INDEX],
+        p["text_done"].id: ["text_es_index"],
+        p["text_running"].id: ["text_es_index"],
+        p["image"].id: ["text_es_index"],
     }
 
 
@@ -488,8 +483,8 @@ def test_enable_text_feature_plans_its_steps_for_images(
     _activate(client, p["project"].id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
-    assert read_step_status(db_session, p["image"].id, JobType.TEXT_ES_INDEX) == 0
-    assert started_steps(held_jobs)[p["image"].id] == [JobType.TEXT_ES_INDEX]
+    assert read_step_status(db_session, p["image"].id, "text_es_index") == 0
+    assert started_steps(held_jobs)[p["image"].id] == ["text_es_index"]
 
 
 def test_enable_feature_job_waits_for_the_request_to_commit(
@@ -530,9 +525,9 @@ def test_enable_feature_job_waits_for_the_request_to_commit(
 
     assert errors == []
     assert started_steps(held_jobs) == {
-        feature_project["text_done"].id: [JobType.TEXT_ES_INDEX],
-        feature_project["text_running"].id: [JobType.TEXT_ES_INDEX],
-        feature_project["image"].id: [JobType.TEXT_ES_INDEX],
+        feature_project["text_done"].id: ["text_es_index"],
+        feature_project["text_running"].id: ["text_es_index"],
+        feature_project["image"].id: ["text_es_index"],
     }
 
 
@@ -580,19 +575,19 @@ def test_enable_feature_with_redis_down_in_a_batch_fails_the_steps_it_cannot_sta
     (computation,) = held_jobs.ran(JobType.ARTEFACT_COMPUTATION)
     assert computation.get_status() == JobStatus.FINISHED
     assert "2 step jobs could not start" in computation.job.meta["status_message"]
-    assert started_steps(held_jobs) == {p["text_done"].id: [JobType.TEXT_ES_INDEX]}
+    assert started_steps(held_jobs) == {p["text_done"].id: ["text_es_index"]}
     for sdoc in (p["text_running"], p["image"]):
-        assert read_step_status(db_session, sdoc.id, JobType.TEXT_ES_INDEX) == -100
+        assert read_step_status(db_session, sdoc.id, "text_es_index") == -100
 
-    held_jobs.run(JobType.TEXT_ES_INDEX)
+    held_jobs.run("text_es_index")
     read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
-        p["text_running"].id: [JobType.TEXT_ES_INDEX],
-        p["image"].id: [JobType.TEXT_ES_INDEX],
+        p["text_running"].id: ["text_es_index"],
+        p["image"].id: ["text_es_index"],
     }
 
 
@@ -620,9 +615,9 @@ def test_enable_feature_whose_computation_dies_with_its_worker_stops_computing(
     _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
-        p["text_done"].id: [JobType.TEXT_ES_INDEX],
-        p["text_running"].id: [JobType.TEXT_ES_INDEX],
-        p["image"].id: [JobType.TEXT_ES_INDEX],
+        p["text_done"].id: ["text_es_index"],
+        p["text_running"].id: ["text_es_index"],
+        p["image"].id: ["text_es_index"],
     }
 
 
@@ -650,9 +645,7 @@ def test_enable_feature_rolled_back_after_the_enqueue_leaves_a_job_that_stops(
     assert project.enabled_features == []
     assert project.artefact_computations == {}
     assert (
-        read_step_status(
-            db_session, feature_project["text_done"].id, JobType.TEXT_ES_INDEX
-        )
+        read_step_status(db_session, feature_project["text_done"].id, "text_es_index")
         is None
     )
 
@@ -736,21 +729,17 @@ def test_complete_feature_plans_failed_and_not_planned_documents(
     started = started_steps(held_jobs)
 
     for key in ("index_failed", "not_indexed", "extraction_failed", "spacy_failed"):
-        assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == 0, key
+        assert read_step_status(db_session, p[key].id, "text_es_index") == 0, key
     assert (
-        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
-        == 0
+        read_step_status(db_session, p["extraction_failed"].id, "text_extraction") == 0
     )
-    assert (
-        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_SPACY)
-        == -100
-    )
-    assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
+    assert read_step_status(db_session, p["extraction_failed"].id, "text_spacy") == -100
+    assert read_step_status(db_session, p["indexed"].id, "text_es_index") == 1
     assert started == {
-        p["index_failed"].id: [JobType.TEXT_ES_INDEX],
-        p["not_indexed"].id: [JobType.TEXT_ES_INDEX],
-        p["extraction_failed"].id: [JobType.TEXT_EXTRACTION],
-        p["spacy_failed"].id: [JobType.TEXT_ES_INDEX],
+        p["index_failed"].id: ["text_es_index"],
+        p["not_indexed"].id: ["text_es_index"],
+        p["extraction_failed"].id: ["text_extraction"],
+        p["spacy_failed"].id: ["text_es_index"],
     }
 
 
@@ -768,8 +757,8 @@ def test_complete_feature_marks_a_new_step_with_an_erroneous_input_erroneous(
     _complete(client, partly_project["project"].id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_HTML_MAPPING) == -100
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_SPACY) == -100
+    assert read_step_status(db_session, sdoc_id, "text_html_mapping") == -100
+    assert read_step_status(db_session, sdoc_id, "text_spacy") == -100
 
 
 def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
@@ -791,11 +780,9 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
 
     assert held_jobs.jobs() == []
     for key in ("index_failed", "not_indexed", "extraction_failed", "spacy_failed"):
-        assert read_step_status(db_session, p[key].id, JobType.TEXT_ES_INDEX) == -100, (
-            key
-        )
+        assert read_step_status(db_session, p[key].id, "text_es_index") == -100, key
     assert (
-        read_step_status(db_session, p["extraction_failed"].id, JobType.TEXT_EXTRACTION)
+        read_step_status(db_session, p["extraction_failed"].id, "text_extraction")
         == -100
     )
     read = _features(client, project_id)["full_text_search"]
@@ -804,10 +791,10 @@ def test_complete_feature_with_redis_down_fails_the_steps_it_cannot_start(
     _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     assert started_steps(held_jobs) == {
-        p["index_failed"].id: [JobType.TEXT_ES_INDEX],
-        p["not_indexed"].id: [JobType.TEXT_ES_INDEX],
-        p["extraction_failed"].id: [JobType.TEXT_EXTRACTION],
-        p["spacy_failed"].id: [JobType.TEXT_ES_INDEX],
+        p["index_failed"].id: ["text_es_index"],
+        p["not_indexed"].id: ["text_es_index"],
+        p["extraction_failed"].id: ["text_extraction"],
+        p["spacy_failed"].id: ["text_es_index"],
     }
 
 
@@ -829,17 +816,17 @@ def test_complete_feature_recovers_the_steps_an_advancing_with_redis_down_failed
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     with unreachable_redis():
-        held_jobs.run(JobType.TEXT_EXTRACTION)
+        held_jobs.run("text_extraction")
 
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_EXTRACTION) == 1
-    assert read_step_status(db_session, sdoc_id, JobType.TEXT_ES_INDEX) == -100
-    held_jobs.run(JobType.TEXT_ES_INDEX)
+    assert read_step_status(db_session, sdoc_id, "text_extraction") == 1
+    assert read_step_status(db_session, sdoc_id, "text_es_index") == -100
+    held_jobs.run("text_es_index")
     read = _features(client, project_id)["full_text_search"]
     assert read.status == FeatureStatus.PARTLY_AVAILABLE
 
     _complete(client, project_id, "full_text_search")
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
-    assert started_steps(held_jobs) == {sdoc_id: [JobType.TEXT_ES_INDEX]}
+    assert started_steps(held_jobs) == {sdoc_id: ["text_es_index"]}
 
 
 # ===========================================================================
@@ -859,7 +846,7 @@ def test_disable_feature_keeps_its_steps(
 
     assert response.status_code == 200, response.text
     assert response.json() == []
-    assert read_step_status(db_session, p["indexed"].id, JobType.TEXT_ES_INDEX) == 1
+    assert read_step_status(db_session, p["indexed"].id, "text_es_index") == 1
     read = _features(client, p["project"].id)["full_text_search"]
     assert read.status == FeatureStatus.DISABLED
 
@@ -876,13 +863,8 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     response = _act(client, p["project"].id, "full_text_search", FeatureAction.DISABLE)
 
     assert response.status_code == 200, response.text
-    assert (
-        read_step_status(db_session, p["index_failed"].id, JobType.TEXT_ES_INDEX)
-        == -100
-    )
-    assert (
-        read_step_status(db_session, p["not_indexed"].id, JobType.TEXT_ES_INDEX) is None
-    )
+    assert read_step_status(db_session, p["index_failed"].id, "text_es_index") == -100
+    assert read_step_status(db_session, p["not_indexed"].id, "text_es_index") is None
 
 
 def test_disable_feature_that_an_enabled_feature_requires_is_rejected(

@@ -45,8 +45,7 @@ def test_doctor_steps_match_the_pipeline_graph() -> None:
     doctor = _doctor_stores()
     graph = artefact_registry.graph()
     assert doctor.PROCESSING_STEPS == {
-        doctype.value: [step.value for step in graph.steps(doctype)]
-        for doctype in DocType
+        doctype.value: graph.steps(doctype) for doctype in DocType
     }
 
 
@@ -57,7 +56,7 @@ def test_doctor_embedding_steps_produce_the_embeddings() -> None:
     graph = artefact_registry.graph()
     producers = {
         collection: {
-            step.value
+            step
             for doctype in DocType
             if (step := graph.producer(doctype, artefact_named(artefact))) is not None
         }

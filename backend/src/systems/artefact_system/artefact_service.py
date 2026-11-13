@@ -157,7 +157,7 @@ class ArtefactService(metaclass=SingletonMeta):
             combinations=crud_sdoc_step_status.count_by_project(
                 db=db,
                 project_id=project_id,
-                steps=[s for s in JobType if s in graph.all_steps()],
+                steps=sorted(graph.all_steps()),
             ),
             step_sets={
                 doctype: {s[doctype] for s in steps.values() if doctype in s}
@@ -186,7 +186,7 @@ class ArtefactService(metaclass=SingletonMeta):
         sdoc_id: int,
         doctype: DocType,
         demand: frozenset[Artefact],
-    ) -> list[JobType]:
+    ) -> list[str]:
         """Plan the steps of a new document of this doctype for the core
         artefacts and the demand, so the document is never seen as finished;
         the other steps stay not planned. Returns its planned root steps, which
@@ -295,7 +295,7 @@ class ArtefactService(metaclass=SingletonMeta):
         db: Session,
         computation: ArtefactComputationJobInput,
         after_sdoc_id: int,
-    ) -> tuple[int, dict[int, list[JobType]]] | None:
+    ) -> tuple[int, dict[int, list[str]]] | None:
         """Plan the next batch of an artefact computation: the documents after
         `after_sdoc_id` up to the computation's last document, at most
         `COMPUTATION_BATCH_SIZE` (see `_plan_missing_steps`). Its first
@@ -341,7 +341,7 @@ class ArtefactService(metaclass=SingletonMeta):
         project_id: int,
         artefacts: frozenset[Artefact],
         sdoc_ids: tuple[int, int],
-    ) -> dict[int, list[JobType]]:
+    ) -> dict[int, list[str]]:
         """Plan for the documents of the project in the id range (after, until]
         the steps of the artefacts and of the core artefacts:
 
@@ -363,7 +363,7 @@ class ArtefactService(metaclass=SingletonMeta):
         they can start now, the others start when their inputs finish."""
         graph = artefact_registry.graph()
 
-        sdoc_steps: dict[int, list[JobType]] = {}
+        sdoc_steps: dict[int, list[str]] = {}
         for doctype in DocType:
             own = (
                 set(graph.steps_for(doctype, artefacts))

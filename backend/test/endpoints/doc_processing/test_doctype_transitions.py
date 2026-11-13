@@ -11,7 +11,7 @@ from job_test_utils import HeldJobs
 from modules.doc_processing.audio.transcription_job import TranscriptionJobInput
 from modules.doc_processing.doc_processing_dto import SdocInitJobInput
 from modules.doc_processing.video.video_utils import audio_stream_path
-from pipeline_test_utils import core_steps, read_all_step_status, step_names
+from pipeline_test_utils import core_steps, read_all_step_status
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -45,20 +45,20 @@ PROCESSING = SDocStatus.processing.value
 
 # the steps that run in the tests (no hosted model)
 RUNNABLE = {
-    JobType.EXTRACT_HTML,
-    JobType.AUDIO_METADATA_EXTRACTION,
-    JobType.AUDIO_THUMBNAIL,
-    JobType.VIDEO_METADATA_EXTRACTION,
-    JobType.VIDEO_THUMBNAIL,
-    JobType.VIDEO_AUDIO_EXTRACTION,
-    JobType.IMAGE_METADATA_EXTRACTION,
-    JobType.IMAGE_THUMBNAIL,
+    "extract_html",
+    "audio_metadata",
+    "audio_thumbnail",
+    "video_metadata",
+    "video_thumbnail",
+    "video_audio_extraction",
+    "image_metadata_extraction",
+    "image_thumbnail",
 }
 
 
 def _follow(
     held_jobs: HeldJobs, project_id: int, filepath: Path, doctype: DocType
-) -> dict[JobType, SdocProcessingJobInput]:
+) -> dict[str, SdocProcessingJobInput]:
     """Upload the file and run the document creation and the runnable steps
     until none is held. Returns the enriched input of every held step job."""
     JobService().start_job(
@@ -72,7 +72,7 @@ def _follow(
         ),
     )
     held_jobs.run(JobType.SDOC_INIT, *RUNNABLE)
-    held: dict[JobType, SdocProcessingJobInput] = {}
+    held: dict[str, SdocProcessingJobInput] = {}
     for job_type, payload in held_jobs.jobs():
         assert isinstance(payload, SdocProcessingJobInput)
         held[job_type] = payload
@@ -104,17 +104,17 @@ def test_audio_runs_its_roots_and_transcribes_the_uploaded_file(
     held = _follow(held_jobs, p["project"].id, p["audio"], DocType.audio)
 
     sdoc_id = _sdoc_id(db_session, p["project"].id, DocType.audio)
-    assert set(held) == {JobType.AUDIO_TRANSCRIPTION}
-    transcription = held[JobType.AUDIO_TRANSCRIPTION]
+    assert set(held) == {"audio_transcription"}
+    transcription = held["audio_transcription"]
     assert isinstance(transcription, TranscriptionJobInput)
     assert transcription.sdoc_id == sdoc_id
     assert transcription.filepath.name == p["audio"].name
     status = read_all_step_status(db_session, sdoc_id)
-    ran = {JobType(step) for step, value in status.items() if value == FINISHED}
+    ran = {step for step, value in status.items() if value == FINISHED}
     assert ran | set(held) == set(artefact_registry.graph().roots(DocType.audio))
-    assert status[JobType.AUDIO_METADATA_EXTRACTION.value] == FINISHED
-    assert status[JobType.AUDIO_THUMBNAIL.value] == FINISHED
-    assert status[JobType.AUDIO_TRANSCRIPTION.value] == PROCESSING
+    assert status["audio_metadata"] == FINISHED
+    assert status["audio_thumbnail"] == FINISHED
+    assert status["audio_transcription"] == PROCESSING
 
 
 def test_video_extracts_its_audio_and_transcribes_it(
@@ -128,17 +128,17 @@ def test_video_extracts_its_audio_and_transcribes_it(
     held = _follow(held_jobs, p["project"].id, p["video"], DocType.video)
 
     sdoc_id = _sdoc_id(db_session, p["project"].id, DocType.video)
-    assert set(held) == {JobType.AUDIO_TRANSCRIPTION}
-    transcription = held[JobType.AUDIO_TRANSCRIPTION]
+    assert set(held) == {"audio_transcription"}
+    transcription = held["audio_transcription"]
     assert isinstance(transcription, TranscriptionJobInput)
     assert transcription.sdoc_id == sdoc_id
     assert transcription.filepath.name == audio_stream_path(p["video"]).name
     assert transcription.filepath.exists()
     status = read_all_step_status(db_session, sdoc_id)
-    assert status[JobType.VIDEO_AUDIO_EXTRACTION.value] == FINISHED
-    assert status[JobType.VIDEO_METADATA_EXTRACTION.value] == FINISHED
-    assert status[JobType.VIDEO_THUMBNAIL.value] == FINISHED
-    assert status[JobType.AUDIO_TRANSCRIPTION.value] == PROCESSING
+    assert status["video_audio_extraction"] == FINISHED
+    assert status["video_metadata"] == FINISHED
+    assert status["video_thumbnail"] == FINISHED
+    assert status["audio_transcription"] == PROCESSING
 
 
 def test_an_image_extracted_from_a_document_runs_its_roots(
@@ -154,10 +154,10 @@ def test_an_image_extracted_from_a_document_runs_its_roots(
 
     image_id = _sdoc_id(db_session, p["project"].id, DocType.image)
     assert [t for t, payload in held.items() if payload.sdoc_id == image_id] == [
-        JobType.IMAGE_CAPTION
+        "image_caption"
     ]
     assert read_all_step_status(db_session, image_id) == {
-        **dict.fromkeys(step_names(core_steps(DocType.image)), PROCESSING),
-        JobType.IMAGE_METADATA_EXTRACTION.value: FINISHED,
-        JobType.IMAGE_THUMBNAIL.value: FINISHED,
+        **dict.fromkeys(core_steps(DocType.image), PROCESSING),
+        "image_metadata_extraction": FINISHED,
+        "image_thumbnail": FINISHED,
     }

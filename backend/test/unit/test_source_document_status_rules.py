@@ -1,7 +1,6 @@
 import pytest
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus, StepSetStatus
 from systems.artefact_system.source_document_status_rules import (
     Availability,
@@ -14,9 +13,9 @@ ERRONEOUS = SDocStatus.erroneous
 PROCESSING = SDocStatus.processing
 FINISHED = SDocStatus.finished
 
-HTML = JobType.EXTRACT_HTML
-LANG = JobType.TEXT_LANGUAGE_DETECTION
-INDEX = JobType.TEXT_ES_INDEX
+HTML = "extract_html"
+LANG = "text_language_detection"
+INDEX = "text_es_index"
 
 
 @pytest.mark.parametrize(
@@ -68,7 +67,7 @@ def test_document_status_is_erroneous_else_processing_else_finished(
     ],
 )
 def test_step_set_status_is_processing_else_failed_else_not_planned_else_ready(
-    statuses: dict[JobType, SDocStatus], expected: StepSetStatus
+    statuses: dict[str, SDocStatus], expected: StepSetStatus
 ):
     """The status of the steps {HTML, LANG} of a document. With an erroneous and
     a processing step it is processing: a feature that still computes allows no

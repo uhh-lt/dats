@@ -2,9 +2,9 @@ import pytest
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
+from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
@@ -16,7 +16,7 @@ PROCESSING = SDocStatus.processing
 ERRONEOUS = SDocStatus.erroneous
 
 
-def _read(db: Session, sdoc_id: int) -> dict[JobType, SDocStatus]:
+def _read(db: Session, sdoc_id: int) -> dict[str, SDocStatus]:
     db.expire_all()
     return crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
 
@@ -39,9 +39,9 @@ def test_read_by_sdocs_returns_the_planned_steps_in_input_order(
     assert list(result) == ids
     assert result[p["image"].id] == {}
     assert result[p["failed"].id] == {
-        JobType.EXTRACT_HTML: FINISHED,
-        JobType.TEXT_EXTRACTION: ERRONEOUS,
-        JobType.TEXT_LANGUAGE_DETECTION: PROCESSING,
+        "extract_html": FINISHED,
+        "text_extraction": ERRONEOUS,
+        "text_language_detection": PROCESSING,
     }
 
 
@@ -53,10 +53,12 @@ def test_count_by_project_groups_the_documents_by_step_status(
     p = step_status_project
 
     counts = crud_sdoc_step_status.count_by_project(
-        db=db_session, project_id=p["project"].id, steps=list(JobType)
+        db=db_session,
+        project_id=p["project"].id,
+        steps=sorted(artefact_registry.graph().all_steps()),
     )
 
-    def key(status: dict[JobType, SDocStatus]) -> frozenset:
+    def key(status: dict[str, SDocStatus]) -> frozenset:
         return frozenset(status.items())
 
     text_status = {
@@ -78,12 +80,12 @@ def test_count_by_project_leaves_out_the_steps_not_counted(
     p = step_status_project
 
     counts = crud_sdoc_step_status.count_by_project(
-        db=db_session, project_id=p["project"].id, steps=[JobType.EXTRACT_HTML]
+        db=db_session, project_id=p["project"].id, steps=["extract_html"]
     )
 
     assert sorted(counts) == [
         (DocType.image, {}, 1),
-        (DocType.text, {JobType.EXTRACT_HTML: FINISHED}, 3),
+        (DocType.text, {"extract_html": FINISHED}, 3),
     ]
 
 
@@ -95,7 +97,7 @@ def test_count_by_project_rejects_more_steps_than_bits(
         crud_sdoc_step_status.count_by_project(
             db=db_session,
             project_id=step_status_project["project"].id,
-            steps=[JobType.EXTRACT_HTML] * 64,
+            steps=["extract_html"] * 64,
         )
 
 
@@ -114,21 +116,21 @@ def test_update_status_plans_new_steps_and_overwrites_planned_ones(
     crud_sdoc_step_status.update_status(
         db=db_session,
         sdoc_ids=[p["running"].id, p["image"].id],
-        steps=[JobType.TEXT_SPACY, JobType.TEXT_ES_INDEX],
+        steps=["text_spacy", "text_es_index"],
         status=FINISHED,
     )
     db_session.commit()
 
     assert _read(db_session, p["running"].id) == {
-        JobType.EXTRACT_HTML: FINISHED,
-        JobType.TEXT_EXTRACTION: FINISHED,
-        JobType.TEXT_LANGUAGE_DETECTION: PROCESSING,
-        JobType.TEXT_SPACY: FINISHED,
-        JobType.TEXT_ES_INDEX: FINISHED,
+        "extract_html": FINISHED,
+        "text_extraction": FINISHED,
+        "text_language_detection": PROCESSING,
+        "text_spacy": FINISHED,
+        "text_es_index": FINISHED,
     }
     assert _read(db_session, p["image"].id) == {
-        JobType.TEXT_SPACY: FINISHED,
-        JobType.TEXT_ES_INDEX: FINISHED,
+        "text_spacy": FINISHED,
+        "text_es_index": FINISHED,
     }
 
 
@@ -142,15 +144,15 @@ def test_update_pending_to_erroneous_fails_only_processing_steps(
     crud_sdoc_step_status.update_pending_to_erroneous(
         db=db_session,
         sdoc_id=p["running"].id,
-        steps=[JobType.TEXT_EXTRACTION, JobType.TEXT_SPACY, JobType.TEXT_NER],
+        steps=["text_extraction", "text_spacy", "text_ner"],
     )
     db_session.commit()
 
     assert _read(db_session, p["running"].id) == {
-        JobType.EXTRACT_HTML: FINISHED,
-        JobType.TEXT_EXTRACTION: FINISHED,
-        JobType.TEXT_LANGUAGE_DETECTION: PROCESSING,
-        JobType.TEXT_SPACY: ERRONEOUS,
+        "extract_html": FINISHED,
+        "text_extraction": FINISHED,
+        "text_language_detection": PROCESSING,
+        "text_spacy": ERRONEOUS,
     }
 
 

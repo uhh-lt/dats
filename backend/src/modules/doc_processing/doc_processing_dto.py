@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
 from systems.artefact_system.artefact_dto import ProcessingJobInput
@@ -40,7 +39,7 @@ class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
 
     @classmethod
     def from_sdoc_orm(
-        cls, sdoc: "SourceDocumentORM", step_status: dict[JobType, SDocStatus]
+        cls, sdoc: "SourceDocumentORM", step_status: dict[str, SDocStatus]
     ) -> "SourceDocumentStatusSimple":
         """Derives the overall status from the status of the planned steps."""
         return cls(
@@ -72,14 +71,12 @@ class SdocStatusRow(BaseModel):
     def from_sdoc_orm(
         cls,
         sdoc: "SourceDocumentORM",
-        steps: list[JobType],
-        step_status: dict[JobType, SDocStatus],
+        steps: list[str],
+        step_status: dict[str, SDocStatus],
     ) -> "SdocStatusRow":
         """The status of the given pipeline steps (the steps of the sdoc's
         doctype), None for steps that are not planned."""
-        status: dict[str, SDocStatus | None] = {
-            s.value: step_status.get(s) for s in steps
-        }
+        status: dict[str, SDocStatus | None] = {s: step_status.get(s) for s in steps}
         return cls(
             sdoc_id=sdoc.id,
             name=sdoc.name,

@@ -8,7 +8,6 @@ import pytest
 
 from bootstrap import register_jobs
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from modules.eximport.import_exceptions import ImportProjectDetailsError
 from modules.eximport.project.import_project_details import archived_features
@@ -51,7 +50,7 @@ def _sdoc(**kwargs) -> SourceDocumentExportSchema:
         sentence_ends=[12],
         document_embedding=[0.1, 0.2],
         sentence_embeddings=[[0.1, 0.2]],
-        step_status={step.value: FINISHED for step in TEXT_STEPS},
+        step_status=dict.fromkeys(TEXT_STEPS, FINISHED),
     )
     values.update(kwargs)
     return SourceDocumentExportSchema.model_validate(values)
@@ -59,55 +58,51 @@ def _sdoc(**kwargs) -> SourceDocumentExportSchema:
 
 def test_archive_step_status_keeps_not_planned_steps() -> None:
     """Steps archived as not planned (None) stay not planned."""
-    archived: dict[str, int | None] = {step.value: FINISHED for step in TEXT_STEPS}
-    archived[JobType.TEXT_ES_INDEX.value] = None
-    archived[JobType.TEXT_KEYWORDS.value] = None
+    archived: dict[str, int | None] = dict.fromkeys(TEXT_STEPS, FINISHED)
+    archived["text_es_index"] = None
+    archived["text_keywords"] = None
 
     status = archived_step_status(_sdoc(step_status=archived))
 
-    assert status[JobType.TEXT_ES_INDEX.value] is None
-    assert status[JobType.TEXT_KEYWORDS.value] is None
-    assert status[JobType.TEXT_NER.value] == FINISHED
+    assert status["text_es_index"] is None
+    assert status["text_keywords"] is None
+    assert status["text_ner"] == FINISHED
 
 
 def test_processing_steps_are_imported_as_not_planned() -> None:
     """Steps archived as processing are not planned: the import starts no job, so
     they would stay processing forever. Other steps keep their status."""
-    archived: dict[str, int | None] = {step.value: FINISHED for step in TEXT_STEPS}
-    archived[JobType.TEXT_ES_INDEX.value] = PROCESSING
-    archived[JobType.TEXT_KEYWORDS.value] = ERRONEOUS
+    archived: dict[str, int | None] = dict.fromkeys(TEXT_STEPS, FINISHED)
+    archived["text_es_index"] = PROCESSING
+    archived["text_keywords"] = ERRONEOUS
 
     status = archived_step_status(_sdoc(step_status=archived))
 
-    assert status[JobType.TEXT_ES_INDEX.value] is None
-    assert status[JobType.TEXT_KEYWORDS.value] == ERRONEOUS
-    assert status[JobType.TEXT_SPACY.value] == FINISHED
+    assert status["text_es_index"] is None
+    assert status["text_keywords"] == ERRONEOUS
+    assert status["text_spacy"] == FINISHED
 
 
 def test_steps_missing_in_the_archive_are_not_planned() -> None:
     """Steps of the doctype that the archived statuses do not list are not planned."""
-    status = archived_step_status(
-        _sdoc(step_status={JobType.EXTRACT_HTML.value: FINISHED})
-    )
-    assert status[JobType.EXTRACT_HTML.value] == FINISHED
-    assert status[JobType.TEXT_SPACY.value] is None
+    status = archived_step_status(_sdoc(step_status={"extract_html": FINISHED}))
+    assert status["extract_html"] == FINISHED
+    assert status["text_spacy"] is None
 
 
 def test_unknown_step_is_ignored() -> None:
     """An archived status of a step this version does not have (renamed or
     removed since the export) is dropped; the other statuses are imported."""
-    sdoc = _sdoc(
-        step_status={"removed_step": FINISHED, JobType.EXTRACT_HTML.value: FINISHED}
-    )
+    sdoc = _sdoc(step_status={"removed_step": FINISHED, "extract_html": FINISHED})
 
-    assert sdoc.step_status == {JobType.EXTRACT_HTML.value: FINISHED}
-    assert archived_step_status(sdoc)[JobType.EXTRACT_HTML.value] == FINISHED
+    assert sdoc.step_status == {"extract_html": FINISHED}
+    assert archived_step_status(sdoc)["extract_html"] == FINISHED
 
 
 def test_step_of_another_doctype_is_ignored() -> None:
     """The archived statuses are read for the steps of the document's doctype: the
     image caption of a text document is dropped."""
-    sdoc = _sdoc(step_status={JobType.IMAGE_CAPTION.value: FINISHED})
+    sdoc = _sdoc(step_status={"image_caption": FINISHED})
 
     assert sdoc.step_status == {}
 
@@ -115,14 +110,14 @@ def test_step_of_another_doctype_is_ignored() -> None:
 def test_invalid_step_status_is_rejected() -> None:
     """An archived status that is no step status fails the validation."""
     with pytest.raises(ValueError, match="is not a valid SDocStatus"):
-        _sdoc(step_status={JobType.EXTRACT_HTML.value: 7})
+        _sdoc(step_status={"extract_html": 7})
 
 
 def test_step_status_survives_the_csv_round_trip() -> None:
     """The per-step statuses, including None, are written to and read from the CSV unchanged."""
     archived: dict[str, int | None] = {
-        JobType.EXTRACT_HTML.value: FINISHED,
-        JobType.TEXT_ES_INDEX.value: None,
+        "extract_html": FINISHED,
+        "text_es_index": None,
     }
     df = SourceDocumentExportCollection(
         source_documents=[_sdoc(step_status=archived)]

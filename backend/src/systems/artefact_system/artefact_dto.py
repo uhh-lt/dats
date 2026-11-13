@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from systems.job_system.job_dto import JobInputBase
 
@@ -29,7 +28,7 @@ class ProcessingJobInput(JobInputBase):
 
 class SdocProcessingJobInput(ProcessingJobInput):
     sdoc_id: int = Field(description="SDoc ID")
-    steps: list[JobType] | None = Field(
+    steps: list[str] | None = Field(
         default=None,
         description="The pipeline steps this job computes, for jobs with several steps (e.g. text_spacy); null = all steps of the job",
     )

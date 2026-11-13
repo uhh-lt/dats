@@ -19,7 +19,6 @@ pending steps after it, and Complete or Recompute starts it again. See
 
 from loguru import logger
 
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import (
@@ -40,12 +39,12 @@ js = JobService()
 sqlr = SQLRepo()
 
 
-def _computed_steps(job_type: JobType, input: SdocProcessingJobInput) -> list[JobType]:
+def _computed_steps(job_type: str, input: SdocProcessingJobInput) -> list[str]:
     """The pipeline steps this run of the job computes."""
     return artefact_registry.graph().job_steps(job_type, input.steps)
 
 
-def _pending_steps(sdoc_id: int, steps: list[JobType]) -> list[JobType]:
+def _pending_steps(sdoc_id: int, steps: list[str]) -> list[str]:
     """The steps that are planned for the document and not computed yet."""
     with sqlr.transaction() as db:
         status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
@@ -56,10 +55,10 @@ def start_steps(
     *,
     project_id: int,
     sdoc_id: int,
-    steps: list[JobType],
+    steps: list[str],
     settings: ProcessingSettings,
     priority: JobPriority | None = None,
-) -> dict[JobType, Job | None]:
+) -> dict[str, Job | None]:
     """Start the steps of the document: one job per job type that computes some
     of them, with a bare input, which the job's enricher completes from the
     document's stored data. Returns the started job per job type.
@@ -69,7 +68,7 @@ def start_steps(
     does not start: its steps and the pending steps after them become
     erroneous, like after a failed job, its job type maps to None, and the
     other jobs still start. Anything else raises as it is."""
-    started: dict[JobType, Job | None] = {}
+    started: dict[str, Job | None] = {}
     for job_type, job_steps in artefact_registry.graph().group_by_job(steps).items():
         job_input = SdocProcessingJobInput(
             project_id=project_id, sdoc_id=sdoc_id, settings=settings, steps=job_steps
@@ -77,14 +76,14 @@ def start_steps(
         try:
             started[job_type] = js.start_job(job_type, job_input, priority=priority)
         except (JobInputError, JobQueueUnavailableError) as e:
-            logger.warning(f"Cannot start {job_type.value} of document {sdoc_id}: {e}")
+            logger.warning(f"Cannot start {job_type} of document {sdoc_id}: {e}")
             handle_job_error(job_type, job_input)
             started[job_type] = None
     return started
 
 
 def _start_planned(
-    jobs: dict[JobType, list[JobType]], input: SdocProcessingJobInput, sdoc_id: int
+    jobs: dict[str, list[str]], input: SdocProcessingJobInput, sdoc_id: int
 ) -> None:
     """Start each job for its steps that are planned for the document, with the
     settings of the run. The job that finished stays finished: a step that
@@ -103,7 +102,7 @@ def _start_planned(
         )
 
 
-def _start_next(job_type: JobType, input: JobInputBase) -> None:
+def _start_next(job_type: str, input: JobInputBase) -> None:
     """Start what follows a finished step job: the planned successors of the
     steps it computed. The jobs that create documents start what follows them
     themselves."""
@@ -124,10 +123,10 @@ def _start_next(job_type: JobType, input: JobInputBase) -> None:
 
 
 def _set_status(
-    job_type: JobType,
+    job_type: str,
     input: JobInputBase,
     status: SDocStatus,
-    steps: list[JobType] | None = None,
+    steps: list[str] | None = None,
 ) -> None:
     """Set the status of the steps this run of the job computes (or of `steps`)."""
     if not isinstance(input, SdocProcessingJobInput):
@@ -142,13 +141,13 @@ def _set_status(
         )
 
 
-def handle_job_started(jobtype: JobType, input: JobInputBase) -> None:
+def handle_job_started(jobtype: str, input: JobInputBase) -> None:
     """Set the steps of the run to processing (a retried job's steps are
     erroneous until then)."""
     _set_status(jobtype, input, SDocStatus.processing)
 
 
-def handle_job_error(job_type: JobType, input: JobInputBase) -> None:
+def handle_job_error(job_type: str, input: JobInputBase) -> None:
     """Set the steps of the run to erroneous, and the pending steps after them
     too: they cannot run without their input, so they do not stay processing.
     Recomputing the input starts them again (see `_start_next`). A failed
@@ -174,7 +173,7 @@ def handle_job_error(job_type: JobType, input: JobInputBase) -> None:
 
 
 def handle_job_finished(
-    job_type: JobType, input: JobInputBase, output: JobOutputBase | None
+    job_type: str, input: JobInputBase, output: JobOutputBase | None
 ) -> None:
     """Set the steps of the run to finished and start what follows the job."""
     _set_status(job_type, input, SDocStatus.finished)

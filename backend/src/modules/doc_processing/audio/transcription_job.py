@@ -5,7 +5,6 @@ import ffmpeg
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -74,7 +73,7 @@ def enrich_for_recompute(
     doctypes={DocType.audio, DocType.video},
 )
 @register_job(
-    job_type=JobType.AUDIO_TRANSCRIPTION,
+    job_type="audio_transcription",
     input_type=TranscriptionJobInput,
     output_type=TranscriptionJobOutput,
     device="api",

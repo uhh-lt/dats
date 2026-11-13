@@ -25,7 +25,6 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.selectable import TableValuedAlias
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
@@ -35,7 +34,7 @@ from systems.artefact_system.source_document_step_status_orm import (
 )
 
 # Documents per step: the rows (sdoc id, step) a planning touched
-StepRows = dict[JobType, list[int]]
+StepRows = dict[str, list[int]]
 
 
 def _id_values(sdoc_ids: list[int]) -> TableValuedAlias:
@@ -55,8 +54,8 @@ def read_sdoc_ids_to_plan(
     project_id: int,
     doctype: DocType,
     sdoc_ids: tuple[int, int],
-    missing_steps: list[JobType],
-    redo_steps: list[JobType],
+    missing_steps: list[str],
+    redo_steps: list[str],
 ) -> list[int]:
     """
     Read and lock (FOR NO KEY UPDATE) the documents of the project and doctype
@@ -117,7 +116,7 @@ def create_missing(
     project_id: int,
     doctype: DocType,
     sdoc_ids: tuple[int, int],
-    steps: list[JobType],
+    steps: list[str],
 ) -> StepRows:
     """
     Plan the steps for the documents of the project and doctype in the id
@@ -144,7 +143,7 @@ def create_missing(
     sdoc = SourceDocumentORM
     existing = aliased(SourceDocumentStepStatusORM)
     step_values = (
-        func.unnest(literal([step.value for step in steps], ARRAY(String)))
+        func.unnest(literal(list(steps), ARRAY(String)))
         .table_valued("step")
         .render_derived()
     )
@@ -185,7 +184,7 @@ def create_missing(
         )
     )
     for sdoc_id, step in db.execute(stmt).all():
-        result[JobType(step)].append(sdoc_id)
+        result[step].append(sdoc_id)
     for planned_ids in result.values():
         planned_ids.sort()
     db.flush()
@@ -196,7 +195,7 @@ def update_to_processing(
     db: Session,
     *,
     sdoc_ids: list[int],
-    steps: list[JobType],
+    steps: list[str],
 ) -> StepRows:
     """
     Plan the given steps of the documents again: set the erroneous ones to
@@ -228,7 +227,7 @@ def update_to_processing(
         .execution_options(synchronize_session=False)
     ).all()
     for sdoc_id, step in changed:
-        result[JobType(step)].append(sdoc_id)
+        result[step].append(sdoc_id)
     for changed_ids in result.values():
         changed_ids.sort()
     db.flush()
@@ -236,7 +235,7 @@ def update_to_processing(
 
 
 def update_blocked_to_erroneous(
-    db: Session, *, rows: StepRows, inputs: dict[JobType, list[JobType]]
+    db: Session, *, rows: StepRows, inputs: dict[str, list[str]]
 ) -> None:
     """
     Set the given rows that are processing to erroneous if one of their input
@@ -272,8 +271,8 @@ def update_blocked_to_erroneous(
 
 
 def read_startable(
-    db: Session, *, rows: StepRows, inputs: dict[JobType, list[JobType]]
-) -> dict[int, list[JobType]]:
+    db: Session, *, rows: StepRows, inputs: dict[str, list[str]]
+) -> dict[int, list[str]]:
     """
     Read which of the given rows can start now: they are processing and all
     their input steps are finished.
@@ -285,7 +284,7 @@ def read_startable(
     Returns:
         The startable steps per document, in the order of `rows`.
     """
-    result: dict[int, list[JobType]] = {}
+    result: dict[int, list[str]] = {}
     for step, sdoc_ids in rows.items():
         if not sdoc_ids:
             continue
@@ -316,7 +315,7 @@ def _in_range(sdoc_ids: list[int]) -> ColumnElement[bool]:
 
 
 def _count_inputs(
-    input_steps: list[JobType], statuses: list[SDocStatus]
+    input_steps: list[str], statuses: list[SDocStatus]
 ) -> ScalarSelect[int]:
     """The number of the input steps of the row's document that have one of
     the statuses, as a correlated subquery."""

@@ -4,7 +4,6 @@ from uuid import uuid4
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
@@ -57,7 +56,7 @@ def enrich_for_recompute(
     doctypes={DocType.image},
 )
 @register_job(
-    job_type=JobType.IMAGE_OBJECT_DETECTION,
+    job_type="image_object_detection",
     input_type=ObjectDetectionJobInput,
     device="api",
     enricher=enrich_for_recompute,

@@ -3,7 +3,6 @@ from typing import Callable, Literal, TypeVar
 from fastapi import APIRouter
 from sqlalchemy.orm import Session
 
-from common.job_type_enum import JobType
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase, JobRead
 from systems.job_system.job_system_enum import (
     EndpointGeneration,
@@ -16,7 +15,7 @@ OutputT = TypeVar("OutputT", bound=JobOutputBase)
 
 
 def register_job(
-    job_type: JobType,
+    job_type: str,
     input_type: type[InputT],
     output_type: type[OutputT] | None = None,
     priority: JobPriority = JobPriority.DEFAULT,

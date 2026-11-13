@@ -77,15 +77,15 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
         ),
     )
     held_jobs.run(JobType.SDOC_INIT)
-    (extract_html,) = held_jobs.inputs(JobType.EXTRACT_HTML)
+    (extract_html,) = held_jobs.inputs("extract_html")
     assert isinstance(extract_html, SdocProcessingJobInput)
     sdoc_id = extract_html.sdoc_id
     assert read_step_status(db_session, sdoc_id, step) == SDocStatus.processing
 
     # started after its input step, its input completed by its enricher
-    held_jobs.run(JobType.EXTRACT_HTML)
+    held_jobs.run("extract_html")
     assert held_jobs.inputs(step) == []
-    held_jobs.run(JobType.TEXT_EXTRACTION)
+    held_jobs.run("text_extraction")
     (payload,) = held_jobs.inputs(step)
     assert isinstance(payload, DummyJobInput)
     assert payload.steps == [step]
@@ -105,7 +105,7 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     )
     assert response.status_code == 200, response.text
     rows = SdocHealthResult.model_validate(response.json()).data
-    assert [row.status[step.value] for row in rows] == [SDocStatus.finished]
+    assert [row.status[step] for row in rows] == [SDocStatus.finished]
 
     # exported and imported
     fsr = FilesystemRepo()
@@ -162,7 +162,7 @@ def test_a_step_requiring_two_artefacts_of_one_step_is_planned_and_started(
     assert read_step_status(db_session, sdoc_id, consumer) == SDocStatus.finished
 
 
-def test_a_step_without_an_enricher_is_rejected(unregistered_job_type: JobType):
+def test_a_step_without_an_enricher_is_rejected(unregistered_job_type: str):
     """A pipeline step is started with a bare input, so registering one without
     an enricher fails."""
 

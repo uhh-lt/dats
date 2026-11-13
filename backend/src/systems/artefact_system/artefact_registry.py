@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.code.system_codes import SystemCode, parent_names
 from systems.artefact_system.artefact_exceptions import (
     PipelineDeclarationError,
@@ -72,7 +71,7 @@ class ArtefactRegistry:
 
     def __init__(self) -> None:
         self._artefacts: dict[str, Artefact] = {}
-        self._steps: dict[JobType, PipelineStep] = {}
+        self._steps: dict[str, PipelineStep] = {}
         self._graph: PipelineGraph | None = None
 
     # --- artefacts
@@ -118,11 +117,11 @@ class ArtefactRegistry:
 
     # --- steps
 
-    def register_step(self, job_type: JobType, step: PipelineStep) -> None:
+    def register_step(self, job_type: str, step: PipelineStep) -> None:
         self._steps[job_type] = step
         self._graph = None
 
-    def unregister_step(self, job_type: JobType) -> None:
+    def unregister_step(self, job_type: str) -> None:
         """Remove the steps of the job (the job's own step and its further steps)."""
         for step in [s for s, d in self._steps.items() if job_type in (s, d.job)]:
             del self._steps[step]

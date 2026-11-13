@@ -6,7 +6,6 @@ import yake
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
@@ -91,13 +90,13 @@ def enrich_for_recompute(
     produces={TOKENS_SENTENCES},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
     further_steps={
-        JobType.TEXT_KEYWORDS: {KEYWORDS},
-        JobType.TEXT_WORD_FREQUENCY: {WORD_FREQUENCIES},
-        JobType.TEXT_NER: {NER_SPANS},
+        "text_keywords": {KEYWORDS},
+        "text_word_frequency": {WORD_FREQUENCIES},
+        "text_ner": {NER_SPANS},
     },
 )
 @register_job(
-    job_type=JobType.TEXT_SPACY,
+    job_type="text_spacy",
     input_type=SpacyJobInput,
     output_type=SpacyJobOutput,
     enricher=enrich_for_recompute,
@@ -105,10 +104,10 @@ def enrich_for_recompute(
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # the outputs to write: tokens and sentences (text_spacy), keywords, word
     # frequencies, named entities; spacy is called once for all of them
-    steps = artefact_registry.graph().job_steps(JobType.TEXT_SPACY, payload.steps)
-    not_computed = [step.value for step in steps if step not in _STEP_WRITERS]
+    steps = artefact_registry.graph().job_steps("text_spacy", payload.steps)
+    not_computed = [step for step in steps if step not in _STEP_WRITERS]
     if not_computed:
-        raise StepNotComputedError(JobType.TEXT_SPACY.value, not_computed)
+        raise StepNotComputedError("text_spacy", not_computed)
 
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
@@ -238,12 +237,12 @@ def _store_named_entities(
 # What each step of the job writes. A step of its `further_steps` without an
 # entry fails the job instead of being set to finished without being computed.
 _STEP_WRITERS: dict[
-    JobType, Callable[[Session, SpacyJobInput, SpacyPipelineOutput, dict], None]
+    str, Callable[[Session, SpacyJobInput, SpacyPipelineOutput, dict], None]
 ] = {
-    JobType.TEXT_SPACY: _store_tokens_sentences,
-    JobType.TEXT_KEYWORDS: _store_keywords,
-    JobType.TEXT_WORD_FREQUENCY: _store_word_frequencies,
-    JobType.TEXT_NER: _store_named_entities,
+    "text_spacy": _store_tokens_sentences,
+    "text_keywords": _store_keywords,
+    "text_word_frequency": _store_word_frequencies,
+    "text_ner": _store_named_entities,
 }
 
 

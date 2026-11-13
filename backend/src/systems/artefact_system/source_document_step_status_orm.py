@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Index, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
 
@@ -27,7 +26,7 @@ class SourceDocumentStepStatusORM(ORMBase):
         "SourceDocumentORM", back_populates="step_statuses"
     )
 
-    step: Mapped[JobType] = mapped_column(String, primary_key=True)
+    step: Mapped[str] = mapped_column(String, primary_key=True)
     status: Mapped[SDocStatus] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (

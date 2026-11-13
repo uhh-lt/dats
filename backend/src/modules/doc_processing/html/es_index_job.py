@@ -1,5 +1,4 @@
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -41,7 +40,7 @@ def enrich_for_recompute(
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
-    job_type=JobType.TEXT_ES_INDEX,
+    job_type="text_es_index",
     input_type=TextESIndexJobInput,
     enricher=enrich_for_recompute,
 )

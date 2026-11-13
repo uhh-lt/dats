@@ -3,7 +3,6 @@ from pathlib import Path
 from PIL import Image
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
@@ -48,7 +47,7 @@ def enrich_for_recompute(
     doctypes={DocType.image},
 )
 @register_job(
-    job_type=JobType.IMAGE_METADATA_EXTRACTION,
+    job_type="image_metadata_extraction",
     input_type=ImageMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
 )

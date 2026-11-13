@@ -114,7 +114,7 @@ def __export_sdocs(
         doctype = DocType(sdoc.doctype)
         planned = stored_status[sdoc.id]
         step_status: dict[str, int | None] = {
-            step.value: planned.get(step) for step in graph.steps(doctype)
+            step: planned.get(step) for step in graph.steps(doctype)
         }
 
         export_schema = SourceDocumentExportSchema(

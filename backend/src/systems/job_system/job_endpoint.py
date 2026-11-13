@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user
-from common.job_type_enum import JobType
 from core.auth.authz_user import AuthzUser
 from systems.job_system.job_dto import JobInputBase, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
@@ -19,7 +18,7 @@ job_service = JobService()
 
 
 def register_job_endpoints(
-    job_type: JobType,
+    job_type: str,
     input_model: Type[JobInputBase],
     output_model: Type[JobOutputBase] | None,
     read_model: Type[JobRead],
@@ -48,9 +47,9 @@ def register_job_endpoints(
         return JobReadModel.from_rq_job(job)
 
     router.add_api_route(
-        f"/{job_type.value}",
+        f"/{job_type}",
         start_job,
-        name=f"start_{job_type.value}_job",
+        name=f"start_{job_type}_job",
         methods=["POST"],
         response_model=JobReadModel,
         summary=f"Start {job_name} job",
@@ -66,9 +65,9 @@ def register_job_endpoints(
         return JobReadModel.from_rq_job(job)
 
     router.add_api_route(
-        f"/{job_type.value}/{{job_id}}",
+        f"/{job_type}/{{job_id}}",
         get_job_by_id,
-        name=f"get_{job_type.value}_job_by_id",
+        name=f"get_{job_type}_job_by_id",
         methods=["GET"],
         response_model=JobReadModel,
         summary=f"Get {job_name} job",
@@ -82,9 +81,9 @@ def register_job_endpoints(
             return job_service.stop_job(job_id)
 
         router.add_api_route(
-            f"/{job_type.value}/{{job_id}}/abort",
+            f"/{job_type}/{{job_id}}/abort",
             abort_job,
-            name=f"abort_{job_type.value}_job",
+            name=f"abort_{job_type}_job",
             methods=["POST"],
             response_model=bool,
             summary=f"Abort {job_name} job",
@@ -100,9 +99,9 @@ def register_job_endpoints(
             return job_service.retry_job(job_id)
 
         router.add_api_route(
-            f"/{job_type.value}/{{job_id}}/retry",
+            f"/{job_type}/{{job_id}}/retry",
             retry_job,
-            name=f"retry_{job_type.value}_job",
+            name=f"retry_{job_type}_job",
             methods=["POST"],
             response_model=bool,
             summary=f"Retry {job_name} job",
@@ -116,9 +115,9 @@ def register_job_endpoints(
             return [JobReadModel.from_rq_job(job) for job in jobs]
 
         router.add_api_route(
-            f"/{job_type.value}/project/{{project_id}}",
+            f"/{job_type}/project/{{project_id}}",
             get_jobs_by_project,
-            name=f"get_{job_type.value}_jobs_by_project",
+            name=f"get_{job_type}_jobs_by_project",
             methods=["GET"],
             response_model=list[JobReadModel],
             summary=f"Get all {job_name} jobs by project",

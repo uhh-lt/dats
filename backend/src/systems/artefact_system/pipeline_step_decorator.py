@@ -1,7 +1,6 @@
 from typing import Callable, TypeVar
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.artefact_system.pipeline_graph import PipelineStep
 from systems.job_system.job_service import JobService
@@ -14,7 +13,7 @@ def pipeline_step(
     requires: set[Artefact],
     produces: set[Artefact],
     doctypes: set[DocType],
-    further_steps: dict[JobType, set[Artefact]] | None = None,
+    further_steps: dict[str, set[Artefact]] | None = None,
 ) -> Callable[[HandlerT], HandlerT]:
     """
     Declare a job as a step of the document preprocessing pipeline. Written above
@@ -36,7 +35,7 @@ def pipeline_step(
             raise ValueError(f"Pipeline step {job_type} declares no doctypes.")
         if js.job_registry[job_type]["enricher"] is None:
             raise ValueError(
-                f"JobType {job_type} is a pipeline step, but has no enricher: the "
+                f"Job type {job_type} is a pipeline step, but has no enricher: the "
                 "steps before it start it with a bare SdocProcessingJobInput, and "
                 "the enricher loads the rest of its input from the stored data."
             )

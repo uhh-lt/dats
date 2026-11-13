@@ -3,7 +3,6 @@ from pathlib import Path
 import ffmpeg
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
@@ -57,7 +56,7 @@ def enrich_for_recompute(
     doctypes={DocType.audio},
 )
 @register_job(
-    job_type=JobType.AUDIO_METADATA_EXTRACTION,
+    job_type="audio_metadata",
     input_type=AudioMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
 )

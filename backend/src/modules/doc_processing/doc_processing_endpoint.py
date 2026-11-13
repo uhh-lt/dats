@@ -39,7 +39,7 @@ def get_search_columns_by_doctype(
     doctype: DocType,
     authz_user: AuthzUser = Depends(),
 ) -> list[str]:
-    return [step.value for step in artefact_registry.graph().steps(doctype)]
+    return list(artefact_registry.graph().steps(doctype))
 
 
 @router.post(

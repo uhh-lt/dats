@@ -1,7 +1,6 @@
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
@@ -38,7 +37,7 @@ def enrich_for_recompute(
     doctypes={DocType.image},
 )
 @register_job(
-    job_type=JobType.IMAGE_EMBEDDING,
+    job_type="image_embedding",
     input_type=ImageEmbeddingJobInput,
     device="api",
     enricher=enrich_for_recompute,

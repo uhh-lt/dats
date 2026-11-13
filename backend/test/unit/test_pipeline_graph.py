@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from bootstrap import register_jobs
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.code.system_codes import SystemCode
 from core.doc.source_document_orm import SourceDocumentORM
 from pipeline_test_utils import artefact_named
@@ -41,12 +40,12 @@ def _step(
 
 
 # the two root steps of `_producing_all_other_artefacts`, in pipeline order
-FILLERS = [JobType.VIDEO_METADATA_EXTRACTION, JobType.VIDEO_THUMBNAIL]
+FILLERS = ["video_metadata", "video_thumbnail"]
 
 
 def _producing_all_other_artefacts(
-    steps: dict[JobType, PipelineStep],
-) -> dict[JobType, PipelineStep]:
+    steps: dict[str, PipelineStep],
+) -> dict[str, PipelineStep]:
     """Adds two root steps that produce every registered artefact the given
     steps do not produce, so a test only sees the problem it sets up:
     VIDEO_METADATA_EXTRACTION the always-computed ones, VIDEO_THUMBNAIL the
@@ -55,17 +54,17 @@ def _producing_all_other_artefacts(
     rest = set(artefact_registry.artefacts()) - produced - {artefact_named("audio")}
     return {
         **steps,
-        JobType.VIDEO_METADATA_EXTRACTION: _step(set(), {a for a in rest if a.always}),
-        JobType.VIDEO_THUMBNAIL: _step(set(), {a for a in rest if not a.always}),
+        "video_metadata": _step(set(), {a for a in rest if a.always}),
+        "video_thumbnail": _step(set(), {a for a in rest if not a.always}),
     }
 
 
-def _graph(steps: dict[JobType, PipelineStep]) -> PipelineGraph:
+def _graph(steps: dict[str, PipelineStep]) -> PipelineGraph:
     """The graph of these steps and the registered artefacts."""
     return PipelineGraph(steps, artefact_registry.artefacts())
 
 
-def _problems(steps: dict[JobType, PipelineStep]) -> list[str]:
+def _problems(steps: dict[str, PipelineStep]) -> list[str]:
     with pytest.raises(PipelineDeclarationError) as exc_info:
         _graph(steps)
     return exc_info.value.problems
@@ -82,11 +81,11 @@ def test_pipeline_graph_derives_order_roots_and_successors():
     by language detection only, which itself needs content."""
     steps = _producing_all_other_artefacts(
         {
-            JobType.TEXT_EXTRACTION: _step(set(), {artefact_named("content")}),
-            JobType.TEXT_LANGUAGE_DETECTION: _step(
+            "text_extraction": _step(set(), {artefact_named("content")}),
+            "text_language_detection": _step(
                 {artefact_named("content")}, {artefact_named("language")}
             ),
-            JobType.TEXT_SPACY: _step(
+            "text_spacy": _step(
                 {artefact_named("content"), artefact_named("language")},
                 {artefact_named("tokens_sentences")},
             ),
@@ -96,17 +95,15 @@ def test_pipeline_graph_derives_order_roots_and_successors():
     graph = _graph(steps)
 
     assert graph.steps(DocType.text) == [
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
+        "text_extraction",
+        "text_language_detection",
+        "text_spacy",
         *FILLERS,
     ]
-    assert graph.roots(DocType.text) == [JobType.TEXT_EXTRACTION, *FILLERS]
-    assert graph.successors(JobType.TEXT_EXTRACTION) == [
-        JobType.TEXT_LANGUAGE_DETECTION
-    ]
-    assert graph.successors(JobType.TEXT_LANGUAGE_DETECTION) == [JobType.TEXT_SPACY]
-    assert graph.successors(JobType.TEXT_SPACY) == []
+    assert graph.roots(DocType.text) == ["text_extraction", *FILLERS]
+    assert graph.successors("text_extraction") == ["text_language_detection"]
+    assert graph.successors("text_language_detection") == ["text_spacy"]
+    assert graph.successors("text_spacy") == []
 
 
 def test_pipeline_graph_orders_doctype_specific_steps_first():
@@ -117,12 +114,12 @@ def test_pipeline_graph_orders_doctype_specific_steps_first():
     image_audio = frozenset({DocType.image, DocType.audio})
     steps = _producing_all_other_artefacts(
         {
-            JobType.IMAGE_CAPTION: _step(set(), {artefact_named("raw_html")}, image),
-            JobType.IMAGE_THUMBNAIL: _step(set(), {artefact_named("thumbnail")}, image),
-            JobType.TEXT_EXTRACTION: _step(
+            "image_caption": _step(set(), {artefact_named("raw_html")}, image),
+            "image_thumbnail": _step(set(), {artefact_named("thumbnail")}, image),
+            "text_extraction": _step(
                 {artefact_named("raw_html")}, {artefact_named("content")}, image_audio
             ),
-            JobType.AUDIO_TRANSCRIPTION: _step(
+            "audio_transcription": _step(
                 set(), {artefact_named("raw_html")}, frozenset({DocType.audio})
             ),
         }
@@ -131,9 +128,9 @@ def test_pipeline_graph_orders_doctype_specific_steps_first():
     graph = _graph(steps)
 
     assert graph.steps(DocType.image)[:3] == [
-        JobType.IMAGE_CAPTION,
-        JobType.IMAGE_THUMBNAIL,
-        JobType.TEXT_EXTRACTION,
+        "image_caption",
+        "image_thumbnail",
+        "text_extraction",
     ]
 
 
@@ -142,10 +139,10 @@ def test_pipeline_graph_uploaded_audio_satisfies_the_audio_requirement():
     av = frozenset({DocType.audio, DocType.video})
     steps = _producing_all_other_artefacts(
         {
-            JobType.VIDEO_AUDIO_EXTRACTION: _step(
+            "video_audio_extraction": _step(
                 set(), {artefact_named("audio")}, frozenset({DocType.video})
             ),
-            JobType.AUDIO_TRANSCRIPTION: _step(
+            "audio_transcription": _step(
                 {artefact_named("audio")}, {artefact_named("transcript")}, av
             ),
         }
@@ -153,11 +150,9 @@ def test_pipeline_graph_uploaded_audio_satisfies_the_audio_requirement():
 
     graph = _graph(steps)
 
-    assert JobType.AUDIO_TRANSCRIPTION in graph.roots(DocType.audio)
-    assert JobType.AUDIO_TRANSCRIPTION not in graph.roots(DocType.video)
-    assert graph.successors(JobType.VIDEO_AUDIO_EXTRACTION) == [
-        JobType.AUDIO_TRANSCRIPTION
-    ]
+    assert "audio_transcription" in graph.roots(DocType.audio)
+    assert "audio_transcription" not in graph.roots(DocType.video)
+    assert graph.successors("video_audio_extraction") == ["audio_transcription"]
 
 
 # ===========================================================================
@@ -176,31 +171,29 @@ def _planning_graph() -> PipelineGraph:
     return _graph(
         _producing_all_other_artefacts(
             {
-                JobType.EXTRACT_HTML: _step(set(), {artefact_named("raw_html")}, TEXT),
-                JobType.IMAGE_CAPTION: _step(
+                "extract_html": _step(set(), {artefact_named("raw_html")}, TEXT),
+                "image_caption": _step(
                     set(),
                     {artefact_named("image_caption"), artefact_named("raw_html")},
                     IMAGE,
                 ),
-                JobType.IMAGE_THUMBNAIL: _step(
-                    set(), {artefact_named("thumbnail")}, IMAGE
-                ),
-                JobType.TEXT_EXTRACTION: _step(
+                "image_thumbnail": _step(set(), {artefact_named("thumbnail")}, IMAGE),
+                "text_extraction": _step(
                     {artefact_named("raw_html")},
                     {artefact_named("content")},
                     TEXT_IMAGE,
                 ),
-                JobType.TEXT_LANGUAGE_DETECTION: _step(
+                "text_language_detection": _step(
                     {artefact_named("content")},
                     {artefact_named("language")},
                     TEXT_IMAGE,
                 ),
-                JobType.TEXT_KEYWORDS: _step(
+                "text_keywords": _step(
                     {artefact_named("language")},
                     {artefact_named("keywords")},
                     TEXT_IMAGE,
                 ),
-                JobType.TEXT_DOCUMENT_EMBEDDING: _step(
+                "text_document_embedding": _step(
                     {artefact_named("keywords")},
                     {artefact_named("document_embeddings")},
                     TEXT_IMAGE,
@@ -216,16 +209,16 @@ def test_steps_for_are_the_producers_of_the_artefacts_and_their_inputs():
     graph = _planning_graph()
 
     assert graph.steps_for(DocType.text, frozenset({artefact_named("keywords")})) == [
-        JobType.EXTRACT_HTML,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_KEYWORDS,
+        "extract_html",
+        "text_extraction",
+        "text_language_detection",
+        "text_keywords",
     ]
     assert graph.steps_for(DocType.image, frozenset({artefact_named("keywords")})) == [
-        JobType.IMAGE_CAPTION,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_KEYWORDS,
+        "image_caption",
+        "text_extraction",
+        "text_language_detection",
+        "text_keywords",
     ]
 
 
@@ -238,7 +231,7 @@ def test_steps_for_pull_in_the_artefacts_a_step_requires():
         DocType.text, frozenset({artefact_named("document_embeddings")})
     )
 
-    assert steps[-2:] == [JobType.TEXT_KEYWORDS, JobType.TEXT_DOCUMENT_EMBEDDING]
+    assert steps[-2:] == ["text_keywords", "text_document_embedding"]
 
 
 def test_steps_for_skip_an_artefact_without_producer_for_the_doctype():
@@ -270,21 +263,19 @@ def test_inputs_are_the_producers_of_the_required_artefacts_per_doctype():
     of the caption in an image."""
     graph = _planning_graph()
 
-    assert graph.inputs(DocType.text, JobType.TEXT_EXTRACTION) == [JobType.EXTRACT_HTML]
-    assert graph.inputs(DocType.image, JobType.TEXT_EXTRACTION) == [
-        JobType.IMAGE_CAPTION
-    ]
-    assert graph.inputs(DocType.text, JobType.EXTRACT_HTML) == []
+    assert graph.inputs(DocType.text, "text_extraction") == ["extract_html"]
+    assert graph.inputs(DocType.image, "text_extraction") == ["image_caption"]
+    assert graph.inputs(DocType.text, "extract_html") == []
 
 
 def test_descendants_are_the_steps_after_a_step_transitively():
     graph = _planning_graph()
 
-    assert graph.descendants([JobType.TEXT_LANGUAGE_DETECTION]) == [
-        JobType.TEXT_KEYWORDS,
-        JobType.TEXT_DOCUMENT_EMBEDDING,
+    assert graph.descendants(["text_language_detection"]) == [
+        "text_keywords",
+        "text_document_embedding",
     ]
-    assert graph.descendants([JobType.TEXT_DOCUMENT_EMBEDDING]) == []
+    assert graph.descendants(["text_document_embedding"]) == []
 
 
 # ===========================================================================
@@ -295,7 +286,7 @@ def test_descendants_are_the_steps_after_a_step_transitively():
 def test_pipeline_graph_fails_on_artefact_nobody_produces():
     """Every artefact must be produced by a step."""
     problems = _problems(
-        {JobType.TEXT_EXTRACTION: _step(set(), {artefact_named("content")})},
+        {"text_extraction": _step(set(), {artefact_named("content")})},
     )
 
     assert "Artefact 'es_index' is produced by no step." in problems
@@ -305,10 +296,10 @@ def test_pipeline_graph_fails_on_required_artefact_not_produced_for_doctype():
     """A step of a doctype must find its required artefacts in that doctype."""
     steps = _producing_all_other_artefacts(
         {
-            JobType.IMAGE_CAPTION: _step(
+            "image_caption": _step(
                 set(), {artefact_named("image_caption")}, frozenset({DocType.image})
             ),
-            JobType.IMAGE_EMBEDDING: _step(
+            "image_embedding": _step(
                 {artefact_named("image_caption")}, {artefact_named("image_embeddings")}
             ),
         }
@@ -327,10 +318,10 @@ def test_pipeline_graph_fails_on_cycle():
     """Two steps that require each other's artefacts form a cycle."""
     steps = _producing_all_other_artefacts(
         {
-            JobType.TEXT_SPACY: _step(
+            "text_spacy": _step(
                 {artefact_named("language")}, {artefact_named("content")}
             ),
-            JobType.TEXT_LANGUAGE_DETECTION: _step(
+            "text_language_detection": _step(
                 {artefact_named("content")}, {artefact_named("language")}
             ),
         }
@@ -345,8 +336,8 @@ def test_pipeline_graph_fails_on_artefact_produced_twice():
     """One artefact per doctype has one producer, else its consumers are ambiguous."""
     steps = _producing_all_other_artefacts(
         {
-            JobType.TEXT_EXTRACTION: _step(set(), {artefact_named("content")}),
-            JobType.EXTRACT_HTML: _step(set(), {artefact_named("content")}),
+            "text_extraction": _step(set(), {artefact_named("content")}),
+            "extract_html": _step(set(), {artefact_named("content")}),
         }
     )
 
@@ -360,9 +351,9 @@ def test_pipeline_graph_fails_on_step_with_two_direct_predecessors():
     independent steps would run twice."""
     steps = _producing_all_other_artefacts(
         {
-            JobType.TEXT_EXTRACTION: _step(set(), {artefact_named("content")}),
-            JobType.EXTRACT_HTML: _step(set(), {artefact_named("raw_html")}),
-            JobType.TEXT_HTML_MAPPING: _step(
+            "text_extraction": _step(set(), {artefact_named("content")}),
+            "extract_html": _step(set(), {artefact_named("raw_html")}),
+            "text_html_mapping": _step(
                 {artefact_named("content"), artefact_named("raw_html")},
                 {artefact_named("html")},
             ),
@@ -383,7 +374,7 @@ def test_pipeline_graph_fails_on_more_steps_than_the_feature_states_count(
     with more steps than that fails with a clear message."""
     monkeypatch.setattr(pipeline_graph, "MAX_COUNTED_STEPS", 1)
     steps = _producing_all_other_artefacts(
-        {JobType.EXTRACT_HTML: _step(set(), {artefact_named("raw_html")})}
+        {"extract_html": _step(set(), {artefact_named("raw_html")})}
     )
 
     problems = _problems(steps)
@@ -427,7 +418,7 @@ def test_pipeline_graph_fails_on_an_own_store_without_archive_and_vice_versa():
     steps = _producing_all_other_artefacts({})
     lacking = _test_artefact("test_lacking", kind=StorageKind.OWN_STORE)
     extra = _test_artefact("test_extra", archive=_NoArchive())
-    steps[JobType.EXTRACT_HTML] = _step(set(), {lacking, extra})
+    steps["extract_html"] = _step(set(), {lacking, extra})
 
     problems = [
         p
@@ -447,7 +438,7 @@ def test_pipeline_graph_fails_on_a_step_mixing_always_and_on_demand_artefacts():
     """A step produces either always-computed or on-demand artefacts."""
     steps = _producing_all_other_artefacts({})
     mixed = _test_artefact("test_on_demand")
-    steps[JobType.EXTRACT_HTML] = _step(
+    steps["extract_html"] = _step(
         set(), {_test_artefact("test_always", always=True), mixed}
     )
 
@@ -461,7 +452,7 @@ def test_pipeline_graph_fails_on_an_always_step_requiring_an_on_demand_artefact(
     """The step of an always-computed artefact requires only always-computed
     ones, so the core steps never wait for an on-demand step."""
     steps = _producing_all_other_artefacts({})
-    steps[JobType.EXTRACT_HTML] = _step(
+    steps["extract_html"] = _step(
         {artefact_named("keywords")}, {_test_artefact("test_always", always=True)}
     )
 
@@ -472,7 +463,7 @@ def test_pipeline_graph_fails_on_an_always_step_requiring_an_on_demand_artefact(
 
 
 def _graph_problems(
-    steps: dict[JobType, PipelineStep], artefacts: list[Artefact]
+    steps: dict[str, PipelineStep], artefacts: list[Artefact]
 ) -> list[str]:
     with pytest.raises(PipelineDeclarationError) as exc_info:
         PipelineGraph(steps, artefacts)
@@ -503,12 +494,12 @@ def test_registry_check_fails_on_a_system_code_declared_differently():
     registry = ArtefactRegistry()
     for declared in artefacts:
         registry.register_artefact(declared)
-    registry.register_step(JobType.EXTRACT_HTML, _step(set(), set(artefacts), TEXT))
+    registry.register_step("extract_html", _step(set(), set(artefacts), TEXT))
     registry.check()
 
     artefacts.append(_test_artefact("test_other", codes=(other,)))
     registry.register_artefact(artefacts[-1])
-    registry.register_step(JobType.EXTRACT_HTML, _step(set(), set(artefacts), TEXT))
+    registry.register_step("extract_html", _step(set(), set(artefacts), TEXT))
     with pytest.raises(PipelineDeclarationError) as exc_info:
         registry.check()
 
@@ -525,7 +516,7 @@ def test_registry_check_fails_on_a_system_code_declared_differently():
 _SPACY_REQUIRES = {artefact_named("content"), artefact_named("language")}
 
 
-def _further_step(produces: set[Artefact], job: JobType) -> PipelineStep:
+def _further_step(produces: set[Artefact], job: str) -> PipelineStep:
     return PipelineStep(
         requires=frozenset(_SPACY_REQUIRES),
         produces=frozenset(produces),
@@ -534,25 +525,19 @@ def _further_step(produces: set[Artefact], job: JobType) -> PipelineStep:
     )
 
 
-def _spacy_steps() -> dict[JobType, PipelineStep]:
+def _spacy_steps() -> dict[str, PipelineStep]:
     """text_spacy with its further steps keywords and named entities, and the
     steps before and after it."""
     return _producing_all_other_artefacts(
         {
-            JobType.TEXT_EXTRACTION: _step(set(), {artefact_named("content")}),
-            JobType.TEXT_LANGUAGE_DETECTION: _step(
+            "text_extraction": _step(set(), {artefact_named("content")}),
+            "text_language_detection": _step(
                 {artefact_named("content")}, {artefact_named("language")}
             ),
-            JobType.TEXT_SPACY: _step(
-                _SPACY_REQUIRES, {artefact_named("tokens_sentences")}
-            ),
-            JobType.TEXT_KEYWORDS: _further_step(
-                {artefact_named("keywords")}, JobType.TEXT_SPACY
-            ),
-            JobType.TEXT_NER: _further_step(
-                {artefact_named("ner_spans")}, JobType.TEXT_SPACY
-            ),
-            JobType.TEXT_HTML_MAPPING: _step(
+            "text_spacy": _step(_SPACY_REQUIRES, {artefact_named("tokens_sentences")}),
+            "text_keywords": _further_step({artefact_named("keywords")}, "text_spacy"),
+            "text_ner": _further_step({artefact_named("ner_spans")}, "text_spacy"),
+            "text_html_mapping": _step(
                 {artefact_named("tokens_sentences")}, {artefact_named("html")}
             ),
         }
@@ -561,33 +546,34 @@ def _spacy_steps() -> dict[JobType, PipelineStep]:
 
 def test_pipeline_graph_lists_further_steps_of_a_job_as_steps():
     """The further steps of a job are steps of the doctype with their own
-    status column, computed by the job."""
+    status column, computed by the job. They share the job's inputs, so the
+    step order lists them by name; the job lists its own step first."""
     graph = _graph(_spacy_steps())
 
     assert graph.steps(DocType.text)[2:5] == [
-        JobType.TEXT_SPACY,
-        JobType.TEXT_KEYWORDS,
-        JobType.TEXT_NER,
+        "text_keywords",
+        "text_ner",
+        "text_spacy",
     ]
-    assert graph.job(JobType.TEXT_NER) == JobType.TEXT_SPACY
-    assert graph.job(JobType.TEXT_SPACY) == JobType.TEXT_SPACY
-    assert graph.job_steps(JobType.TEXT_SPACY) == [
-        JobType.TEXT_SPACY,
-        JobType.TEXT_KEYWORDS,
-        JobType.TEXT_NER,
+    assert graph.job("text_ner") == "text_spacy"
+    assert graph.job("text_spacy") == "text_spacy"
+    assert graph.job_steps("text_spacy") == [
+        "text_spacy",
+        "text_keywords",
+        "text_ner",
     ]
-    assert graph.job_steps(JobType.TEXT_EXTRACTION) == [JobType.TEXT_EXTRACTION]
+    assert graph.job_steps("text_extraction") == ["text_extraction"]
 
 
 def test_pipeline_graph_starts_one_job_for_all_its_steps():
     """Language detection starts the spacy job once, computing all its steps."""
     graph = _graph(_spacy_steps())
 
-    assert graph.next_jobs([JobType.TEXT_LANGUAGE_DETECTION]) == {
-        JobType.TEXT_SPACY: [
-            JobType.TEXT_SPACY,
-            JobType.TEXT_KEYWORDS,
-            JobType.TEXT_NER,
+    assert graph.next_jobs(["text_language_detection"]) == {
+        "text_spacy": [
+            "text_spacy",
+            "text_keywords",
+            "text_ner",
         ]
     }
 
@@ -597,11 +583,11 @@ def test_pipeline_graph_only_computed_steps_start_their_successors():
     computes tokens and sentences starts the HTML mapping."""
     graph = _graph(_spacy_steps())
 
-    ner_only = graph.job_steps(JobType.TEXT_SPACY, [JobType.TEXT_NER])
-    assert ner_only == [JobType.TEXT_NER]
+    ner_only = graph.job_steps("text_spacy", ["text_ner"])
+    assert ner_only == ["text_ner"]
     assert graph.next_jobs(ner_only) == {}
-    assert graph.next_jobs([JobType.TEXT_SPACY, JobType.TEXT_NER]) == {
-        JobType.TEXT_HTML_MAPPING: [JobType.TEXT_HTML_MAPPING]
+    assert graph.next_jobs(["text_spacy", "text_ner"]) == {
+        "text_html_mapping": ["text_html_mapping"]
     }
 
 
@@ -610,18 +596,18 @@ def test_pipeline_graph_rejects_a_requested_step_of_another_job():
     graph = _graph(_spacy_steps())
 
     with pytest.raises(PipelineDeclarationError):
-        graph.job_steps(JobType.TEXT_SPACY, [JobType.TEXT_HTML_MAPPING])
+        graph.job_steps("text_spacy", ["text_html_mapping"])
 
 
 def test_pipeline_graph_fails_on_further_step_with_other_inputs():
     """A further step shares the inputs of its job, as both are computed in
     the same run."""
     steps = _spacy_steps()
-    steps[JobType.TEXT_KEYWORDS] = PipelineStep(
+    steps["text_keywords"] = PipelineStep(
         requires=frozenset({artefact_named("content")}),
         produces=frozenset({artefact_named("keywords")}),
         doctypes=ALL_DOCTYPES,
-        job=JobType.TEXT_SPACY,
+        job="text_spacy",
     )
 
     problems = _problems(steps)
@@ -668,50 +654,50 @@ def test_the_core_steps_produce_core_artefacts(graph: PipelineGraph, doctype: Do
         pytest.param(
             DocType.text,
             artefact_named("keywords"),
-            [JobType.TEXT_KEYWORDS],
+            ["text_keywords"],
             id="text-keywords",
         ),
         pytest.param(
             DocType.text,
             artefact_named("ner_spans"),
-            [JobType.TEXT_NER],
+            ["text_ner"],
             id="text-entities",
         ),
         pytest.param(
             DocType.audio,
             artefact_named("word_frequencies"),
-            [JobType.TEXT_WORD_FREQUENCY],
+            ["text_word_frequency"],
             id="audio-word-frequencies",
         ),
         pytest.param(
             DocType.text,
             artefact_named("es_index"),
-            [JobType.TEXT_ES_INDEX],
+            ["text_es_index"],
             id="text-index",
         ),
         pytest.param(
             DocType.video,
             artefact_named("document_embeddings"),
-            [JobType.TEXT_DOCUMENT_EMBEDDING],
+            ["text_document_embedding"],
             id="video-document-embeddings",
         ),
         pytest.param(
             DocType.image,
             artefact_named("object_bboxes"),
-            [JobType.IMAGE_OBJECT_DETECTION],
+            ["image_object_detection"],
             id="image-object-boxes",
         ),
         pytest.param(
             DocType.image,
             artefact_named("image_embeddings"),
-            [JobType.IMAGE_EMBEDDING],
+            ["image_embedding"],
             id="image-embeddings",
         ),
         # every image has text: its caption
         pytest.param(
             DocType.image,
             artefact_named("sentence_embeddings"),
-            [JobType.TEXT_SENTENCE_EMBEDDING],
+            ["text_sentence_embedding"],
             id="image-sentence-embeddings",
         ),
     ],
@@ -720,7 +706,7 @@ def test_an_artefact_adds_its_producer_to_the_core_steps(
     graph: PipelineGraph,
     doctype: DocType,
     artefact: Artefact,
-    added_steps: list[JobType],
+    added_steps: list[str],
 ):
     """An optional artefact needs its producer besides the core steps."""
     core = set(graph.steps_for(doctype, artefact_registry.always()))
@@ -734,13 +720,13 @@ def test_the_steps_of_sentence_embeddings_are_the_text_chain(graph: PipelineGrap
     embeddings = frozenset({artefact_named("sentence_embeddings")})
 
     assert graph.steps_for(DocType.text, embeddings) == [
-        JobType.EXTRACT_HTML,
-        JobType.TEXT_EXTRACTION,
-        JobType.TEXT_LANGUAGE_DETECTION,
-        JobType.TEXT_SPACY,
-        JobType.TEXT_SENTENCE_EMBEDDING,
+        "extract_html",
+        "text_extraction",
+        "text_language_detection",
+        "text_spacy",
+        "text_sentence_embedding",
     ]
-    assert graph.steps_for(DocType.image, embeddings)[0] == JobType.IMAGE_CAPTION
+    assert graph.steps_for(DocType.image, embeddings)[0] == "image_caption"
 
 
 def test_image_artefacts_do_not_apply_to_text(graph: PipelineGraph):

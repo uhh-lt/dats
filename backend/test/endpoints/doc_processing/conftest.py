@@ -1,7 +1,6 @@
 import base64
 import os
 import wave
-from enum import Enum
 from io import BytesIO
 from pathlib import Path
 from typing import Generator, TypedDict
@@ -12,7 +11,6 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_dto import SourceDocumentCreate
@@ -233,6 +231,41 @@ def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjec
 # --- recompute ----------------------------------------------------------------
 
 
+class RemovedStepProject(TypedDict):
+    """
+    This fixture sets up the following project:
+
+    - project: "Removed Step Project" of `test_user`, without any enabled
+      feature
+    - text: text document "text.txt" with the text of `SDOC_SENTENCES` and the
+      language "en"; the steps of a project without features are finished,
+      and it has a finished status row of the step "removed_step", which no
+      step registers (as after a step was removed from DATS)
+    """
+
+    project: ProjectORM
+    text: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def removed_step_project(db_session: Session, test_user: UserORM) -> RemovedStepProject:
+    """The project described in `RemovedStepProject`."""
+    project = create_project_with_features(
+        db_session, test_user, title="Removed Step Project", features=[]
+    )
+    text = _create_sdoc(
+        db_session,
+        project,
+        name="text.txt",
+        doctype=DocType.text,
+        status={**dict.fromkeys(minimal_text_steps(), 1), "removed_step": 1},
+    )
+    db_session.commit()
+    db_session.refresh(project)
+    db_session.refresh(text)
+    return {"project": project, "text": text}
+
+
 class RecomputeProject(TypedDict):
     """
     This fixture sets up the following project:
@@ -319,7 +352,7 @@ def recompute_project(db_session: Session, test_user: UserORM) -> RecomputeProje
 
 
 class DummyStep(TypedDict):
-    step: JobType
+    step: str
     artefact: Artefact
     # the content of each document the step ran for, by document id
     computed: dict[int, str]
@@ -344,27 +377,10 @@ def _handle_dummy_job(payload: DummyJobInput, job: Job) -> None:
     _DUMMY_COMPUTED[payload.sdoc_id] = payload.text
 
 
-def _add_enum_member(enum_cls: type[JobType], name: str, value: str) -> JobType:
-    """Add a member to an enum, as a new value in its source file would."""
-    member = str.__new__(enum_cls, value)
-    member._name_ = name
-    member._value_ = value
-    enum_cls._member_map_[name] = member
-    enum_cls._value2member_map_[value] = member
-    enum_cls._member_names_.append(name)
-    return member
-
-
-def _remove_enum_member(enum_cls: type[Enum], member: Enum) -> None:
-    del enum_cls._member_map_[member.name]
-    del enum_cls._value2member_map_[member.value]
-    enum_cls._member_names_.remove(member.name)
-
-
 @pytest.fixture(scope="function")
 def dummy_step() -> Generator[DummyStep, None, None]:
     """
-    Declares a new pipeline step the way a developer adds one: a `JobType` value
+    Declares a new pipeline step the way a developer adds one: a job type
     (`test_dummy_step`), an always-computed artefact it produces
     (`test_dummy_artefact`, declared with `artefact(...)` as document data) and
     one `@pipeline_step` declaration on a job registered with an enricher.
@@ -374,7 +390,7 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     and runs for all doctypes that have content. Its enricher loads the content from the document data;
     its handler records it in `computed`. The fixture removes the step again.
     """
-    step = _add_enum_member(JobType, "TEST_DUMMY_STEP", "test_dummy_step")
+    step = "test_dummy_step"
     test_artefact = artefact(
         "test_dummy_artefact", kind=StorageKind.DOCUMENT_DATA, always=True
     )
@@ -395,14 +411,13 @@ def dummy_step() -> Generator[DummyStep, None, None]:
     JobService().job_registry.pop(step)
     artefact_registry.unregister_step(step)
     artefact_registry.unregister_artefact(test_artefact.name)
-    _remove_enum_member(JobType, step)
 
 
 class PairedSteps(TypedDict):
-    producer: JobType
-    consumer: JobType
+    producer: str
+    consumer: str
     # the documents each step ran for, by step
-    ran: dict[JobType, list[int]]
+    ran: dict[str, list[int]]
 
 
 # the documents each paired step ran for, by step; module-level functions, as
@@ -443,8 +458,8 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
     - The consumer's only input step is the producer, although it requires two
       artefacts.
     """
-    producer = _add_enum_member(JobType, "TEST_PRODUCER_STEP", "test_producer_step")
-    consumer = _add_enum_member(JobType, "TEST_CONSUMER_STEP", "test_consumer_step")
+    producer = "test_producer_step"
+    consumer = "test_consumer_step"
     artefacts = [
         artefact(f"test_{name}_artefact", kind=StorageKind.DOCUMENT_DATA, always=True)
         for name in ("first", "second", "third")
@@ -452,7 +467,7 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
 
     for documents in _PAIRED_RAN.values():
         documents.clear()
-    ran = {producer: _PAIRED_RAN[producer.value], consumer: _PAIRED_RAN[consumer.value]}
+    ran = {producer: _PAIRED_RAN[producer], consumer: _PAIRED_RAN[consumer]}
 
     for step, requires, produces, handler in (
         (
@@ -480,8 +495,6 @@ def paired_steps() -> Generator[PairedSteps, None, None]:
         artefact_registry.unregister_step(step)
     for declared in artefacts:
         artefact_registry.unregister_artefact(declared.name)
-    for step in (consumer, producer):
-        _remove_enum_member(JobType, step)
 
 
 # long enough for the HTML cleaning (readability), which drops a short text
@@ -494,14 +507,11 @@ DUMMY_UPLOAD_TEXT = (
 
 
 @pytest.fixture(scope="function")
-def unregistered_job_type() -> Generator[JobType, None, None]:
-    """A new `JobType` value (`test_unregistered_step`) that no job registers."""
-    job_type = _add_enum_member(
-        JobType, "TEST_UNREGISTERED_STEP", "test_unregistered_step"
-    )
+def unregistered_job_type() -> Generator[str, None, None]:
+    """A job type (`test_unregistered_step`) that no job registers."""
+    job_type = "test_unregistered_step"
     yield job_type
     JobService().job_registry.pop(job_type, None)
-    _remove_enum_member(JobType, job_type)
 
 
 class DummyStepProjects(TypedDict):
