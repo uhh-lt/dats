@@ -4,7 +4,9 @@ import pytest
 
 from bootstrap import register_jobs
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
+from common.doc_type_enum import DocType
 from common.feature_enum import Feature
+from pipeline_test_utils import all_steps, planned_steps
 from systems.feature_system.feature_exceptions import (
     FeatureDeclarationError,
     FeatureStillRequiredError,
@@ -44,6 +46,75 @@ def test_every_feature_requires_an_artefact():
     its status counts the documents its artefacts apply to."""
     for feature in Feature:
         assert feature_registry.required_artefacts([feature]), feature
+
+
+@pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
+def test_all_features_plan_every_step_of_the_doctype(doctype: DocType):
+    """All features together (every existing project enables them) plan every
+    step of the doctype, in pipeline order: no step is unreachable from the
+    features."""
+    assert planned_steps(doctype, list(Feature)) == all_steps(doctype)
+
+
+@pytest.mark.parametrize(
+    "feature,artefacts",
+    [
+        # the search index serves two features
+        pytest.param(Feature.FULL_TEXT_SEARCH, {Artefact.ES_INDEX}, id="full-text"),
+        pytest.param(
+            Feature.SEARCH_ANNOTATE, {Artefact.ES_INDEX}, id="search-annotate"
+        ),
+        pytest.param(
+            Feature.SENTENCE_SIMILARITY_SEARCH,
+            {Artefact.SENTENCE_EMBEDDINGS},
+            id="sentence-search",
+        ),
+        pytest.param(
+            Feature.IMAGE_SIMILARITY_SEARCH,
+            {Artefact.IMAGE_EMBEDDINGS},
+            id="image-search",
+        ),
+        # these require sentence similarity search and need only its artefact
+        pytest.param(Feature.RAG_CHAT, {Artefact.SENTENCE_EMBEDDINGS}, id="rag-chat"),
+        pytest.param(
+            Feature.ANNOTATION_SCALING,
+            {Artefact.SENTENCE_EMBEDDINGS},
+            id="annotation-scaling",
+        ),
+        pytest.param(
+            Feature.CONCEPTS_OVER_TIME,
+            {Artefact.SENTENCE_EMBEDDINGS},
+            id="concepts-over-time",
+        ),
+        pytest.param(
+            Feature.TAG_RECOMMENDATION,
+            {Artefact.DOCUMENT_EMBEDDINGS},
+            id="tag-recommendation",
+        ),
+        # the word frequencies serve two features
+        pytest.param(
+            Feature.WORD_FREQUENCY, {Artefact.WORD_FREQUENCIES}, id="word-frequency"
+        ),
+        pytest.param(
+            Feature.DUPLICATE_FINDER,
+            {Artefact.WORD_FREQUENCIES},
+            id="duplicate-finder",
+        ),
+        pytest.param(
+            Feature.KEYWORD_STATISTICS, {Artefact.KEYWORDS}, id="keyword-statistics"
+        ),
+        pytest.param(
+            Feature.ENTITY_ANNOTATIONS, {Artefact.NER_SPANS}, id="entity-annotations"
+        ),
+        pytest.param(
+            Feature.OBJECT_DETECTION, {Artefact.OBJECT_BBOXES}, id="object-detection"
+        ),
+    ],
+)
+def test_a_feature_requires_its_artefacts(feature: Feature, artefacts: set[Artefact]):
+    """The artefacts a feature (with the features it requires) needs besides
+    the core artefacts."""
+    assert feature_registry.required_artefacts([feature]) == artefacts
 
 
 def test_closure_adds_the_required_features_transitively():

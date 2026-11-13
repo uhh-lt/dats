@@ -34,9 +34,18 @@ def test_upgrade_renames_the_column_and_drops_the_pending_activations(
 def test_downgrade_restores_the_column_name(
     db_session: Session, feature_activations_database: int
 ):
-    """The downgrade renames the column back, with no pending activation."""
+    """The downgrade renames the column back and drops a pending computation:
+    it cannot be translated into a pending activation."""
     config = alembic_config()
     command.upgrade(config, ARTEFACT_COMPUTATIONS)
+    db_session.execute(
+        sa.text(
+            "UPDATE project SET artefact_computations = "
+            """CAST('{"c1": ["es_index"]}' AS jsonb) WHERE id = :id"""
+        ),
+        {"id": feature_activations_database},
+    )
+    db_session.commit()
     command.downgrade(config, CAPTIONS_CORE)
 
     assert (

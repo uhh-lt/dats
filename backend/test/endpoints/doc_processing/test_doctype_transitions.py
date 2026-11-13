@@ -11,7 +11,7 @@ from job_test_utils import HeldJobs
 from modules.doc_processing.audio.transcription_job import TranscriptionJobInput
 from modules.doc_processing.doc_processing_dto import SdocInitJobInput
 from modules.doc_processing.video.video_utils import audio_stream_path
-from pipeline_test_utils import read_all_step_status
+from pipeline_test_utils import core_steps, read_all_step_status, step_names
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -153,8 +153,11 @@ def test_an_image_extracted_from_a_document_runs_its_roots(
     held = _follow(held_jobs, p["project"].id, p["html_with_image"], DocType.text)
 
     image_id = _sdoc_id(db_session, p["project"].id, DocType.image)
-    assert held[JobType.IMAGE_CAPTION].sdoc_id == image_id
-    status = read_all_step_status(db_session, image_id)
-    assert status[JobType.IMAGE_METADATA_EXTRACTION.value] == FINISHED
-    assert status[JobType.IMAGE_THUMBNAIL.value] == FINISHED
-    assert status[JobType.IMAGE_CAPTION.value] == PROCESSING
+    assert [t for t, payload in held.items() if payload.sdoc_id == image_id] == [
+        JobType.IMAGE_CAPTION
+    ]
+    assert read_all_step_status(db_session, image_id) == {
+        **dict.fromkeys(step_names(core_steps(DocType.image)), PROCESSING),
+        JobType.IMAGE_METADATA_EXTRACTION.value: FINISHED,
+        JobType.IMAGE_THUMBNAIL.value: FINISHED,
+    }
