@@ -1,6 +1,6 @@
 # Plan: Per-Project Feature Toggles
 
-Status: implemented. All phases are implemented, each on its own branch: the backend (phases 1 to 4), the frontend registry and gating (5a, 5b), the creation and activation UI (6) and the edges (7), including the user guide (`docs/feature-guides/project-features.md`). Open: running the full test suite and validating the migrations on a production copy. The maintainability rework (`feature-toggles-maintainability-plan.md`) moved the step statuses into their own table, derived transitions and the frontend navigation from the declarations and moved the project feature code into `modules/project_features`. Where the implementation deviates from the plan, the sections below describe the implementation after that rework.
+Status: implemented. All phases are implemented, each on its own branch: the backend (phases 1 to 4), the frontend registry and gating (5a, 5b), the creation and activation UI (6) and the edges (7), including the user guide (`docs/feature-guides/project-features.md`). Open: validating the migrations on a production copy. The maintainability rework (`feature-toggles-maintainability-plan.md`) moved the step statuses into their own table, derived transitions and the frontend navigation from the declarations and moved the project feature code into `modules/project_features`. Where the implementation deviates from the plan, the sections below describe the implementation after that rework.
 
 ## Goal
 
@@ -107,7 +107,7 @@ Coreference and quotation need core data only and stay on-demand actions in ML A
 
 ```python
 register_feature(
-    Feature.SENTENCE_SEARCH,
+    Feature.SENTENCE_SIMILARITY_SEARCH,
     requires_artefacts={Artefact.SENTENCE_EMBEDDINGS},
     requires_features=set(),
 )
@@ -200,7 +200,7 @@ Each phase is one PR and leaves DATS fully working.
 | 7. Edges                                    | export/import, project doctor, docs, instructions                                                                                                          | —                                          | implemented |
 | Final review                                | Disable in every enabled state (computing, partly and fully available); disabling a computing feature unplans its processing steps                         | Disable no longer needs full availability  | implemented |
 
-The feature, project, document processing, unit and export/import tests ran on the phase 6 branch (the three export/import tests that need the registered jobs fail when run on their own; the verify branch fixes this). The full test suite and the validation of the migrations on a production copy are still required before merge.
+The feature, project, document processing, unit and export/import tests ran on the phase 6 branch (the three export/import tests that need the registered jobs fail when run on their own; the verify branch fixes this). The default backend test suite has run; validation of the migrations on a production copy is still required before merge.
 
 Phase 7 details:
 

@@ -11,3 +11,12 @@ This release adds [project features](../feature-guides/project-features.md): eve
 - **Tag Recommendations shows "partly available"**: before this release, document embeddings were computed on demand. After the migration, every existing project shows **Tag Recommendations** as partly available in **Project Settings** → **Features** until a project member clicks **Complete**, which computes the missing document embeddings in the background.
 - **Features are planned in the background**: enabling, completing or restarting a feature returns at once; a low-priority job plans the project's documents in batches of `feature_activation.batch_size` documents (default 10,000, in the backend configuration), so uploads are never held up by it. If a worker dies while it plans, the feature stays **Computing** until a project member clicks **Restart**.
 - **Rolling back**: a downgrade of the migration after projects disabled features brings the steps they did not plan back as processing (documents that never finish) or as finished without data.
+
+## Provider Configuration
+
+Before upgrading, update the environment files used by the deployment. The LLM and embedding providers are now configured by the base URL of their OpenAI-compatible APIs:
+
+- Replace `LLM_PROVIDER_HOST` and `LLM_PROVIDER_PORT` with `LLM_PROVIDER_URL`, for example `http://vllm-llm:8000/v1`.
+- Replace `EMB_PROVIDER_HOST` and `EMB_PROVIDER_PORT` with `EMB_PROVIDER_URL`, for example `http://vllm-emb:8000/v1`.
+
+Each URL must include the scheme and API path (usually `/v1`). Keep the existing `LLM_PROVIDER_API_KEY` and `EMB_PROVIDER_API_KEY` settings.
