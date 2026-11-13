@@ -12,6 +12,8 @@ The preprocessing pipeline is built as a distributed job system using the **RQ (
 
 When you upload a batch of files, DATS automatically detects their modalities and schedules a series of actions (a "flow"). These steps are executed asynchronously and in parallel by background workers. Depending on the task, DATS intelligently routes the job to either CPU-powered or GPU-powered workers (managed via **Ray** and **vLLM** for efficient model serving).
 
+The project's [enabled features](../feature-guides/project-features.md) determine which optional steps are planned. DATS always plans the core steps needed by the document type, but computes data such as the Elasticsearch index, embeddings, keywords, named entities, image captions and object bounding boxes only when an enabled feature needs them. The flows below describe all available processing; they are not a fixed sequence for every project.
+
 ![DATS Preprocessing Pipeline](../assets/preprocessing-pipeline.png)
 
 _The multimodal preprocessing pipeline routes files through specific AI models based on their data type._
