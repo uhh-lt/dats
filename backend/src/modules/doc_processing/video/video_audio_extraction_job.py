@@ -3,11 +3,14 @@ from pathlib import Path
 import ffmpeg
 from loguru import logger
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
+from modules.doc_processing.video.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -44,6 +47,11 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.AUDIO},
+    doctypes={DocType.video},
+)
 @register_job(
     job_type=JobType.VIDEO_AUDIO_EXTRACTION,
     input_type=VideoAudioExtractionJobInput,
@@ -53,12 +61,20 @@ def enrich_for_recompute(
 def create_and_store_audio_stream_file(
     payload: VideoAudioExtractionJobInput, job: Job
 ) -> VideoAudioExtractionJobOutput:
-    audio_filepath = payload.filepath.with_suffix(".mp3")
+    return VideoAudioExtractionJobOutput(
+        filepath=extract_audio_stream(payload.filepath)
+    )
+
+
+def extract_audio_stream(video_path: Path) -> Path:
+    """Write the audio stream of the video to `audio_stream_path(video_path)` and
+    return that path."""
+    audio_filepath = audio_stream_path(video_path)
 
     try:
         # convert the video to an audio stream
         (
-            ffmpeg.input(str(payload.filepath))
+            ffmpeg.input(str(video_path))
             .output(
                 str(audio_filepath),
                 acodec="libmp3lame",
@@ -81,4 +97,4 @@ def create_and_store_audio_stream_file(
         logger.error(msg)
         raise IOError(msg)
 
-    return VideoAudioExtractionJobOutput(filepath=audio_filepath)
+    return audio_filepath

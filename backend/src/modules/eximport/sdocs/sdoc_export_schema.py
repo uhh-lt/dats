@@ -1,8 +1,17 @@
+import ast
+
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 
 
 class SourceDocumentExportSchema(BaseModel):
@@ -13,6 +22,9 @@ class SourceDocumentExportSchema(BaseModel):
     name: str = Field(description="Name of the source document (default is filename)")
     doctype: str = Field(description="Document type of the source document")
     status: int = Field(description="Status of the source document")
+    step_status: dict[str, int | None] = Field(
+        description="Status of each pipeline step of the doctype, null = not planned"
+    )
 
     # Info about the folder that contains the source document
     folder_name: str = Field(
@@ -78,6 +90,13 @@ class SourceDocumentExportSchema(BaseModel):
             raise ValueError(f"{info.field_name} cannot be empty")
         return v
 
+    @field_validator("html", "raw_html", mode="before")
+    @classmethod
+    def read_missing_html_as_empty(cls, v):
+        """An empty HTML (e.g. of an image without caption) is an empty CSV cell,
+        which pandas reads as a missing value."""
+        return "" if v is None else v
+
     @field_validator("doctype")
     @classmethod
     def validate_doctype(cls, v):
@@ -108,6 +127,23 @@ class SourceDocumentExportSchema(BaseModel):
 
         return v
 
+    @field_validator("step_status")
+    @classmethod
+    def validate_step_status(cls, v, info: ValidationInfo):
+        """Validate that the values are statuses, and drop the keys that are no
+        pipeline step of the doctype: an archive of another version may name a
+        step this version does not have (renamed or removed)."""
+        if "doctype" not in info.data:
+            return v
+        steps = {
+            s.value
+            for s in pipeline_registry.graph().steps(DocType(info.data["doctype"]))
+        }
+        for status in v.values():
+            if status is not None:
+                SDocStatus(status)
+        return {step: status for step, status in v.items() if step in steps}
+
     @field_validator("tags")
     @classmethod
     def validate_lists(cls, v):
@@ -128,11 +164,13 @@ class SourceDocumentExportSchema(BaseModel):
                 raise ValueError(f"{item} must be a tuple of length 2")
         return v
 
-    @classmethod
     @field_validator("sentence_embeddings")
-    def validate_sentence_embeddings_consistency(cls, sentence_embeddings):
+    @classmethod
+    def validate_sentence_embeddings_consistency(
+        cls, sentence_embeddings: list[list[float]]
+    ) -> list[list[float]]:
         """Validate that all embedding vectors in sentence_embeddings have the same length."""
-        if not sentence_embeddings or len(sentence_embeddings) == 0:
+        if len(sentence_embeddings) == 0:
             return sentence_embeddings
 
         # Get the length of the first embedding vector
@@ -148,88 +186,44 @@ class SourceDocumentExportSchema(BaseModel):
 
         return sentence_embeddings
 
-    @classmethod
-    @field_validator("__all__", mode="after")
-    def validate_arrays_consistency(cls, values, info):
-        """Validate that related arrays have the same length."""
-        # Skip validation if this isn't the whole model
-        if not isinstance(values, dict):
-            return values
-
+    @model_validator(mode="after")
+    def validate_arrays_consistency(self) -> "SourceDocumentExportSchema":
+        """Validate that related arrays have the same length. Whether the sentence
+        embeddings are complete (one per sentence) is the archive module's
+        question (`artefact_archive.py`): an incomplete archive imports with the
+        step not planned."""
         # Validate token arrays
-        token_starts = values.get("token_starts")
-        token_ends = values.get("token_ends")
-        if token_starts is None or token_ends is None:
-            raise ValueError(
-                "token_starts and token_ends must be present for all source documents"
-            )
-
-        if len(token_starts) != len(token_ends):
+        if len(self.token_starts) != len(self.token_ends):
             raise ValueError(
                 f"token_starts and token_ends must have the same length. "
-                f"Got {len(token_starts)} and {len(token_ends)}"
+                f"Got {len(self.token_starts)} and {len(self.token_ends)}"
             )
 
         # Validate sentence arrays
-        sentence_starts = values.get("sentence_starts")
-        sentence_ends = values.get("sentence_ends")
-        sentence_embeddings = values.get("sentence_embeddings")
-        if (
-            sentence_starts is None
-            or sentence_ends is None
-            or sentence_embeddings is None
-        ):
-            raise ValueError(
-                "sentence_starts, sentence_ends and sentence_embeddings must be present"
-            )
-
-        if len(sentence_starts) != len(sentence_ends):
+        if len(self.sentence_starts) != len(self.sentence_ends):
             raise ValueError(
                 f"sentence_starts and sentence_ends must have the same length. "
-                f"Got {len(sentence_starts)} and {len(sentence_ends)}"
+                f"Got {len(self.sentence_starts)} and {len(self.sentence_ends)}"
             )
 
-        if len(sentence_embeddings) > 0 and len(sentence_starts) != len(
-            sentence_embeddings
-        ):
-            raise ValueError(
-                f"sentence_starts and sentence_embeddings must have the same length if sentence_embeddings are present. "
-                f"Got {len(sentence_starts)} and {len(sentence_embeddings)}"
-            )
-
-        # Validate token time arrays
-        token_time_starts = values.get("token_time_starts")
-        token_time_ends = values.get("token_time_ends")
-
-        # Check if one is None and the other isn't
-        if (token_time_starts is None) != (token_time_ends is None):
+        # Validate token time arrays: either both are None or both are present
+        if (self.token_time_starts is None) != (self.token_time_ends is None):
             raise ValueError(
                 "token_time_starts and token_time_ends must either both be None or both be present"
             )
 
         # If both are present, check lengths
-        if token_time_starts and token_time_ends:
-            if len(token_time_starts) != len(token_time_ends):
-                raise ValueError(
-                    f"token_time_starts and token_time_ends must have the same length. "
-                    f"Got {len(token_time_starts)} and {len(token_time_ends)}"
-                )
+        if (
+            self.token_time_starts is not None
+            and self.token_time_ends is not None
+            and len(self.token_time_starts) != len(self.token_time_ends)
+        ):
+            raise ValueError(
+                f"token_time_starts and token_time_ends must have the same length. "
+                f"Got {len(self.token_time_starts)} and {len(self.token_time_ends)}"
+            )
 
-        return values
-
-    @classmethod
-    @field_validator("__all__", mode="after")
-    def validate_image_embedding(cls, values, info):
-        """Validate that image_embedding is present for image documents (if available)."""
-        # Skip validation if this isn't the whole model
-        if not isinstance(values, dict):
-            return values
-
-        # Validate image embedding for image documents - no longer strictly required
-        # doctype = values.get("doctype")
-        # image_embedding = values.get("image_embedding")
-
-        return values
+        return self
 
 
 class SourceDocumentExportCollection(BaseModel):
@@ -244,10 +238,10 @@ class SourceDocumentExportCollection(BaseModel):
         df_cleaned = df.replace({pd.NA: None, float("nan"): None})
         records = df_cleaned.to_dict("records")
 
-        # Process each record to convert string representations back to Python objects
+        # The export writes lists as their Python representation (e.g. "[('a', 1)]").
+        # The cells come from an uploaded file: parse them as literals, never evaluate them.
         processed_records = []
         for record in records:
-            # Convert string representations of lists and tuples back to Python objects
             for field in [
                 "tags",
                 "token_starts",
@@ -261,13 +255,19 @@ class SourceDocumentExportCollection(BaseModel):
                 "token_time_ends",
                 "word_frequencies",
                 "metadata",
+                "step_status",
             ]:
                 if field in record and isinstance(record[field], str):
                     try:
-                        # Safe evaluation of string representation to Python object
-                        record[field] = eval(record[field])
-                    except (SyntaxError, NameError, ValueError):
-                        # If eval fails, keep as is - validation will catch it later
+                        record[field] = ast.literal_eval(record[field])
+                    except (
+                        SyntaxError,
+                        ValueError,
+                        TypeError,
+                        MemoryError,
+                        RecursionError,
+                    ):
+                        # Not a literal: keep the string, the schema validation rejects it
                         pass
 
             processed_records.append(record)

@@ -9,8 +9,8 @@ workers, the setup script and the tests cannot drift apart:
 | `worker.py` (job processes)  | init_logging, register_jobs, connect_repos, init_services  |
 | `setup.py`                   | init_logging, setup_data_stores                            |
 | `run_migrations.py`          | init_logging, migrate_database                             |
-| `test/conftest.py`           | connect_repos, init_services, delete_all_data,             |
-|                              | ensure_system_data, create_app                             |
+| `test/conftest.py`           | register_jobs, connect_repos, init_services,               |
+|                              | delete_all_data, ensure_system_data, create_app            |
 
 All functions are idempotent, so calling one twice in a process is safe.
 """
@@ -63,16 +63,67 @@ def _init_sentry() -> None:
 # JOBS
 # ==============================================================================
 def register_jobs() -> None:
-    """Register all jobs (by importing the `*_job.py` modules) and build the
-    JOB_UPDATED event model, which needs all jobs registered.
+    """Register all jobs (by importing the `*_job.py` modules), check the
+    preprocessing pipeline derived from their declarations, register the job
+    lifecycle hooks of the pipeline, check that the feature states can count
+    all steps, register the features (`register_features`) and build the JOB_UPDATED event model, which needs all jobs registered.
 
     Must run before any endpoint is imported: the job endpoints are generated
     on registration.
     """
     from common.dats_event import build_job_event_models
+    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+    from modules.doc_processing.step_run import (
+        handle_job_error,
+        handle_job_finished,
+        handle_job_started,
+    )
+    from systems.job_system.job_service import JobHooks, JobService
 
     import_by_suffix("_job.py")
+    # fails on artefacts nobody produces and cycles
+    pipeline_registry.graph()
+    # the pipeline tracks the step statuses and starts the next steps
+    JobService().register_hooks(
+        JobHooks(
+            started=handle_job_started,
+            finished=handle_job_finished,
+            failed=handle_job_error,
+        )
+    )
+    _check_counted_steps(len(pipeline_registry.graph().all_steps()))
+    register_features()
     build_job_event_models()
+
+
+def _check_counted_steps(steps: int) -> None:
+    """Raise a `PipelineDeclarationError` if the feature states cannot count
+    this many pipeline steps (`crud_sdoc_step_status.count_by_project`)."""
+    from core.doc.source_document_step_status_crud import MAX_COUNTED_STEPS
+    from modules.doc_processing.doc_processing_exceptions import (
+        PipelineDeclarationError,
+    )
+
+    if steps > MAX_COUNTED_STEPS:
+        raise PipelineDeclarationError(
+            [
+                f"There are {steps} pipeline steps, but the feature states "
+                f"count at most {MAX_COUNTED_STEPS} (one bit each in a BIGINT, see "
+                f"crud_sdoc_step_status.count_by_project)."
+            ]
+        )
+
+
+def register_features() -> None:
+    """Register all features (by importing the `*_feature.py` modules) and check
+    their declarations against the pipeline: fails on undeclared features,
+    artefacts no step produces, unknown or cyclic feature requirements. Called by
+    `register_jobs`, as the check needs the pipeline steps."""
+    from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+    from systems.feature_system.feature_registry import feature_registry
+
+    import_by_suffix("_feature.py")
+    feature_registry.check(pipeline_registry.graph().artefacts())
 
 
 # ==============================================================================

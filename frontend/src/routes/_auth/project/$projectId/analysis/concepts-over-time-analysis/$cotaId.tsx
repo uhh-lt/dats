@@ -1,3 +1,4 @@
+import { ensureRouteFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
 import { parseIdParam } from "@core/navigation";
 import { cotaQueries, CotaView } from "@features/concept-over-time-analysis";
@@ -17,7 +18,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
     parse: ({ cotaId }) => ({ cotaId: parseIdParam(cotaId) }),
   },
   context: ({ params }) => ({ cotasByProjectOptions: cotaQueries.byProject(params.projectId) }),
-  loader: async ({ context, params }) => {
+  loader: async ({ context, params, route }) => {
+    if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;
     const cotas = await context.queryClient.ensureQueryData(context.cotasByProjectOptions);
     if (!cotas[params.cotaId]) throw notFound();
   },

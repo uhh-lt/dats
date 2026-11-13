@@ -2,8 +2,11 @@
 """
 check_core.py
 
-This script enforces multiple rules for files in the 'core' folder:
-1. No file in 'core' may import anything from 'modules'.
+This script enforces the layering of 'core' and 'systems' on 'modules':
+1. No file in 'core' may import anything from 'modules' at module level (type
+   hints under `if TYPE_CHECKING:` are allowed).
+2. No file in 'systems' may import anything from 'modules', also not inside a
+   function or under `if TYPE_CHECKING:`.
 (More rules can be added in the future.)
 """
 
@@ -12,21 +15,26 @@ import re
 import sys
 from pathlib import Path
 
+# folder -> pattern of a forbidden import line
+FORBIDDEN_IMPORTS = {
+    "core": re.compile(r"^(from|import) +modules[. ]"),
+    "systems": re.compile(r"^\s*(from|import) +modules[. ]"),
+}
 
-def find_core_files(root):
-    core_dir = os.path.join(root, "core")
-    for dirpath, _, filenames in os.walk(core_dir):
+
+def find_files(root, folder):
+    for dirpath, _, filenames in os.walk(os.path.join(root, folder)):
         for filename in filenames:
             if filename.endswith(".py"):
                 yield os.path.join(dirpath, filename)
 
 
-def check_no_modules_import(file_path):
+def check_no_modules_import(file_path, pattern):
     violations = []
     with open(file_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        if re.search(r"^(from|import) +modules[. ]", line):
+        if pattern.search(line):
             violations.append((i, line.strip()))
     if violations:
         print(f"Violation in {file_path}: imports from modules:")
@@ -39,15 +47,16 @@ def check_no_modules_import(file_path):
 def main():
     root = Path(__file__).parent.parent / "src"
     all_ok = True
-    for file in find_core_files(root):
-        ok = True
-        ok &= check_no_modules_import(file)
-        # (Add more checks here as needed)
-        if not ok:
-            all_ok = False
+    for folder, pattern in FORBIDDEN_IMPORTS.items():
+        for file in find_files(root, folder):
+            ok = True
+            ok &= check_no_modules_import(file, pattern)
+            # (Add more checks here as needed)
+            if not ok:
+                all_ok = False
     if not all_ok:
         sys.exit(1)
-    print("All core checks passed.")
+    print("All core and systems layering checks passed.")
 
 
 if __name__ == "__main__":

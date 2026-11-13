@@ -144,8 +144,9 @@ def update_project(
     ws: WebsocketEmitter = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(project_id)
-    db_obj = crud_project.update(db=db, id=project_id, update_dto=proj)
-    result = ProjectRead.model_validate(db_obj)
+    result = ProjectService().update_project(
+        db=db, project_id=project_id, update_dto=proj
+    )
     ws.emit_to_project(DATSEvent.PROJECT_UPDATED, result, project_id=project_id)
     return result
 

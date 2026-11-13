@@ -41,7 +41,7 @@ def _preload_modules() -> None:
     register_jobs()
     for suffix in ["_repo.py", "_service.py", "_orm.py", "_dto.py", "_crud.py"]:
         import_by_suffix(suffix)
-    import modules.doc_processing.doc_processing_pipeline  # noqa: F401
+    import modules.doc_processing.step_run  # noqa: F401
 
 
 class DATSWorker(Worker):

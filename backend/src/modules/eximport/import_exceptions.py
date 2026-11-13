@@ -71,6 +71,11 @@ class ImportPromptsError(Exception):
         self.errors = errors
 
 
+class ImportProjectDetailsError(Exception):
+    def __init__(self, errors: list[str]) -> None:
+        super().__init__(f"Errors occurred while importing project details: {errors}")
+
+
 class ImportProjectMetadataError(Exception):
     def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing project metadata: {errors}")

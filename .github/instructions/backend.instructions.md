@@ -36,7 +36,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
   - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud` in `*_enum.py` files, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
   - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...)
   - `modules/`: features built on `core` and `systems` (analysis, search, export/import, doc processing, ...)
-  - `systems/`: reusable infrastructure (`job_system`, `search_system`, `websocket_system`, `mcp_system`)
+  - `systems/`: reusable infrastructure (`job_system`, `feature_system`, `search_system`, `websocket_system`, `mcp_system`)
   - `repos/`: connections to external services (SQL, Weaviate, Elasticsearch, Redis, filesystem, LLM, Ray, Docling, mail); see `repos/README.md` for the repo lifecycle
   - `utils/`: process-level helpers (`import_by_suffix`, logger setup, image/GPU utils)
   - `migrations/`: Alembic migrations
@@ -53,6 +53,7 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 | Exception classes only in `*_exceptions.py`                                        | `lint/check_exceptions.py` |
 | Enum classes only in `*_enum.py`, with a str or int value type                     | `lint/check_enums.py`      |
 | `core` never imports from `modules`                                                | `lint/check_core.py`       |
+| `systems` never imports from `modules`, also not inside a function                 | `lint/check_core.py`       |
 | `*_endpoint.py` imports `*_dto` modules from its own folder only                   | `lint/check_endpoints.py`  |
 | `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only  | `lint/check_repos.py`      |
 
@@ -70,6 +71,7 @@ The suffix states the role of a file. Several suffixes are auto-imported by `imp
 - `*_service.py`: business logic
 - `*_endpoint.py`: one FastAPI router (auto-mounted by `bootstrap.create_app`)
 - `*_job.py`: background job handlers registered with `@register_job`
+- `*_feature.py`: the module's toggleable feature, declared with `register_feature`
 - `*_exceptions.py`: module-specific exceptions
 - `*_enum.py`: the module's enums
 - `*_repo.py`: external service connection (only in `repos/`)
@@ -167,3 +169,61 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 - Add the job type to `JobType` (`common/job_type_enum.py`) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
 - `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(JobType.X, <X>JobInput(...))`.
 - See [ml_job.py](backend/src/modules/ml/ml_job.py) and `systems/job_system/README.md`.
+- A job of a gated module checks its feature in its `validate_input` hook with `FeatureService().assert_enabled(...)` (`duplicate_finder_job.py`).
+
+## Pipeline Steps
+
+Add a step:
+
+1. Add its `JobType` value (`common/job_type_enum.py`); its position breaks ties in the derived step order.
+2. Add new artefacts to `Artefact` (`common/artefact_enum.py`), and to `CORE_ARTEFACTS` only if every document needs them whatever features its project enables.
+3. Add the artefact's archive entry to `ARTEFACT_ARCHIVE` (`modules/eximport/sdocs/artefact_archive.py`): an archive module if it has its own store, else the parts of the archive that carry it; `test_artefact_archive.py` fails otherwise.
+4. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type, input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`modules/doc_processing/pipeline/pipeline_step_decorator.py`).
+5. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
+6. Regenerate the API client (`just update-api`), which adds the value to `JobType.ts`.
+
+Rules:
+
+- The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations (`modules/doc_processing/pipeline/pipeline_graph.py`); never list steps by hand.
+- The job system knows no pipeline: the job handler calls the lifecycle hooks (started, finished, failed) that `bootstrap.register_jobs` registers with the functions of `step_run.py` (`handle_job_started`, `handle_job_finished`, `handle_job_error`).
+- `handle_job_started` returns the input to run, a copy narrowed to the planned steps, or None to skip the job; never change a job input in place.
+- Start step jobs only with `step_run.start_steps` (document, steps, settings, an optional priority), which groups the steps by job and builds the bare input; never build an `SdocProcessingJobInput` or name a step's job to start it.
+- A finished step starts each planned successor with a bare `SdocProcessingJobInput` (project, document, settings, steps), and the successor's enricher loads the rest of its input from the database or filesystem, so a step stores all its output before its handler returns and never passes data to the next step in memory.
+- Every step registers an enricher (`@pipeline_step` rejects a step without one); the same enricher serves the advancing, recompute and feature activation.
+- A step job whose input cannot be built (`JobInputError`, e.g. its enricher finds no data) sets its steps and the pending steps after them to erroneous on every start path; an unreachable queue (`JobQueueUnavailableError`) never marks a step: recompute answers 503, advancing logs it and leaves the successors processing, and a feature activation fails and undoes its batch's change for the steps it could not start.
+- A step applies to every doctype of the step it follows, as a step starts the same successors for every doctype (the startup check fails otherwise).
+- A step has one direct predecessor: the steps producing its required artefacts must depend on each other (`NER_SPANS` and `SENTENCE_EMBEDDINGS` together are rejected), as no step waits for several inputs (the startup check fails otherwise).
+- Only jobs that create documents or fan out over files (`_ENTRY_POINTS` in `step_run.py`) build the input of the next job by hand.
+- A job that computes several steps in one run declares the others in the `further_steps` of `@pipeline_step` (step → produced artefacts), computes only the steps in `SdocProcessingJobInput.steps` and fails on a step it has no branch for (`_STEP_WRITERS` in `spacy_job.py`).
+- The status of a step per document is a row of `sourcedocumentstepstatus`, no row means not planned, and only `crud_sdoc_step_status` (the generic reads and writes), `core/doc/source_document_status_rules.py` and the planning statements of `StepPlanningService` (`modules/doc_processing/step_planning_statements.py`) touch these rows.
+- The overall status of a document is derived from its step rows (erroneous, else processing, else finished) and the status of a feature's steps from theirs (processing, else failed, else not planned, else ready), both only in `source_document_status_rules.py`; never store them.
+- `export_sdocs.py` and `import_sdocs.py` name no artefact: they iterate over the archive modules of `ARTEFACT_ARCHIVE`, the export reads an artefact only if its step finished and keeps it only if its module says it is complete, the import writes it only if its step was imported as finished.
+- A new archive module needs its round-trip case in `test_feature_toggle_eximport.py` and the doctor's check of its store or an entry in `UNCHECKED_STORES` (`tools/project_doctor/doctor_stores.py`); both tests fail otherwise.
+- The import rejects document archives without `step_status` (exported before the feature toggles).
+- A step that cannot run because its input step failed is erroneous, never processing: a failed job fails its pending successors, and planning fails a step whose input is erroneous; recomputing the input starts them again.
+- Code that needs the step of an artefact looks it up with `graph.producer(doctype, artefact)` instead of naming the step (`export_sdocs.py`, `import_sdocs.py`).
+- `test_new_pipeline_step.py` declares a step in a test and follows it through the pipeline; keep it passing when the pipeline changes.
+
+## Features
+
+Add a feature:
+
+1. Add its `Feature` value (`common/feature_enum.py`).
+2. Declare it with `register_feature(feature, requires_artefacts, requires_features)` in `<module>/<module>_feature.py`.
+3. Gate its routes and jobs (see "Feature Gating" in `backend-endpoint.instructions.md`).
+4. Regenerate the API client and add its entry to the frontend feature map `FEATURES` (`frontend.instructions.md`).
+
+Rules:
+
+- A toggleable feature is a `Feature` value (`common/feature_enum.py`) declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads.
+- A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
+- The startup check rejects unknown artefacts, artefacts no step produces and cycles, so a new feature needs the steps of its artefacts first.
+- `systems/feature_system` holds the generic part (declarations, registry, requirement resolution, `FeatureService.assert_enabled` and the `require_feature` dependencies, `GET /feature`); `modules/project_features` holds what knows projects and documents (`ProjectFeatureService`, the `/feature/project/...` endpoints, `ProjectFeatureRead` and `FeatureActivation`).
+- The planner lives in the `pipeline` package: `PipelineGraph.plan` gives the steps of a doctype for the needed artefacts and `step_planning.py` the steps of enabled features (`planned_steps`, `feature_steps`).
+- Only `PipelineGraph` derives which step feeds which (`inputs`, `successors`, `descendants`, `needed_steps`); never walk the `requires` and `produces` of the declarations elsewhere.
+- Only the operations of `StepPlanningService` (`modules/doc_processing/step_planning_service.py`: `enable_feature`, `restart_feature`, `disable_feature`, `add_features` for an import, `plan_new_document` and `handle_feature_activation_job`, which the activation job calls) take the planning locks, write planning rows, `project.enabled_features` and `project.feature_activations`, and start the `FEATURE_ACTIVATION` job; their SQL lives in `step_planning_statements.py`, which only the service imports, and no CRUD offers it; never plan steps by hand.
+- Enabling or completing a feature plans `(plan(enabled) - plan(enabled without the feature)) | steps(feature) | core steps` and never the missing data of another feature.
+- Enabling, completing and restarting a feature plan nothing in the request: they store a pending activation and start the `FEATURE_ACTIVATION` job before the commit, which plans the documents in batches (one transaction each, project share lock first) and removes the pending activation at the end; a feature with a pending activation is computing, and enabling or completing it answers 409.
+- The enabled features change only through `StepPlanningService.enable_feature` and `disable_feature` (called by the `/feature/project/...` endpoints and the project import), never through `ProjectUpdate`.
+- Disabling a feature sets its processing steps that no remaining feature plans to not planned, and `handle_job_started` skips steps that are not planned, so a disabled feature leaves no document processing.
+- An import restores only what the archive holds, adds the archive's features to the project's with `StepPlanningService.add_features` (never disables one) and plans no steps; features whose data is missing are partly available until a user completes them.

@@ -8,7 +8,7 @@ an incompatible DATS version fails early instead of half-way.
 """
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -24,14 +24,28 @@ STATUS_ERRONEOUS = -100
 STATUS_PROCESSING = 0
 STATUS_FINISHED = 1
 
-# The processing steps per doctype; each is a status column of sourcedocument
-# (common/doc_processing_steps.py)
+# The processing steps per doctype, in pipeline order
+# (pipeline_registry.graph().steps(doctype) of the backend), and the steps that
+# write the embeddings of a Weaviate collection, the Elasticsearch index and the
+# thumbnail of an image. A copy: the doctor imports no
+# DATS code, so it runs on the released backend image.
+# backend/test/unit/test_project_doctor_steps.py fails when it differs from the
+# backend.
+#
+# Since the feature toggles, the status of a step is a row of
+# sourcedocumentstepstatus (STEP_STATUS_TABLE), and a step without a row is not
+# planned for the document (its feature is not enabled). Before, every step was a
+# status column of sourcedocument and only the steps of the doctype counted.
 _TEXT_STEPS = [
     "text_extraction",
     "text_language_detection",
     "text_spacy",
+    "text_keywords",
+    "text_word_frequency",
+    "text_ner",
     "text_es_index",
     "text_sentence_embedding",
+    "text_document_embedding",
     "text_html_mapping",
 ]
 PROCESSING_STEPS: dict[str, list[str]] = {
@@ -53,7 +67,21 @@ PROCESSING_STEPS: dict[str, list[str]] = {
         *_TEXT_STEPS,
     ],
 }
+EMBEDDING_STEPS = {
+    "Document": "text_document_embedding",
+    "Sentence": "text_sentence_embedding",
+    "Image": "image_embedding",
+}
+ES_INDEX_STEP = "text_es_index"
+IMAGE_THUMBNAIL_STEP = "image_thumbnail"
+# The artefacts with their own store in the project export (the archive modules
+# of backend/src/modules/eximport/sdocs/artefact_archive.py) that the doctor does
+# not check: the word frequencies and the audio stream extracted from a video.
+# test_project_doctor_steps.py fails when an archive module is neither checked
+# nor listed here.
+UNCHECKED_STORES = ["word_frequencies", "audio"]
 ALL_STEPS = sorted({step for steps in PROCESSING_STEPS.values() for step in steps})
+STEP_STATUS_TABLE = "sourcedocumentstepstatus"
 
 # The Weaviate collections (the `name` of the *_collection.py classes) and
 # whether their objects carry the sdoc_id property
@@ -123,7 +151,6 @@ REQUIRED_COLUMNS: dict[str, list[str]] = {
         "project_id",
         "folder_id",
         "created",
-        *ALL_STEPS,
     ],
     "sourcedocumentdata": [
         "id",
@@ -209,6 +236,11 @@ class Stores:
     collection_postfix: str
     system_code_parents: dict[str, str | None]
     config_metadata: dict[tuple[str, str], str]
+    # where this database keeps the step statuses (set by verify_schema): the
+    # status table, or the step columns of sourcedocument (versions before the
+    # feature toggles)
+    has_step_status_table: bool = False
+    step_columns: list[str] = field(default_factory=list)
 
     # ==========================================================================
     # NAMING
@@ -277,7 +309,9 @@ class Stores:
             )
 
     def verify_schema(self) -> None:
-        """Raises if a table or column the doctor uses does not exist."""
+        """Raises if a table or column the doctor uses does not exist. Remembers
+        where the step statuses are: the status table, or the step columns of
+        older versions."""
         with self.db.connect() as conn:
             rows = conn.execute(
                 text(
@@ -292,6 +326,12 @@ class Stores:
             for column in columns
             if (table, column) not in existing
         ]
+        self.has_step_status_table = (STEP_STATUS_TABLE, "status") in existing
+        self.step_columns = [
+            step for step in ALL_STEPS if ("sourcedocument", step) in existing
+        ]
+        if not self.has_step_status_table and not self.step_columns:
+            missing.append(f"{STEP_STATUS_TABLE}.status")
         if missing:
             raise UnsupportedSchemaError(
                 "This DATS version is not supported by the doctor: the database "

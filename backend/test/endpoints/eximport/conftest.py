@@ -2,15 +2,33 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import TypedDict
 
+import ffmpeg
 import pytest
 from loguru import logger
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.meta_type_enum import MetaType
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
+from core.doc.document_embedding_crud import crud_document_embedding
+from core.doc.document_embedding_dto import DocumentObjectIdentifier
+from core.doc.image_embedding_crud import crud_image_embedding
+from core.doc.image_embedding_dto import ImageObjectIdentifier
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
+from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
+from core.doc.sentence_embedding_crud import crud_sentence_embedding
+from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_dto import (
+    SourceDocumentCreate,
+    SourceDocumentRead,
+)
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
@@ -27,8 +45,23 @@ from core.tag.tag_dto import TagCreate
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
+from feature_test_utils import (
+    create_project_with_features,
+    minimal_image_steps,
+    minimal_text_steps,
+    set_step_status,
+)
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
+from modules.doc_processing.image.image_thumbnail_generation_job import (
+    generate_thumbnails,
+)
+from modules.doc_processing.video.video_audio_extraction_job import (
+    extract_audio_stream,
+)
+from modules.doc_processing.video.video_thumbnail_generation_job import (
+    store_video_thumbnail,
+)
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM
@@ -38,6 +71,9 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
+from pipeline_test_utils import core_steps, step_names
 from prompt_test_utils import (
     PromptEximportProjects,
     create_prompt_eximport_projects,
@@ -49,7 +85,9 @@ from provenance_test_utils import (
     create_provenance_copies,
     create_provenance_project,
 )
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_system_enum import JobStatus
 from virtual_user_test_utils import VirtualUserProject, create_virtual_user_project
 
@@ -346,6 +384,51 @@ def _create_text_document_with_file(
     return sdoc
 
 
+def _create_video_document_with_file(
+    db: Session, *, project: ProjectORM
+) -> SourceDocumentORM:
+    """The video "clip.mp4" of `feature_toggle_eximport_projects`: its file, its
+    transcript, and the audio stream and thumbnail its steps write."""
+    video = crud_sdoc.create(
+        db=db,
+        create_dto=SourceDocumentCreate(
+            filename="clip.mp4",
+            name="clip.mp4",
+            doctype=DocType.video,
+            project_id=project.id,
+        ),
+    )
+    video_path = FilesystemRepo().get_path_to_sdoc_file(
+        SourceDocumentRead.model_validate(video)
+    )
+    picture = ffmpeg.input("testsrc=duration=1:size=64x64:rate=10", f="lavfi")
+    tone = ffmpeg.input("sine=frequency=440:duration=1", f="lavfi")
+    ffmpeg.output(
+        picture, tone, str(video_path), pix_fmt="yuv420p"
+    ).overwrite_output().run(quiet=True)
+    crud_sdoc_data.create(
+        db=db,
+        create_dto=SourceDocumentDataCreate(
+            id=video.id,
+            content="Hello world.",
+            repo_url=str(video_path.relative_to(FilesystemRepo().root_dir)),
+            raw_html="<html><body><p>Hello world.</p></body></html>",
+            html="<p>Hello world.</p>",
+            token_starts=[0, 6],
+            token_ends=[5, 12],
+            sentence_starts=[0],
+            sentence_ends=[12],
+            token_time_starts=[0, 500],
+            token_time_ends=[400, 900],
+        ),
+    )
+    extract_audio_stream(video_path)
+    store_video_thumbnail(
+        db=db, sdoc=SourceDocumentRead.model_validate(video), video_path=video_path
+    )
+    return video
+
+
 @pytest.fixture(scope="function")
 def experiment_eximport_projects(
     db_session: Session, test_project: ProjectORM, test_user: UserORM
@@ -515,3 +598,274 @@ def logged_warnings() -> Iterator[list[str]]:
     )
     yield messages
     logger.remove(handler_id)
+
+
+class FeatureToggleEximportProjects(TypedDict):
+    project: ProjectORM
+    target_project: ProjectORM
+    text: SourceDocumentORM
+    image: SourceDocumentORM
+    video: SourceDocumentORM
+    sentence_embeddings: list[list[float]]
+
+
+def minimal_video_steps() -> list[str]:
+    """The steps of a video document in a project without features."""
+    return step_names(core_steps(DocType.video))
+
+
+def toggled_text_steps() -> list[str]:
+    """The steps of the text document of `feature_toggle_eximport_projects`."""
+    return [
+        *minimal_text_steps(),
+        "text_word_frequency",
+        "text_es_index",
+        "text_sentence_embedding",
+        "text_document_embedding",
+    ]
+
+
+def toggled_image_steps() -> list[str]:
+    """The steps of the image document of `feature_toggle_eximport_projects`."""
+    return [*minimal_image_steps(), "image_embedding"]
+
+
+@pytest.fixture(scope="function")
+def feature_toggle_eximport_projects(
+    db_session: Session, test_user: UserORM
+) -> FeatureToggleEximportProjects:
+    """
+    This fixture sets up the following projects of the test user:
+
+    - Project "Toggled Project" (`project`), which enables only sentence
+      similarity search (all other features are disabled), with three documents
+      that hold the data of every archive module (`artefact_archive.py`):
+      - "text.txt" (`text`), a text document with the 30 sentences "Sentence
+        0." to "Sentence 29.", its raw file, and finished `toggled_text_steps()`
+        (the core steps, `text_word_frequency`, `text_es_index`,
+        `text_sentence_embedding` and `text_document_embedding`); every other
+        step is not planned. Each sentence has its own embedding in Weaviate
+        (`sentence_embeddings`, by sentence id): sentence i has 1.0 at position
+        i of 30. Its document embedding is [0.1, 0.2, 0.3], its word
+        frequencies are ("sentence", 30) and ("29", 1), and it has its
+        Elasticsearch entry (filename and content).
+      - "image.png" (`image`), a 4x4 PNG image with its raw file, the WebP and
+        thumbnail that image_thumbnail writes, without caption (empty content,
+        HTML and raw HTML), the image embedding [0.4, 0.5] and finished
+        `toggled_image_steps()` (the core steps and `image_embedding`); every
+        other step is not planned.
+      - "clip.mp4" (`video`), a video of one second (a 64x64 test picture with
+        a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello
+        world." (two tokens with their times, one sentence), finished
+        `minimal_video_steps()`, the audio stream that video_audio_extraction
+        extracted from it and the thumbnail that video_thumbnail wrote (its
+        `repo_url` links the thumbnail); every other step is not planned.
+    - Project "Import Target" (`target_project`), which enables only keyword
+      statistics, with no documents.
+
+    Non-obvious derived behavior:
+
+    - The empty HTML of the image is an empty CSV cell in the export, which
+      pandas reads as a missing value.
+    - The text has more sentences than Weaviate returns without a limit (25).
+    """
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Toggled Project",
+        features=[Feature.SENTENCE_SIMILARITY_SEARCH],
+    )
+    text = _create_text_document_with_file(
+        db_session,
+        project=project,
+        filename="text.txt",
+        sentences=[f"Sentence {i}." for i in range(30)],
+    )
+    sentence_embeddings = [
+        [1.0 if i == j else 0.0 for j in range(30)] for i in range(30)
+    ]
+    crud_sentence_embedding.create_multi(
+        client=WeaviateRepo().get_client(),
+        project_id=project.id,
+        ids=[
+            SentenceObjectIdentifier(sdoc_id=text.id, sentence_id=i)
+            for i in range(len(sentence_embeddings))
+        ],
+        embeddings=sentence_embeddings,
+    )
+
+    image = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="image.png",
+            name="image.png",
+            doctype=DocType.image,
+            project_id=project.id,
+        ),
+    )
+    image_path = FilesystemRepo().get_path_to_sdoc_file(
+        SourceDocumentRead.model_validate(image)
+    )
+    Image.new("RGB", (4, 4)).save(image_path, "PNG")
+    generate_thumbnails(image_path)
+    crud_sdoc_data.create(
+        db=db_session,
+        create_dto=SourceDocumentDataCreate(
+            id=image.id,
+            content="",
+            repo_url=str(image_path.relative_to(FilesystemRepo().root_dir)),
+            raw_html="",
+            html="",
+            token_starts=[],
+            token_ends=[],
+            sentence_starts=[],
+            sentence_ends=[],
+            token_time_starts=None,
+            token_time_ends=None,
+        ),
+    )
+
+    video = _create_video_document_with_file(db_session, project=project)
+
+    client = WeaviateRepo().get_client()
+    crud_document_embedding.create(
+        client=client,
+        project_id=project.id,
+        id=DocumentObjectIdentifier(sdoc_id=text.id),
+        embedding=[0.1, 0.2, 0.3],
+    )
+    crud_image_embedding.create(
+        client=client,
+        project_id=project.id,
+        id=ImageObjectIdentifier(sdoc_id=image.id),
+        embedding=[0.4, 0.5],
+    )
+    crud_word_frequency.create_multi(
+        db=db_session,
+        create_dtos=[
+            WordFrequencyCreate(sdoc_id=text.id, word=word, count=count)
+            for word, count in (("sentence", 30), ("29", 1))
+        ],
+    )
+    text_data = crud_sdoc_data.read(db=db_session, id=text.id)
+    crud_sdoc_elastic.create(
+        client=ElasticSearchRepo().get_client(),
+        project_id=project.id,
+        create_dto=ElasticSearchDocumentCreate(
+            project_id=project.id,
+            sdoc_id=text.id,
+            filename=text.filename,
+            content=text_data.content,
+        ),
+    )
+
+    set_step_status(db_session, text.id, dict.fromkeys(toggled_text_steps(), 1))
+    set_step_status(db_session, image.id, dict.fromkeys(toggled_image_steps(), 1))
+    set_step_status(db_session, video.id, dict.fromkeys(minimal_video_steps(), 1))
+    target_project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Import Target",
+        features=[Feature.KEYWORD_STATISTICS],
+    )
+    db_session.commit()
+    for obj in (project, target_project, text, image, video):
+        db_session.refresh(obj)
+    return {
+        "project": project,
+        "target_project": target_project,
+        "text": text,
+        "image": image,
+        "video": video,
+        "sentence_embeddings": sentence_embeddings,
+    }
+
+
+class SdocEximportProjects(TypedDict):
+    """
+    This fixture sets up the following projects:
+
+    Project "project" (the test project, owned by the test user):
+    - Tag "Important"
+    - Document "report.txt" (name "report.txt", text, with its raw file):
+        - Sentences "Alpha beta alpha." and "Gamma delta."
+        - Linked to the tag "Important"
+        - Word frequencies: "alpha" 2, "beta" 1
+        - Metadata: the initial metadata of a text document, with "language" = "en"
+        - Document embedding SDOC_DOCUMENT_EMBEDDING
+        - Sentence embeddings SDOC_SENTENCE_EMBEDDINGS (one per sentence)
+        - Finished `toggled_text_steps()`; every other step is not planned
+
+    Project "target_project" ("Import Target", owned by the test user):
+    - Tag "Important" (the documents import requires the tags of the documents)
+    - No documents
+
+    Non-obvious derived behavior:
+    - The documents export writes one CSV row per document. The list fields (tags,
+      word frequencies, metadata, token and sentence offsets, embeddings) are cells
+      with the Python representation of the list, e.g. "[('alpha', 2), ('beta', 1)]".
+    - The embedding values are exact in float32, so they survive Weaviate unchanged.
+    - The archive holds the word frequencies and embeddings because their steps are
+      finished.
+    """
+
+    project: ProjectORM
+    target_project: ProjectORM
+    sdoc: SourceDocumentORM
+
+
+SDOC_DOCUMENT_EMBEDDING = [0.25, 0.5, 0.75, 1.0]
+SDOC_SENTENCE_EMBEDDINGS = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]
+
+
+@pytest.fixture(scope="function")
+def sdoc_eximport_projects(
+    db_session, test_project: ProjectORM, test_user: UserORM
+) -> SdocEximportProjects:
+    """The projects described in `SdocEximportProjects`."""
+    target_project = _create_target_project(db_session, test_user)
+    tag_ids = [
+        crud_tag.create(
+            db=db_session,
+            create_dto=TagCreate(
+                name="Important", color="blue", description="", project_id=project.id
+            ),
+        ).id
+        for project in (test_project, target_project)
+    ]
+    sdoc = _create_text_document_with_file(
+        db_session,
+        project=test_project,
+        filename="report.txt",
+        sentences=["Alpha beta alpha.", "Gamma delta."],
+    )
+    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=tag_ids[:1])
+    set_step_status(db_session, sdoc.id, dict.fromkeys(toggled_text_steps(), 1))
+    crud_word_frequency.create_multi(
+        db=db_session,
+        create_dtos=[
+            WordFrequencyCreate(sdoc_id=sdoc.id, word="alpha", count=2),
+            WordFrequencyCreate(sdoc_id=sdoc.id, word="beta", count=1),
+        ],
+    )
+    client = WeaviateRepo().get_client()
+    crud_document_embedding.create(
+        client=client,
+        project_id=test_project.id,
+        id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
+        embedding=SDOC_DOCUMENT_EMBEDDING,
+    )
+    crud_sentence_embedding.create_multi(
+        client=client,
+        project_id=test_project.id,
+        ids=[
+            SentenceObjectIdentifier(sdoc_id=sdoc.id, sentence_id=i)
+            for i in range(len(SDOC_SENTENCE_EMBEDDINGS))
+        ],
+        embeddings=SDOC_SENTENCE_EMBEDDINGS,
+    )
+    db_session.commit()
+    db_session.refresh(test_project)
+    db_session.refresh(target_project)
+    db_session.refresh(sdoc)
+    return {"project": test_project, "target_project": target_project, "sdoc": sdoc}

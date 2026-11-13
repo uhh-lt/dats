@@ -14,6 +14,11 @@ from core.doc.source_document_exceptions import (
     SourceDocumentPreprocessingUnfinishedError,
 )
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_status_rules import (
+    document_status,
+    document_status_filter,
+)
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
 from repos.db.sql_utils import aggregate_ids
@@ -59,10 +64,13 @@ class CRUDSourceDocument(
     def read_status(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
-        sdoc = self.read(db=db, id=sdoc_id)
-        if sdoc.processed_status != SDocStatus.finished and raise_error_on_unfinished:
+        self.exists(db=db, id=sdoc_id, raise_error=True)
+        status = document_status(
+            crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id).values()
+        )
+        if status != SDocStatus.finished and raise_error_on_unfinished:
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
-        return sdoc.processed_status
+        return status
 
     def read_by_project_and_status(
         self, db: Session, *, project_id: int, status: SDocStatus
@@ -71,7 +79,7 @@ class CRUDSourceDocument(
             db.query(self.model)
             .filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == status.value,
+                document_status_filter(status),
             )
             .all()
         )
@@ -90,7 +98,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == SDocStatus.finished.value,
+                document_status_filter(SDocStatus.finished),
                 TagORM.id == tag_id,
             )
         else:
@@ -119,7 +127,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == SDocStatus.finished.value,
+                document_status_filter(SDocStatus.finished),
             )
         else:
             query = query.filter(self.model.project_id == project_id)
@@ -149,7 +157,7 @@ class CRUDSourceDocument(
             query = query.filter(
                 self.model.project_id == project_id,
                 self.model.filename == filename,
-                self.model.processed_status == SDocStatus.finished.value,
+                document_status_filter(SDocStatus.finished),
             )
         else:
             query = query.filter(
@@ -259,6 +267,9 @@ class CRUDSourceDocument(
             .all()
         ]
 
+    ### UPDATE OPERATIONS ###
+    # Inherited from SQLCRUDBase (the step statuses: crud_sdoc_step_status)
+
     ### DELETE OPERATIONS ###
     # Inherited from SQLCRUDBase
 
@@ -271,7 +282,7 @@ class CRUDSourceDocument(
         if status is not None:
             query = query.filter(
                 self.model.project_id == project_id,
-                self.model.processed_status == status.value,
+                document_status_filter(status),
             )
         else:
             query = query.filter(self.model.project_id == project_id)

@@ -1,4 +1,5 @@
 import { Icon } from "@components/icons";
+import type { Feature } from "@models/Feature";
 import type { QueryClient } from "@tanstack/react-query";
 import "@tanstack/react-router";
 
@@ -17,5 +18,10 @@ declare module "@tanstack/react-router" {
     tab?: boolean;
     icon?: Icon;
     getTitle?: GetTitleFn;
+    /**
+     * The feature of a gated page and of the routes below it: the project layout shows a "not enabled" view instead of
+     * them if it is disabled.
+     */
+    feature?: Feature;
   }
 }

@@ -17,7 +17,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/prompts")({
   staticData: {
     tab: true,
     icon: Icon.PROMPT,
-    getTitle: () => "Prompts",
   },
   validateSearch: zodValidator(promptsSearchSchema),
   context: ({ params }) => ({

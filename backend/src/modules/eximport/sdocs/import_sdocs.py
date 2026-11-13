@@ -3,42 +3,70 @@ from pathlib import Path
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from common.doc_processing_steps import PROCESSING_JOBS
 from common.doc_type_enum import DocType
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
+from common.job_type_enum import JobType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
-from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
-from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentUpdate
+from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
+from core.doc.source_document_step_status_dto import SourceDocumentStepStatusCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
-from modules.doc_processing.image.image_thumbnail_generation_job import (
-    generate_thumbnails,
-)
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.import_csv_utils import read_import_csv
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
-from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
+from modules.eximport.sdocs.artefact_archive import archive_modules
+from modules.eximport.sdocs.sdoc_export_schema import (
+    SourceDocumentExportCollection,
+    SourceDocumentExportSchema,
+)
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.vector.weaviate_repo import WeaviateRepo
+
+# archives of versions before the feature toggles hold one status per document
+ARCHIVE_WITHOUT_STEP_STATUS = (
+    "The archive was exported by a version of DATS before the feature toggles "
+    "(it holds no status per processing step) and cannot be imported."
+)
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()
+
+
+def archived_step_status(
+    sdoc_export: SourceDocumentExportSchema,
+) -> dict[str, int | None]:
+    """The status of each pipeline step of the document's doctype, as in the
+    archive (None = not planned).
+
+    A step that was processing when the archive was exported is not planned: the
+    import starts no job, so it would stay processing forever. A step whose
+    artefact the archive does not hold completely (its archive module says so) is
+    not planned either, whatever its status. The import plans no step: a feature
+    whose steps are not planned is partly available until a user completes it."""
+    graph = pipeline_registry.graph()
+    doctype = DocType(sdoc_export.doctype)
+    steps = graph.steps(doctype)
+    step_status: dict[str, int | None] = {
+        step.value: sdoc_export.step_status.get(step.value) for step in steps
+    }
+    for step, status in step_status.items():
+        if status == SDocStatus.processing.value:
+            step_status[step] = None
+
+    for artefact, module in archive_modules().items():
+        step = graph.producer(doctype, artefact)
+        if step is not None and not module.is_complete(sdoc_export):
+            step_status[step.value] = None
+    return step_status
 
 
 def import_sdocs_to_proj(
@@ -77,6 +105,8 @@ def import_sdocs_to_proj(
         )
 
     df = read_import_csv(data_file)
+    if "step_status" not in df.columns:
+        raise ImportSourceDocumentsError(errors=[ARCHIVE_WITHOUT_STEP_STATUS])
 
     # Validate input data with our schema
     try:
@@ -194,9 +224,6 @@ def import_sdocs_to_proj(
             project_id=project_id, src_file=source_file
         )
         relative_url = str(repo_path.relative_to(fsr.root_dir))
-        # generate thumbnail if needed
-        if DocType(sdoc_export.doctype) == DocType.image:
-            generate_thumbnails(repo_path)
 
         # 2.1 Create the sdoc folder (if it does not already exist)
         sdoc_folder = crud_folder.read_by_name_and_project(
@@ -221,14 +248,22 @@ def import_sdocs_to_proj(
             folder_id=sdoc_folder.id,
         )
 
-        # 2.3 Set the source document status to success
-        jobs = PROCESSING_JOBS[DocType(sdoc_export.doctype)]
-        sdoc_update = SourceDocumentUpdate(
-            **{job: sdoc_export.status for job in jobs},  # type: ignore
-        )
+        # 2.3 Set the status of the steps from the archive
+        step_status = archived_step_status(sdoc_export)
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
-        crud_sdoc.update(db=db, id=created_sdoc.id, update_dto=sdoc_update)
+        crud_sdoc_step_status.create_multi(
+            db=db,
+            create_dtos=[
+                SourceDocumentStepStatusCreate(
+                    sdoc_id=created_sdoc.id,
+                    step=JobType(step),
+                    status=SDocStatus(status),
+                )
+                for step, status in step_status.items()
+                if status is not None
+            ],
+        )
         imported_sdoc_ids.append(created_sdoc.id)
         filename_to_id_map[created_sdoc.filename] = created_sdoc.id
 
@@ -248,17 +283,10 @@ def import_sdocs_to_proj(
         )
         crud_sdoc_data.create(db=db, create_dto=sdoc_data_create)
 
-        # 4. Link the source documents with the attached data (tags, metadata, word frequencies)
+        # 4. Link the source documents with the attached data (tags, metadata)
         # Tags
         tag_ids = [existing_tags[tag_name].id for tag_name in sdoc_export.tags]
         crud_tag.link_multiple_tags(db=db, sdoc_ids=[created_sdoc.id], tag_ids=tag_ids)
-
-        # Word frequencies
-        wf_create_dtos = [
-            WordFrequencyCreate(sdoc_id=created_sdoc.id, word=word, count=count)
-            for word, count in sdoc_export.word_frequencies
-        ]
-        crud_word_frequency.create_multi(db=db, create_dtos=wf_create_dtos)
 
         # Metadata
         metadata_create_dtos = []
@@ -275,51 +303,13 @@ def import_sdocs_to_proj(
             metadata_create_dtos.append(metadata_create)
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
-        # 5. Add embeddings to the vector database
-        client = WeaviateRepo().get_client()
-        # Document embeddings
-        if sdoc_export.document_embedding is not None:
-            crud_document_embedding.create(
-                client=client,
-                project_id=project_id,
-                id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
-                embedding=sdoc_export.document_embedding,
-            )
-
-        # Sentence embeddings
-        crud_sentence_embedding.create_multi(
-            client=client,
-            project_id=project_id,
-            ids=[
-                SentenceObjectIdentifier(sdoc_id=created_sdoc.id, sentence_id=i)
-                for i in range(len(sdoc_export.sentence_embeddings))
-            ],
-            embeddings=[se for se in sdoc_export.sentence_embeddings],
-        )
-
-        # Image embedding
-        if (
-            sdoc_export.image_embedding is not None
-            and DocType(sdoc_export.doctype) == DocType.image
-        ):
-            crud_image_embedding.create(
-                client=client,
-                project_id=project_id,
-                id=ImageObjectIdentifier(sdoc_id=created_sdoc.id),
-                embedding=sdoc_export.image_embedding,
-            )
-
-        # 6. Add the source documents to the Elasticsearch index
-        crud_sdoc_elastic.create(
-            client=ElasticSearchRepo().get_client(),
-            project_id=project_id,
-            create_dto=ElasticSearchDocumentCreate(
-                project_id=project_id,
-                sdoc_id=created_sdoc.id,
-                filename=created_sdoc.filename,
-                content=sdoc_export.content if sdoc_export.content else "",
-            ),
-        )
+        # 5. Write the artefacts with an archive module to their stores, if
+        # their step was imported as finished
+        graph = pipeline_registry.graph()
+        for artefact, module in archive_modules().items():
+            step = graph.producer(DocType(sdoc_export.doctype), artefact)
+            if step is not None and step_status.get(step.value) == SDocStatus.finished:
+                module.write(db=db, sdoc=created_sdoc, archived=sdoc_export)
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"

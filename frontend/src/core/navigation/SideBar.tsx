@@ -28,8 +28,40 @@ import { useOpenDialog } from "@store/global/dialogBusHooks";
 import { useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { LinkListItemButton, LinkMenuItem } from "./links";
+import { formatNavigationShortcut } from "./navigationEntries";
+import { NavigationRoute, NavigationShortcut } from "./navigationTypes";
 import { useTabNavigate } from "./tabs";
+import { useEnabledNavigationEntries } from "./useNavigationEntries";
 import { WebSocketStatusIndicator } from "./WebSocketStatusIndicator";
+
+const PROJECT_ROUTE_PREFIX = "/project/$projectId";
+
+// Perspectives has always been highlighted lighter than the other entries.
+const SELECTED_COLOR_OVERRIDES: Record<string, string> = {
+  perspectives: "rgba(0, 0, 0, 0.08)",
+};
+
+function withShortcutHint(label: string, shortcut: NavigationShortcut) {
+  return `${label} (${formatNavigationShortcut(shortcut)})`;
+}
+
+interface ShortcutLabelProps {
+  title: string;
+  shortcut: NavigationShortcut;
+}
+
+/** Underlines the first letter of the title that matches a single-key shortcut; chords are shown in the tooltip. */
+function ShortcutLabel({ title, shortcut }: ShortcutLabelProps) {
+  const index = typeof shortcut === "string" ? title.toLowerCase().indexOf(shortcut.toLowerCase()) : -1;
+  if (index < 0) return title;
+  return (
+    <>
+      {title.slice(0, index)}
+      <span style={{ textDecoration: "underline" }}>{title[index]}</span>
+      {title.slice(index + 1)}
+    </>
+  );
+}
 
 interface SideBarProps {
   projectId?: number;
@@ -42,6 +74,9 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const location = useLocation();
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
   const tabNavigate = useTabNavigate();
+  const searchEntries = useEnabledNavigationEntries("search");
+  const mainEntries = useEnabledNavigationEntries("main");
+  const toolsEntries = useEnabledNavigationEntries("tools");
 
   // Memoize isActive function
   const isActive = useCallback(
@@ -76,7 +111,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   }, []);
 
   const handleOpenSearchTab = useCallback(
-    (to: "/project/$projectId/search" | "/project/$projectId/imagesearch" | "/project/$projectId/sentencesearch") => {
+    (to: NavigationRoute) => {
       if (!projectId) {
         return;
       }
@@ -197,260 +232,54 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <MenuItem onClick={() => handleOpenSearchTab("/project/$projectId/search")}>
-                  <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SEARCH)}</ListItemIcon>
-                  <ListItemText>Document Search</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={() => handleOpenSearchTab("/project/$projectId/imagesearch")}>
-                  <ListItemIcon>{getIconComponent(Icon.IMAGE_SEARCH)}</ListItemIcon>
-                  <ListItemText>Image Search</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={() => handleOpenSearchTab("/project/$projectId/sentencesearch")}>
-                  <ListItemIcon>{getIconComponent(Icon.SENTENCE_SEARCH)}</ListItemIcon>
-                  <ListItemText>Sentence Search</ListItemText>
-                </MenuItem>
+                {searchEntries.map((entry) => (
+                  <MenuItem key={entry.id} onClick={() => handleOpenSearchTab(entry.to)}>
+                    <ListItemIcon>{getIconComponent(entry.icon)}</ListItemIcon>
+                    <ListItemText>{withShortcutHint(entry.title, entry.shortcut)}</ListItemText>
+                  </MenuItem>
+                ))}
               </Menu>
             </ListItem>
 
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Perspectives (⌘⇧E)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/perspectives"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/perspectives") ? "rgba(0, 0, 0, 0.08)" : "transparent",
-                  }}
+            {mainEntries.map((entry) => (
+              <ListItem key={entry.id} disablePadding sx={{ display: "block" }}>
+                <Tooltip
+                  title={withShortcutHint(entry.title, entry.shortcut)}
+                  placement="right"
+                  arrow
+                  disableHoverListener={isExpanded}
                 >
-                  <ListItemIcon
+                  <LinkListItemButton
+                    to={entry.to}
+                    params={{ projectId }}
                     sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
+                      minHeight: 48,
+                      justifyContent: isExpanded ? "initial" : "center",
+                      px: 2.5,
+                      bgcolor: isActive(entry.to.replace(PROJECT_ROUTE_PREFIX, ""))
+                        ? (SELECTED_COLOR_OVERRIDES[entry.id] ?? selectedColor)
+                        : "transparent",
                     }}
                   >
-                    {getIconComponent(Icon.PERSPECTIVES)}
-                  </ListItemIcon>
-                  {isExpanded && (
-                    <ListItemText>
-                      P<span style={{ textDecoration: "underline" }}>e</span>rspectives
-                    </ListItemText>
-                  )}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Annotation (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/annotation"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/annotation") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.ANNOTATION)}
-                  </ListItemIcon>
-                  {isExpanded && (
-                    <ListItemText>
-                      <span style={{ textDecoration: "underline" }}>A</span>nnotation
-                    </ListItemText>
-                  )}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Analysis (⌘⇧Y)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/analysis"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/analysis") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.ANALYSIS)}
-                  </ListItemIcon>
-                  {isExpanded && (
-                    <ListItemText>
-                      Anal<span style={{ textDecoration: "underline" }}>y</span>sis
-                    </ListItemText>
-                  )}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Classifier (⌘⇧C)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/classifier"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/classifier") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.CLASSIFIER)}
-                  </ListItemIcon>
-                  {isExpanded && (
-                    <ListItemText>
-                      <span style={{ textDecoration: "underline" }}>C</span>lassifier
-                    </ListItemText>
-                  )}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Prompts" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/prompts"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/prompts") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.PROMPT)}
-                  </ListItemIcon>
-                  {isExpanded && <ListItemText>Prompts</ListItemText>}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Experiment Studio" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/experiments"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/experiments") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.EXPERIMENT)}
-                  </ListItemIcon>
-                  {isExpanded && <ListItemText>Experiments</ListItemText>}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Whiteboard (⌘⇧B)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/whiteboard"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/whiteboard") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.WHITEBOARD)}
-                  </ListItemIcon>
-                  {isExpanded && (
-                    <ListItemText>
-                      White<span style={{ textDecoration: "underline" }}>b</span>oard
-                    </ListItemText>
-                  )}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Memo Workspace (⌘⇧M)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/memo-workspace"
-                  params={{ projectId }}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/memo-workspace") ? selectedColor : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.LOGBOOK)}
-                  </ListItemIcon>
-                  {isExpanded && (
-                    <ListItemText>
-                      <span style={{ textDecoration: "underline" }}>M</span>emo Workspace
-                    </ListItemText>
-                  )}
-                </LinkListItemButton>
-              </Tooltip>
-            </ListItem>
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: isExpanded ? 3 : "auto",
+                        justifyContent: "center",
+                        color: "primary.contrastText",
+                      }}
+                    >
+                      {getIconComponent(entry.icon)}
+                    </ListItemIcon>
+                    {isExpanded && (
+                      <ListItemText>
+                        <ShortcutLabel title={entry.title} shortcut={entry.shortcut} />
+                      </ListItemText>
+                    )}
+                  </LinkListItemButton>
+                </Tooltip>
+              </ListItem>
+            ))}
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Tools" placement="right" arrow disableHoverListener={isExpanded}>
@@ -484,22 +313,12 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <LinkMenuItem to="/project/$projectId/tools/ml-automation" params={{ projectId }}>
-                  <ListItemIcon>{getIconComponent(Icon.ML_AUTOMATION)}</ListItemIcon>
-                  <ListItemText primary="ML Automation" />
-                </LinkMenuItem>
-                <LinkMenuItem to="/project/$projectId/tools/duplicate-finder" params={{ projectId }}>
-                  <ListItemIcon>{getIconComponent(Icon.DUPLICATE_FINDER)}</ListItemIcon>
-                  <ListItemText primary="Duplicate Finder" />
-                </LinkMenuItem>
-                <LinkMenuItem to="/project/$projectId/tools/document-sampler" params={{ projectId }}>
-                  <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SAMPLER)}</ListItemIcon>
-                  <ListItemText primary="Document Sampler" />
-                </LinkMenuItem>
-                <LinkMenuItem to="/project/$projectId/tools/health" params={{ projectId }}>
-                  <ListItemIcon>{getIconComponent(Icon.HEALTH)}</ListItemIcon>
-                  <ListItemText primary="Document Health (⌘⇧H)" />
-                </LinkMenuItem>
+                {toolsEntries.map((entry) => (
+                  <LinkMenuItem key={entry.id} to={entry.to} params={{ projectId }}>
+                    <ListItemIcon>{getIconComponent(entry.icon)}</ListItemIcon>
+                    <ListItemText primary={withShortcutHint(entry.title, entry.shortcut)} />
+                  </LinkMenuItem>
+                ))}
               </Menu>
             </ListItem>
           </List>

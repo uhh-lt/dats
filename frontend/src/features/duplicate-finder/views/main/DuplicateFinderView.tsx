@@ -14,6 +14,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
+import { useNavigationTitle } from "@core/navigation";
 import { useMemo, useState } from "react";
 import { DuplicateFinderHooks } from "../../api/duplicateFinderHooks";
 import { duplicateFinderQueries } from "../../api/duplicateFinderQueries";
@@ -39,6 +40,7 @@ const columns: MRT_ColumnDef<DuplicateDocumentData>[] = [
 ];
 
 export function DuplicateFinderView() {
+  const title = useNavigationTitle();
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // local state
@@ -216,7 +218,7 @@ export function DuplicateFinderView() {
         className="myFlexFillAllContainer myFlexContainer"
       >
         <CardHeader
-          title="Duplicate Finder"
+          title={title}
           subheader={
             <Typography>
               Find duplicate documents based on their text content.

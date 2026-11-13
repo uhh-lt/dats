@@ -4,6 +4,7 @@ from pathlib import Path
 import ffmpeg
 from loguru import logger
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
@@ -14,6 +15,8 @@ from core.doc.source_document_data_dto import (
 )
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
+from modules.doc_processing.video.video_utils import audio_stream_path
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.ray_repo import RayRepo
@@ -47,11 +50,17 @@ def enrich_for_recompute(
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
-        assert sdoc.doctype == DocType.audio, (
-            f"SourceDocument with {payload.sdoc_id=} is not an audio file!"
+        assert sdoc.doctype in {DocType.audio, DocType.video}, (
+            f"SourceDocument with {payload.sdoc_id=} is not an audio or video file!"
         )
 
     audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+    if sdoc.doctype == DocType.video:
+        # the audio stream extracted by the video_audio_extraction step
+        audio_path = audio_stream_path(audio_path)
+        assert audio_path.exists(), (
+            f"The audio stream of the video with {payload.sdoc_id=} was not extracted!"
+        )
 
     return TranscriptionJobInput(
         **payload.model_dump(),
@@ -59,6 +68,11 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires={Artefact.AUDIO},
+    produces={Artefact.TRANSCRIPT, Artefact.RAW_HTML},
+    doctypes={DocType.audio, DocType.video},
+)
 @register_job(
     job_type=JobType.AUDIO_TRANSCRIPTION,
     input_type=TranscriptionJobInput,

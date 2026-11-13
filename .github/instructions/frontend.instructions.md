@@ -78,6 +78,28 @@ Choose the home of a piece of state by its kind; [frontend-slice.instructions.md
 - **Form state** → React Hook Form with the `@components/form-inputs` controls (`FormText`, `FormNumber`, `FormSwitch`, `FormColorPicker`, `FormMenu`, ...) and `ErrorMessage` from `@hookform/error-message`; forms in dialogs follow [frontend-dialog](frontend-dialog.instructions.md).
 - **Local UI state** (hover, a toggled section) → `useState`.
 
+## Toggleable Features and Navigation
+
+Add a feature (after its backend `Feature` value and the regenerated client):
+
+1. Add its entry with title, description and area to `FEATURES` (`core/feature/features.ts`); `tsc` fails without it.
+2. Gate its embedded entry points with `useFeature(Feature.X)`.
+
+Add a page to a feature:
+
+1. Write the route with `staticData: { tab: true, icon: Icon.X, feature: Feature.X }` and `ensureRouteFeatureEnabled` at the start of its loader (see [frontend-route](frontend-route.instructions.md)).
+2. Add one entry without `title` and `description` to `NAVIGATION_ENTRIES` (`core/navigation/navigationEntries.ts`).
+
+Rules:
+
+- `FEATURES` in `core/feature/features.ts` holds the one title, description and area of every feature (`tsc` enforces one entry per `Feature`); never write a feature's title anywhere else.
+- `NAVIGATION_ENTRIES` in `core/navigation/navigationEntries.ts` lists every page of a project once, with its group, route, shortcut and command, and takes the feature and the icon from the page's route; the sidebar, the analysis dashboard, the command palette, the shortcuts and the tab titles are generated from it through `useNavigationEntries`.
+- A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from `FEATURES`, and a page heading uses `useNavigationTitle()` (lint: `local/navigation-entries`, which also checks that `to` is a page route with `staticData.tab`).
+- The feature of a page is declared only on its route or a parent route (`staticData.feature`, see [frontend-route](frontend-route.instructions.md)), never in its navigation entry.
+- A feature has one listed page, as its entry takes the feature's title; its further pages are detail routes below that page's folder without a navigation entry.
+- Gate an embedded entry point (menu item, button, search box) with `useFeature(Feature.X)` from `@core/feature`, which reads `ProjectRead.enabled_features`.
+- Never gate on the feature states (`projectQueries.features`): they are an aggregate over all documents, loaded only by `useFeatureCoverage` and the Features tab.
+
 ## Feedback and Errors
 
 - Mutations report through `meta`: `successMessage` and `errorMessage` (string or function, typed in `plugins/tanstack/mutationMeta.ts`) are shown as snackbars by the `MutationCache` in `api/queryClient.ts`; `datsEvent` writes the result into the caches. Do not open snackbars in `onError`/`onSuccess` for this.

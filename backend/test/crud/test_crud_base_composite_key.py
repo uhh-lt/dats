@@ -81,7 +81,7 @@ def test_job_status_create_multi_replaces_only_the_same_job_type(
         db=db_session,
         create_dtos=[
             status(MLJobTypeID.QUOTATION_ATTRIBUTION, MLJobStatus.WAITING),
-            status(MLJobTypeID.DOCUMENT_EMBEDDING, MLJobStatus.WAITING),
+            status(MLJobTypeID.COREFERENCE_RESOLUTION, MLJobStatus.WAITING),
         ],
     )
     crud_sdoc_job_status.create_multi(
@@ -93,7 +93,7 @@ def test_job_status_create_multi_replaces_only_the_same_job_type(
         db=db_session,
         ids=[
             (sdoc_id, MLJobTypeID.QUOTATION_ATTRIBUTION),
-            (sdoc_id, MLJobTypeID.DOCUMENT_EMBEDDING),
+            (sdoc_id, MLJobTypeID.COREFERENCE_RESOLUTION),
         ],
     )
     assert [r.status for r in result] == [MLJobStatus.FINISHED, MLJobStatus.WAITING]

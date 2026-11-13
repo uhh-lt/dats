@@ -88,6 +88,14 @@ router = APIRouter(
 - **Authz first**: The first statement of the body is `authz_user.assert_in_project(project_id)` or `authz_user.assert_in_same_project_as(Crud.X, id)`.
 - **Thin body**: Delegate to `crud_*` / service functions; no business logic in the route. Return type annotation matches `response_model`.
 
+### Feature Gating
+
+- **Gate the router**: routes of a toggleable feature declare `dependencies=[Depends(require_feature(Feature.X))]` when they have a `project_id` path or query parameter (`simsearch_endpoint.py`).
+- **Gate by object**: routes that identify an object by a path parameter use `require_feature_of(Feature.X, Crud.Y, "y_id")` (`cota_endpoint.py`).
+- **Gate by body**: routes that carry the project id only in the body call `FeatureService().assert_enabled(db=db, project_id=..., feature=Feature.X)` right after the authz check.
+- **Generated job routes**: jobs with generated endpoints are gated by their `validate_input` hook, not by a dependency.
+- **Enabled, not ready**: gating checks only that the feature is enabled; never reject a request because its data is still being computed.
+
 ### Imports
 
 - **Own-folder DTOs only**: An endpoint may only import `*_dto` modules from its own folder. The rule is checked by `backend/lint/check_endpoints.py`, but the script does not run automatically yet and still reports existing violations.

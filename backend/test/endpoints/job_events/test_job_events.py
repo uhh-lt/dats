@@ -182,8 +182,10 @@ class TestJobUpdatedEmission:
 
         from common.doc_type_enum import DocType
         from common.languages_enum import Language
-        from modules.doc_processing.doc_processing_dto import ProcessingSettings
-        from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
+        from modules.doc_processing.doc_processing_dto import (
+            ProcessingSettings,
+            SdocInitJobInput,
+        )
 
         payload = SdocInitJobInput(
             project_id=test_project.id,
@@ -289,9 +291,12 @@ class TestJobUpdatedEmission:
 
         with (
             patch("systems.job_system.job_handler.Job", return_value=job),
-            patch(
-                "systems.job_system.job_handler.handle_job_finished",
-                side_effect=RuntimeError("enqueue failed"),
+            patch.object(
+                JobService(),
+                "hooks",
+                JobService().hooks._replace(
+                    finished=MagicMock(side_effect=RuntimeError("enqueue failed")),
+                ),
             ),
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"
@@ -324,9 +329,12 @@ class TestJobUpdatedEmission:
 
         with (
             patch("systems.job_system.job_handler.Job", return_value=job),
-            patch(
-                "systems.job_system.job_handler.handle_job_error",
-                side_effect=RuntimeError("status update failed"),
+            patch.object(
+                JobService(),
+                "hooks",
+                JobService().hooks._replace(
+                    failed=MagicMock(side_effect=RuntimeError("status update failed")),
+                ),
             ),
             patch(
                 "systems.job_system.job_events._publish_envelope_sync"

@@ -1,0 +1,173 @@
+"""Jobs held on queues of the test Redis that no background worker listens to, and
+run on demand in this process through the real job handler."""
+
+import signal
+from collections.abc import Generator
+from contextlib import contextmanager
+from typing import Any
+
+import rq
+from redis import Redis
+from rq import SimpleWorker
+from rq.registry import (
+    BaseRegistry,
+    FailedJobRegistry,
+    FinishedJobRegistry,
+    StartedJobRegistry,
+)
+
+from common.job_type_enum import JobType
+from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_service import JobService
+from systems.job_system.job_system_enum import JobPriority
+
+# no held queue starts with "gpu": the job handler would take its GPU branch
+_HELD_PREFIX = "held"
+_RUN_QUEUE = f"{_HELD_PREFIX}-run"
+
+
+class HeldJobs:
+    """The jobs started while the fixture is active. `JobService.start_job` runs
+    as it is (validation, enrichment, enqueue), but on queues no background
+    worker listens to, so the jobs wait until the test runs them."""
+
+    def __init__(self, queues: list[rq.Queue]) -> None:
+        conn = queues[0].connection
+        self._run_queue = rq.Queue(name=_RUN_QUEUE, connection=conn)
+        # a retried job is requeued on the queue it ran on: it is held there
+        self._queues = [*queues, self._run_queue]
+
+    def registries(self) -> dict[str, BaseRegistry]:
+        """The registries of the jobs `run` ran, by name as in
+        `JobService.registries`, so `JobService` finds e.g. the failed ones."""
+        return {
+            "started": StartedJobRegistry(queue=self._run_queue),
+            "finished": FinishedJobRegistry(queue=self._run_queue),
+            "failed": FailedJobRegistry(queue=self._run_queue),
+        }
+
+    def jobs(
+        self, job_type: JobType | None = None
+    ) -> list[tuple[JobType, JobInputBase]]:
+        """The held jobs (of `job_type`) with their enriched input, in the order
+        they were started."""
+        held = sorted(
+            (job for queue in self._queues for job in queue.get_jobs()),
+            key=lambda job: job.enqueued_at or job.created_at,
+        )
+        return [
+            (job.kwargs["jobtype"], job.kwargs["payload"])
+            for job in held
+            if job_type is None or job.kwargs["jobtype"] == job_type
+        ]
+
+    def inputs(self, job_type: JobType) -> list[JobInputBase]:
+        """The enriched inputs of the held jobs of `job_type`."""
+        return [payload for _, payload in self.jobs(job_type)]
+
+    def run(self, *job_types: JobType) -> None:
+        """Run the held jobs of `job_types` (all if none is given) in an
+        in-process worker through the real job handler, the hooks included,
+        until none is held: jobs they start are held and run too if their type
+        matches. A failing job does not raise here; its `failed` hook runs."""
+        while picked := self._next(job_types):
+            queue, job = picked
+            queue.remove(job)
+            self._run_queue.enqueue_job(job)
+            self._work()
+
+    def ran(self, job_type: JobType) -> list[Job]:
+        """The jobs of `job_type` that `run` ran to the end, finished or
+        failed."""
+        conn = self._run_queue.connection
+        ids = [
+            *FinishedJobRegistry(queue=self._run_queue).get_job_ids(),
+            *FailedJobRegistry(queue=self._run_queue).get_job_ids(),
+        ]
+        jobs = [rq.job.Job.fetch(job_id, connection=conn) for job_id in ids]
+        return [Job(job) for job in jobs if job.kwargs["jobtype"] == job_type]
+
+    def _next(
+        self, job_types: tuple[JobType, ...]
+    ) -> tuple[rq.Queue, rq.job.Job] | None:
+        candidates = [
+            (queue, job)
+            for queue in self._queues
+            for job in queue.get_jobs()
+            if not job_types or job.kwargs["jobtype"] in job_types
+        ]
+        if not candidates:
+            return None
+        return min(candidates, key=lambda c: c[1].enqueued_at or c[1].created_at)
+
+    def _work(self) -> None:
+        """Run the run queue empty, keeping the signal handlers of pytest."""
+        handlers = {s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM)}
+        try:
+            SimpleWorker([self._run_queue], connection=self._run_queue.connection).work(
+                burst=True, logging_level="WARNING"
+            )
+        finally:
+            for s, handler in handlers.items():
+                signal.signal(s, handler)
+
+    def empty(self) -> None:
+        for queue in self._queues:
+            queue.empty()
+
+
+def hold_jobs() -> Generator[HeldJobs, None, None]:
+    """Point `JobService().queues` at held queues while the generator is open,
+    and add the registries of the jobs it ran to `JobService().registries`."""
+    js = JobService()
+    original = js.queues
+    original_registries = js.registries
+    held = {
+        key: rq.Queue(name=f"{_HELD_PREFIX}-{queue.name}", connection=queue.connection)
+        for key, queue in original.items()
+    }
+    held_jobs = HeldJobs(list(held.values()))
+    js.queues = held
+    js.registries = {
+        **original_registries,
+        (_RUN_QUEUE, JobPriority.DEFAULT): held_jobs.registries(),
+    }
+    try:
+        yield held_jobs
+    finally:
+        js.queues = original
+        js.registries = original_registries
+        held_jobs.empty()
+
+
+class _CutQueue(rq.Queue):
+    """A queue that enqueues while the shared budget of starts lasts, and then
+    on a Redis that cannot be reached."""
+
+    def __init__(self, queue: rq.Queue, down: Redis, budget: list[int]) -> None:
+        super().__init__(name=queue.name, connection=queue.connection)
+        self._down = rq.Queue(name=queue.name, connection=down)
+        self._budget = budget
+
+    def enqueue(self, *args: Any, **kwargs: Any) -> rq.job.Job:
+        if self._budget[0] <= 0:
+            return self._down.enqueue(*args, **kwargs)
+        self._budget[0] -= 1
+        return super().enqueue(*args, **kwargs)
+
+
+@contextmanager
+def unreachable_redis(after_starts: int = 0) -> Generator[None, None, None]:
+    """Point `JobService().queues` at a Redis that cannot be reached while the
+    context is open, so every `start_job` fails like when Redis is down; the
+    first `after_starts` starts still reach the queues (e.g. those of
+    `held_jobs`), to cut the queue in the middle of a run."""
+    js = JobService()
+    original = js.queues
+    down = Redis(host="localhost", port=1, socket_connect_timeout=1)
+    budget = [after_starts]
+    js.queues = {key: _CutQueue(queue, down, budget) for key, queue in original.items()}
+    try:
+        yield
+    finally:
+        js.queues = original

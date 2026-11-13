@@ -4,6 +4,7 @@ import { DocType } from "@models/DocType";
 import { SdocHealthResult } from "@models/SdocHealthResult";
 import { SDocStatus } from "@models/SDocStatus";
 import { SdocStatusRow } from "@models/SdocStatusRow";
+import DoNotDisturbOnOutlinedIcon from "@mui/icons-material/DoNotDisturbOnOutlined";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
@@ -32,6 +33,15 @@ const sdocStatus2Text: Record<SDocStatus, string> = {
   [SDocStatus._0]: "Waiting/In Progress",
   [SDocStatus._1]: "Completed",
 };
+
+// null = the step is not planned for the document (its feature is not enabled)
+const notEnabledIcon = <DoNotDisturbOnOutlinedIcon sx={{ color: "text.disabled" }} />;
+const notEnabledText = "Not enabled";
+
+const statusIcon = (status: SDocStatus | null | undefined) =>
+  status === null || status === undefined ? notEnabledIcon : sdocStatus2Icon[status];
+const statusText = (status: SDocStatus | null | undefined) =>
+  status === null || status === undefined ? notEnabledText : sdocStatus2Text[status];
 
 interface SdocStatusTableProps {
   doctype: DocType;
@@ -82,6 +92,15 @@ export function SdocStatusTable({
       .filter((id) => !isNaN(id));
   }, [rowSelectionModel]);
 
+  // the steps that are planned for at least one selected document: only these can be recomputed
+  const plannedSteps = useMemo(() => {
+    const selected = new Set(selectedRows);
+    const rows = searchData.pages.flatMap(flatMapData).filter((row) => selected.has(row.sdoc_id));
+    return tableColumnInfo.filter((step) =>
+      rows.some((row) => row.status[step] !== null && row.status[step] !== undefined),
+    );
+  }, [searchData, selectedRows, tableColumnInfo]);
+
   // actions
   const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = HealthHooks.useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
@@ -131,12 +150,12 @@ export function SdocStatusTable({
                       Job ID: {jobId}
                     </>
                   ) : (
-                    <>Status: {sdocStatus2Text[row.original.status[current]]}</>
+                    <>Status: {statusText(row.original.status[current])}</>
                   )
                 }
                 placement="top-start"
               >
-                {sdocStatus2Icon[row.original.status[current]] ?? null}
+                {statusIcon(row.original.status[current])}
               </Tooltip>
             );
           },
@@ -177,7 +196,7 @@ export function SdocStatusTable({
       renderTopRightToolbar={HealthTableToolbarRight}
       toolbarExtraProps={{
         selectedRows,
-        tableColumnInfo,
+        plannedSteps,
         settings,
         onChangeSettings: setSettings,
         isRetryPending,

@@ -430,6 +430,12 @@ export default defineConfig(
     plugins: { local: datsRulesPlugin },
     rules: { "local/route-options": "error" },
   },
+  // NAVIGATION ENTRIES (see .github/instructions/frontend.instructions.md)
+  {
+    files: ["src/core/navigation/navigationEntries.ts"],
+    plugins: { local: datsRulesPlugin },
+    rules: { "local/navigation-entries": "error" },
+  },
   // FEATURE FOLDER RULES (see .github/instructions/frontend-feature.instructions.md)
   {
     files: ["src/features/**/*.{ts,tsx}"],

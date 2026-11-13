@@ -1,19 +1,20 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from modules.ml.ml_enum import MLJobStatus, MLJobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
-    DocumentEmbeddingParams,
     MLJobInput,
     QuotationAttributionParams,
-    SentenceEmbeddingParams,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.db.sql_repo import SQLRepo
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
@@ -21,9 +22,18 @@ from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 sqlr = SQLRepo()
 
 
+def validate_ml_input(db: Session, payload: MLJobInput) -> None:
+    """Tag recommendation needs its feature; the other ML jobs need core data only."""
+    if payload.ml_job_type == MLJobType.TAG_RECOMMENDATION:
+        FeatureService().assert_enabled(
+            db=db, project_id=payload.project_id, feature=Feature.TAG_RECOMMENDATION
+        )
+
+
 @register_job(
     job_type=JobType.ML,
     input_type=MLJobInput,
+    validate_input=validate_ml_input,
     generate_endpoints=EndpointGeneration.ALL,
     publish_updates=True,
     device="api",
@@ -76,36 +86,6 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
                 recompute = payload.specific_ml_job_parameters.recompute
                 filter_criterion = _build_filter_criterion(start_time, recompute)
                 CorefService().perform_coreference_resolution(
-                    db=db,
-                    project_id=payload.project_id,
-                    filter_criterion=filter_criterion,
-                    recompute=recompute,
-                )
-            case MLJobType.DOCUMENT_EMBEDDING:
-                from modules.ml.embedding_service import EmbeddingService
-
-                assert isinstance(
-                    payload.specific_ml_job_parameters,
-                    DocumentEmbeddingParams,
-                ), "DocumentEmbeddingParams expected"
-                recompute = payload.specific_ml_job_parameters.recompute
-                filter_criterion = _build_filter_criterion(start_time, recompute)
-                EmbeddingService().embed_documents(
-                    db=db,
-                    project_id=payload.project_id,
-                    filter_criterion=filter_criterion,
-                    recompute=recompute,
-                )
-            case MLJobType.SENTENCE_EMBEDDING:
-                from modules.ml.embedding_service import EmbeddingService
-
-                assert isinstance(
-                    payload.specific_ml_job_parameters,
-                    SentenceEmbeddingParams,
-                ), "SentencetEmbeddingParams expected"
-                recompute = payload.specific_ml_job_parameters.recompute
-                filter_criterion = _build_filter_criterion(start_time, recompute)
-                EmbeddingService().embed_sentences(
                     db=db,
                     project_id=payload.project_id,
                     filter_criterion=filter_criterion,

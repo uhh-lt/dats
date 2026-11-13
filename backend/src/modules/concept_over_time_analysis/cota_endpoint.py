@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
+from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
@@ -16,6 +17,11 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
 )
 from modules.concept_over_time_analysis.cota_service import COTAService
+from systems.feature_system.feature_dependency import (
+    require_feature,
+    require_feature_of,
+)
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_service import JobService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -46,6 +52,9 @@ def create(
     ws: WebsocketEmitter = Depends(),
 ) -> COTARead:
     authz_user.assert_in_project(cota.project_id)
+    FeatureService().assert_enabled(
+        db=db, project_id=cota.project_id, feature=Feature.CONCEPTS_OVER_TIME
+    )
 
     result = cotas.create(
         db=db,
@@ -57,6 +66,13 @@ def create(
 
 @router.put(
     "/duplicate/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
 )
@@ -82,6 +98,13 @@ def duplicate_by_id(
 
 @router.get(
     "/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Returns the ConceptOverTimeAnalysis",
     description="Returns the ConceptOverTimeAnalysis with the given ID if it exists",
@@ -100,6 +123,7 @@ def get_by_id(
 
 @router.get(
     "/project/{project_id}",
+    dependencies=[Depends(require_feature(Feature.CONCEPTS_OVER_TIME))],
     response_model=list[COTARead],
     summary="Returns COTAs of the Project",
     description="Returns the COTA of the Project with the given ID if it exists",
@@ -121,6 +145,13 @@ def get_by_project(
 
 @router.patch(
     "/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Updates the ConceptOverTimeAnalysis",
     description="Updates the ConceptOverTimeAnalysis with the given ID if it exists",
@@ -146,6 +177,13 @@ def update_by_id(
 
 @router.patch(
     "/annotate/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Annotate (multiple) COTASentences",
 )
@@ -172,6 +210,13 @@ def annotate_cota_sentence(
 
 @router.patch(
     "/remove/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Remove (multiple) COTASentences from the search space",
 )
@@ -196,6 +241,13 @@ def remove_cota_sentence(
 
 @router.patch(
     "/reset/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Resets the ConceptOverTimeAnalysis",
     description="Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
@@ -222,6 +274,13 @@ def reset_cota(
 
 @router.delete(
     "/{cota_id}",
+    dependencies=[
+        Depends(
+            require_feature_of(
+                Feature.CONCEPTS_OVER_TIME, Crud.COTA_ANALYSIS, "cota_id"
+            )
+        )
+    ],
     response_model=COTARead,
     summary="Removes the ConceptOverTimeAnalysis",
     description="Removes the ConceptOverTimeAnalysis with the given ID if it exists",
@@ -259,6 +318,11 @@ def refine_cota(
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, payload.cota_id)
+    FeatureService().assert_enabled(
+        db=db,
+        project_id=crud_cota.read(db=db, id=payload.cota_id).project_id,
+        feature=Feature.CONCEPTS_OVER_TIME,
+    )
     return cotas.start_refinement_job(db=db, payload=payload)
 
 

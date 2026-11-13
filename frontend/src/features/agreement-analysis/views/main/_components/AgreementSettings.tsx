@@ -1,3 +1,4 @@
+import { useNavigationTitle } from "@core/navigation";
 import { AgreementScoringSelector } from "@components/AgreementScoringSelector";
 import { CodeSelector } from "@core/code";
 import { SdocSelectionDialog } from "@core/source-document";
@@ -25,6 +26,7 @@ interface AgreementSettingsProps {
 }
 
 export function AgreementSettings({ params }: AgreementSettingsProps) {
+  const title = useNavigationTitle() ?? "";
   // global client state (URL)
   const projectId = AgreementAnalysisRouteAPI.useParams({ select: (urlParams) => urlParams.projectId });
   const navigate = AgreementAnalysisRouteAPI.useNavigate();
@@ -47,7 +49,7 @@ export function AgreementSettings({ params }: AgreementSettingsProps) {
   return (
     <CardContainer>
       <CardHeader
-        title="Annotator Agreement"
+        title={title}
         subheader="Compare a reference annotator (gold standard) with another annotator."
         action={<AgreementCountsExportButton params={params} />}
       />

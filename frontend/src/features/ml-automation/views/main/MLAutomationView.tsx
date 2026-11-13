@@ -1,6 +1,8 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
+import { FEATURES, useFeature } from "@core/feature";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { Feature } from "@models/Feature";
 import { MLJobType } from "@models/MLJobType";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
@@ -32,6 +34,7 @@ export function MlAutomationView() {
 
   // actions
   const startMlJob = MlAutomationHooks.useStartMLJob();
+  const tagRecommendationEnabled = useFeature(Feature.TAG_RECOMMENDATION);
 
   // global server state (react-query)
   const { mlJobsByProjectOptions } = routeApi.useRouteContext();
@@ -97,58 +100,6 @@ export function MlAutomationView() {
             ml_job_type: MLJobType.COREFERENCE_RESOLUTION,
             project_id: projectId,
             specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.COREFERENCE_RESOLUTION },
-          },
-        });
-      },
-    });
-  };
-
-  // document embedding job
-  const handleStartNewDocumentEmbeddings = () => {
-    startMlJob.mutate({
-      requestBody: {
-        ml_job_type: MLJobType.DOCUMENT_EMBEDDING,
-        project_id: projectId,
-        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.DOCUMENT_EMBEDDING },
-      },
-    });
-  };
-
-  const handleStartReComputeDocumentEmbeddings = () => {
-    openConfirmationDialog({
-      text: "Remove all document embeddings from the index and compute new embeddings?",
-      onAccept: () => {
-        startMlJob.mutate({
-          requestBody: {
-            ml_job_type: MLJobType.DOCUMENT_EMBEDDING,
-            project_id: projectId,
-            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.DOCUMENT_EMBEDDING },
-          },
-        });
-      },
-    });
-  };
-
-  // document embedding job
-  const handleStartNewSentenceEmbeddings = () => {
-    startMlJob.mutate({
-      requestBody: {
-        ml_job_type: MLJobType.SENTENCE_EMBEDDING,
-        project_id: projectId,
-        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.SENTENCE_EMBEDDING },
-      },
-    });
-  };
-
-  const handleStartReComputeSentenceEmbeddings = () => {
-    openConfirmationDialog({
-      text: "Remove all document embeddings from the index and compute new embeddings?",
-      onAccept: () => {
-        startMlJob.mutate({
-          requestBody: {
-            ml_job_type: MLJobType.SENTENCE_EMBEDDING,
-            project_id: projectId,
-            specific_ml_job_parameters: { recompute: true, ml_job_type: MLJobType.SENTENCE_EMBEDDING },
           },
         });
       },
@@ -227,74 +178,32 @@ export function MlAutomationView() {
               </ListItemIcon>
             </ListItem>
           </List>
-          <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>{getIconComponent(Icon.TAG)}</Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Document Tag Recommendations"
-                secondary={
-                  "Based on currently applied tags, recommend new tags for documents. Use the corresponding analysis feature to view recommendations."
-                }
-              />
-              <ListItemIcon>
-                <Tooltip title="Perform tag recommendation on untagged documents">
-                  <IconButton onClick={handleStartNewTagRecommendation} loading={startMlJob.isPending} color="success">
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </List>
-          <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>{getIconComponent(Icon.DOCUMENT)}</Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="Document Embeddings" secondary="Compute document embeddings" />
-              <ListItemIcon>
-                <Tooltip title="Compute embeddings for all unprocessed documents">
-                  <IconButton onClick={handleStartNewDocumentEmbeddings} loading={startMlJob.isPending} color="success">
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Re-compute embeddings for all documents">
-                  <IconButton
-                    onClick={handleStartReComputeDocumentEmbeddings}
-                    loading={startMlJob.isPending}
-                    color="error"
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </List>
-          <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>{getIconComponent(Icon.SENTENCE_SEARCH)}</Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="Sentence Embeddings" secondary="Compute sentence embeddings" />
-              <ListItemIcon>
-                <Tooltip title="Compute sentence embeddings for all unprocessed documents">
-                  <IconButton onClick={handleStartNewSentenceEmbeddings} loading={startMlJob.isPending} color="success">
-                    <NotStartedIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Re-compute sentence embeddings for all documents">
-                  <IconButton
-                    onClick={handleStartReComputeSentenceEmbeddings}
-                    loading={startMlJob.isPending}
-                    color="error"
-                  >
-                    <RestartAltIcon />
-                  </IconButton>
-                </Tooltip>
-              </ListItemIcon>
-            </ListItem>
-          </List>
+          {tagRecommendationEnabled && (
+            <List dense={false}>
+              <ListItem>
+                <ListItemAvatar>
+                  <Avatar>{getIconComponent(Icon.TAG)}</Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={FEATURES[Feature.TAG_RECOMMENDATION].title}
+                  secondary={
+                    "Based on currently applied tags, recommend new tags for documents. Use the corresponding analysis feature to view recommendations."
+                  }
+                />
+                <ListItemIcon>
+                  <Tooltip title="Perform tag recommendation on untagged documents">
+                    <IconButton
+                      onClick={handleStartNewTagRecommendation}
+                      loading={startMlJob.isPending}
+                      color="success"
+                    >
+                      <NotStartedIcon />
+                    </IconButton>
+                  </Tooltip>
+                </ListItemIcon>
+              </ListItem>
+            </List>
+          )}
         </CardContent>
       </Card>
       <MLJobsView

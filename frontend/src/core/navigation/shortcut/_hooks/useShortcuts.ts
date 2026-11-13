@@ -1,7 +1,9 @@
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusHooks";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
+import { ResolvedNavigationEntry } from "../../navigationTypes";
 import { useTabManager, useTabNavigate } from "../../tabs";
+import { useEnabledNavigationEntries } from "../../useNavigationEntries";
 
 export interface Shortcut {
   id: string;
@@ -11,6 +13,8 @@ export interface Shortcut {
     shift?: boolean;
     alt?: boolean;
   };
+  /** A chord: the plain key that follows `keys` within CHORD_TIMEOUT_MS; `keys` keeps its own shortcut. */
+  then?: string;
   description: string;
   action: () => void;
 }
@@ -40,6 +44,7 @@ export function useShortcuts() {
   const tabManager = useTabManager(projectId || -1);
   const toggleQuickCommandMenu = useToggleDialog("quickCommandMenu");
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
+  const navigationEntries = useEnabledNavigationEntries();
 
   // Memoize the sorted shortcuts
   const sortedShortcuts = useMemo(() => {
@@ -53,86 +58,26 @@ export function useShortcuts() {
       }),
 
       // Navigation shortcuts
-      createShortcut(
-        "goToSearch",
-        "s",
-        "Go to Search",
-        () => tabNavigate({ to: "/project/$projectId/search", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToPerspectives",
-        "e",
-        "Go to Perspectives",
-        () => tabNavigate({ to: "/project/$projectId/perspectives", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToAnnotation",
-        "a",
-        "Go to Annotation",
-        () => tabNavigate({ to: "/project/$projectId/annotation", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToAnalysis",
-        "y",
-        "Go to Analysis",
-        () => tabNavigate({ to: "/project/$projectId/analysis", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToClassifier",
-        "c",
-        "Go to Classifier",
-        () => tabNavigate({ to: "/project/$projectId/classifier", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToWhiteboard",
-        "b",
-        "Go to Whiteboard",
-        () => tabNavigate({ to: "/project/$projectId/whiteboard", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToMemoWorkspace",
-        "m",
-        "Go to Memo Workspace",
-        () => tabNavigate({ to: "/project/$projectId/memo-workspace", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToHealth",
-        "h",
-        "Go to Health",
-        () => tabNavigate({ to: "/project/$projectId/tools/health", params: { projectId } }),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
+      // a disabled feature has no shortcut, so its keys do nothing
+      ...navigationEntries.flatMap((entry: ResolvedNavigationEntry): Shortcut[] => {
+        const { shortcut } = entry;
+        const shortcutKey = typeof shortcut === "string" ? shortcut : shortcut.after;
+        return [
+          {
+            ...createShortcut(
+              `goTo-${entry.id}`,
+              shortcutKey,
+              `Go to ${entry.title}`,
+              () => tabNavigate({ to: entry.to, params: { projectId } }),
+              {
+                ctrlmeta: true,
+                shift: true,
+              },
+            ),
+            then: typeof shortcut === "string" ? undefined : shortcut.key,
+          },
+        ];
+      }),
       createShortcut("goToSettings", ",", "Go to Settings", openProjectSettingsDialog, {
         ctrlmeta: true,
         shift: true,
@@ -163,7 +108,7 @@ export function useShortcuts() {
       const bModifiers = (b.keys.ctrlmeta ? 1 : 0) + (b.keys.shift ? 1 : 0) + (b.keys.alt ? 1 : 0);
       return bModifiers - aModifiers; // Sort in descending order
     });
-  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu]);
+  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu, navigationEntries]);
 
   return sortedShortcuts;
 }

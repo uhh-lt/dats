@@ -9,6 +9,7 @@ import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import { useNavigationTitle } from "@core/navigation";
 import { useMemo } from "react";
 import { CotaHooks } from "../../api/cotaHooks";
 import { CotaActions } from "../../store/cotaSlice";
@@ -17,6 +18,7 @@ import { CotaExportButton } from "./_components/CotaExportButton";
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/");
 
 export function CotaDashboardView() {
+  const title = useNavigationTitle() ?? "";
   // global client state
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
@@ -134,9 +136,9 @@ export function CotaDashboardView() {
 
   return (
     <AnalysisDashboard
-      pageTitle="Concept Over Time Analysis Dashboard"
-      headerTitle="Concept Over Time Dashboard"
-      subheaderTitle="Manage your Concept Over Time Analysis"
+      pageTitle={title}
+      headerTitle={title}
+      subheaderTitle="Manage your concepts over time analyses"
       table={table}
     />
   );

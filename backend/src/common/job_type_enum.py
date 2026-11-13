@@ -2,7 +2,8 @@ from enum import Enum
 
 
 class JobType(str, Enum):
-    # KEEP THE SAME ORDER AS source_document_status_orm.py!
+    # The order of the pipeline steps breaks ties in the derived step order
+    # (modules/doc_processing/pipeline/pipeline_graph.py).
 
     # entrypoints
     EXTRACT_ARCHIVE = "extract_archive"
@@ -16,8 +17,13 @@ class JobType(str, Enum):
     TEXT_EXTRACTION = "text_extraction"
     TEXT_LANGUAGE_DETECTION = "text_language_detection"
     TEXT_SPACY = "text_spacy"
+    # further steps of the text_spacy job (no jobs of their own)
+    TEXT_KEYWORDS = "text_keywords"
+    TEXT_WORD_FREQUENCY = "text_word_frequency"
+    TEXT_NER = "text_ner"
     TEXT_ES_INDEX = "text_es_index"
     TEXT_SENTENCE_EMBEDDING = "text_sentence_embedding"
+    TEXT_DOCUMENT_EMBEDDING = "text_document_embedding"
     TEXT_HTML_MAPPING = "text_html_mapping"
 
     # image
@@ -48,5 +54,6 @@ class JobType(str, Enum):
     LLM_ASSISTANT = "llm_assistant"
     EXPERIMENT_RUN = "experiment_run"
     CRAWLER = "crawler"
+    FEATURE_ACTIVATION = "feature_activation"
     COTA_REFINEMENT = "cota_refinement"
     PERSPECTIVES = "perspectives"

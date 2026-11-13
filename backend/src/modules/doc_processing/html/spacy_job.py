@@ -1,12 +1,14 @@
+from collections.abc import Callable
 from typing import Counter
 from uuid import uuid4
 
 import yake
+from sqlalchemy.orm import Session
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.annotation.annotation_document_crud import crud_adoc
-from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
@@ -17,7 +19,10 @@ from core.doc.source_document_data_dto import (
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.doc_processing_exceptions import StepNotComputedError
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo
@@ -28,6 +33,9 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
+
+# the system code whose children are the named entity codes
+NAMED_ENTITY_CODE = "NAMED_ENTITY"
 
 
 class SpacyJobInput(SdocProcessingJobInput):
@@ -71,6 +79,16 @@ def enrich_for_recompute(
         )
 
 
+@pipeline_step(
+    requires={Artefact.CONTENT, Artefact.LANGUAGE},
+    produces={Artefact.TOKENS_SENTENCES},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+    further_steps={
+        JobType.TEXT_KEYWORDS: {Artefact.KEYWORDS},
+        JobType.TEXT_WORD_FREQUENCY: {Artefact.WORD_FREQUENCIES},
+        JobType.TEXT_NER: {Artefact.NER_SPANS},
+    },
+)
 @register_job(
     job_type=JobType.TEXT_SPACY,
     input_type=SpacyJobInput,
@@ -78,6 +96,13 @@ def enrich_for_recompute(
     enricher=enrich_for_recompute,
 )
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
+    # the outputs to write: tokens and sentences (text_spacy), keywords, word
+    # frequencies, named entities; spacy is called once for all of them
+    steps = pipeline_registry.graph().job_steps(JobType.TEXT_SPACY, payload.steps)
+    not_computed = [step.value for step in steps if step not in _STEP_WRITERS]
+    if not_computed:
+        raise StepNotComputedError(JobType.TEXT_SPACY.value, not_computed)
+
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
         SpacyInput(
@@ -86,89 +111,12 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
     )
 
+    # tokens & offsets & sentences
+    sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
+
     with sqlr.transaction() as trans:
-        # query required data from db
-        system_code_ids = {
-            code.name: code.id
-            for code in crud_code.read_system_codes_by_project(
-                db=trans, project_id=payload.project_id
-            )
-        }
-        adoc = crud_adoc.exists_or_create(
-            db=trans,
-            user_id=SYSTEM_USER_ID,
-            sdoc_id=payload.sdoc_id,
-        )
-
-        # tokens & offsets & sentences
-        sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
-
-        # keywords
-        # if payload does not have keywords:
-        keywords = extract_keywords(payload, spacy_output)
-
-        # word frequencies
-        word_frequencies = extract_word_frequencies(payload, spacy_output)
-
-        # span annotations
-        span_annotations = extract_span_annotations(
-            payload, spacy_output, system_code_ids, adoc.id
-        )
-
-        # store outputs in db
-        crud_sdoc_meta.update_multi_with_doctype(
-            db=trans,
-            project_id=payload.project_id,
-            sdoc_id=payload.sdoc_id,
-            doctype=payload.doctype,
-            keys=["keywords"],
-            values=[keywords],
-        )
-        crud_word_frequency.delete_by_sdoc_id(
-            db=trans,
-            sdoc_id=payload.sdoc_id,
-        )
-        crud_word_frequency.create_multi(
-            db=trans,
-            create_dtos=word_frequencies,
-        )
-        crud_span_anno.delete_by_sdoc(
-            db=trans,
-            sdoc_id=payload.sdoc_id,
-        )
-        crud_sentence_anno.delete_by_sdoc(
-            db=trans,
-            sdoc_id=payload.sdoc_id,
-        )
-        crud_span_anno.create_multi(
-            trans,
-            create_dtos=span_annotations,
-        )
-
-        if payload.doctype in {DocType.text, DocType.image}:
-            crud_sdoc_data.update(
-                db=trans,
-                id=payload.sdoc_id,
-                update_dto=SourceDocumentDataUpdate(
-                    token_starts=sdoc_data["token_starts"],
-                    token_ends=sdoc_data["token_ends"],
-                    sentence_starts=sdoc_data["sentence_starts"],
-                    sentence_ends=sdoc_data["sentence_ends"],
-                ),
-            )
-        else:
-            # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
-            existing_sdoc_data = crud_sdoc_data.read(db=trans, id=payload.sdoc_id)
-            sdoc_data["token_starts"] = existing_sdoc_data.token_starts
-            sdoc_data["token_ends"] = existing_sdoc_data.token_ends
-            crud_sdoc_data.update(
-                db=trans,
-                id=payload.sdoc_id,
-                update_dto=SourceDocumentDataUpdate(
-                    sentence_starts=sdoc_data["sentence_starts"],
-                    sentence_ends=sdoc_data["sentence_ends"],
-                ),
-            )
+        for step in steps:
+            _STEP_WRITERS[step](trans, payload, spacy_output, sdoc_data)
 
     return SpacyJobOutput(
         sentence_starts=sdoc_data["sentence_starts"],
@@ -180,6 +128,116 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             for s, e in zip(sdoc_data["sentence_starts"], sdoc_data["sentence_ends"])
         ],
     )
+
+
+def _store_tokens_sentences(
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
+) -> None:
+    if payload.doctype in {DocType.text, DocType.image}:
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                token_starts=sdoc_data["token_starts"],
+                token_ends=sdoc_data["token_ends"],
+                sentence_starts=sdoc_data["sentence_starts"],
+                sentence_ends=sdoc_data["sentence_ends"],
+            ),
+        )
+    else:
+        # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
+        existing_sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
+        sdoc_data["token_starts"] = existing_sdoc_data.token_starts
+        sdoc_data["token_ends"] = existing_sdoc_data.token_ends
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                sentence_starts=sdoc_data["sentence_starts"],
+                sentence_ends=sdoc_data["sentence_ends"],
+            ),
+        )
+
+
+def _store_keywords(
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
+) -> None:
+    crud_sdoc_meta.update_multi_with_doctype(
+        db=db,
+        project_id=payload.project_id,
+        sdoc_id=payload.sdoc_id,
+        doctype=payload.doctype,
+        keys=["keywords"],
+        values=[extract_keywords(payload, spacy_output)],
+    )
+
+
+def _store_word_frequencies(
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
+) -> None:
+    crud_word_frequency.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
+    crud_word_frequency.create_multi(
+        db=db, create_dtos=extract_word_frequencies(payload, spacy_output)
+    )
+
+
+def _store_named_entities(
+    db: Session,
+    payload: SpacyJobInput,
+    spacy_output: SpacyPipelineOutput,
+    sdoc_data: dict,
+) -> None:
+    system_codes = crud_code.read_system_codes_by_project(
+        db=db, project_id=payload.project_id
+    )
+    system_code_ids = {code.name: code.id for code in system_codes}
+    # the codes of the named entities spacy annotates
+    ner_parent_id = system_code_ids.get(NAMED_ENTITY_CODE)
+    ner_code_ids = [
+        code.id
+        for code in system_codes
+        if ner_parent_id is not None and code.parent_id == ner_parent_id
+    ]
+    adoc = crud_adoc.exists_or_create(
+        db=db,
+        user_id=SYSTEM_USER_ID,
+        sdoc_id=payload.sdoc_id,
+    )
+    # replace only the system user's named entities, keeping the annotations
+    # of all users and of other automatic annotators (quotation, coreference)
+    crud_span_anno.delete_by_user_sdocs_codes(
+        db=db,
+        user_id=SYSTEM_USER_ID,
+        sdoc_ids=[payload.sdoc_id],
+        code_ids=ner_code_ids,
+    )
+    crud_span_anno.create_multi(
+        db,
+        create_dtos=extract_span_annotations(
+            payload, spacy_output, system_code_ids, adoc.id
+        ),
+    )
+
+
+# What each step of the job writes. A step of its `further_steps` without an
+# entry fails the job instead of being set to finished without being computed.
+_STEP_WRITERS: dict[
+    JobType, Callable[[Session, SpacyJobInput, SpacyPipelineOutput, dict], None]
+] = {
+    JobType.TEXT_SPACY: _store_tokens_sentences,
+    JobType.TEXT_KEYWORDS: _store_keywords,
+    JobType.TEXT_WORD_FREQUENCY: _store_word_frequencies,
+    JobType.TEXT_NER: _store_named_entities,
+}
 
 
 def extract_keywords(

@@ -1435,6 +1435,70 @@ const propertyName = (property) =>
       ? String(property.key.value)
       : "";
 
+/** Whether a call of the function named `name` appears anywhere in `node`. */
+const containsCallOf = (node, name) => {
+  if (!node || typeof node.type !== "string") return false;
+  if (node.type === "CallExpression" && node.callee.type === "Identifier" && node.callee.name === name) return true;
+  return Object.keys(node).some((key) => {
+    if (key === "parent") return false;
+    const child = node[key];
+    if (Array.isArray(child)) return child.some((c) => containsCallOf(c, name));
+    return child && typeof child === "object" ? containsCallOf(child, name) : false;
+  });
+};
+
+// a route file that declares a feature (`staticData: { feature: Feature.X }`)
+const ROUTE_FEATURE_PATTERN = /\bfeature\s*:\s*Feature\.[A-Z_]+/;
+
+const readFileOrNull = (file) => {
+  try {
+    return fs.readFileSync(file, "utf-8");
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The file of the nearest parent route of the route file `file` that declares a feature, if any: the routes below a
+ * feature's route inherit its feature (`getRouteFeature`). Parents are the `route.tsx` and `<folder>.tsx` files of the
+ * folders above the route.
+ */
+function findFeatureParentRouteFile(file) {
+  const index = file.lastIndexOf("/src/routes/");
+  if (index === -1) return undefined;
+  const root = file.slice(0, index + "/src/routes".length);
+  let dir = path.posix.dirname(file);
+  if (path.posix.basename(file) === "route.tsx") dir = path.posix.dirname(dir);
+  while (dir.length > root.length) {
+    for (const candidate of [`${dir}/route.tsx`, `${dir}.tsx`]) {
+      if (candidate === file) continue;
+      const content = readFileOrNull(candidate);
+      if (content !== null && ROUTE_FEATURE_PATTERN.test(content)) return candidate;
+    }
+    dir = path.posix.dirname(dir);
+  }
+  return undefined;
+}
+
+/** Whether the function starts with `if (!(await ensureRouteFeatureEnabled(...))) return;`. */
+const startsWithFeatureGuard = (fn) => {
+  if (fn.body.type !== "BlockStatement") return false;
+  const first = fn.body.body[0];
+  if (!first || first.type !== "IfStatement" || first.alternate) return false;
+  const test = first.test;
+  const call =
+    test.type === "UnaryExpression" && test.operator === "!" && test.argument.type === "AwaitExpression"
+      ? test.argument.argument
+      : undefined;
+  if (!call || call.type !== "CallExpression" || call.callee.type !== "Identifier") return false;
+  if (call.callee.name !== "ensureRouteFeatureEnabled") return false;
+  const consequent =
+    first.consequent.type === "BlockStatement" && first.consequent.body.length === 1
+      ? first.consequent.body[0]
+      : first.consequent;
+  return consequent.type === "ReturnStatement" && !consequent.argument;
+};
+
 /** Finds return statements with a value that belong to the function itself (not to nested functions). */
 const findValueReturns = (fn) => {
   if (fn.type === "ArrowFunctionExpression" && fn.body.type !== "BlockStatement") return [fn.body];
@@ -1472,8 +1536,19 @@ const routeOptionsRule = {
       contextName: "Route context option '{{name}}' must be named after the data it loads and end with 'Options'.",
       beforeLoadReturn: "`beforeLoad` is only for guards (throw redirect / notFound); it never returns context.",
       validateSearch: "`validateSearch` uses `zodValidator(<page>SearchSchema)`.",
-      tabStaticData:
-        "A page route of a project needs `staticData: { tab: true, icon, getTitle }` (missing: {{missing}}).",
+      featureLoader:
+        "The `loader` of a route with a feature (its own `staticData.feature` or a parent's) starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;` (its queries fail with 403 while the feature is disabled).",
+      featureLoaderInline:
+        "The `loader` of a route with a feature is an inline function, so its feature guard can be checked.",
+      staticDataInline:
+        "`staticData` is an inline object literal without spreads, so its keys (`feature`, `tab`, `icon`) can be checked.",
+      featureRepeated:
+        "This route inherits the feature of its parent route ({{parent}}); do not declare `staticData.feature` again.",
+      featureCallWithoutFeature:
+        "`ensureRouteFeatureEnabled` is only for routes with a feature (`staticData.feature` on the route or a parent route).",
+      tabStaticData: "A page route of a project needs `staticData: { tab: true, icon }` (missing: {{missing}}).",
+      staticTitle:
+        "A static tab title comes from the page's navigation entry (`NAVIGATION_ENTRIES`); `getTitle` is only for dynamic titles.",
     },
     schema: [],
   },
@@ -1512,6 +1587,46 @@ const routeOptionsRule = {
           for (const ret of findValueReturns(loader)) context.report({ node: ret, messageId: "loaderReturn" });
         }
 
+        const staticData = options.staticData?.value;
+        const staticDataKeys =
+          staticData && staticData.type === "ObjectExpression"
+            ? staticData.properties.filter((p) => p.type === "Property").map(propertyName)
+            : [];
+        if (
+          staticData &&
+          (staticData.type !== "ObjectExpression" || staticData.properties.some((p) => p.type !== "Property"))
+        ) {
+          context.report({ node: staticData, messageId: "staticDataInline" });
+        }
+
+        const ownFeature = staticDataKeys.includes("feature");
+        const parentFeatureFile = findFeatureParentRouteFile(filename);
+        if (ownFeature && parentFeatureFile) {
+          context.report({
+            node: options.staticData,
+            messageId: "featureRepeated",
+            data: { parent: path.posix.relative(path.posix.dirname(filename), parentFeatureFile) },
+          });
+        }
+        if (ownFeature || parentFeatureFile) {
+          if (options.loader && !loader) {
+            context.report({ node: options.loader, messageId: "featureLoaderInline" });
+          } else if (loader && !startsWithFeatureGuard(loader)) {
+            context.report({ node: options.loader, messageId: "featureLoader" });
+          }
+        } else if (containsCallOf(node, "ensureRouteFeatureEnabled")) {
+          context.report({ node, messageId: "featureCallWithoutFeature" });
+        }
+
+        const getTitle =
+          staticData && staticData.type === "ObjectExpression"
+            ? staticData.properties.find((p) => p.type === "Property" && propertyName(p) === "getTitle")
+            : undefined;
+        const getTitleFn = unwrapFunctionBody(getTitle?.value);
+        if (getTitleFn && getTitleFn.params.length === 0) {
+          context.report({ node: getTitle, messageId: "staticTitle" });
+        }
+
         const beforeLoad = unwrapFunctionBody(options.beforeLoad?.value);
         if (beforeLoad) {
           for (const ret of findValueReturns(beforeLoad)) context.report({ node: ret, messageId: "beforeLoadReturn" });
@@ -1541,12 +1656,7 @@ const routeOptionsRule = {
         }
 
         if (isProjectPage) {
-          const staticData = options.staticData?.value;
-          const keys =
-            staticData && staticData.type === "ObjectExpression"
-              ? staticData.properties.filter((p) => p.type === "Property").map(propertyName)
-              : [];
-          const missing = ["tab", "icon", "getTitle"].filter((key) => !keys.includes(key));
+          const missing = ["tab", "icon"].filter((key) => !staticDataKeys.includes(key));
           if (missing.length > 0) {
             context.report({ node, messageId: "tabStaticData", data: { missing: missing.join(", ") } });
           }
@@ -1568,6 +1678,105 @@ const routeOptionsRule = {
 };
 
 datsRulesPlugin.rules["route-options"] = routeOptionsRule;
+
+// NAVIGATION ENTRIES (see .github/instructions/frontend.instructions.md, "Toggleable Features and Navigation")
+
+/** The page path (`to`) of a route id: without pathless segments (`_auth`) and the trailing slash of an index. */
+const routeIdToPath = (id) =>
+  id
+    .split("/")
+    .filter((segment) => !segment.startsWith("_") && !/^\(.*\)$/.test(segment))
+    .join("/")
+    .replace(/(.)\/$/, "$1");
+
+/** The page routes (`staticData.tab`) under `routesDir`, by path, with whether they have a feature (own or inherited). */
+function readPageRoutes(routesDir) {
+  /** @type {Map<string, { file: string, feature: boolean }>} */
+  const pages = new Map();
+  const visit = (dir) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const file = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        visit(file);
+        continue;
+      }
+      if (!entry.name.endsWith(".tsx")) continue;
+      const content = readFileOrNull(file) ?? "";
+      const id = content.match(/createFileRoute\(\s*["'`]([^"'`]+)["'`]\s*\)/)?.[1];
+      if (!id || !/\btab\s*:\s*true\b/.test(content)) continue;
+      const feature = ROUTE_FEATURE_PATTERN.test(content) || findFeatureParentRouteFile(file) !== undefined;
+      pages.set(routeIdToPath(id), { file, feature });
+    }
+  };
+  visit(routesDir);
+  return pages;
+}
+
+/** @type {Rule.RuleModule} */
+const navigationEntriesRule = {
+  meta: {
+    type: "problem",
+    fixable: false,
+    docs: {
+      description:
+        "Every navigation entry points to a page route (`staticData.tab`); the entry of a feature's page has no title or description (they come from FEATURES), every other entry has a title.",
+    },
+    messages: {
+      to: "The `to` of a navigation entry is a string literal.",
+      noRoute: "No page route declares `staticData.tab` for '{{to}}'.",
+      featureTitle:
+        "The page '{{to}}' has a feature (its route or a parent route declares `staticData.feature`); its entry takes the title and description from FEATURES.",
+      missingTitle: "The page '{{to}}' has no feature; its entry needs a `title`.",
+    },
+    schema: [],
+  },
+  create(context) {
+    const filename = (context.filename || context.getFilename()).split(path.sep).join("/");
+    const srcIndex = filename.lastIndexOf("/src/");
+    if (srcIndex === -1) return {};
+    const pages = readPageRoutes(`${filename.slice(0, srcIndex)}/src/routes`);
+
+    return {
+      "VariableDeclarator[id.name='NAVIGATION_ENTRIES']"(node) {
+        let list = node.init;
+        while (list && (list.type === "TSSatisfiesExpression" || list.type === "TSAsExpression"))
+          list = list.expression;
+        if (!list || list.type !== "ArrayExpression") return;
+        for (const element of list.elements) {
+          if (!element || element.type !== "ObjectExpression") continue;
+          /** @type {Record<string, import("estree").Property>} */
+          const props = {};
+          for (const p of element.properties) if (p.type === "Property") props[propertyName(p)] = p;
+          const toValue = props.to?.value;
+          if (!toValue || toValue.type !== "Literal" || typeof toValue.value !== "string") {
+            context.report({ node: props.to ?? element, messageId: "to" });
+            continue;
+          }
+          const to = toValue.value;
+          const page = pages.get(to);
+          if (!page) {
+            context.report({ node: props.to, messageId: "noRoute", data: { to } });
+            continue;
+          }
+          if (page.feature && (props.title || props.description)) {
+            context.report({ node: props.title ?? props.description, messageId: "featureTitle", data: { to } });
+          }
+          if (!page.feature && !props.title) {
+            context.report({ node: element, messageId: "missingTitle", data: { to } });
+          }
+        }
+      },
+    };
+  },
+};
+
+datsRulesPlugin.rules["navigation-entries"] = navigationEntriesRule;
 
 // ---------------------------------------------------------------------------
 // feature folder rules (see .github/instructions/frontend-feature.instructions.md)

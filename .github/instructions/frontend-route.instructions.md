@@ -88,11 +88,16 @@ export const Route = createFileRoute("/_auth/project/$projectId/xxx/$xxxId")({
 ### Guards
 
 - **`beforeLoad`** is only for guards: it throws `redirect(...)` (login, already authenticated) and never returns context or builds query options. It is synchronous. Protected pages live under `_auth`, public pages under `_public`.
+- **Toggleable features**: the feature of a page is declared only on its route, as `staticData.feature` (the project layout's `FeatureGuard` then shows the "not enabled" view); its navigation entry, the sidebar, the dashboard, the commands and the shortcuts read it from there.
+- **Inherited features**: the routes below a route with a feature inherit it (`getRouteFeature`), so a feature with detail pages declares it once on the `route.tsx` of its folder (`analysis/concepts-over-time-analysis/route.tsx`) and its routes never repeat it (lint: `local/route-options`).
+- **Disabled features**: the loader of such a page starts with `if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;`, as its queries would fail with 403 (lint: `local/route-options`).
+- **Checkable feature routes**: `staticData` is an inline object without spreads, the loader of a feature route is an inline function, and only a route with a feature calls `ensureRouteFeatureEnabled` (lint: `local/route-options`).
 
 ### Tabs (`staticData`)
 
-- Every page route under `$projectId/` (not `route.tsx`) declares `staticData: { tab: true, icon: Icon.XXX, getTitle }`. Routes outside a project (`me`, `projects`, `_public/*`) have no `staticData`.
-- A static title is `getTitle: () => "Document Search"`. A dynamic title reads the entity from the cache with the factory's typed key and is `<Kind> <name>` with an empty name as fallback: `` `Whiteboard ${whiteboards?.[Number(params.whiteboardId)]?.title ?? ""}` ``. `params` are untyped there, so wrap them in `Number(...)`.
+- Every page route under `$projectId/` (not `route.tsx`) declares `staticData: { tab: true, icon: Icon.XXX }`; this is the only place of a page's icon, its navigation entry reads it from here. Routes outside a project (`me`, `projects`, `_public/*`) have no `staticData`.
+- A static tab title is the `title` of the page's navigation entry (`NAVIGATION_ENTRIES`), never a `getTitle: () => "..."` (lint: `local/route-options`).
+- `getTitle` is only for a dynamic title, which reads the entity from the cache with the factory's typed key and is `<Kind> <name>` with an empty name as fallback: `` `Whiteboard ${whiteboards?.[Number(params.whiteboardId)]?.title ?? ""}` ``. `params` are untyped there, so wrap them in `Number(...)`.
 
 ## Examples
 

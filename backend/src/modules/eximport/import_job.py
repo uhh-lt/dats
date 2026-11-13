@@ -15,7 +15,7 @@ def import_data(payload: ImportJobInput, job: Job) -> None:
     from modules.eximport.import_service import ImportService
 
     with SQLRepo().transaction() as db:
-        return ImportService().handle_import_job(
+        ImportService().handle_import_job(
             db=db,
             payload=payload,
         )

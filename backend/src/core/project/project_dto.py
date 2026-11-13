@@ -3,6 +3,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from common.feature_enum import Feature
 from core.user.user_dto import UserRead
 from repos.db.dto_base import UpdateDTOBase
 
@@ -15,7 +16,10 @@ class ProjectBaseDTO(BaseModel):
 
 # Properties for creation
 class ProjectCreate(ProjectBaseDTO):
-    pass
+    enabled_features: list[Feature] = Field(
+        default_factory=lambda: list(Feature),
+        description="Features enabled in the Project (default: all); the Features they require are enabled as well",
+    )
 
 
 # Properties for updating
@@ -34,6 +38,9 @@ class ProjectRead(ProjectBaseDTO):
     id: int = Field(description="ID of the Project")
     created: datetime = Field(description="Created timestamp of the Project")
     updated: datetime = Field(description="Updated timestamp of the Project")
+    enabled_features: list[Feature] = Field(
+        description="Features enabled in the Project"
+    )
     model_config = ConfigDict(from_attributes=True)
 
 

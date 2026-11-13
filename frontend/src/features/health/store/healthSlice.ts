@@ -1,4 +1,4 @@
-import { Language } from "@models/Language";
+import { DEFAULT_PROCESSING_SETTINGS } from "@components/defaultProcessingSettings";
 import { ProcessingSettings } from "@models/ProcessingSettings";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
@@ -10,15 +10,7 @@ interface HealthState extends TableState {
 
 const initialState: HealthState = {
   ...initialTableState,
-  processingSettings: {
-    model: "default",
-    extract_images: true,
-    pages_per_chunk: 10,
-    keyword_deduplication_threshold: 0.5,
-    keyword_max_ngram_size: 2,
-    keyword_number: 5,
-    language: Language.AUTO,
-  },
+  processingSettings: DEFAULT_PROCESSING_SETTINGS,
 };
 
 const healthSlice = createSlice({

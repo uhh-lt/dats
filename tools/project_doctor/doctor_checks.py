@@ -26,13 +26,16 @@ from doctor_report import (
 )
 from doctor_stores import (
     ALL_COLLECTIONS,
-    ALL_STEPS,
     ANNOTATION_TABLES,
+    EMBEDDING_STEPS,
+    ES_INDEX_STEP,
+    IMAGE_THUMBNAIL_STEP,
     PROCESSING_STEPS,
     SDOC_COLLECTIONS,
     STATUS_ERRONEOUS,
     STATUS_FINISHED,
     STATUS_PROCESSING,
+    STEP_STATUS_TABLE,
     AnnotationKind,
     Stores,
 )
@@ -54,24 +57,34 @@ _HINT_CROSS_PROJECT = (
     "database and decide by hand."
 )
 
-# the steps that write the embeddings of a Weaviate collection
-_EMBEDDING_STEPS = {
-    "Sentence": "text_sentence_embedding",
-    "Image": "image_embedding",
-}
-
 
 class SdocRow:
-    """The columns of a source document that the checks need (no content)."""
+    """The columns of a source document that the checks need (no content).
 
-    def __init__(self, row: dict[str, Any]) -> None:
+    `statuses` holds the planned steps of the document only: steps of other
+    doctypes, steps this database does not know, and steps that are not planned
+    (their feature is not enabled) are left out, so no check expects their
+    data.
+
+    `step_status` holds the status of the steps this database knows, None if a
+    step is not planned."""
+
+    def __init__(self, row: dict[str, Any], step_status: dict[str, int | None]) -> None:
         self.id: int = row["id"]
         self.filename: str = row["filename"]
         self.doctype: str = row["doctype"]
         self.project_id: int = row["project_id"]
+        steps = [
+            step
+            for step in PROCESSING_STEPS.get(self.doctype, [])
+            if step in step_status
+        ]
         self.statuses: dict[str, int] = {
-            step: row[step] for step in PROCESSING_STEPS.get(self.doctype, [])
+            step: status for step in steps if (status := step_status[step]) is not None
         }
+        self.not_planned: list[str] = [
+            step for step in steps if step_status[step] is None
+        ]
 
     def is_finished(self, step: str) -> bool:
         return self.statuses.get(step) == STATUS_FINISHED
@@ -129,6 +142,7 @@ class Checker:
 
     def check_project(self, *, project_id: int) -> list[Issue]:
         sdocs = self._read_sdocs(project_id=project_id)
+        self._print_not_planned(sdocs=sdocs)
         data_ids = set(
             self._ids(
                 "SELECT d.id FROM sourcedocumentdata d "
@@ -212,7 +226,7 @@ class Checker:
                 continue
 
             # 2) the image thumbnails, which the document views show
-            if sdoc.doctype == "image" and sdoc.is_finished("image_thumbnail"):
+            if sdoc.doctype == "image" and sdoc.is_finished(IMAGE_THUMBNAIL_STEP):
                 missing = [
                     fn
                     for fn in (f"{name}.webp", f"{name}.thumbnail.webp")
@@ -227,7 +241,7 @@ class Checker:
                             message=f"SourceDocument {sdoc.id} ({sdoc.filename}): "
                             f"missing {', '.join(missing)}",
                             fix=None,
-                            hint=_HINT_RECOMPUTE.format(step="image_thumbnail"),
+                            hint=_HINT_RECOMPUTE.format(step=IMAGE_THUMBNAIL_STEP),
                         )
                     )
 
@@ -277,15 +291,66 @@ class Checker:
     # POSTGRES
     # ==========================================================================
     def _read_sdocs(self, *, project_id: int) -> list[SdocRow]:
-        columns = ", ".join(["id", "filename", "doctype", "project_id", *ALL_STEPS])
-        rows = self.conn.execute(
+        step_columns = (
+            [] if self.stores.has_step_status_table else self.stores.step_columns
+        )
+        columns = ", ".join(["id", "filename", "doctype", "project_id", *step_columns])
+        rows = [
+            dict(row)
+            for row in self.conn.execute(
+                text(
+                    f"SELECT {columns} FROM sourcedocument "
+                    "WHERE project_id = :pid ORDER BY id"
+                ),
+                {"pid": project_id},
+            ).mappings()
+        ]
+        if not self.stores.has_step_status_table:
+            return [
+                SdocRow(row, {step: row[step] for step in step_columns}) for row in rows
+            ]
+
+        # one row per planned step; the steps without a row are not planned
+        planned: dict[int, dict[str, int]] = {}
+        for sdoc_id, step, status in self.conn.execute(
             text(
-                f"SELECT {columns} FROM sourcedocument "
-                "WHERE project_id = :pid ORDER BY id"
+                f"SELECT t.sdoc_id, t.step, t.status FROM {STEP_STATUS_TABLE} t "
+                "JOIN sourcedocument s ON s.id = t.sdoc_id WHERE s.project_id = :pid"
             ),
             {"pid": project_id},
-        ).mappings()
-        return [SdocRow(dict(row)) for row in rows]
+        ):
+            planned.setdefault(sdoc_id, {})[step] = status
+        return [
+            SdocRow(
+                row,
+                {
+                    step: planned.get(row["id"], {}).get(step)
+                    for step in PROCESSING_STEPS.get(row["doctype"], [])
+                },
+            )
+            for row in rows
+        ]
+
+    @staticmethod
+    def _print_not_planned(*, sdocs: list[SdocRow]) -> None:
+        """Data of steps that are not planned is missing on purpose: no check
+        reports it. Say so, as it explains e.g. an empty search index."""
+        counts: dict[str, int] = {}
+        for sdoc in sdocs:
+            for step in sdoc.not_planned:
+                counts[step] = counts.get(step, 0) + 1
+        if not counts:
+            return
+        steps = ", ".join(
+            f"{step} ({n} documents)" for step, n in sorted(counts.items())
+        )
+        print(
+            f"  Not checked, as the step is not planned: {steps}. A step is not "
+            "planned if no enabled feature needs it, or if it was never computed "
+            "for the document; enable or complete the feature in the project "
+            "settings to compute the data.",
+            file=sys.stderr,
+        )
 
     def _check_processing(
         self, *, sdocs: list[SdocRow], data_ids: set[int]
@@ -304,8 +369,9 @@ class Checker:
                         hint=_HINT_FAILED_PROCESSING,
                     )
                 )
-            # the export needs the processed data of every document. After a
-            # failed step, the later steps stay "processing" forever.
+            # the export needs the processed data of every document. A document
+            # that still processes gets its data later; one with a failed step
+            # does not (the steps after a failed step fail too).
             if sdoc.id not in data_ids and (
                 sdoc.failed_steps or not sdoc.is_processing
             ):
@@ -478,7 +544,7 @@ class Checker:
         missing = [
             sdoc.id
             for sdoc in sdocs
-            if sdoc.is_finished("text_es_index")
+            if sdoc.is_finished(ES_INDEX_STEP)
             and sdoc.id in data_ids
             and sdoc.id not in es_ids
         ]
@@ -498,7 +564,7 @@ class Checker:
                     hint=None
                     if index_exists
                     else f"The index {index} does not exist. "
-                    + _HINT_RECOMPUTE.format(step="text_es_index"),
+                    + _HINT_RECOMPUTE.format(step=ES_INDEX_STEP),
                 )
             )
         if orphaned:
@@ -585,7 +651,7 @@ class Checker:
                     )
                 )
 
-            step = _EMBEDDING_STEPS.get(name)
+            step = EMBEDDING_STEPS.get(name)
             if step is None:
                 continue
             missing = [
@@ -595,7 +661,7 @@ class Checker:
                 and sdoc.id not in embedded
                 # documents without sentences have no sentence embeddings
                 and (
-                    step != "text_sentence_embedding"
+                    step != EMBEDDING_STEPS["Sentence"]
                     or sentence_counts.get(sdoc.id, 0) > 0
                 )
             ]

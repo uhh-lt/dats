@@ -2,6 +2,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
+import { useFeature } from "@core/feature";
 import { TableInfoHooks, URLFilterPopover } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton, useTabNavigate } from "@core/navigation";
@@ -16,6 +17,7 @@ import {
   sdocQueries,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
+import { Feature } from "@models/Feature";
 import { FolderType } from "@models/FolderType";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { SdocColumns } from "@models/SdocColumns";
@@ -106,6 +108,13 @@ export function SearchDocumentTable({
 }: DocumentTableProps) {
   const { searchFilter } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
+  // without full-text search, documents are searched with filters only
+  const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
+  // full-text search was disabled while the page is open: drop the text query from the URL (the route loader drops
+  // it when the page loads), else the search fails with 403
+  useEffect(() => {
+    if (!fullTextSearchEnabled && searchQuery.trim() !== "") setSearchQuery("");
+  }, [fullTextSearchEnabled, searchQuery, setSearchQuery]);
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
   const navigate = DocumentSearchRouteAPI.useNavigate();
   const tabNavigate = useTabNavigate();
@@ -281,13 +290,13 @@ export function SearchDocumentTable({
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
-      showGlobalFilter: true,
+      showGlobalFilter: fullTextSearchEnabled,
       expanded: expandedModel,
     },
     // search query
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
-    // enableGlobalFilter: true,
+    enableGlobalFilter: fullTextSearchEnabled,
     onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: rowSelection(folderSelectionType),

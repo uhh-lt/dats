@@ -1,3 +1,4 @@
+import { useNavigationTitle } from "@core/navigation";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -14,6 +15,7 @@ import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/");
 
 export function WhiteboardDashboardView() {
+  const title = useNavigationTitle() ?? "";
   // route params
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
@@ -126,11 +128,6 @@ export function WhiteboardDashboardView() {
   });
 
   return (
-    <AnalysisDashboard
-      pageTitle="Whiteboard Dashboard"
-      headerTitle="Whiteboard Dashboard"
-      subheaderTitle="Manage your whiteboards"
-      table={table}
-    />
+    <AnalysisDashboard pageTitle={title} headerTitle={title} subheaderTitle="Manage your whiteboards" table={table} />
   );
 }

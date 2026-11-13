@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/classifier")({
   staticData: {
     tab: true,
     icon: Icon.CLASSIFIER,
-    getTitle: () => "Classifier",
   },
   context: ({ params }) => ({
     classifiersByProjectOptions: classifierQueries.byProject(params.projectId),

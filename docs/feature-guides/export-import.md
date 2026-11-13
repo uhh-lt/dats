@@ -50,3 +50,5 @@ If you have an exported DATS ZIP file—perhaps a backup you previously created,
 _Select the correct data type before importing a DATS backup file._
 
 DATS will process the archive and populate your current project with the imported data!
+
+An import restores exactly what the archive contains. A project archive also restores the project's [features](project-features.md). If the archive lacks the data of an enabled feature (for example because it was disabled in the exported project), the feature shows as **Partly available** in the Features tab of the Project Settings; click **Complete** there to compute the missing data.

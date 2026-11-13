@@ -188,6 +188,7 @@ class WeaviateConfig(BaseModel):
     port: int = Field(gt=0, lt=65536)
     collection_postfix: str
     grpc_port: int = Field(gt=0, lt=65536)
+    page_size: int = Field(gt=0)
 
 
 class PostgresPoolConfig(BaseModel):
@@ -419,6 +420,12 @@ class ChunkingConfig(BaseModel):
     characters_per_page: int = Field(gt=0)
 
 
+class FeatureActivationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    batch_size: int = Field(gt=0)
+
+
 class BackendConfigSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -444,6 +451,7 @@ class BackendConfigSchema(BaseModel):
     classifier: ClassifierConfig
     promptembedder: PromptEmbedderConfig
     chunking: ChunkingConfig
+    feature_activation: FeatureActivationConfig
     project_metadata: list[ProjectMetadataConfig]
     system_codes: list[SystemCodeConfig]
 

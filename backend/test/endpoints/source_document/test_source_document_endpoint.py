@@ -251,6 +251,22 @@ def test_update_sdoc_if_not_exists(
     assert resp.status_code == 403, resp.text
 
 
+def test_update_sdoc_cannot_write_step_statuses(client: TestClient, project_with_sdoc):
+    """The step statuses are no fields of the update: a status next to the name
+    is ignored, so the finished document stays readable (GET /sdoc rejects
+    unfinished documents), and a status alone is an empty update (422)."""
+    sdoc = project_with_sdoc["source_document"]
+
+    with_name = client.patch(
+        f"/sdoc/{sdoc.id}", json={"name": "Renamed", "text_spacy": -100}
+    )
+    status_only = client.patch(f"/sdoc/{sdoc.id}", json={"text_spacy": -100})
+
+    assert with_name.status_code == 200, with_name.text
+    assert status_only.status_code == 422, status_only.text
+    assert client.get(f"/sdoc/{sdoc.id}").status_code == 200
+
+
 def test_get_same_folder_sdocs(client: TestClient, project_with_sdocs_in_same_folder):
     sdoc = project_with_sdocs_in_same_folder["source_documents"][0]
     sdoc_2 = project_with_sdocs_in_same_folder["source_documents"][1]

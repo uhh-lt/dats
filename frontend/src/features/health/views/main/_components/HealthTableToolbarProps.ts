@@ -5,7 +5,8 @@ import { Dispatch, SetStateAction } from "react";
 
 export interface HealthTableToolbarProps extends FilterTableToolbarProps<SdocStatusRow> {
   selectedRows: number[];
-  tableColumnInfo: string[];
+  /** The steps planned for at least one selected document; the recompute menu offers only these. */
+  plannedSteps: string[];
   settings: ProcessingSettings;
   onChangeSettings: Dispatch<SetStateAction<ProcessingSettings>>;
   isRetryPending: boolean;

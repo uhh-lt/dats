@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/ml-automat
   staticData: {
     tab: true,
     icon: Icon.ML_AUTOMATION,
-    getTitle: () => "ML Automation",
   },
   context: ({ params }) => ({ mlJobsByProjectOptions: mlAutomationQueries.job.byProject(params.projectId) }),
   loader: async ({ context }) => {

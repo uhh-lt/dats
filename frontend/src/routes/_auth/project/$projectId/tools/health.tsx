@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   staticData: {
     tab: true,
     icon: Icon.HEALTH,
-    getTitle: () => "Health",
   },
   validateSearch: zodValidator(healthSearchSchema),
   loaderDeps: ({ search }) => search,

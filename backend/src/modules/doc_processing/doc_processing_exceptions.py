@@ -23,3 +23,35 @@ class UnsupportedMimeTypeError(Exception):
 class NoFilesProcessedError(Exception):
     def __init__(self) -> None:
         super().__init__("No files were processed or no job was started.")
+
+
+class PipelineDeclarationError(Exception):
+    """Raised at startup when the `@pipeline_step` declarations of
+    the pipeline steps do not form a valid pipeline (e.g. an artefact nobody
+    produces, or a cycle)."""
+
+    def __init__(self, problems: list[str]) -> None:
+        self.problems = problems
+        super().__init__(
+            "Invalid preprocessing pipeline declarations:\n- " + "\n- ".join(problems)
+        )
+
+
+class PipelineNotRegisteredError(Exception):
+    """Raised when the pipeline graph is read before the jobs were registered."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "No pipeline steps are registered. Register the jobs first "
+            "(bootstrap.register_jobs)."
+        )
+
+
+class StepNotComputedError(Exception):
+    """Raised by a job that computes several steps when it is asked for a step
+    of its `further_steps` that its handler does not compute."""
+
+    def __init__(self, job_type: str, steps: list[str]) -> None:
+        super().__init__(
+            f"Job '{job_type}' has no branch that computes the steps {steps}."
+        )

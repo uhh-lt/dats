@@ -10,6 +10,7 @@ from weaviate.collections import Collection
 from weaviate.collections.classes.filters import _Filters
 from weaviate.types import UUID
 
+from config import conf
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_exceptions import (
     WeaviateBatchImportError,
@@ -21,6 +22,8 @@ from repos.vector.weaviate_models import (
     ObjectIdentifier,
     SimSearchResult,
 )
+
+PAGE_SIZE = conf.weaviate.page_size
 
 ID = TypeVar("ID", bound=ObjectIdentifier)
 COLLECTION = TypeVar("COLLECTION", bound=BaseCollection)
@@ -274,17 +277,24 @@ class EmbeddingCRUDBase(Generic[ID, COLLECTION]):
         """
         collection = self._get_collection(client=client, project_id=project_id)
 
-        # Query to find the objects with vector
-        result = collection.query.fetch_objects(
-            filters=filters,
-            include_vector=True,
-        )
-
-        # TODO: How can I circumvent the limit?
+        # Query to find the objects with vector, page by page: without a limit,
+        # Weaviate returns its default limit of objects (25). The offset is
+        # limited by Weaviate's QUERY_MAXIMUM_RESULTS (10,000 by default).
+        objects = []
+        while True:
+            page = collection.query.fetch_objects(
+                filters=filters,
+                include_vector=True,
+                limit=PAGE_SIZE,
+                offset=len(objects),
+            ).objects
+            objects.extend(page)
+            if len(page) < PAGE_SIZE:
+                break
 
         # Map each result to its ID and embedding
         embeddings: list[EmbeddingSearchResult[ID]] = []
-        for obj in result.objects:
+        for obj in objects:
             obj_id = self.object_identifier.model_validate(obj.properties)
             vector = obj.vector["default"]
             assert isinstance(vector, list), (

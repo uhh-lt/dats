@@ -41,6 +41,7 @@ from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from feature_test_utils import FeaturelessProject, create_featureless_project
 from provenance_test_utils import (
     ProvenanceProjectWithCopies,
     create_provenance_copies,
@@ -679,3 +680,17 @@ def provenance_project_with_copies(
         seed_db_session,
         create_provenance_project(seed_db_session, test_user, project_with_sdoc),
     )
+
+
+@pytest.fixture(scope="session")
+def featureless_project(seed_db_session, test_user) -> FeaturelessProject:
+    """The project described in `FeaturelessProject`, built once next to
+    `search_project`: "Featureless Project" of `test_user` without any enabled
+    feature (so full-text search is disabled), with the text document
+    "text_done.txt". It is a project of its own, so it changes no result of the
+    `search_project` tests."""
+    featureless = create_featureless_project(seed_db_session, test_user)
+    # end the transaction of the final refreshes: an open transaction of the
+    # seed session blocks the TRUNCATE of the next test suite's cleanup
+    seed_db_session.commit()
+    return featureless

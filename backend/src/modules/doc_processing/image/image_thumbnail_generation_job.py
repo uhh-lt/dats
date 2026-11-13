@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from common.artefact_enum import Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.source_document_crud import crud_sdoc
@@ -9,6 +10,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.pipeline.pipeline_step_decorator import pipeline_step
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
@@ -64,6 +66,11 @@ def enrich_for_recompute(
     )
 
 
+@pipeline_step(
+    requires=set(),
+    produces={Artefact.THUMBNAIL},
+    doctypes={DocType.image},
+)
 @register_job(
     job_type=JobType.IMAGE_THUMBNAIL,
     input_type=ImageThumbnailJobInput,

@@ -1,5 +1,6 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
+import { FeatureSelection, featureQueries } from "@core/feature";
 import { ProjectHooks } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialog } from "@hooks/useDialog";
@@ -7,6 +8,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ProjectCreate } from "@models/ProjectCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import {
+  Box,
   Button,
   Card,
   CardActionArea,
@@ -14,12 +16,14 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  Divider,
   Stack,
   Typography,
 } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { closeOnEscape } from "@utils/dialogUtils";
 
 export function ProjectCreationDialog() {
@@ -29,20 +33,35 @@ export function ProjectCreationDialog() {
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
+  // all toggleable features; a new project enables all of them by default ("Everything")
+  const features = useQuery(featureQueries.list());
+
   // form
   const {
     handleSubmit,
     formState: { errors },
     control,
     reset,
+    getValues,
+    setValue,
   } = useForm<ProjectCreate>();
 
   // reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
-      reset({ title: "", description: "" });
+      reset({ title: "", description: "", enabled_features: undefined });
     }
   }, [isOpen, reset]);
+
+  // select all features once they are loaded, without touching what the user typed or selected
+  useEffect(() => {
+    if (isOpen && features.data && getValues("enabled_features") === undefined) {
+      setValue(
+        "enabled_features",
+        features.data.map((f) => f.feature),
+      );
+    }
+  }, [isOpen, features.data, getValues, setValue]);
 
   // form actions
   const navigate = useNavigate();
@@ -54,6 +73,8 @@ export function ProjectCreationDialog() {
           requestBody: {
             title: data.title,
             description: data.description,
+            // without the feature list, the backend's default applies: all features
+            enabled_features: features.isSuccess ? data.enabled_features : undefined,
           },
         },
         {
@@ -68,7 +89,7 @@ export function ProjectCreationDialog() {
         },
       );
     },
-    [createProjectMutation, handleClose, navigate],
+    [createProjectMutation, features.isSuccess, handleClose, navigate],
   );
   const handleError: SubmitErrorHandler<ProjectCreate> = (data) => console.error(data);
 
@@ -141,6 +162,30 @@ export function ProjectCreationDialog() {
                 helperText: <ErrorMessage errors={errors} name="description" />,
               }}
             />
+            <Divider />
+            <Box>
+              <Typography variant="h6">Features</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Choose what this project needs. Annotation, the LLM assistant and all tools not listed here are always
+                available.
+              </Typography>
+            </Box>
+            {features.isSuccess && (
+              <Controller
+                name="enabled_features"
+                control={control}
+                render={({ field }) => (
+                  <FeatureSelection features={features.data} value={field.value ?? []} onChange={field.onChange} />
+                )}
+              />
+            )}
+            {features.isLoading && <Typography color="text.secondary">Loading features...</Typography>}
+            {features.isError && (
+              <Typography color="error">
+                The features could not be loaded. The project enables all features; you can change them later in the
+                project settings.
+              </Typography>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -149,6 +194,7 @@ export function ProjectCreationDialog() {
             color="success"
             startIcon={<SaveIcon />}
             type="submit"
+            disabled={features.isLoading}
             loading={isPending}
             loadingPosition="start"
             fullWidth

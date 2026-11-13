@@ -60,6 +60,7 @@ There are two levels of conftest:
 - Truncates all data stores and seeds them again (system users, Weaviate collections) **on function scope** — every test gets a clean database.
 - Builds the real app (`bootstrap.create_app`) and runs its lifespan once per session (`app_client`).
 - Provides `db_session`, `app`, `client`, `test_user`, `test_project`, `project_with_sdoc`.
+- Provides `held_jobs` ([job_test_utils.py](backend/test/job_test_utils.py)): the jobs a test starts are held on queues of the test Redis that no background worker listens to, and `held_jobs.run(...)` runs them in-process through the real job handler; never patch `JobService.start_job`, and register the handlers and enrichers of jobs declared in a test as module-level functions (RQ pickles them by reference).
 
 Clients authenticate by a test header instead of a JWT. For a client acting as another user, use `dats_test_utils.create_user_client(app_client, user)`; never open another `TestClient(app)` context, it would run a second lifespan.
 

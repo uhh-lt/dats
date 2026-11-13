@@ -4,12 +4,15 @@ import networkx as nx
 import torch
 from loguru import logger
 from pydantic import Field
+from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from common.feature_enum import Feature
 from common.job_type_enum import JobType
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.db.sql_repo import SQLRepo
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import EndpointGeneration
@@ -33,10 +36,17 @@ class DuplicateFinderOutput(JobOutputBase):
     )
 
 
+def validate_duplicate_finder_input(db: Session, payload: DuplicateFinderInput) -> None:
+    FeatureService().assert_enabled(
+        db=db, project_id=payload.project_id, feature=Feature.DUPLICATE_FINDER
+    )
+
+
 @register_job(
     job_type=JobType.DUPLICATE_FINDER,
     input_type=DuplicateFinderInput,
     output_type=DuplicateFinderOutput,
+    validate_input=validate_duplicate_finder_input,
     generate_endpoints=EndpointGeneration.MINIMAL,
     publish_updates=True,
     device="gpu",

@@ -44,6 +44,7 @@ import { Route as AuthProjectProjectIdAnalysisBboxAnnotationsRouteImport } from 
 import { Route as AuthProjectProjectIdAnalysisAnnotationScalingRouteImport } from './routes/_auth/project/$projectId/analysis/annotation-scaling'
 import { Route as AuthProjectProjectIdAnalysisAgreementRouteImport } from './routes/_auth/project/$projectId/analysis/agreement'
 import { Route as AuthProjectProjectIdPerspectivesAspectIdRouteRouteImport } from './routes/_auth/project/$projectId/perspectives/$aspectId/route'
+import { Route as AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteImport } from './routes/_auth/project/$projectId/analysis/concepts-over-time-analysis/route'
 import { Route as AuthProjectProjectIdPerspectivesAspectIdIndexRouteImport } from './routes/_auth/project/$projectId/perspectives/$aspectId/index'
 import { Route as AuthProjectProjectIdAnalysisTimelineIndexRouteImport } from './routes/_auth/project/$projectId/analysis/timeline/index'
 import { Route as AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRouteImport } from './routes/_auth/project/$projectId/analysis/concepts-over-time-analysis/index'
@@ -252,6 +253,12 @@ const AuthProjectProjectIdPerspectivesAspectIdRouteRoute =
     path: '/perspectives/$aspectId',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
+const AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute =
+  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteImport.update({
+    id: '/analysis/concepts-over-time-analysis',
+    path: '/analysis/concepts-over-time-analysis',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
 const AuthProjectProjectIdPerspectivesAspectIdIndexRoute =
   AuthProjectProjectIdPerspectivesAspectIdIndexRouteImport.update({
     id: '/',
@@ -266,9 +273,10 @@ const AuthProjectProjectIdAnalysisTimelineIndexRoute =
   } as any)
 const AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute =
   AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRouteImport.update({
-    id: '/analysis/concepts-over-time-analysis/',
-    path: '/analysis/concepts-over-time-analysis/',
-    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute,
   } as any)
 const AuthProjectProjectIdPerspectivesAspectIdMapRoute =
   AuthProjectProjectIdPerspectivesAspectIdMapRouteImport.update({
@@ -284,9 +292,10 @@ const AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute =
   } as any)
 const AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute =
   AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRouteImport.update({
-    id: '/analysis/concepts-over-time-analysis/$cotaId',
-    path: '/analysis/concepts-over-time-analysis/$cotaId',
-    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+    id: '/$cotaId',
+    path: '/$cotaId',
+    getParentRoute: () =>
+      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -302,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/prompts': typeof AuthProjectProjectIdPromptsRoute
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
+  '/project/$projectId/analysis/concepts-over-time-analysis': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteWithChildren
   '/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
   '/project/$projectId/analysis/agreement': typeof AuthProjectProjectIdAnalysisAgreementRoute
   '/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
@@ -386,6 +396,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/prompts': typeof AuthProjectProjectIdPromptsRoute
   '/_auth/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/_auth/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
+  '/_auth/project/$projectId/analysis/concepts-over-time-analysis': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteWithChildren
   '/_auth/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
   '/_auth/project/$projectId/analysis/agreement': typeof AuthProjectProjectIdAnalysisAgreementRoute
   '/_auth/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/prompts'
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
+    | '/project/$projectId/analysis/concepts-over-time-analysis'
     | '/project/$projectId/perspectives/$aspectId'
     | '/project/$projectId/analysis/agreement'
     | '/project/$projectId/analysis/annotation-scaling'
@@ -512,6 +524,7 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/prompts'
     | '/_auth/project/$projectId/search'
     | '/_auth/project/$projectId/sentencesearch'
+    | '/_auth/project/$projectId/analysis/concepts-over-time-analysis'
     | '/_auth/project/$projectId/perspectives/$aspectId'
     | '/_auth/project/$projectId/analysis/agreement'
     | '/_auth/project/$projectId/analysis/annotation-scaling'
@@ -793,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
+    '/_auth/project/$projectId/analysis/concepts-over-time-analysis': {
+      id: '/_auth/project/$projectId/analysis/concepts-over-time-analysis'
+      path: '/analysis/concepts-over-time-analysis'
+      fullPath: '/project/$projectId/analysis/concepts-over-time-analysis'
+      preLoaderRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
     '/_auth/project/$projectId/perspectives/$aspectId/': {
       id: '/_auth/project/$projectId/perspectives/$aspectId/'
       path: '/'
@@ -809,10 +829,10 @@ declare module '@tanstack/react-router' {
     }
     '/_auth/project/$projectId/analysis/concepts-over-time-analysis/': {
       id: '/_auth/project/$projectId/analysis/concepts-over-time-analysis/'
-      path: '/analysis/concepts-over-time-analysis'
+      path: '/'
       fullPath: '/project/$projectId/analysis/concepts-over-time-analysis/'
       preLoaderRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRouteImport
-      parentRoute: typeof AuthProjectProjectIdRouteRoute
+      parentRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute
     }
     '/_auth/project/$projectId/perspectives/$aspectId/map': {
       id: '/_auth/project/$projectId/perspectives/$aspectId/map'
@@ -830,13 +850,31 @@ declare module '@tanstack/react-router' {
     }
     '/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId': {
       id: '/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId'
-      path: '/analysis/concepts-over-time-analysis/$cotaId'
+      path: '/$cotaId'
       fullPath: '/project/$projectId/analysis/concepts-over-time-analysis/$cotaId'
       preLoaderRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRouteImport
-      parentRoute: typeof AuthProjectProjectIdRouteRoute
+      parentRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute
     }
   }
 }
+
+interface AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteChildren {
+  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute
+  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute
+}
+
+const AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteChildren: AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteChildren =
+  {
+    AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute:
+      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute,
+    AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute:
+      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute,
+  }
+
+const AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteWithChildren =
+  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute._addFileChildren(
+    AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteChildren,
+  )
 
 interface AuthProjectProjectIdPerspectivesAspectIdRouteRouteChildren {
   AuthProjectProjectIdPerspectivesAspectIdMapRoute: typeof AuthProjectProjectIdPerspectivesAspectIdMapRoute
@@ -863,6 +901,7 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdPromptsRoute: typeof AuthProjectProjectIdPromptsRoute
   AuthProjectProjectIdSearchRoute: typeof AuthProjectProjectIdSearchRoute
   AuthProjectProjectIdSentencesearchRoute: typeof AuthProjectProjectIdSentencesearchRoute
+  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteWithChildren
   AuthProjectProjectIdPerspectivesAspectIdRouteRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
   AuthProjectProjectIdAnalysisAgreementRoute: typeof AuthProjectProjectIdAnalysisAgreementRoute
   AuthProjectProjectIdAnalysisAnnotationScalingRoute: typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
@@ -884,9 +923,7 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdExperimentsIndexRoute: typeof AuthProjectProjectIdExperimentsIndexRoute
   AuthProjectProjectIdPerspectivesIndexRoute: typeof AuthProjectProjectIdPerspectivesIndexRoute
   AuthProjectProjectIdWhiteboardIndexRoute: typeof AuthProjectProjectIdWhiteboardIndexRoute
-  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute
   AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute: typeof AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute
-  AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute
   AuthProjectProjectIdAnalysisTimelineIndexRoute: typeof AuthProjectProjectIdAnalysisTimelineIndexRoute
 }
 
@@ -900,6 +937,8 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
     AuthProjectProjectIdSearchRoute: AuthProjectProjectIdSearchRoute,
     AuthProjectProjectIdSentencesearchRoute:
       AuthProjectProjectIdSentencesearchRoute,
+    AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRoute:
+      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisRouteRouteWithChildren,
     AuthProjectProjectIdPerspectivesAspectIdRouteRoute:
       AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren,
     AuthProjectProjectIdAnalysisAgreementRoute:
@@ -941,12 +980,8 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
       AuthProjectProjectIdPerspectivesIndexRoute,
     AuthProjectProjectIdWhiteboardIndexRoute:
       AuthProjectProjectIdWhiteboardIndexRoute,
-    AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute:
-      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute,
     AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute:
       AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute,
-    AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute:
-      AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute,
     AuthProjectProjectIdAnalysisTimelineIndexRoute:
       AuthProjectProjectIdAnalysisTimelineIndexRoute,
   }

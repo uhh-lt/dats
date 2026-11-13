@@ -1,5 +1,11 @@
 from fastapi.testclient import TestClient
 
+from common.feature_enum import Feature
+from core.project.project_dto import (
+    ProjectCreate,
+    ProjectRead,
+    ProjectUpdate,
+)
 from experiment_test_utils import RunUserProject
 
 # ===========================================================================
@@ -75,3 +81,66 @@ def test_delete_nonexistent_project(client: TestClient):
     response = client.delete(f"/project/{project_id}")
 
     assert response.status_code == 403, response.text
+
+
+# ===========================================================================
+# PROJECT FEATURES: CREATE (/project) TESTS
+# ===========================================================================
+
+
+def test_create_project_enables_all_features_by_default(client: TestClient):
+    """A project created without `enabled_features` enables every feature, so
+    it behaves like every project before the feature toggles."""
+    response = client.put("/project", json={"title": "All", "description": ""})
+
+    assert response.status_code == 200, response.text
+    project = ProjectRead.model_validate(response.json())
+    assert project.enabled_features == list(Feature)
+
+
+def test_create_project_enables_the_features_the_requested_ones_require(
+    client: TestClient,
+):
+    """Requesting RAG chat also enables sentence similarity search."""
+    create = ProjectCreate(
+        title="RAG", description="", enabled_features=[Feature.RAG_CHAT]
+    )
+
+    response = client.put("/project", json=create.model_dump(mode="json"))
+
+    assert response.status_code == 200, response.text
+    project = ProjectRead.model_validate(response.json())
+    assert project.enabled_features == [
+        Feature.SENTENCE_SIMILARITY_SEARCH,
+        Feature.RAG_CHAT,
+    ]
+
+
+# ===========================================================================
+# UPDATE PROJECT (/project/{project_id}) TESTS
+# ===========================================================================
+
+
+def test_update_project_rejects_enabled_features(client: TestClient, test_project):
+    """The enabled features change through the feature endpoints only: a project
+    update with `enabled_features` is rejected as an empty update."""
+    response = client.patch(
+        f"/project/{test_project.id}", json={"enabled_features": []}
+    )
+
+    assert response.status_code == 422, response.text
+
+
+def test_update_project_changes_the_title(client: TestClient, test_project):
+    """The title changes, the enabled features stay."""
+    update = ProjectUpdate(title="Renamed")
+
+    response = client.patch(
+        f"/project/{test_project.id}",
+        json=update.model_dump(mode="json", exclude_unset=True),
+    )
+
+    assert response.status_code == 200, response.text
+    project = ProjectRead.model_validate(response.json())
+    assert project.title == "Renamed"
+    assert project.enabled_features == list(Feature)

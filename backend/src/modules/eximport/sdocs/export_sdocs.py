@@ -2,27 +2,24 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
+from common.doc_type_enum import DocType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.source_document_status_rules import document_status
+from core.doc.source_document_step_status_crud import crud_sdoc_step_status
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
+from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.eximport.export_exceptions import NoDataToExportError
+from modules.eximport.sdocs.artefact_archive import archive_modules
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,
 )
 from repos.filesystem_repo import FilesystemRepo
-from repos.vector.weaviate_exceptions import (
-    WeaviateObjectIDNotFoundException,
-)
-from repos.vector.weaviate_repo import WeaviateRepo
 
 
 def export_selected_sdocs(
@@ -66,15 +63,14 @@ def __export_sdocs(
     # We export these things for each source document:
     # 1. The source document itself (the raw file) [Filesystem]
     # 2. Data that is attached to the source document
-    # 2.1. Info about the source document itself (name, filename, doctype, status) [SourceDocumentORM]
+    # 2.1. Info about the source document itself (name, filename, doctype, status of each step) [SourceDocumentORM]
     # 2.2. The source document's metadata (sdoc metadata) [SourceDocumentMetadataORM]
     # 2.3. The source document's tags (sdoc tags) [TagORM]
     # 2.4. The source document's folder [FolderORM]
-    # 2.5. The source document's word frequencies (sdoc word frequencies) [WordFrequencyORM]
     # 3. Processed data of the source document (content, html, tokens, sentences, times) [SourceDocumentDataORM]
-    # 4. Embeddings of the source document
-    # 4.1. Document Embeddings
-    # 4.2. Sentence Embeddings
+    # 4. The artefacts with an archive module (embeddings, word frequencies, see
+    # artefact_archive.py), only if their step finished: a document of a project
+    # without e.g. sentence similarity search has no sentence embeddings.
 
     # Collect all files to be included in the export
     all_files = []
@@ -89,6 +85,10 @@ def __export_sdocs(
     all_files.extend(sdoc_files)
 
     # Create a collection of export data
+    graph = pipeline_registry.graph()
+    stored_status = crud_sdoc_step_status.read_by_sdocs(
+        db=db, sdoc_ids=[sdoc.id for sdoc in sdocs]
+    )
     export_collection = []
     for sdoc in sdocs:
         sdoc_data = sdoc.data
@@ -109,59 +109,23 @@ def __export_sdocs(
                 (metadata.project_metadata.key, metadata.get_value_serializable())
             )
 
-        # Word frequencies
-        word_frequencies = [(wf.word, wf.count) for wf in sdoc.word_frequencies]
+        # Status of each pipeline step of the doctype, None = not planned
+        doctype = DocType(sdoc.doctype)
+        planned = stored_status[sdoc.id]
+        step_status: dict[str, int | None] = {
+            step.value: planned.get(step) for step in graph.steps(doctype)
+        }
 
-        client = WeaviateRepo().get_client()
-        # Get document embeddings
-        doc_embedding = None
-        if crud_document_embedding._tenant_exists(
-            client=client, project_id=sdoc.project_id
-        ):
-            try:
-                doc_embedding = crud_document_embedding.read(
-                    client=client,
-                    project_id=sdoc.project_id,
-                    id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
-                )
-            except WeaviateObjectIDNotFoundException:
-                doc_embedding = None
-
-        # Get sentence embeddings
-        sentence_embeddings = []
-        if crud_sentence_embedding._tenant_exists(
-            client=client, project_id=sdoc.project_id
-        ):
-            sentence_embeddings = crud_sentence_embedding.read_by_sdoc_id(
-                client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
-            )
-            sentence_embeddings = [se.embedding for se in sentence_embeddings]
-
-        # Get image embeddings
-        image_embedding = None
-        if sdoc.doctype == "image":
-            if crud_image_embedding._tenant_exists(
-                client=client, project_id=sdoc.project_id
-            ):
-                try:
-                    image_embedding = crud_image_embedding.read(
-                        client=client,
-                        project_id=sdoc.project_id,
-                        id=ImageObjectIdentifier(sdoc_id=sdoc.id),
-                    )
-                except WeaviateObjectIDNotFoundException:
-                    image_embedding = None
-
-        # Create export schema for the document
         export_schema = SourceDocumentExportSchema(
             filename=sdoc.filename,
             name=sdoc.name,
             doctype=sdoc.doctype,
-            status=sdoc.processed_status.value,
+            status=document_status(planned.values()),
+            step_status=step_status,
             folder_name=sdoc.folder.name,
             folder_parent_name=sdoc.folder.parent.name if sdoc.folder.parent else None,
             tags=tags,
-            word_frequencies=word_frequencies,
+            word_frequencies=[],
             metadata=metadata_list,
             content=sdoc_data.content,
             html=sdoc_data.html,
@@ -172,10 +136,19 @@ def __export_sdocs(
             sentence_ends=sdoc_data.sentence_ends,
             token_time_starts=sdoc_data.token_time_starts,
             token_time_ends=sdoc_data.token_time_ends,
-            document_embedding=doc_embedding,
-            sentence_embeddings=sentence_embeddings,
-            image_embedding=image_embedding,
+            sentence_embeddings=[],
         )
+
+        # The artefacts with their own store: exported only if their step
+        # finished and their data is complete, else the import leaves the step
+        # not planned
+        for artefact, module in archive_modules().items():
+            step = graph.producer(doctype, artefact)
+            if step is None or planned.get(step) != SDocStatus.finished:
+                continue
+            archived = export_schema.model_copy(update=module.read(sdoc))
+            if module.is_complete(archived):
+                export_schema = archived
 
         export_collection.append(export_schema)
 

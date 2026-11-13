@@ -2005,6 +2005,28 @@
         }
       }
     },
+    "/feature": {
+      "get": {
+        "tags": ["feature"],
+        "summary": "Returns all Features a Project can enable, with the Features they require",
+        "operationId": "get_all",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/FeatureRead" },
+                  "type": "array",
+                  "title": "Response Feature-Get All"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/folder": {
       "put": {
         "tags": ["folder"],
@@ -3739,6 +3761,151 @@
             "content": {
               "application/json": {
                 "schema": { "type": "integer", "title": "Response Project-Count Sdocs With Status" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/feature/project/{project_id}": {
+      "get": {
+        "tags": ["feature"],
+        "summary": "Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps",
+        "operationId": "get_project_features",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ProjectFeatureRead" },
+                  "title": "Response Feature-Get Project Features"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/feature/project/{project_id}/{feature}": {
+      "put": {
+        "tags": ["feature"],
+        "summary": "Enables the Feature in the Project, or completes it: computes its data for the documents that lack it. Returns the enabled Features",
+        "operationId": "activate_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeatureActivation" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Activate Feature"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["feature"],
+        "summary": "Disables the Feature in the Project; its data is kept. Returns the enabled Features",
+        "operationId": "disable_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Disable Feature"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/feature/project/{project_id}/{feature}/restart": {
+      "post": {
+        "tags": ["feature"],
+        "summary": "Restarts the processing of the enabled Feature: plans and starts its processing steps again (steps whose job still runs compute twice). Returns the enabled Features",
+        "operationId": "restart_feature",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeatureActivation" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "title": "Response Feature-Restart Feature"
+                }
               }
             }
           },
@@ -12415,25 +12582,6 @@
         "title": "DocTagRecommendationParams"
       },
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
-      "DocumentEmbeddingParams": {
-        "properties": {
-          "ml_job_type": {
-            "type": "string",
-            "const": "DOCUMENT_EMBEDDING",
-            "title": "Ml Job Type",
-            "description": "The type of the MLJob"
-          },
-          "recompute": {
-            "type": "boolean",
-            "title": "Recompute",
-            "description": "Whether to recompute already processed documents",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["ml_job_type"],
-        "title": "DocumentEmbeddingParams"
-      },
       "DocumentUnit": {
         "type": "string",
         "enum": ["whole", "sentences", "chunks"],
@@ -13201,6 +13349,59 @@
         "type": "object",
         "required": ["export_job_type", "whiteboard_ids"],
         "title": "ExportSelectedWhiteboardsParams"
+      },
+      "Feature": {
+        "type": "string",
+        "enum": [
+          "full_text_search",
+          "search_annotate",
+          "sentence_similarity_search",
+          "image_similarity_search",
+          "rag_chat",
+          "annotation_scaling",
+          "concepts_over_time",
+          "tag_recommendation",
+          "word_frequency",
+          "duplicate_finder",
+          "keyword_statistics",
+          "entity_annotations",
+          "image_captions",
+          "object_detection"
+        ],
+        "title": "Feature",
+        "description": "A user-facing capability that a project can enable or disable. Each feature\nis declared with `register_feature` in a `*_feature.py` file of its module.\n\nOnly toggleable features are listed: the features that need core data only\n(annotation, LLM assistant, classifier, perspectives, ...) are always available."
+      },
+      "FeatureActivation": {
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/ProcessingSettings",
+            "description": "The processing settings of the computed steps"
+          }
+        },
+        "type": "object",
+        "required": ["settings"],
+        "title": "FeatureActivation",
+        "description": "Enable a Feature, or complete it: compute its data for the documents that lack it."
+      },
+      "FeatureRead": {
+        "properties": {
+          "feature": { "$ref": "#/components/schemas/Feature", "description": "ID of the Feature" },
+          "requires_features": {
+            "items": { "$ref": "#/components/schemas/Feature" },
+            "type": "array",
+            "title": "Requires Features",
+            "description": "The Features this Feature requires (directly); enabling it enables them"
+          }
+        },
+        "type": "object",
+        "required": ["feature", "requires_features"],
+        "title": "FeatureRead"
+      },
+      "FeatureStatus": {
+        "type": "string",
+        "enum": ["disabled", "computing", "partly_available", "fully_available"],
+        "title": "FeatureStatus",
+        "description": "The state of a feature in a project, derived from the step statuses of its\ndocuments."
       },
       "FilterExpression_BBoxColumns_": {
         "properties": {
@@ -14322,14 +14523,56 @@
         "enum": ["queued", "finished", "failed", "started", "deferred", "scheduled", "stopped", "canceled"],
         "title": "JobStatus"
       },
+      "JobType": {
+        "type": "string",
+        "enum": [
+          "extract_archive",
+          "doc_chunking",
+          "sdoc_init",
+          "extract_html",
+          "text_extraction",
+          "text_language_detection",
+          "text_spacy",
+          "text_keywords",
+          "text_word_frequency",
+          "text_ner",
+          "text_es_index",
+          "text_sentence_embedding",
+          "text_document_embedding",
+          "text_html_mapping",
+          "image_caption",
+          "image_embedding",
+          "image_metadata_extraction",
+          "image_thumbnail",
+          "image_object_detection",
+          "audio_metadata",
+          "audio_thumbnail",
+          "audio_transcription",
+          "video_metadata",
+          "video_thumbnail",
+          "video_audio_extraction",
+          "duplicate_finder",
+          "export",
+          "import",
+          "ml",
+          "classifier",
+          "llm_assistant",
+          "experiment_run",
+          "crawler",
+          "feature_activation",
+          "cota_refinement",
+          "perspectives"
+        ],
+        "title": "JobType"
+      },
       "JobUpdatedEvent": {
         "properties": {
           "type": { "type": "string", "const": "JOB_UPDATED", "title": "Type", "default": "JOB_UPDATED" },
           "payload": {
             "anyOf": [
+              { "$ref": "#/components/schemas/CrawlerJobRead" },
               { "$ref": "#/components/schemas/ClassifierJobRead" },
               { "$ref": "#/components/schemas/COTARefinementJobRead" },
-              { "$ref": "#/components/schemas/CrawlerJobRead" },
               { "$ref": "#/components/schemas/DuplicateFinderJobRead" },
               { "$ref": "#/components/schemas/LlmAssistantJobRead" },
               { "$ref": "#/components/schemas/ExperimentRunJobRead" },
@@ -14509,17 +14752,13 @@
                 "oneOf": [
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
                   { "$ref": "#/components/schemas/DocTagRecommendationParams" },
-                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" },
-                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" },
-                  { "$ref": "#/components/schemas/SentenceEmbeddingParams" }
+                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" }
                 ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
                   "mapping": {
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
-                    "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
                     "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
-                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams",
                     "TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams"
                   }
                 }
@@ -14536,13 +14775,7 @@
       },
       "MLJobType": {
         "type": "string",
-        "enum": [
-          "QUOTATION_ATTRIBUTION",
-          "TAG_RECOMMENDATION",
-          "COREFERENCE_RESOLUTION",
-          "DOCUMENT_EMBEDDING",
-          "SENTENCE_EMBEDDING"
-        ],
+        "enum": ["QUOTATION_ATTRIBUTION", "TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION"],
         "title": "MLJobType"
       },
       "MemoColumns": {
@@ -15601,7 +15834,13 @@
       "ProjectCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Project" },
-          "description": { "type": "string", "title": "Description", "description": "Description of the Project" }
+          "description": { "type": "string", "title": "Description", "description": "Description of the Project" },
+          "enabled_features": {
+            "items": { "$ref": "#/components/schemas/Feature" },
+            "type": "array",
+            "title": "Enabled Features",
+            "description": "Features enabled in the Project (default: all); the Features they require are enabled as well"
+          }
         },
         "type": "object",
         "required": ["title", "description"],
@@ -15624,6 +15863,77 @@
         "type": "object",
         "required": ["payload"],
         "title": "ProjectDeletedEvent"
+      },
+      "ProjectFeatureRead": {
+        "properties": {
+          "feature": { "$ref": "#/components/schemas/Feature", "description": "ID of the Feature" },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether the Feature is enabled in the Project"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FeatureStatus",
+            "description": "State of the Feature: disabled, computing (documents are processing or being planned), partly available (documents lack its data and nothing runs for them) or fully available"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "description": "Whether all documents the Feature applies to have its data"
+          },
+          "covered_documents": {
+            "type": "integer",
+            "title": "Covered Documents",
+            "description": "Number of documents the Feature applies to with all its steps finished"
+          },
+          "processing_documents": {
+            "type": "integer",
+            "title": "Processing Documents",
+            "description": "Number of documents the Feature applies to with a step of it processing"
+          },
+          "failed_documents": {
+            "type": "integer",
+            "title": "Failed Documents",
+            "description": "Number of documents the Feature applies to with a step of it erroneous and none processing"
+          },
+          "not_planned_documents": {
+            "type": "integer",
+            "title": "Not Planned Documents",
+            "description": "Number of documents the Feature applies to with a step of it not planned, and none processing or erroneous"
+          },
+          "lacking_documents": {
+            "type": "integer",
+            "title": "Lacking Documents",
+            "description": "Number of documents the Feature applies to that lack its data and for which nothing runs (failed plus not planned)"
+          },
+          "total_documents": {
+            "type": "integer",
+            "title": "Total Documents",
+            "description": "Number of documents the Feature applies to"
+          },
+          "missing_steps": {
+            "items": { "$ref": "#/components/schemas/JobType" },
+            "type": "array",
+            "title": "Missing Steps",
+            "description": "The steps of the Feature that are not finished for at least one document"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "enabled",
+          "status",
+          "ready",
+          "covered_documents",
+          "processing_documents",
+          "failed_documents",
+          "not_planned_documents",
+          "lacking_documents",
+          "total_documents",
+          "missing_steps"
+        ],
+        "title": "ProjectFeatureRead",
+        "description": "The state of a Feature in a Project."
       },
       "ProjectMetadataCreate": {
         "properties": {
@@ -15806,10 +16116,16 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the Project"
+          },
+          "enabled_features": {
+            "items": { "$ref": "#/components/schemas/Feature" },
+            "type": "array",
+            "title": "Enabled Features",
+            "description": "Features enabled in the Project"
           }
         },
         "type": "object",
-        "required": ["title", "description", "id", "created", "updated"],
+        "required": ["title", "description", "id", "created", "updated", "enabled_features"],
         "title": "ProjectRead"
       },
       "ProjectUpdate": {
@@ -16785,7 +17101,12 @@
         "required": ["perspectives_job_type"],
         "title": "ResetModelParams"
       },
-      "SDocStatus": { "type": "integer", "enum": [-100, 0, 1], "title": "SDocStatus" },
+      "SDocStatus": {
+        "type": "integer",
+        "enum": [-100, 0, 1],
+        "title": "SDocStatus",
+        "description": "The status of a pipeline step of a document, and the overall status of a\ndocument derived from them (`source_document_status_rules`)."
+      },
       "SampledSdocsResults": {
         "properties": {
           "tags": {
@@ -16958,10 +17279,10 @@
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the SourceDocument" },
           "name": { "type": "string", "title": "Name", "description": "Name of the SourceDocument" },
           "status": {
-            "additionalProperties": { "$ref": "#/components/schemas/SDocStatus" },
+            "additionalProperties": { "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }] },
             "type": "object",
             "title": "Status",
-            "description": "Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)"
+            "description": "Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype, null = the step is not planned)"
           },
           "failed_job_uuids": {
             "additionalProperties": { "type": "string" },
@@ -17589,25 +17910,6 @@
         "required": ["sentence_annotations"],
         "title": "SentenceAnnotatorResult"
       },
-      "SentenceEmbeddingParams": {
-        "properties": {
-          "ml_job_type": {
-            "type": "string",
-            "const": "SENTENCE_EMBEDDING",
-            "title": "Ml Job Type",
-            "description": "The type of the MLJob"
-          },
-          "recompute": {
-            "type": "boolean",
-            "title": "Recompute",
-            "description": "Whether to recompute already processed documents",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["ml_job_type"],
-        "title": "SentenceEmbeddingParams"
-      },
       "SentencePromptExample": {
         "properties": {
           "sdoc_id": {
@@ -18217,19 +18519,11 @@
             "description": "Project the SourceDocument belongs to"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
-          "processed_jobs": {
-            "type": "integer",
-            "title": "Processed Jobs",
-            "description": "Number of processed jobs (depending on the doctype)"
-          },
-          "total_jobs": {
-            "type": "integer",
-            "title": "Total Jobs",
-            "description": "Total number of jobs (depending on the doctype)"
-          },
+          "processed_jobs": { "type": "integer", "title": "Processed Jobs", "description": "Number of finished jobs" },
+          "total_jobs": { "type": "integer", "title": "Total Jobs", "description": "Number of planned jobs" },
           "processed_status": {
             "$ref": "#/components/schemas/SDocStatus",
-            "description": "Overall processing status. Results from processed_jobs and total_jobs"
+            "description": "Overall processing status: erroneous if any job failed, processing if any job is pending, finished otherwise"
           }
         },
         "type": "object",
@@ -18275,78 +18569,6 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Folder Id",
             "description": "ID of the Folder this SourceDocument belongs to"
-          },
-          "extract_html": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Extract HTML done?"
-          },
-          "text_extraction": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Text Extraction done?"
-          },
-          "text_language_detection": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Text Language Detection done?"
-          },
-          "text_spacy": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Text Spacy done?"
-          },
-          "text_es_index": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Text ES Index done?"
-          },
-          "text_sentence_embedding": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Text Sentence Embedding done?"
-          },
-          "text_html_mapping": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Text HTML Mapping done?"
-          },
-          "image_caption": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Image Captioning done?"
-          },
-          "image_embedding": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Image Embedding done?"
-          },
-          "image_metadata_extraction": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Image Metadata Extraction done?"
-          },
-          "image_thumbnail": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Image Thumbnail Generation done?"
-          },
-          "image_object_detection": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Object Detection done?"
-          },
-          "audio_metadata": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Audio Metadata Extraction done?"
-          },
-          "audio_thumbnail": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Audio Thumbnail Generation done?"
-          },
-          "audio_transcription": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Transcription done?"
-          },
-          "video_metadata": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Video Metadata Extraction done?"
-          },
-          "video_thumbnail": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Video Thumbnail Generation done?"
-          },
-          "video_audio_extraction": {
-            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
-            "description": "Video Audio Extraction done?"
           }
         },
         "type": "object",

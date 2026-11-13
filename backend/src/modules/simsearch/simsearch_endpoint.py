@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
+from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
+from systems.feature_system.feature_dependency import require_feature
 from systems.search_system.filtering import Filter
 
 router = APIRouter(
@@ -17,6 +19,7 @@ router = APIRouter(
 
 @router.post(
     "/sentences",
+    dependencies=[Depends(require_feature(Feature.SENTENCE_SIMILARITY_SEARCH))],
     response_model=list[SimSearchSentenceHit],
     summary="Returns similar sentences according to a textual or visual query.",
 )
@@ -44,6 +47,7 @@ def find_similar_sentences(
 
 @router.post(
     "/images",
+    dependencies=[Depends(require_feature(Feature.IMAGE_SIMILARITY_SEARCH))],
     response_model=list[SimSearchImageHit],
     summary="Returns similar images according to a textual or visual query.",
 )

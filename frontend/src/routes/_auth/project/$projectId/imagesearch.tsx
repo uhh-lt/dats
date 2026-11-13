@@ -1,9 +1,11 @@
+import { ensureRouteFeatureEnabled } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { ImageSimilaritySearchView, similaritySearchQueries } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
+import { Feature } from "@models/Feature";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
   staticData: {
     tab: true,
     icon: Icon.IMAGE_SEARCH,
-    getTitle: () => "Image Search",
+    feature: Feature.IMAGE_SIMILARITY_SEARCH,
   },
   validateSearch: zodValidator(imageSimilaritySearchSchema),
   loaderDeps: ({ search }) => search,
@@ -33,7 +35,8 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
     }),
     projectMetadataOptions: projectMetadataQueries.byProject(params.projectId),
   }),
-  loader: async ({ context }) => {
+  loader: async ({ context, params, route }) => {
+    if (!(await ensureRouteFeatureEnabled({ context, params, route }))) return;
     await Promise.all([
       context.queryClient.ensureQueryData(context.projectMetadataOptions),
       context.queryClient.ensureQueryData(context.imageSimilaritySearchOptions),

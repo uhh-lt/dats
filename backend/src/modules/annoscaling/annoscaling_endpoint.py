@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
+from common.feature_enum import Feature
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.auth.authz_user import AuthzUser
 from modules.annoscaling.annoscaling_dto import (
@@ -11,6 +12,7 @@ from modules.annoscaling.annoscaling_dto import (
     AnnoscalingSuggest,
 )
 from modules.annoscaling.annoscaling_service import AnnoScalingService
+from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
 router = APIRouter(
@@ -34,6 +36,9 @@ def suggest(
     authz_user: AuthzUser = Depends(),
 ) -> list[AnnoscalingResult]:
     authz_user.assert_in_project(dto.project_id)
+    FeatureService().assert_enabled(
+        db=db, project_id=dto.project_id, feature=Feature.ANNOTATION_SCALING
+    )
 
     return ass.suggest(
         db=db,
@@ -59,6 +64,9 @@ def confirm_suggestions(
     ws: WebsocketEmitter = Depends(),
 ) -> list[SpanAnnotationRead]:
     authz_user.assert_in_project(dto.project_id)
+    FeatureService().assert_enabled(
+        db=db, project_id=dto.project_id, feature=Feature.ANNOTATION_SCALING
+    )
 
     results = ass.confirm_suggestions(
         db=db,

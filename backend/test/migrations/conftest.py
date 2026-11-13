@@ -1,11 +1,17 @@
 import json
-from typing import TypedDict
+from collections.abc import Generator
+from pathlib import Path
+from typing import Callable, TypedDict
 from uuid import uuid4
 
 import pytest
 import sqlalchemy as sa
+from alembic import command
+from alembic.config import Config
 from sqlalchemy.orm import Session
 
+from common.doc_type_enum import DocType
+from common.sdoc_status_enum import SDocStatus
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_service import SentenceAnnotationService
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -287,3 +293,176 @@ def assistant_users_database(
         "timeline_analysis_id": timeline_analysis_id,
         "search_view_id": search_view_id,
     }
+
+
+# The pipeline steps per doctype before migration 448579029394; their status
+# columns were NOT NULL with default 0, and there were no other step columns.
+_HTML_STEPS = [
+    "text_extraction",
+    "text_language_detection",
+    "text_spacy",
+    "text_es_index",
+    "text_sentence_embedding",
+    "text_html_mapping",
+]
+OLD_STEPS_BY_DOCTYPE = {
+    DocType.text: ["extract_html", *_HTML_STEPS],
+    DocType.image: [
+        "image_caption",
+        "image_embedding",
+        "image_metadata_extraction",
+        "image_thumbnail",
+        "image_object_detection",
+        *_HTML_STEPS,
+    ],
+    DocType.audio: [
+        "audio_metadata",
+        "audio_thumbnail",
+        "audio_transcription",
+        *_HTML_STEPS,
+    ],
+    DocType.video: [
+        "video_metadata",
+        "video_thumbnail",
+        "video_audio_extraction",
+        "audio_transcription",
+        *_HTML_STEPS,
+    ],
+}
+OLD_STATUS_COLUMNS = list(
+    dict.fromkeys(c for steps in OLD_STEPS_BY_DOCTYPE.values() for c in steps)
+)
+BEFORE_STEP_STATUS = "d7f4aa3e7395"
+# sourcedocumentjobstatus types and statuses
+ML_COREFERENCE = 101
+ML_DOCUMENT_EMBEDDING = 102
+ML_SENTENCE_EMBEDDING = 103
+ML_FINISHED = 3
+ML_ERROR = 4
+
+
+def alembic_config() -> Config:
+    config = Config(str(Path(__file__).parents[2] / "src/migrations/alembic.ini"))
+    config.attributes["configure_logger"] = False
+    return config
+
+
+class OldStatusDocument(TypedDict):
+    sdoc_id: int
+    doctype: DocType
+    status: dict[str, int]
+    status_before: SDocStatus
+
+
+@pytest.fixture(scope="function")
+def old_status_database(
+    db_session: Session, test_project: ProjectORM
+) -> Generator[dict[str, OldStatusDocument], None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `448579029394_sdoc_step_status_per_feature` and sets up documents as they
+    were then: every step column is set, the columns of steps that are no step
+    of the doctype (`OLD_STEPS_BY_DOCTYPE`) hold 0. It migrates the database back
+    to head afterwards.
+
+    `test_project` holds, per doctype (text, image, audio, video), four documents
+    named `<doctype>_<case>`, in the folder "migration":
+
+    - `finished`: all steps of the doctype are finished (1)
+    - `processing`: all steps are finished except the second-to-last (0)
+    - `erroneous`: all steps are finished except the second (-100) and third (0)
+    - `new`: all steps are processing (0)
+
+    sourcedocumentjobstatus holds, for `text_finished`, finished rows (3) of the
+    ML jobs DOCUMENT_EMBEDDING (102), SENTENCE_EMBEDDING (103) and
+    COREFERENCE_RESOLUTION (101), and for `text_processing` a failed row (4) of
+    DOCUMENT_EMBEDDING.
+
+    Returned by name, with its step status (all old columns) and the
+    processed_status the application read before the migration
+    (`status_before`): -100 if the sum of all columns is negative, 1 if it
+    equals the step count of the doctype, 0 otherwise.
+
+    Non-obvious derived behavior:
+
+    - text_spacy is a step of every doctype, as every doctype has text steps.
+    """
+    project_id = test_project.id
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, BEFORE_STEP_STATUS)
+    try:
+        cases: dict[str, Callable[[list[str]], dict[str, int]]] = {
+            "finished": lambda steps: dict.fromkeys(steps, 1),
+            "processing": lambda steps: {**dict.fromkeys(steps, 1), steps[-2]: 0},
+            "erroneous": lambda steps: {
+                **dict.fromkeys(steps, 1),
+                steps[1]: -100,
+                steps[2]: 0,
+            },
+            "new": lambda steps: dict.fromkeys(steps, 0),
+        }
+        folder_id = db_session.execute(
+            sa.text(
+                "INSERT INTO folder (name, folder_type, project_id) "
+                "VALUES ('migration', 'normal', :p) RETURNING id"
+            ),
+            {"p": project_id},
+        ).scalar_one()
+        documents: dict[str, OldStatusDocument] = {}
+        for doctype, steps in OLD_STEPS_BY_DOCTYPE.items():
+            for case, step_values in cases.items():
+                name = f"{doctype.value}_{case}"
+                status = {c: step_values(steps).get(c, 0) for c in OLD_STATUS_COLUMNS}
+                sdoc_id = db_session.execute(
+                    sa.text(
+                        "INSERT INTO sourcedocument (filename, name, doctype, "
+                        "project_id, folder_id, "
+                        + ", ".join(OLD_STATUS_COLUMNS)
+                        + ") VALUES (:name, :name, :doctype, :p, :f, "
+                        + ", ".join(f":{c}" for c in OLD_STATUS_COLUMNS)
+                        + ") RETURNING id"
+                    ),
+                    {
+                        **status,
+                        "name": name,
+                        "doctype": doctype.value,
+                        "p": project_id,
+                        "f": folder_id,
+                    },
+                ).scalar_one()
+                total = sum(status.values())
+                documents[name] = {
+                    "sdoc_id": sdoc_id,
+                    "doctype": doctype,
+                    "status": status,
+                    "status_before": SDocStatus.erroneous
+                    if total < 0
+                    else SDocStatus.finished
+                    if total == len(steps)
+                    else SDocStatus.processing,
+                }
+        job_rows = [
+            ("text_finished", ML_DOCUMENT_EMBEDDING, ML_FINISHED),
+            ("text_finished", ML_SENTENCE_EMBEDDING, ML_FINISHED),
+            ("text_finished", ML_COREFERENCE, ML_FINISHED),
+            ("text_processing", ML_DOCUMENT_EMBEDDING, ML_ERROR),
+        ]
+        for name, job_type, job_status in job_rows:
+            db_session.execute(
+                sa.text(
+                    "INSERT INTO sourcedocumentjobstatus (id, type, status, timestamp) "
+                    "VALUES (:id, :type, :status, now())"
+                ),
+                {
+                    "id": documents[name]["sdoc_id"],
+                    "type": job_type,
+                    "status": job_status,
+                },
+            )
+        db_session.commit()
+        yield documents
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")

@@ -17,7 +17,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/span-an
   staticData: {
     tab: true,
     icon: Icon.SPAN_ANNOTATION_TABLE,
-    getTitle: () => "Span Annotations",
   },
   validateSearch: zodValidator(spanAnnotationAnalysisSearchSchema),
   component: SpanAnnotationAnalysisView,

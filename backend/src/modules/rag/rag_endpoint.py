@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
+from common.feature_enum import Feature
 from core.auth.authz_user import AuthzUser
 from modules.rag.rag_dto import ChatSessionResponse
 from modules.rag.rag_service import RAGService
 from repos.llm_repo import LLMRepo
+from systems.feature_system.feature_dependency import require_feature
 
 router = APIRouter(
     prefix="/rag", dependencies=[Depends(get_current_user)], tags=["rag"]
@@ -14,6 +16,7 @@ router = APIRouter(
 
 @router.post(
     "/rag_session",
+    dependencies=[Depends(require_feature(Feature.RAG_CHAT))],
     response_model=ChatSessionResponse,
     summary="Answer a query using Retrieval-Augmented Generation (RAG)",
 )

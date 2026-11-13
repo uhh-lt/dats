@@ -7,7 +7,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
   staticData: {
     tab: true,
     icon: Icon.TIMELINE_ANALYSIS,
-    getTitle: () => "Timeline Analysis",
   },
   context: ({ params }) => ({ timelineAnalysesByProjectOptions: timelineAnalysisQueries.byProject(params.projectId) }),
   loader: async ({ context }) => {

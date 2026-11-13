@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
+from common.doc_type_enum import DocType
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_service import SpanAnnotationService
 from core.annotation.span_group_crud import crud_span_group
@@ -14,6 +15,9 @@ from core.annotation.span_group_dto import SpanGroupCreate
 from core.annotation.span_group_service import SpanGroupService
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
@@ -21,8 +25,10 @@ from core.project.project_orm import ProjectORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
+from feature_test_utils import create_project_with_features
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
+from pipeline_test_utils import set_step_status
 
 
 @contextmanager
@@ -265,4 +271,111 @@ def sdoc_with_memos_and_span_group(
             memo.id: target for memo, target in zip(memos, targets, strict=True)
         },
         "favorite_memo_ids": favorite_memo_ids,
+    }
+
+
+class StepStatusProject(TypedDict):
+    project: ProjectORM
+    done: SourceDocumentORM
+    running: SourceDocumentORM
+    failed: SourceDocumentORM
+    image: SourceDocumentORM
+    other_project_doc: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def step_status_project(db_session, test_project, test_user) -> StepStatusProject:
+    """
+    This fixture sets up the following documents with these step statuses
+    (1 finished, 0 processing, -100 erroneous; steps not listed are not planned):
+
+    - In the test project:
+      - text "done.txt" (`done`): extract_html 1, text_extraction 1,
+        text_language_detection 1, text_spacy 1
+      - text "running.txt" (`running`): extract_html 1, text_extraction 1,
+        text_language_detection 0, text_spacy 0
+      - text "failed.txt" (`failed`): extract_html 1, text_extraction -100,
+        text_language_detection 0
+      - image "image.png" (`image`): no step planned
+    - In the project "Other Project" of the test user:
+      - text "other.txt" (`other_project_doc`): extract_html 1,
+        text_language_detection 0
+
+    Non-obvious derived behavior:
+
+    - The overall status is finished for done and image (no step planned),
+      processing for running, erroneous for failed (it also has a processing
+      step) and processing for other_project_doc.
+    """
+    other_project = create_project_with_features(
+        db_session, test_user, title="Other Project", features=[]
+    )
+    statuses = {
+        "done": (
+            test_project,
+            DocType.text,
+            {
+                "extract_html": 1,
+                "text_extraction": 1,
+                "text_language_detection": 1,
+                "text_spacy": 1,
+            },
+        ),
+        "running": (
+            test_project,
+            DocType.text,
+            {
+                "extract_html": 1,
+                "text_extraction": 1,
+                "text_language_detection": 0,
+                "text_spacy": 0,
+            },
+        ),
+        "failed": (
+            test_project,
+            DocType.text,
+            {
+                "extract_html": 1,
+                "text_extraction": -100,
+                "text_language_detection": 0,
+            },
+        ),
+        "image": (test_project, DocType.image, {}),
+        "other_project_doc": (
+            other_project,
+            DocType.text,
+            {
+                "extract_html": 1,
+                "text_language_detection": 0,
+            },
+        ),
+    }
+    names = {
+        "done": "done.txt",
+        "running": "running.txt",
+        "failed": "failed.txt",
+        "image": "image.png",
+        "other_project_doc": "other.txt",
+    }
+    sdocs: dict[str, SourceDocumentORM] = {}
+    for key, (project, doctype, status) in statuses.items():
+        sdoc = crud_sdoc.create(
+            db=db_session,
+            create_dto=SourceDocumentCreate(
+                filename=names[key],
+                name=names[key],
+                doctype=doctype,
+                project_id=project.id,
+            ),
+        )
+        set_step_status(db_session, sdoc.id, status)
+        sdocs[key] = sdoc
+    db_session.commit()
+    return {
+        "project": test_project,
+        "done": sdocs["done"],
+        "running": sdocs["running"],
+        "failed": sdocs["failed"],
+        "image": sdocs["image"],
+        "other_project_doc": sdocs["other_project_doc"],
     }

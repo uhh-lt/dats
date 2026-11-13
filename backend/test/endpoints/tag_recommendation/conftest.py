@@ -14,6 +14,7 @@ from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from feature_test_utils import FeaturelessProject, create_featureless_project
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
@@ -142,3 +143,16 @@ def tag_recommendation_project(
         "foreign_tag": foreign_tag,
         "foreign_recommendation": foreign_recommendation,
     }
+
+
+@pytest.fixture(scope="function")
+def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
+    """
+    This fixture sets up the following project, in addition to `test_project`
+    (which enables all features):
+
+    - project: "Featureless Project" of `test_user`, without any enabled feature
+    - sdoc: text document "text_done.txt" in it, with the steps of a project
+      without features finished
+    """
+    return create_featureless_project(db_session, test_user)

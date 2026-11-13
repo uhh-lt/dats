@@ -11,6 +11,7 @@ import { ProjectImport } from "./_components/project-import/ProjectImport";
 import { ProjectCodes } from "./_components/ProjectCodes";
 import { ProjectDangerZone } from "./_components/ProjectDangerZone";
 import { ProjectDetails } from "./_components/ProjectDetails";
+import { ProjectFeatures } from "./_components/project-features/ProjectFeatures";
 import { ProjectTags } from "./_components/ProjectTags";
 import { ProjectUsers } from "./_components/ProjectUsers";
 import { ProjectVirtualUsers } from "./_components/ProjectVirtualUsers";
@@ -28,16 +29,24 @@ export function ProjectSettingsDialog({
   onToggleCodeVisibility,
 }: ProjectSettingsDialogProps) {
   // dialog state
-  const { isOpen, close: handleClose } = useDialogBus("projectSettings");
+  const { isOpen, data: dialogData, close: closeDialog } = useDialogBus("projectSettings");
 
   // queries
   const project = ProjectHooks.useGetProject(projectId);
 
-  // state
-  const [tab, setTab] = useState("1");
+  // state: the tab chosen in the dialog, else the tab it was opened on
+  const [chosenTab, setChosenTab] = useState<string | null>(null);
+  const tab = chosenTab ?? dialogData?.tab ?? "1";
   const handleChangeTab = useCallback((_event: SyntheticEvent, newValue: string) => {
-    setTab(newValue);
+    setChosenTab(newValue);
   }, []);
+  // forget the chosen tab when the dialog closes, also when its content closed it (e.g. "Open Document Health")
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) setChosenTab(null);
+  }
+  const handleClose = useCallback(() => closeDialog(), [closeDialog]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -70,6 +79,7 @@ export function ProjectSettingsDialog({
             <Tab label="Virtual users" value="7" />
             <Tab label="Codes" value="3" />
             <Tab label="Tags" value="4" />
+            <Tab label="Features" value="features" />
             <Tab label="Import" value="5" />
             <Tab label="Danger Zone" value="6" />
           </Tabs>
@@ -92,6 +102,9 @@ export function ProjectSettingsDialog({
             </TabPanel>
             <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectTags />
+            </TabPanel>
+            <TabPanel value="features" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectFeatures project={project.data} />
             </TabPanel>
             <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectImport project={project.data} />
