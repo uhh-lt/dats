@@ -32,7 +32,6 @@ from systems.feature_system.feature_exceptions import (
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
-from systems.job_system.job_exceptions import JobQueueUnavailableError
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
 
@@ -239,10 +238,11 @@ class StepPlanningService(metaclass=SingletonMeta):
         sets its steps and the pending steps after them to erroneous, like a
         failed job, and the other documents still start.
 
-        If the queue cannot be reached, the activation stops and fails with
-        that cause: the batch undoes its own change for the steps it could not
-        start and the batch's steps after them (`_undo_batch`), so the feature
-        reads partly available and Complete plans them again.
+        If a start fails (e.g. the queue cannot be reached), the activation
+        stops and fails with that cause: the batch undoes its own change for the
+        steps it could not start and the batch's steps after them
+        (`_undo_batch`), so the feature reads partly available and Complete
+        plans them again.
 
         The activation stops when the feature is disabled or another activation
         of it replaces this one. At the end, also when it fails, it removes the
@@ -282,7 +282,7 @@ class StepPlanningService(metaclass=SingletonMeta):
                             settings=payload.settings,
                             priority=JobPriority.LOW,
                         )
-                    except JobQueueUnavailableError:
+                    except Exception:
                         with self.sqlr.transaction() as db:
                             self._undo_batch(
                                 db=db,
@@ -413,7 +413,7 @@ class StepPlanningService(metaclass=SingletonMeta):
         unstarted: list[tuple[int, list[JobType]]],
     ) -> None:
         """Undo the change of a committed batch for the steps it could not start
-        (the queue cannot be reached), per document, and for the batch's rows
+        (e.g. the queue cannot be reached), per document, and for the batch's rows
         after them: a row the batch created is removed, a row it set from
         erroneous to processing is erroneous again (it may be a core step, which
         must not read finished), and a row a restart planned again stays

@@ -281,10 +281,11 @@ def test_a_failing_activation_removes_the_pending_activation(
     held_jobs: HeldJobs,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """An activation job that fails (its steps cannot be started) removes the
-    feature's pending activation, so the feature does not stay computing for
-    it. The batch it planned before stays planned: the index of done is
-    processing without a job until a user completes or restarts the feature."""
+    """An activation job that fails for another reason than the queue (its
+    steps cannot be started) removes the feature's pending activation, so the
+    feature does not stay computing for it, and undoes the batch it could not
+    start, like for an unreachable queue: the index of done is not planned, so
+    no step stays processing without a job."""
     p = planning_projects
     _enable_full_text_search(db_session, p["project"].id)
     monkeypatch.setattr(step_planning_service, "start_steps", _fail)
@@ -296,7 +297,7 @@ def test_a_failing_activation_removes_the_pending_activation(
     assert (
         crud_project.read(db=db_session, id=p["project"].id).feature_activations == {}
     )
-    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) == 0
+    assert read_step_status(db_session, p["done"].id, JobType.TEXT_ES_INDEX) is None
 
 
 # ===========================================================================
