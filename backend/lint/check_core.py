@@ -29,8 +29,8 @@ FORBIDDEN_IMPORTS = {
 # import. The feature system enables, completes and disables the features of
 # a project, which the step planning of document processing carries out, and
 # derives their status from the planned steps.
-# TODO: remove once document processing moves to core, see the issue "Move
-# document processing to core".
+# TODO: remove once document processing moves to core, see uhh-lt/dats#900
+# ("Move document processing to core").
 ALLOWED_MODULE_IMPORTS = {
     "systems/feature_system/feature_dto.py": "modules.doc_processing",
     "systems/feature_system/feature_endpoint.py": "modules.doc_processing",
