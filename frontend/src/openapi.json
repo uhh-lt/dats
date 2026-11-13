@@ -2030,7 +2030,7 @@
     "/feature/project/{project_id}": {
       "get": {
         "tags": ["feature"],
-        "summary": "Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps",
+        "summary": "Returns the state of every Feature in the Project: enabled, status, ready and document counts",
         "operationId": "get_project_features",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [

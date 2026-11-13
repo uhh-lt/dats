@@ -22,7 +22,7 @@ export class FeatureService {
     });
   }
   /**
-   * Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps
+   * Returns the state of every Feature in the Project: enabled, status, ready and document counts
    * @returns ProjectFeatureRead Successful Response
    * @throws ApiError
    */

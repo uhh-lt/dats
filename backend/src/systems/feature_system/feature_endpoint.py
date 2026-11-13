@@ -35,7 +35,7 @@ def get_all() -> list[FeatureRead]:
 @router.get(
     "/project/{project_id}",
     response_model=list[ProjectFeatureRead],
-    summary="Returns the state of every Feature in the Project: enabled, ready, document coverage and missing steps",
+    summary="Returns the state of every Feature in the Project: enabled, status, ready and document counts",
     tags=["mcp"],
 )
 def get_project_features(
