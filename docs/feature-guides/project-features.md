@@ -24,16 +24,16 @@ You can change your choice at any time later.
 
 ## 2\. The Features Tab
 
-Open the **Project Settings** (the cog icon in the bottom left navigation bar) and select the **Features** tab. Every feature is listed with its description, its status and its actions:
+Open the **Project Settings** (the cog icon in the bottom left navigation bar) and select the **Features** tab. Every feature is listed with its description, its status and the actions its status allows:
 
 | Status               | Meaning                                                                                                   | Actions                   |
 | -------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------- |
 | **Disabled**         | The feature is switched off and hidden in the project.                                                    | **Enable**                |
-| **Computing**        | The feature is enabled and its data is being computed; a progress bar shows how many documents are ready. | **Restart**, **Disable**  |
+| **Computing**        | The feature is enabled and its data is being computed; a progress bar shows how many documents are ready. | none                      |
 | **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete**, **Disable** |
 | **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**               |
 
-While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. Views of such a feature (and of a partly available one) show a small hint such as "Full-Text Search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
+While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. It offers no action until it stops computing: then it is fully available, or partly available if some documents failed. Views of such a feature (and of a partly available one) show a small hint such as "Full-Text Search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
 
 ### Enabling and Completing a Feature
 
@@ -46,17 +46,17 @@ A feature becomes **partly available** when documents lack its data, for example
 
 **Complete** computes the data for exactly these documents, including the failed ones; documents that already have the data are left alone.
 
+Whatever goes wrong while a document is computed (a processing error, a server or worker that stops, a queue that cannot be reached), its step is marked as failed. **Complete** computes the failed steps again.
+
 If documents failed, the feature shows **Open Document Health** next to the failed count. It opens the [Health View](tools/health-view.md), where you select the failed documents (in the tab of their document type) and **Recompute** the failed steps. Once they succeed, the feature is **fully available**.
 
-### Restarting a Computing Feature
+### A Feature That Stays Computing
 
-A feature should not stay **Computing** for long. If its progress does not move for a long time (for example after the server was restarted while it computed), click **Restart** and confirm. DATS starts the computation of the documents that are not done yet again, with the processing settings you choose; documents that are still being uploaded keep their upload processing. Restart may repeat work that is still running: a document whose computation was only slow is computed twice, which costs time but does no harm.
+If a worker stops while it computes a document, DATS notices it after the job's time limit (about an hour) and marks the step as failed; the feature then becomes partly available and you can **Complete** it. In rare cases (the server stops at the very moment it starts a step) a document stays processing; select it in the [Health View](tools/health-view.md) and **Recompute** the step.
 
 ### Disabling a Feature
 
-Every enabled feature can be disabled, whatever its status. Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents that lack it.
-
-Disabling a **computing** feature stops the computation: documents that are not done yet are no longer processed for it and do not stay "processing". The data computed so far is kept.
+A partly or fully available feature can be disabled. Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents that lack it.
 
 A feature that another enabled feature needs cannot be disabled; hover over its greyed out **Disable** button to see which features need it, and disable those first.
 
