@@ -185,16 +185,22 @@ def _start_next(
         roots = graph.group_by_job(graph.roots(output.doctype))
         _start_planned(roots, input, output.sdoc_id)
 
-    for step in _ENTRY_POINTS.get(job_type, []):
-        if isinstance(step, LoopBranchOperator):
-            jobs = step.get_next_jobs(input, output)
-            for transition_fn, next_job_type, idx in jobs:
-                job_input = transition_fn(input, output, idx)
+    # like _start_planned, a queue outage is only logged: the finished job (e.g.
+    # extract_html, which starts the sdoc_init of its extracted images) stays
+    # finished, as its data is stored
+    try:
+        for step in _ENTRY_POINTS.get(job_type, []):
+            if isinstance(step, LoopBranchOperator):
+                jobs = step.get_next_jobs(input, output)
+                for transition_fn, next_job_type, idx in jobs:
+                    job_input = transition_fn(input, output, idx)
+                    js.start_job(next_job_type, job_input)
+            else:
+                transition_fn, next_job_type = step
+                job_input = transition_fn(input, output)
                 js.start_job(next_job_type, job_input)
-        else:
-            transition_fn, next_job_type = step
-            job_input = transition_fn(input, output)
-            js.start_job(next_job_type, job_input)
+    except JobQueueUnavailableError as e:
+        logger.error(f"Cannot start the jobs after a finished {job_type.value}: {e}")
 
 
 def _set_status(
