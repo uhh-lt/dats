@@ -50,6 +50,7 @@ Use **Recompute** when you want to force DATS to re-run a step that has _already
 
 - Clicking **Recompute** opens a small dropdown menu allowing you to select a _specific_ pipeline step (e.g., text_spacy). DATS will then force-run that step (and all subsequent dependent steps) for the selected documents, even if they had previously completed successfully.
 - _Use Case:_ You have updated the global project settings or you want to force the system to re-evaluate the named entities in a document.
+- Recompute works for steps that are planned for the selected documents (they show a status icon). A step that is not planned for a document (an empty cell) is computed by enabling or completing its feature in **Project Settings** → **Features**; if you select such a document, DATS shows an error and starts nothing.
 
 !!! tip "Selecting Multiple Documents"
 

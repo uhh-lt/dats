@@ -1,17 +1,54 @@
 # Artefact system
 
-The artefacts and the pipeline steps that produce them: the step declarations (`@pipeline_step`, `artefact_registry.py`), the graph between them (`pipeline_graph.py`), the step planning and the availability of artefacts (`artefact_service.py`), the step runs (`step_run.py`) and the step statuses (`source_document_step_status_*.py`, `source_document_status_rules.py`). It knows artefacts and steps, never features: the feature system passes it artefacts. The terms are in `GLOSSARY.md`.
+The artefacts and the pipeline steps that produce them: their declarations (`artefact(...)`, `@pipeline_step`, `artefact_registry.py`), the graph between them (`pipeline_graph.py`), the step planning and the availability of artefacts (`artefact_service.py`), the step runs (`step_run.py`) and the step statuses (`source_document_step_status_*.py`, `source_document_status_rules.py`). It knows artefacts and steps, never features: the feature system passes it artefacts. The terms are in `GLOSSARY.md`.
 
 ## What it is asked
 
 | Call                                  | Caller                                    | What it does                                                                                                                         |
 | ------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `ArtefactService.set_up`              | Enable, project creation, project import  | Creates the system codes the artefacts declare, those of the artefacts their steps require and those of the always-computed ones.   |
 | `ArtefactService.compute`             | Enable and Complete of a feature          | Stores a pending artefact computation of the feature's artefacts and starts its job, which plans and starts the steps in batches.   |
 | `ArtefactService.read_availability`   | The feature status                        | Counts the documents per artefact set: ready, processing, failed, not planned; and whether a computation of them is pending.         |
 | `ArtefactService.plan_document`       | The upload (`sdoc_init`)                  | Plans the steps of the core artefacts and of the project's artefact demand for a new document; returns its root steps to start.      |
 | `start_steps`                         | Advancing, upload, computation, Recompute | Starts the jobs of some steps of a document.                                                                                         |
 
 Disable calls nothing: the stored data and the step statuses stay. A computation plans the steps of the core artefacts and of its artefacts, if they apply to the doctype, and plans their erroneous steps again; it never plans the steps of other artefacts.
+
+## Declaring an artefact
+
+An artefact is declared by the code that owns it, in a file that its steps and features import (`modules/doc_processing/artefacts.py` holds the standard ones):
+
+```python
+KEYWORDS = artefact("keywords", kind=StorageKind.METADATA)
+```
+
+| Argument       | Meaning                                                                                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`         | Where it is stored (`StorageKind`): the document data row, the metadata, annotations, or an own store (a table, index or file of its own).               |
+| `always`       | Computed for every document, whatever features its project enables (a core artefact). A step produces either always-computed or on-demand artefacts.    |
+| `uploaded_for` | The doctypes whose uploaded file is the artefact, so no step produces it there (the audio stream of an audio document).                                  |
+| `codes`        | The system code trees (`core/code/system_codes.py`) a project needs before the artefact is produced. Data, not a function: the import reads them too.   |
+| `archive`      | Required exactly for an own store: an `ArtefactArchive` that reads the artefact for the project export, says whether an archive holds it completely and writes it on import. |
+
+The name never changes without a data migration: step status rows, pending computations and archives store it. A step names the artefacts it requires and produces with the imported objects (`@pipeline_step(requires={CONTENT}, produces={KEYWORDS}, ...)`); tests name them by text (`artefact_named` in `backend/test/pipeline_test_utils.py`).
+
+The startup check (`artefact_registry.check()`, from `bootstrap.register_jobs`) rejects an artefact no step produces and no upload provides, an own store without archive (or an archive without own store), a step that mixes always-computed and on-demand artefacts, the step of an always-computed artefact that requires an on-demand one, and a system code name that two artefacts declare with a different parent, description or `enabled` flag.
+
+Deletion is not declared: a store goes with its document as before (foreign key cascades, the document's files, the Elasticsearch delete and the Weaviate loop in `SourceDocumentService`).
+
+Limit of the archive: the document archive has no open column. The archive columns of today's own stores (`word_frequencies`, `document_embedding`, `image_embedding`, `sentence_embeddings`) are fixed fields of `SourceDocumentExportSchema` in `modules/eximport`. A new artefact with an own store adds its column there.
+
+## The set up
+
+`ArtefactService.set_up` creates the system codes the artefacts of some features declare, with `crud_code.create_system_codes`: those of the artefacts, of the artefacts their steps require and of the always-computed artefacts. It is idempotent and does nothing without declared codes. A user code of a declared name, or a system code of that name with another parent, fails it with a 409 (`SystemCodeConflictError`).
+
+| Caller                                           | When                                                                       |
+| ------------------------------------------------ | -------------------------------------------------------------------------- |
+| `FeatureService.enable_feature`                  | Before it computes the artefacts of the feature                            |
+| `ProjectService.create_project`                  | For the features the new project enables                                   |
+| `import_project.py`                              | Once, before the entities of the archive: its codes then meet the system codes by name |
+
+Complete runs no set up, and neither does `add_features` (the import has set up before). Disable leaves the codes, as annotations may use them. Recompute never plans a step: it is rejected (400, `StepNotPlannedError`) for a document that has no status row of the step, so it never runs a step whose set up did not run.
 
 ## Lock order
 
