@@ -59,7 +59,8 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
     mutate({ projectId, feature: feature.feature, requestBody: { settings } }, { onSuccess: handleSuccess });
   }, [activateFeatureMutation, feature, handleSuccess, isRestart, projectId, restartFeatureMutation, settings]);
 
-  const count = !state ? 0 : isRestart ? state.processing_documents : state.lacking_documents;
+  // a restart also plans the documents a pending activation has not reached yet (they lack the data)
+  const count = !state ? 0 : (isRestart ? state.processing_documents : 0) + state.lacking_documents;
   const requiredTitles = (feature?.requires_features ?? [])
     .filter((f) => !states[f]?.enabled)
     .map((f) => FEATURES[f].title);
@@ -83,7 +84,7 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
           <Typography>{feature && FEATURES[feature.feature].description}</Typography>
           {isRestart ? (
             <Typography>
-              {`${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} still computing. Restart computes ${count === 1 ? "it" : "them"} again in the background, for example when the progress has not moved for a long time.`}
+              {`${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} still computing or not computed yet. Restart computes ${count === 1 ? "it" : "them"} again in the background, for example when the progress has not moved for a long time.`}
             </Typography>
           ) : (
             <Typography>
