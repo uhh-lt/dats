@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from common.artefact_enum import Artefact
@@ -28,6 +29,7 @@ from modules.doc_processing.pipeline.pipeline_graph import pipeline_registry
 from modules.doc_processing.step_run import start_steps
 from modules.doc_processing.video.video_utils import audio_stream_path
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
+from modules.eximport.project import import_project as import_project_module
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from modules.eximport.sdocs.artefact_archive import archive_modules
@@ -37,6 +39,7 @@ from modules.eximport.sdocs.import_sdocs import (
     import_sdocs_to_proj,
 )
 from pipeline_test_utils import read_all_step_status
+from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -130,6 +133,39 @@ def test_project_import_merges_the_enabled_features(
         Feature.SENTENCE_SIMILARITY_SEARCH,
         Feature.KEYWORD_STATISTICS,
     ]
+
+
+def test_project_import_does_not_lock_the_project_while_importing_documents(
+    db_session: Session,
+    feature_toggle_eximport_projects: FeatureToggleEximportProjects,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The import enables the archived features last, so the project stays
+    unlocked while the documents are imported: another transaction (the
+    `sdoc_init` of an upload) can lock it FOR SHARE meanwhile."""
+    projects = feature_toggle_eximport_projects
+    project_id = projects["target_project"].id
+    import_sdocs = import_project_module.import_sdocs_to_proj
+    locked: list[bool] = []
+
+    def _import_sdocs_and_lock_the_project(**kwargs) -> None:
+        import_sdocs(**kwargs)
+        with SQLRepo().transaction() as db:
+            row = db.execute(
+                text("SELECT id FROM project WHERE id = :id FOR SHARE SKIP LOCKED"),
+                {"id": project_id},
+            ).first()
+            locked.append(row is None)
+
+    monkeypatch.setattr(
+        import_project_module,
+        "import_sdocs_to_proj",
+        _import_sdocs_and_lock_the_project,
+    )
+
+    _round_trip(db_session, projects)
+
+    assert locked == [False]
 
 
 def test_project_import_plans_and_starts_nothing(
