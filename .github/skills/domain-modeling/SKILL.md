@@ -14,7 +14,7 @@ Most repos have a single context:
 ```
 /
 ├── GLOSSARY.md
-├── docs/
+├── specs/
 │   └── adr/
 │       ├── 0001-event-sourced-orders.md
 │       └── 0002-postgres-for-write-model.md
@@ -26,7 +26,7 @@ If a `GLOSSARY-MAP.md` exists at the root, the repo has multiple contexts. The m
 ```
 /
 ├── GLOSSARY-MAP.md
-├── docs/
+├── specs/
 │   └── adr/                          ← system-wide decisions
 ├── src/
 │   ├── ordering/
