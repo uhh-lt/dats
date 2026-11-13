@@ -70,7 +70,7 @@ The overall state of a source document, derived from the step statuses of its pl
 _Avoid_: Processed status, sdoc status, health
 
 **Feature Status**:
-The state of a feature in a project: disabled, computing (a step of it is processing for some document, or a feature activation is pending), partly available (some documents lack its data and nothing runs for them) or fully available.
+The state of a feature in a project: disabled (the project does not use it), computing (work for it is queued or running: a step of it is processing for some document, or a feature activation is pending), partly available (nothing runs, and some documents lack its data) or fully available (every document has its data). It decides which feature actions are allowed: Enable when disabled, Complete when partly available, Disable when partly or fully available, none while computing.
 _Avoid_: Feature state, readiness, coverage (coverage is the share of documents that are ready)
 
 **Step Planning**:
@@ -78,7 +78,7 @@ Deciding which pipeline steps a source document gets a step status for, from the
 _Avoid_: Scheduling, activation (a feature activation triggers step planning)
 
 **Feature Activation**:
-The background work that plans and starts a feature's pipeline steps for the existing source documents of a project, in batches, after a user enables, completes or restarts the feature.
+The background work that plans and starts a feature's pipeline steps for the existing source documents of a project, in batches, after a user enables or completes the feature.
 _Avoid_: Enabling (enabling is the user's action), planning job
 
 **Step Run**:

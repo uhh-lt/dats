@@ -36,15 +36,15 @@ def my_job(payload: MyJobInput, job: Job) -> MyJobOutput:
 
 Key decorator arguments:
 
-| Argument             | Meaning                                                                 |
-| -------------------- | ----------------------------------------------------------------------- |
-| `job_type`           | The `JobType` enum member identifying this job.                          |
-| `input_type`         | Pydantic model of the job input (stored in the RQ job kwargs).           |
-| `output_type`        | Pydantic model of the result (optional).                                 |
-| `device`             | Which queue the job lands on: `cpu`, `gpu`, or `api`.                    |
-| `generate_endpoints` | `ALL` / `MINIMAL` / `NONE` — which REST endpoints are auto-generated.    |
-| `publish_updates`    | Whether state changes are pushed over websockets (see below).            |
-| `read_model`         | Optional custom `JobRead` subclass for the event/REST payload.           |
+| Argument             | Meaning                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `job_type`           | The `JobType` enum member identifying this job.                                                                                                  |
+| `input_type`         | Pydantic model of the job input (stored in the RQ job kwargs).                                                                                   |
+| `output_type`        | Pydantic model of the result (optional).                                                                                                         |
+| `device`             | Which queue the job lands on: `cpu`, `gpu`, or `api`.                                                                                            |
+| `generate_endpoints` | `ALL` / `MINIMAL` / `NONE` — which REST endpoints are auto-generated.                                                                            |
+| `publish_updates`    | Whether state changes are pushed over websockets (see below).                                                                                    |
+| `read_model`         | Optional custom `JobRead` subclass for the event/REST payload.                                                                                   |
 | `validate_input`     | Optional check `(db, payload)` the generated start endpoint runs before enqueueing; it raises to reject the input (e.g. ids of another project). |
 
 ## Execution Lifecycle
@@ -88,15 +88,15 @@ user-visible status is conveyed through the sdoc-status polling instead.
 
 ### Where events are emitted
 
-| Transition          | Emission site                                                        |
-| ------------------- | -------------------------------------------------------------------- |
-| Progress / meta     | `Job.update()` — after `save_meta()` (in-job progress)               |
-| Started             | `rq_job_handler`, right after the job is picked up                   |
+| Transition          | Emission site                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| Progress / meta     | `Job.update()` — after `save_meta()` (in-job progress)                                      |
+| Started             | `rq_job_handler`, right after the job is picked up                                          |
 | Finished (FINISHED) | `rq_job_handler`, after `handle_job_finished`, with `output_override` and `status_override` |
-| Failed (FAILED)     | `rq_job_handler`, after `handle_job_error`, with `status_override`   |
-| Enqueued (QUEUED)   | `JobService.start_job`                                               |
-| Aborted (CANCELED)  | `JobService.stop_job`                                                |
-| Retried (QUEUED)    | `JobService.retry_job`                                               |
+| Failed (FAILED)     | `rq_job_failed` (RQ's failure callback), after `handle_job_error`, with `status_override`   |
+| Enqueued (QUEUED)   | `JobService.start_job`                                                                      |
+| Aborted (CANCELED)  | `JobService.stop_job`                                                                       |
+| Retried (QUEUED)    | `JobService.retry_job`                                                                      |
 
 Every state change emits — there is no throttling or batching.
 
@@ -125,8 +125,8 @@ Two invariants make this safe:
 - **Emission never fails a job.** Every function in `job_events.py` swallows
   exceptions and only logs them.
 - **The final event carries the terminal status and the output.** RQ only
-  sets FINISHED / FAILED and persists the return value *after* the handler
-  returned or raised. While `rq_job_handler` runs, the RQ status is still
+  sets FINISHED / FAILED and persists the return value _after_ the handler
+  returned or the failure callback ran. While they run, the RQ status is still
   STARTED, so the final emit passes the status explicitly via
   `status_override` (and the output via `output_override`). Without it,
   clients never see a job finish: they do not poll while the websocket is
