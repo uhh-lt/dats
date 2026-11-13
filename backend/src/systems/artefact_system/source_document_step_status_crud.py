@@ -17,6 +17,7 @@ from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase, UpdateNotAllowed
+from systems.artefact_system.pipeline_graph import MAX_COUNTED_STEPS
 from systems.artefact_system.source_document_step_status_dto import (
     SourceDocumentStepStatusCreate,
 )
@@ -28,11 +29,6 @@ from systems.search_system.sorting import SortDirection
 # The status of each planned step of a document; a step without a status is not
 # planned.
 StepStatus = dict[JobType, SDocStatus]
-
-
-# The most steps `count_by_project` counts: one bit each in a BIGINT, without the
-# sign bit. `bootstrap.register_jobs` rejects more pipeline steps at startup.
-MAX_COUNTED_STEPS = 63
 
 
 class CRUDSourceDocumentStepStatus(

@@ -19,6 +19,10 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
 
+# The most steps `crud_sdoc_step_status.count_by_project` counts: one bit each in
+# a BIGINT, without the sign bit. The graph rejects more pipeline steps.
+MAX_COUNTED_STEPS = 63
+
 # Artefacts that the uploaded file itself provides, per doctype.
 UPLOADED_ARTEFACTS: dict[DocType, frozenset[Artefact]] = {
     DocType.audio: frozenset({Artefact.AUDIO}),
@@ -58,6 +62,12 @@ class PipelineGraph:
         successors_by_doctype: dict[DocType, dict[JobType, list[JobType]]] = {}
 
         problems = _check_artefacts_produced(steps) + _check_jobs(steps)
+        if len(steps) > MAX_COUNTED_STEPS:
+            problems.append(
+                f"There are {len(steps)} pipeline steps, but the feature states "
+                f"count at most {MAX_COUNTED_STEPS} (one bit each in a BIGINT, see "
+                f"crud_sdoc_step_status.count_by_project)."
+            )
         for doctype in DocType:
             doctype_steps = {jt: s for jt, s in steps.items() if doctype in s.doctypes}
             deps, dep_problems = _dependencies(doctype, doctype_steps)

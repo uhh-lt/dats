@@ -6,6 +6,7 @@ from bootstrap import register_jobs
 from common.artefact_enum import CORE_ARTEFACTS, Artefact
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
+from systems.artefact_system import pipeline_graph
 from systems.artefact_system.artefact_exceptions import PipelineDeclarationError
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.pipeline_graph import PipelineGraph, PipelineStep
@@ -331,6 +332,24 @@ def test_pipeline_graph_fails_on_step_with_two_direct_predecessors():
     assert any(
         "'text_html_mapping'" in p and "started by several steps" in p for p in problems
     ), problems
+
+
+def test_pipeline_graph_fails_on_more_steps_than_the_feature_states_count(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """The feature states count each step as one bit of a BIGINT: a pipeline
+    with more steps than that fails with a clear message."""
+    monkeypatch.setattr(pipeline_graph, "MAX_COUNTED_STEPS", 1)
+    steps = _producing_all_other_artefacts(
+        {JobType.EXTRACT_HTML: _step(set(), {Artefact.RAW_HTML})}
+    )
+
+    problems = _problems(steps)
+
+    assert (
+        "There are 2 pipeline steps, but the feature states count at most 1 "
+        "(one bit each in a BIGINT, see crud_sdoc_step_status.count_by_project)."
+    ) in problems
 
 
 # ===========================================================================

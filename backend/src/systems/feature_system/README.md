@@ -2,7 +2,7 @@
 
 The toggleable features: their declarations (`feature_registry.py`), the requirement resolution and the gating of routes and jobs (`feature_service.py`, `feature_dependency.py`), and the features of a project: their status and the actions Enable, Complete and Disable (`feature_endpoint.py`). The terms are in `GLOSSARY.md`.
 
-The feature system imports `modules/doc_processing`, which plans the steps of the documents (`StepPlanningService`) and knows which steps a feature needs (`pipeline/step_planning.py`). This is a temporary exemption of the layering lint (`backend/lint/check_core.py`) until document processing moves to `core` ([uhh-lt/dats#900](https://github.com/uhh-lt/dats/issues/900)).
+The feature system talks to the artefact system (`systems/artefact_system`) in artefacts only; the artefact system never imports the feature system (`backend/lint/check_core.py`).
 
 ## Feature status
 

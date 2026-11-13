@@ -2,12 +2,14 @@
 """
 check_core.py
 
-This script enforces the layering of 'core' and 'systems' on 'modules':
+This script enforces the layering of 'core' and 'systems':
 1. No file in 'core' may import anything from 'modules' at module level (type
    hints under `if TYPE_CHECKING:` are allowed).
 2. No file in 'systems' may import anything from 'modules', also not inside a
-   function or under `if TYPE_CHECKING:`, except the imports of
-   `ALLOWED_MODULE_IMPORTS`.
+   function or under `if TYPE_CHECKING:`.
+3. No file in 'systems/artefact_system' may import anything from
+   'systems.feature_system': the feature system talks to the artefact system,
+   never the other way round.
 (More rules can be added in the future.)
 """
 
@@ -18,35 +20,15 @@ from pathlib import Path
 
 SRC = Path(__file__).parent.parent / "src"
 
-# folder -> pattern of a forbidden import line
+# folder -> (forbidden package, pattern of a forbidden import line)
 FORBIDDEN_IMPORTS = {
-    "core": re.compile(r"^(from|import) +modules[. ]"),
-    "systems": re.compile(r"^\s*(from|import) +modules[. ]"),
+    "core": ("modules", re.compile(r"^(from|import) +modules[. ]")),
+    "systems": ("modules", re.compile(r"^\s*(from|import) +modules[. ]")),
+    "systems/artefact_system": (
+        "systems.feature_system",
+        re.compile(r"^\s*(from|import) +systems\.feature_system[. ]"),
+    ),
 }
-
-
-# Temporary exemptions: file (relative to src) -> the module package it may
-# import. The feature system enables, completes and disables the features of
-# a project, which the step planning of document processing carries out, and
-# derives their status from the planned steps.
-# TODO: remove once document processing moves to core, see uhh-lt/dats#900
-# ("Move document processing to core").
-ALLOWED_MODULE_IMPORTS = {
-    "systems/feature_system/feature_dto.py": "modules.doc_processing",
-    "systems/feature_system/feature_endpoint.py": "modules.doc_processing",
-    "systems/feature_system/feature_service.py": "modules.doc_processing",
-}
-
-
-def _is_allowed(file_path, line):
-    """Whether the import line is one of `ALLOWED_MODULE_IMPORTS`."""
-    allowed = ALLOWED_MODULE_IMPORTS.get(Path(file_path).relative_to(SRC).as_posix())
-    if allowed is None:
-        return False
-    match = re.match(r"^\s*(?:from|import) +([\w.]+)", line)
-    return match is not None and (
-        match.group(1) == allowed or match.group(1).startswith(allowed + ".")
-    )
 
 
 def find_files(root, folder):
@@ -56,28 +38,27 @@ def find_files(root, folder):
                 yield os.path.join(dirpath, filename)
 
 
-def check_no_modules_import(file_path, pattern):
+def check_no_forbidden_import(file_path, package, pattern):
     violations = []
     with open(file_path, encoding="utf-8") as f:
         lines = f.readlines()
     for i, line in enumerate(lines, 1):
-        if pattern.search(line) and not _is_allowed(file_path, line):
+        if pattern.search(line):
             violations.append((i, line.strip()))
     if violations:
-        print(f"Violation in {file_path}: imports from modules:")
+        print(f"Violation in {file_path}: imports from {package}:")
         for lineno, code in violations:
             print(f"  Line {lineno}: {code}")
         return False
     return True
 
 
-def main():
-    root = SRC
+def main(root=SRC):
     all_ok = True
-    for folder, pattern in FORBIDDEN_IMPORTS.items():
+    for folder, (package, pattern) in FORBIDDEN_IMPORTS.items():
         for file in find_files(root, folder):
             ok = True
-            ok &= check_no_modules_import(file, pattern)
+            ok &= check_no_forbidden_import(file, package, pattern)
             # (Add more checks here as needed)
             if not ok:
                 all_ok = False
