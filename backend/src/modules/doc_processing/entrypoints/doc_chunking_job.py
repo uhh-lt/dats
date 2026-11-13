@@ -4,11 +4,14 @@ from pathlib import Path
 import pymupdf
 from loguru import logger
 
+from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from config import conf
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
+from modules.doc_processing.doc_processing_dto import SdocInitJobInput
+from modules.doc_processing.entrypoints.follower_utils import start_followers
 from modules.doc_processing.entrypoints.html_chunking_utils import (
     split_html_into_chunks,
 )
@@ -82,6 +85,23 @@ def handle_pdf_chunking_job(
             )
             folder_id = folder.id
 
+    # create a document for every chunk
+    start_followers(
+        JobType.DOC_CHUNKING,
+        [
+            (
+                JobType.SDOC_INIT,
+                SdocInitJobInput(
+                    project_id=payload.project_id,
+                    doctype=DocType.text,
+                    filepath=chunk,
+                    folder_id=folder_id,
+                    settings=payload.settings,
+                ),
+            )
+            for chunk in chunks
+        ],
+    )
     return DocChunkingJobOutput(files=chunks, folder_id=folder_id)
 
 

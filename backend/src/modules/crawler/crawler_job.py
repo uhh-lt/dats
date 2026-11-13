@@ -8,11 +8,16 @@ from pydantic import Field
 from common.job_type_enum import JobType
 from core.project.project_crud import crud_project
 from modules.crawler.crawler_exceptions import NoDataToCrawlError
+from modules.doc_processing.entrypoints.archive_extraction_job import (
+    ArchiveExtractionJobInput,
+)
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase
+from systems.job_system.job_exceptions import JobQueueUnavailableError
 from systems.job_system.job_register_decorator import register_job
+from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 
 sqlr = SQLRepo()
@@ -80,5 +85,18 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     result = fsr.move_file_to_project_sdoc_files(
         project_id=payload.project_id, src_file=export_zip_path
     )
+
+    # import the crawled data; a queue outage leaves the crawl finished
+    try:
+        JobService().start_job(
+            JobType.EXTRACT_ARCHIVE,
+            ArchiveExtractionJobInput(
+                project_id=payload.project_id,
+                filepath=result,
+                settings=payload.settings,
+            ),
+        )
+    except JobQueueUnavailableError as e:
+        logger.error(f"Cannot start the archive extraction after the crawl: {e}")
 
     return CrawlerJobOutput(crawled_data_zip=result)

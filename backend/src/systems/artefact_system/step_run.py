@@ -8,7 +8,8 @@ the steps of one document.
 - `handle_job_started`, `handle_job_finished` and `handle_job_error` are the job
   lifecycle hooks the job system calls around every job
   (`bootstrap.register_jobs`): they track the step statuses and start what
-  follows a finished job, the entry points included. `handle_job_error` runs
+  follows a finished step job. The jobs that create documents (the entry
+  points) start what follows them themselves. `handle_job_error` runs
   for every failed job, also when its worker died (RQ's failure callback).
 
 One failure rule: whatever goes wrong, the step becomes erroneous, with the
@@ -20,15 +21,9 @@ from loguru import logger
 
 from common.job_type_enum import JobType
 from common.sdoc_status_enum import SDocStatus
-from modules.doc_processing.doc_processing_dto import (
-    FeatureActivationJobInput,
-    SdocInitJobOutput,
-)
-from modules.doc_processing.pipeline import pipeline_transitions as t
-from modules.doc_processing.pipeline.pipeline_operators import LoopBranchOperator
+from modules.doc_processing.doc_processing_dto import FeatureActivationJobInput
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import (
-    ProcessingJobInput,
     ProcessingSettings,
     SdocProcessingJobInput,
 )
@@ -40,45 +35,6 @@ from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_exceptions import JobInputError, JobQueueUnavailableError
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
-
-# --- ENTRY POINTS ---
-# Jobs that are no pipeline steps: they create the documents. Their successors
-# are not derived from artefacts, as they loop over files or switch by doctype.
-# The pipeline steps need no such table: a finished step starts its planned
-# successors with a bare SdocProcessingJobInput, and the enricher of each
-# successor loads its input from the data the steps before it stored.
-# fmt: off
-_ENTRY_POINTS = {
-    JobType.CRAWLER: [
-        (t.crawler_to_extract_archive, JobType.EXTRACT_ARCHIVE),
-    ],
-    # extract archive is called if user uploads zip archive or user triggers the crawler
-    JobType.EXTRACT_ARCHIVE: [
-        LoopBranchOperator(
-            loop_variable=lambda output: output.file_paths,
-            next_jobs=[(t.extract_archive_to_pdf_chunking, JobType.DOC_CHUNKING)],
-        )
-    ],
-    # doc chunking is called if text documents are preprocessed
-    JobType.DOC_CHUNKING: [
-        LoopBranchOperator(
-            loop_variable=lambda output: output.files,
-            next_jobs=[
-                (t.doc_chunking_to_sdoc_init, JobType.SDOC_INIT),
-            ],
-        ),
-    ],
-    # images extracted from text documents become documents of their own
-    JobType.EXTRACT_HTML: [
-        LoopBranchOperator(
-            loop_variable=lambda output: output.image_paths,
-            next_jobs=[
-                (t.extract_html_to_image_sdoc_init, JobType.SDOC_INIT),
-            ],
-        ),
-    ],
-}
-# fmt: on
 
 js = JobService()
 sqlr = SQLRepo()
@@ -128,7 +84,7 @@ def start_steps(
 
 
 def _start_planned(
-    jobs: dict[JobType, list[JobType]], input: ProcessingJobInput, sdoc_id: int
+    jobs: dict[JobType, list[JobType]], input: SdocProcessingJobInput, sdoc_id: int
 ) -> None:
     """Start each job for its steps that are planned for the document, with the
     settings of the run. The job that finished stays finished: a step that
@@ -147,11 +103,10 @@ def _start_planned(
         )
 
 
-def _start_next(
-    job_type: JobType, input: JobInputBase, output: JobOutputBase | None
-) -> None:
-    """Start what follows a finished job: the planned successors of the steps it
-    computed, the root steps of a new document, and the jobs of entry points."""
+def _start_next(job_type: JobType, input: JobInputBase) -> None:
+    """Start what follows a finished step job: the planned successors of the
+    steps it computed. The jobs that create documents start what follows them
+    themselves."""
     graph = artefact_registry.graph()
     if isinstance(input, SdocProcessingJobInput):
         # only the steps this run computed start their successors, so recomputing
@@ -166,29 +121,6 @@ def _start_next(
         pending = _pending_steps(input.sdoc_id, others) if others else []
         if pending:
             _start_planned({job_type: pending}, input, input.sdoc_id)
-
-    if job_type == JobType.SDOC_INIT:
-        assert isinstance(input, ProcessingJobInput), "Expected ProcessingJobInput"
-        assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
-        roots = graph.group_by_job(graph.roots(output.doctype))
-        _start_planned(roots, input, output.sdoc_id)
-
-    # like _start_planned, a queue outage is only logged: the finished job (e.g.
-    # extract_html, which starts the sdoc_init of its extracted images) stays
-    # finished, as its data is stored
-    try:
-        for step in _ENTRY_POINTS.get(job_type, []):
-            if isinstance(step, LoopBranchOperator):
-                jobs = step.get_next_jobs(input, output)
-                for transition_fn, next_job_type, idx in jobs:
-                    job_input = transition_fn(input, output, idx)
-                    js.start_job(next_job_type, job_input)
-            else:
-                transition_fn, next_job_type = step
-                job_input = transition_fn(input, output)
-                js.start_job(next_job_type, job_input)
-    except JobQueueUnavailableError as e:
-        logger.error(f"Cannot start the jobs after a finished {job_type.value}: {e}")
 
 
 def _set_status(
@@ -246,4 +178,4 @@ def handle_job_finished(
 ) -> None:
     """Set the steps of the run to finished and start what follows the job."""
     _set_status(job_type, input, SDocStatus.finished)
-    _start_next(job_type=job_type, input=input, output=output)
+    _start_next(job_type=job_type, input=input)

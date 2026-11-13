@@ -17,6 +17,11 @@ from modules.doc_processing.doc_processing_dto import (
 from modules.doc_processing.step_planning_service import StepPlanningService
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.source_document_step_status_crud import (
+    crud_sdoc_step_status,
+)
+from systems.artefact_system.step_run import start_steps
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
@@ -79,8 +84,20 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             doctype=payload.doctype,
         )
 
-        return SdocInitJobOutput(
+        output = SdocInitJobOutput(
             sdoc_id=sdoc_db_obj.id,
             folder_id=sdoc_db_obj.folder_id,
             doctype=DocType(sdoc_db_obj.doctype),
         )
+
+    # start the planned root steps of the new document
+    with sqlr.transaction() as db:
+        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=output.sdoc_id)
+    roots = artefact_registry.graph().roots(output.doctype)
+    start_steps(
+        project_id=payload.project_id,
+        sdoc_id=output.sdoc_id,
+        steps=[step for step in roots if step in status],
+        settings=payload.settings,
+    )
+    return output

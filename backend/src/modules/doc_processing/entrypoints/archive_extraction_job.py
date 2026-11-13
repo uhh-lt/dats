@@ -6,6 +6,8 @@ from loguru import logger
 from common.doc_type_enum import DocType
 from common.doc_type_utils import get_doc_type
 from common.job_type_enum import JobType
+from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from modules.doc_processing.entrypoints.follower_utils import start_followers
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -53,6 +55,21 @@ def handle_archive_extraction_job(
         raise Exception("Archive extraction failed! No valid document found within!")
     job.update(
         status_message=f"Extracted {len(paths)} files, {len(valid_paths)} can be processed, {len(invalid_files)} are unsupprted/skipped."
+    )
+    # chunk every extracted file
+    start_followers(
+        JobType.EXTRACT_ARCHIVE,
+        [
+            (
+                JobType.DOC_CHUNKING,
+                DocChunkingJobInput(
+                    project_id=payload.project_id,
+                    filepath=path,
+                    settings=payload.settings,
+                ),
+            )
+            for path in valid_paths
+        ],
     )
     return ArchiveExtractionJobOutput(
         file_paths=valid_paths, doctypes=doctypes, invalid_files=invalid_files
