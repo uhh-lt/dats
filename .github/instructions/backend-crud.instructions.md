@@ -28,7 +28,7 @@ BATCH_SIZE = conf.postgres.batch_size
 # 3. The CRUD class, generic over [ORM, CreateDTO, UpdateDTO]
 class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
-    def create_system_codes_for_project(self, db: Session, *, project_id: int) -> list[CodeORM]: ...
+    def create_system_codes(self, db: Session, *, project_id: int, codes: list[SystemCode]) -> list[CodeORM]: ...
 
     ### READ OPERATIONS ###
     def read_by_name(self, db: Session, *, code_name: str) -> list[CodeORM]:

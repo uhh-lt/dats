@@ -413,10 +413,10 @@ class PortabilityChecker:
                     check=CheckName.SYSTEM_CODE_CONFLICT,
                     project_id=project_id,
                     message=f"{len(reparents)} system codes were moved away from their "
-                    "configured parent, which the import rejects: "
+                    "declared parent, which the import rejects: "
                     f"{', '.join(repr(names[i]) for i in list(reparents)[:10])}",
                     fix=SetParents(table="code", parents=reparents),
-                    hint="Heal moves them back to their configured parent.",
+                    hint="Heal moves them back to their declared parent.",
                 )
             )
         if orphans:
@@ -426,7 +426,7 @@ class PortabilityChecker:
                     check=CheckName.SYSTEM_CODE_CONFLICT,
                     project_id=project_id,
                     message=f"{len(orphans)} system codes lack the system code that "
-                    "is configured as their parent, which the import rejects: "
+                    "is declared as their parent, which the import rejects: "
                     f"{', '.join(repr(names[i]) for i in orphans[:10])}",
                     fix=None,
                     hint="The project misses system codes. Compare its codes with "

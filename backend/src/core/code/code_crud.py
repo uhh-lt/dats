@@ -1,57 +1,14 @@
 from sqlalchemy.orm import Session
 
-from config import conf
-from config_schema import SystemCodeConfig
 from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_exceptions import SystemCodeConflictError
 from core.code.code_orm import CodeORM
 from core.code.system_codes import ROOT, ROOT_DESCRIPTION, SystemCode
 from repos.db.crud_base import BATCH_SIZE, SQLCRUDBase
-from utils.color_utils import get_next_color
 
 
 class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ### CREATE OPERATIONS ###
-
-    def create_system_codes_for_project(
-        self, db: Session, *, project_id: int
-    ) -> list[CodeORM]:
-        created: list[CodeORM] = []
-
-        def __create_recursively(
-            code_list: list[SystemCodeConfig], parent_code_id: int | None = None
-        ) -> None:
-            for system_code in code_list:
-                create_dto = CodeCreate(
-                    name=system_code.name,
-                    color=get_next_color(),
-                    description=system_code.desc,
-                    project_id=project_id,
-                    parent_id=parent_code_id,
-                    is_system=True,
-                    enabled=system_code.enabled,
-                )
-
-                existing_code_id = self.read_id_by_name_and_project(
-                    db,
-                    code_name=create_dto.name,
-                    project_id=create_dto.project_id,
-                )
-
-                if existing_code_id is None:
-                    db_code = self.create(db=db, create_dto=create_dto)
-                    existing_code_id = db_code.id
-                    created.append(db_code)
-
-                if len(system_code.children) > 0:
-                    __create_recursively(
-                        system_code.children,
-                        parent_code_id=existing_code_id,
-                    )
-
-        __create_recursively(conf.system_codes)
-
-        return created
 
     def create_system_codes(
         self, db: Session, *, project_id: int, codes: list[SystemCode]

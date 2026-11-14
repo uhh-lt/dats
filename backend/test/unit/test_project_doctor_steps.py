@@ -6,9 +6,12 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
+from omegaconf import OmegaConf
+
 from bootstrap import register_jobs
 from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
+from core.code.system_codes import MENTION_CODES, QUOTATION_CODES, parent_names
 from pipeline_test_utils import artefact_named
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_orm import (
@@ -107,3 +110,16 @@ def test_doctor_status_values_match_the_step_statuses() -> None:
         SDocStatus.processing.value,
         SDocStatus.finished.value,
     )
+
+
+def test_doctor_system_codes_match_the_declared_code_trees() -> None:
+    """The doctor's copy of the system code trees (`system_codes.yaml`) names
+    every code the artefacts declare, plus the codes every project gets until
+    their artefacts declare them, each with the same parent."""
+    doctor = _doctor_stores()
+    copy = OmegaConf.load(doctor.SYSTEM_CODES_FILE).system_codes
+    declared = parent_names(
+        [*artefact_registry.system_codes(), MENTION_CODES, QUOTATION_CODES]
+    )
+
+    assert doctor._system_code_parents(copy) == declared

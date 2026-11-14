@@ -5,6 +5,8 @@ import pytest
 
 from common.doc_type_enum import DocType
 from common.feature_enum import FeatureArea
+from core.code.code_crud import crud_code
+from core.code.code_dto import CodeCreate
 from core.code.system_codes import SystemCode
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
@@ -19,6 +21,7 @@ from feature_test_utils import (
     create_feature_project,
     create_partly_project,
     create_project_with_features,
+    feature_named,
     minimal_text_steps,
     off_by_default_feature,
     set_step_status,
@@ -31,6 +34,7 @@ from systems.feature_system.feature_registry import (
     feature_registry,
     register_feature,
 )
+from systems.feature_system.feature_service import FeatureService
 
 
 @pytest.fixture(scope="function")
@@ -277,3 +281,63 @@ def coded_feature() -> Generator[Feature, None, None]:
     finally:
         feature_registry.unregister_feature(feature.name)
         artefact_registry.unregister_artefact(coded.name)
+
+
+class CodeImportProjects(TypedDict):
+    """
+    This fixture sets up the following projects of `test_user`, without
+    documents:
+
+    - entities_disabled: "Entities Disabled", created with automatic entity
+      annotations, which were then disabled: it keeps the system code tree
+      `NAMED_ENTITY` (with `PERSON`) and enables no feature
+    - user_named_entity: "User Named Entity", without any enabled feature, with
+      the top-level user code `NAMED_ENTITY` (no parent)
+    - target: "Codes Target", without any enabled feature: it has only the
+      codes `MENTION` and `QUOTATIONS` (below `SYSTEM_CODE`)
+
+    Non-obvious derived behavior:
+
+    - An archive has no `is_system` column: the import decides by the declared
+      code trees whether an unknown code is a system code.
+    """
+
+    entities_disabled: ProjectORM
+    user_named_entity: ProjectORM
+    target: ProjectORM
+
+
+@pytest.fixture(scope="function")
+def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
+    """The projects described in `CodeImportProjects`."""
+    entities = create_project_with_features(
+        db_session,
+        test_user,
+        title="Entities Disabled",
+        features=["entity_annotations"],
+    )
+    FeatureService().disable_feature(
+        db=db_session,
+        project_id=entities.id,
+        feature=feature_named("entity_annotations"),
+    )
+    user_code = create_project_with_features(
+        db_session, test_user, title="User Named Entity", features=[]
+    )
+    crud_code.create(
+        db=db_session,
+        create_dto=CodeCreate(
+            name="NAMED_ENTITY", project_id=user_code.id, is_system=False
+        ),
+    )
+    target = create_project_with_features(
+        db_session, test_user, title="Codes Target", features=[]
+    )
+    db_session.commit()
+    for project in (entities, user_code, target):
+        db_session.refresh(project)
+    return {
+        "entities_disabled": entities,
+        "user_named_entity": user_code,
+        "target": target,
+    }

@@ -4,11 +4,13 @@ from sqlalchemy.orm import Session
 
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
+from core.code.system_codes import parent_names
 from modules.eximport.codes.code_export_schema import (
     CodeExportCollection,
     CodeExportSchema,
 )
 from modules.eximport.import_exceptions import ImportCodesError
+from systems.artefact_system.artefact_registry import artefact_registry
 from utils.color_utils import get_next_color
 
 
@@ -22,6 +24,8 @@ class CodeImporter:
         self.db = db
         self.project_id = project_id
         self.code_id_mapping: dict[str, int] = {}
+        # the parent of each system code the registered artefacts declare
+        self.system_code_parents = parent_names(artefact_registry.system_codes())
 
     def import_codes(self, df: pd.DataFrame, validate_only: bool) -> dict[str, int]:
         """
@@ -167,10 +171,19 @@ class CodeImporter:
                 description=code.description,
                 parent_id=parent_id,
                 project_id=self.project_id,
-                is_system=False,
+                is_system=self._is_declared_system_code(code),
                 enabled=True,
                 color=code.color if code.color else get_next_color(),
             )
+
+    def _is_declared_system_code(self, code: CodeExportSchema) -> bool:
+        """Whether the archived code is a system code an artefact declares: its
+        name is declared, with the parent it has in the archive. The archive
+        has no `is_system` column, so a code tree of a feature the archive does
+        not enable would otherwise become user codes."""
+        return code.code_name in self.system_code_parents and self.system_code_parents[
+            code.code_name
+        ] == (code.parent_code_name or None)
 
     def _validate_existing_code(
         self,

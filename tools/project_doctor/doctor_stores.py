@@ -347,10 +347,14 @@ def _bool(value: Any) -> bool:
     return bool(value)
 
 
+# the doctor's copy of the system code trees the backend declares
+SYSTEM_CODES_FILE = Path(__file__).parent / "system_codes.yaml"
+
+
 def _system_code_parents(
     codes: Any, parent: str | None = None
 ) -> dict[str, str | None]:
-    """The names of the system codes every project gets (config system_codes,
+    """The names of the system codes a project can have (`system_codes.yaml`,
     nested via `children`), mapped to the names of their parents."""
     parents: dict[str, str | None] = {}
     for name, code in codes.items():
@@ -425,7 +429,9 @@ def connect() -> Stores:
         root_dir=root_dir,
         index_prefix=str(es_conf.index_prefix),
         collection_postfix=str(wv.collection_postfix),
-        system_code_parents=_system_code_parents(conf.system_codes),
+        system_code_parents=_system_code_parents(
+            OmegaConf.load(SYSTEM_CODES_FILE).system_codes
+        ),
         config_metadata={
             (str(m.key), str(m.doctype)): str(m.metatype)
             for m in conf.project_metadata.values()

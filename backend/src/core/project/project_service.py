@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.code.code_crud import crud_code
+from core.code.system_codes import MENTION_CODES, QUOTATION_CODES
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
@@ -65,14 +66,16 @@ class ProjectService(metaclass=SingletonMeta):
         if creating_user_id != SYSTEM_USER_ID:
             self.associate_user(db=db, project_id=project_id, user_id=creating_user_id)
 
-        # 4) create the system codes the enabled features need, then those of
-        # the config
+        # 4) create the system codes the enabled features need, and the codes
+        # of coreference and quotation, which no artefact declares yet
         ArtefactService().set_up(
             db=db,
             project_id=project_id,
             artefacts=feature_registry.required_artefacts(enabled_features),
         )
-        crud_code.create_system_codes_for_project(db=db, project_id=project_id)
+        crud_code.create_system_codes(
+            db=db, project_id=project_id, codes=[MENTION_CODES, QUOTATION_CODES]
+        )
 
         # 5) create project metadata
         crud_project_meta.create_project_metadata_for_project(

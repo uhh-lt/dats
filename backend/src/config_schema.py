@@ -26,33 +26,6 @@ def _normalize_project_metadata(project_metadata: Any) -> Any:
     return project_metadata
 
 
-def _normalize_system_code_entry(name: str, entry: Any) -> Any:
-    if not isinstance(entry, dict):
-        return entry
-
-    normalized_entry = dict(entry)
-    normalized_entry.setdefault("name", name)
-
-    children = normalized_entry.get("children")
-    if isinstance(children, dict):
-        normalized_entry["children"] = [
-            _normalize_system_code_entry(child_name, child_entry)
-            for child_name, child_entry in children.items()
-        ]
-
-    return normalized_entry
-
-
-def _normalize_system_codes(system_codes: Any) -> Any:
-    if isinstance(system_codes, dict):
-        return [
-            _normalize_system_code_entry(code_name, code_entry)
-            for code_name, code_entry in system_codes.items()
-        ]
-
-    return system_codes
-
-
 class ProjectMetadataConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -62,15 +35,6 @@ class ProjectMetadataConfig(BaseModel):
     read_only: bool = False
     doctype: DocType
     description: str = Field(min_length=1)
-
-
-class SystemCodeConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    name: str = Field(min_length=1)
-    desc: str = Field(min_length=1)
-    enabled: bool = True
-    children: list[SystemCodeConfig] = Field(default_factory=list)
 
 
 class ApiConfig(BaseModel):
@@ -453,7 +417,6 @@ class BackendConfigSchema(BaseModel):
     chunking: ChunkingConfig
     artefact_computation: ArtefactComputationConfig
     project_metadata: list[ProjectMetadataConfig]
-    system_codes: list[SystemCodeConfig]
 
     @model_validator(mode="before")
     @classmethod
@@ -464,8 +427,5 @@ class BackendConfigSchema(BaseModel):
         normalized_values = dict(values)
         normalized_values["project_metadata"] = _normalize_project_metadata(
             normalized_values.get("project_metadata")
-        )
-        normalized_values["system_codes"] = _normalize_system_codes(
-            normalized_values.get("system_codes")
         )
         return normalized_values
