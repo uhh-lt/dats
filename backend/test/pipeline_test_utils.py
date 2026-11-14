@@ -92,11 +92,11 @@ def count_processing_sdocs(db: Session, project_id: int) -> int:
 
 def started_steps(held_jobs: HeldJobs) -> dict[int, list[str]]:
     """The steps of the held step jobs per document, in the order the jobs were
-    started."""
+    started (a step job is named like its step)."""
     result: dict[int, list[str]] = {}
-    for _, payload in held_jobs.jobs():
-        if isinstance(payload, SdocProcessingJobInput) and payload.steps:
-            result.setdefault(payload.sdoc_id, []).extend(payload.steps)
+    for job_type, payload in held_jobs.jobs():
+        if isinstance(payload, SdocProcessingJobInput):
+            result.setdefault(payload.sdoc_id, []).append(job_type)
     return result
 
 
@@ -111,11 +111,10 @@ def failing_started_hook() -> Generator[None, None, None]:
         job_type: str,
         input: JobInputBase,
         status: SDocStatus,
-        steps: list[str] | None = None,
     ) -> None:
         if status == SDocStatus.processing:
             raise RuntimeError("cannot set the steps processing")
-        set_status(job_type, input, status, steps)
+        set_status(job_type, input, status)
 
     step_run._set_status = fail_to_set_processing
     try:

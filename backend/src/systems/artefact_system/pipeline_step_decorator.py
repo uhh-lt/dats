@@ -13,7 +13,6 @@ def pipeline_step(
     requires: set[Artefact],
     produces: set[Artefact],
     doctypes: set[DocType],
-    further_steps: dict[str, set[Artefact]] | None = None,
 ) -> Callable[[HandlerT], HandlerT]:
     """
     Declare a job as a step of the document preprocessing pipeline. Written above
@@ -21,11 +20,7 @@ def pipeline_step(
 
     The step runs for documents of the `doctypes`, after the steps that produce
     the artefacts it `requires`, and it `produces` artefacts for the steps after it.
-
-    `further_steps` are more steps the job computes in the same run, each with its
-    own status and the artefacts it produces, and the job's `requires` and
-    `doctypes`. The job input (`SdocProcessingJobInput.steps`) says which of the
-    job's steps to compute, so each can be planned and recomputed on its own.
+    The step is named like its job, and a run of the job computes the step.
     """
 
     def decorator(func: HandlerT) -> HandlerT:
@@ -47,16 +42,6 @@ def pipeline_step(
                 doctypes=frozenset(doctypes),
             ),
         )
-        for step, step_produces in (further_steps or {}).items():
-            artefact_registry.register_step(
-                step,
-                PipelineStep(
-                    requires=frozenset(requires),
-                    produces=frozenset(step_produces),
-                    doctypes=frozenset(doctypes),
-                    job=job_type,
-                ),
-            )
         return func
 
     return decorator

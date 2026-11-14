@@ -17,11 +17,17 @@ from pipeline_test_utils import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.sorting import SortDirection
 
-from .conftest import RecomputeProject, RemovedStepProject
+from .conftest import (
+    RecomputeProject,
+    RemovedStepProject,
+    TextStepsProject,
+    spacy_output,
+)
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -310,6 +316,36 @@ def test_recompute_of_a_document_without_input_data_marks_it_erroneous(
         -100,
         -100,
     ]
+
+
+def test_recompute_of_text_ner_runs_that_step_only(
+    client: TestClient,
+    db_session,
+    text_steps_project: TextStepsProject,
+    held_jobs: HeldJobs,
+):
+    """Recomputing the named entities of text starts the job text_ner only;
+    once it ran, nothing follows it, and text_spacy and the HTML mapping keep
+    their status."""
+    p = text_steps_project
+    sdoc_id = p["text"].id
+
+    response = _recompute(client, p["project"].id, "text_ner", [sdoc_id])
+
+    assert response.status_code == 200, response.text
+    assert started_steps(held_jobs) == {sdoc_id: ["text_ner"]}
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(
+            RayRepo,
+            "spacy_pipline",
+            lambda self, spacy_input: spacy_output(spacy_input.text, {}),
+        )
+        held_jobs.run("text_ner")
+    assert [job_type for job_type, _ in held_jobs.jobs()] == []
+    assert [
+        read_step_status(db_session, sdoc_id, s)
+        for s in ("text_ner", "text_spacy", "text_html_mapping")
+    ] == [1, 1, 1]
 
 
 def test_recompute_with_an_unreachable_queue_fails_the_step(

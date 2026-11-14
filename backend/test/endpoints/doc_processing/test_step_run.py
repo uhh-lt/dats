@@ -2,14 +2,14 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
-from feature_test_utils import FeatureProject
+from feature_test_utils import FeatureProject, feature_named
 from job_test_utils import HeldJobs, unreachable_redis
 from modules.doc_processing.doc_processing_dto import SdocInitJobInput
 from modules.doc_processing.text.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,
 )
-from pipeline_test_utils import failing_started_hook, read_step_status
+from pipeline_test_utils import failing_started_hook, read_step_status, started_steps
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,
     SdocProcessingJobInput,
@@ -22,10 +22,11 @@ from systems.artefact_system.step_run import (
     handle_job_finished,
     start_steps,
 )
+from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
 
-from .conftest import DummyStepProjects
+from .conftest import DummyStepProjects, TextStepsProject
 
 SETTINGS = ProcessingSettings(
     extract_images=True,
@@ -198,3 +199,32 @@ def test_a_finished_step_stays_finished_if_the_queue_is_unreachable_for_its_entr
         read_step_status(db_session, extract_html.sdoc_id, "extract_html")
         == SDocStatus.finished
     )
+
+
+def test_a_step_planned_while_text_spacy_runs_starts_after_the_language_detection(
+    db_session,
+    text_steps_project: TextStepsProject,
+    held_jobs: HeldJobs,
+):
+    """Completing keyword statistics plans text_keywords for spacy_running,
+    whose spaCy job runs: text_keywords follows the language detection, which
+    is finished, so the computation starts it at once, and it finishes while
+    text_spacy is still processing."""
+    p = text_steps_project
+    sdoc_id = p["spacy_running"].id
+
+    FeatureService().complete_feature(
+        db=db_session,
+        project_id=p["project"].id,
+        feature=feature_named("keyword_statistics"),
+        settings=SETTINGS,
+    )
+    db_session.commit()
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
+
+    assert started_steps(held_jobs) == {sdoc_id: ["text_keywords"]}
+    held_jobs.run("text_keywords")
+    assert _statuses(db_session, sdoc_id, ["text_keywords", "text_spacy"]) == [
+        SDocStatus.finished,
+        SDocStatus.processing,
+    ]

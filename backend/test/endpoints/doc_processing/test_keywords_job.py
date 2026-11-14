@@ -1,0 +1,52 @@
+from sqlalchemy.orm import Session
+
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from feature_test_utils import SDOC_SENTENCES
+
+from .conftest import TextStepsProject, run_step_handler
+
+TEXT = " ".join(SDOC_SENTENCES)
+SETTINGS = {
+    "extract_images": False,
+    "pages_per_chunk": 10,
+    "keyword_number": 3,
+    "keyword_deduplication_threshold": 0.5,
+    "keyword_max_ngram_size": 1,
+    "language": "en",
+    "model": "default",
+}
+
+# ===========================================================================
+# KEYWORDS JOB (step text_keywords) TESTS
+# ===========================================================================
+# The step runs as a background job, so these tests call its handler, taken
+# from the job registry by the step name. The keywords come from YAKE, which
+# runs in the job (no spaCy).
+
+
+def test_keywords_job_stores_the_keywords_as_metadata(
+    db_session: Session, text_steps_project: TextStepsProject
+):
+    """With at most 3 keywords of one word, the job stores 3 words of the text
+    as the document's metadata "keywords"."""
+    sdoc_id = text_steps_project["text"].id
+
+    run_step_handler(
+        "text_keywords",
+        {
+            "project_id": text_steps_project["project"].id,
+            "sdoc_id": sdoc_id,
+            "settings": SETTINGS,
+            "doctype": "text",
+            "text": TEXT,
+            "language": "en",
+        },
+    )
+
+    db_session.expire_all()
+    keywords = crud_sdoc_meta.read_by_sdoc_and_key(
+        db=db_session, sdoc_id=sdoc_id, key="keywords"
+    ).list_value
+    assert keywords is not None
+    assert len(keywords) == 3
+    assert all(keyword.lower() in TEXT.lower() for keyword in keywords), keywords

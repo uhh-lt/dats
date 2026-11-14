@@ -88,7 +88,6 @@ def test_a_step_declared_once_is_planned_run_shown_exported_and_imported(
     held_jobs.run("text_extraction")
     (payload,) = held_jobs.inputs(step)
     assert isinstance(payload, DummyJobInput)
-    assert payload.steps == [step]
     assert payload.settings == SETTINGS
     assert payload.text == DUMMY_UPLOAD_TEXT
 

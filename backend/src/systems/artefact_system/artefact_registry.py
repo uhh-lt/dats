@@ -124,9 +124,8 @@ class ArtefactRegistry:
         self._graph = None
 
     def unregister_step(self, job_type: str) -> None:
-        """Remove the steps of the job (the job's own step and its further steps)."""
-        for step in [s for s, d in self._steps.items() if job_type in (s, d.job)]:
-            del self._steps[step]
+        """Remove the step of the job (tests)."""
+        self._steps.pop(job_type, None)
         self._graph = None
 
     def graph(self) -> PipelineGraph:

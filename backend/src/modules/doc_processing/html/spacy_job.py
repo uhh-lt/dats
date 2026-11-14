@@ -1,47 +1,19 @@
-from collections.abc import Callable
-from typing import Counter
-from uuid import uuid4
-
-import yake
-from sqlalchemy.orm import Session
-
 from common.doc_type_enum import DocType
-from core.annotation.annotation_document_crud import crud_adoc
-from core.annotation.span_annotation_crud import crud_span_anno
-from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
-from core.code.code_crud import crud_code
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import (
-    SourceDocumentDataUpdate,
-)
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from core.user.user_crud import SYSTEM_USER_ID
-from modules.doc_processing.artefacts import (
-    CONTENT,
-    LANGUAGE,
-    TOKENS_SENTENCES,
-    WORD_FREQUENCIES,
-)
-from modules.doc_processing.doc_processing_exceptions import StepNotComputedError
+from core.doc.source_document_data_dto import SourceDocumentDataUpdate
+from modules.doc_processing.artefacts import CONTENT, LANGUAGE, TOKENS_SENTENCES
 from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
-from modules.doc_processing.html.keywords_artefact import KEYWORDS
-from modules.doc_processing.html.ner_artefact import NER_SPANS
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
+from modules.doc_processing.html.text_step_utils import read_stored_text
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
-from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
-from systems.job_system.job_dto import Job, JobOutputBase
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
-
-# the system code whose children are the named entity codes
-NAMED_ENTITY_CODE = "NAMED_ENTITY"
 
 
 class SpacyJobInput(SdocProcessingJobInput):
@@ -52,264 +24,57 @@ class SpacyJobInput(SdocProcessingJobInput):
     raw_html: str
 
 
-class SpacyJobOutput(JobOutputBase):
-    sentence_starts: list[int]
-    sentence_ends: list[int]
-    token_starts: list[int]
-    token_ends: list[int]
-    sentences: list[str]
-
-
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> SpacyJobInput:
-    with sqlr.transaction() as db:
-        sdoc_data = crud_sdoc_data.read(
-            db=db,
-            id=payload.sdoc_id,
-        )
-
-        language = crud_sdoc_meta.read_by_sdoc_and_key(
-            db=db, key="language", sdoc_id=payload.sdoc_id
-        )
-        assert language.str_value is not None, (
-            "Language must be set for Spacy processing!"
-        )
-
-        return SpacyJobInput(
-            **payload.model_dump(),
-            doctype=DocType(sdoc_data.source_document.doctype),
-            text=sdoc_data.content,
-            raw_html=sdoc_data.raw_html,
-            language=language.str_value,
-        )
+    stored = read_stored_text(payload.sdoc_id)
+    return SpacyJobInput(
+        **payload.model_dump(),
+        doctype=stored.doctype,
+        text=stored.text,
+        raw_html=stored.raw_html,
+        language=stored.language,
+    )
 
 
 @pipeline_step(
     requires={CONTENT, LANGUAGE},
     produces={TOKENS_SENTENCES},
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
-    further_steps={
-        "text_keywords": {KEYWORDS},
-        "text_word_frequency": {WORD_FREQUENCIES},
-        "text_ner": {NER_SPANS},
-    },
 )
 @register_job(
     job_type="text_spacy",
     input_type=SpacyJobInput,
-    output_type=SpacyJobOutput,
     enricher=enrich_for_recompute,
 )
-def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
-    # the outputs to write: tokens and sentences (text_spacy), keywords, word
-    # frequencies, named entities; spacy is called once for all of them
-    steps = artefact_registry.graph().job_steps("text_spacy", payload.steps)
-    not_computed = [step for step in steps if step not in _STEP_WRITERS]
-    if not_computed:
-        raise StepNotComputedError("text_spacy", not_computed)
-
-    # 1. call spacy in ray
+def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> None:
     spacy_output = ray.spacy_pipline(
-        SpacyInput(
-            text=payload.text,
-            language=payload.language,
-        )
+        SpacyInput(text=payload.text, language=payload.language)
     )
-
-    # tokens & offsets & sentences
     sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
 
-    with sqlr.transaction() as trans:
-        for step in steps:
-            _STEP_WRITERS[step](trans, payload, spacy_output, sdoc_data)
-
-    return SpacyJobOutput(
-        sentence_starts=sdoc_data["sentence_starts"],
-        sentence_ends=sdoc_data["sentence_ends"],
-        token_starts=sdoc_data["token_starts"],
-        token_ends=sdoc_data["token_ends"],
-        sentences=[
-            payload.text[s:e]
-            for s, e in zip(sdoc_data["sentence_starts"], sdoc_data["sentence_ends"])
-        ],
-    )
-
-
-def _store_tokens_sentences(
-    db: Session,
-    payload: SpacyJobInput,
-    spacy_output: SpacyPipelineOutput,
-    sdoc_data: dict,
-) -> None:
-    if payload.doctype in {DocType.text, DocType.image}:
-        crud_sdoc_data.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                token_starts=sdoc_data["token_starts"],
-                token_ends=sdoc_data["token_ends"],
-                sentence_starts=sdoc_data["sentence_starts"],
-                sentence_ends=sdoc_data["sentence_ends"],
-            ),
-        )
-    else:
-        # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
-        existing_sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
-        sdoc_data["token_starts"] = existing_sdoc_data.token_starts
-        sdoc_data["token_ends"] = existing_sdoc_data.token_ends
-        crud_sdoc_data.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                sentence_starts=sdoc_data["sentence_starts"],
-                sentence_ends=sdoc_data["sentence_ends"],
-            ),
-        )
-
-
-def _store_keywords(
-    db: Session,
-    payload: SpacyJobInput,
-    spacy_output: SpacyPipelineOutput,
-    sdoc_data: dict,
-) -> None:
-    crud_sdoc_meta.update_multi_with_doctype(
-        db=db,
-        project_id=payload.project_id,
-        sdoc_id=payload.sdoc_id,
-        doctype=payload.doctype,
-        keys=["keywords"],
-        values=[extract_keywords(payload, spacy_output)],
-    )
-
-
-def _store_word_frequencies(
-    db: Session,
-    payload: SpacyJobInput,
-    spacy_output: SpacyPipelineOutput,
-    sdoc_data: dict,
-) -> None:
-    crud_word_frequency.delete_by_sdoc_id(db=db, sdoc_id=payload.sdoc_id)
-    crud_word_frequency.create_multi(
-        db=db, create_dtos=extract_word_frequencies(payload, spacy_output)
-    )
-
-
-def _store_named_entities(
-    db: Session,
-    payload: SpacyJobInput,
-    spacy_output: SpacyPipelineOutput,
-    sdoc_data: dict,
-) -> None:
-    system_codes = crud_code.read_system_codes_by_project(
-        db=db, project_id=payload.project_id
-    )
-    system_code_ids = {code.name: code.id for code in system_codes}
-    # the codes of the named entities spacy annotates
-    ner_parent_id = system_code_ids.get(NAMED_ENTITY_CODE)
-    ner_code_ids = [
-        code.id
-        for code in system_codes
-        if ner_parent_id is not None and code.parent_id == ner_parent_id
-    ]
-    adoc = crud_adoc.exists_or_create(
-        db=db,
-        user_id=SYSTEM_USER_ID,
-        sdoc_id=payload.sdoc_id,
-    )
-    # replace only the system user's named entities, keeping the annotations
-    # of all users and of other automatic annotators (quotation, coreference)
-    crud_span_anno.delete_by_user_sdocs_codes(
-        db=db,
-        user_id=SYSTEM_USER_ID,
-        sdoc_ids=[payload.sdoc_id],
-        code_ids=ner_code_ids,
-    )
-    crud_span_anno.create_multi(
-        db,
-        create_dtos=extract_span_annotations(
-            payload, spacy_output, system_code_ids, adoc.id
-        ),
-    )
-
-
-# What each step of the job writes. A step of its `further_steps` without an
-# entry fails the job instead of being set to finished without being computed.
-_STEP_WRITERS: dict[
-    str, Callable[[Session, SpacyJobInput, SpacyPipelineOutput, dict], None]
-] = {
-    "text_spacy": _store_tokens_sentences,
-    "text_keywords": _store_keywords,
-    "text_word_frequency": _store_word_frequencies,
-    "text_ner": _store_named_entities,
-}
-
-
-def extract_keywords(
-    payload: SpacyJobInput,
-    spacy_output: SpacyPipelineOutput,
-) -> list[str]:
-    kw_extractor = yake.KeywordExtractor(
-        lan=payload.language,
-        n=payload.settings.keyword_max_ngram_size,
-        dedupLim=payload.settings.keyword_deduplication_threshold,
-        windowsSize=1,
-        top=payload.settings.keyword_number,
-    )
-    keyword_proposals = kw_extractor.extract_keywords(payload.text)
-    keyword_proposals = [kw for kw, _ in keyword_proposals]
-
-    # Part of speech filtering for keywords, is this really necessary?
-    # tok2pos = {tok.text: tok.pos for tok in spacy_output.tokens}
-    # # pos_to_keep = [
-    # #     "NOUN",
-    # #     "PROPN",
-    # #     "ADJ",
-    # #     "VERB",
-    # # ]
-    # # keywords = []
-    # # for kp in keyword_proposals:
-    # #     ws = kp.split()
-    # #     keep_kp = True
-    # #     for w in ws:
-    # #         if tok2pos[w] not in pos_to_keep:
-    # #             keep_kp = False
-    # #             break
-    # #     if keep_kp:
-    # #         keywords.append(kp)
-
-    return keyword_proposals
-
-
-def extract_span_annotations(
-    payload: SpacyJobInput,
-    spacy_output: SpacyPipelineOutput,
-    system_code_ids: dict[str, int],
-    adoc_id: int,
-) -> list[SpanAnnotationCreateIntern]:
-    create_dtos: list[SpanAnnotationCreateIntern] = []
-    # create AutoSpans for NER
-    for ne in spacy_output.ents:
-        # FIXME Flo: hacky solution for German NER model, which only contains ('LOC', 'MISC', 'ORG', 'PER')
-        code_name = f"{ne.label}"
-        if code_name == "PER":
-            code_name = "PERSON"
-
-        auto = SpanAnnotationCreateIntern(
-            begin=ne.start_char,
-            begin_token=ne.start_token,
-            project_id=payload.project_id,
-            uuid=str(uuid4()),
-            code_id=system_code_ids[code_name],
-            annotation_document_id=adoc_id,
-            end=ne.end_char,
-            span_text=ne.text,
-            end_token=ne.end_token,
-        )
-        create_dtos.append(auto)
-
-    return create_dtos
+    with sqlr.transaction() as db:
+        if payload.doctype in {DocType.text, DocType.image}:
+            crud_sdoc_data.update(
+                db=db,
+                id=payload.sdoc_id,
+                update_dto=SourceDocumentDataUpdate(
+                    token_starts=sdoc_data["token_starts"],
+                    token_ends=sdoc_data["token_ends"],
+                    sentence_starts=sdoc_data["sentence_starts"],
+                    sentence_ends=sdoc_data["sentence_ends"],
+                ),
+            )
+        else:
+            # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
+            crud_sdoc_data.update(
+                db=db,
+                id=payload.sdoc_id,
+                update_dto=SourceDocumentDataUpdate(
+                    sentence_starts=sdoc_data["sentence_starts"],
+                    sentence_ends=sdoc_data["sentence_ends"],
+                ),
+            )
 
 
 def extract_tok_sent_data(
@@ -363,23 +128,3 @@ def extract_tok_sent_data(
         "sentence_starts": sentence_starts,
         "sentence_ends": sentence_ends,
     }
-
-
-def extract_word_frequencies(
-    payload: SpacyJobInput, spacy_output: SpacyPipelineOutput
-) -> list[WordFrequencyCreate]:
-    word_freqs = Counter()
-    for token in spacy_output.tokens:
-        if not (token.is_stopword or token.is_punctuation) and (
-            token.is_alpha or token.is_digit
-        ):
-            word_freqs.update((token.text,))
-
-    return [
-        WordFrequencyCreate(
-            sdoc_id=payload.sdoc_id,
-            word=word,
-            count=count,
-        )
-        for word, count in word_freqs.items()
-    ]

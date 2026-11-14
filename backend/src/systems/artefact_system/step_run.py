@@ -1,6 +1,6 @@
 """Step runs: the start, the skip, the finish and the failure of the jobs that
-compute pipeline steps of a document. A step run is one run of a job for some of
-the steps of one document.
+compute pipeline steps of a document. A step run is one run of the job of one
+pipeline step for one document; the job is named like its step.
 
 - `start_steps` is the only start of a step job: the advancing (here), the
   upload, the artefact computation job and recompute call it. A retry requeues the stored job
@@ -39,18 +39,6 @@ js = JobService()
 sqlr = SQLRepo()
 
 
-def _computed_steps(job_type: str, input: SdocProcessingJobInput) -> list[str]:
-    """The pipeline steps this run of the job computes."""
-    return artefact_registry.graph().job_steps(job_type, input.steps)
-
-
-def _pending_steps(sdoc_id: int, steps: list[str]) -> list[str]:
-    """The steps that are planned for the document and not computed yet."""
-    with sqlr.transaction() as db:
-        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
-    return [step for step in steps if status.get(step) == SDocStatus.processing]
-
-
 def start_steps(
     *,
     project_id: int,
@@ -59,96 +47,76 @@ def start_steps(
     settings: ProcessingSettings,
     priority: JobPriority | None = None,
 ) -> dict[str, Job | None]:
-    """Start the steps of the document: one job per job type that computes some
-    of them, with a bare input, which the job's enricher completes from the
-    document's stored data. Returns the started job per job type.
+    """Start the steps of the document: the job of each step, with a bare
+    input, which the job's enricher completes from the document's stored data.
+    Returns the started job per step.
 
     A job that cannot be queued, because its input cannot be built (the
     document's input data is missing) or the queue (Redis) cannot be reached,
-    does not start: its steps and the pending steps after them become
-    erroneous, like after a failed job, its job type maps to None, and the
-    other jobs still start. Anything else raises as it is."""
+    does not start: its step and the pending steps after it become erroneous,
+    like after a failed job, its step maps to None, and the other jobs still
+    start. Anything else raises as it is."""
     started: dict[str, Job | None] = {}
-    for job_type, job_steps in artefact_registry.graph().group_by_job(steps).items():
+    for step in dict.fromkeys(steps):
         job_input = SdocProcessingJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, settings=settings, steps=job_steps
+            project_id=project_id, sdoc_id=sdoc_id, settings=settings
         )
         try:
-            started[job_type] = js.start_job(job_type, job_input, priority=priority)
+            started[step] = js.start_job(step, job_input, priority=priority)
         except (JobInputError, JobQueueUnavailableError) as e:
-            logger.warning(f"Cannot start {job_type} of document {sdoc_id}: {e}")
-            handle_job_error(job_type, job_input)
-            started[job_type] = None
+            logger.warning(f"Cannot start {step} of document {sdoc_id}: {e}")
+            handle_job_error(step, job_input)
+            started[step] = None
     return started
 
 
-def _start_planned(
-    jobs: dict[str, list[str]], input: SdocProcessingJobInput, sdoc_id: int
-) -> None:
-    """Start each job for its steps that are planned for the document, with the
-    settings of the run. The job that finished stays finished: a step that
-    cannot start becomes erroneous itself (`start_steps`)."""
-    if not jobs:
+def _start_planned(steps: list[str], input: SdocProcessingJobInput) -> None:
+    """Start the steps that are planned for the document, with the settings of
+    the run. The job that finished stays finished: a step that cannot start
+    becomes erroneous itself (`start_steps`)."""
+    if not steps:
         return
     with sqlr.transaction() as db:
-        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=sdoc_id)
-    planned = [step for steps in jobs.values() for step in steps if step in status]
+        status = crud_sdoc_step_status.read_by_sdoc(db=db, sdoc_id=input.sdoc_id)
+    planned = [step for step in steps if step in status]
     if planned:
         start_steps(
             project_id=input.project_id,
-            sdoc_id=sdoc_id,
+            sdoc_id=input.sdoc_id,
             steps=planned,
             settings=input.settings,
         )
 
 
 def _start_next(job_type: str, input: JobInputBase) -> None:
-    """Start what follows a finished step job: the planned successors of the
-    steps it computed. The jobs that create documents start what follows them
-    themselves."""
-    graph = artefact_registry.graph()
+    """Start what follows a finished step job: the planned successors of its
+    step. The jobs that create documents start what follows them themselves."""
     if isinstance(input, SdocProcessingJobInput):
-        # only the steps this run computed start their successors, so recomputing
-        # e.g. the named entities does not start the steps after tokens and sentences
-        finished_steps = _computed_steps(job_type, input)
-        _start_planned(graph.next_jobs(finished_steps), input, input.sdoc_id)
-
-        # steps of this job that were planned while it ran (an artefact computation
-        # plans e.g. the keywords while the spaCy job runs for tokens only): run
-        # the job again for them
-        others = [s for s in graph.job_steps(job_type) if s not in finished_steps]
-        pending = _pending_steps(input.sdoc_id, others) if others else []
-        if pending:
-            _start_planned({job_type: pending}, input, input.sdoc_id)
+        _start_planned(artefact_registry.graph().successors(job_type), input)
 
 
 def _set_status(
     job_type: str,
     input: JobInputBase,
     status: SDocStatus,
-    steps: list[str] | None = None,
 ) -> None:
-    """Set the status of the steps this run of the job computes (or of `steps`)."""
+    """Set the status of the step this run of the job computes."""
     if not isinstance(input, SdocProcessingJobInput):
-        return
-    if steps is None:
-        steps = _computed_steps(job_type, input)
-    if not steps:
         return
     with sqlr.transaction() as db:
         crud_sdoc_step_status.update_status(
-            db=db, sdoc_ids=[input.sdoc_id], steps=steps, status=status
+            db=db, sdoc_ids=[input.sdoc_id], steps=[job_type], status=status
         )
 
 
 def handle_job_started(jobtype: str, input: JobInputBase) -> None:
-    """Set the steps of the run to processing (a retried job's steps are
-    erroneous until then)."""
+    """Set the step of the run to processing (a retried job's step is erroneous
+    until then)."""
     _set_status(jobtype, input, SDocStatus.processing)
 
 
 def handle_job_error(job_type: str, input: JobInputBase) -> None:
-    """Set the steps of the run to erroneous, and the pending steps after them
+    """Set the step of the run to erroneous, and the pending steps after it
     too: they cannot run without their input, so they do not stay processing.
     Recomputing the input starts them again (see `_start_next`). A failed
     artefact computation ends (`ArtefactService.end_computation`)."""
@@ -166,15 +134,13 @@ def handle_job_error(job_type: str, input: JobInputBase) -> None:
         crud_sdoc_step_status.update_pending_to_erroneous(
             db=db,
             sdoc_id=input.sdoc_id,
-            steps=artefact_registry.graph().descendants(
-                _computed_steps(job_type, input)
-            ),
+            steps=artefact_registry.graph().descendants([job_type]),
         )
 
 
 def handle_job_finished(
     job_type: str, input: JobInputBase, output: JobOutputBase | None
 ) -> None:
-    """Set the steps of the run to finished and start what follows the job."""
+    """Set the step of the run to finished and start what follows it."""
     _set_status(job_type, input, SDocStatus.finished)
     _start_next(job_type=job_type, input=input)

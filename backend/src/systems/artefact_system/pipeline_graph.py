@@ -7,9 +7,7 @@ answers every question about that relation: the steps some artefacts need,
 whether they apply to a doctype, the input steps of a step and the steps after
 a step.
 
-A job can compute several steps in one run (`text_spacy` also computes keywords,
-word frequencies and named entities). Each step has its own status row and
-artefacts; the job input says which of its steps to compute.
+Each step is computed by a job of its own, named like the step.
 """
 
 from collections.abc import Iterable
@@ -33,8 +31,6 @@ class PipelineStep:
     requires: frozenset["Artefact"]
     produces: frozenset["Artefact"]
     doctypes: frozenset[DocType]
-    # the job that computes this step, if it is a further step of another job
-    job: str | None = None
 
 
 class PipelineGraph:
@@ -47,11 +43,6 @@ class PipelineGraph:
     ) -> None:
         self._declarations = dict(steps)
         self._artefacts = frozenset(artefacts)
-        self._job_of = {jt: s.job or jt for jt, s in steps.items()}
-        self._steps_of_job: dict[str, list[str]] = {}
-        # a job's own step first, then its further steps by name
-        for job_type in sorted(steps, key=lambda s: (steps[s].job is not None, s)):
-            self._steps_of_job.setdefault(self._job_of[job_type], []).append(job_type)
         self._steps_by_doctype: dict[DocType, list[str]] = {}
         self._roots_by_doctype: dict[DocType, list[str]] = {}
         # the input steps of each step per doctype: the producers of its
@@ -59,11 +50,7 @@ class PipelineGraph:
         self._dependencies: dict[DocType, dict[str, set[str]]] = {}
         successors_by_doctype: dict[DocType, dict[str, list[str]]] = {}
 
-        problems = (
-            _check_artefacts(steps, self._artefacts)
-            + _check_jobs(steps)
-            + _check_always(steps)
-        )
+        problems = _check_artefacts(steps, self._artefacts) + _check_always(steps)
         if len(steps) > MAX_COUNTED_STEPS:
             problems.append(
                 f"There are {len(steps)} pipeline steps, but the feature states "
@@ -196,41 +183,6 @@ class PipelineGraph:
         """The steps started when this step finished (empty for non-pipeline jobs)."""
         return self._successors.get(job_type, [])
 
-    def job(self, step: str) -> str:
-        """The job that computes this step (the step itself for most steps)."""
-        return self._job_of.get(step, step)
-
-    def job_steps(self, job_type: str, requested: list[str] | None = None) -> list[str]:
-        """The steps a run of this job computes: the requested ones, or all steps
-        of the job if None. Raises if a requested step is no step of the job."""
-        steps = self._steps_of_job.get(job_type, [job_type])
-        if requested is None:
-            return steps
-        foreign = [s for s in requested if s not in steps]
-        if foreign:
-            raise PipelineDeclarationError(
-                [f"Job '{job_type}' does not compute the steps {foreign}."]
-            )
-        return [s for s in steps if s in requested]
-
-    def next_jobs(self, steps: list[str]) -> dict[str, list[str]]:
-        """The jobs to start after these steps finished, with the steps each job
-        computes."""
-        return self.group_by_job(
-            [successor for step in steps for successor in self.successors(step)]
-        )
-
-    def group_by_job(self, steps: list[str]) -> dict[str, list[str]]:
-        """The jobs computing these steps, in the order of their first step,
-        with the steps each job computes in the job's order (its own step
-        first)."""
-        jobs: dict[str, list[str]] = {}
-        for step in steps:
-            jobs.setdefault(self.job(step), [])
-        for job, job_steps in jobs.items():
-            job_steps += [s for s in self.job_steps(job) if s in steps]
-        return jobs
-
 
 def _check_artefacts(
     steps: dict[str, PipelineStep], artefacts: frozenset["Artefact"]
@@ -265,27 +217,6 @@ def _check_always(steps: dict[str, PipelineStep]) -> list[str]:
             problems.append(
                 f"Step '{job_type}' produces an always-computed artefact but "
                 "requires an on-demand one."
-            )
-    return problems
-
-
-def _check_jobs(steps: dict[str, PipelineStep]) -> list[str]:
-    """A further step of a job shares the job's inputs and doctypes, as both are
-    computed in the same run."""
-    problems: list[str] = []
-    for job_type, step in steps.items():
-        if step.job is None:
-            continue
-        main = steps.get(step.job)
-        if main is None or main.job is not None:
-            problems.append(
-                f"Step '{job_type}' is computed by '{step.job}', "
-                "which is no pipeline step of its own."
-            )
-        elif main.requires != step.requires or main.doctypes != step.doctypes:
-            problems.append(
-                f"Step '{job_type}' must have the requires and doctypes of "
-                f"its job '{step.job}'."
             )
     return problems
 

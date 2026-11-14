@@ -60,7 +60,7 @@ Enable and Complete start the computation job before their transaction commits: 
 
 ## Step runs
 
-A step run is one run of a job for some of the steps of one document. A finished step starts its planned successors with a bare `SdocProcessingJobInput`, and the successor's enricher loads its input from the stored data. The jobs that create documents (the entry points `crawler`, `extract_archive`, `doc_chunking`, `extract_html` and `sdoc_init`) start what follows them themselves, at the end of their handlers.
+A step run is one run of the job of one pipeline step for one document; the job is named like its step and computes that step only. A finished step starts its planned successors with a bare `SdocProcessingJobInput`, and the successor's enricher loads its input from the stored data. The jobs that create documents (the entry points `crawler`, `extract_archive`, `doc_chunking`, `extract_html` and `sdoc_init`) start what follows them themselves, at the end of their handlers.
 
 ## Failures
 

@@ -7,6 +7,7 @@ from typing import Generator, TypedDict
 
 import ffmpeg
 import pytest
+import rq.job
 from PIL import Image
 from sqlalchemy.orm import Session
 
@@ -29,6 +30,7 @@ from feature_test_utils import (
 from pipeline_test_utils import artefact_named
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.ray.dto.spacy import SpacyPipelineOutput, SpacySpan, SpacyToken
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.artefact_registry import (
     Artefact,
@@ -125,16 +127,6 @@ def audio_project(db_session: Session, test_project: ProjectORM) -> AudioProject
 def feature_project(db_session, test_user: UserORM) -> FeatureProject:
     """The project described in `FeatureProject`."""
     return create_feature_project(db_session, test_user)
-
-
-@pytest.fixture(scope="function")
-def ner_pending_project(db_session, test_user: UserORM) -> FeatureProject:
-    """The project described in `FeatureProject`, where text_ner of text_done is
-    processing as well: planned, its job not run yet."""
-    project = create_feature_project(db_session, test_user)
-    set_step_status(db_session, project["text_done"].id, {"text_ner": 0})
-    db_session.commit()
-    return project
 
 
 # --- step planning ------------------------------------------------------------
@@ -607,3 +599,125 @@ def media_uploads(db_session: Session, test_user: UserORM) -> MediaUploads:
         "video": store("clip.mp4"),
         "html_with_image": store("page.html"),
     }
+
+
+# --- one job per text step ----------------------------------------------------
+
+
+class TextStepsProject(TypedDict):
+    """
+    This fixture sets up the following project of `test_user`:
+
+    - project: "Text Steps Project", with keyword statistics, word frequency
+      analysis and automatic entity annotations enabled, so it has the system
+      codes `NAMED_ENTITY` > `PERSON`, `ORG`, ...
+    - text: text document "text.txt" with the text of `SDOC_SENTENCES`
+      ("Hello world. The cat sits on the mat.") and the language "en"; the
+      steps of a project without features and text_keywords,
+      text_word_frequency and text_ner are finished (no data of the last three
+      is stored)
+    - spacy_running: text document "spacy_running.txt" with the same text;
+      extract_html, text_extraction and text_language_detection are finished,
+      text_spacy and text_html_mapping are processing (the spaCy job runs), no
+      other step is planned
+
+    Non-obvious derived behavior:
+
+    - text_keywords, text_word_frequency and text_ner each follow the language
+      detection only, not text_spacy.
+    """
+
+    project: ProjectORM
+    text: SourceDocumentORM
+    spacy_running: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def text_steps_project(db_session: Session, test_user: UserORM) -> TextStepsProject:
+    """The project described in `TextStepsProject`."""
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Text Steps Project",
+        features=["keyword_statistics", "word_frequency", "entity_annotations"],
+    )
+    text = _create_sdoc(
+        db_session,
+        project,
+        name="text.txt",
+        doctype=DocType.text,
+        status={
+            **dict.fromkeys(minimal_text_steps(), 1),
+            "text_keywords": 1,
+            "text_word_frequency": 1,
+            "text_ner": 1,
+        },
+    )
+    spacy_running = _create_sdoc(
+        db_session,
+        project,
+        name="spacy_running.txt",
+        doctype=DocType.text,
+        status={
+            "extract_html": 1,
+            "text_extraction": 1,
+            "text_language_detection": 1,
+            "text_spacy": 0,
+            "text_html_mapping": 0,
+        },
+    )
+    db_session.commit()
+    for obj in (project, text, spacy_running):
+        db_session.refresh(obj)
+    return {"project": project, "text": text, "spacy_running": spacy_running}
+
+
+def spacy_output(text: str, entities: dict[str, str]) -> SpacyPipelineOutput:
+    """What spaCy returns for the text: a token per word (split at spaces, a
+    trailing "." split off as punctuation; "the" and "on" are stopwords) and
+    the given entities (word -> label), each one token long. Tests replace
+    `RayRepo.spacy_pipline` with it, as spaCy is an external service."""
+    tokens: list[SpacyToken] = []
+    start = 0
+    for word in text.split(" "):
+        parts = [word[:-1], "."] if word.endswith(".") else [word]
+        for part in parts:
+            begin = text.index(part, start)
+            start = begin + len(part)
+            tokens.append(
+                SpacyToken(
+                    text=part,
+                    start_char=begin,
+                    end_char=start,
+                    pos="X",
+                    lemma=part.lower(),
+                    is_stopword=part.lower() in {"the", "on"},
+                    is_punctuation=part == ".",
+                    is_alpha=part.isalpha(),
+                    is_digit=part.isdigit(),
+                )
+            )
+    ents = [
+        SpacySpan(
+            text=token.text,
+            start_char=token.start_char,
+            end_char=token.end_char,
+            start_token=index,
+            end_token=index + 1,
+            label=entities[token.text],
+        )
+        for index, token in enumerate(tokens)
+        if token.text in entities
+    ]
+    return SpacyPipelineOutput(tokens=tokens, ents=ents, sents=[])
+
+
+def run_step_handler(step: str, payload: dict[str, object]) -> None:
+    """Run the handler of the step's job, taken from the job registry by the
+    step name, on an input built from the dict."""
+    registered = JobService().job_registry[step]
+    handler = registered["handler"]
+    handler(
+        registered["input_type"].model_validate(payload),
+        Job(rq.job.Job.create(handler, connection=JobService().redis_conn)),
+    )

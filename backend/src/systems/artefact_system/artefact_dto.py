@@ -28,10 +28,6 @@ class ProcessingJobInput(JobInputBase):
 
 class SdocProcessingJobInput(ProcessingJobInput):
     sdoc_id: int = Field(description="SDoc ID")
-    steps: list[str] | None = Field(
-        default=None,
-        description="The pipeline steps this job computes, for jobs with several steps (e.g. text_spacy); null = all steps of the job",
-    )
 
 
 class ArtefactComputationJobInput(JobInputBase):

@@ -167,7 +167,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         # 1. retrieve all failed jobs in this project
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
-            job_types=list(graph.group_by_job(steps)),
+            job_types=steps,
         )
 
         # 2. convert to SdocProcessingJob and build dict for easy access
@@ -186,14 +186,10 @@ class DocProcessingService(metaclass=SingletonMeta):
                     # a job of a step that is not registered (anymore) is skipped
                     if failed_job.job_type not in graph.all_steps():
                         continue
-                    # a job with several steps failed all steps it computed
-                    for step in graph.job_steps(
-                        failed_job.job_type, failed_job.input.steps
-                    ):
-                        row.failed_job_uuids[step] = failed_job.job_id
-                        row.failed_job_status_msgs[step] = (
-                            failed_job.status_message or ""
-                        )
+                    row.failed_job_uuids[failed_job.job_type] = failed_job.job_id
+                    row.failed_job_status_msgs[failed_job.job_type] = (
+                        failed_job.status_message or ""
+                    )
 
         return results
 
@@ -209,7 +205,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         graph = artefact_registry.graph()
         failed_project_jobs = self.js.get_failed_jobs_by_project(
             project_id=project_id,
-            job_types=list(graph.group_by_job(graph.steps(doctype))),
+            job_types=graph.steps(doctype),
         )
 
         # 2. convert to SdocProcessingJob and collect by sdoc_id
