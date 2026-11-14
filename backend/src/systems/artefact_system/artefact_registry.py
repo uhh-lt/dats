@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
-from core.code.system_codes import SystemCode, parent_names
+from core.code.system_codes import ROOT, SystemCode
 from systems.artefact_system.artefact_exceptions import (
     PipelineDeclarationError,
     PipelineNotRegisteredError,
@@ -118,6 +118,8 @@ class ArtefactRegistry:
     # --- steps
 
     def register_step(self, job_type: str, step: PipelineStep) -> None:
+        if job_type in self._steps:
+            raise PipelineDeclarationError([f"Step '{job_type}' is declared twice."])
         self._steps[job_type] = step
         self._graph = None
 
@@ -136,42 +138,40 @@ class ArtefactRegistry:
 
     def check(self) -> None:
         """Check the declarations at startup: build the graph (its checks of the
-        steps and the artefacts) and check the declared system codes. Raises a
+        steps and the artefacts) and check the declared system codes. Raises one
         `PipelineDeclarationError` listing all problems."""
-        self.graph()
-        problems = _check_system_codes(self.artefacts())
+        problems: list[str] = []
+        try:
+            self.graph()
+        except PipelineDeclarationError as e:
+            problems += e.problems
+        problems += _check_system_codes(self.artefacts())
         if problems:
             raise PipelineDeclarationError(problems)
 
 
 def _check_system_codes(artefacts: list[Artefact]) -> list[str]:
-    """A code name is unique in a project, so every declaration of a name must
-    give it the same parent, description and `enabled` flag."""
+    """A code name is unique in a project, so every node of every declared tree
+    that has a name must give it the same parent, description and `enabled`
+    flag, within one artefact and across artefacts."""
     problems: list[str] = []
-    seen: dict[str, tuple[str | None, str, bool]] = {}
+    seen: dict[str, tuple[str, str, bool]] = {}
+
+    def visit(artefact: Artefact, code: SystemCode, parent: str) -> None:
+        declared = (parent, code.description, code.enabled)
+        if seen.setdefault(code.name, declared) != declared:
+            problems.append(
+                f"System code '{code.name}' is declared differently by two trees "
+                f"(at artefact '{artefact.name}': parent, description or enabled "
+                "flag)."
+            )
+        for child in code.children:
+            visit(artefact, child, code.name)
+
     for artefact in artefacts:
-        for name, parent in parent_names(artefact.codes).items():
-            code = _find(artefact.codes, name)
-            if code is None:
-                continue
-            declared = (parent, code.description, code.enabled)
-            if seen.setdefault(name, declared) != declared:
-                problems.append(
-                    f"System code '{name}' is declared differently by artefact "
-                    f"'{artefact.name}' and another artefact (parent, description "
-                    "or enabled flag)."
-                )
+        for tree in artefact.codes:
+            visit(artefact, tree, ROOT)
     return problems
-
-
-def _find(trees: Collection[SystemCode], name: str) -> SystemCode | None:
-    for tree in trees:
-        if tree.name == name:
-            return tree
-        found = _find(tree.children, name)
-        if found is not None:
-            return found
-    return None
 
 
 artefact_registry = ArtefactRegistry()

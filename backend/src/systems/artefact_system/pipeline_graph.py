@@ -126,11 +126,6 @@ class PipelineGraph:
         """The declaration of this step: what it requires, produces and its doctypes."""
         return self._declarations[step]
 
-    def artefacts(self) -> frozenset["Artefact"]:
-        """All registered artefacts: each is produced by a step or is the
-        uploaded file of a doctype."""
-        return self._artefacts
-
     def _uploaded(self, doctype: DocType) -> frozenset["Artefact"]:
         """The artefacts the uploaded file of this doctype provides."""
         return frozenset(a for a in self._artefacts if doctype in a.uploaded_for)

@@ -63,11 +63,10 @@ def _init_sentry() -> None:
 # JOBS
 # ==============================================================================
 def register_jobs() -> None:
-    """Register all jobs (by importing the `*_job.py` modules), check the
-    preprocessing pipeline derived from their declarations, register the job
-    lifecycle hooks of the pipeline, register the features
-    (`register_features`) and build the JOB_UPDATED event model, which needs
-    all jobs registered.
+    """Register all jobs and features (by importing the `*_job.py` and
+    `*_feature.py` modules), check their declarations, register the job
+    lifecycle hooks of the pipeline and build the JOB_UPDATED event model,
+    which needs all jobs registered.
 
     Must run before any endpoint is imported: the job endpoints are generated
     on registration.
@@ -79,12 +78,16 @@ def register_jobs() -> None:
         handle_job_finished,
         handle_job_started,
     )
+    from systems.feature_system.feature_registry import feature_registry
     from systems.job_system.job_service import JobHooks, JobService
 
     import_by_suffix("_job.py")
+    import_by_suffix("_feature.py")
     # fails on artefacts nobody produces, cycles, too many steps and system
     # codes declared differently
     artefact_registry.check()
+    # fails on unregistered artefacts and unknown or cyclic feature requirements
+    feature_registry.check(artefact_registry.artefacts())
     # the pipeline tracks the step statuses and starts the next steps
     JobService().register_hooks(
         JobHooks(
@@ -93,20 +96,7 @@ def register_jobs() -> None:
             failed=handle_job_error,
         )
     )
-    register_features()
     build_job_event_models()
-
-
-def register_features() -> None:
-    """Register all features (by importing the `*_feature.py` modules) and check
-    their declarations against the pipeline: fails on undeclared features,
-    artefacts no step produces, unknown or cyclic feature requirements. Called by
-    `register_jobs`, as the check needs the pipeline steps."""
-    from systems.artefact_system.artefact_registry import artefact_registry
-    from systems.feature_system.feature_registry import feature_registry
-
-    import_by_suffix("_feature.py")
-    feature_registry.check(artefact_registry.graph().artefacts())
 
 
 # ==============================================================================

@@ -499,14 +499,132 @@ def test_registry_check_fails_on_a_system_code_declared_differently():
 
     artefacts.append(_test_artefact("test_other", codes=(other,)))
     registry.register_artefact(artefacts[-1])
+    registry.unregister_step("extract_html")
     registry.register_step("extract_html", _step(set(), set(artefacts), TEXT))
     with pytest.raises(PipelineDeclarationError) as exc_info:
         registry.check()
 
     assert exc_info.value.problems == [
-        "System code 'PERSON' is declared differently by artefact 'test_other' "
-        "and another artefact (parent, description or enabled flag)."
+        "System code 'PERSON' is declared differently by two trees (at artefact "
+        "'test_other': parent, description or enabled flag)."
     ]
+
+
+@pytest.mark.parametrize(
+    "codes,name",
+    [
+        # two trees of one artefact put PERSON below different parents
+        pytest.param(
+            (
+                SystemCode(
+                    "NAMED_ENTITY",
+                    "Entities",
+                    children=(SystemCode("PERSON", "A person"),),
+                ),
+                SystemCode(
+                    "OBJECT", "Objects", children=(SystemCode("PERSON", "A person"),)
+                ),
+            ),
+            "PERSON",
+            id="two-trees-two-parents",
+        ),
+        # one tree declares PERSON twice, once disabled
+        pytest.param(
+            (
+                SystemCode(
+                    "NAMED_ENTITY",
+                    "Entities",
+                    children=(
+                        SystemCode("PERSON", "A person"),
+                        SystemCode(
+                            "GROUP",
+                            "A group",
+                            children=(SystemCode("PERSON", "A person", enabled=False),),
+                        ),
+                    ),
+                ),
+            ),
+            "PERSON",
+            id="one-tree-twice",
+        ),
+        # two trees of one artefact give their top code different descriptions
+        pytest.param(
+            (SystemCode("MENTION", "A mention"), SystemCode("MENTION", "Another text")),
+            "MENTION",
+            id="two-trees-two-descriptions",
+        ),
+    ],
+)
+def test_registry_check_fails_on_two_trees_of_one_artefact_that_disagree(
+    codes: tuple[SystemCode, ...], name: str
+):
+    """The trees of one artefact are checked against each other too, as a project
+    gets all of them in one set up."""
+    declared = _test_artefact("test_codes", codes=codes)
+    registry = ArtefactRegistry()
+    registry.register_artefact(declared)
+    registry.register_step("extract_html", _step(set(), {declared}, TEXT))
+    with pytest.raises(PipelineDeclarationError) as exc_info:
+        registry.check()
+
+    assert exc_info.value.problems == [
+        f"System code '{name}' is declared differently by two trees (at artefact "
+        "'test_codes': parent, description or enabled flag)."
+    ]
+
+
+def test_registry_check_lists_the_graph_and_the_code_problems_in_one_error():
+    """An artefact no step produces and a code declared differently are reported
+    together."""
+    declared = _test_artefact(
+        "test_codes",
+        codes=(SystemCode("MENTION", "A mention"), SystemCode("MENTION", "Other")),
+    )
+    unproduced = _test_artefact("test_unproduced")
+    registry = ArtefactRegistry()
+    registry.register_artefact(declared)
+    registry.register_artefact(unproduced)
+    registry.register_step("extract_html", _step(set(), {declared}, TEXT))
+    with pytest.raises(PipelineDeclarationError) as exc_info:
+        registry.check()
+
+    problems = exc_info.value.problems
+    assert any("test_unproduced" in p for p in problems), problems
+    assert any("System code 'MENTION'" in p for p in problems), problems
+
+
+# ===========================================================================
+# ARTEFACT REGISTRY: DUPLICATE NAMES AND THE CHECK AT STARTUP
+# ===========================================================================
+
+
+def test_registry_rejects_an_artefact_name_declared_twice():
+    registry = ArtefactRegistry()
+    registry.register_artefact(_test_artefact("test_twice"))
+    with pytest.raises(
+        PipelineDeclarationError, match="'test_twice' is declared twice"
+    ):
+        registry.register_artefact(_test_artefact("test_twice"))
+
+
+def test_registry_rejects_a_step_name_declared_twice():
+    """Also a further step, which is no job of its own, cannot replace a step."""
+    registry = ArtefactRegistry()
+    registry.register_step("extract_html", _step(set(), set(), TEXT))
+    with pytest.raises(
+        PipelineDeclarationError, match="'extract_html' is declared twice"
+    ):
+        registry.register_step("extract_html", _step(set(), set(), TEXT))
+
+
+def test_bootstrap_runs_the_check_of_the_declarations():
+    """`register_jobs` fails on a registered artefact that no step produces."""
+    artefact_registry.register_artefact(_test_artefact("test_unproduced"))
+    try:
+        with pytest.raises(PipelineDeclarationError, match="test_unproduced"):
+            register_jobs()
+    finally:
+        artefact_registry.unregister_artefact("test_unproduced")
 
 
 # ===========================================================================
@@ -636,7 +754,9 @@ def test_every_artefact_needs_every_step_of_the_doctype(
 ):
     """All artefacts together (a project with all features, every existing
     project) need every step of the doctype, in pipeline order."""
-    assert graph.steps_for(doctype, graph.artefacts()) == graph.steps(doctype)
+    assert graph.steps_for(
+        doctype, frozenset(artefact_registry.artefacts())
+    ) == graph.steps(doctype)
 
 
 @pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)

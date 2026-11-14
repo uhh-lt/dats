@@ -32,7 +32,7 @@ KEYWORDS = artefact("keywords", kind=StorageKind.METADATA)
 
 The name never changes without a data migration: step status rows, pending computations and archives store it. A step names the artefacts it requires and produces with the imported objects (`@pipeline_step(requires={CONTENT}, produces={KEYWORDS}, ...)`); tests name them by text (`artefact_named` in `backend/test/pipeline_test_utils.py`).
 
-The startup check (`artefact_registry.check()`, from `bootstrap.register_jobs`) rejects an artefact no step produces and no upload provides, an own store without archive (or an archive without own store), a step that mixes always-computed and on-demand artefacts, the step of an always-computed artefact that requires an on-demand one, and a system code name that two artefacts declare with a different parent, description or `enabled` flag.
+The startup check (`artefact_registry.check()`, from `bootstrap.register_jobs`) rejects an artefact no step produces and no upload provides, an own store without archive (or an archive without own store), a step that mixes always-computed and on-demand artefacts, the step of an always-computed artefact that requires an on-demand one, and a system code name that two declared trees (of one artefact or of two) give a different parent, description or `enabled` flag.
 
 Deletion is not declared: a store goes with its document as before (foreign key cascades, the document's files, the Elasticsearch delete and the Weaviate loop in `SourceDocumentService`).
 

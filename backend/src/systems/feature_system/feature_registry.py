@@ -1,7 +1,7 @@
 """The feature declarations.
 
 Every module declares its features with `register_feature` in a `*_feature.py`
-file, which `bootstrap.register_features` imports. A feature has a text name,
+file, which `bootstrap.register_jobs` imports. A feature has a text name,
 a title, a description and an area, requires artefacts (preprocessed document
 data) and other features, and declares whether a new project enables it. The
 feature system passes the artefacts of a feature to the artefact system, which
@@ -48,16 +48,16 @@ class FeatureRegistry:
         """Remove the feature of this name (tests)."""
         self._features.pop(name, None)
 
-    def check(self, produced: frozenset[Artefact]) -> None:
-        """Raise a `FeatureDeclarationError` listing all problems: artefacts not
-        in `produced` (the artefacts of the pipeline), unregistered or cyclic
-        feature requirements."""
+    def check(self, artefacts: Collection[Artefact]) -> None:
+        """Raise a `FeatureDeclarationError` listing all problems: required
+        artefacts not in `artefacts` (the registered ones), unregistered or
+        cyclic feature requirements."""
         problems: list[str] = []
         for feature in self._features.values():
             problems += [
                 f"Feature '{feature.name}' requires artefact '{a.name}', which is not registered."
                 for a in sorted(feature.requires_artefacts, key=lambda a: a.name)
-                if a not in produced
+                if a not in artefacts
             ]
             problems += [
                 f"Feature '{feature.name}' requires the undeclared feature '{f.name}'."
