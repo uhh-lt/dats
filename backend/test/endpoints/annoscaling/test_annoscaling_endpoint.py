@@ -1,12 +1,15 @@
 from fastapi.testclient import TestClient
 
-from feature_test_utils import FeaturelessProject, assert_feature_disabled
+from feature_test_utils import (
+    FeaturelessProject,
+    assert_feature_disabled,
+    feature_named,
+)
 from modules.annoscaling.annoscaling_dto import (
     AnnoscalingConfirmSuggest,
     AnnoscalingSuggest,
 )
-from modules.annoscaling.annoscaling_feature import ANNOTATION_SCALING
-from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS
+from pipeline_test_utils import artefact_named
 from systems.feature_system.feature_registry import feature_registry
 
 # The codes are never read: the feature check comes first.
@@ -62,9 +65,9 @@ def test_confirm_suggestions_is_rejected_when_annotation_scaling_is_disabled(
 def test_annotation_scaling_builds_on_sentence_similarity_search():
     """Annotation scaling requires sentence similarity search and needs only its sentence
     embeddings besides the core artefacts."""
-    assert {f.name for f in ANNOTATION_SCALING.requires_features} == {
+    assert {f.name for f in feature_named("annotation_scaling").requires_features} == {
         "sentence_similarity_search"
     }
-    assert feature_registry.required_artefacts([ANNOTATION_SCALING]) == {
-        SENTENCE_EMBEDDINGS
-    }
+    assert feature_registry.required_artefacts(
+        [feature_named("annotation_scaling")]
+    ) == {artefact_named("sentence_embeddings")}

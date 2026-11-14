@@ -13,7 +13,7 @@ from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
-from dats_test_utils import create_text_document
+from dats_test_utils import create_span_for_text, create_text_document
 from feature_test_utils import (
     FeatureProject,
     PartlyProject,
@@ -27,6 +27,7 @@ from feature_test_utils import (
     set_step_status,
 )
 from pipeline_test_utils import planned_steps
+from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import artefact, artefact_registry
 from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.feature_system.feature_registry import (
@@ -295,6 +296,14 @@ class CodeImportProjects(TypedDict):
       the top-level user code `NAMED_ENTITY` (no parent)
     - target: "Codes Target", without any enabled feature: it has only the
       codes `MENTION` and `QUOTATIONS` (below `SYSTEM_CODE`)
+    - entity_spans: "Entity Spans", with automatic entity annotations enabled
+      and one text document "persons.txt" (the sentences "Ada met Alan." and
+      "They talked.", with its raw file); its core steps and `text_ner` are
+      finished, and `test_user` annotated "Ada" and "Alan" with the system
+      code `PERSON` (below `NAMED_ENTITY`)
+    - entity_target: "Entity Target", with automatic entity annotations
+      enabled and no documents: it already has the system code tree
+      `NAMED_ENTITY` (with `PERSON`)
 
     Non-obvious derived behavior:
 
@@ -305,6 +314,8 @@ class CodeImportProjects(TypedDict):
     entities_disabled: ProjectORM
     user_named_entity: ProjectORM
     target: ProjectORM
+    entity_spans: ProjectORM
+    entity_target: ProjectORM
 
 
 @pytest.fixture(scope="function")
@@ -333,11 +344,42 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
     target = create_project_with_features(
         db_session, test_user, title="Codes Target", features=[]
     )
+    entity_spans = create_project_with_features(
+        db_session, test_user, title="Entity Spans", features=["entity_annotations"]
+    )
+    sentences = ["Ada met Alan.", "They talked."]
+    persons = create_text_document(
+        db_session,
+        project=entity_spans,
+        filename="persons.txt",
+        name="persons.txt",
+        sentences=sentences,
+    )
+    FilesystemRepo()._get_dst_path_for_project_sdoc_file(
+        project_id=entity_spans.id, filename="persons.txt"
+    ).write_text(" ".join(sentences))
+    set_step_status(
+        db_session, persons.id, dict.fromkeys([*minimal_text_steps(), "text_ner"], 1)
+    )
+    person = crud_code.read_by_name_and_project(
+        db=db_session, code_name="PERSON", project_id=entity_spans.id
+    )
+    assert person is not None
+    for text in ("Ada", "Alan"):
+        create_span_for_text(
+            db_session, sdoc=persons, text=text, code_id=person.id, user_id=test_user.id
+        )
+    entity_target = create_project_with_features(
+        db_session, test_user, title="Entity Target", features=["entity_annotations"]
+    )
     db_session.commit()
-    for project in (entities, user_code, target):
+    projects = (entities, user_code, target, entity_spans, entity_target)
+    for project in projects:
         db_session.refresh(project)
     return {
         "entities_disabled": entities,
         "user_named_entity": user_code,
         "target": target,
+        "entity_spans": entity_spans,
+        "entity_target": entity_target,
     }

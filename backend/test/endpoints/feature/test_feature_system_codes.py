@@ -4,11 +4,14 @@ the artefact system)."""
 
 import zipfile
 
+import pytest
 from sqlalchemy.orm import Session
 
 from common.languages_enum import Language
+from core.annotation.span_annotation_crud import crud_span_anno
 from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
+from core.doc.source_document_crud import crud_sdoc
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from feature_test_utils import create_project_with_features, feature_named
@@ -181,3 +184,47 @@ def test_import_keeps_a_top_level_user_code_named_like_a_system_code(
     assert code is not None
     assert not code.is_system
     assert code.parent_id is None
+
+
+@pytest.mark.parametrize(
+    "target_key",
+    [
+        # the target has no entity codes: the import creates them once
+        pytest.param("target", id="target-without-the-codes"),
+        # the target has the entity codes already: the import reuses them
+        pytest.param("entity_target", id="target-with-the-codes"),
+    ],
+)
+def test_import_of_entity_spans_keeps_the_annotations_on_one_set_of_system_codes(
+    db_session: Session,
+    test_user: UserORM,
+    code_import_projects: CodeImportProjects,
+    target_key: str,
+):
+    """The archive of entity_spans holds `NAMED_ENTITY` > `PERSON` and the spans
+    "Ada" and "Alan" with `PERSON`: the import neither rejects nor duplicates
+    the codes, enables entity annotations and keeps both spans on the one
+    system code `PERSON`."""
+    p = code_import_projects
+    target = p[target_key]
+
+    _round_trip(db_session, p["entity_spans"], target)
+
+    db_session.expire_all()
+    for name in ("NAMED_ENTITY", "PERSON"):
+        codes = crud_code.read_by_name(db=db_session, code_name=name)
+        assert [c.is_system for c in codes if c.project_id == target.id] == [True]
+    person = _codes(db_session, target.id)["PERSON"]
+    assert person.parent_id == _codes(db_session, target.id)["NAMED_ENTITY"].id
+    [sdoc] = crud_sdoc.read_by_project(
+        db=db_session, project_id=target.id, only_finished=False
+    )
+    spans = crud_span_anno.read_by_user_and_sdoc(
+        db=db_session, user_id=test_user.id, sdoc_id=sdoc.id
+    )
+    assert sorted((s.span_text.text, s.code_id) for s in spans) == [
+        ("Ada", person.id),
+        ("Alan", person.id),
+    ]
+    db_session.refresh(target)
+    assert "entity_annotations" in target.enabled_features

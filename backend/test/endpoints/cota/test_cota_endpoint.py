@@ -1,14 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from feature_test_utils import assert_feature_disabled
+from feature_test_utils import assert_feature_disabled, feature_named
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreate,
     COTARead,
     COTARefinementJobInput,
 )
-from modules.concept_over_time_analysis.cota_feature import CONCEPTS_OVER_TIME
-from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS
+from pipeline_test_utils import artefact_named
 from systems.feature_system.feature_registry import feature_registry
 
 from .conftest import ProjectWithCota
@@ -125,9 +124,9 @@ def test_cota_route_with_a_non_integer_id_is_a_validation_error(client: TestClie
 def test_concepts_over_time_builds_on_sentence_similarity_search():
     """Concepts over time requires sentence similarity search and needs only its sentence
     embeddings besides the core artefacts."""
-    assert {f.name for f in CONCEPTS_OVER_TIME.requires_features} == {
+    assert {f.name for f in feature_named("concepts_over_time").requires_features} == {
         "sentence_similarity_search"
     }
-    assert feature_registry.required_artefacts([CONCEPTS_OVER_TIME]) == {
-        SENTENCE_EMBEDDINGS
-    }
+    assert feature_registry.required_artefacts(
+        [feature_named("concepts_over_time")]
+    ) == {artefact_named("sentence_embeddings")}
