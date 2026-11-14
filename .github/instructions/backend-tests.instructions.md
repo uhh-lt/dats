@@ -109,6 +109,14 @@ Use `@pytest.mark.parametrize` for operator/column matrices. Give **every `pytes
 )
 ```
 
+## Features, Artefacts and Steps
+
+- Name a feature with `feature_named("<name>")` (`feature_test_utils.py`) and an artefact with `artefact_named("<name>")` (`pipeline_test_utils.py`); never import a feature or artefact object from its module.
+- Name pipeline steps by their text (`"text_ner"`) and set or read their status with `set_step_status` and `read_step_status` (`pipeline_test_utils.py`).
+- Create a project with features with `create_project_with_features` (`feature_test_utils.py`), never by writing `enabled_features` yourself, unless the test is about a stored name.
+- Never list or count all registered features, artefacts or steps literally; derive them from the registries (`feature_registry.names()`, `artefact_registry.artefacts()`), so a new one needs no edit of a central test.
+- Test what a feature requires next to its module's endpoint tests, not in a central list.
+
 ## Test Coverage
 
 Aim to cover the full input space of an endpoint, not just the happy path:
