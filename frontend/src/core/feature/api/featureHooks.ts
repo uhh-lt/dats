@@ -1,5 +1,6 @@
 import { queryClient } from "@api/queryClient";
 import { FeatureService } from "@api/services/FeatureService";
+import { codeQueries } from "@core/code";
 import { projectQueries } from "@core/project";
 import { useMutation } from "@tanstack/react-query";
 import { featureTitle } from "../featureInfo";
@@ -25,7 +26,11 @@ const useEnableFeature = () =>
   useMutation({
     mutationKey: [...featureQueries.all(), "enableFeature"],
     mutationFn: FeatureService.enableFeature,
-    onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
+    onSuccess: (enabledFeatures, { projectId }) => {
+      refreshProjectFeatures(projectId, enabledFeatures);
+      // Enable creates the system codes of the feature (the set up), which send no code events
+      queryClient.invalidateQueries({ queryKey: codeQueries.byProject(projectId).queryKey });
+    },
     onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
       successMessage: (_data: string[], { feature }: { feature: string }) =>
