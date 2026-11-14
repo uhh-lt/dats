@@ -46,12 +46,24 @@ A note or comment added to a source document or annotation.
 ### Features and preprocessing
 
 **Feature**:
-A capability of DATS that a project can enable or disable, and that needs certain artefacts of the project's source documents. Capabilities that need core artefacts only (annotation, for example) are always available and are not features in this sense.
-_Avoid_: Feature toggle, feature flag, module
+A capability of DATS that a project can enable or disable, and that needs certain artefacts of the project's source documents. It is declared by its module with a text name, a title, a description, an area, and whether a new project enables it. Capabilities that need core artefacts only (annotation, for example) are always available and are not features in this sense.
+_Avoid_: Feature toggle, feature flag, module (a module holds a feature)
 
 **Artefact**:
-A named piece of data that preprocessing computes for a source document, such as its sentence embeddings.
+A named piece of data that preprocessing computes for a source document, such as its sentence embeddings. It is declared by the code that owns it, with its storage kind and the system codes a project needs before it is produced.
 _Avoid_: Output, result, preprocessed data
+
+**Storage Kind**:
+Where an artefact is stored: in the source document data, in its metadata, as annotations, or in an own store (a table, index or file of its own). Only an own store needs an artefact archive of its own.
+_Avoid_: Storage type, backend
+
+**Set Up**:
+Creating in a project the system codes that the artefacts of its features declare, before anything produces them: when a feature is enabled, a project is created or a project is imported. It creates only what is missing; disabling a feature keeps the codes.
+_Avoid_: Initialization, provisioning
+
+**Module**:
+A folder that holds one capability of DATS with its feature, the artefacts only it uses, their pipeline steps and storage, and its endpoints.
+_Avoid_: Plugin, package
 
 **Core Artefact**:
 An artefact computed for every source document, whatever features its project enables, such as the content, the tokens and sentences, or the caption of an image (DATS turns every modality into text). All other artefacts are computed only while a feature needs them.
@@ -94,5 +106,5 @@ One execution of a job for some of the pipeline steps of one source document.
 _Avoid_: Job run, task, step job (the job is what runs; a step run is one run of it)
 
 **Artefact Archive**:
-How one artefact of a source document travels in a project export: read from its store, checked for completeness, and written back on import, or carried by another part of the archive.
+How one artefact of a source document travels in a project export: read from its own store, checked for completeness, and written back on import. Declared with the artefact; an artefact without an own store travels with the data, metadata or annotations of its document.
 _Avoid_: Exporter, serializer, artefact handler

@@ -4,6 +4,36 @@ The toggleable features: their declarations (`feature_registry.py`), the require
 
 The feature system talks to the artefact system (`systems/artefact_system`) in artefacts only; the artefact system never imports the feature system (`backend/lint/check_core.py`).
 
+## Declaring a feature
+
+A module declares each of its features once, in its `*_feature.py`, and keeps the returned object as a module constant:
+
+```python
+WORD_FREQUENCY = register_feature(
+    "word_frequency",
+    title="Word Frequency Analysis",
+    description="Count and compare the words of the documents.",
+    area=FeatureArea.ANALYSIS,
+    requires_artefacts={WORD_FREQUENCIES},
+    default_enabled=True,
+)
+```
+
+| Argument             | Meaning                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| name                 | The text name, stored in `project.enabled_features` and named in the URLs; it never changes without a migration. |
+| `title`, `description` | Shown by the frontend, which reads them from `GET /feature`.                                                 |
+| `area`               | `FeatureArea`; features are listed by area, then by title.                                                     |
+| `requires_artefacts` | The artefacts the feature reads, besides the core artefacts.                                                    |
+| `requires_features`  | The features it builds on (the imported objects); enabling it enables them.                                    |
+| `default_enabled`    | Whether a new project without a feature list, and an archive without project details, enable it.              |
+
+Gated routes and jobs import the object (`require_feature(WORD_FREQUENCY)`). The startup check rejects an unregistered artefact or required feature and a cycle.
+
+Names: a name a request names is read strictly (`FeatureService.read_by_name`: an unknown name answers 404, for the three actions and for `ProjectCreate.enabled_features`); a stored name is read tolerantly (an unregistered name is ignored and dropped at the next write of the enabled features).
+
+Enable runs the set up of the artefact system first (`ArtefactService.set_up`): it creates the system codes the feature's artefacts declare. A user code named like one of them makes Enable fail with 409 until it is renamed. Complete and Disable run no set up; Disable keeps the codes.
+
 ## Feature status
 
 `FeatureService.read_project_features` derives the status from the availability of the feature's artefacts (`ArtefactService.read_availability`): the step statuses of the documents they apply to and the pending artefact computations. Nothing stores it.

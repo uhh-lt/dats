@@ -1,6 +1,6 @@
 # Design: features, artefacts and self-contained modules
 
-Status: being built. PR A (the per-project feature toggles and the actions rework) and PR B (captions are core; the artefact system) are built; PR C to F are not. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
+Status: being built. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system) and PR C (open registries, storage kinds, codes on the artefacts) are built; PR D to F are not. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
 
 ## Goal
 
@@ -16,7 +16,7 @@ Two cases must both be one small step:
 ## The model
 
 - A **feature** requires artefacts (and possibly other features). It knows nothing else.
-- An **artefact** knows how it is produced, stored, exported, imported and deleted, and what a project needs before it can be produced (for example codes).
+- An **artefact** knows how it is produced, stored, exported and imported, and which codes a project needs before it can be produced. How it is deleted is not declared: deletion stays central.
 - A **pipeline step** produces artefacts from other artefacts.
 - A **project** enables features. The artefacts its enabled features require are the project's **artefact demand**.
 
@@ -66,9 +66,8 @@ Sketch for coreference resolution. Names and signatures are illustrative.
 # modules/coreference_resolution/coreference_artefact.py
 COREFERENCES = artefact(
     "coreferences",
-    setup=create_coreference_codes,      # what a project needs first
-    archive=CoreferenceArchive,          # export and import
-    delete=delete_coreferences,          # removal with a document
+    kind=StorageKind.ANNOTATIONS,        # travels with the annotations
+    codes=(MENTION_CODES,),              # what a project needs first, as data
 )
 
 
@@ -96,13 +95,13 @@ register_feature("sentence_similarity_search", ..., requires_artefacts={SENTENCE
 
 ### The life of an artefact
 
-| Stage             | Declared by the artefact                                           | Today                                                           |
-| ----------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Set up            | What the project needs first, such as codes                        | All codes are listed in the config and created in every project |
-| Produce           | The pipeline step and its inputs                                   | Declared on the step, in one module                             |
-| Store             | Where it is stored (see below); the storage itself does not change | Not declared                                                    |
-| Export and import | Follows from where it is stored                                    | One central table in the export module                          |
-| Delete            | Follows from where it is stored                                    | Central                                                         |
+| Stage             | Declared by the artefact                                                       | Today                                                           |
+| ----------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Set up            | The codes the project needs first, declared as data                            | All codes are listed in the config and created in every project |
+| Produce           | The pipeline step and its inputs                                               | Declared on the step, in one module                             |
+| Store             | Where it is stored (see below); the storage itself does not change             | Not declared                                                    |
+| Export and import | Follows from where it is stored                                                | One central table in the export module                          |
+| Delete            | Not declared: stays central (cascades, the Elasticsearch and Weaviate deletes) | Central                                                         |
 
 The set up runs when a project first demands the artefact and creates what is missing. Disabling a feature leaves the codes, as annotations may use them. The list of system codes leaves the config files: each module defines its own codes.
 
@@ -110,14 +109,14 @@ The set up runs when a project first demands the artefact and creates what is mi
 
 Nothing moves. An artefact keeps the storage it has today and only declares which kind it is. Export, import and deletion follow from the kind, so most artefacts need no code for them. This is what the artefact archive of uhh-lt/dats#892 does already; the entry moves from the central table to the artefact's declaration.
 
-| Kind          | Stored in                           | Export, import, delete                           | Examples                                              |
-| ------------- | ----------------------------------- | ------------------------------------------------ | ----------------------------------------------------- |
-| Document data | The source document data            | Travels with the document                        | Content, tokens and sentences, HTML                   |
-| Metadata      | Source document metadata            | Travels with the metadata                        | Language, file metadata, keywords                     |
-| Annotations   | Span or bbox annotations with codes | Travels with the annotations                     | Named-entity spans, object boxes, coreferences        |
-| Own store     | A table, index or file of its own   | The artefact brings its own archive and deletion | Embeddings, search index, word frequencies, thumbnail |
+| Kind          | Stored in                           | Export, import, delete              | Examples                                              |
+| ------------- | ----------------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Document data | The source document data            | Travels with the document           | Content, tokens and sentences, HTML                   |
+| Metadata      | Source document metadata            | Travels with the metadata           | Language, file metadata, keywords                     |
+| Annotations   | Span or bbox annotations with codes | Travels with the annotations        | Named-entity spans, object boxes, coreferences        |
+| Own store     | A table, index or file of its own   | The artefact brings its own archive | Embeddings, search index, word frequencies, thumbnail |
 
-A new artefact picks a kind. Only "own store" needs code for export, import and deletion.
+A new artefact picks a kind. Only "own store" needs code, for export and import (its archive); deletion stays central for every kind.
 
 Tables that hold a feature's results (the tag recommendations, for example) are not artefacts: nothing requires them and no pipeline step produces them. They stay ordinary module tables.
 

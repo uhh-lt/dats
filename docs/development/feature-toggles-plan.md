@@ -1,5 +1,7 @@
 # Plan: Per-Project Feature Toggles
 
+> Historical: the current design is `specs/module-architecture.md` (the artefact, feature and job systems, ADR 0008 and 0009).
+
 Status: implemented. All phases are implemented, each on its own branch: the backend (phases 1 to 4), the frontend registry and gating (5a, 5b), the creation and activation UI (6) and the edges (7), including the user guide (`docs/feature-guides/project-features.md`). Open: validating the migrations on a production copy. The maintainability rework (`feature-toggles-maintainability-plan.md`) moved the step statuses into their own table, derived transitions and the frontend navigation from the declarations and moved the project feature code into `modules/project_features`, which later moved into `systems/feature_system`. Where the implementation deviates from the plan, the sections below describe the implementation after that rework. Since then, the step planning, the step statuses and the pipeline graph moved into `systems/artefact_system` (ADR 0008, `specs/module-architecture.md`); the file and class names below are those before that move.
 
 ## Goal
