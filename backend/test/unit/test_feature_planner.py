@@ -57,67 +57,14 @@ def test_all_features_plan_every_step_of_the_doctype(doctype: DocType):
     assert planned_steps(doctype, feature_registry.names()) == all_steps(doctype)
 
 
-@pytest.mark.parametrize(
-    "feature,artefacts",
-    [
-        # the search index serves two features
-        pytest.param("full_text_search", {artefact_named("es_index")}, id="full-text"),
-        pytest.param(
-            "search_annotate", {artefact_named("es_index")}, id="search-annotate"
-        ),
-        pytest.param(
-            "sentence_similarity_search",
-            {artefact_named("sentence_embeddings")},
-            id="sentence-search",
-        ),
-        pytest.param(
-            "image_similarity_search",
-            {artefact_named("image_embeddings")},
-            id="image-search",
-        ),
-        # these require sentence similarity search and need only its artefact
-        pytest.param(
-            "rag_chat", {artefact_named("sentence_embeddings")}, id="rag-chat"
-        ),
-        pytest.param(
-            "annotation_scaling",
-            {artefact_named("sentence_embeddings")},
-            id="annotation-scaling",
-        ),
-        pytest.param(
-            "concepts_over_time",
-            {artefact_named("sentence_embeddings")},
-            id="concepts-over-time",
-        ),
-        pytest.param(
-            "tag_recommendation",
-            {artefact_named("document_embeddings")},
-            id="tag-recommendation",
-        ),
-        # the word frequencies serve two features
-        pytest.param(
-            "word_frequency", {artefact_named("word_frequencies")}, id="word-frequency"
-        ),
-        pytest.param(
-            "duplicate_finder",
-            {artefact_named("word_frequencies")},
-            id="duplicate-finder",
-        ),
-        pytest.param(
-            "keyword_statistics", {artefact_named("keywords")}, id="keyword-statistics"
-        ),
-        pytest.param(
-            "entity_annotations", {artefact_named("ner_spans")}, id="entity-annotations"
-        ),
-        pytest.param(
-            "object_detection", {artefact_named("object_bboxes")}, id="object-detection"
-        ),
-    ],
-)
-def test_a_feature_requires_its_artefacts(feature: str, artefacts: set[Artefact]):
-    """The artefacts a feature (with the features it requires) needs besides
-    the core artefacts."""
-    assert feature_registry.required_artefacts([feature_named(feature)]) == artefacts
+def test_all_features_together_require_every_on_demand_artefact():
+    """Every artefact that is neither always computed nor uploaded is required by
+    some feature."""
+    required = feature_registry.required_artefacts(feature_registry.declarations())
+
+    assert required == {
+        a for a in artefact_registry.artefacts() if not a.always and not a.uploaded_for
+    }
 
 
 def test_closure_adds_the_required_features_transitively():

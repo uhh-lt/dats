@@ -5,6 +5,9 @@ from modules.annoscaling.annoscaling_dto import (
     AnnoscalingConfirmSuggest,
     AnnoscalingSuggest,
 )
+from modules.annoscaling.annoscaling_feature import ANNOTATION_SCALING
+from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS
+from systems.feature_system.feature_registry import feature_registry
 
 # The codes are never read: the feature check comes first.
 CODE_ID = 1
@@ -49,3 +52,19 @@ def test_confirm_suggestions_is_rejected_when_annotation_scaling_is_disabled(
     response = client.post("/annoscaling/confirm_suggestions", json=dto.model_dump())
 
     assert_feature_disabled(response, "annotation_scaling")
+
+
+# ===========================================================================
+# FEATURE DECLARATION (annoscaling_feature.py)
+# ===========================================================================
+
+
+def test_annotation_scaling_builds_on_sentence_similarity_search():
+    """Annotation scaling requires sentence similarity search and needs only its sentence
+    embeddings besides the core artefacts."""
+    assert {f.name for f in ANNOTATION_SCALING.requires_features} == {
+        "sentence_similarity_search"
+    }
+    assert feature_registry.required_artefacts([ANNOTATION_SCALING]) == {
+        SENTENCE_EMBEDDINGS
+    }

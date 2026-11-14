@@ -7,6 +7,9 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
     COTARefinementJobInput,
 )
+from modules.concept_over_time_analysis.cota_feature import CONCEPTS_OVER_TIME
+from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS
+from systems.feature_system.feature_registry import feature_registry
 
 from .conftest import ProjectWithCota
 
@@ -112,3 +115,19 @@ def test_cota_route_with_a_non_integer_id_is_a_validation_error(client: TestClie
 
     assert response.status_code == 422, response.text
     assert "cota_id" in response.text
+
+
+# ===========================================================================
+# FEATURE DECLARATION (cota_feature.py)
+# ===========================================================================
+
+
+def test_concepts_over_time_builds_on_sentence_similarity_search():
+    """Concepts over time requires sentence similarity search and needs only its sentence
+    embeddings besides the core artefacts."""
+    assert {f.name for f in CONCEPTS_OVER_TIME.requires_features} == {
+        "sentence_similarity_search"
+    }
+    assert feature_registry.required_artefacts([CONCEPTS_OVER_TIME]) == {
+        SENTENCE_EMBEDDINGS
+    }
