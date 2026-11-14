@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Feature } from "./Feature";
 export type ProjectCreate = {
   /**
    * Title of the Project
@@ -13,7 +12,7 @@ export type ProjectCreate = {
    */
   description: string;
   /**
-   * Features enabled in the Project (default: all); the Features they require are enabled as well
+   * Names of the Features enabled in the Project (null: the Features that declare default_enabled); the Features they require are enabled as well; an unknown name is rejected (404)
    */
-  enabled_features?: Array<Feature>;
+  enabled_features?: Array<string> | null;
 };

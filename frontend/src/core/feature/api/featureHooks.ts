@@ -1,14 +1,13 @@
 import { queryClient } from "@api/queryClient";
 import { FeatureService } from "@api/services/FeatureService";
 import { projectQueries } from "@core/project";
-import { Feature } from "@models/Feature";
 import { useMutation } from "@tanstack/react-query";
-import { FEATURES } from "../features";
+import { featureTitle } from "../featureInfo";
 import { featureQueries } from "./featureQueries";
 
 // The backend sends PROJECT_UPDATED to the other members only (the actor has the response): store the enabled features
 // in the project and refresh the state of the features here.
-const refreshProjectFeatures = (projectId: number, enabledFeatures: Feature[]) => {
+const refreshProjectFeatures = (projectId: number, enabledFeatures: string[]) => {
   queryClient.setQueryData(projectQueries.userProjects().queryKey, (projects) =>
     projects?.map((project) =>
       project.id === projectId ? { ...project, enabled_features: enabledFeatures } : project,
@@ -29,9 +28,10 @@ const useEnableFeature = () =>
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
-      successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
-        `Started computing ${FEATURES[feature].title}`,
-      errorMessage: (_error: Error, { feature }: { feature: Feature }) => `Could not enable ${FEATURES[feature].title}`,
+      successMessage: (_data: string[], { feature }: { feature: string }) =>
+        `Started computing ${featureTitle(queryClient, feature)}`,
+      errorMessage: (_error: Error, { feature }: { feature: string }) =>
+        `Could not enable ${featureTitle(queryClient, feature)}`,
     },
   });
 
@@ -42,10 +42,10 @@ const useCompleteFeature = () =>
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
-      successMessage: (_data: Feature[], { feature }: { feature: Feature }) =>
-        `Started computing ${FEATURES[feature].title}`,
-      errorMessage: (_error: Error, { feature }: { feature: Feature }) =>
-        `Could not complete ${FEATURES[feature].title}`,
+      successMessage: (_data: string[], { feature }: { feature: string }) =>
+        `Started computing ${featureTitle(queryClient, feature)}`,
+      errorMessage: (_error: Error, { feature }: { feature: string }) =>
+        `Could not complete ${featureTitle(queryClient, feature)}`,
     },
   });
 
@@ -56,9 +56,10 @@ const useDisableFeature = () =>
     onSuccess: (enabledFeatures, { projectId }) => refreshProjectFeatures(projectId, enabledFeatures),
     onError: (_error, { projectId }) => refetchProjectFeatures(projectId),
     meta: {
-      successMessage: (_data: Feature[], { feature }: { feature: Feature }) => `Disabled ${FEATURES[feature].title}`,
-      errorMessage: (_error: Error, { feature }: { feature: Feature }) =>
-        `Could not disable ${FEATURES[feature].title}`,
+      successMessage: (_data: string[], { feature }: { feature: string }) =>
+        `Disabled ${featureTitle(queryClient, feature)}`,
+      errorMessage: (_error: Error, { feature }: { feature: string }) =>
+        `Could not disable ${featureTitle(queryClient, feature)}`,
     },
   });
 

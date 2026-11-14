@@ -2,7 +2,7 @@ import { generalQueries } from "@api/general/generalQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { DEFAULT_PROCESSING_SETTINGS } from "@components/defaultProcessingSettings";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { FeatureHooks, FEATURES } from "@core/feature";
+import { FeatureHooks, featureQueries } from "@core/feature";
 import { ProjectFeatureMap } from "@core/project";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { FeatureRead } from "@models/FeatureRead";
@@ -56,10 +56,11 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
     mutate({ projectId, feature: feature.feature, requestBody: { settings } }, { onSuccess: handleSuccess });
   }, [completeFeatureMutation, enableFeatureMutation, feature, handleSuccess, isComplete, projectId, settings]);
 
+  const features = useQuery(featureQueries.list());
   const count = state?.lacking_documents ?? 0;
   const requiredTitles = (feature?.requires_features ?? [])
     .filter((f) => !states[f]?.enabled)
-    .map((f) => FEATURES[f].title);
+    .map((f) => features.data?.find((info) => info.feature === f)?.title ?? f);
 
   return (
     <Dialog
@@ -70,14 +71,14 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
       fullScreen={isMaximized}
     >
       <DATSDialogHeader
-        title={`${verb} ${feature ? FEATURES[feature.feature].title : "feature"}`}
+        title={`${verb} ${feature ? feature.title : "feature"}`}
         onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={2}>
-          <Typography>{feature && FEATURES[feature.feature].description}</Typography>
+          <Typography>{feature?.description}</Typography>
           <Typography>
             {count === 0
               ? "No document needs to be processed."

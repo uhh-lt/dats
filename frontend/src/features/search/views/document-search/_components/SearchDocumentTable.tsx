@@ -2,7 +2,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { TableInfoHooks, URLFilterPopover } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton, useTabNavigate } from "@core/navigation";
@@ -17,7 +17,6 @@ import {
   sdocQueries,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
-import { Feature } from "@models/Feature";
 import { FolderType } from "@models/FolderType";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { SdocColumns } from "@models/SdocColumns";

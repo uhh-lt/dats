@@ -1,6 +1,6 @@
 import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
 import { CodeCreateDialog, CodeEditDialog } from "@core/code";
-import { FeatureGuard } from "@core/feature";
+import { FeatureGuard, featureQueries } from "@core/feature";
 import { FolderCreateDialog, FolderEditDialog } from "@core/folder";
 import { MemoDialog } from "@core/memo";
 import { parseIdParam, QuickCommandMenu, ShortcutManager } from "@core/navigation";
@@ -29,10 +29,14 @@ export const Route = createFileRoute("/_auth/project/$projectId")({
   params: {
     parse: ({ projectId }) => ({ projectId: parseIdParam(projectId) }),
   },
-  // the guard needs the enabled features of the project; the feature states load where they are shown
-  context: () => ({ userProjectsOptions: projectQueries.userProjects() }),
+  // the guard needs the enabled features of the project, the pages the titles of the features (from the backend);
+  // the feature states load where they are shown
+  context: () => ({ userProjectsOptions: projectQueries.userProjects(), featuresOptions: featureQueries.list() }),
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(context.userProjectsOptions);
+    await Promise.all([
+      context.queryClient.ensureQueryData(context.userProjectsOptions),
+      context.queryClient.ensureQueryData(context.featuresOptions),
+    ]);
   },
   pendingComponent: () => <CircularProgress />,
   component: ProjectRouteLayout,

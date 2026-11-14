@@ -1,8 +1,7 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
-import { FEATURES, useFeature } from "@core/feature";
+import { Feature, useFeature, useFeatureInfo } from "@core/feature";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { Feature } from "@models/Feature";
 import { MLJobType } from "@models/MLJobType";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
@@ -35,6 +34,7 @@ export function MlAutomationView() {
   // actions
   const startMlJob = MlAutomationHooks.useStartMLJob();
   const tagRecommendationEnabled = useFeature(Feature.TAG_RECOMMENDATION);
+  const { title: tagRecommendationTitle } = useFeatureInfo(Feature.TAG_RECOMMENDATION);
 
   // global server state (react-query)
   const { mlJobsByProjectOptions } = routeApi.useRouteContext();
@@ -185,7 +185,7 @@ export function MlAutomationView() {
                   <Avatar>{getIconComponent(Icon.TAG)}</Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={FEATURES[Feature.TAG_RECOMMENDATION].title}
+                  primary={tagRecommendationTitle}
                   secondary={
                     "Based on currently applied tags, recommend new tags for documents. Use the corresponding analysis feature to view recommendations."
                   }

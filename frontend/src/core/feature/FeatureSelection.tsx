@@ -1,17 +1,16 @@
-import { Feature } from "@models/Feature";
 import { FeatureRead } from "@models/FeatureRead";
 import { Box, Checkbox, FormControlLabel, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { MouseEvent, useMemo } from "react";
 import { deselectFeature, selectFeature } from "./featureRequirements";
-import { FEATURES, groupFeaturesByArea } from "./features";
+import { groupFeaturesByArea } from "./features";
 
 type FeaturePreset = "everything" | "minimal" | "custom";
 
 interface FeatureSelectionProps {
   /** Every toggleable feature (`featureQueries.list()`). */
   features: FeatureRead[];
-  value: Feature[];
-  onChange: (features: Feature[]) => void;
+  value: string[];
+  onChange: (features: string[]) => void;
 }
 
 /**
@@ -20,6 +19,7 @@ interface FeatureSelectionProps {
  */
 export function FeatureSelection({ features, value, onChange }: FeatureSelectionProps) {
   const requires = useMemo(() => new Map(features.map((f) => [f.feature, f.requires_features])), [features]);
+  const titles = useMemo(() => new Map(features.map((f) => [f.feature, f.title])), [features]);
   const areas = useMemo(() => groupFeaturesByArea(features), [features]);
 
   const preset: FeaturePreset =
@@ -30,8 +30,17 @@ export function FeatureSelection({ features, value, onChange }: FeatureSelection
     if (newPreset === "minimal") onChange([]);
   };
 
-  const handleToggle = (feature: Feature, checked: boolean) => {
-    onChange(checked ? selectFeature(value, feature, requires) : deselectFeature(value, feature, requires));
+  const handleToggle = (feature: string, checked: boolean) => {
+    onChange(
+      checked
+        ? selectFeature(
+            value,
+            feature,
+            requires,
+            features.map((f) => f.feature),
+          )
+        : deselectFeature(value, feature, requires),
+    );
   };
 
   return (
@@ -70,11 +79,11 @@ export function FeatureSelection({ features, value, onChange }: FeatureSelection
                 }
                 label={
                   <Box>
-                    <Typography variant="body2">{FEATURES[feature.feature].title}</Typography>
+                    <Typography variant="body2">{feature.title}</Typography>
                     <Typography variant="caption" color="text.secondary" component="div">
-                      {FEATURES[feature.feature].description}
+                      {feature.description}
                       {feature.requires_features.length > 0 &&
-                        ` Needs ${feature.requires_features.map((f) => FEATURES[f].title).join(", ")}.`}
+                        ` Needs ${feature.requires_features.map((f) => titles.get(f) ?? f).join(", ")}.`}
                     </Typography>
                   </Box>
                 }

@@ -1,13 +1,12 @@
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { FeatureService } from "@api/services/FeatureService";
 import { ProjectService } from "@api/services/ProjectService";
-import type { Feature } from "@models/Feature";
 import { FeatureStatus } from "@models/FeatureStatus";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
 import type { SDocStatus } from "@models/SDocStatus";
 import { queryOptions } from "@tanstack/react-query";
 
-export type ProjectFeatureMap = Partial<Record<Feature, ProjectFeatureRead>>;
+export type ProjectFeatureMap = Partial<Record<string, ProjectFeatureRead>>;
 
 /**
  * Query factory for projects.
@@ -61,6 +60,6 @@ export const projectQueries = {
       },
       staleTime: 1000 * 60,
       refetchInterval: (query) =>
-        Object.values(query.state.data ?? {}).some((state) => state.status === FeatureStatus.COMPUTING) ? 3000 : false,
+        Object.values(query.state.data ?? {}).some((state) => state?.status === FeatureStatus.COMPUTING) ? 3000 : false,
     }),
 };

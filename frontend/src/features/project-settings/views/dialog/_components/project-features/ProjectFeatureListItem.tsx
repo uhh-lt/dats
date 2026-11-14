@@ -1,5 +1,5 @@
 import { LinearProgressWithLabel } from "@components/progress-bars";
-import { FeatureHooks, FEATURES, featuresRequiring } from "@core/feature";
+import { FeatureHooks, featuresRequiring } from "@core/feature";
 import { useTabNavigate } from "@core/navigation";
 import { ProjectFeatureMap } from "@core/project";
 import { useOpenConfirmationDialog } from "@core/notification";
@@ -37,14 +37,15 @@ export const ProjectFeatureListItem = memo(
     const neededBy = useMemo(() => {
       const requires = new Map(features.map((f) => [f.feature, f.requires_features]));
       const enabled = features.filter((f) => states[f.feature]?.enabled).map((f) => f.feature);
-      return featuresRequiring(enabled, feature.feature, requires).map((f) => FEATURES[f].title);
+      const titles = new Map(features.map((f) => [f.feature, f.title]));
+      return featuresRequiring(enabled, feature.feature, requires).map((f) => titles.get(f) ?? f);
     }, [features, states, feature.feature]);
 
     // disable
     const openConfirmationDialog = useOpenConfirmationDialog();
     const { mutate: disableFeatureMutation, isPending: isDisablePending } = FeatureHooks.useDisableFeature();
     const refreshHealthTable = useRefreshHealthTable();
-    const { title, description } = FEATURES[feature.feature];
+    const { title, description } = feature;
     const handleClickDisable = useCallback(() => {
       openConfirmationDialog({
         text: `Do you really want to disable ${title}? It is hidden in this project and not computed for new uploads anymore. Its data is kept, so enabling it again only computes the documents that lack it.`,

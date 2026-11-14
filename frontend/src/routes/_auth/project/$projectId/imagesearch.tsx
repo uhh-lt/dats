@@ -1,11 +1,10 @@
-import { ensureRouteFeatureEnabled } from "@core/feature";
+import { ensureRouteFeatureEnabled, Feature } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
 import { ImageSimilaritySearchView, similaritySearchQueries } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
-import { Feature } from "@models/Feature";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";

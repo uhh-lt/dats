@@ -2,16 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Feature } from "./Feature";
 import type { FeatureStatus } from "./FeatureStatus";
 /**
  * The state of a Feature in a Project.
  */
 export type ProjectFeatureRead = {
   /**
-   * ID of the Feature
+   * Name of the Feature
    */
-  feature: Feature;
+  feature: string;
   /**
    * Whether the Feature is enabled in the Project
    */

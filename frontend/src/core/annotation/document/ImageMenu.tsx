@@ -1,6 +1,5 @@
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { LinkListItemButton, useTabNavigate } from "@core/navigation";
-import { Feature } from "@models/Feature";
 import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";

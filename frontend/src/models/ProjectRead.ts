@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Feature } from "./Feature";
 export type ProjectRead = {
   /**
    * Title of the Project
@@ -25,7 +24,7 @@ export type ProjectRead = {
    */
   updated: string;
   /**
-   * Features enabled in the Project
+   * Names of the Features enabled in the Project
    */
-  enabled_features: Array<Feature>;
+  enabled_features: Array<string>;
 };

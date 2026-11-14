@@ -1,11 +1,11 @@
-import { Feature } from "@models/Feature";
 import { Chip, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusHooks";
-import { FEATURES } from "./features";
+import { useFeatureInfo } from "./featureInfo";
+import { FrontendFeature } from "./features";
 import { useFeature, useFeatureCoverage } from "./useFeature";
 
 interface FeatureCoverageHintProps {
-  feature: Feature;
+  feature: FrontendFeature;
 }
 
 /**
@@ -22,7 +22,7 @@ export function FeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
 
 function EnabledFeatureCoverageHint({ feature }: FeatureCoverageHintProps) {
   const state = useFeatureCoverage(feature);
-  const { title } = FEATURES[feature];
+  const { title } = useFeatureInfo(feature);
   const openProjectSettings = useOpenDialog("projectSettings");
   if (!state || state.ready) return null;
 

@@ -1,5 +1,4 @@
-import { useFeature } from "@core/feature";
-import { Feature } from "@models/Feature";
+import { useFeature, Feature } from "@core/feature";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
 import { useState } from "react";

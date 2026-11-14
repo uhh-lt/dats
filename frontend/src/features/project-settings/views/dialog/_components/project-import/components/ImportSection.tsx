@@ -1,6 +1,5 @@
 import { DialogSection } from "@components/DialogSection";
-import { FEATURES } from "@core/feature";
-import { Feature } from "@models/Feature";
+import { Feature, useFeatureInfo } from "@core/feature";
 import { ImportJobType } from "@models/ImportJobType";
 import { PlayCircle } from "@mui/icons-material";
 import {
@@ -31,7 +30,8 @@ const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.PROJECT_METADATA]: "Import project metadata from a project metadata export file",
   [ImportJobType.WHITEBOARDS]: "Import whiteboards from a whiteboard export file",
   [ImportJobType.TIMELINE_ANALYSES]: "Import timeline analyses from a timeline analyses export file",
-  [ImportJobType.COTA]: `Import the analyses of ${FEATURES[Feature.CONCEPTS_OVER_TIME].title} from a COTA export file`,
+  // the title of the feature is read at render time, see `helperText`
+  [ImportJobType.COTA]: "Import the analyses of {cota} from a COTA export file",
   [ImportJobType.MEMOS]: "Import memos from a memos export file",
   [ImportJobType.PROMPTS]: "Import prompts with all their versions from a prompts export file",
   [ImportJobType.EXPERIMENTS]:
@@ -45,6 +45,7 @@ export function ImportSection({ projectId }: { projectId: number }) {
   const [file, setFile] = useState<File>();
 
   const { mutate: startImportMutation, isPending } = ImportHooks.useStartImportJob();
+  const { title: cotaTitle } = useFeatureInfo(Feature.CONCEPTS_OVER_TIME);
 
   // Handle import type change
   const handleImportTypeChange = (event: SelectChangeEvent) => {
@@ -98,7 +99,7 @@ export function ImportSection({ projectId }: { projectId: number }) {
               </MenuItem>
             ))}
           </Select>
-          <FormHelperText>{importTypeHelperText[importType]}</FormHelperText>
+          <FormHelperText>{importTypeHelperText[importType].replace("{cota}", cotaTitle)}</FormHelperText>
         </FormControl>
 
         <Typography variant="subtitle2">Select File to Import</Typography>

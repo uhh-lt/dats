@@ -1,11 +1,11 @@
-import { Feature } from "@models/Feature";
 import { FeatureCoverageHint } from "./FeatureCoverageHint";
+import { FrontendFeature } from "./features";
 import { FeatureNotEnabledView } from "./FeatureNotEnabledView";
 import { useFeature } from "./useFeature";
 
 interface FeatureGuardProps {
   /** The feature of the current page; pages without one are always shown. */
-  feature: Feature | undefined;
+  feature: FrontendFeature | undefined;
   children: React.ReactNode;
 }
 

@@ -1,9 +1,9 @@
 import { projectQueries } from "@core/project";
-import { Feature } from "@models/Feature";
 import { ProjectRead } from "@models/ProjectRead";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { AnyRoute, useParams } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { FrontendFeature } from "./features";
 
 export interface FeatureCoverage {
   /** All documents the feature applies to have its data. */
@@ -13,7 +13,7 @@ export interface FeatureCoverage {
 }
 
 /** A page or entry point without a feature (`undefined`) needs core data only and is always available. */
-function isEnabled(project: ProjectRead | undefined, feature: Feature | undefined): boolean {
+function isEnabled(project: ProjectRead | undefined, feature: FrontendFeature | undefined): boolean {
   if (feature === undefined) return true;
   return project?.enabled_features.includes(feature) ?? false;
 }
@@ -37,22 +37,22 @@ function useCurrentProject() {
  * Whether a feature is enabled in the current project; disabled features are hidden. A gated feature counts as
  * disabled until the project is loaded.
  */
-export function useFeature(feature: Feature | undefined): boolean {
+export function useFeature(feature: FrontendFeature | undefined): boolean {
   const { data } = useCurrentProject();
   return isEnabled(data, feature);
 }
 
 /** A predicate for lists of entries that each may name a feature (sidebar, commands, shortcuts). */
-export function useIsFeatureEnabled(): (feature: Feature | undefined) => boolean {
+export function useIsFeatureEnabled(): (feature: FrontendFeature | undefined) => boolean {
   const { data } = useCurrentProject();
-  return useCallback((feature: Feature | undefined) => isEnabled(data, feature), [data]);
+  return useCallback((feature: FrontendFeature | undefined) => isEnabled(data, feature), [data]);
 }
 
 /**
  * How many documents of the current project have the data of a feature. Loads the project features (an aggregate
  * over all documents) only where it is used; undefined while they load.
  */
-export function useFeatureCoverage(feature: Feature): FeatureCoverage | undefined {
+export function useFeatureCoverage(feature: FrontendFeature): FeatureCoverage | undefined {
   const projectId = useCurrentProjectId();
   const { data } = useQuery({ ...projectQueries.features(projectId ?? -1), enabled: projectId !== undefined });
   const state = data?.[feature];
@@ -67,7 +67,7 @@ export function useFeatureCoverage(feature: Feature): FeatureCoverage | undefine
 export async function ensureFeatureEnabled(
   queryClient: QueryClient,
   projectId: number,
-  feature: Feature,
+  feature: FrontendFeature,
 ): Promise<boolean> {
   const projects = await queryClient.ensureQueryData(projectQueries.userProjects());
   return isEnabled(
@@ -86,7 +86,7 @@ interface FeatureRouteLoaderArgs {
  * The feature of a route: the one it declares (`staticData.feature`), else the one of its nearest parent route that
  * declares one, so the routes below a feature's route (its detail pages) need not repeat it.
  */
-export function getRouteFeature(route: AnyRoute): Feature | undefined {
+export function getRouteFeature(route: AnyRoute): FrontendFeature | undefined {
   for (let current: AnyRoute | undefined = route; current; current = current.parentRoute) {
     const feature = current.options.staticData?.feature;
     if (feature !== undefined) return feature;

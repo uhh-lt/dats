@@ -2,14 +2,30 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Feature } from "./Feature";
+import type { FeatureArea } from "./FeatureArea";
 export type FeatureRead = {
   /**
-   * ID of the Feature
+   * Name of the Feature
    */
-  feature: Feature;
+  feature: string;
   /**
-   * The Features this Feature requires (directly); enabling it enables them
+   * Title of the Feature
    */
-  requires_features: Array<Feature>;
+  title: string;
+  /**
+   * Description of the Feature
+   */
+  description: string;
+  /**
+   * Area of the Feature
+   */
+  area: FeatureArea;
+  /**
+   * Names of the Features this Feature requires (directly); enabling it enables them
+   */
+  requires_features: Array<string>;
+  /**
+   * Whether a new Project enables the Feature unless the request names its Features
+   */
+  default_enabled: boolean;
 };

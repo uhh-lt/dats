@@ -1725,13 +1725,13 @@ const navigationEntriesRule = {
     fixable: false,
     docs: {
       description:
-        "Every navigation entry points to a page route (`staticData.tab`); the entry of a feature's page has no title or description (they come from FEATURES), every other entry has a title.",
+        "Every navigation entry points to a page route (`staticData.tab`); the entry of a feature's page has no title or description (they come from the backend list of the features), every other entry has a title.",
     },
     messages: {
       to: "The `to` of a navigation entry is a string literal.",
       noRoute: "No page route declares `staticData.tab` for '{{to}}'.",
       featureTitle:
-        "The page '{{to}}' has a feature (its route or a parent route declares `staticData.feature`); its entry takes the title and description from FEATURES.",
+        "The page '{{to}}' has a feature (its route or a parent route declares `staticData.feature`); its entry takes the title and description from the backend list of the features.",
       missingTitle: "The page '{{to}}' has no feature; its entry needs a `title`.",
     },
     schema: [],

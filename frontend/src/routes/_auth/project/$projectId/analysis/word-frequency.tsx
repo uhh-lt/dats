@@ -1,10 +1,9 @@
-import { ensureRouteFeatureEnabled } from "@core/feature";
+import { ensureRouteFeatureEnabled, Feature } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators, toSorts } from "@core/filter";
 import { wordFrequencyQueries, WordFrequencyView } from "@features/word-frequency-analysis";
 import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress } from "@mui/material";
-import { Feature } from "@models/Feature";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";

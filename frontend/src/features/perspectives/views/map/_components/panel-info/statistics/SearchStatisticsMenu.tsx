@@ -1,8 +1,7 @@
 import { useWithLevel } from "@components/tree-explorer";
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { useDebounce } from "@hooks/useDebounce";
 import { CodeRead } from "@models/CodeRead";
-import { Feature } from "@models/Feature";
 import {
   Autocomplete,
   Box,

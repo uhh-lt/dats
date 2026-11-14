@@ -1,6 +1,5 @@
 import { CodeHooks } from "@core/code";
-import { useFeature } from "@core/feature";
-import { Feature } from "@models/Feature";
+import { useFeature, Feature } from "@core/feature";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";

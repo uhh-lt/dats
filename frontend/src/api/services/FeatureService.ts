@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Feature } from "@models/Feature";
 import type { FeatureActivation } from "@models/FeatureActivation";
 import type { FeatureRead } from "@models/FeatureRead";
 import type { ProjectFeatureRead } from "@models/ProjectFeatureRead";
@@ -40,7 +39,7 @@ export class FeatureService {
   }
   /**
    * Enables the disabled Feature in the Project and computes its data for all documents. Returns the enabled Features
-   * @returns Feature Successful Response
+   * @returns string Successful Response
    * @throws ApiError
    */
   public static enableFeature({
@@ -49,9 +48,9 @@ export class FeatureService {
     requestBody,
   }: {
     projectId: number;
-    feature: Feature;
+    feature: string;
     requestBody: FeatureActivation;
-  }): CancelablePromise<Array<Feature>> {
+  }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/feature/project/{project_id}/{feature}/enable",
@@ -68,7 +67,7 @@ export class FeatureService {
   }
   /**
    * Completes the partly available Feature: computes its data for the documents that lack it. Returns the enabled Features
-   * @returns Feature Successful Response
+   * @returns string Successful Response
    * @throws ApiError
    */
   public static completeFeature({
@@ -77,9 +76,9 @@ export class FeatureService {
     requestBody,
   }: {
     projectId: number;
-    feature: Feature;
+    feature: string;
     requestBody: FeatureActivation;
-  }): CancelablePromise<Array<Feature>> {
+  }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/feature/project/{project_id}/{feature}/complete",
@@ -96,7 +95,7 @@ export class FeatureService {
   }
   /**
    * Disables the partly or fully available Feature in the Project; its data is kept. Returns the enabled Features
-   * @returns Feature Successful Response
+   * @returns string Successful Response
    * @throws ApiError
    */
   public static disableFeature({
@@ -104,8 +103,8 @@ export class FeatureService {
     feature,
   }: {
     projectId: number;
-    feature: Feature;
-  }): CancelablePromise<Array<Feature>> {
+    feature: string;
+  }): CancelablePromise<Array<string>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/feature/project/{project_id}/{feature}/disable",

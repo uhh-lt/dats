@@ -1,6 +1,6 @@
 import { Icon } from "@components/icons";
 import { AnnotationScalingView } from "@features/annotation-scaling";
-import { Feature } from "@models/Feature";
+import { Feature } from "@core/feature";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/annotation-scaling")({

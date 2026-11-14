@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { Feature } from "@models/Feature";
+import { FrontendFeature } from "@core/feature";
 import type { RegisteredRouter } from "@tanstack/react-router";
 
 /** Where an entry appears: the sidebar search menu, the sidebar, the analysis dashboard or the sidebar tools menu. */
@@ -24,7 +24,7 @@ export interface NavigationEntry {
   group: NavigationGroup;
   /**
    * The one title of the page: sidebar, analysis dashboard card, command, shortcut and tab. Omitted for the page of a
-   * toggleable feature, which takes its title and description from `FEATURES`.
+   * toggleable feature, which takes its title and description from the backend list of the features.
    */
   title?: string;
   /** Shown on the analysis dashboard card. */
@@ -44,7 +44,7 @@ export interface NavigationEntry {
 /** A navigation entry with the feature and the icon its route declares (`staticData`) and its title. */
 export interface ResolvedNavigationEntry extends Omit<NavigationEntry, "title"> {
   /** The toggleable feature of the page; pages without one need core data only and are always available. */
-  feature: Feature | undefined;
+  feature: FrontendFeature | undefined;
   icon: Icon;
   title: string;
 }

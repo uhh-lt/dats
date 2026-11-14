@@ -1,4 +1,6 @@
-import { FEATURES, getRouteFeature, useIsFeatureEnabled } from "@core/feature";
+import { featureQueries, getRouteFeature, useIsFeatureEnabled } from "@core/feature";
+import { FeatureRead } from "@models/FeatureRead";
+import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@components/icons";
 import { AnyRoute, AnyRouter, useMatches, useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -12,10 +14,14 @@ function findPageRoute(router: AnyRouter, to: NavigationRoute): AnyRoute | undef
 
 /**
  * An entry with the feature and the icon of its route; the page of a feature takes its title and description from
- * `FEATURES`. The lint rule `local/navigation-entries` rejects an entry whose route or title does not fit; should one
+ * the backend list of the features (`featureQueries.list()`), with the feature's name as fallback. The lint rule `local/navigation-entries` rejects an entry whose route or title does not fit; should one
  * slip through, it is logged and shown with what is known instead of failing every page.
  */
-function resolveNavigationEntry(router: AnyRouter, entry: NavigationEntry): ResolvedNavigationEntry {
+function resolveNavigationEntry(
+  router: AnyRouter,
+  entry: NavigationEntry,
+  features: readonly FeatureRead[] | undefined,
+): ResolvedNavigationEntry {
   const route = findPageRoute(router, entry.to);
   if (!route) {
     console.error(`Navigation entry '${entry.id}': no page route declares \`staticData.tab\` for '${entry.to}'.`);
@@ -27,23 +33,25 @@ function resolveNavigationEntry(router: AnyRouter, entry: NavigationEntry): Reso
     return { ...entry, feature, icon, title: entry.title ?? entry.id };
   }
   if (entry.title !== undefined || entry.description !== undefined) {
-    console.error(`Navigation entry '${entry.id}' takes its title and description from FEATURES['${feature}'].`);
+    console.error(`Navigation entry '${entry.id}' takes its title and description from the feature '${feature}'.`);
   }
+  const info = features?.find((f) => f.feature === feature);
   return {
     ...entry,
     feature,
     icon,
-    title: entry.title ?? FEATURES[feature].title,
-    description: entry.description ?? FEATURES[feature].description,
+    title: entry.title ?? info?.title ?? feature,
+    description: entry.description ?? info?.description,
   };
 }
 
 /** Every navigation entry with the feature of its page, also the entries of disabled features. */
 export function useNavigationEntries(): readonly ResolvedNavigationEntry[] {
   const router = useRouter();
+  const { data: features } = useQuery(featureQueries.list());
   return useMemo(
-    () => NAVIGATION_ENTRIES.map((entry: NavigationEntry) => resolveNavigationEntry(router, entry)),
-    [router],
+    () => NAVIGATION_ENTRIES.map((entry: NavigationEntry) => resolveNavigationEntry(router, entry, features)),
+    [router, features],
   );
 }
 

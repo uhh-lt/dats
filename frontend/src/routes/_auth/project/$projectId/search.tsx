@@ -1,4 +1,4 @@
-import { ensureFeatureEnabled } from "@core/feature";
+import { ensureFeatureEnabled, Feature } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators, toSorts } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
@@ -6,7 +6,6 @@ import { sdocQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
-import { Feature } from "@models/Feature";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";

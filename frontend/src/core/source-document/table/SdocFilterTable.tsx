@@ -13,9 +13,8 @@ import {
   URLFilterTableProps,
   URLFilterTableToolbarLeft,
 } from "@core/filter";
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { Feature } from "@models/Feature";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";

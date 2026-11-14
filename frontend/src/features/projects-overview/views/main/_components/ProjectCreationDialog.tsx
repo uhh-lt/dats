@@ -53,12 +53,13 @@ export function ProjectCreationDialog() {
     }
   }, [isOpen, reset]);
 
-  // select all features once they are loaded, without touching what the user typed or selected
+  // preselect the features a new project enables once they are loaded, without touching what the user typed or
+  // selected
   useEffect(() => {
     if (isOpen && features.data && getValues("enabled_features") === undefined) {
       setValue(
         "enabled_features",
-        features.data.map((f) => f.feature),
+        features.data.filter((f) => f.default_enabled).map((f) => f.feature),
       );
     }
   }, [isOpen, features.data, getValues, setValue]);
@@ -73,7 +74,7 @@ export function ProjectCreationDialog() {
           requestBody: {
             title: data.title,
             description: data.description,
-            // without the feature list, the backend's default applies: all features
+            // without the feature list, the backend's default applies: the features that declare default_enabled
             enabled_features: features.isSuccess ? data.enabled_features : undefined,
           },
         },

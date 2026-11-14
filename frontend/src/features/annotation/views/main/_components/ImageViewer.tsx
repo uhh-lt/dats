@@ -1,8 +1,7 @@
 import { bboxAnnotationQueries } from "@core/bbox-annotation";
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { useTabNavigate } from "@core/navigation";
 import { sdocMetadataQueries } from "@core/sdoc-metadata";
-import { Feature } from "@models/Feature";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";

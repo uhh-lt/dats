@@ -1,6 +1,6 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FeatureCoverageHint } from "@core/feature";
+import { FeatureCoverageHint, Feature } from "@core/feature";
 import { FILTER_PARAM, TableInfoHooks } from "@core/filter";
 import { FolderExplorer, FolderHooks, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel, sdocQueries } from "@core/source-document";
@@ -8,7 +8,6 @@ import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
-import { Feature } from "@models/Feature";
 import { FolderType } from "@models/FolderType";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";

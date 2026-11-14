@@ -80,9 +80,11 @@ Choose the home of a piece of state by its kind; [frontend-slice.instructions.md
 
 ## Toggleable Features and Navigation
 
-Add a feature (after its backend `Feature` value and the regenerated client):
+A feature is declared in the backend (`register_feature` with name, title, description, area and `default_enabled`); the frontend reads the features from `GET /feature` (`featureQueries.list()`). The Features tab and the project creation dialog need no frontend change for a new feature.
 
-1. Add its entry with title, description and area to `FEATURES` (`core/feature/features.ts`); `tsc` fails without it.
+Give a feature a page or a gate:
+
+1. Add its backend name to the const object `Feature` (`core/feature/features.ts`).
 2. Gate its embedded entry points with `useFeature(Feature.X)`.
 
 Add a page to a feature:
@@ -92,9 +94,10 @@ Add a page to a feature:
 
 Rules:
 
-- `FEATURES` in `core/feature/features.ts` holds the one title, description and area of every feature (`tsc` enforces one entry per `Feature`); never write a feature's title anywhere else.
+- The title, description and area of a feature come from the backend only: components read them with `useFeatureInfo(Feature.X)`, code outside React (mutation messages) with `featureTitle(queryClient, Feature.X)`; the project route loader ensures `featureQueries.list()`. Never write a feature's title in the frontend.
+- `Feature` in `core/feature/features.ts` lists only the features with a page or a gate (`FrontendFeature`); a name missing from the backend list is logged once.
 - `NAVIGATION_ENTRIES` in `core/navigation/navigationEntries.ts` lists every page of a project once, with its group, route, shortcut and command, and takes the feature and the icon from the page's route; the sidebar, the analysis dashboard, the command palette, the shortcuts and the tab titles are generated from it through `useNavigationEntries`.
-- A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from `FEATURES`, and a page heading uses `useNavigationTitle()` (lint: `local/navigation-entries`, which also checks that `to` is a page route with `staticData.tab`).
+- A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from the backend list of the features, and a page heading uses `useNavigationTitle()` (lint: `local/navigation-entries`, which also checks that `to` is a page route with `staticData.tab`).
 - The feature of a page is declared only on its route or a parent route (`staticData.feature`, see [frontend-route](frontend-route.instructions.md)), never in its navigation entry.
 - A feature has one listed page, as its entry takes the feature's title; its further pages are detail routes below that page's folder without a navigation entry.
 - Gate an embedded entry point (menu item, button, search box) with `useFeature(Feature.X)` from `@core/feature`, which reads `ProjectRead.enabled_features`.

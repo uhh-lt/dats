@@ -2074,7 +2074,7 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+          { "name": "feature", "in": "path", "required": true, "schema": { "type": "string", "title": "Feature" } }
         ],
         "requestBody": {
           "required": true,
@@ -2085,11 +2085,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Feature" },
-                  "title": "Response Feature-Enable Feature"
-                }
+                "schema": { "type": "array", "items": { "type": "string" }, "title": "Response Feature-Enable Feature" }
               }
             }
           },
@@ -2113,7 +2109,7 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+          { "name": "feature", "in": "path", "required": true, "schema": { "type": "string", "title": "Feature" } }
         ],
         "requestBody": {
           "required": true,
@@ -2126,7 +2122,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "items": { "type": "string" },
                   "title": "Response Feature-Complete Feature"
                 }
               }
@@ -2152,7 +2148,7 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "feature", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Feature" } }
+          { "name": "feature", "in": "path", "required": true, "schema": { "type": "string", "title": "Feature" } }
         ],
         "responses": {
           "200": {
@@ -2161,7 +2157,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Feature" },
+                  "items": { "type": "string" },
                   "title": "Response Feature-Disable Feature"
                 }
               }
@@ -13352,26 +13348,6 @@
         "required": ["export_job_type", "whiteboard_ids"],
         "title": "ExportSelectedWhiteboardsParams"
       },
-      "Feature": {
-        "type": "string",
-        "enum": [
-          "full_text_search",
-          "search_annotate",
-          "sentence_similarity_search",
-          "image_similarity_search",
-          "rag_chat",
-          "annotation_scaling",
-          "concepts_over_time",
-          "tag_recommendation",
-          "word_frequency",
-          "duplicate_finder",
-          "keyword_statistics",
-          "entity_annotations",
-          "object_detection"
-        ],
-        "title": "Feature",
-        "description": "A user-facing capability that a project can enable or disable. Each feature\nis declared with `register_feature` in a `*_feature.py` file of its module.\n\nOnly toggleable features are listed: the features that need core data only\n(annotation, LLM assistant, classifier, perspectives, ...) are always available."
-      },
       "FeatureActivation": {
         "properties": {
           "settings": {
@@ -13384,18 +13360,32 @@
         "title": "FeatureActivation",
         "description": "The settings to enable or complete a Feature with."
       },
+      "FeatureArea": {
+        "type": "string",
+        "enum": ["Search", "Analysis", "Automatic Annotation"],
+        "title": "FeatureArea",
+        "description": "The area a feature belongs to; features are listed by area, in this\norder, then by title."
+      },
       "FeatureRead": {
         "properties": {
-          "feature": { "$ref": "#/components/schemas/Feature", "description": "ID of the Feature" },
+          "feature": { "type": "string", "title": "Feature", "description": "Name of the Feature" },
+          "title": { "type": "string", "title": "Title", "description": "Title of the Feature" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the Feature" },
+          "area": { "$ref": "#/components/schemas/FeatureArea", "description": "Area of the Feature" },
           "requires_features": {
-            "items": { "$ref": "#/components/schemas/Feature" },
+            "items": { "type": "string" },
             "type": "array",
             "title": "Requires Features",
-            "description": "The Features this Feature requires (directly); enabling it enables them"
+            "description": "Names of the Features this Feature requires (directly); enabling it enables them"
+          },
+          "default_enabled": {
+            "type": "boolean",
+            "title": "Default Enabled",
+            "description": "Whether a new Project enables the Feature unless the request names its Features"
           }
         },
         "type": "object",
-        "required": ["feature", "requires_features"],
+        "required": ["feature", "title", "description", "area", "requires_features", "default_enabled"],
         "title": "FeatureRead"
       },
       "FeatureStatus": {
@@ -15795,10 +15785,9 @@
           "title": { "type": "string", "title": "Title", "description": "Title of the Project" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Project" },
           "enabled_features": {
-            "items": { "$ref": "#/components/schemas/Feature" },
-            "type": "array",
+            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
             "title": "Enabled Features",
-            "description": "Features enabled in the Project (default: all); the Features they require are enabled as well"
+            "description": "Names of the Features enabled in the Project (null: the Features that declare default_enabled); the Features they require are enabled as well; an unknown name is rejected (404)"
           }
         },
         "type": "object",
@@ -15825,7 +15814,7 @@
       },
       "ProjectFeatureRead": {
         "properties": {
-          "feature": { "$ref": "#/components/schemas/Feature", "description": "ID of the Feature" },
+          "feature": { "type": "string", "title": "Feature", "description": "Name of the Feature" },
           "enabled": {
             "type": "boolean",
             "title": "Enabled",
@@ -16070,10 +16059,10 @@
             "description": "Updated timestamp of the Project"
           },
           "enabled_features": {
-            "items": { "$ref": "#/components/schemas/Feature" },
+            "items": { "type": "string" },
             "type": "array",
             "title": "Enabled Features",
-            "description": "Features enabled in the Project"
+            "description": "Names of the Features enabled in the Project"
           }
         },
         "type": "object",

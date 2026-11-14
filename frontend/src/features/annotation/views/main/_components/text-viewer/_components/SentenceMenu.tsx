@@ -1,9 +1,8 @@
 import { CodeHooks } from "@core/code";
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { MemoCreateOrSelectListItemButton } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
-import { Feature } from "@models/Feature";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SearchIcon from "@mui/icons-material/Search";

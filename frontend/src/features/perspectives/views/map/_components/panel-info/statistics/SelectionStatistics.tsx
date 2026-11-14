@@ -1,7 +1,6 @@
 import { CodeHooks, CodeRenderer } from "@core/code";
-import { useFeature } from "@core/feature";
+import { useFeature, Feature } from "@core/feature";
 import { ProjectMetadataHooks } from "@core/project-metadata";
-import { Feature } from "@models/Feature";
 import { SpanEntityStat } from "@models/SpanEntityStat";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";

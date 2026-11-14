@@ -1,4 +1,4 @@
-import { Feature } from "@models/Feature";
+import { Feature } from "@core/feature";
 import { createFileRoute } from "@tanstack/react-router";
 
 // the feature of the concepts over time pages: the dashboard and each analysis inherit it
