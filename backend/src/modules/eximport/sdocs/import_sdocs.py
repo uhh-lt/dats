@@ -64,9 +64,10 @@ def archived_step_status(
         if status == SDocStatus.processing.value:
             step_status[step] = None
 
+    archived = sdoc_export.model_dump()
     for artefact, archive in artefact_registry.archives():
         step = graph.producer(doctype, artefact)
-        if step is not None and not archive.is_complete(sdoc_export.model_dump()):
+        if step is not None and not archive.is_complete(archived):
             step_status[step] = None
     return step_status
 
@@ -308,12 +309,11 @@ def import_sdocs_to_proj(
         # 5. Write the artefacts with an archive to their stores, if
         # their step was imported as finished
         graph = artefact_registry.graph()
+        archived = sdoc_export.model_dump()
         for artefact, archive in artefact_registry.archives():
             step = graph.producer(DocType(sdoc_export.doctype), artefact)
             if step is not None and step_status.get(step) == SDocStatus.finished:
-                archive.write(
-                    db=db, sdoc=created_sdoc, archived=sdoc_export.model_dump()
-                )
+                archive.write(db=db, sdoc=created_sdoc, archived=archived)
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"

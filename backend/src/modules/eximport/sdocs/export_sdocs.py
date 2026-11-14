@@ -143,13 +143,16 @@ def __export_sdocs(
         # The artefacts with their own store: exported only if their step
         # finished and their data is complete, else the import leaves the step
         # not planned
+        row = export_schema.model_dump()
+        complete: dict[str, object] = {}
         for artefact, archive in artefact_registry.archives():
             step = graph.producer(doctype, artefact)
             if step is None or planned.get(step) != SDocStatus.finished:
                 continue
-            archived = export_schema.model_copy(update=archive.read(sdoc))
-            if archive.is_complete(archived.model_dump()):
-                export_schema = archived
+            columns = archive.read(sdoc)
+            if archive.is_complete({**row, **columns}):
+                complete.update(columns)
+        export_schema = export_schema.model_copy(update=complete)
 
         export_collection.append(export_schema)
 

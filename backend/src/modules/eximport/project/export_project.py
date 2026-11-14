@@ -37,6 +37,7 @@ from modules.eximport.timeline_analysis.export_timeline_analysis import (
 from modules.eximport.user.export_users import export_all_users
 from modules.eximport.whiteboards.export_whiteboards import export_all_whiteboards
 from repos.filesystem_repo import FilesystemRepo
+from systems.feature_system.feature_registry import feature_registry
 
 
 def export_project(
@@ -99,7 +100,12 @@ def __export_project_details(fsr: FilesystemRepo, project: ProjectORM) -> Path:
     export_data = ProjectDetailsExportSchema(
         title=project.title,
         description=project.description,
-        enabled_features=list(project.enabled_features),
+        # a stored name of a feature that is no longer registered is dropped
+        enabled_features=[
+            name
+            for name in project.enabled_features
+            if feature_registry.feature(name) is not None
+        ],
     )
     return fsr.write_json_to_temp_file(
         json_obj=export_data.model_dump(),

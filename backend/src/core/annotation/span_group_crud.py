@@ -113,14 +113,13 @@ class CRUDSpanGroup(SQLCRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUp
         # insert links (group <-> span)
         from sqlalchemy.dialects.postgresql import insert
 
-        if len(links) == 0:
-            return 0
-
         insert_values = [
             {"span_group_id": str(group_id), "span_annotation_id": str(span_id)}
             for group_id, span_ids in links.items()
             for span_id in span_ids
         ]
+        if not insert_values:
+            return 0
 
         insert_stmt = (
             insert(SpanAnnotationSpanGroupLinkTable)

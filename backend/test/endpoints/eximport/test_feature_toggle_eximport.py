@@ -119,7 +119,9 @@ def test_project_import_merges_the_enabled_features(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> None:
     """The target project enables keyword statistics, the archive sentence
-    similarity search: the import enables both and disables nothing."""
+    similarity search: the import enables both and disables nothing. The
+    exported project's stored name of an unregistered feature is not exported,
+    so the archive is accepted."""
     projects = feature_toggle_eximport_projects
 
     _round_trip(db_session, projects)

@@ -144,3 +144,26 @@ def test_replace_groups_without_codes_deletes_only_the_groups_of_that_name(
         )
     )
     assert remaining_ids == fixture["span_ids"]
+
+
+def test_replace_groups_with_only_empty_groups_creates_them_without_spans(
+    db_session: Session, sdoc_with_memos_and_span_group: SdocWithMemosAndSpanGroup
+) -> None:
+    """One empty group links no span: the call creates the group and deletes the
+    fixture's 30 spans, which have the replaced code."""
+    fixture = sdoc_with_memos_and_span_group
+    adoc_id = _adoc_id(db_session, fixture)
+
+    SpanGroupService().replace_groups(
+        db=db_session,
+        annotation_document_id=adoc_id,
+        name=GROUP_NAME,
+        code_ids=[fixture["code_id"]],
+        groups=[[]],
+    )
+    db_session.commit()
+
+    assert _groups_by_name(db_session, fixture) == {
+        "crud-group": [[]],
+        GROUP_NAME: [[]],
+    }
