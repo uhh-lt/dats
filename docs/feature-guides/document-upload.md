@@ -54,8 +54,8 @@ You will see a progress bar for each file. Depending on the size and modality of
 
 - **Audio/Video:** Automatically transcribed into text using Speech-to-Text models.
 - **Images:** Captioned automatically; object detection runs if its feature is enabled.
-- **Text:** Cleaned, split into chunks, and run through Named Entity Recognition (finding people, organizations, locations).
-- **Embeddings:** Semantic vectors are calculated for text and images to power the cross-modal similarity search.
+- **Text:** Cleaned and split into chunks; named entities (people, organizations, locations) are recognised if entity annotations are enabled.
+- **Embeddings:** Semantic vectors are calculated for text and images if a similarity search feature is enabled.
 
 _(For a deep dive into the technical architecture of this pipeline, refer to the [Technical Appendix: The Preprocessing Pipeline](../technical-details/preprocessing-pipeline.md))._
 
