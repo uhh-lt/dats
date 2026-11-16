@@ -47,10 +47,10 @@ def _issues(rows: list[CodeRow]) -> dict[str, object]:
     }
 
 
-def test_a_user_tree_below_a_user_parent_is_reported_without_a_fix():
-    """The user tree `ANIMAL` > `DOG`: `ANIMAL` lies below the system root,
-    which the project has, so heal renames it; `DOG` lies below the user code
-    `ANIMAL`, so it is only reported, without a fix."""
+def test_a_user_tree_of_declared_names_is_left_alone():
+    """The user tree `ANIMAL` > `DOG`: `ANIMAL` is a top-level code, not below
+    the system root, and `DOG` lies below the user code `ANIMAL`; the import
+    keeps both as user codes, so the check reports nothing."""
     issues = _issues(
         [
             CodeRow(1, "SYSTEM_CODE", None, True),
@@ -59,10 +59,7 @@ def test_a_user_tree_below_a_user_parent_is_reported_without_a_fix():
         ]
     )
 
-    assert set(issues) == {"names", "blocking"}
-    assert issues["names"].fix.values == {2: "ANIMAL (custom)"}  # type: ignore[attr-defined]
-    assert issues["blocking"].fix is None  # type: ignore[attr-defined]
-    assert "'DOG'" in issues["blocking"].message  # type: ignore[attr-defined]
+    assert issues == {}
 
 
 def test_a_user_code_below_its_declared_system_parent_is_renamed():
