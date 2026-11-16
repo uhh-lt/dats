@@ -86,6 +86,13 @@ class SdocStatusRow(BaseModel):
         )
 
 
+class SdocHealthColumn(BaseModel):
+    step: str = Field(description="Name of the pipeline step")
+    core: bool = Field(
+        description="Whether the step is a core step, which every document gets and Recompute starts also where it is missing"
+    )
+
+
 class SdocHealthResult(BaseModel):
     total_results: int = Field(description="Total number of sdocs in the project")
     data: list[SdocStatusRow] = Field(

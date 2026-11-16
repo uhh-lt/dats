@@ -7,6 +7,7 @@ from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.doc_processing.doc_processing_dto import (
+    SdocHealthColumn,
     SdocHealthResult,
     SdocHealthSort,
     SourceDocumentStatusSimple,
@@ -30,16 +31,20 @@ router = APIRouter(
 
 @router.get(
     "/searchColumns/{doctype}",
-    response_model=list[str],
-    summary="Get all column names (the job names) for the given document type",
+    response_model=list[SdocHealthColumn],
+    summary="Get all columns (the pipeline steps) for the given document type, with whether each is a core step",
 )
 def get_search_columns_by_doctype(
     *,
     db: Session = Depends(get_db_session),
     doctype: DocType,
     authz_user: AuthzUser = Depends(),
-) -> list[str]:
-    return list(artefact_registry.graph().steps(doctype))
+) -> list[SdocHealthColumn]:
+    graph = artefact_registry.graph()
+    core = set(graph.steps_for(doctype, artefact_registry.always()))
+    return [
+        SdocHealthColumn(step=step, core=step in core) for step in graph.steps(doctype)
+    ]
 
 
 @router.post(

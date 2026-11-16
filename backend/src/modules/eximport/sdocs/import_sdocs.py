@@ -53,7 +53,9 @@ def archived_step_status(
     import starts no job, so it would stay processing forever. A step whose
     artefact the archive does not hold completely (its archive says so) is
     not planned either, whatever its status. The import plans no step: a feature
-    whose steps are not planned is partly available until a user completes it."""
+    whose steps are not planned is partly available until a user completes it,
+    and a core step that is not planned (e.g. the search index) is planned by
+    Recompute in the document health view."""
     graph = artefact_registry.graph()
     doctype = DocType(sdoc_export.doctype)
     steps = graph.steps(doctype)

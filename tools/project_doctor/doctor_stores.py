@@ -34,7 +34,8 @@ STATUS_FINISHED = 1
 #
 # Since the feature toggles, the status of a step is a row of
 # sourcedocumentstepstatus (STEP_STATUS_TABLE), and a step without a row is not
-# planned for the document (its feature is not enabled). Before, every step was a
+# planned for the document (its feature is not enabled, or a core step was never
+# computed for it, e.g. after an import). Before, every step was a
 # status column of sourcedocument and only the steps of the doctype counted.
 _TEXT_STEPS = [
     "text_extraction",

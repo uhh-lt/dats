@@ -6,11 +6,16 @@ from fastapi.testclient import TestClient
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
-from core.doc_processing.doc_processing_dto import SdocHealthResult, SdocHealthSort
+from core.doc_processing.doc_processing_dto import (
+    SdocHealthColumn,
+    SdocHealthResult,
+    SdocHealthSort,
+)
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
 from pipeline_test_utils import (
     all_steps,
+    core_steps,
     failing_started_hook,
     read_step_status,
     started_steps,
@@ -208,11 +213,15 @@ def test_search_columns_lists_the_pipeline_steps_of_the_doctype_in_order(
     client: TestClient, doctype: DocType
 ):
     """The steps per doctype are derived from the requires/produces/doctypes
-    declarations of the jobs, in pipeline order."""
+    declarations of the jobs, in pipeline order; the core steps (those of a
+    project without features, text_es_index among them) are flagged."""
     response = client.get(f"/docprocessing/searchColumns/{doctype.value}")
 
     assert response.status_code == 200, response.text
-    assert response.json() == all_steps(doctype)
+    columns = [SdocHealthColumn.model_validate(c) for c in response.json()]
+    assert [c.step for c in columns] == all_steps(doctype)
+    assert {c.step for c in columns if c.core} == set(core_steps(doctype))
+    assert "text_es_index" in core_steps(doctype)
 
 
 # ===========================================================================
@@ -377,8 +386,9 @@ def test_recompute_of_a_step_that_is_not_planned_is_rejected(
     held_jobs: HeldJobs,
 ):
     """The keywords are not planned for text_done (the project enables no
-    feature): Recompute never plans a step, so it answers 400, starts no job
-    and creates no status row."""
+    feature): Recompute never plans the step of a feature (its set up may not
+    have run), so it answers 400 naming the step, starts no job and creates no
+    status row."""
     p = recompute_project
     sdoc_id = p["text_done"].id
 
@@ -388,6 +398,27 @@ def test_recompute_of_a_step_that_is_not_planned_is_rejected(
     assert "text_keywords" in response.text
     assert held_jobs.jobs() == []
     assert read_step_status(db_session, sdoc_id, "text_keywords") is None
+
+
+def test_recompute_starts_a_core_step_that_is_not_planned(
+    client: TestClient,
+    db_session,
+    recompute_project: RecomputeProject,
+    held_jobs: HeldJobs,
+):
+    """text_es_index of no_data has no status row (no_data was created without
+    it). It is a core step, which no feature owns: Recompute starts its job,
+    which cannot start for no_data (no content), so its failed hook writes the
+    row as erroneous instead of leaving it unplanned."""
+    p = recompute_project
+    sdoc_id = p["no_data"].id
+    assert read_step_status(db_session, sdoc_id, "text_es_index") is None
+
+    response = _recompute(client, p["project"].id, "text_es_index", [sdoc_id])
+
+    assert response.status_code == 200, response.text
+    assert read_step_status(db_session, sdoc_id, "text_es_index") == -100
+    assert held_jobs.jobs() == []
 
 
 def test_recompute_is_rejected_as_a_whole_if_one_document_lacks_the_step(

@@ -274,11 +274,12 @@ class RecomputeProject(TypedDict):
     - text_done: text document "text_done.txt" with the text of
       `SDOC_SENTENCES` and the language "en"; the steps of a project without
       features are finished (extract_html, text_extraction,
-      text_language_detection, text_spacy, text_html_mapping)
+      text_language_detection, text_es_index, text_spacy, text_html_mapping)
     - no_data: text document "no_data.txt" without any content (no
       SourceDocumentData); extract_html, text_extraction and
       text_language_detection are finished, text_spacy and text_html_mapping
-      are processing (its spaCy job waits in the queue)
+      are processing (its spaCy job waits in the queue), the core step
+      text_es_index is not planned
     - keywords_done: text document "keywords_done.txt" with the text of
       `SDOC_SENTENCES` and the language "en"; the steps of a project without
       features and text_keywords are finished (as if keyword statistics was

@@ -268,12 +268,17 @@ class DocProcessingService(metaclass=SingletonMeta):
                 f"Processing step '{processing_step}' is not valid for doctype '{doctype}'"
             )
 
-        # 4. check that the step is planned for every document: Recompute never
-        # plans a step, as its set up may not have run
+        # 4. check that the step of a feature is planned for every document:
+        # Recompute never starts it unplanned, as its set up may not have run.
+        # A core step, which every document gets and no feature owns, starts
+        # unplanned too: its job's started or failed hook writes its row. The
+        # request writes no row, as these hooks write in their own transaction.
         step = processing_step
         statuses = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
         not_planned = sorted(i for i in sdoc_ids if step not in statuses.get(i, {}))
-        if not_planned:
+        if not_planned and step not in graph.steps_for(
+            DocType(doctype), artefact_registry.always()
+        ):
             raise StepNotPlannedError(step=processing_step, sdoc_ids=not_planned)
 
         # Start the job of the step for every document.

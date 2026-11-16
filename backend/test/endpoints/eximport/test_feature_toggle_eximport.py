@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -31,7 +32,12 @@ from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
-from pipeline_test_utils import artefact_named, read_all_step_status
+from pipeline_test_utils import (
+    artefact_named,
+    read_all_step_status,
+    read_step_status,
+    started_steps,
+)
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -386,3 +392,29 @@ def test_every_archive_module_has_a_round_trip_case() -> None:
     """The round trip covers each artefact archive, and no case names an artefact
     without one."""
     assert set(ROUND_TRIP_CASES) == {a.name for a, _ in artefact_registry.archives()}
+
+
+def test_recompute_computes_the_core_index_step_an_import_left_unplanned(
+    client: TestClient,
+    db_session: Session,
+    indexing_eximport_projects: FeatureToggleEximportProjects,
+    held_jobs: HeldJobs,
+) -> None:
+    """The imported text has no row of the core step text_es_index (it was
+    processing at the export). No feature computes it, so Recompute starts its
+    job without a row, and the job writes the row: finished once it ran."""
+    projects = indexing_eximport_projects
+    _round_trip(db_session, projects)
+    sdoc_id = _imported(db_session, projects, "text.txt").id
+    assert read_step_status(db_session, sdoc_id, "text_es_index") is None
+
+    response = client.post(
+        f"/docprocessing/project/{projects['target_project'].id}/recompute",
+        params={"processing_step": "text_es_index"},
+        json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
+    )
+
+    assert response.status_code == 200, response.text
+    assert started_steps(held_jobs) == {sdoc_id: ["text_es_index"]}
+    held_jobs.run("text_es_index")
+    assert read_step_status(db_session, sdoc_id, "text_es_index") == 1

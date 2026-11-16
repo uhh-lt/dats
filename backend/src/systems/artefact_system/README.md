@@ -48,7 +48,7 @@ Limit of the archive: the document archive has no open column. The archive colum
 | `ProjectService.create_project`                  | For the features the new project enables                                   |
 | `import_project.py`                              | Once, before the entities of the archive: its codes then meet the system codes by name |
 
-Complete runs no set up, and neither does `add_features` (the import has set up before). Disable leaves the codes, as annotations may use them. Recompute never plans a step: it is rejected (400, `StepNotPlannedError`) for a document that has no status row of the step, so it never runs a step whose set up did not run.
+Complete runs no set up, and neither does `add_features` (the import has set up before). Disable leaves the codes, as annotations may use them. Recompute never plans the step of a feature: it is rejected (400, `StepNotPlannedError`) for a document that has no status row of the step, so it never runs a step whose set up did not run. A core step needs no set up: Recompute starts it also where it has no row, e.g. for a document imported while the step was running, and the started or failed hook of its job writes the row. The request writes no row: the hooks and `start_steps` write in their own transactions, which would wait for the request's.
 
 ## Lock order
 

@@ -43,8 +43,9 @@ export function HealthTableToolbarLeft({
         title={
           <>
             <Typography>Recompute step:</Typography>
-            After selecting a step, this action <u>recomputes</u> it for the selected documents. Only steps of enabled
-            features are offered; enable a feature in the project settings to compute its steps.
+            After selecting a step, this action <u>recomputes</u> it for the selected documents. The core steps are
+            always offered and planned where they are missing; the steps of a feature only where it is enabled. Enable
+            or complete a feature in the project settings to compute its steps.
           </>
         }
         placement="top-start"

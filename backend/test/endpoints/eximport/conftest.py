@@ -869,3 +869,22 @@ def sdoc_eximport_projects(
     db_session.refresh(target_project)
     db_session.refresh(sdoc)
     return {"project": test_project, "target_project": target_project, "sdoc": sdoc}
+
+
+@pytest.fixture(scope="function")
+def indexing_eximport_projects(
+    db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
+) -> FeatureToggleEximportProjects:
+    """The projects of `feature_toggle_eximport_projects`, except that the
+    core step text_es_index of "text.txt" is processing (the document is
+    exported while it is being indexed).
+
+    Non-obvious derived behavior:
+
+    - The import does not plan a step that was processing at the export: the
+      imported "text.txt" has no row of text_es_index and no index entry.
+    """
+    projects = feature_toggle_eximport_projects
+    set_step_status(db_session, projects["text"].id, {"text_es_index": 0})
+    db_session.commit()
+    return projects

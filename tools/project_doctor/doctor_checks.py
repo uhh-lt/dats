@@ -333,8 +333,8 @@ class Checker:
 
     @staticmethod
     def _print_not_planned(*, sdocs: list[SdocRow]) -> None:
-        """Data of steps that are not planned is missing on purpose: no check
-        reports it. Say so, as it explains e.g. an empty search index."""
+        """Data of steps that are not planned is not checked: no check reports
+        it. Say so, as it explains e.g. missing keywords or embeddings."""
         counts: dict[str, int] = {}
         for sdoc in sdocs:
             for step in sdoc.not_planned:
@@ -345,10 +345,12 @@ class Checker:
             f"{step} ({n} documents)" for step, n in sorted(counts.items())
         )
         print(
-            f"  Not checked, as the step is not planned: {steps}. A step is not "
-            "planned if no enabled feature needs it, or if it was never computed "
-            "for the document; enable or complete the feature in the project "
-            "settings to compute the data.",
+            f"  Not checked, as the step is not planned: {steps}. The step of a "
+            "feature is not planned if the project does not enable the feature: "
+            "enable or complete it in the project settings to compute the data. "
+            "A core step (e.g. text_es_index) is not planned if it was never "
+            "computed for the document (e.g. an imported document): recompute it "
+            "in the document health view.",
             file=sys.stderr,
         )
 

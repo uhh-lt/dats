@@ -1,6 +1,7 @@
 import { FilterTable } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
+import { SdocHealthColumn } from "@models/SdocHealthColumn";
 import { SdocHealthResult } from "@models/SdocHealthResult";
 import { SDocStatus } from "@models/SDocStatus";
 import { SdocStatusRow } from "@models/SdocStatusRow";
@@ -34,19 +35,20 @@ const sdocStatus2Text: Record<SDocStatus, string> = {
   [SDocStatus._1]: "Completed",
 };
 
-// null = the step is not planned for the document (its feature is not enabled)
-const notEnabledIcon = <DoNotDisturbOnOutlinedIcon sx={{ color: "text.disabled" }} />;
-const notEnabledText = "Not enabled";
+// null = the step is not planned for the document: the step of a feature the project does not enable, or a core step
+// that was never computed for it (e.g. an imported document); Recompute computes the latter
+const notPlannedIcon = <DoNotDisturbOnOutlinedIcon sx={{ color: "text.disabled" }} />;
+const notPlannedText = "Not computed";
 
 const statusIcon = (status: SDocStatus | null | undefined) =>
-  status === null || status === undefined ? notEnabledIcon : sdocStatus2Icon[status];
+  status === null || status === undefined ? notPlannedIcon : sdocStatus2Icon[status];
 const statusText = (status: SDocStatus | null | undefined) =>
-  status === null || status === undefined ? notEnabledText : sdocStatus2Text[status];
+  status === null || status === undefined ? notPlannedText : sdocStatus2Text[status];
 
 interface SdocStatusTableProps {
   doctype: DocType;
   projectId: number;
-  tableColumnInfo: string[];
+  tableColumnInfo: SdocHealthColumn[];
   searchData: InfiniteData<SdocHealthResult>;
   isError: boolean;
   isFetching: boolean;
@@ -92,13 +94,17 @@ export function SdocStatusTable({
       .filter((id) => !isNaN(id));
   }, [rowSelectionModel]);
 
-  // the steps that are planned for at least one selected document: only these can be recomputed
+  // the steps that can be recomputed: the core steps (Recompute starts them also where they are missing) and the steps of a
+  // feature that are planned for at least one selected document
   const plannedSteps = useMemo(() => {
     const selected = new Set(selectedRows);
     const rows = searchData.pages.flatMap(flatMapData).filter((row) => selected.has(row.sdoc_id));
-    return tableColumnInfo.filter((step) =>
-      rows.some((row) => row.status[step] !== null && row.status[step] !== undefined),
-    );
+    return tableColumnInfo
+      .filter(
+        ({ step, core }) =>
+          (core && rows.length > 0) || rows.some((row) => row.status[step] !== null && row.status[step] !== undefined),
+      )
+      .map(({ step }) => step);
   }, [searchData, selectedRows, tableColumnInfo]);
 
   // actions
@@ -131,7 +137,7 @@ export function SdocStatusTable({
   const columns: MRT_ColumnDef<SdocStatusRow>[] = useMemo(() => {
     if (!tableColumnInfo) return [];
     const result: MRT_ColumnDef<SdocStatusRow>[] = tableColumnInfo.reduce(
-      (prev, current) => {
+      (prev, { step: current }) => {
         prev.push({
           id: current,
           header: current,

@@ -5,6 +5,7 @@
 import type { Body_docprocessing_recompute_processing_step } from "@models/Body_docprocessing_recompute_processing_step";
 import type { Body_docprocessing_upload_files } from "@models/Body_docprocessing_upload_files";
 import type { DocType } from "@models/DocType";
+import type { SdocHealthColumn } from "@models/SdocHealthColumn";
 import type { SdocHealthResult } from "@models/SdocHealthResult";
 import type { SdocHealthSort } from "@models/SdocHealthSort";
 import type { SDocStatus } from "@models/SDocStatus";
@@ -14,11 +15,15 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class DocprocessingService {
   /**
-   * Get all column names (the job names) for the given document type
-   * @returns string Successful Response
+   * Get all columns (the pipeline steps) for the given document type, with whether each is a core step
+   * @returns SdocHealthColumn Successful Response
    * @throws ApiError
    */
-  public static getSearchColumnsByDoctype({ doctype }: { doctype: DocType }): CancelablePromise<Array<string>> {
+  public static getSearchColumnsByDoctype({
+    doctype,
+  }: {
+    doctype: DocType;
+  }): CancelablePromise<Array<SdocHealthColumn>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/docprocessing/searchColumns/{doctype}",
