@@ -34,8 +34,8 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 - `backend/test/`: tests
 - `backend/src/`: application code, every top-level folder is an import root (`from core.code.code_crud import crud_code`)
   - `common/`: shared enums and helpers (`DocType`, `JobType`, `Crud` in `*_enum.py` files, `DATSEvent`, `SingletonMeta`, `exception_handler`, `NotFoundError`, FastAPI dependencies)
-  - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...)
-  - `modules/`: features built on `core` and `systems` (analysis, search, export/import, doc processing, ...)
+  - `core/`: the core concepts (project, user, doc, code, tag, annotation, memo, metadata, auth, ...) and the standard pipeline (`core/doc_processing`: the upload, the always-computed steps and the steps of artefacts several features read)
+  - `modules/`: features built on `core` and `systems` (analysis, search, export/import, ...); a step whose artefact only one feature reads lives with that feature
   - `systems/`: reusable infrastructure (`job_system`, `artefact_system`, `feature_system`, `search_system`, `websocket_system`, `mcp_system`)
   - `repos/`: connections to external services (SQL, Weaviate, Elasticsearch, Redis, filesystem, LLM, Ray, Docling, mail); see `repos/README.md` for the repo lifecycle
   - `utils/`: process-level helpers (`import_by_suffix`, logger setup, image/GPU utils)
@@ -176,7 +176,7 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 
 Add a step:
 
-1. Declare new artefacts with `artefact(name, kind=..., always=..., uploaded_for=..., codes=..., archive=...)` in a file of their owner (`modules/doc_processing/artefacts.py` for the shared ones, one `*_artefact.py` file per single-user artefact): `always=True` only if every document needs it whatever features its project enables; an own store (`StorageKind.OWN_STORE`) needs an `ArtefactArchive`, and the system code trees a project needs before the artefact is produced go into `codes` (`core/code/system_codes.py`). See `systems/artefact_system/README.md`.
+1. Declare new artefacts with `artefact(name, kind=..., always=..., uploaded_for=..., codes=..., archive=...)` in a file of their owner (`core/doc_processing/artefacts.py` for the artefacts every document or several features need, one `*_artefact.py` file next to its step per single-user artefact): `always=True` only if every document needs it whatever features its project enables; an own store (`StorageKind.OWN_STORE`) needs an `ArtefactArchive`, and the system code trees a project needs before the artefact is produced go into `codes` (`core/code/system_codes.py`). See `systems/artefact_system/README.md`.
 2. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type="<step name>", input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`systems/artefact_system/pipeline_step_decorator.py`), with the imported artefact objects. The step name is text and never changes without a data migration (it is stored in `sourcedocumentstepstatus`); among the ready steps the name breaks ties in the derived order.
 3. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code, and the trees of an artefact that declares `codes` to its `tools/project_doctor/system_codes.yaml`; `test_project_doctor_steps.py` fails otherwise.
 4. Regenerate the API client (`just update-api`) if the step adds an endpoint or a DTO the API uses.

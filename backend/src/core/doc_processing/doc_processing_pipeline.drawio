@@ -57,7 +57,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="ki-ykA9jZWMNNJkTGhho-1" value="&lt;div&gt;&lt;b&gt;text_spacy&lt;/b&gt;&lt;/div&gt;&lt;div&gt;tokens, sentences&lt;/div&gt;&lt;div&gt;+ text_keywords,&lt;/div&gt;&lt;div&gt;text_word_frequency,&lt;/div&gt;&lt;div&gt;text_ner&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+        <mxCell id="ki-ykA9jZWMNNJkTGhho-1" value="&lt;div&gt;&lt;b&gt;text_spacy&lt;/b&gt;&lt;/div&gt;&lt;div&gt;tokens, sentences&lt;/div&gt;&lt;div&gt;(text_keywords, text_word_frequency and text_ner are steps of their own after the language detection)&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
           <mxGeometry x="1390" y="230" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="916Zq6EatjBtoMfXoMin-1" value="&lt;div&gt;&lt;b&gt;text_es_index&lt;/b&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
