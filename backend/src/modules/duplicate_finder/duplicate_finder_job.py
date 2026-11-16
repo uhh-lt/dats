@@ -10,7 +10,6 @@ from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
 from core.doc.word_frequency_crud import crud_word_frequency
 from modules.duplicate_finder.duplicate_finder_feature import DUPLICATE_FINDER
-from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
@@ -71,7 +70,8 @@ def find_duplicates_job(
             wf_orms = crud_word_frequency.read_by_project_and_doctype(
                 db, project_id=payload.project_id, doctype=DocType.text
             )
-        result = [WordFrequencyRead.model_validate(wf) for wf in wf_orms]
+        # (sdoc_id, word, count), read inside the transaction
+        result = [(wf.sdoc_id, wf.word, wf.count) for wf in wf_orms]
     t1 = time.time()
     logger.info(f"query took: {t1 - t0}")
 
@@ -79,16 +79,16 @@ def find_duplicates_job(
     job.update(status_message="Creating document word vectors")
     t0 = time.time()
     # unique words in project
-    words = set([r.word.lower() for r in result])
+    words = {word.lower() for _, word, _ in result}
     word2idx = {w: i for i, w in enumerate(words)}
     vocab_size = len(words)
 
     # process result to map
     sdoc_id2word_id2word_freq = {}
-    for wf in result:
-        word_id2_word_freq = sdoc_id2word_id2word_freq.get(wf.sdoc_id, {})
-        word_id2_word_freq[word2idx[wf.word.lower()]] = wf.count
-        sdoc_id2word_id2word_freq[wf.sdoc_id] = word_id2_word_freq
+    for sdoc_id, word, count in result:
+        word_id2_word_freq = sdoc_id2word_id2word_freq.get(sdoc_id, {})
+        word_id2_word_freq[word2idx[word.lower()]] = count
+        sdoc_id2word_id2word_freq[sdoc_id] = word_id2_word_freq
 
     # create document vectors
     idx2sdoc_id = {}
