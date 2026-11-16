@@ -285,7 +285,7 @@ be sorted/grouped. Project-metadata columns get a `ColumnInfo` via
    `sortable` / `groupable` flags).
 
 Reuse the generic request/response DTOs — `QueryRequest[T]` / `Page[XRow]` (from
-[`modules/search/search_dto.py`](../../modules/search/search_dto.py)) for row
+[`core/search/search_dto.py`](../../core/search/search_dto.py)) for row
 queries and `GroupQueryRequest[T]` / `GroupPage` for group queries — so the API shape
 stays consistent across entities.
 
@@ -293,15 +293,15 @@ stays consistent across entities.
 
 ## Worked example: memo search
 
-Memo search ([`modules/search/memo_search`](../../modules/search/memo_search/)) is the
+Memo search ([`core/search/memo_search`](../../core/search/memo_search/)) is the
 most complete consumer of the engine:
 
-- [`memo_search_columns.py`](../../modules/search/memo_search/memo_search_columns.py)
+- [`memo_search_columns.py`](../../core/search/memo_search/memo_search_columns.py)
   defines `MemoColumns` and `build_memo_subquery(db, project_id, user_id)` — a
   10-table projection that resolves, per memo, the attached object's type/id/label,
   the source-document and code context labels, the author's name, and the per-user
   favorite flag. Every column except `CONTENT` is groupable (`is_groupable()`).
-- [`memo_search.py`](../../modules/search/memo_search/memo_search.py)
+- [`memo_search.py`](../../core/search/memo_search/memo_search.py)
   - `find_memos` — the builder filters/sorts/paginates to a page of memo **ids**,
     then re-runs the projection restricted to those ids to build rich `MemoSummary`
     rows (labels included) in the correct order. Returns the unified
@@ -312,7 +312,7 @@ most complete consumer of the engine:
 
 Both functions take the unified request DTOs (`QueryRequest[MemoColumns]` /
 `GroupQueryRequest[MemoColumns]`) defined in
-[`modules/search/search_dto.py`](../../modules/search/search_dto.py) and
+[`core/search/search_dto.py`](../../core/search/search_dto.py) and
 [`grouping.py`](grouping.py), so the API shape is identical to span/sentence/bbox
 search. Stored search views ([`modules/search_view/search_view_dto.py`](../../modules/search_view/search_view_dto.py))
 reuse the same `GroupConfig[T]` and `Sort[T]` types and validate

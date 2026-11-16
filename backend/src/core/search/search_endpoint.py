@@ -4,24 +4,24 @@ from sqlalchemy.orm import Session
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.memo.memo_dto import MemoRead
-from modules.search.bbox_anno_search.bbox_anno_search import (
+from core.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotation_groups,
     find_bbox_annotations,
     find_bbox_annotations_info,
 )
-from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.memo_search.memo_search import (
+from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
+from core.search.memo_search.memo_search import (
     find_memo_groups,
     find_memo_info,
     find_memos,
 )
-from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search.sdoc_search.sdoc_search import (
+from core.search.memo_search.memo_search_columns import MemoColumns
+from core.search.sdoc_search.sdoc_search import (
     find_sdocs,
     find_sdocs_info,
 )
-from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.search_dto import (
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
+from core.search.search_dto import (
     BBoxAnnotationRow,
     Page,
     PaginatedSDocHits,
@@ -29,18 +29,18 @@ from modules.search.search_dto import (
     SentenceAnnotationRow,
     SpanAnnotationRow,
 )
-from modules.search.sent_anno_search.sent_anno_search import (
+from core.search.sent_anno_search.sent_anno_search import (
     find_sentence_annotation_groups,
     find_sentence_annotations,
     find_sentence_annotations_info,
 )
-from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-from modules.search.span_anno_search.span_anno_search import (
+from core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+from core.search.span_anno_search.span_anno_search import (
     find_span_annotation_groups,
     find_span_annotations,
     find_span_annotations_info,
 )
-from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
+from core.search.span_anno_search.span_anno_search_columns import SpanColumns
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.grouping import GroupPage, GroupQueryRequest

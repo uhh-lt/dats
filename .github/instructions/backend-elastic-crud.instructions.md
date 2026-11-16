@@ -82,7 +82,7 @@ crud_sdoc_elastic = CRUDSdocElastic(index=SdocIndex, model=ElasticSearchDocument
 
 - **Delete with the source document**: CRUDs need no cleanup code for deleted source documents. `SourceDocumentService.delete_multi` deletes their Elasticsearch documents with `crud_sdoc_elastic.delete_multi` (inherited from `ElasticCRUDBase`, skips missing ids). A new index keyed by sdoc id is cleaned up there too. Do not add event listeners.
 - **Project lifecycle**: a new index must be created in `ProjectService.create_project` (`crud_<x>_elastic.index.create_index(client=..., project_id=...)`) and removed in `ProjectService.delete_project` (`.index.delete_index(...)`).
-- No business logic or result enrichment (joining SQL data, building Read DTOs). That belongs in the search services (`modules/search/sdoc_search/sdoc_search.py`).
+- No business logic or result enrichment (joining SQL data, building Read DTOs). That belongs in the search services (`core/search/sdoc_search/sdoc_search.py`).
 
 ## Examples
 

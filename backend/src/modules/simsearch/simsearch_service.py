@@ -6,8 +6,8 @@ from common.singleton_meta import SingletonMeta
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.search.sdoc_search.sdoc_search import filter_sdoc_ids
-from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from core.search.sdoc_search.sdoc_search import filter_sdoc_ids
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_utils import encode_image
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
-from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
 from core.doc.source_document_dto import SourceDocumentRead
@@ -11,21 +11,19 @@ from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.search.search_dto import (
-    Page,
-    QueryRequest,
-    SentenceAnnotationRow,
-)
-from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
+from core.search.search_dto import BBoxAnnotationRow, Page, QueryRequest
+from repos.filesystem_repo import FilesystemRepo
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder
 
+repo_service = FilesystemRepo()
 
-def find_sentence_annotations_info(
-    db: Session,
-    project_id: int,
-) -> list[ColumnInfo[SentAnnoColumns]]:
+
+def find_bbox_annotations_info(
+    db: Session, project_id: int
+) -> list[ColumnInfo[BBoxColumns]]:
     project_metadata = [
         ProjectMetadataRead.model_validate(pm)
         for pm in crud_project_meta.read_by_project(db=db, project_id=project_id)
@@ -33,20 +31,23 @@ def find_sentence_annotations_info(
     metadata_column_info = [
         ColumnInfo.from_project_metadata(pm)
         for pm in project_metadata
-        if pm.doctype in [DocType.text]
+        if pm.doctype
+        in [
+            DocType.image,
+        ]
     ]
 
     return [
-        ColumnInfo[SentAnnoColumns].from_column(column) for column in SentAnnoColumns
+        ColumnInfo[BBoxColumns].from_column(column) for column in BBoxColumns
     ] + metadata_column_info
 
 
-def find_sentence_annotations(
+def find_bbox_annotations(
     db: Session,
     *,
-    request: QueryRequest[SentAnnoColumns],
+    request: QueryRequest[BBoxColumns],
     user_id: int,
-) -> Page[SentenceAnnotationRow]:
+) -> Page[BBoxAnnotationRow]:
     builder = SearchBuilder(
         db,
         request.filter,
@@ -55,40 +56,37 @@ def find_sentence_annotations(
         group_key=request.group_key,
         user_id=user_id,
     )
-    # build the initial subquery that queries all necessary data for the desired output
     subquery = builder.init_subquery(
         db.query(
-            SentenceAnnotationORM.id,
+            BBoxAnnotationORM.id,
         ).group_by(
-            SentenceAnnotationORM.id,
+            BBoxAnnotationORM.id,
         )
     ).build_subquery()
     builder.init_query(
         db.query(
-            SentenceAnnotationORM.id,
-            SentenceAnnotationORM.sentence_id_start,
-            SentenceAnnotationORM.sentence_id_end,
+            BBoxAnnotationORM.id,
             AnnotationDocumentORM.user_id,
         )
+        .add_entity(BBoxAnnotationORM)
         .add_entity(CodeORM)
         .add_entity(SourceDocumentORM)
         .add_columns(
-            SentenceAnnotationORM.created,
-            SentenceAnnotationORM.source_user_id,
-            SentenceAnnotationORM.source_code_id,
+            BBoxAnnotationORM.created,
+            BBoxAnnotationORM.source_user_id,
+            BBoxAnnotationORM.source_code_id,
         )
-        .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+        .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
         .filter(SourceDocumentORM.project_id == request.project_id)
-        .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,
-        AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+        AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
     )._join_query(
         SourceDocumentORM,
         SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
     )._join_query(
         CodeORM,
-        CodeORM.id == SentenceAnnotationORM.code_id,
+        CodeORM.id == BBoxAnnotationORM.code_id,
     )
     builder.build_query()
 
@@ -99,39 +97,48 @@ def find_sentence_annotations(
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
         db=db,
-        attached_object_type=AttachedObjectType.sentence_annotation,
+        attached_object_type=AttachedObjectType.bbox_annotation,
         object_ids=[row[0] for row in result_rows],
     )
 
     items = []
     for row in result_rows:
-        sent_start = row[1]
-        sent_end = row[2]
-        sdoc_orm: SourceDocumentORM = row[5]
+        bbox_orm: BBoxAnnotationORM = row[2]
+        code_orm: CodeORM = row[3]
+        sdoc_orm: SourceDocumentORM = row[4]
         items.append(
-            SentenceAnnotationRow(
+            BBoxAnnotationRow(
                 id=row[0],
-                user_id=row[3],
-                code=CodeRead.model_validate(row[4]),
+                user_id=row[1],
+                x=bbox_orm.x_min,
+                y=bbox_orm.y_min,
+                width=bbox_orm.x_max - bbox_orm.x_min,
+                height=bbox_orm.y_max - bbox_orm.y_min,
+                url=repo_service.get_sdoc_url(
+                    sdoc=SourceDocumentRead.model_validate(sdoc_orm),
+                    relative=True,
+                    webp=True,
+                    thumbnail=False,
+                ),
+                code=CodeRead.model_validate(code_orm),
                 sdoc=SourceDocumentRead.model_validate(sdoc_orm),
                 tag_ids=[tag.id for tag in sdoc_orm.tags],
-                text=" ".join(sdoc_orm.data.sentences[sent_start : sent_end + 1]),
                 memo_ids=memo_ids_by_annotation.get(row[0], []),
-                created=row[6],
-                source_user_id=row[7],
-                source_code_id=row[8],
+                created=row[5],
+                source_user_id=row[6],
+                source_code_id=row[7],
             )
         )
-    return Page[SentenceAnnotationRow](items=items, total_results=total_results)
+    return Page[BBoxAnnotationRow](items=items, total_results=total_results)
 
 
-def find_sentence_annotation_groups(
+def find_bbox_annotation_groups(
     db: Session,
     *,
-    request: GroupQueryRequest[SentAnnoColumns],
+    request: GroupQueryRequest[BBoxColumns],
     user_id: int,
 ) -> GroupPage:
-    """Group query: aggregate sentence annotations by a column -> GroupPage.
+    """Group query: aggregate bbox annotations by a column -> GroupPage.
 
     The SearchBuilder grouping branch returns aggregate rows
     (group_key, group_label, total_results, target_id, target_type) directly.
@@ -141,27 +148,26 @@ def find_sentence_annotation_groups(
     )
     subquery = builder.init_subquery(
         db.query(
-            SentenceAnnotationORM.id,
+            BBoxAnnotationORM.id,
         ).group_by(
-            SentenceAnnotationORM.id,
+            BBoxAnnotationORM.id,
         )
     ).build_subquery()
     builder.init_query(
         db.query(
-            SentenceAnnotationORM.id,
+            BBoxAnnotationORM.id,
         )
-        .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+        .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
         .filter(SourceDocumentORM.project_id == request.project_id)
-        .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,
-        AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+        AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
     )._join_query(
         SourceDocumentORM,
         SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
     )._join_query(
         CodeORM,
-        CodeORM.id == SentenceAnnotationORM.code_id,
+        CodeORM.id == BBoxAnnotationORM.code_id,
     )
     builder.build_query()
 

@@ -9,6 +9,8 @@ from common.dependencies import get_current_user, get_db_session, get_weaviate_c
 from common.job_type_enum import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
+from core.search.sdoc_search.sdoc_search import find_sdoc_ids
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import (
     AspectCreate,
@@ -39,8 +41,6 @@ from modules.perspectives.perspectives_vis_dto import (
     PerspectivesDoc,
     PerspectivesVisualization,
 )
-from modules.search.sdoc_search.sdoc_search import find_sdoc_ids
-from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from systems.job_system.job_dto import RUNNING_JOB_STATUS
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus

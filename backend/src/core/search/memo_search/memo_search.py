@@ -2,11 +2,11 @@ from sqlalchemy.orm import Session
 
 from core.memo.memo_dto import MemoRead
 from core.memo.memo_enum import AttachedObjectType
-from modules.search.memo_search.memo_search_columns import (
+from core.search.memo_search.memo_search_columns import (
     MemoColumns,
     build_memo_subquery,
 )
-from modules.search.search_dto import Page, QueryRequest
+from core.search.search_dto import Page, QueryRequest
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder

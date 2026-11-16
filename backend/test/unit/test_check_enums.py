@@ -70,7 +70,7 @@ def rules(source: str, filename: str) -> set[str]:
         ),
         # exempt: search columns
         pytest.param(
-            ENUMS, "modules/search/sdoc_search/sdoc_search_columns.py", set(), id="cols"
+            ENUMS, "core/search/sdoc_search/sdoc_search_columns.py", set(), id="cols"
         ),
         # no enums at all
         pytest.param(NO_ENUMS, "modules/example/example_dto.py", set(), id="no-enum"),

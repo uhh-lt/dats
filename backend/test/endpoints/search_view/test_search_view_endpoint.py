@@ -9,11 +9,11 @@ bare `test_project` fixture because they assert on a fresh, empty project.
 import pytest
 from fastapi.testclient import TestClient
 
+from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
+from core.search.memo_search.memo_search_columns import MemoColumns
+from core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+from core.search.span_anno_search.span_anno_search_columns import SpanColumns
 from core.user.user_dto import UserRead
-from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
 from modules.search_view.search_view_dto import (
     BBoxSearchViewCreate,
     BBoxSearchViewRead,

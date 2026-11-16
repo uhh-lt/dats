@@ -12,8 +12,8 @@ from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.search.search_dto import Page, QueryRequest, SpanAnnotationRow
-from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
+from core.search.search_dto import Page, QueryRequest, SpanAnnotationRow
+from core.search.span_anno_search.span_anno_search_columns import SpanColumns
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder

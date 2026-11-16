@@ -82,10 +82,10 @@ class SearchViewProjectState(TypedDict):
 def search_view_project(db_session, test_project, test_user) -> SearchViewProjectState:
     """Create a project for the test user with one saved search view per entity type
     plus two extra memo views (so memo has three views at positions 0-2)."""
-    from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-    from modules.search.memo_search.memo_search_columns import MemoColumns
-    from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
-    from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
+    from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
+    from core.search.memo_search.memo_search_columns import MemoColumns
+    from core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
+    from core.search.span_anno_search.span_anno_search_columns import SpanColumns
 
     def create_view(create_dto) -> SearchViewORM:
         return crud_search_view.read(

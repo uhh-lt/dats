@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
 from modules.simsearch.simsearch_feature import SEMANTIC_SEARCH
 from modules.simsearch.simsearch_service import SimSearchService

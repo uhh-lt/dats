@@ -12,12 +12,12 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.search_dto import (
+from core.search.sdoc_search.sdoc_search_columns import SdocColumns
+from core.search.search_dto import (
     HierarchicalElasticSearchHit,
     PaginatedSDocHits,
 )
-from modules.search.search_feature import FULL_TEXT_SEARCH
+from core.search.search_feature import FULL_TEXT_SEARCH
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.feature_system.feature_service import FeatureService
