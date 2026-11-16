@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
 from common.languages_enum import Language
+from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_dto import SpanGroupWithAnnotationsRead
 from core.code.code_crud import crud_code
 from core.project.project_dto import ProjectCreate, ProjectRead
@@ -75,6 +76,13 @@ def _groups(client: TestClient, sdoc_id: int) -> list[SpanGroupWithAnnotationsRe
     return [SpanGroupWithAnnotationsRead.model_validate(g) for g in response.json()]
 
 
+def _spans(client: TestClient, sdoc_id: int) -> list[SpanAnnotationRead]:
+    """The span annotations of the system user in the document."""
+    response = client.get(f"/span/sdoc/{sdoc_id}/user/{SYSTEM_USER_ID}")
+    assert response.status_code == 200, response.text
+    return [SpanAnnotationRead.model_validate(s) for s in response.json()]
+
+
 def _texts(groups: list[SpanGroupWithAnnotationsRead]) -> list[list[str]]:
     return sorted(
         sorted(span.text for span in group.span_annotations) for group in groups
@@ -113,6 +121,10 @@ def test_enable_resolves_the_german_text_into_mention_groups(
     assert read_step_status(db_session, sdoc_id, STEP) == 1
     assert [[doc.id for doc in call.documents] for call in calls] == [[sdoc_id]]
     assert calls[0].language == "de"
+    assert calls[0].documents[0].tokens == [
+        ["Anna", "liest", "ein", "Buch."],
+        ["Sie", "mag", "es", "sehr."],
+    ]
     groups = _groups(client, sdoc_id)
     assert {group.name for group in groups} == {"coref"}
     assert _texts(groups) == [["Anna", "Sie"], ["ein Buch.", "es"]]
@@ -212,6 +224,31 @@ def test_recompute_replaces_the_mentions_and_groups(
     held_jobs.run(STEP)
 
     assert _texts(_groups(client, sdoc_id)) == [["Anna", "Sie"]]
+    assert sorted(span.text for span in _spans(client, sdoc_id)) == ["Anna", "Sie"]
+
+
+def test_recompute_clears_a_document_that_is_no_longer_german(
+    client: TestClient,
+    db_session: Session,
+    coref_project: CorefProject,
+    held_jobs: HeldJobs,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """formerly_german holds the mentions of an earlier run but is English now:
+    the recompute calls no model and leaves no MENTION span and no group of the
+    system user."""
+    p = coref_project
+    sdoc_id = p["formerly_german"].id
+    calls = _mock_coref(monkeypatch, CLUSTERS)
+    assert _texts(_groups(client, sdoc_id)) == [["Anna", "She"]]
+
+    _recompute(client, p["project"].id, sdoc_id)
+    held_jobs.run(STEP)
+
+    assert calls == []
+    assert read_step_status(db_session, sdoc_id, STEP) == 1
+    assert _groups(client, sdoc_id) == []
+    assert _spans(client, sdoc_id) == []
 
 
 # ===========================================================================
