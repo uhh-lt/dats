@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type TagRecommendationLinkRead = {
   /**
-   * Identifier of the corresponding ML Job.
+   * Identifier of the tag recommendation job.
    */
   ml_job_id: string;
   /**

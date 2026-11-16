@@ -9,20 +9,20 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class TagRecommendationService {
   /**
-   * Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.
+   * Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.
    * @returns TagRecommendationResult Successful Response
    * @throws ApiError
    */
   public static getAllTagrecommendationsFromJob({
-    mlJobId,
+    jobId,
   }: {
-    mlJobId: string;
+    jobId: string;
   }): CancelablePromise<Array<TagRecommendationResult>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/tagrecommendation/job/{ml_job_id}",
+      url: "/tagrecommendation/job/{job_id}",
       path: {
-        ml_job_id: mlJobId,
+        job_id: jobId,
       },
       errors: {
         422: `Validation Error`,

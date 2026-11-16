@@ -7134,14 +7134,14 @@
         }
       }
     },
-    "/tagrecommendation/job/{ml_job_id}": {
+    "/tagrecommendation/job/{job_id}": {
       "get": {
         "tags": ["TagRecommendation"],
-        "summary": "Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
+        "summary": "Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.",
         "operationId": "get_all_tagrecommendations_from_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "ml_job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Ml Job Id" } }
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
         ],
         "responses": {
           "200": {
@@ -19318,7 +19318,7 @@
           "ml_job_id": {
             "type": "string",
             "title": "Ml Job Id",
-            "description": "Identifier of the corresponding ML Job."
+            "description": "Identifier of the tag recommendation job."
           },
           "source_document_id": {
             "type": "integer",

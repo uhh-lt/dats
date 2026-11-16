@@ -28,7 +28,7 @@ export const tagRecommendationQueries = {
   byJob: (jobId: string | null | undefined) =>
     queryOptions({
       queryKey: [...tagRecommendationQueries.byJobScope(), jobId] as const,
-      queryFn: !jobId ? skipToken : () => TagRecommendationService.getAllTagrecommendationsFromJob({ mlJobId: jobId }),
+      queryFn: !jobId ? skipToken : () => TagRecommendationService.getAllTagrecommendationsFromJob({ jobId }),
       staleTime: 1000 * 60 * 5,
     }),
 };
