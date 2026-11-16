@@ -75,9 +75,9 @@ def test_activate_keyword_statistics_advances_through_the_planned_steps(
     activation_project: ActivationProject,
 ):
     """For extracted, the computation starts the language detection only; when it
-    finishes, the advancing starts spaCy for tokens and keywords, and then the
-    HTML mapping. tokenized gets the keywords from a spaCy run for the keywords
-    alone, which leaves its finished steps alone."""
+    finishes, the advancing starts the jobs text_spacy and text_keywords, and
+    after text_spacy the HTML mapping. tokenized gets the keywords from the
+    text_keywords job alone, which leaves its finished steps alone."""
     p = activation_project
 
     _activate(client, p["project"].id, "keyword_statistics")
@@ -94,14 +94,14 @@ def test_activate_keyword_statistics_advances_through_the_planned_steps(
     assert read_step_status(db_session, p["tokenized"].id, "text_ner") is None
 
 
-def test_activate_word_frequency_runs_spacy_for_the_word_frequencies_only(
+def test_activate_word_frequency_runs_the_word_frequency_job_only(
     client: TestClient,
     db_session,
     activation_project: ActivationProject,
 ):
-    """The spaCy job of tokenized computes only the word frequencies: they are
-    stored, and the steps after the tokens (the HTML mapping) are not recomputed
-    (they stay finished, nothing processes)."""
+    """The text_word_frequency job of tokenized stores the word frequencies,
+    and the steps after the tokens (the HTML mapping) are not recomputed (they
+    stay finished, nothing processes)."""
     p = activation_project
 
     _activate(client, p["project"].id, "word_frequency")

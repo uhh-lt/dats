@@ -276,8 +276,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         if not_planned:
             raise StepNotPlannedError(step=processing_step, sdoc_ids=not_planned)
 
-        # Start recompute jobs for the specified processing step: the job that
-        # computes the step, for this step only (e.g. text_spacy for text_ner).
+        # Start the job of the step for every document.
         # A document whose job cannot be queued (its input data is missing or
         # the queue cannot be reached) gets the step and the pending steps
         # after it erroneous, and the other documents still start.

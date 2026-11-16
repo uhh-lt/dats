@@ -608,7 +608,6 @@ def test_registry_rejects_an_artefact_name_declared_twice():
 
 
 def test_registry_rejects_a_step_name_declared_twice():
-    """Also a further step, which is no job of its own, cannot replace a step."""
     registry = ArtefactRegistry()
     registry.register_step("extract_html", _step(set(), set(), TEXT))
     with pytest.raises(
