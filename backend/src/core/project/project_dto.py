@@ -17,7 +17,7 @@ class ProjectBaseDTO(BaseModel):
 class ProjectCreate(ProjectBaseDTO):
     enabled_features: list[str] | None = Field(
         default=None,
-        description="Names of the Features enabled in the Project (null: the Features that declare default_enabled); the Features they require are enabled as well; an unknown name is rejected (404)",
+        description="Names of the Features enabled in the Project (null: the Features that declare default_enabled); an unknown name is rejected (404)",
     )
 
 

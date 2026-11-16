@@ -25,7 +25,7 @@ router = APIRouter(
 @router.get(
     "",
     response_model=list[FeatureRead],
-    summary="Returns all Features a Project can enable, with the Features they require",
+    summary="Returns all Features a Project can enable",
 )
 def get_all() -> list[FeatureRead]:
     return FeatureService().read_all()

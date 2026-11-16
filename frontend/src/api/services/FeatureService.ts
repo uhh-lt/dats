@@ -10,7 +10,7 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class FeatureService {
   /**
-   * Returns all Features a Project can enable, with the Features they require
+   * Returns all Features a Project can enable
    * @returns FeatureRead Successful Response
    * @throws ApiError
    */
