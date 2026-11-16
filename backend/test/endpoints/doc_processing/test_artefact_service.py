@@ -54,11 +54,11 @@ def _computation(held_jobs: HeldJobs) -> ArtefactComputationJobInput:
     return computation
 
 
-def _enable_full_text_search(db: Session, project_id: int) -> None:
+def _enable_keyword_statistics(db: Session, project_id: int) -> None:
     FeatureService().enable_feature(
         db=db,
         project_id=project_id,
-        feature=feature_named("full_text_search"),
+        feature=feature_named("keyword_statistics"),
         settings=SETTINGS,
     )
     db.commit()
@@ -74,37 +74,38 @@ def test_enable_feature_plans_only_the_documents_of_the_project(
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
-    """Enabling full-text search in project plans the index of its two text
+    """Enabling keyword statistics in project plans the keywords of its two text
     documents and its image (which has a caption) and starts it where its
     input is finished; the finished steps of done and the image keep their
     status, and the documents of the other project are left alone."""
     p = planning_projects
 
-    _enable_full_text_search(db_session, p["project"].id)
+    _enable_keyword_statistics(db_session, p["project"].id)
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
 
     assert crud_project.read(db=db_session, id=p["project"].id).enabled_features == [
-        "full_text_search"
+        "keyword_statistics"
     ]
     assert read_all_step_status(db_session, p["done"].id) == {
         "extract_html": 1,
         "text_extraction": 1,
         "text_language_detection": 1,
+        "text_es_index": 1,
         "text_spacy": 1,
         "text_html_mapping": 1,
-        "text_es_index": 0,
+        "text_keywords": 0,
     }
     assert read_all_step_status(db_session, p["image"].id) == {
         **dict.fromkeys(minimal_image_steps(), 1),
-        "text_es_index": 0,
+        "text_keywords": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
-    assert read_step_status(db_session, p["indexing"].id, "text_es_index") == 0
+    assert read_step_status(db_session, p["extracting"].id, "text_keywords") == 0
     assert started == {
-        p["done"].id: ["text_es_index"],
-        p["language_failed"].id: ["text_es_index"],
-        p["image"].id: ["text_es_index"],
+        p["done"].id: ["text_keywords"],
+        p["spacy_failed"].id: ["text_keywords"],
+        p["image"].id: ["text_keywords"],
     }
 
 
@@ -113,23 +114,23 @@ def test_enable_feature_fails_the_planned_steps_after_an_erroneous_input(
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
-    """Enabling full-text search plans the core steps text_spacy and
-    text_html_mapping for language_failed: text_spacy is erroneous as its input
-    language detection is, and text_html_mapping after it as well, as the steps
-    are planned in pipeline order. The erroneous language detection is no step
-    of full-text search and stays erroneous."""
-    sdoc_id = planning_projects["language_failed"].id
+    """Enabling keyword statistics plans the core step text_html_mapping for
+    spacy_failed: it is erroneous as its input text_spacy is. The erroneous
+    text_spacy is no step of keyword statistics and stays erroneous; the
+    keywords start, as their input language detection is finished."""
+    sdoc_id = planning_projects["spacy_failed"].id
 
-    _enable_full_text_search(db_session, planning_projects["project"].id)
+    _enable_keyword_statistics(db_session, planning_projects["project"].id)
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
 
     assert read_all_step_status(db_session, sdoc_id) == {
         "extract_html": 1,
         "text_extraction": 1,
-        "text_language_detection": -100,
+        "text_language_detection": 1,
+        "text_es_index": 1,
         "text_spacy": -100,
         "text_html_mapping": -100,
-        "text_es_index": 0,
+        "text_keywords": 0,
     }
 
 
@@ -146,7 +147,7 @@ def test_enable_feature_lets_other_transactions_reference_the_locked_documents(
     private batch operation of the computation, to hold a batch's transaction
     open."""
     sdoc_id = planning_projects["done"].id
-    _enable_full_text_search(db_session, planning_projects["project"].id)
+    _enable_keyword_statistics(db_session, planning_projects["project"].id)
     batch = ArtefactService()._plan_batch(
         db=db_session, computation=_computation(held_jobs), after_sdoc_id=0
     )
@@ -181,28 +182,29 @@ def test_computation_plans_in_batches_like_in_one(
     held_jobs: HeldJobs,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """With one document per batch, enabling full-text search plans and starts
+    """With one document per batch, enabling keyword statistics plans and starts
     the same steps as in one batch (`test_enable_feature_plans_only_the_documents_of_the_project`)."""
     p = planning_projects
     monkeypatch.setattr(artefact_service, "COMPUTATION_BATCH_SIZE", 1)
 
-    _enable_full_text_search(db_session, p["project"].id)
+    _enable_keyword_statistics(db_session, p["project"].id)
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
     started = started_steps(held_jobs)
 
     assert started == {
-        p["done"].id: ["text_es_index"],
-        p["language_failed"].id: ["text_es_index"],
-        p["image"].id: ["text_es_index"],
+        p["done"].id: ["text_keywords"],
+        p["spacy_failed"].id: ["text_keywords"],
+        p["image"].id: ["text_keywords"],
     }
-    assert read_step_status(db_session, p["done"].id, "text_es_index") == 0
-    assert read_all_step_status(db_session, p["language_failed"].id) == {
+    assert read_step_status(db_session, p["done"].id, "text_keywords") == 0
+    assert read_all_step_status(db_session, p["spacy_failed"].id) == {
         "extract_html": 1,
         "text_extraction": 1,
-        "text_language_detection": -100,
+        "text_language_detection": 1,
+        "text_es_index": 1,
         "text_spacy": -100,
         "text_html_mapping": -100,
-        "text_es_index": 0,
+        "text_keywords": 0,
     }
     assert (
         crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
@@ -216,10 +218,10 @@ def test_computation_leaves_the_documents_after_its_last_document_alone(
 ):
     """A computation plans the documents up to the highest id at its request;
     later documents plan their steps on upload. With its last document set to
-    done (as if language_failed and image were uploaded after the request), it
+    done (as if spacy_failed and image were uploaded after the request), it
     plans done only."""
     p = planning_projects
-    _enable_full_text_search(db_session, p["project"].id)
+    _enable_keyword_statistics(db_session, p["project"].id)
     computation = _computation(held_jobs)
     held_jobs.empty()
     JobService().start_job(
@@ -231,10 +233,8 @@ def test_computation_leaves_the_documents_after_its_last_document_alone(
 
     started = started_steps(held_jobs)
 
-    assert started == {p["done"].id: ["text_es_index"]}
-    assert (
-        read_step_status(db_session, p["language_failed"].id, "text_es_index") is None
-    )
+    assert started == {p["done"].id: ["text_keywords"]}
+    assert read_step_status(db_session, p["spacy_failed"].id, "text_keywords") is None
 
 
 def _fail(*args: object, **kwargs: object) -> None:
@@ -249,12 +249,12 @@ def test_a_failing_computation_removes_the_pending_computation(
 ):
     """A computation job that fails (here its steps cannot be started) ends
     through its failure callback: the feature's pending computation is removed,
-    so the feature does not stay computing for it. The index of done, which
-    the committed batch planned before the failure, stays processing without
+    so the feature does not stay computing for it. The keywords of done, which
+    the committed batch planned before the failure, stay processing without
     a job: the accepted gap of a process that dies between writing processing
     and queueing; Recompute starts it."""
     p = planning_projects
-    _enable_full_text_search(db_session, p["project"].id)
+    _enable_keyword_statistics(db_session, p["project"].id)
     monkeypatch.setattr(artefact_service, "start_steps", _fail)
 
     held_jobs.run(JobType.ARTEFACT_COMPUTATION)
@@ -264,7 +264,7 @@ def test_a_failing_computation_removes_the_pending_computation(
     assert (
         crud_project.read(db=db_session, id=p["project"].id).artefact_computations == {}
     )
-    assert read_step_status(db_session, p["done"].id, "text_es_index") == 0
+    assert read_step_status(db_session, p["done"].id, "text_keywords") == 0
 
 
 # ===========================================================================
@@ -277,8 +277,8 @@ def test_add_features_enables_them_and_plans_nothing(
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
-    """Adding RAG chat to the other project, as an import does, keeps full-text
-    search and enables RAG chat alone; the steps of its documents stay as they
+    """Adding RAG chat to the other project, as an import does, keeps keyword
+    statistics and enables RAG chat alone; the steps of its documents stay as they
     are and no job starts."""
     p = planning_projects
 
@@ -289,17 +289,18 @@ def test_add_features_enables_them_and_plans_nothing(
     )
     db_session.commit()
 
-    expected = ["full_text_search", "rag_chat"]
+    expected = ["keyword_statistics", "rag_chat"]
     assert [f.name for f in enabled] == expected
     project = crud_project.read(db=db_session, id=p["other_project"].id)
     assert project.enabled_features == expected
-    assert read_all_step_status(db_session, p["indexing"].id) == {
+    assert read_all_step_status(db_session, p["extracting"].id) == {
         "extract_html": 1,
         "text_extraction": 1,
         "text_language_detection": 1,
+        "text_es_index": 1,
         "text_spacy": 1,
         "text_html_mapping": 1,
-        "text_es_index": 0,
+        "text_keywords": 0,
     }
     assert read_all_step_status(db_session, p["new"].id) == {}
     assert held_jobs.jobs() == []
@@ -315,8 +316,8 @@ def test_plan_document_plans_the_steps_of_the_artefact_demand(
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
-    """A new text document of the other project, which enables full-text
-    search, gets the minimal text steps and the index as processing, and no
+    """A new text document of the other project, which enables keyword
+    statistics, gets the minimal text steps and the keywords as processing, and no
     computation job: the upload starts the returned root step itself."""
     p = planning_projects
 
@@ -328,15 +329,16 @@ def test_plan_document_plans_the_steps_of_the_artefact_demand(
     )
     db_session.commit()
 
-    assert demand == {artefact_named("es_index")}
+    assert demand == {artefact_named("keywords")}
     assert roots == ["extract_html"]
 
     assert read_all_step_status(db_session, p["new"].id) == {
         "extract_html": 0,
         "text_extraction": 0,
         "text_language_detection": 0,
+        "text_es_index": 0,
         "text_spacy": 0,
         "text_html_mapping": 0,
-        "text_es_index": 0,
+        "text_keywords": 0,
     }
     assert held_jobs.jobs() == []

@@ -225,7 +225,7 @@ def off_by_default() -> Generator[Feature, None, None]:
 def removed_feature_project(db_session, test_user: UserORM) -> ProjectORM:
     """
     This fixture sets up the project "Removed Feature Project" of `test_user`,
-    without documents. Its stored enabled features are "full_text_search" and
+    without documents. Its stored enabled features are "keyword_statistics" and
     "removed_feature", a name no registered feature has (as after a feature
     was removed from DATS).
     """
@@ -233,9 +233,9 @@ def removed_feature_project(db_session, test_user: UserORM) -> ProjectORM:
         db_session,
         test_user,
         title="Removed Feature Project",
-        features=["full_text_search"],
+        features=["keyword_statistics"],
     )
-    project.enabled_features = ["full_text_search", "removed_feature"]
+    project.enabled_features = ["keyword_statistics", "removed_feature"]
     db_session.commit()
     db_session.refresh(project)
     return project

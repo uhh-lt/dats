@@ -17,10 +17,8 @@ from core.search.search_dto import (
     HierarchicalElasticSearchHit,
     PaginatedSDocHits,
 )
-from core.search.search_feature import FULL_TEXT_SEARCH
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from systems.feature_system.feature_service import FeatureService
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.search_builder import SearchBuilder
@@ -152,10 +150,6 @@ def find_sdoc_ids(
             total_results=total_results,
         )
     else:
-        # without full-text search, documents can be searched with filters only
-        FeatureService().assert_enabled(
-            db=db, project_id=project_id, feature=FULL_TEXT_SEARCH
-        )
         # special case: no filter, no sorting, no folder restriction -> all sdocs are relevant
         if (
             len(filter.items) == 0

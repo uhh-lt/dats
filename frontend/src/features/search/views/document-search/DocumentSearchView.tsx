@@ -1,6 +1,5 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FeatureCoverageHint, Feature } from "@core/feature";
 import { FILTER_PARAM, TableInfoHooks } from "@core/filter";
 import { FolderExplorer, FolderHooks, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel, sdocQueries } from "@core/source-document";
@@ -372,7 +371,6 @@ export function DocumentSearchView() {
           </Stack>
         )}
       </DragOverlay>
-      <FeatureCoverageHint feature={Feature.FULL_TEXT_SEARCH} />
     </DndContext>
   );
 }

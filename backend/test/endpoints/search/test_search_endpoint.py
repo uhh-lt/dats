@@ -31,7 +31,7 @@ from core.search.search_dto import (
 )
 from core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from core.search.span_anno_search.span_anno_search_columns import SpanColumns
-from feature_test_utils import FeaturelessProject, assert_feature_disabled
+from feature_test_utils import FeaturelessProject
 from provenance_test_utils import ANNOTATION_KINDS, AnnotationKind
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter, FilterExpression, LogicalOperator
@@ -3222,8 +3222,8 @@ def test_search_group_by_source_user_counts_copies_per_source_user(
 # ===========================================================================
 # SEARCH SDOCS (/search/sdoc) TESTS
 # ===========================================================================
-# Without full-text search, documents can be searched with filters only: a text
-# query is rejected, an empty one is answered from the database.
+# Full-text search is core: a project without features answers a text query
+# from Elasticsearch and an empty one from the database.
 
 
 def _search_sdocs(client: TestClient, project_id: int, search_query: str):
@@ -3242,15 +3242,19 @@ def _search_sdocs(client: TestClient, project_id: int, search_query: str):
     )
 
 
-def test_search_sdocs_with_a_text_query_is_rejected_without_full_text_search(
+def test_search_sdocs_with_a_text_query_works_in_a_project_without_features(
     client: TestClient, featureless_project: FeaturelessProject
 ):
+    """The text query reaches Elasticsearch; the project's document is not
+    stored there, so it finds nothing."""
     response = _search_sdocs(client, featureless_project["project"].id, "alpha")
 
-    assert_feature_disabled(response, "full_text_search")
+    assert response.status_code == 200, response.text
+    hits = PaginatedSDocHits.model_validate(response.json())
+    assert hits.hits == []
 
 
-def test_search_sdocs_without_a_text_query_works_without_full_text_search(
+def test_search_sdocs_without_a_text_query_works_in_a_project_without_features(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     """Filter-only search needs no Elasticsearch index: it finds the project's

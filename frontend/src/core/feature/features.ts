@@ -6,7 +6,6 @@ import { FeatureRead } from "@models/FeatureRead";
  * come from the backend (`GET /feature`, `useFeatureInfo`); every other feature is known from that list only.
  */
 export const Feature = {
-  FULL_TEXT_SEARCH: "full_text_search",
   SEMANTIC_SEARCH: "semantic_search",
   RAG_CHAT: "rag_chat",
   KEYWORD_STATISTICS: "keyword_statistics",

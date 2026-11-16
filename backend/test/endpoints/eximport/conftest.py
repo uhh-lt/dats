@@ -614,7 +614,6 @@ def toggled_text_steps() -> list[str]:
     return [
         *minimal_text_steps(),
         "text_word_frequency",
-        "text_es_index",
         "text_sentence_embedding",
         "text_document_embedding",
     ]
@@ -638,7 +637,7 @@ def feature_toggle_eximport_projects(
       that hold the data of every artefact archive (`artefact_registry.archives()`):
       - "text.txt" (`text`), a text document with the 30 sentences "Sentence
         0." to "Sentence 29.", its raw file, and finished `toggled_text_steps()`
-        (the core steps, `text_word_frequency`, `text_es_index`,
+        (the core steps, `text_es_index` among them, `text_word_frequency`,
         `text_sentence_embedding` and `text_document_embedding`); every other
         step is not planned. Each sentence has its own embedding in Weaviate
         (`sentence_embeddings`, by sentence id): sentence i has 1.0 at position
@@ -649,14 +648,15 @@ def feature_toggle_eximport_projects(
         thumbnail that image_thumbnail writes, an empty caption (empty
         content, HTML and raw HTML), the image embedding [0.4, 0.5] and
         finished `toggled_image_steps()` (the core steps, among them the
-        caption and the text steps after it, and `image_embedding`); every
-        other step is not planned.
+        caption and the text steps after it, and `image_embedding`), and its
+        Elasticsearch entry; every other step is not planned.
       - "clip.mp4" (`video`), a video of one second (a 64x64 test picture with
         a 440 Hz tone, made with ffmpeg) with its raw file, the transcript "Hello
         world." (two tokens with their times, one sentence), finished
         `minimal_video_steps()`, the audio stream that video_audio_extraction
-        extracted from it and the thumbnail that video_thumbnail wrote (its
-        `repo_url` links the thumbnail); every other step is not planned.
+        extracted from it, the thumbnail that video_thumbnail wrote (its
+        `repo_url` links the thumbnail) and its Elasticsearch entry; every other
+        step is not planned.
     - Project "Import Target" (`target_project`), which enables only keyword
       statistics, with no documents.
 
@@ -746,17 +746,18 @@ def feature_toggle_eximport_projects(
             for word, count in (("sentence", 30), ("29", 1))
         ],
     )
-    text_data = crud_sdoc_data.read(db=db_session, id=text.id)
-    crud_sdoc_elastic.create(
-        client=ElasticSearchRepo().get_client(),
-        project_id=project.id,
-        create_dto=ElasticSearchDocumentCreate(
+    # the index is core: every document has its entry
+    for sdoc in (text, image, video):
+        crud_sdoc_elastic.create(
+            client=ElasticSearchRepo().get_client(),
             project_id=project.id,
-            sdoc_id=text.id,
-            filename=text.filename,
-            content=text_data.content,
-        ),
-    )
+            create_dto=ElasticSearchDocumentCreate(
+                project_id=project.id,
+                sdoc_id=sdoc.id,
+                filename=sdoc.filename,
+                content=crud_sdoc_data.read(db=db_session, id=sdoc.id).content,
+            ),
+        )
 
     set_step_status(db_session, text.id, dict.fromkeys(toggled_text_steps(), 1))
     set_step_status(db_session, image.id, dict.fromkeys(toggled_image_steps(), 1))

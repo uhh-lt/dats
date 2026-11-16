@@ -82,23 +82,24 @@ class FeatureProject(TypedDict):
 
     - text_done: text document "text_done.txt"; the steps of a project without
       features are finished (extract_html, text_extraction,
-      text_language_detection, text_spacy, text_html_mapping), all other steps
-      are not planned
-    - text_running: text document "text_running.txt"; extract_html and
-      text_extraction are finished, text_language_detection, text_spacy and
-      text_html_mapping are processing, all other steps are not planned
+      text_language_detection, text_es_index, text_spacy, text_html_mapping),
+      all other steps are not planned
+    - text_running: text document "text_running.txt"; extract_html,
+      text_extraction and text_language_detection are finished, text_es_index,
+      text_spacy and text_html_mapping are processing, all other steps are not
+      planned
     - image: image document "image.png"; the steps of an image in a project
       without features are finished (image_metadata_extraction,
       image_thumbnail, image_caption and the text steps after it:
-      text_extraction, text_language_detection, text_spacy,
+      text_extraction, text_language_detection, text_es_index, text_spacy,
       text_html_mapping), all other steps are not planned
 
     Non-obvious derived behavior:
 
     - A feature's steps include the core steps it needs: keyword statistics on
       text needs extract_html, text_extraction, text_language_detection and
-      text_keywords (not text_spacy, keywords need no tokens), so
-      text_running misses text_language_detection.
+      text_keywords (not text_spacy, keywords need no tokens), so the keywords
+      of text_running can start at once.
     - Every image has a caption, so features that need text apply to the
       image too; image features (object detection)
       apply to the image only; semantic search applies to every document
@@ -183,7 +184,8 @@ def create_feature_project(db: Session, user: UserORM) -> FeatureProject:
         status={
             "extract_html": 1,
             "text_extraction": 1,
-            "text_language_detection": 0,
+            "text_language_detection": 1,
+            "text_es_index": 0,
             "text_spacy": 0,
             "text_html_mapping": 0,
         },
@@ -213,31 +215,32 @@ class PartlyProject(TypedDict):
     """
     This fixture sets up the following project:
 
-    - project: "Partly Available Project" of `test_user`, with only full-text
-      search enabled
+    - project: "Partly Available Project" of `test_user`, with only keyword
+      statistics enabled
     - five text documents with the text of `SDOC_SENTENCES` and the language
-      "en"; the minimal text steps are extract_html,
-      text_extraction, text_language_detection, text_spacy, text_html_mapping;
+      "en"; the minimal text steps are extract_html, text_extraction,
+      text_language_detection, text_es_index, text_spacy, text_html_mapping;
       steps not listed are not planned:
-      - indexed: minimal steps and text_es_index finished
-      - index_failed: minimal steps finished, text_es_index erroneous
-      - not_indexed: minimal steps finished (text_es_index not planned)
+      - with_keywords: minimal steps and text_keywords finished
+      - keywords_failed: minimal steps finished, text_keywords erroneous
+      - without_keywords: minimal steps finished (text_keywords not planned)
       - extraction_failed: extract_html finished, text_extraction and the
         minimal steps after it erroneous
-      - spacy_failed: extract_html, text_extraction, text_language_detection
-        finished, text_spacy erroneous
+      - spacy_failed: extract_html, text_extraction, text_language_detection,
+        text_es_index finished, text_spacy erroneous
 
     Non-obvious derived behavior:
 
-    - Full-text search needs extract_html, text_extraction and text_es_index, so
-      it covers indexed only: index_failed and extraction_failed count as failed,
-      not_indexed and spacy_failed as not planned; it is partly available.
+    - Keyword statistics needs extract_html, text_extraction,
+      text_language_detection and text_keywords, so it covers with_keywords
+      only: keywords_failed and extraction_failed count as failed,
+      without_keywords and spacy_failed as not planned; it is partly available.
     """
 
     project: ProjectORM
-    indexed: SourceDocumentORM
-    index_failed: SourceDocumentORM
-    not_indexed: SourceDocumentORM
+    with_keywords: SourceDocumentORM
+    keywords_failed: SourceDocumentORM
+    without_keywords: SourceDocumentORM
     extraction_failed: SourceDocumentORM
     spacy_failed: SourceDocumentORM
 
@@ -245,17 +248,18 @@ class PartlyProject(TypedDict):
 def create_partly_project(db: Session, user: UserORM) -> PartlyProject:
     """The project described in the fixtures that use `PartlyProject`."""
     project = create_project_with_features(
-        db, user, title=PARTLY_PROJECT_TITLE, features=["full_text_search"]
+        db, user, title=PARTLY_PROJECT_TITLE, features=["keyword_statistics"]
     )
     done = dict.fromkeys(minimal_text_steps(), 1)
     sdocs = {
-        "indexed": {**done, "text_es_index": 1},
-        "index_failed": {**done, "text_es_index": -100},
-        "not_indexed": done,
+        "with_keywords": {**done, "text_keywords": 1},
+        "keywords_failed": {**done, "text_keywords": -100},
+        "without_keywords": done,
         "extraction_failed": {
             "extract_html": 1,
             "text_extraction": -100,
             "text_language_detection": -100,
+            "text_es_index": -100,
             "text_spacy": -100,
             "text_html_mapping": -100,
         },
@@ -263,6 +267,7 @@ def create_partly_project(db: Session, user: UserORM) -> PartlyProject:
             "extract_html": 1,
             "text_extraction": 1,
             "text_language_detection": 1,
+            "text_es_index": 1,
             "text_spacy": -100,
         },
     }
@@ -278,9 +283,9 @@ def create_partly_project(db: Session, user: UserORM) -> PartlyProject:
         db.refresh(sdoc)
     return {
         "project": project,
-        "indexed": created["indexed"],
-        "index_failed": created["index_failed"],
-        "not_indexed": created["not_indexed"],
+        "with_keywords": created["with_keywords"],
+        "keywords_failed": created["keywords_failed"],
+        "without_keywords": created["without_keywords"],
         "extraction_failed": created["extraction_failed"],
         "spacy_failed": created["spacy_failed"],
     }

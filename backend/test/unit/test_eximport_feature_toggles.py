@@ -159,17 +159,38 @@ def test_unknown_feature_is_rejected() -> None:
         archived_features(details)
 
 
-def test_removed_image_captions_feature_is_dropped() -> None:
-    """An archive of an earlier version that enables the removed feature
-    "image_captions" imports: the name is dropped, the other features are
-    restored, and an unknown name next to it is still rejected."""
+@pytest.mark.parametrize(
+    "removed",
+    [
+        # image captions are always computed
+        pytest.param("image_captions", id="image-captions"),
+        # the search index is always computed
+        pytest.param("full_text_search", id="full-text-search"),
+        pytest.param("search_annotate", id="search-annotate"),
+    ],
+)
+def test_removed_feature_is_dropped(removed: str) -> None:
+    """An archive of an earlier version that enables a removed feature imports:
+    the name is dropped, the other features are restored, and an unknown name
+    next to it is still rejected."""
     details = ProjectDetailsExportSchema(
         title="p",
         description="d",
-        enabled_features=["image_captions", "rag_chat"],
+        enabled_features=[removed, "rag_chat"],
     )
     assert [f.name for f in archived_features(details)] == ["rag_chat"]
 
     details.enabled_features.append("time_travel")
     with pytest.raises(ImportProjectDetailsError, match="'time_travel'"):
         archived_features(details)
+
+
+def test_the_similarity_searches_are_imported_as_semantic_search() -> None:
+    """An archive of an earlier version that enables the sentence and the image
+    similarity search enables Semantic Search once."""
+    details = ProjectDetailsExportSchema(
+        title="p",
+        description="d",
+        enabled_features=["sentence_similarity_search", "image_similarity_search"],
+    )
+    assert [f.name for f in archived_features(details)] == ["semantic_search"]

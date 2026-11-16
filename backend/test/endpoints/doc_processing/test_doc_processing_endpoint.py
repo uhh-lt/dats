@@ -119,13 +119,13 @@ def test_upload_with_unsupported_file_stores_nothing(client: TestClient, test_pr
     [
         # processing (0) before finished (1)
         pytest.param(
-            [("text_language_detection", SortDirection.ASC)],
+            [("text_es_index", SortDirection.ASC)],
             2,
             ["text_running.txt", "text_done.txt"],
             id="step-asc",
         ),
         pytest.param(
-            [("text_language_detection", SortDirection.DESC)],
+            [("text_es_index", SortDirection.DESC)],
             2,
             ["text_done.txt", "text_running.txt"],
             id="step-desc",

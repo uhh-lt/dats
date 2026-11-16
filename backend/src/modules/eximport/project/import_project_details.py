@@ -12,9 +12,14 @@ from modules.eximport.project.project_export_schema import (
 from systems.feature_system.feature_registry import Feature, feature_registry
 from systems.feature_system.feature_service import FeatureService
 
-# The feature DATS no longer has: image captions are always computed. Archives
-# of an earlier version may still enable it.
-_REMOVED_FEATURE = "image_captions"
+# The features DATS no longer has, as what they need is always computed (image
+# captions, the search index), and the features that became Semantic Search.
+# Archives of an earlier version may still enable them.
+_REMOVED_FEATURES = {"image_captions", "full_text_search", "search_annotate"}
+_RENAMED_FEATURES = {
+    "sentence_similarity_search": "semantic_search",
+    "image_similarity_search": "semantic_search",
+}
 
 
 def read_project_details(path: Path) -> ProjectDetailsExportSchema:
@@ -35,7 +40,13 @@ def archived_features(details: ProjectDetailsExportSchema | None) -> list[Featur
     if details is None:
         return feature_registry.defaults()
 
-    archived = [f for f in details.enabled_features if f != _REMOVED_FEATURE]
+    archived = list(
+        dict.fromkeys(
+            _RENAMED_FEATURES.get(f, f)
+            for f in details.enabled_features
+            if f not in _REMOVED_FEATURES
+        )
+    )
     known = set(feature_registry.names())
     unknown = [f for f in archived if f not in known]
     if unknown:

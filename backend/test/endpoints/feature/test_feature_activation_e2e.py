@@ -52,7 +52,7 @@ def _wait_until_nothing_processes(
         time.sleep(1)
 
 
-def test_activate_full_text_search_indexes_the_documents_and_fails_those_without_data(
+def test_activate_keyword_statistics_extracts_the_keywords_of_the_documents_and_fails_those_without_data(
     client: TestClient,
     db_session,
     activation_project: ActivationProject,
@@ -62,11 +62,11 @@ def test_activate_full_text_search_indexes_the_documents_and_fails_those_without
     anyway."""
     p = activation_project
 
-    _activate(client, p["project"].id, "full_text_search")
+    _activate(client, p["project"].id, "keyword_statistics")
     _wait_until_nothing_processes(db_session, p["project"].id)
 
-    assert read_step_status(db_session, p["tokenized"].id, "text_es_index") == 1
-    assert read_step_status(db_session, p["no_data"].id, "text_es_index") == -100
+    assert read_step_status(db_session, p["tokenized"].id, "text_keywords") == 1
+    assert read_step_status(db_session, p["no_data"].id, "text_keywords") == -100
 
 
 def test_activate_keyword_statistics_advances_through_the_planned_steps(

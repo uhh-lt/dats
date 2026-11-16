@@ -653,7 +653,7 @@ def test_every_artefact_needs_every_step_of_the_doctype(
 
 @pytest.mark.parametrize("doctype", list(DocType), ids=lambda d: d.value)
 def test_the_core_steps_produce_core_artefacts(graph: PipelineGraph, doctype: DocType):
-    """The steps of the core artefacts compute no index, embeddings, keywords,
+    """The steps of the core artefacts compute no embeddings, keywords,
     word frequencies, entities or object boxes alone."""
     for step in graph.steps_for(doctype, artefact_registry.always()):
         assert graph.declaration(step).produces & artefact_registry.always(), step
@@ -680,12 +680,6 @@ def test_the_core_steps_produce_core_artefacts(graph: PipelineGraph, doctype: Do
             artefact_named("word_frequencies"),
             ["text_word_frequency"],
             id="audio-word-frequencies",
-        ),
-        pytest.param(
-            DocType.text,
-            artefact_named("es_index"),
-            ["text_es_index"],
-            id="text-index",
         ),
         pytest.param(
             DocType.video,
@@ -749,4 +743,4 @@ def test_image_artefacts_do_not_apply_to_text(graph: PipelineGraph):
     assert graph.applies(DocType.image, boxes)
     assert not graph.applies(DocType.text, boxes)
     for doctype in DocType:
-        assert graph.applies(doctype, frozenset({artefact_named("es_index")})), doctype
+        assert graph.applies(doctype, frozenset({artefact_named("keywords")})), doctype

@@ -1,4 +1,3 @@
-import { ensureFeatureEnabled, Feature } from "@core/feature";
 import { Icon } from "@components/icons";
 import { FILTER_PARAM, searchParamFilterValidators, toSorts } from "@core/filter";
 import { projectMetadataQueries } from "@core/project-metadata";
@@ -6,7 +5,7 @@ import { sdocQueries } from "@core/source-document";
 import { DocumentSearchView } from "@features/search";
 import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { searchParamBooleanValidator, searchParamSortingModelValidator } from "@utils/searchParamValidators";
@@ -42,14 +41,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
     }),
     projectMetadataOptions: projectMetadataQueries.byProject(params.projectId),
   }),
-  loader: async ({ context, params, deps }) => {
-    // without full-text search, documents are searched with filters only: drop a text query (e.g. from an old link)
-    if (
-      deps.searchQuery.trim() !== "" &&
-      !(await ensureFeatureEnabled(context.queryClient, params.projectId, Feature.FULL_TEXT_SEARCH))
-    ) {
-      throw redirect({ to: "/project/$projectId/search", params, search: { ...deps, searchQuery: "" } });
-    }
+  loader: async ({ context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(context.projectMetadataOptions),
       context.queryClient.ensureInfiniteQueryData(context.documentSearchOptions),

@@ -135,8 +135,8 @@ def feature_project(db_session, test_user: UserORM) -> FeatureProject:
 class PlanningProjects(TypedDict):
     """
     This fixture sets up two projects of `test_user`; the minimal text steps are
-    extract_html, text_extraction, text_language_detection, text_spacy and
-    text_html_mapping, the minimal image steps image_metadata_extraction,
+    extract_html, text_extraction, text_language_detection, text_es_index,
+    text_spacy and text_html_mapping, the minimal image steps image_metadata_extraction,
     image_thumbnail, image_caption and the text steps after it; steps not
     listed are not planned. Every document has the text of `SDOC_SENTENCES`
     and the language "en" (the image as its caption), the image an 8x8 red
@@ -144,31 +144,33 @@ class PlanningProjects(TypedDict):
 
     - project: "Planning Project", without any enabled feature
       - done: text document "done.txt"; the minimal text steps are finished
-      - language_failed: text document "language_failed.txt"; extract_html and
-        text_extraction are finished, text_language_detection is erroneous
+      - spacy_failed: text document "spacy_failed.txt"; extract_html,
+        text_extraction, text_language_detection and text_es_index are finished,
+        text_spacy is erroneous
       - image: image document "image.png"; the minimal image steps are finished
-    - other_project: "Other Planning Project", with full-text search enabled
-      - indexing: text document "indexing.txt"; the minimal text steps are
-        finished, text_es_index is processing
+    - other_project: "Other Planning Project", with keyword statistics enabled
+      - extracting: text document "extracting.txt"; the minimal text steps are
+        finished, text_keywords is processing
       - new: text document "new.txt" without any step, as an upload creates it
         before it plans its steps
 
     Non-obvious derived behavior:
 
-    - Full-text search needs extract_html, text_extraction and text_es_index;
-      text_spacy and text_html_mapping are core steps outside it, so enabling it
-      in project plans them for language_failed without planning its erroneous
-      language detection again.
+    - Keyword statistics needs extract_html, text_extraction,
+      text_language_detection and text_keywords; text_spacy and
+      text_html_mapping are core steps outside it, so enabling it in project
+      plans text_html_mapping for spacy_failed without planning its erroneous
+      text_spacy again.
     - text_spacy needs text_language_detection, text_html_mapping needs
       text_spacy.
     """
 
     project: ProjectORM
     done: SourceDocumentORM
-    language_failed: SourceDocumentORM
+    spacy_failed: SourceDocumentORM
     image: SourceDocumentORM
     other_project: ProjectORM
-    indexing: SourceDocumentORM
+    extracting: SourceDocumentORM
     new: SourceDocumentORM
 
 
@@ -182,18 +184,24 @@ def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjec
         db_session,
         test_user,
         title="Other Planning Project",
-        features=["full_text_search"],
+        features=["keyword_statistics"],
     )
     done = dict.fromkeys(minimal_text_steps(), 1)
     sdocs = {
         "done": (project, DocType.text, done),
-        "language_failed": (
+        "spacy_failed": (
             project,
             DocType.text,
-            {"extract_html": 1, "text_extraction": 1, "text_language_detection": -100},
+            {
+                "extract_html": 1,
+                "text_extraction": 1,
+                "text_language_detection": 1,
+                "text_es_index": 1,
+                "text_spacy": -100,
+            },
         ),
         "image": (project, DocType.image, dict.fromkeys(minimal_image_steps(), 1)),
-        "indexing": (other_project, DocType.text, {**done, "text_es_index": 0}),
+        "extracting": (other_project, DocType.text, {**done, "text_keywords": 0}),
         "new": (other_project, DocType.text, {}),
     }
     created = {
@@ -212,10 +220,10 @@ def planning_projects(db_session: Session, test_user: UserORM) -> PlanningProjec
     return {
         "project": project,
         "done": created["done"],
-        "language_failed": created["language_failed"],
+        "spacy_failed": created["spacy_failed"],
         "image": created["image"],
         "other_project": other_project,
-        "indexing": created["indexing"],
+        "extracting": created["extracting"],
         "new": created["new"],
     }
 
@@ -617,9 +625,9 @@ class TextStepsProject(TypedDict):
       text_word_frequency and text_ner are finished (no data of the last three
       is stored)
     - spacy_running: text document "spacy_running.txt" with the same text;
-      extract_html, text_extraction and text_language_detection are finished,
-      text_spacy and text_html_mapping are processing (the spaCy job runs), no
-      other step is planned
+      extract_html, text_extraction, text_language_detection and text_es_index
+      are finished, text_spacy and text_html_mapping are processing (the spaCy
+      job runs), no other step is planned
 
     Non-obvious derived behavior:
 
@@ -662,6 +670,7 @@ def text_steps_project(db_session: Session, test_user: UserORM) -> TextStepsProj
             "extract_html": 1,
             "text_extraction": 1,
             "text_language_detection": 1,
+            "text_es_index": 1,
             "text_spacy": 0,
             "text_html_mapping": 0,
         },

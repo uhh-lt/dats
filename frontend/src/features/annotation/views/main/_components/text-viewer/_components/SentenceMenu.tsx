@@ -38,7 +38,6 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
   // global server state
   const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
   const semanticSearchEnabled = useFeature(Feature.SEMANTIC_SEARCH);
-  const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -142,26 +141,24 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
             return (
               <Fragment key={anno.id}>
                 {/* the filter searches the annotated text with the full-text search */}
-                {fullTextSearchEnabled && (
-                  <ListItem disablePadding>
-                    <ListItemButton onClick={() => handleAddFilter(anno)}>
-                      <ListItemIcon>
-                        <FilterAltIcon />
-                      </ListItemIcon>
-                      <ListItemText primary="Filter: " />
-                      <Box
-                        style={{
-                          width: 20,
-                          height: 20,
-                          backgroundColor: code.color,
-                          marginRight: 8,
-                          marginLeft: 16,
-                        }}
-                      />
-                      <ListItemText primary={`${code.name}: ${anno.text}`} />
-                    </ListItemButton>
-                  </ListItem>
-                )}
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => handleAddFilter(anno)}>
+                    <ListItemIcon>
+                      <FilterAltIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Filter: " />
+                    <Box
+                      style={{
+                        width: 20,
+                        height: 20,
+                        backgroundColor: code.color,
+                        marginRight: 8,
+                        marginLeft: 16,
+                      }}
+                    />
+                    <ListItemText primary={`${code.name}: ${anno.text}`} />
+                  </ListItemButton>
+                </ListItem>
                 <MemoCreateOrSelectListItemButton
                   onClick={() => closeMenu()}
                   attachedObjectId={anno.id}

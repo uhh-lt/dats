@@ -182,12 +182,13 @@ AUDIO = artefact(
     uploaded_for={DocType.audio},
     archive=_AudioArchive(),
 )
+# the full-text search index: search is core
+ES_INDEX = artefact(
+    "es_index", kind=StorageKind.OWN_STORE, always=True, archive=_ElasticIndexArchive()
+)
 
 # --- computed on demand, shared by several features
 
-ES_INDEX = artefact(
-    "es_index", kind=StorageKind.OWN_STORE, archive=_ElasticIndexArchive()
-)
 WORD_FREQUENCIES = artefact(
     "word_frequencies", kind=StorageKind.OWN_STORE, archive=_WordFrequencyArchive()
 )
