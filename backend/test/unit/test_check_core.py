@@ -35,7 +35,7 @@ def test_the_artefact_system_must_not_import_the_feature_system(
     )
 
     with pytest.raises(SystemExit):
-        check_core.main(root)
+        check_core.main(root, module_exceptions={})
 
     out = capsys.readouterr().out
     assert "imports from systems.feature_system" in out
@@ -55,7 +55,7 @@ def test_the_feature_system_may_import_the_artefact_system(
         },
     )
 
-    check_core.main(root)
+    check_core.main(root, module_exceptions={})
 
     assert "passed" in capsys.readouterr().out
 
@@ -74,6 +74,69 @@ def test_no_system_may_import_a_module(
     )
 
     with pytest.raises(SystemExit):
-        check_core.main(root)
+        check_core.main(root, module_exceptions={})
 
     assert "imports from modules" in capsys.readouterr().out
+
+
+def test_a_module_must_not_import_another_module(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    """A module importing another module, also inside a function, is a
+    violation naming both; its own imports are fine."""
+    root = _src(
+        tmp_path,
+        {
+            "modules/rag/rag_service.py": (
+                "from modules.rag.rag_dto import X\n"
+                "def f():\n"
+                "    from modules.simsearch.simsearch_service import S\n"
+            ),
+        },
+    )
+
+    with pytest.raises(SystemExit):
+        check_core.main(root, module_exceptions={})
+
+    out = capsys.readouterr().out
+    assert "module 'rag' imports module 'simsearch'" in out
+    assert "Line 3" in out
+    assert "rag_dto" not in out
+
+
+def test_a_listed_module_import_is_allowed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    root = _src(
+        tmp_path,
+        {
+            "modules/eximport/export_service.py": (
+                "from modules.whiteboard.whiteboard_crud import crud_whiteboard\n"
+            ),
+        },
+    )
+
+    check_core.main(root, module_exceptions={("eximport", "whiteboard"): "reason"})
+
+    assert "passed" in capsys.readouterr().out
+
+
+def test_an_exception_that_no_longer_occurs_fails(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    """A listed pair without an import is stale and must be removed."""
+    root = _src(tmp_path, {"modules/eximport/export_service.py": "x = 1\n"})
+
+    with pytest.raises(SystemExit):
+        check_core.main(root, module_exceptions={("eximport", "whiteboard"): "reason"})
+
+    assert "Stale exception: module 'eximport'" in capsys.readouterr().out
+
+
+def test_the_module_import_exceptions_are_exactly_the_current_imports(
+    capsys: pytest.CaptureFixture[str],
+):
+    """The real source tree passes with the listed exceptions."""
+    check_core.main()
+
+    assert "passed" in capsys.readouterr().out

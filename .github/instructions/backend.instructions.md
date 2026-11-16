@@ -44,19 +44,20 @@ Dependencies are declared in `backend/pyproject.toml` and managed with uv. Use w
 
 ### Layer Rules
 
-| Rule                                                                               | Script                     |
-| ---------------------------------------------------------------------------------- | -------------------------- |
-| CRUD conventions (see the three CRUD instruction files)                            | `lint/check_crud.py`       |
-| DTO conventions (see backend-dto), incl. no ORM/CRUD/service/repo/endpoint imports | `lint/check_dtos.py`       |
-| ORM conventions (see backend-orm)                                                  | `lint/check_orm.py`        |
-| Service conventions (see backend-service)                                          | `lint/check_services.py`   |
-| Exception classes only in `*_exceptions.py`                                        | `lint/check_exceptions.py` |
-| Enum classes only in `*_enum.py`, with a str or int value type                     | `lint/check_enums.py`      |
-| `core` never imports from `modules`                                                | `lint/check_core.py`       |
-| `systems` never imports from `modules`, also not inside a function                 | `lint/check_core.py`       |
-| `systems/artefact_system` never imports `systems.feature_system`                   | `lint/check_core.py`       |
-| `*_endpoint.py` imports `*_dto` modules from its own folder only                   | `lint/check_endpoints.py`  |
-| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only  | `lint/check_repos.py`      |
+| Rule                                                                                  | Script                     |
+| ------------------------------------------------------------------------------------- | -------------------------- |
+| CRUD conventions (see the three CRUD instruction files)                               | `lint/check_crud.py`       |
+| DTO conventions (see backend-dto), incl. no ORM/CRUD/service/repo/endpoint imports    | `lint/check_dtos.py`       |
+| ORM conventions (see backend-orm)                                                     | `lint/check_orm.py`        |
+| Service conventions (see backend-service)                                             | `lint/check_services.py`   |
+| Exception classes only in `*_exceptions.py`                                           | `lint/check_exceptions.py` |
+| Enum classes only in `*_enum.py`, with a str or int value type                        | `lint/check_enums.py`      |
+| `core` never imports from `modules`                                                   | `lint/check_core.py`       |
+| `systems` never imports from `modules`, also not inside a function                    | `lint/check_core.py`       |
+| `systems/artefact_system` never imports `systems.feature_system`                      | `lint/check_core.py`       |
+| A module never imports another module, except the pairs of `MODULE_IMPORT_EXCEPTIONS` | `lint/check_core.py`       |
+| `*_endpoint.py` imports `*_dto` modules from its own folder only                      | `lint/check_endpoints.py`  |
+| `*_repo.py` lives in `repos/`, imports no `*_service`/`*_endpoint`, own DTOs only     | `lint/check_repos.py`      |
 
 All checks except `check_endpoints.py` and `check_repos.py` run automatically (`just lint backend` and pre-commit). Run those two by hand from `backend/` (`uv run python lint/check_endpoints.py`); they still report some existing violations, so make sure you add no new ones.
 

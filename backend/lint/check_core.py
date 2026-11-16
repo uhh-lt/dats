@@ -10,7 +10,10 @@ This script enforces the layering of 'core' and 'systems':
 3. No file in 'systems/artefact_system' may import anything from
    'systems.feature_system': the feature system talks to the artefact system,
    never the other way round.
-(More rules can be added in the future.)
+4. No file in 'modules/<a>' may import 'modules.<b>' for another module b, also
+   not inside a function or under `if TYPE_CHECKING:`, except the pairs listed
+   in MODULE_IMPORT_EXCEPTIONS. An exception that no longer occurs is a
+   violation too, so the list only shrinks.
 """
 
 import os
@@ -29,6 +32,24 @@ FORBIDDEN_IMPORTS = {
         re.compile(r"^\s*(from|import) +systems\.feature_system[. ]"),
     ),
 }
+
+
+# (importing module, imported module) -> why it may import it
+MODULE_IMPORT_EXCEPTIONS = {
+    ("eximport", "whiteboard"): "export/import becomes a system later",
+    ("eximport", "timeline_analysis"): "export/import becomes a system later",
+    ("eximport", "experiment"): "export/import becomes a system later",
+    ("eximport", "concept_over_time_analysis"): "export/import becomes a system later",
+    ("eximport", "agreement"): "export/import becomes a system later",
+    ("eximport", "llm_assistant"): "export/import becomes a system later",
+    (
+        "experiment",
+        "agreement",
+    ): "experiments evaluate with the agreement measures by design",
+    ("experiment", "llm_assistant"): "experiments run the LLM assistant by design",
+}
+
+MODULE_IMPORT = re.compile(r"^\s*(?:from|import) +modules\.(\w+)")
 
 
 def find_files(root, folder):
@@ -53,7 +74,38 @@ def check_no_forbidden_import(file_path, package, pattern):
     return True
 
 
-def main(root=SRC):
+def check_module_imports(root, exceptions):
+    """Rule 4: the imports of another module, outside the exceptions, and the
+    exceptions that no longer occur. Returns whether all is fine."""
+    modules_dir = os.path.join(root, "modules")
+    found = set()
+    ok = True
+    for file in sorted(find_files(root, "modules")):
+        importer = os.path.relpath(file, modules_dir).split(os.sep)[0]
+        with open(file, encoding="utf-8") as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines, 1):
+            match = MODULE_IMPORT.search(line)
+            if not match or match.group(1) == importer:
+                continue
+            pair = (importer, match.group(1))
+            found.add(pair)
+            if pair not in exceptions:
+                print(
+                    f"Violation in {file}: module '{pair[0]}' imports module "
+                    f"'{pair[1]}':\n  Line {i}: {line.strip()}"
+                )
+                ok = False
+    for pair in sorted(set(exceptions) - found):
+        print(
+            f"Stale exception: module '{pair[0]}' no longer imports module "
+            f"'{pair[1]}'; remove it from MODULE_IMPORT_EXCEPTIONS."
+        )
+        ok = False
+    return ok
+
+
+def main(root=SRC, module_exceptions=MODULE_IMPORT_EXCEPTIONS):
     all_ok = True
     for folder, (package, pattern) in FORBIDDEN_IMPORTS.items():
         for file in find_files(root, folder):
@@ -62,9 +114,10 @@ def main(root=SRC):
             # (Add more checks here as needed)
             if not ok:
                 all_ok = False
+    all_ok &= check_module_imports(root, module_exceptions)
     if not all_ok:
         sys.exit(1)
-    print("All core and systems layering checks passed.")
+    print("All core, systems and module layering checks passed.")
 
 
 if __name__ == "__main__":
