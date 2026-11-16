@@ -15,7 +15,6 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.annoscaling.annoscaling_dto import AnnoscalingResult
 from modules.simsearch.simsearch_dto import SimSearchSentenceHit
-from modules.simsearch.simsearch_service import SimSearchService
 from repos.vector.weaviate_repo import WeaviateRepo
 
 SimSearchHit = TypeVar("SimSearchHit")
@@ -26,7 +25,6 @@ SimSearchHit = TypeVar("SimSearchHit")
 
 class AnnoScalingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sim = SimSearchService()
         cls.weaviate = WeaviateRepo()
 
         return super(AnnoScalingService, cls).__new__(cls)

@@ -3,10 +3,10 @@ from loguru import logger
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.ml.embedding_service import EmbeddingService
 from modules.simsearch.image_embedding_artefact import IMAGE_EMBEDDINGS
 from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
+from modules.simsearch.image_embedding_utils import encode_image
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -14,7 +14,6 @@ from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
-emb = EmbeddingService()
 weaviate = WeaviateRepo()
 sqlr = SQLRepo()
 
@@ -48,7 +47,7 @@ def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> Non
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
 
-    embedding = emb.encode_image(sdoc=sdoc).tolist()
+    embedding = encode_image(sdoc).tolist()
 
     # store the embeddings
     logger.debug(

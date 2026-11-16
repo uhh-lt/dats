@@ -1,9 +1,12 @@
 from common.doc_type_enum import DocType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc_processing.artefacts import CONTENT
-from modules.ml.embedding_service import EmbeddingService
 from modules.tag_recommendation.document_embedding_artefact import DOCUMENT_EMBEDDINGS
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.db.sql_repo import SQLRepo
+from repos.llm_repo import LLMRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
 from systems.job_system.job_dto import Job
@@ -45,8 +48,11 @@ def enrich_for_recompute(
 def handle_text_document_embedding_job(
     payload: TextDocumentEmbeddingJobInput, job: Job
 ) -> None:
-    EmbeddingService().embed_document(
+    # embed the text and replace the document's previous embedding
+    embedding = LLMRepo().llm_embed([payload.text]).tolist()[0]
+    crud_document_embedding.create_multi(
+        client=WeaviateRepo().get_client(),
         project_id=payload.project_id,
-        sdoc_id=payload.sdoc_id,
-        text=payload.text,
+        ids=[DocumentObjectIdentifier(sdoc_id=payload.sdoc_id)],
+        embeddings=[embedding],
     )

@@ -80,7 +80,6 @@ crud_document_embedding = CRUDDocumentEmbedding(
 
 - **Delete with the source document**: CRUDs need no cleanup code for deleted source documents. `SourceDocumentService.delete_multi` calls `BaseCollection.delete_by_sdoc_ids` for every collection whose properties contain `sdoc_id`. Do not add event listeners or a per-CRUD `delete_by_sdoc_id`.
 - **Project lifecycle**: `BaseCollection.all_collections()` imports every `*_collection.py`, so a new collection is created (`bootstrap.py`), gets its tenants (`ProjectService.create_project`) and is cleaned up (`ProjectService.delete_project`, `SourceDocumentService`) without registration.
-- No business logic, embedding computation or Ray calls. Those belong in services (`embedding_service.py`, `simsearch_service.py`).
 
 ## Examples
 

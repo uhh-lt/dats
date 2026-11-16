@@ -1,76 +1,42 @@
-from typing import Any
-
 import numpy as np
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.ml.embedding_service import EmbeddingService
 from modules.search.sdoc_search.sdoc_search import filter_sdoc_ids
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.image_embedding_crud import crud_image_embedding
+from modules.simsearch.image_embedding_utils import encode_image
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
+from modules.simsearch.simsearch_exceptions import ListQueryNotSupportedError
+from repos.ray.dto.clip import ClipTextEmbeddingInput
+from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.search_system.filtering import Filter
 
 
 class SimSearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.emb = EmbeddingService()
+        cls.ray = RayRepo()
         cls.weaviate = WeaviateRepo()
         return super(SimSearchService, cls).__new__(cls)
 
-    def _encode_query(
-        self,
-        db: Session,
-        text_query: list[str] | None = None,
-        image_query_id: int | None = None,
-        document_query: bool = False,
-    ) -> np.ndarray:
-        if text_query is None and image_query_id is None:
-            msg = "Either text_query or image_query must be set!"
-            logger.error(msg)
-            raise ValueError(msg)
-        elif text_query is not None and image_query_id is not None:
-            msg = "Only one of text_query or image_query must be set!"
-            logger.error(msg)
-            raise ValueError(msg)
-        elif text_query is not None:
-            query_emb = (
-                self.emb.encode_document(" ".join(text_query))
-                if document_query
-                else self.emb.encode_sentences(sentences=text_query)[0]
-            )
-        elif image_query_id is not None:
+    def _encode_query(self, db: Session, query: str | list[str] | int) -> np.ndarray:
+        """The CLIP embedding of the query: the image of a document id (an int or
+        a string of digits), else the text. A list of texts is rejected: the
+        collections hold CLIP embeddings of one text or image."""
+        if isinstance(query, list):
+            raise ListQueryNotSupportedError()
+        if isinstance(query, int) or query.isdigit():
             sdoc = SourceDocumentRead.model_validate(
-                crud_sdoc.read(db=db, id=image_query_id)
+                crud_sdoc.read(db=db, id=int(query))
             )
-            query_emb = self.emb.encode_image(sdoc=sdoc)
-        else:
-            msg = "This should never happend! Unknown Error!"
-            logger.error(msg)
-            raise ValueError(msg)
-        return query_emb
-
-    def __parse_query_param(self, query: str | list[str] | int) -> dict[str, Any]:
-        query_params = {
-            "text_query": None,
-            "image_query_id": None,
-            "document_query": False,
-        }
-
-        if isinstance(query, int) or (isinstance(query, str) and query.isdigit()):
-            query_params["image_query_id"] = int(query)
-        elif isinstance(query, str) and not query.isdigit():
-            query_params["text_query"] = [query]
-        elif isinstance(query, list):
-            query_params["text_query"] = query
-            query_params["document_query"] = True
-
-        return query_params
+            return encode_image(sdoc)
+        return self.ray.clip_text_embedding(
+            ClipTextEmbeddingInput(text=[query])
+        ).numpy()[0]
 
     def find_similar_sentences(
         self,
@@ -81,10 +47,7 @@ class SimSearchService(metaclass=SingletonMeta):
         threshold: float,
         sdoc_ids_to_search: list[int] | None = None,
     ) -> list[SimSearchSentenceHit]:
-        query_emb = self._encode_query(
-            db=db,
-            **self.__parse_query_param(query),
-        ).tolist()
+        query_emb = self._encode_query(db=db, query=query).tolist()
 
         results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
@@ -135,10 +98,7 @@ class SimSearchService(metaclass=SingletonMeta):
         top_k: int,
         threshold: float,
     ) -> list[SimSearchImageHit]:
-        query_emb = self._encode_query(
-            db=db,
-            **self.__parse_query_param(query),
-        ).tolist()
+        query_emb = self._encode_query(db=db, query=query).tolist()
 
         results = crud_image_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),

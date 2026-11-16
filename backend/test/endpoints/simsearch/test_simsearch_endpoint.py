@@ -39,3 +39,30 @@ def test_similarity_search_is_rejected_when_its_feature_is_disabled(
     )
 
     assert_feature_disabled(response, feature)
+
+
+# ===========================================================================
+# QUERY (/simsearch/sentences, /simsearch/images) TESTS
+# ===========================================================================
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("/simsearch/sentences", id="sentences"),
+        pytest.param("/simsearch/images", id="images"),
+    ],
+)
+def test_similarity_search_rejects_a_list_query(
+    client: TestClient, test_project, path: str
+):
+    """`test_project` enables both searches; a list of texts is no query, as
+    the collections hold CLIP embeddings of one text or image: 400."""
+    response = client.post(
+        path,
+        params={"project_id": test_project.id, "top_k": 10, "threshold": 0.5},
+        json={"query": ["alpha", "beta"], "filter": EMPTY_FILTER},
+    )
+
+    assert response.status_code == 400, response.text
+    assert "not a list" in response.text
