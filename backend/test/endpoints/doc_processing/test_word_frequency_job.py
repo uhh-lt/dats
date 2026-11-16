@@ -2,8 +2,8 @@ import pytest
 from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
+from core.doc.word_frequency_crud import crud_word_frequency
 from feature_test_utils import SDOC_SENTENCES
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from repos.ray.ray_repo import RayRepo
 
 from .conftest import TextStepsProject, run_step_handler, spacy_output

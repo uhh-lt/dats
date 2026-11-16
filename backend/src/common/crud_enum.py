@@ -11,6 +11,7 @@ from core.code.code_crud import crud_code
 from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.word_frequency_crud import crud_word_frequency
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_enum import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
@@ -40,7 +41,6 @@ from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
 )
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
 
 
 class Crud(Enum):

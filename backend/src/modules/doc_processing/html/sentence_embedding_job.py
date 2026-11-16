@@ -5,8 +5,9 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS, TOKENS_SENTENCES
-from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
+from repos.ray.dto.clip import ClipTextEmbeddingInput
+from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
@@ -52,7 +53,10 @@ def handle_text_sentence_embedding_job(
     if len(payload.sentences) > 0:
         # embed the sentences
         embeddings = (
-            EmbeddingService().encode_sentences(sentences=payload.sentences).tolist()
+            RayRepo()
+            .clip_text_embedding(ClipTextEmbeddingInput(text=payload.sentences))
+            .numpy()
+            .tolist()
         )
 
         # store the embeddings

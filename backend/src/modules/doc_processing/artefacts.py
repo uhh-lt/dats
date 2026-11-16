@@ -15,13 +15,13 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.word_frequency_crud import crud_word_frequency
+from core.doc.word_frequency_dto import WordFrequencyCreate
 from modules.doc_processing.image.image_thumbnail_utils import generate_thumbnails
 from modules.doc_processing.video.video_utils import (
     extract_audio_stream,
     store_video_thumbnail,
 )
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo

@@ -18,6 +18,8 @@ from core.code.code_dto import CodeCreate
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.word_frequency_crud import crud_word_frequency
+from core.doc.word_frequency_dto import WordFrequencyCreate
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoCreateIntern
 from core.memo.memo_enum import AttachedObjectType
@@ -26,8 +28,6 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from feature_test_utils import create_project_with_features
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from pipeline_test_utils import set_step_status
 
 

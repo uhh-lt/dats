@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 import pytest
 from sqlalchemy.orm import Session
 
+from core.doc.word_frequency_crud import crud_word_frequency
 from modules.ml.ml_enum import MLJobStatus, MLJobTypeID
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.source_document_job_status_dto import SourceDocumentJobStatusCreate
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from repos.db import crud_base
 from repos.db.sql_exceptions import NoSuchElementError
 

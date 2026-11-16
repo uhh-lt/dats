@@ -82,10 +82,6 @@ If the prompt requests reasoning (`PromptSettings.request_reasoning`), each reas
 - **`build_strategy()`** (`strategies/strategy_factory.py`) — instantiates the strategy of a prompt's output format.
 - **`build_task()`** (`tasks/task_factory.py`) — instantiates the correct task for a given task type, injecting the `LLMRepo`.
 
-### Prompts (`prompts/`)
-
-- **`image_captioning_prompt.py`** — the prompt of the image captioning in document processing.
-
 ### DTOs (`llm_assistant_job_dto.py`)
 
 The job input (task, documents, model, either a `prompt_version_id` or an unsaved `draft` prompt, e.g. of the wizard's guided path, and the virtual user of annotation tasks) and the job outputs per task.

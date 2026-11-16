@@ -2,9 +2,9 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.word_frequency_dto import WordFrequencyCreate
+from core.doc.word_frequency_orm import WordFrequencyORM
 from core.tag.tag_orm import TagORM
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
-from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.crud_base import SQLCRUDBase, UpdateNotAllowed
 
 

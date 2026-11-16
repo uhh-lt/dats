@@ -11,10 +11,10 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_enum import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.word_frequency_orm import WordFrequencyORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
-from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType

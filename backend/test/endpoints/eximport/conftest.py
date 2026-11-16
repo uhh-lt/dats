@@ -29,6 +29,8 @@ from core.doc.source_document_dto import (
     SourceDocumentRead,
 )
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc.word_frequency_crud import crud_word_frequency
+from core.doc.word_frequency_dto import WordFrequencyCreate
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from core.project.project_crud import crud_project
@@ -66,8 +68,6 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from pipeline_test_utils import core_steps
 from prompt_test_utils import (
     PromptEximportProjects,

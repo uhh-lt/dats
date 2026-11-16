@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.job_type_enum import JobType
+from core.doc.word_frequency_crud import crud_word_frequency
 from modules.duplicate_finder.duplicate_finder_feature import DUPLICATE_FINDER
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyRead
 from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_service import FeatureService

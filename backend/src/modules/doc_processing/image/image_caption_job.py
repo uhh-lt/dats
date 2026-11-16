@@ -7,7 +7,7 @@ from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.artefacts import IMAGE_CAPTION, RAW_HTML
-from modules.llm_assistant.prompts.image_captioning_prompt import (
+from modules.doc_processing.image.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
 from repos.db.sql_repo import SQLRepo
