@@ -11,7 +11,7 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.user.user_crud import SYSTEM_USER_ID
-from modules.doc_processing.image.object_detection_artefact import OBJECT_BBOXES
+from modules.object_detection.object_detection_artefact import OBJECT_BBOXES
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray.dto.detr import DETRImageInput
