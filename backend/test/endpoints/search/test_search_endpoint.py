@@ -3254,7 +3254,10 @@ def test_search_sdocs_with_a_text_query_works_in_a_project_without_features(
 
     assert found.status_code == 200, found.text
     hits = PaginatedSDocHits.model_validate(found.json())
-    assert [hit.id for hit in hits.hits] == [featureless_project["sdoc"].id]
+    # a hit is the document's folder, with the document as its sub row
+    assert [row.id for hit in hits.hits for row in hit.sub_rows] == [
+        featureless_project["sdoc"].id
+    ]
     assert PaginatedSDocHits.model_validate(missing.json()).hits == []
 
 
