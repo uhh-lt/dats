@@ -58,7 +58,7 @@ Where an artefact is stored: in the source document data, in its metadata, as an
 _Avoid_: Storage type, backend
 
 **Set Up**:
-Creating in a project the system codes that the artefacts of its features declare, before anything produces them: when a feature is enabled, a project is created or a project is imported. It creates only what is missing; disabling a feature keeps the codes.
+Creating in a project what its features need before anything is computed: the system codes that the artefacts of its features declare, then whatever each feature's set-up hook creates (metadata keys, tags, rows of its own tables). It runs when a feature is enabled, a project is created or a project is imported, is safe to run twice, and disabling a feature keeps what it created.
 _Avoid_: Initialization, provisioning
 
 **Module**:

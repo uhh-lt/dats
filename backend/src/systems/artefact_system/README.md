@@ -1,6 +1,6 @@
 # Artefact system
 
-The artefacts and the pipeline steps that produce them: their declarations (`artefact(...)`, `@pipeline_step`, `artefact_registry.py`), the graph between them (`pipeline_graph.py`), the step planning and the availability of artefacts (`artefact_service.py`), the step runs (`step_run.py`) and the step statuses (`source_document_step_status_*.py`, `source_document_status_rules.py`). It knows artefacts and steps, never features: the feature system passes it artefacts. The terms are in `GLOSSARY.md`.
+The artefacts and the pipeline steps that produce them: their declarations (`artefact(...)`, `@pipeline_step`, `artefact_registry.py`), the graph between them (`pipeline_graph.py`), the step planning and the availability of artefacts (`artefact_service.py`), the step runs (`step_execution.py`) and the step statuses (`source_document_step_status_*.py`, `source_document_status_rules.py`). It knows artefacts and steps, never features: the feature system passes it artefacts. The terms are in `GLOSSARY.md`.
 
 ## What it is asked
 
@@ -75,7 +75,7 @@ One rule: whatever goes wrong, the step becomes erroneous, with the pending step
 | A worker dies in the middle of an artefact computation          | the computation ends, the documents it did not reach stay not planned: partly available  | Complete              |
 | The queue is down when Enable or Complete starts the computation | nothing changes; the request answers 503                                                | Try again             |
 
-`start_steps` applies the rule for every start path. The failed hook (`step_run.handle_job_error`) applies it for every failed job; for an artefact computation it removes the pending computation instead, so its artefacts are no longer pending.
+`start_steps` applies the rule for every start path. The failed hook (`step_execution.handle_job_error`) applies it for every failed job; for an artefact computation it removes the pending computation instead, so its artefacts are no longer pending.
 
 Accepted gap: a process dies after it wrote "processing" and before it queued the job (the backend in an upload, a worker between a computation batch's commit and its starts, or between a finished step and its successors). The step stays processing without a job, and the feature stays Computing. Recompute in the document health view starts it.
 

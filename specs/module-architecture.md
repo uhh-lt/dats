@@ -16,6 +16,7 @@ Two cases must both be one small step:
 ## The model
 
 - A **feature** requires artefacts, at least one of them outside the core preprocessing pipeline, and never another feature. It knows nothing else.
+- A feature may declare a **set-up hook** that creates what else it needs in a project (metadata keys, tags, rows of its own tables) after the system codes of its artefacts: on Enable, project creation and import, never on Complete or Disable; it is safe to run twice and Disable does not undo it.
 - An **artefact** knows how it is produced, stored, exported and imported, and which codes a project needs before it can be produced. How it is deleted is not declared: deletion stays central.
 - A **pipeline step** produces artefacts from other artefacts.
 - A **project** enables features. The artefacts its enabled features require are the project's **artefact demand**.
@@ -217,15 +218,15 @@ The implementation briefs with the exact interfaces are in `.architecture-review
 
 Each package leaves DATS working and is one pull request, stacked on the one before. They can be merged into one pull request at the end.
 
-| PR  | Package                                                                                                                                                                                                                | Kind                      |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| A   | uhh-lt/dats#892 as it is, plus the actions rework (three actions, one failure rule)                                                                                                                                    | Exists                    |
-| B   | Captions always computed; the feature "Image captions" removed (first part). Artefact system: move the graph, planning, step runs and statuses into a system; the feature system talks in artefacts; no lint exception | Changes what A introduces |
-| C   | Open registries: artefacts, steps and features declared by their owner; set up and storage kind per artefact; codes leave the config                                                                                   | Changes what A introduces |
-| D   | Standard pipeline into `core/doc_processing`; one spaCy call per step                                                                                                                                                  | Move and behaviour change |
-| E   | Feature modules: the single-user artefacts and their steps move into their modules                                                                                                                                     | Move                      |
-| F   | Dissolve `modules/ml`: coreference and quotation as features, tag recommendation as a module; drop the embedding service and the ML Automation page                                                                    | Move                      |
-| G   | The three rules: features require artefacts only; search in core with a core index, no search features; one feature Semantic Search; modules decoupled; the module import lint                                         | Change and move           |
+| PR  | Package                                                                                                                                                                                                                                                 | Kind                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| A   | uhh-lt/dats#892 as it is, plus the actions rework (three actions, one failure rule)                                                                                                                                                                     | Exists                    |
+| B   | Captions always computed; the feature "Image captions" removed (first part). Artefact system: move the graph, planning, step runs and statuses into a system; the feature system talks in artefacts; no lint exception                                  | Changes what A introduces |
+| C   | Open registries: artefacts, steps and features declared by their owner; set up and storage kind per artefact; codes leave the config                                                                                                                    | Changes what A introduces |
+| D   | Standard pipeline into `core/doc_processing`; one spaCy call per step                                                                                                                                                                                   | Move and behaviour change |
+| E   | Feature modules: the single-user artefacts and their steps move into their modules                                                                                                                                                                      | Move                      |
+| F   | Dissolve `modules/ml`: coreference and quotation as features, tag recommendation as a module; drop the embedding service and the ML Automation page                                                                                                     | Move                      |
+| G   | The three rules: features require artefacts only; search in core with a core index, no search features; one feature Semantic Search; modules decoupled; the module import lint; the set-up hook of a feature; `step_run.py` renamed `step_execution.py` | Change and move           |
 
 Each pull request updates the glossary, ADRs, READMEs and instruction files it touches. The frontend reads the features from the registry from C on.
 

@@ -186,9 +186,9 @@ Add a step:
 Rules:
 
 - The pipeline order, the steps per doctype, the planning, the health view and the export and import are derived from the declarations (`systems/artefact_system/pipeline_graph.py`); never list steps by hand.
-- The job system knows no pipeline: the job handler calls the started and finished hooks and RQ's failure callback (`job_handler.rq_job_failed`, set as `on_failure` at enqueue) calls the failed hook; `bootstrap.register_jobs` registers them with the functions of `step_run.py` (`handle_job_started`, `handle_job_finished`, `handle_job_error`).
+- The job system knows no pipeline: the job handler calls the started and finished hooks and RQ's failure callback (`job_handler.rq_job_failed`, set as `on_failure` at enqueue) calls the failed hook; `bootstrap.register_jobs` registers them with the functions of `step_execution.py` (`handle_job_started`, `handle_job_finished`, `handle_job_error`).
 - Never call the failed hook anywhere else: RQ calls the failure callback once per failed job, also when its worker died, and `DATSWorker.handle_work_horse_killed` calls it for a killed job process.
-- Start step jobs only with `step_run.start_steps` (document, steps, settings, an optional priority), which starts the job of each step with the bare input; never build an `SdocProcessingJobInput` or name a step's job to start it.
+- Start step jobs only with `step_execution.start_steps` (document, steps, settings, an optional priority), which starts the job of each step with the bare input; never build an `SdocProcessingJobInput` or name a step's job to start it.
 - A finished step starts each planned successor with a bare `SdocProcessingJobInput` (project, document, settings), and the successor's enricher loads the rest of its input from the database or filesystem, so a step stores all its output before its handler returns and never passes data to the next step in memory.
 - Every step registers an enricher (`@pipeline_step` rejects a step without one); the same enricher serves the advancing, recompute and the artefact computation.
 - One failure rule: whatever goes wrong (the job raises, its input cannot be built, the queue is unreachable, its worker died), the step and the pending steps after it become erroneous on every start path, and Complete or Recompute retries it (`systems/artefact_system/README.md`).
