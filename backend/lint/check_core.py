@@ -10,7 +10,8 @@ This script enforces the layering of 'core' and 'systems':
 3. No file in 'systems/artefact_system' may import anything from
    'systems.feature_system': the feature system talks to the artefact system,
    never the other way round.
-4. No file in 'modules/<a>' may import 'modules.<b>' for another module b, also
+4. No file in 'modules/<a>' may import 'modules.<b>' (`from modules.b ...`,
+   `import modules.b`, `from modules import b`) for another module b, also
    not inside a function or under `if TYPE_CHECKING:`, except the pairs listed
    in MODULE_IMPORT_EXCEPTIONS. An exception that no longer occurs is a
    violation too, so the list only shrinks.
@@ -50,6 +51,28 @@ MODULE_IMPORT_EXCEPTIONS = {
 }
 
 MODULE_IMPORT = re.compile(r"^\s*(?:from|import) +modules\.(\w+)")
+# `from modules import a, b` (also parenthesized over several lines)
+MODULES_FROM_IMPORT = re.compile(r"^\s*from +modules +import +(.*)")
+
+
+def imported_modules(lines, i):
+    """The modules the import statement at line i (0-based) imports, if it
+    imports from `modules`: one for `from modules.b ... import`, all names of
+    `from modules import a, b`."""
+    match = MODULE_IMPORT.search(lines[i])
+    if match:
+        return [match.group(1)]
+    match = MODULES_FROM_IMPORT.search(lines[i])
+    if not match:
+        return []
+    names = match.group(1)
+    j = i
+    if names.strip().startswith("(") and ")" not in names:
+        while ")" not in lines[j]:
+            j += 1
+            names += lines[j]
+    names = names.split("#")[0].replace("(", "").replace(")", "")
+    return [n.split(" as ")[0].strip() for n in names.split(",") if n.strip()]
 
 
 def find_files(root, folder):
@@ -84,18 +107,18 @@ def check_module_imports(root, exceptions):
         importer = os.path.relpath(file, modules_dir).split(os.sep)[0]
         with open(file, encoding="utf-8") as f:
             lines = f.readlines()
-        for i, line in enumerate(lines, 1):
-            match = MODULE_IMPORT.search(line)
-            if not match or match.group(1) == importer:
-                continue
-            pair = (importer, match.group(1))
-            found.add(pair)
-            if pair not in exceptions:
-                print(
-                    f"Violation in {file}: module '{pair[0]}' imports module "
-                    f"'{pair[1]}':\n  Line {i}: {line.strip()}"
-                )
-                ok = False
+        for i, line in enumerate(lines):
+            for imported in imported_modules(lines, i):
+                if imported == importer:
+                    continue
+                pair = (importer, imported)
+                found.add(pair)
+                if pair not in exceptions:
+                    print(
+                        f"Violation in {file}: module '{pair[0]}' imports module "
+                        f"'{pair[1]}':\n  Line {i + 1}: {line.strip()}"
+                    )
+                    ok = False
     for pair in sorted(set(exceptions) - found):
         print(
             f"Stale exception: module '{pair[0]}' no longer imports module "

@@ -104,6 +104,32 @@ def test_a_module_must_not_import_another_module(
     assert "rag_dto" not in out
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        # one line, with an alias
+        pytest.param("from modules import simsearch as s\n", id="from-modules-import"),
+        # parenthesized over several lines, after the module's own name
+        pytest.param(
+            "from modules import (\n    rag,\n    simsearch,\n)\n",
+            id="from-modules-import-multiline",
+        ),
+    ],
+)
+def test_a_module_must_not_import_another_module_from_the_package(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], source: str
+):
+    """`from modules import b` imports module b as well."""
+    root = _src(tmp_path, {"modules/rag/rag_service.py": source})
+
+    with pytest.raises(SystemExit):
+        check_core.main(root, module_exceptions={})
+
+    out = capsys.readouterr().out
+    assert "module 'rag' imports module 'simsearch'" in out
+    assert "module 'rag' imports module 'rag'" not in out
+
+
 def test_a_listed_module_import_is_allowed(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
