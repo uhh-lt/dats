@@ -358,8 +358,10 @@ class PortabilityChecker:
         return issues
 
     def _check_system_codes(self, project_id: int) -> list[Issue]:
-        # the import creates the system codes first and matches the imported
-        # codes by name: a different parent fails, a user code is merged
+        # a user code named like a declared system code blocks the set up of
+        # the artefact that declares it (409); it is renamed only where the
+        # declared parent exists as a system code, else it may be a user tree
+        # (`ANIMAL` > `DOG`) and is only reported
         rows = self._rows(
             "SELECT id, name, parent_id, is_system FROM code WHERE project_id = :pid",
             pid=project_id,
@@ -369,6 +371,7 @@ class PortabilityChecker:
         # user codes named like a system parent are renamed, so never move to them
         system_ids_by_name = {r.name: int(r.id) for r in rows if r.is_system}
         renames: dict[int, str] = {}
+        blocking: list[int] = []
         reparents: dict[int, int | None] = {}
         orphans: list[int] = []
         for r in rows:
@@ -376,6 +379,9 @@ class PortabilityChecker:
                 continue
             expected_parent = self.stores.system_code_parents[r.name]
             if not r.is_system:
+                if expected_parent is not None and expected_parent not in system_ids_by_name:
+                    blocking.append(int(r.id))
+                    continue
                 new_name = f"{r.name} (custom)"
                 if new_name in all_names:
                     new_name = f"{r.name} (custom {r.id})"
@@ -399,11 +405,27 @@ class PortabilityChecker:
                     key=f"{CheckName.SYSTEM_CODE_CONFLICT.value}:{project_id}:names",
                     check=CheckName.SYSTEM_CODE_CONFLICT,
                     project_id=project_id,
-                    message=f"{len(renames)} codes are named like system codes, which "
-                    "the import merges into the system code or rejects: "
+                    message=f"{len(renames)} user codes are named like system codes "
+                    "below an existing system parent, which block enabling the "
+                    "feature that declares them: "
                     f"{', '.join(repr(names[i]) for i in list(renames)[:10])}",
                     fix=SetValues(table="code", column="name", values=renames),
                     hint="Heal renames them as listed in the fix.",
+                )
+            )
+        if blocking:
+            issues.append(
+                Issue(
+                    key=f"{CheckName.SYSTEM_CODE_CONFLICT.value}:{project_id}:blocking",
+                    check=CheckName.SYSTEM_CODE_CONFLICT,
+                    project_id=project_id,
+                    message=f"{len(blocking)} user codes are named like system codes "
+                    "whose declared parent the project lacks: "
+                    f"{', '.join(repr(names[i]) for i in blocking[:10])}",
+                    fix=None,
+                    hint="They may be a user tree. Enabling the feature that declares "
+                    "these names fails until they are renamed, so rename them only if "
+                    "the project needs that feature.",
                 )
             )
         if reparents:
