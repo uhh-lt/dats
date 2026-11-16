@@ -1,5 +1,5 @@
 from common.feature_enum import FeatureArea
-from modules.doc_processing.html.keywords_artefact import KEYWORDS
+from modules.statistics.keywords_artefact import KEYWORDS
 from systems.feature_system.feature_registry import register_feature
 
 KEYWORD_STATISTICS = register_feature(

@@ -4,7 +4,7 @@ from common.doc_type_enum import DocType
 from core.doc_processing.artefacts import CONTENT, LANGUAGE
 from core.doc_processing.html.text_step_utils import read_stored_text
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.doc_processing.html.keywords_artefact import KEYWORDS
+from modules.statistics.keywords_artefact import KEYWORDS
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step
