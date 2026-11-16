@@ -1,20 +1,16 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
 from modules.ml.ml_enum import MLJobStatus, MLJobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
-    DocTagRecommendationParams,
     MLJobInput,
     QuotationAttributionParams,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
-from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
 from repos.db.sql_repo import SQLRepo
-from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
@@ -22,18 +18,9 @@ from systems.job_system.job_system_enum import EndpointGeneration, JobTiming
 sqlr = SQLRepo()
 
 
-def validate_ml_input(db: Session, payload: MLJobInput) -> None:
-    """Tag recommendation needs its feature; the other ML jobs need core data only."""
-    if payload.ml_job_type == MLJobType.TAG_RECOMMENDATION:
-        FeatureService().assert_enabled(
-            db=db, project_id=payload.project_id, feature=TAG_RECOMMENDATION
-        )
-
-
 @register_job(
     job_type=JobType.ML,
     input_type=MLJobInput,
-    validate_input=validate_ml_input,
     generate_endpoints=EndpointGeneration.ALL,
     publish_updates=True,
     device="api",
@@ -58,23 +45,6 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
                     project_id=payload.project_id,
                     filter_criterion=filter_criterion,
                     recompute=recompute,
-                )
-            case MLJobType.TAG_RECOMMENDATION:
-                from modules.ml.tag_recommendation.tag_recommendation_service import (
-                    TagRecommendationService,
-                )
-
-                assert isinstance(
-                    payload.specific_ml_job_parameters,
-                    DocTagRecommendationParams,
-                ), "DocTagRecommendationParams expected"
-                TagRecommendationService().classify_untagged_documents(
-                    db=db,
-                    ml_job_id=job.get_id(),
-                    project_id=payload.project_id,
-                    tag_ids=payload.specific_ml_job_parameters.tag_ids,
-                    multi_class=payload.specific_ml_job_parameters.multi_class,
-                    method=payload.specific_ml_job_parameters.method,
                 )
             case MLJobType.COREFERENCE_RESOLUTION:
                 from modules.ml.coref_service import CorefService

@@ -15,13 +15,13 @@ if TYPE_CHECKING:
     from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
     from core.project.project_orm import ProjectORM
     from core.tag.tag_orm import TagORM
-    from modules.ml.tag_recommendation.tag_recommendation_orm import (
-        TagRecommendationLinkORM,
-    )
     from modules.perspectives.aspect_orm import AspectORM
     from modules.perspectives.cluster_orm import ClusterORM
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
+    from modules.tag_recommendation.tag_recommendation_orm import (
+        TagRecommendationLinkORM,
+    )
     from systems.artefact_system.source_document_step_status_orm import (
         SourceDocumentStepStatusORM,
     )

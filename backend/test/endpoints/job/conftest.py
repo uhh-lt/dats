@@ -4,8 +4,9 @@ import rq
 from common.job_type_enum import JobType
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
-from modules.ml.ml_enum import MLJobType
-from modules.ml.ml_job_dto import DocTagRecommendationParams, MLJobInput
+from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationJobInput,
+)
 from systems.job_system.job_handler import rq_job_handler
 from systems.job_system.job_service import JobService
 
@@ -25,24 +26,23 @@ def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
 
 @pytest.fixture(scope="function")
 def featureless_tag_recommendation_job(featureless_project: FeaturelessProject) -> str:
-    """The id of a tag recommendation ML job of `featureless_project` (like a job
+    """The id of a tag recommendation job of `featureless_project` (like a job
     started before the feature was disabled). The job is stored, not enqueued,
     so no worker runs it."""
     js = JobService()
     job = rq.job.Job.create(
         rq_job_handler,
         kwargs={
-            "jobtype": JobType.ML,
+            "jobtype": JobType.TAG_RECOMMENDATION,
             "handler": None,
-            "payload": MLJobInput(
-                project_id=featureless_project["project"].id,
-                ml_job_type=MLJobType.TAG_RECOMMENDATION,
-                specific_ml_job_parameters=DocTagRecommendationParams(
-                    ml_job_type=MLJobType.TAG_RECOMMENDATION
-                ),
+            "payload": TagRecommendationJobInput(
+                project_id=featureless_project["project"].id
             ),
         },
-        meta={"type": JobType.ML, "project_id": featureless_project["project"].id},
+        meta={
+            "type": JobType.TAG_RECOMMENDATION,
+            "project_id": featureless_project["project"].id,
+        },
         connection=js.redis_conn,
     )
     job.save()

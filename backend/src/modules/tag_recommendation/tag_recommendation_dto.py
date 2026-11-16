@@ -1,6 +1,25 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.tag_recommendation.tag_recommendation_enum import (
+    TagRecommendationMethod,
+)
 from repos.db.dto_base import UpdateDTOBase
+from systems.job_system.job_dto import JobInputBase
+
+
+class TagRecommendationJobInput(JobInputBase):
+    project_id: int = Field(description="The ID of the Project to recommend tags in")
+    multi_class: bool = Field(
+        default=False, description="Tags are mutually exclusive if `False`"
+    )
+    tag_ids: list[int] = Field(
+        default=[],
+        description="Tags to consider. If empty, all tags applied to any document are considered.",
+    )
+    method: TagRecommendationMethod = Field(
+        default=TagRecommendationMethod.KNN,
+        description="Method to use for suggestions",
+    )
 
 
 class TagRecommendationLinkBaseDTO(BaseModel):

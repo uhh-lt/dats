@@ -25,12 +25,12 @@ from core.user.user_dto import UserRead
 from modules.classifier.classifier_dto import ClassifierRead
 from modules.concept_over_time_analysis.cota_dto import COTARead
 from modules.experiment.experiment_dto import ExperimentRead
-from modules.ml.tag_recommendation.tag_recommendation_dto import (
-    TagRecommendationLinkRead,
-)
 from modules.perspectives.aspect_dto import AspectRead
 from modules.perspectives.cluster_dto import ClusterRead
 from modules.search_view.search_view_dto import SearchViewReadUnion
+from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationLinkRead,
+)
 from modules.timeline_analysis.timeline_analysis_dto import TimelineAnalysisRead
 from modules.whiteboard.whiteboard_dto import WhiteboardRead
 

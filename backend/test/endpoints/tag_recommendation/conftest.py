@@ -15,13 +15,13 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
-from modules.ml.tag_recommendation.tag_recommendation_crud import (
+from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
-from modules.ml.tag_recommendation.tag_recommendation_dto import (
+from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkCreate,
 )
-from modules.ml.tag_recommendation.tag_recommendation_orm import (
+from modules.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
 

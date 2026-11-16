@@ -2,8 +2,9 @@ from fastapi.testclient import TestClient
 
 from feature_test_utils import FeaturelessProject, assert_feature_disabled
 from modules.duplicate_finder.duplicate_finder_job import DuplicateFinderInput
-from modules.ml.ml_enum import MLJobType
-from modules.ml.ml_job_dto import DocTagRecommendationParams, MLJobInput
+from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationJobInput,
+)
 
 # ===========================================================================
 # START JOB (/job/{job_type}) TESTS
@@ -26,18 +27,14 @@ def test_duplicate_finder_job_is_rejected_when_the_feature_is_disabled(
     assert_feature_disabled(response, "duplicate_finder")
 
 
-def test_tag_recommendation_ml_job_is_rejected_when_the_feature_is_disabled(
+def test_tag_recommendation_job_is_rejected_when_the_feature_is_disabled(
     client: TestClient, featureless_project: FeaturelessProject
 ):
-    payload = MLJobInput(
-        project_id=featureless_project["project"].id,
-        ml_job_type=MLJobType.TAG_RECOMMENDATION,
-        specific_ml_job_parameters=DocTagRecommendationParams(
-            ml_job_type=MLJobType.TAG_RECOMMENDATION
-        ),
-    )
+    payload = TagRecommendationJobInput(project_id=featureless_project["project"].id)
 
-    response = client.post("/job/ml", json=payload.model_dump(mode="json"))
+    response = client.post(
+        "/job/tag_recommendation", json=payload.model_dump(mode="json")
+    )
 
     assert_feature_disabled(response, "tag_recommendation")
 
@@ -52,6 +49,8 @@ def test_retry_job_is_rejected_when_the_feature_is_disabled(
 ):
     """A retry checks the input again like the start: tag recommendation is
     disabled in the job's project, so the job is not requeued."""
-    response = client.post(f"/job/ml/{featureless_tag_recommendation_job}/retry")
+    response = client.post(
+        f"/job/tag_recommendation/{featureless_tag_recommendation_job}/retry"
+    )
 
     assert_feature_disabled(response, "tag_recommendation")

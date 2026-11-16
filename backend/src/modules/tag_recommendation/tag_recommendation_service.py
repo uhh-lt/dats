@@ -9,18 +9,18 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
-from modules.ml.tag_recommendation.tag_recommendation_crud import (
-    crud_tag_recommendation_link,
-)
-from modules.ml.tag_recommendation.tag_recommendation_dto import (
-    TagRecommendationLinkCreate,
-)
-from modules.ml.tag_recommendation.tag_recommendation_enum import (
-    TagRecommendationMethod,
-)
 from modules.simsearch.simsearch_dto import SimSearchDocumentHit
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
+from modules.tag_recommendation.tag_recommendation_crud import (
+    crud_tag_recommendation_link,
+)
+from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationLinkCreate,
+)
+from modules.tag_recommendation.tag_recommendation_enum import (
+    TagRecommendationMethod,
+)
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
 

@@ -19,6 +19,7 @@ class JobType(StrEnum):
 
     # on demand jobs (long-lived)
     ML = "ml"
+    TAG_RECOMMENDATION = "tag_recommendation"
     CLASSIFIER = "classifier"
     LLM_ASSISTANT = "llm_assistant"
     EXPERIMENT_RUN = "experiment_run"

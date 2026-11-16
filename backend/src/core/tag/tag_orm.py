@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
-    from modules.ml.tag_recommendation.tag_recommendation_orm import (
+    from modules.tag_recommendation.tag_recommendation_orm import (
         TagRecommendationLinkORM,
     )
 

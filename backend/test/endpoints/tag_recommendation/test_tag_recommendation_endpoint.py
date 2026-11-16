@@ -4,8 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 import dats_test_utils
-from feature_test_utils import FeaturelessProject, assert_feature_disabled
-from modules.ml.tag_recommendation.tag_recommendation_dto import (
+from job_test_utils import HeldJobs
+from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationJobInput,
     TagRecommendationLinkRead,
     TagRecommendationResult,
 )
@@ -111,22 +112,23 @@ def test_review_recommendations_rejects_unknown_id(
 
 
 # ===========================================================================
-# TAG RECOMMENDATION JOBS (/tagrecommendation/{project_id}) TESTS
+# TAG RECOMMENDATION JOBS (/job/tag_recommendation) TESTS
 # ===========================================================================
+# The job endpoints are generated from the job registration (job system).
 
 
-def test_tag_recommendation_jobs_are_rejected_when_the_feature_is_disabled(
-    client: TestClient, featureless_project: FeaturelessProject
+def test_a_started_tag_recommendation_job_is_listed(
+    client: TestClient, test_project, held_jobs: HeldJobs
 ):
-    response = client.get(f"/tagrecommendation/{featureless_project['project'].id}")
+    """A job started in a project with tag recommendation is listed for the
+    project (it is held, so it does not run)."""
+    payload = TagRecommendationJobInput(project_id=test_project.id)
 
-    assert_feature_disabled(response, "tag_recommendation")
+    started = client.post(
+        "/job/tag_recommendation", json=payload.model_dump(mode="json")
+    )
+    listed = client.get(f"/job/tag_recommendation/project/{test_project.id}")
 
-
-def test_tag_recommendation_jobs_of_a_project_with_the_feature_are_listed(
-    client: TestClient, test_project
-):
-    response = client.get(f"/tagrecommendation/{test_project.id}")
-
-    assert response.status_code == 200, response.text
-    assert response.json() == []
+    assert started.status_code == 200, started.text
+    assert listed.status_code == 200, listed.text
+    assert [job["job_id"] for job in listed.json()] == [started.json()["job_id"]]

@@ -3,9 +3,6 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from modules.ml.ml_enum import MLJobType
-from modules.ml.tag_recommendation.tag_recommendation_enum import (
-    TagRecommendationMethod,
-)
 from systems.job_system.job_dto import JobInputBase
 
 
@@ -15,23 +12,6 @@ class QuotationAttributionParams(BaseModel):
     )
     recompute: bool = Field(
         default=False, description="Whether to recompute already processed documents"
-    )
-
-
-class DocTagRecommendationParams(BaseModel):
-    ml_job_type: Literal[MLJobType.TAG_RECOMMENDATION] = Field(
-        description="The type of the MLJob"
-    )
-    multi_class: bool = Field(
-        default=False, description="Tags are mutually exclusive if `False`"
-    )
-    tag_ids: list[int] = Field(
-        default=[],
-        description="Tags to consider. If empty, all tags applied to any document are considered.",
-    )
-    method: TagRecommendationMethod = Field(
-        default=TagRecommendationMethod.KNN,
-        description="Method to use for suggestions",
     )
 
 
@@ -48,10 +28,7 @@ class MLJobInput(JobInputBase):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
     specific_ml_job_parameters: (
-        QuotationAttributionParams
-        | DocTagRecommendationParams
-        | CoreferenceResolutionParams
-        | None
+        QuotationAttributionParams | CoreferenceResolutionParams | None
     ) = Field(
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",

@@ -6,19 +6,18 @@ from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.tag.tag_crud import crud_tag
-from modules.ml.tag_recommendation.tag_recommendation_crud import (
+from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
-from modules.ml.tag_recommendation.tag_recommendation_dto import (
+from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkRead,
     TagRecommendationLinkUpdate,
     TagRecommendationResult,
 )
-from modules.ml.tag_recommendation.tag_recommendation_orm import (
+from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
+from modules.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
-from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
-from systems.feature_system.feature_dependency import require_feature
 from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
 
@@ -30,32 +29,6 @@ router = APIRouter(
 
 
 # --- read operations
-
-
-@router.get(
-    "/{project_id}",
-    dependencies=[Depends(require_feature(TAG_RECOMMENDATION))],
-    response_model=list[int],
-    summary="Retrieve all finished tag recommendation MLJobs.",
-)
-def get_all_tagrecommendation_jobs(
-    *,
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[int]:
-    authz_user.assert_in_project(project_id)
-
-    # TODO: FIXME
-    # ml_jobs = mls.get_all_ml_jobs(project_id=project_id)
-    # ml_jobs = [
-    #     ml_job
-    #     for ml_job in ml_jobs
-    #     if ml_job.status == BackgroundJobStatus.FINISHED
-    #     and ml_job.parameters.ml_job_type == MLJobType.TAG_RECOMMENDATION
-    # ]
-    # ml_jobs.sort(key=lambda x: x.created, reverse=True)
-    # return [ml_job.id for ml_job in ml_jobs]
-    return []
 
 
 @router.get(
