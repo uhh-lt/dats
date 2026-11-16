@@ -9,9 +9,11 @@ from common.feature_enum import FeatureArea
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.system_codes import SystemCode
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
+from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from dats_test_utils import create_span_for_text, create_text_document
@@ -28,7 +30,10 @@ from feature_test_utils import (
     set_step_status,
 )
 from pipeline_test_utils import artefact_named, planned_steps
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.vector.collection_base import BaseCollection
+from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import artefact, artefact_registry
 from systems.artefact_system.artefact_system_enum import StorageKind
 from systems.feature_system.feature_registry import (
@@ -285,13 +290,19 @@ def coded_feature() -> Generator[Feature, None, None]:
         artefact_registry.unregister_artefact(coded.name)
 
 
+# what the set-up hook finds of a complete project: the system code
+# `TEST_CODED_TREE`, the project metadata, the search index and the Weaviate
+# tenants
+HOOK_FINDS_ALL = frozenset({"codes", "metadata", "index", "tenants"})
+
+
 class HookedFeature(TypedDict):
     """The feature of the `hooked_feature` fixture and the calls of its hook."""
 
     feature: Feature
-    # one entry per call of the set-up hook: the project id and whether the
-    # system code `TEST_CODED_TREE` existed in the project at that moment
-    calls: list[tuple[int, bool]]
+    # one entry per call of the set-up hook: the project id and what of the
+    # project existed at that moment (a subset of `HOOK_FINDS_ALL`)
+    calls: list[tuple[int, frozenset[str]]]
 
 
 @pytest.fixture(scope="function")
@@ -303,20 +314,41 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
     (`TEST_CODED_TREE` > `TEST_CODED_LEAF`), and the feature
     "test_hooked_feature" (area Analysis, `default_enabled=False`), which
     requires it and the keywords and has a set-up hook. The hook records each
-    call in `calls`. Both are removed afterwards.
+    call in `calls`, with what it finds of the project (`HOOK_FINDS_ALL` in a
+    complete project). Both are removed afterwards.
 
     Non-obvious derived behavior:
 
     - In a project without documents the feature is fully available right
       after Enable and can be disabled at once.
     """
-    calls: list[tuple[int, bool]] = []
+    calls: list[tuple[int, frozenset[str]]] = []
 
     def _set_up(db: Session, project_id: int) -> None:
         code = crud_code.read_by_name_and_project(
             db=db, code_name=CODED_TREE.name, project_id=project_id
         )
-        calls.append((project_id, code is not None))
+        weaviate = WeaviateRepo().get_client()
+        found = {
+            "codes": code is not None,
+            "metadata": bool(
+                crud_project_meta.read_by_project(db=db, project_id=project_id)
+            ),
+            "index": bool(
+                ElasticSearchRepo()
+                .get_client()
+                .indices.exists(
+                    index=crud_sdoc_elastic.index.get_index_name(project_id=project_id)
+                )
+            ),
+            "tenants": all(
+                weaviate.collections.get(c.get_collection_name()).tenants.exists(
+                    c.get_tenant_name(project_id)
+                )
+                for c in BaseCollection.all_collections()
+            ),
+        }
+        calls.append((project_id, frozenset(k for k, v in found.items() if v)))
 
     hooked = artefact(
         "test_hooked_artefact",

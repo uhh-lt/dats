@@ -7,11 +7,13 @@ import zipfile
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from common.job_type_enum import JobType
 from common.languages_enum import Language
 from core.code.code_crud import crud_code
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from feature_test_utils import create_project_with_features
+from job_test_utils import HeldJobs
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from repos.filesystem_repo import FilesystemRepo
@@ -20,7 +22,7 @@ from systems.feature_system.feature_dto import FeatureActivation
 from systems.feature_system.feature_registry import Feature
 from systems.feature_system.feature_service import FeatureService
 
-from .conftest import HookedFeature
+from .conftest import HOOK_FINDS_ALL, HookedFeature
 
 CODE_NAMES = ["TEST_CODED_TREE", "TEST_CODED_LEAF"]
 
@@ -134,33 +136,38 @@ def test_enable_runs_the_set_up_hook_after_the_codes_and_disable_does_not(
     test_user: UserORM,
     hooked_feature: HookedFeature,
 ):
-    """Enable runs the hook once, after the declared system codes exist;
+    """Enable runs the hook once, in the complete project after the declared
+    system codes exist;
     Disable runs nothing, and Enable again runs the hook again."""
     project = _project(db_session, test_user, "Hook Enable", [])
     base = f"/feature/project/{project.id}/{hooked_feature['feature'].name}"
     activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
 
     assert client.post(f"{base}/enable", json=activation).status_code == 200
-    assert hooked_feature["calls"] == [(project.id, True)]
+    assert hooked_feature["calls"] == [(project.id, HOOK_FINDS_ALL)]
 
     assert client.post(f"{base}/disable").status_code == 200
-    assert hooked_feature["calls"] == [(project.id, True)]
+    assert hooked_feature["calls"] == [(project.id, HOOK_FINDS_ALL)]
 
     assert client.post(f"{base}/enable", json=activation).status_code == 200
-    assert hooked_feature["calls"] == [(project.id, True), (project.id, True)]
+    assert hooked_feature["calls"] == [
+        (project.id, HOOK_FINDS_ALL),
+        (project.id, HOOK_FINDS_ALL),
+    ]
 
 
 def test_project_creation_runs_the_set_up_hook_of_its_features_only(
     db_session: Session, test_user: UserORM, hooked_feature: HookedFeature
 ):
-    """A project created with the feature runs its hook after its codes; one
+    """A project created with the feature runs its hook in the complete
+    project, after its codes, metadata, search index and Weaviate tenants; one
     created without it does not."""
     with_feature = _project(
         db_session, test_user, "Hook With", [hooked_feature["feature"].name]
     )
     _project(db_session, test_user, "Hook Without", [])
 
-    assert hooked_feature["calls"] == [(with_feature.id, True)]
+    assert hooked_feature["calls"] == [(with_feature.id, HOOK_FINDS_ALL)]
 
 
 def test_import_runs_the_set_up_hook_of_the_archived_features(
@@ -182,18 +189,23 @@ def test_import_runs_the_set_up_hook_of_the_archived_features(
     import_project(db=db_session, fsr=fsr, path_to_dir=import_dir, project_id=target.id)
     db_session.commit()
 
-    assert hooked_feature["calls"] == [(source.id, True), (target.id, True)]
+    assert hooked_feature["calls"] == [
+        (source.id, HOOK_FINDS_ALL),
+        (target.id, HOOK_FINDS_ALL),
+    ]
 
 
 def test_complete_does_not_run_the_set_up_hook(
     client: TestClient,
     hooked_feature: HookedFeature,
     hooked_partly_project: ProjectORM,
+    held_jobs: HeldJobs,
 ):
     """Completing the partly available feature computes its data and runs no
-    set up: the hook keeps the one call of the project creation."""
+    set up: the hook keeps the one call of the project creation, also after
+    the artefact computation planned the document."""
     project_id = hooked_partly_project.id
-    assert hooked_feature["calls"] == [(project_id, True)]
+    assert hooked_feature["calls"] == [(project_id, HOOK_FINDS_ALL)]
 
     response = client.post(
         f"/feature/project/{project_id}/{hooked_feature['feature'].name}/complete",
@@ -201,4 +213,5 @@ def test_complete_does_not_run_the_set_up_hook(
     )
 
     assert response.status_code == 200, response.text
-    assert hooked_feature["calls"] == [(project_id, True)]
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
+    assert hooked_feature["calls"] == [(project_id, HOOK_FINDS_ALL)]

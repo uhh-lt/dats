@@ -378,7 +378,7 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
     }
 
 
-def test_enable_feature_starts_a_step_whose_input_is_processing_when_it_finishes(
+def test_enable_feature_plans_but_does_not_start_a_step_whose_input_is_processing(
     client: TestClient,
     db_session,
     feature_project: FeatureProject,
@@ -388,7 +388,7 @@ def test_enable_feature_starts_a_step_whose_input_is_processing_when_it_finishes
     and image_embedding for the image. The sentence embeddings need text_spacy:
     they start for text_done and the image, whose spaCy step finished; for
     text_running, whose spaCy step is still processing, they are planned but not
-    started (the finished spaCy step starts them)."""
+    started."""
     p = feature_project
 
     _activate(client, p["project"].id, "semantic_search")

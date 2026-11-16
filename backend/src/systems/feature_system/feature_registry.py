@@ -127,7 +127,10 @@ def register_feature(
     anything is computed: on Enable, on the creation of a project with the
     feature and on a project import that enables it; not on Complete or
     Disable. It must be safe to run twice (Enable again runs it again), and
-    Disable does not undo it. System codes are declared on the artefacts
+    Disable does not undo it. It runs in the complete project, on creation as
+    on Enable (its metadata, search index and Weaviate tenants exist); a hook
+    that raises at project creation leaves the project's directory, index
+    and tenants behind. System codes are declared on the artefacts
     (`Artefact.codes`), never created here."""
     feature = Feature(
         name=name,
