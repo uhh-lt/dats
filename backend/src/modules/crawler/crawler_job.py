@@ -6,11 +6,11 @@ from loguru import logger
 from pydantic import Field
 
 from common.job_type_enum import JobType
-from core.project.project_crud import crud_project
-from modules.crawler.crawler_exceptions import NoDataToCrawlError
-from modules.doc_processing.entrypoints.archive_extraction_job import (
+from core.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
+from core.project.project_crud import crud_project
+from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingJobInput

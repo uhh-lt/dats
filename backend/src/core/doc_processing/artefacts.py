@@ -17,8 +17,8 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.doc.word_frequency_crud import crud_word_frequency
 from core.doc.word_frequency_dto import WordFrequencyCreate
-from modules.doc_processing.image.image_thumbnail_utils import generate_thumbnails
-from modules.doc_processing.video.video_utils import (
+from core.doc_processing.image.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.video.video_utils import (
     extract_audio_stream,
     store_video_thumbnail,
 )

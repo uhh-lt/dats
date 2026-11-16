@@ -9,9 +9,9 @@ from common.job_type_enum import JobType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
+from core.doc_processing.doc_processing_dto import SdocHealthResult, SdocInitJobInput
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs
-from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocInitJobInput
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project.import_project import import_project
 from pipeline_test_utils import artefact_named, read_step_status, started_steps

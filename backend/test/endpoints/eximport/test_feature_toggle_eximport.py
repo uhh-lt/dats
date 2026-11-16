@@ -19,9 +19,9 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.doc_processing.video.video_utils import audio_stream_path
 from core.project.project_crud import crud_project
 from job_test_utils import HeldJobs
-from modules.doc_processing.video.video_utils import audio_stream_path
 from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.project import import_project as import_project_module
 from modules.eximport.project.export_project import export_project

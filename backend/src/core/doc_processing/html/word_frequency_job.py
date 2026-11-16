@@ -3,8 +3,8 @@ from collections import Counter
 from common.doc_type_enum import DocType
 from core.doc.word_frequency_crud import crud_word_frequency
 from core.doc.word_frequency_dto import WordFrequencyCreate
-from modules.doc_processing.artefacts import CONTENT, LANGUAGE, WORD_FREQUENCIES
-from modules.doc_processing.html.text_step_utils import read_stored_text
+from core.doc_processing.artefacts import CONTENT, LANGUAGE, WORD_FREQUENCIES
+from core.doc_processing.html.text_step_utils import read_stored_text
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo

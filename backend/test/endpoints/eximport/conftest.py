@@ -31,6 +31,11 @@ from core.doc.source_document_dto import (
 from core.doc.source_document_orm import SourceDocumentORM
 from core.doc.word_frequency_crud import crud_word_frequency
 from core.doc.word_frequency_dto import WordFrequencyCreate
+from core.doc_processing.image.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.video.video_utils import (
+    extract_audio_stream,
+    store_video_thumbnail,
+)
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataCreate
 from core.project.project_crud import crud_project
@@ -54,11 +59,6 @@ from feature_test_utils import (
 )
 from modules.agreement.agreement_dto import AgreementCodeScore, AgreementScore
 from modules.agreement.agreement_enum import AgreementScoring
-from modules.doc_processing.image.image_thumbnail_utils import generate_thumbnails
-from modules.doc_processing.video.video_utils import (
-    extract_audio_stream,
-    store_video_thumbnail,
-)
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_dto import ExperimentCreateIntern
 from modules.experiment.experiment_orm import ExperimentORM, ExperimentRunORM

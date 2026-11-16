@@ -1,12 +1,12 @@
 from pathlib import Path
 
+from PIL import Image
+
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.doc_processing.artefacts import THUMBNAIL
-from modules.doc_processing.image.image_thumbnail_utils import generate_thumbnails
+from core.doc_processing.artefacts import FILE_METADATA
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -18,13 +18,13 @@ fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 
-class ImageThumbnailJobInput(SdocProcessingJobInput):
+class ImageMetadataExtractionJobInput(SdocProcessingJobInput):
     filepath: Path
 
 
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
-) -> ImageThumbnailJobInput:
+) -> ImageMetadataExtractionJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
@@ -35,7 +35,7 @@ def enrich_for_recompute(
 
     image_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
 
-    return ImageThumbnailJobInput(
+    return ImageMetadataExtractionJobInput(
         **payload.model_dump(),
         filepath=image_path,
     )
@@ -43,30 +43,30 @@ def enrich_for_recompute(
 
 @pipeline_step(
     requires=set(),
-    produces={THUMBNAIL},
+    produces={FILE_METADATA},
     doctypes={DocType.image},
 )
 @register_job(
-    job_type="image_thumbnail",
-    input_type=ImageThumbnailJobInput,
+    job_type="image_metadata_extraction",
+    input_type=ImageMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_image_thumbnail_job(payload: ImageThumbnailJobInput, job: Job) -> None:
-    generate_thumbnails(payload.filepath)
+def handle_image_metadata_extraction_job(
+    payload: ImageMetadataExtractionJobInput, job: Job
+) -> None:
+    with Image.open(payload.filepath) as img:
+        width = img.width
+        height = img.height
+        format = str(img.format)
+        mode = str(img.mode)
 
-    # Store link to webp image in DB
     with sqlr.transaction() as db:
-        sdoc = SourceDocumentRead.model_validate(
-            crud_sdoc.read(db=db, id=payload.sdoc_id)
-        )
-        repo_url = FilesystemRepo().get_sdoc_url(
-            sdoc=sdoc,
-            relative=True,
-            webp=True,
-            thumbnail=False,
-        )
-        crud_sdoc_data.update(
+        # Store image metadata in db
+        crud_sdoc_meta.update_multi_with_doctype(
             db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            doctype=DocType.image,
+            keys=["width", "height", "format", "mode"],
+            values=[width, height, format, mode],
         )

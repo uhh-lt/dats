@@ -5,8 +5,8 @@ import ffmpeg
 from common.doc_type_enum import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
+from core.doc_processing.artefacts import FILE_METADATA
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.doc_processing.artefacts import FILE_METADATA
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
@@ -18,10 +18,6 @@ fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 EXPECTED_METADATA = [
-    "language",
-    "transcription_keywords",
-    "width",
-    "height",
     "duration",
     "format_name",
     "format_long_name",
@@ -31,63 +27,57 @@ EXPECTED_METADATA = [
 ]
 
 
-class VideoMetadataExtractionJobInput(SdocProcessingJobInput):
+class AudioMetadataExtractionJobInput(SdocProcessingJobInput):
     filepath: Path
 
 
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
-) -> VideoMetadataExtractionJobInput:
+) -> AudioMetadataExtractionJobInput:
     with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
-        assert sdoc.doctype == DocType.video, (
-            f"SourceDocument with {payload.sdoc_id=} is not a video file!"
+        assert sdoc.doctype == DocType.audio, (
+            f"SourceDocument with {payload.sdoc_id=} is not an audio file!"
         )
 
-    video_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+    audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
 
-    return VideoMetadataExtractionJobInput(
+    return AudioMetadataExtractionJobInput(
         **payload.model_dump(),
-        filepath=video_path,
+        filepath=audio_path,
     )
 
 
 @pipeline_step(
     requires=set(),
     produces={FILE_METADATA},
-    doctypes={DocType.video},
+    doctypes={DocType.audio},
 )
 @register_job(
-    job_type="video_metadata",
-    input_type=VideoMetadataExtractionJobInput,
+    job_type="audio_metadata",
+    input_type=AudioMetadataExtractionJobInput,
     enricher=enrich_for_recompute,
 )
-def handle_video_metadata_extraction_job(
-    payload: VideoMetadataExtractionJobInput, job: Job
+def handle_audio_metadata_extraction_job(
+    payload: AudioMetadataExtractionJobInput, job: Job
 ) -> None:
+    audio_metadata = {}
     ffmpeg_probe = ffmpeg.probe(payload.filepath)
-
-    metadata = {}
     for k, v in ffmpeg_probe["format"].items():
         if k == "format_name":
-            metadata[k] = str(v).split(",")
+            audio_metadata[k] = str(v).split(",")
         elif k in EXPECTED_METADATA:
-            metadata[k] = str(v)
-
-    vidx = 0 if ffmpeg_probe["streams"][0]["codec_type"] == "video" else 1
-    for k, v in ffmpeg_probe["streams"][vidx].items():
-        if k in EXPECTED_METADATA:
-            metadata[k] = str(v)
+            audio_metadata[k] = str(v)
 
     with sqlr.transaction() as db:
-        # Store video metadata in db
+        # Store audio_metadata in db
         crud_sdoc_meta.update_multi_with_doctype(
             db=db,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
-            doctype=DocType.video,
-            keys=list(metadata.keys()),
-            values=list(metadata.values()),
+            doctype=DocType.audio,
+            keys=list(audio_metadata.keys()),
+            values=list(audio_metadata.values()),
         )

@@ -68,7 +68,7 @@ def test_no_system_may_import_a_module(
         tmp_path,
         {
             "systems/feature_system/feature_service.py": (
-                "from modules.doc_processing.doc_processing_dto import X\n"
+                "from modules.word_frequency.word_frequency_dto import X\n"
             ),
         },
     )

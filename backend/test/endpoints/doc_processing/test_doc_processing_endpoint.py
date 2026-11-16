@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
+from core.doc_processing.doc_processing_dto import SdocHealthResult, SdocHealthSort
 from feature_test_utils import FeatureProject
 from job_test_utils import HeldJobs, unreachable_redis
-from modules.doc_processing.doc_processing_dto import SdocHealthResult, SdocHealthSort
 from pipeline_test_utils import (
     all_steps,
     failing_started_hook,

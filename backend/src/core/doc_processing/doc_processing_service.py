@@ -10,21 +10,21 @@ from common.job_type_enum import JobType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from modules.doc_processing.doc_processing_dto import (
+from core.doc_processing.doc_processing_dto import (
     SdocHealthResult,
     SdocHealthSort,
     SdocInitJobInput,
     SdocStatusRow,
 )
-from modules.doc_processing.doc_processing_exceptions import (
+from core.doc_processing.doc_processing_exceptions import (
     NoFilesProcessedError,
     StepNotPlannedError,
     UnsupportedMimeTypeError,
 )
-from modules.doc_processing.entrypoints.archive_extraction_job import (
+from core.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
-from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from core.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import (
     ProcessingSettings,

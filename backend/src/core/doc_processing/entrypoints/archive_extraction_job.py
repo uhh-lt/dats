@@ -6,8 +6,8 @@ from loguru import logger
 from common.doc_type_enum import DocType
 from common.doc_type_utils import get_doc_type
 from common.job_type_enum import JobType
-from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
-from modules.doc_processing.entrypoints.follower_utils import start_followers
+from core.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from core.doc_processing.entrypoints.follower_utils import start_followers
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_dto import ProcessingJobInput
 from systems.job_system.job_dto import Job, JobOutputBase

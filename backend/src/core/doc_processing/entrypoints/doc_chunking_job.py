@@ -10,12 +10,12 @@ from config import conf
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate
 from core.doc.folder_enum import FolderType
-from modules.doc_processing.doc_processing_dto import SdocInitJobInput
-from modules.doc_processing.entrypoints.follower_utils import start_followers
-from modules.doc_processing.entrypoints.html_chunking_utils import (
+from core.doc_processing.doc_processing_dto import SdocInitJobInput
+from core.doc_processing.entrypoints.follower_utils import start_followers
+from core.doc_processing.entrypoints.html_chunking_utils import (
     split_html_into_chunks,
 )
-from modules.doc_processing.entrypoints.txt_chunking_utils import split_text_into_chunks
+from core.doc_processing.entrypoints.txt_chunking_utils import split_text_into_chunks
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_exceptions import (
     FileAlreadyExistsInFilesystemError,

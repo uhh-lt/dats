@@ -9,11 +9,11 @@ from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
 )
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.doc_processing.doc_processing_dto import (
+from core.doc_processing.doc_processing_dto import (
     SdocInitJobInput,
     SdocInitJobOutput,
 )
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_service import ArtefactService

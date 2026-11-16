@@ -6,12 +6,12 @@ from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from modules.doc_processing.doc_processing_dto import (
+from core.doc_processing.doc_processing_dto import (
     SdocHealthResult,
     SdocHealthSort,
     SourceDocumentStatusSimple,
 )
-from modules.doc_processing.doc_processing_service import DocProcessingService
+from core.doc_processing.doc_processing_service import DocProcessingService
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (

@@ -4,7 +4,7 @@ from common.doc_type_enum import DocType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
-from modules.doc_processing.artefacts import SENTENCE_EMBEDDINGS, TOKENS_SENTENCES
+from core.doc_processing.artefacts import SENTENCE_EMBEDDINGS, TOKENS_SENTENCES
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.clip import ClipTextEmbeddingInput
 from repos.ray.ray_repo import RayRepo

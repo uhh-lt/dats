@@ -5,10 +5,10 @@ from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
+from core.doc_processing.artefacts import CONTENT, LANGUAGE
+from core.doc_processing.html.text_step_utils import read_stored_text
 from core.user.user_crud import SYSTEM_USER_ID
-from modules.doc_processing.artefacts import CONTENT, LANGUAGE
 from modules.doc_processing.html.ner_artefact import NER_SPANS
-from modules.doc_processing.html.text_step_utils import read_stored_text
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo

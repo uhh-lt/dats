@@ -193,7 +193,7 @@ class TestJobUpdatedEmission:
 
         from common.doc_type_enum import DocType
         from common.languages_enum import Language
-        from modules.doc_processing.doc_processing_dto import SdocInitJobInput
+        from core.doc_processing.doc_processing_dto import SdocInitJobInput
         from systems.artefact_system.artefact_dto import ProcessingSettings
 
         payload = SdocInitJobInput(

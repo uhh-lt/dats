@@ -1,9 +1,9 @@
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc_processing.artefacts import CONTENT, LANGUAGE
+from core.doc_processing.doc_processing_exceptions import LanguageNotSupportedError
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from modules.doc_processing.artefacts import CONTENT, LANGUAGE
-from modules.doc_processing.doc_processing_exceptions import LanguageNotSupportedError
 from repos.db.sql_repo import SQLRepo
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.ray.ray_repo import RayRepo

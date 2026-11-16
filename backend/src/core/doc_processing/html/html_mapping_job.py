@@ -3,8 +3,8 @@ from loguru import logger
 from common.doc_type_enum import DocType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from modules.doc_processing.artefacts import HTML, RAW_HTML, TOKENS_SENTENCES
-from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper, StringBuilder
+from core.doc_processing.artefacts import HTML, RAW_HTML, TOKENS_SENTENCES
+from core.doc_processing.html.html_mapping_utils import HTMLTextMapper, StringBuilder
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.pipeline_step_decorator import pipeline_step

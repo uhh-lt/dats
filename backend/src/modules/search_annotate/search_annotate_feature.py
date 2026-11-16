@@ -1,5 +1,5 @@
 from common.feature_enum import FeatureArea
-from modules.doc_processing.artefacts import ES_INDEX
+from core.doc_processing.artefacts import ES_INDEX
 from systems.feature_system.feature_registry import register_feature
 
 SEARCH_ANNOTATE = register_feature(
