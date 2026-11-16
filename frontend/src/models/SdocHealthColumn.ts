@@ -8,7 +8,7 @@ export type SdocHealthColumn = {
    */
   step: string;
   /**
-   * Whether the step is a core step, which every document gets and Recompute starts also where it is missing
+   * Whether the step is a core step, which every document gets and Recompute plans where it is missing
    */
   core: boolean;
 };

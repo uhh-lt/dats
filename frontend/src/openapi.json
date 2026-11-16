@@ -16924,7 +16924,7 @@
           "core": {
             "type": "boolean",
             "title": "Core",
-            "description": "Whether the step is a core step, which every document gets and Recompute starts also where it is missing"
+            "description": "Whether the step is a core step, which every document gets and Recompute plans where it is missing"
           }
         },
         "type": "object",
