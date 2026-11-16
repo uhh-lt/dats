@@ -127,7 +127,7 @@ export function TagRecommendationsView() {
         ) : selectedJobState === "error" ? (
           <CardContent>
             The tag recommendation job did not finish ({selectedJob?.status}).
-            {selectedJob?.status_message ? ` ${selectedJob.status_message}` : ""}
+            {selectedJob?.status_message ? ` Message: ${selectedJob.status_message}` : ""}
           </CardContent>
         ) : recommendations.isError ? (
           <CardContent>The recommendations could not be loaded.</CardContent>
