@@ -10,7 +10,7 @@ from common.doc_type_enum import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from job_test_utils import HeldJobs
-from systems.artefact_system import step_run
+from systems.artefact_system import step_execution
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput
 from systems.artefact_system.artefact_registry import Artefact, artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (
@@ -105,7 +105,7 @@ def failing_started_hook() -> Generator[None, None, None]:
     """While the context is open, the started hook of every step job raises as
     it sets the steps processing, as if the database failed, so the job fails
     and its steps become erroneous."""
-    set_status = step_run._set_status
+    set_status = step_execution._set_status
 
     def fail_to_set_processing(
         job_type: str,
@@ -116,8 +116,8 @@ def failing_started_hook() -> Generator[None, None, None]:
             raise RuntimeError("cannot set the steps processing")
         set_status(job_type, input, status)
 
-    step_run._set_status = fail_to_set_processing
+    step_execution._set_status = fail_to_set_processing
     try:
         yield
     finally:
-        step_run._set_status = set_status
+        step_execution._set_status = set_status

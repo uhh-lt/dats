@@ -25,7 +25,7 @@ from systems.artefact_system.source_document_status_rules import (
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
-from systems.artefact_system.step_run import start_steps
+from systems.artefact_system.step_execution import start_steps
 from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobPriority
@@ -220,7 +220,7 @@ class ArtefactService(metaclass=SingletonMeta):
 
         At the end it removes the pending computation (`end_computation`). If
         the computation fails, also because its worker died, the failure
-        callback ends it (`step_run.handle_job_error`): the documents it did
+        callback ends it (`step_execution.handle_job_error`): the documents it did
         not reach stay unplanned, the artefacts read partly available and
         another computation plans them. It opens its transactions itself: one
         commit per batch, so no lock is held longer than a batch. Called only
@@ -278,7 +278,7 @@ class ArtefactService(metaclass=SingletonMeta):
     ) -> None:
         """End an artefact computation, done or failed: remove it from the
         project's pending computations, so its artefacts are pending only while
-        it runs. Called by the job and by `step_run.handle_job_error`."""
+        it runs. Called by the job and by `step_execution.handle_job_error`."""
         project = crud_project.read_locked(db=db, id=computation.project_id)
         if not self._is_pending(project=project, computation=computation):
             return

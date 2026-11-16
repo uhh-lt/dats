@@ -73,7 +73,7 @@ def register_jobs() -> None:
     """
     from common.dats_event import build_job_event_models
     from systems.artefact_system.artefact_registry import artefact_registry
-    from systems.artefact_system.step_run import (
+    from systems.artefact_system.step_execution import (
         handle_job_error,
         handle_job_finished,
         handle_job_started,

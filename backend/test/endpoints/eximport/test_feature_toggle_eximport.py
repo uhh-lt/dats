@@ -38,7 +38,7 @@ from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.artefact_system.artefact_registry import artefact_registry
-from systems.artefact_system.step_run import start_steps
+from systems.artefact_system.step_execution import start_steps
 
 from .conftest import FeatureToggleEximportProjects
 
