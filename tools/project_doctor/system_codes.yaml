@@ -1,6 +1,6 @@
 # The system code trees a DATS project can have, nested via `children`: the copy
 # of the project doctor, which imports no DATS code. The backend declares them on
-# its artefacts (`codes=`, e.g. backend/src/modules/doc_processing/html/ner_artefact.py)
+# its artefacts (`codes=`, e.g. backend/src/modules/entity_annotations/ner_artefact.py)
 # and in backend/src/core/code/system_codes.py;
 # backend/test/unit/test_project_doctor_steps.py fails when the two differ.
 system_codes:
