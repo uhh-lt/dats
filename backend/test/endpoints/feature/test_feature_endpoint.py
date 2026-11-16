@@ -168,7 +168,7 @@ def test_project_features_ignore_a_stored_name_of_an_unregistered_feature(
 def test_project_features_count_the_documents_by_the_status_of_their_steps(
     client: TestClient, partly_project: PartlyProject
 ):
-    """Keyword statistics covers one document; two failed (an erroneous index or
+    """Keyword statistics covers one document; two failed (erroneous keywords or
     text extraction), two lack a planned step and nothing runs: it is partly
     available."""
     read = _features(client, partly_project["project"].id)["keyword_statistics"]
@@ -234,7 +234,7 @@ def _complete(client: TestClient, project_id: int, feature: str) -> None:
     assert response.status_code == 200, response.text
 
 
-# one project per status of keyword statistics or keyword statistics
+# one project per status of keyword statistics
 _STATUS_PROJECTS = {
     FeatureStatus.DISABLED: ("feature_project", "keyword_statistics"),
     FeatureStatus.COMPUTING: ("uploading_project", "keyword_statistics"),
@@ -375,6 +375,33 @@ def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
         p["text_done"].id: ["text_keywords"],
         p["text_running"].id: ["text_keywords"],
         p["image"].id: ["text_keywords"],
+    }
+
+
+def test_enable_feature_starts_a_step_whose_input_is_processing_when_it_finishes(
+    client: TestClient,
+    db_session,
+    feature_project: FeatureProject,
+    held_jobs: HeldJobs,
+):
+    """Enabling semantic search plans text_sentence_embedding for every document
+    and image_embedding for the image. The sentence embeddings need text_spacy:
+    they start for text_done and the image, whose spaCy step finished; for
+    text_running, whose spaCy step is still processing, they are planned but not
+    started (the finished spaCy step starts them)."""
+    p = feature_project
+
+    _activate(client, p["project"].id, "semantic_search")
+    held_jobs.run(JobType.ARTEFACT_COMPUTATION)
+    started = started_steps(held_jobs)
+
+    assert (
+        read_step_status(db_session, p["text_running"].id, "text_sentence_embedding")
+        == 0
+    )
+    assert started == {
+        p["text_done"].id: ["text_sentence_embedding"],
+        p["image"].id: ["image_embedding", "text_sentence_embedding"],
     }
 
 

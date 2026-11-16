@@ -62,28 +62,29 @@ class ProjectService(metaclass=SingletonMeta):
         if creating_user_id != SYSTEM_USER_ID:
             self.associate_user(db=db, project_id=project_id, user_id=creating_user_id)
 
-        # 4) set up the enabled features: their system codes and set-up hooks
-        self.fs.set_up(db=db, project_id=project_id, features=enabled_features)
-
-        # 5) create project metadata
+        # 4) create project metadata
         crud_project_meta.create_project_metadata_for_project(
             db=db, project_id=project_id
         )
 
-        # 6) create the default prompts
+        # 5) create the default prompts
         self.pts.create_default_prompts(db=db, project_id=project_id)
 
-        # 7) create filesystem directory structure
+        # 6) create filesystem directory structure
         self.fsr.create_directory_structure_for_project(project_id=project_id)
 
-        # 8) create elasticsearch indices for this project
+        # 7) create elasticsearch indices for this project
         client = self.es_repo.get_client()
         crud_sdoc_elastic.index.create_index(client=client, project_id=project_id)
 
-        # 9) create weaviate tenants for this project
+        # 8) create weaviate tenants for this project
         client = self.weaviate.get_client()
         for collection in BaseCollection.all_collections():
             collection.create_tenant(client, project_id)
+
+        # 9) set up the enabled features in the complete project, as on Enable:
+        # their system codes, then their set-up hooks
+        self.fs.set_up(db=db, project_id=project_id, features=enabled_features)
 
         # 10) re-load a fresh instance to avoid detachment
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))

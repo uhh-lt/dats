@@ -27,7 +27,7 @@ from feature_test_utils import (
     off_by_default_feature,
     set_step_status,
 )
-from pipeline_test_utils import planned_steps
+from pipeline_test_utils import artefact_named, planned_steps
 from repos.filesystem_repo import FilesystemRepo
 from systems.artefact_system.artefact_registry import artefact, artefact_registry
 from systems.artefact_system.artefact_system_enum import StorageKind
@@ -302,14 +302,13 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
     to produce it), which declares the code tree `CODED_TREE`
     (`TEST_CODED_TREE` > `TEST_CODED_LEAF`), and the feature
     "test_hooked_feature" (area Analysis, `default_enabled=False`), which
-    requires it and has a set-up hook. The hook records each call in `calls`.
-    Both are removed afterwards.
+    requires it and the keywords and has a set-up hook. The hook records each
+    call in `calls`. Both are removed afterwards.
 
     Non-obvious derived behavior:
 
-    - The feature applies to no text document, so in a project without audio
-      documents it is fully available right after Enable and can be disabled
-      at once.
+    - In a project without documents the feature is fully available right
+      after Enable and can be disabled at once.
     """
     calls: list[tuple[int, bool]] = []
 
@@ -330,7 +329,7 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
         title="Test Hooked Feature",
         description="A test feature with a set-up hook.",
         area=FeatureArea.ANALYSIS,
-        requires_artefacts={hooked},
+        requires_artefacts={hooked, artefact_named("keywords")},
         default_enabled=False,
         set_up=_set_up,
     )
@@ -339,6 +338,31 @@ def hooked_feature() -> Generator[HookedFeature, None, None]:
     finally:
         feature_registry.unregister_feature(feature.name)
         artefact_registry.unregister_artefact(hooked.name)
+
+
+@pytest.fixture(scope="function")
+def hooked_partly_project(
+    db_session: Session, test_user: UserORM, hooked_feature: HookedFeature
+) -> ProjectORM:
+    """The project "Hook Partly", created with the feature of `hooked_feature`
+    (its hook ran once for it), with one text document "text_done.txt" whose
+    core steps are finished and whose text_keywords is not planned: the
+    feature is partly available."""
+    project = create_project_with_features(
+        db_session,
+        test_user,
+        title="Hook Partly",
+        features=[hooked_feature["feature"].name],
+    )
+    _create_sdoc(
+        db_session,
+        project,
+        name="text_done.txt",
+        doctype=DocType.text,
+        status=dict.fromkeys(minimal_text_steps(), 1),
+    )
+    db_session.commit()
+    return project
 
 
 class CodeImportProjects(TypedDict):

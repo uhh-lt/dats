@@ -183,3 +183,22 @@ def test_import_runs_the_set_up_hook_of_the_archived_features(
     db_session.commit()
 
     assert hooked_feature["calls"] == [(source.id, True), (target.id, True)]
+
+
+def test_complete_does_not_run_the_set_up_hook(
+    client: TestClient,
+    hooked_feature: HookedFeature,
+    hooked_partly_project: ProjectORM,
+):
+    """Completing the partly available feature computes its data and runs no
+    set up: the hook keeps the one call of the project creation."""
+    project_id = hooked_partly_project.id
+    assert hooked_feature["calls"] == [(project_id, True)]
+
+    response = client.post(
+        f"/feature/project/{project_id}/{hooked_feature['feature'].name}/complete",
+        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
+    )
+
+    assert response.status_code == 200, response.text
+    assert hooked_feature["calls"] == [(project_id, True)]
