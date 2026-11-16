@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
-from core.code.system_codes import parent_names
+from core.code.system_codes import declared_codes, parent_names
 from modules.eximport.codes.code_export_schema import (
     CodeExportCollection,
     CodeExportSchema,
@@ -24,8 +24,13 @@ class CodeImporter:
         self.db = db
         self.project_id = project_id
         self.code_id_mapping: dict[str, int] = {}
-        # the parent of each system code the registered artefacts declare
-        self.system_code_parents = parent_names(artefact_registry.system_codes())
+        # the parent and the declaration of each system code the registered
+        # artefacts declare
+        declared_trees = artefact_registry.system_codes()
+        self.system_code_parents = parent_names(declared_trees)
+        self.declared_codes = declared_codes(declared_trees)
+        # the names that are system codes in the project, existing or imported
+        self.system_code_names: set[str] = set()
 
     def import_codes(self, df: pd.DataFrame, validate_only: bool) -> dict[str, int]:
         """
@@ -164,26 +169,35 @@ class CodeImporter:
             # Validate that existing code matches imported code
             self._validate_existing_code(existing_code, code, parent_id)
             self.code_id_mapping[code.code_name] = existing_code.id
+            if existing_code.is_system:
+                self.system_code_names.add(code.code_name)
             return None
-        else:
-            return CodeCreate(
-                name=code.code_name,
-                description=code.description,
-                parent_id=parent_id,
-                project_id=self.project_id,
-                is_system=self._is_declared_system_code(code),
-                enabled=True,
-                color=code.color if code.color else get_next_color(),
-            )
+        is_system = self._is_declared_system_code(code)
+        if is_system:
+            self.system_code_names.add(code.code_name)
+        declared = self.declared_codes.get(code.code_name)
+        return CodeCreate(
+            name=code.code_name,
+            description=code.description,
+            parent_id=parent_id,
+            project_id=self.project_id,
+            is_system=is_system,
+            # a declared system code is enabled as declared, a user code is enabled
+            enabled=declared.enabled if is_system and declared else True,
+            color=code.color if code.color else get_next_color(),
+        )
 
     def _is_declared_system_code(self, code: CodeExportSchema) -> bool:
         """Whether the archived code is a system code an artefact declares: its
-        name is declared, with the parent it has in the archive. The archive
-        has no `is_system` column, so a code tree of a feature the archive does
-        not enable would otherwise become user codes."""
-        return code.code_name in self.system_code_parents and self.system_code_parents[
-            code.code_name
-        ] == (code.parent_code_name or None)
+        name is declared, with the parent it has in the archive, and that
+        parent is a system code in the project (a user tree `ANIMAL` > `DOG`
+        stays a user tree). The archive has no `is_system` column, so a code
+        tree of a feature the archive does not enable would otherwise become
+        user codes."""
+        parent = code.parent_code_name or None
+        if self.system_code_parents.get(code.code_name, "") != parent:
+            return False
+        return parent is None or parent in self.system_code_names
 
     def _validate_existing_code(
         self,

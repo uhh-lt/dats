@@ -153,8 +153,9 @@ def test_import_marks_a_declared_code_tree_as_system_codes(
     db_session: Session, code_import_projects: CodeImportProjects
 ):
     """The archive of entities_disabled holds `NAMED_ENTITY` but does not enable
-    entity annotations: the import still creates the tree as system codes, so
-    a later Enable of entity annotations succeeds instead of a 409."""
+    entity annotations: the import still creates the tree as system codes,
+    each enabled as declared (`CARDINAL` is declared disabled), so a later
+    Enable of entity annotations succeeds instead of a 409."""
     p = code_import_projects
 
     _round_trip(db_session, p["entities_disabled"], p["target"])
@@ -162,11 +163,31 @@ def test_import_marks_a_declared_code_tree_as_system_codes(
     codes = _codes(db_session, p["target"].id)
     assert codes["NAMED_ENTITY"].is_system
     assert codes["PERSON"].is_system
+    assert codes["PERSON"].enabled
+    assert codes["CARDINAL"].is_system
+    assert not codes["CARDINAL"].enabled
     _enable(db_session, p["target"].id, "entity_annotations")
     assert (
         codes["NAMED_ENTITY"].id
         == _codes(db_session, p["target"].id)["NAMED_ENTITY"].id
     )
+
+
+def test_import_keeps_a_user_tree_whose_names_are_declared_below_its_user_parent(
+    db_session: Session, code_import_projects: CodeImportProjects
+):
+    """`DOG` is declared below `ANIMAL`, and user_animals has it below its user
+    code `ANIMAL`: as that parent is no system code, both stay user codes."""
+    p = code_import_projects
+
+    _round_trip(db_session, p["user_animals"], p["target"])
+
+    for name in ("ANIMAL", "DOG"):
+        code = crud_code.read_by_name_and_project(
+            db=db_session, code_name=name, project_id=p["target"].id
+        )
+        assert code is not None, name
+        assert not code.is_system, name
 
 
 def test_import_keeps_a_top_level_user_code_named_like_a_system_code(

@@ -35,6 +35,21 @@ def parent_names(trees: Iterable[SystemCode]) -> dict[str, str | None]:
     return parents
 
 
+def declared_codes(trees: Iterable[SystemCode]) -> dict[str, SystemCode]:
+    """Every code of these trees by name, the first declaration of a name (the
+    startup check makes all declarations of a name agree); without `ROOT`."""
+    codes: dict[str, SystemCode] = {}
+
+    def visit(code: SystemCode) -> None:
+        codes.setdefault(code.name, code)
+        for child in code.children:
+            visit(child)
+
+    for tree in trees:
+        visit(tree)
+    return codes
+
+
 # The path NAMED_ENTITY > PERSON has two users: the named-entity spans and the
 # object boxes (DETR's "person"). Declared once, here; both extend it.
 NAMED_ENTITY_PERSON = SystemCode(

@@ -301,6 +301,10 @@ class CodeImportProjects(TypedDict):
       "They talked.", with its raw file); its core steps and `text_ner` are
       finished, and `test_user` annotated "Ada" and "Alan" with the system
       code `PERSON` (below `NAMED_ENTITY`)
+    - user_animals: "User Animals", without any enabled feature, with the
+      top-level user code `ANIMAL` and below it the user code `DOG` (both
+      names of the COCO tree of object detection, which declares `ANIMAL`
+      below `SYSTEM_CODE`)
     - entity_target: "Entity Target", with automatic entity annotations
       enabled and no documents: it already has the system code tree
       `NAMED_ENTITY` (with `PERSON`)
@@ -315,6 +319,7 @@ class CodeImportProjects(TypedDict):
     user_named_entity: ProjectORM
     target: ProjectORM
     entity_spans: ProjectORM
+    user_animals: ProjectORM
     entity_target: ProjectORM
 
 
@@ -369,11 +374,26 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
         create_span_for_text(
             db_session, sdoc=persons, text=text, code_id=person.id, user_id=test_user.id
         )
+    user_animals = create_project_with_features(
+        db_session, test_user, title="User Animals", features=[]
+    )
+    animal = crud_code.create(
+        db=db_session,
+        create_dto=CodeCreate(
+            name="ANIMAL", project_id=user_animals.id, is_system=False
+        ),
+    )
+    crud_code.create(
+        db=db_session,
+        create_dto=CodeCreate(
+            name="DOG", project_id=user_animals.id, parent_id=animal.id, is_system=False
+        ),
+    )
     entity_target = create_project_with_features(
         db_session, test_user, title="Entity Target", features=["entity_annotations"]
     )
     db_session.commit()
-    projects = (entities, user_code, target, entity_spans, entity_target)
+    projects = (entities, user_code, target, entity_spans, user_animals, entity_target)
     for project in projects:
         db_session.refresh(project)
     return {
@@ -381,5 +401,6 @@ def code_import_projects(db_session, test_user: UserORM) -> CodeImportProjects:
         "user_named_entity": user_code,
         "target": target,
         "entity_spans": entity_spans,
+        "user_animals": user_animals,
         "entity_target": entity_target,
     }
