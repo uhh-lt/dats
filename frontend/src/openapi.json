@@ -13287,12 +13287,6 @@
           "title": { "type": "string", "title": "Title", "description": "Title of the Feature" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Feature" },
           "area": { "$ref": "#/components/schemas/FeatureArea", "description": "Area of the Feature" },
-          "requires_features": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Requires Features",
-            "description": "Names of the Features this Feature requires (directly); enabling it enables them"
-          },
           "default_enabled": {
             "type": "boolean",
             "title": "Default Enabled",
@@ -13300,7 +13294,7 @@
           }
         },
         "type": "object",
-        "required": ["feature", "title", "description", "area", "requires_features", "default_enabled"],
+        "required": ["feature", "title", "description", "area", "default_enabled"],
         "title": "FeatureRead"
       },
       "FeatureStatus": {

@@ -21,10 +21,6 @@ export type FeatureRead = {
    */
   area: FeatureArea;
   /**
-   * Names of the Features this Feature requires (directly); enabling it enables them
-   */
-  requires_features: Array<string>;
-  /**
    * Whether a new Project enables the Feature unless the request names its Features
    */
   default_enabled: boolean;

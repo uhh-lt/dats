@@ -54,8 +54,7 @@ def import_project_details_to_proj(
     features: list[Feature],
     project_id: int,
 ) -> None:
-    """Enable the features of the archive's project (`archived_features`), and the
-    features they require, in addition to the features the project enables already: an import
+    """Enable the features of the archive's project (`archived_features`) in addition to the features the project enables already: an import
     never disables a feature. The import plans no steps: features whose data the
     archive lacks are partly available until a user completes them in the project
     settings (`FeatureService.add_features`)."""

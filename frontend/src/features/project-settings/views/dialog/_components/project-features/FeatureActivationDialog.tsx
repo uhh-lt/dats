@@ -2,8 +2,7 @@ import { generalQueries } from "@api/general/generalQueries";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { DEFAULT_PROCESSING_SETTINGS } from "@components/defaultProcessingSettings";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { FeatureHooks, featureQueries } from "@core/feature";
-import { ProjectFeatureMap } from "@core/project";
+import { FeatureHooks } from "@core/feature";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { FeatureRead } from "@models/FeatureRead";
 import { FeatureStatus } from "@models/FeatureStatus";
@@ -21,8 +20,6 @@ interface FeatureActivationDialogProps {
   /** The feature to enable or complete; the dialog is open while it is set. */
   feature: FeatureRead | null;
   state: ProjectFeatureRead | undefined;
-  /** The states of all features, to name only the required features that are not enabled yet. */
-  states: ProjectFeatureMap;
   onClose: () => void;
 }
 
@@ -30,7 +27,7 @@ interface FeatureActivationDialogProps {
  * Enable a disabled feature or complete a partly available one: states how many documents are processed and lets the
  * user choose the processing settings, like the upload.
  */
-export function FeatureActivationDialog({ projectId, feature, state, states, onClose }: FeatureActivationDialogProps) {
+export function FeatureActivationDialog({ projectId, feature, state, onClose }: FeatureActivationDialogProps) {
   const { isMaximized, toggleMaximize } = useDialogMaximize();
   const availableLLMs = useQuery(generalQueries.availableModels());
   const [settings, setSettings] = useState<ProcessingSettings>(DEFAULT_PROCESSING_SETTINGS);
@@ -56,11 +53,7 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
     mutate({ projectId, feature: feature.feature, requestBody: { settings } }, { onSuccess: handleSuccess });
   }, [completeFeatureMutation, enableFeatureMutation, feature, handleSuccess, isComplete, projectId, settings]);
 
-  const features = useQuery(featureQueries.list());
   const count = state?.lacking_documents ?? 0;
-  const requiredTitles = (feature?.requires_features ?? [])
-    .filter((f) => !states[f]?.enabled)
-    .map((f) => features.data?.find((info) => info.feature === f)?.title ?? f);
 
   return (
     <Dialog
@@ -84,9 +77,6 @@ export function FeatureActivationDialog({ projectId, feature, state, states, onC
               ? "No document needs to be processed."
               : `${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} processed in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
           </Typography>
-          {!isComplete && requiredTitles.length > 0 && (
-            <Typography color="text.secondary">This also enables {requiredTitles.join(", ")}.</Typography>
-          )}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Box>
               <Typography variant="subtitle1" fontWeight={500}>

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,6 @@ from systems.feature_system.feature_exceptions import (
     FeatureActionNotAllowedError,
     FeatureDisabledError,
     FeatureNotFoundError,
-    FeatureStillRequiredError,
 )
 from systems.feature_system.feature_registry import Feature, feature_registry
 
@@ -34,8 +33,8 @@ ALLOWED_STATUSES = {
 
 
 class FeatureService(metaclass=SingletonMeta):
-    """The toggleable features: which features exist, which features a set of
-    features requires, whether a project enables a feature, the status of the
+    """The toggleable features: which features exist, whether a project
+    enables a feature, the status of the
     features of a project, which actions it allows and the actions Enable,
     Complete and Disable (see the README next to this file). It talks to the
     artefact system in artefacts only: Enable and Complete compute the
@@ -58,9 +57,6 @@ class FeatureService(metaclass=SingletonMeta):
                 title=f.title,
                 description=f.description,
                 area=f.area,
-                requires_features=[
-                    r.name for r in declarations if r in f.requires_features
-                ],
                 default_enabled=f.default_enabled,
             )
             for f in declarations
@@ -74,23 +70,6 @@ class FeatureService(metaclass=SingletonMeta):
         if feature is None:
             raise FeatureNotFoundError(name)
         return feature
-
-    def resolve_enabled_features(
-        self, *, requested: Iterable[Feature], current: Iterable[Feature] = ()
-    ) -> list[Feature]:
-        """The features to store as enabled when `requested` are asked for: they
-        and the features they require, sorted by name. Rejects disabling a
-        feature of `current` that a requested feature requires."""
-        requested = frozenset(requested)
-        for feature in frozenset(current) - requested:
-            required_by = sorted(
-                f.name for f in requested if feature in self.registry.closure([f]) - {f}
-            )
-            if required_by:
-                raise FeatureStillRequiredError(
-                    feature=feature.name, required_by=required_by
-                )
-        return sorted(self.registry.closure(requested), key=lambda f: f.name)
 
     def assert_enabled(self, *, db: Session, project_id: int, feature: Feature) -> None:
         """Raise a `FeatureDisabledError` (403) if the feature is not enabled in
@@ -182,20 +161,15 @@ class FeatureService(metaclass=SingletonMeta):
         feature: Feature,
         settings: ProcessingSettings,
     ) -> ProjectRead:
-        """Enable the disabled feature and the features it requires, and compute
-        their artefacts for the documents that lack them
+        """Enable the disabled feature and compute its artefacts for the documents that lack them
         (`ArtefactService.compute`) on the low-priority queue with these
         settings. Returns the project."""
         project = crud_project.read_locked(db=db, id=project_id)
         self.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.ENABLE
         )
-        current = self._enabled(project)
-        enabled = self.resolve_enabled_features(
-            requested=current | {feature}, current=current
-        )
         statements.update_enabled_features(
-            db=db, project_id=project_id, features=enabled
+            db=db, project_id=project_id, features=self._enabled(project) | {feature}
         )
         artefacts = self.registry.required_artefacts([feature])
         ArtefactService().set_up(db=db, project_id=project_id, artefacts=artefacts)
@@ -235,33 +209,24 @@ class FeatureService(metaclass=SingletonMeta):
     ) -> ProjectRead:
         """Disable the partly or fully available feature: it is hidden and its
         artefacts are not computed for new documents anymore; the stored data
-        and the step statuses are kept. Rejects disabling a feature that
-        another enabled feature requires. Returns the project."""
+        and the step statuses are kept. Returns the project."""
         project = crud_project.read_locked(db=db, id=project_id)
         self.assert_action_allowed(
             db=db, project_id=project_id, feature=feature, action=FeatureAction.DISABLE
         )
-        current = self._enabled(project)
-        enabled = self.resolve_enabled_features(
-            requested=current - {feature}, current=current
-        )
         statements.update_enabled_features(
-            db=db, project_id=project_id, features=enabled
+            db=db, project_id=project_id, features=self._enabled(project) - {feature}
         )
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 
     def add_features(
         self, *, db: Session, project_id: int, features: list[Feature]
     ) -> list[Feature]:
-        """Enable the features and the features they require in addition to the
-        enabled ones, without computing any artefact (a project import:
+        """Enable the features in addition to the enabled ones, without computing any artefact (a project import:
         features whose data is missing are partly available until a user
         completes them). Returns the enabled features."""
         project = crud_project.read_locked(db=db, id=project_id)
-        current = self._enabled(project)
-        enabled = self.resolve_enabled_features(
-            requested=current | set(features), current=current
-        )
+        enabled = sorted(self._enabled(project) | set(features), key=lambda f: f.name)
         statements.update_enabled_features(
             db=db, project_id=project_id, features=enabled
         )

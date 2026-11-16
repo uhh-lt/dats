@@ -141,17 +141,18 @@ def test_create_project_with_an_unknown_feature_is_rejected(
     assert crud_project.read_by_title(db=db_session, title="Unknown") is None
 
 
-def test_create_project_enables_the_features_the_requested_ones_require(
+def test_create_project_enables_only_the_requested_features(
     client: TestClient,
 ):
-    """Requesting RAG chat also enables sentence similarity search."""
+    """Requesting RAG chat enables RAG chat alone, not the other features that
+    need the sentence embeddings."""
     create = ProjectCreate(title="RAG", description="", enabled_features=["rag_chat"])
 
     response = client.put("/project", json=create.model_dump(mode="json"))
 
     assert response.status_code == 200, response.text
     project = ProjectRead.model_validate(response.json())
-    assert project.enabled_features == ["rag_chat", "sentence_similarity_search"]
+    assert project.enabled_features == ["rag_chat"]
 
 
 # ===========================================================================

@@ -208,19 +208,19 @@ Rules:
 
 Add a feature:
 
-1. Declare it in `<module>/<module>_feature.py` as a module constant: `FEATURE = register_feature("<name>", title=..., description=..., area=FeatureArea.X, requires_artefacts={...}, requires_features={...}, default_enabled=True)`.
+1. Declare it in `<module>/<module>_feature.py` as a module constant: `FEATURE = register_feature("<name>", title=..., description=..., area=FeatureArea.X, requires_artefacts={...}, default_enabled=True)`.
 2. Gate its routes and jobs with the imported constant (see "Feature Gating" in `backend-endpoint.instructions.md`).
 3. Regenerate the API client; the frontend reads the feature from `GET /feature` and needs a change only for a page or a gate (`frontend.instructions.md`).
 
 Rules:
 
-- A toggleable feature is declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads; its text name never changes without a data migration (it is stored in `project.enabled_features`). Other features and gated code import the returned object.
+- A toggleable feature is declared once with `register_feature` in a `<module>_feature.py` file of its module, which `import_by_suffix` loads; its text name never changes without a data migration (it is stored in `project.enabled_features`). Gated code imports the returned object.
 - A name a request names is looked up strictly (`FeatureService.read_by_name`, 404 for an unknown name); a stored name is read tolerantly (an unregistered name is ignored and dropped at the next write).
 - `default_enabled` says whether a new project (created without a feature list) and an archive without project details enable the feature; `GET /feature` lists the features ordered by area and title.
-- A feature declares the optional artefacts it reads in `requires_artefacts` and the features it builds on in `requires_features`; core artefacts and features that need only core data are not declared.
-- The startup check rejects unregistered artefacts, unregistered required features and cycles, so a new feature needs its artefacts first.
+- A feature requires artefacts only (`requires_artefacts`), never another feature, and at least one of them is not a core artefact (`always`); a capability that needs only core artefacts is no feature and is always available.
+- The startup check rejects unregistered artefacts and features without an on-demand artefact, so a new feature needs its artefacts first.
 - Enable (and the project creation and the import) run the set up of the artefact system first (`ArtefactService.set_up`), which creates the system codes the feature's artefacts declare; a user code named like a declared code makes it fail with 409.
-- `systems/feature_system` holds the declarations, the registry, the requirement resolution, `FeatureService.assert_enabled` and the `require_feature` dependencies, the status of the features of a project (`FeatureService.read_project_features`), the allowed actions (`ALLOWED_STATUSES`, `FeatureService.assert_action_allowed`) and all `/feature` endpoints with their DTOs (`ProjectFeatureRead`, `FeatureActivation`), and carries out the actions (`FeatureService.enable_feature`, `complete_feature`, `disable_feature`, `add_features` for an import); it talks to `systems/artefact_system` in artefacts only, and the artefact system never imports it.
+- `systems/feature_system` holds the declarations, the registry, `FeatureService.assert_enabled` and the `require_feature` dependencies, the status of the features of a project (`FeatureService.read_project_features`), the allowed actions (`ALLOWED_STATUSES`, `FeatureService.assert_action_allowed`) and all `/feature` endpoints with their DTOs (`ProjectFeatureRead`, `FeatureActivation`), and carries out the actions (`FeatureService.enable_feature`, `complete_feature`, `disable_feature`, `add_features` for an import); it talks to `systems/artefact_system` in artefacts only, and the artefact system never imports it.
 - `systems/artefact_system` plans in artefacts: `PipelineGraph.steps_for` gives the steps of a doctype that some artefacts need, `PipelineGraph.applies` whether they apply to a doctype.
 - Only `PipelineGraph` derives which step feeds which (`inputs`, `successors`, `descendants`, `steps_for`); never walk the `requires` and `produces` of the declarations elsewhere.
 - Only the operations of `ArtefactService` (`systems/artefact_system/artefact_service.py`: `compute`, `plan_document`, `handle_artefact_computation_job` and `end_computation`) write planning rows and `project.artefact_computations` and start the `ARTEFACT_COMPUTATION` job, and only those of `FeatureService` write `project.enabled_features`; their SQL lives in `artefact_statements.py` and `feature_statements.py`, which only their service imports, and no CRUD offers it; the project lock is `crud_project.read_locked`; never plan steps by hand.

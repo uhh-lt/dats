@@ -53,11 +53,8 @@ def _quotation_codes(db: Session, project_id: int) -> dict[str, int]:
 
 
 def test_quotation_detection_requires_the_quotations_only() -> None:
-    """The feature reads the quotations and builds on no other feature."""
-    feature = feature_named(FEATURE)
-
-    assert feature.requires_artefacts == {artefact_named("quotations")}
-    assert feature.requires_features == frozenset()
+    """The feature reads the quotations and no other artefact."""
+    assert feature_named(FEATURE).requires_artefacts == {artefact_named("quotations")}
 
 
 def test_create_project_leaves_quotation_detection_off_unless_requested(

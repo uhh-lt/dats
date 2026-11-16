@@ -272,14 +272,14 @@ def test_a_failing_computation_removes_the_pending_computation(
 # ===========================================================================
 
 
-def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
+def test_add_features_enables_them_and_plans_nothing(
     db_session: Session,
     planning_projects: PlanningProjects,
     held_jobs: HeldJobs,
 ):
     """Adding RAG chat to the other project, as an import does, keeps full-text
-    search and enables sentence similarity search, which RAG chat requires; the
-    steps of its documents stay as they are and no job starts."""
+    search and enables RAG chat alone; the steps of its documents stay as they
+    are and no job starts."""
     p = planning_projects
 
     enabled = FeatureService().add_features(
@@ -289,7 +289,7 @@ def test_add_features_enables_them_with_their_requirements_and_plans_nothing(
     )
     db_session.commit()
 
-    expected = ["full_text_search", "rag_chat", "sentence_similarity_search"]
+    expected = ["full_text_search", "rag_chat"]
     assert [f.name for f in enabled] == expected
     project = crud_project.read(db=db_session, id=p["other_project"].id)
     assert project.enabled_features == expected

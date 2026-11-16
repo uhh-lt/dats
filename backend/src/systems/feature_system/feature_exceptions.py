@@ -7,7 +7,7 @@ from common.feature_enum import FeatureAction, FeatureStatus
 
 class FeatureDeclarationError(Exception):
     """Raised at startup when the `register_feature` declarations are invalid
-    (e.g. an unknown artefact, an unknown required feature or a cycle)."""
+    (e.g. an unknown artefact or no artefact besides the core artefacts)."""
 
     def __init__(self, problems: list[str]) -> None:
         self.problems = problems
@@ -22,18 +22,6 @@ class FeatureDisabledError(Exception):
         super().__init__(
             f"The feature '{feature}' is not enabled in project {project_id}. "
             "Enable it in the project settings to use it."
-        )
-
-
-@exception_handler(status.HTTP_400_BAD_REQUEST)
-class FeatureStillRequiredError(Exception):
-    """Raised when a feature is disabled that another enabled feature requires."""
-
-    def __init__(self, feature: str, required_by: list[str]) -> None:
-        names = ", ".join(f"'{f}'" for f in required_by)
-        super().__init__(
-            f"The feature '{feature}' cannot be disabled: the enabled features "
-            f"{names} require it. Disable them as well."
         )
 
 

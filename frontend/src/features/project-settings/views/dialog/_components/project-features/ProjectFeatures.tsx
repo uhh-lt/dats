@@ -50,8 +50,6 @@ export function ProjectFeatures({ project }: ProjectFeaturesProps) {
                     projectId={project.id}
                     feature={feature}
                     state={state}
-                    features={features.data}
-                    states={states.data}
                     onActivate={setActivating}
                   />
                 );
@@ -64,7 +62,6 @@ export function ProjectFeatures({ project }: ProjectFeaturesProps) {
         projectId={project.id}
         feature={activating}
         state={activating ? states.data[activating.feature] : undefined}
-        states={states.data}
         onClose={handleCloseActivation}
       />
     </Stack>

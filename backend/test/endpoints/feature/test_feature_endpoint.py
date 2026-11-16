@@ -55,17 +55,16 @@ def test_get_all_features_lists_every_feature_ordered_by_area_and_title(
     assert keys == sorted(keys)
 
 
-def test_get_all_features_reports_title_requirements_and_default(
+def test_get_all_features_reports_title_and_default(
     client: TestClient,
 ):
-    """RAG chat reads its title, description and area from its declaration,
-    requires sentence similarity search and is enabled in a new project."""
+    """RAG chat reads its title, description and area from its declaration and
+    is enabled in a new project."""
     rag = _all_features(client)["rag_chat"]
 
     assert rag.title == "RAG Chat"
     assert rag.area == FeatureArea.ANALYSIS
     assert rag.description
-    assert rag.requires_features == ["sentence_similarity_search"]
     assert rag.default_enabled is True
 
 
@@ -338,15 +337,16 @@ def test_feature_action_on_an_unknown_feature_is_rejected(
 # ===========================================================================
 
 
-def test_enable_feature_enables_it_and_the_features_it_requires(
+def test_enable_feature_enables_only_it(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Enabling RAG chat enables sentence similarity search as well."""
+    """Enabling RAG chat enables no other feature, not even one that needs the
+    same sentence embeddings."""
     enabled = _activate(client, feature_project["project"].id, "rag_chat")
 
-    assert enabled == ["rag_chat", "sentence_similarity_search"]
+    assert enabled == ["rag_chat"]
 
 
 def test_enable_feature_plans_its_steps_and_starts_them_with_the_settings(
@@ -402,16 +402,15 @@ def test_enable_feature_is_computing_before_its_documents_are_planned(
     held_jobs: HeldJobs,
 ):
     """No document of partly_project processes. Right after the request the
-    computation job has planned nothing yet, but RAG chat and sentence similarity
-    search, which it requires, are computing already."""
+    computation job has planned nothing yet, but RAG chat is computing
+    already."""
     project_id = partly_project["project"].id
 
     _activate(client, project_id, "rag_chat")
 
-    features = _features(client, project_id)
-    for feature in ("rag_chat", "sentence_similarity_search"):
-        assert features[feature].status == FeatureStatus.COMPUTING, feature
-        assert features[feature].processing_documents == 0, feature
+    read = _features(client, project_id)["rag_chat"]
+    assert read.status == FeatureStatus.COMPUTING
+    assert read.processing_documents == 0
 
 
 def test_a_feature_that_shares_an_artefact_of_a_pending_computation_is_computing(
@@ -434,14 +433,14 @@ def test_a_feature_that_shares_an_artefact_of_a_pending_computation_is_computing
         assert features[feature].processing_documents == 0, feature
 
 
-def test_enable_feature_that_requires_a_computing_feature_starts_its_computation(
+def test_enable_feature_sharing_an_artefact_of_a_computing_feature_starts_its_computation(
     client: TestClient,
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Enabling RAG chat while sentence similarity search, which it requires,
-    has a pending computation still starts a computation for RAG chat, of the
-    sentence embeddings both need."""
+    """Enabling RAG chat while sentence similarity search has a pending
+    computation still starts a computation for RAG chat, of the sentence
+    embeddings both need."""
     project_id = feature_project["project"].id
     _activate(client, project_id, "sentence_similarity_search")
 
@@ -873,11 +872,11 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
     assert read_step_status(db_session, p["not_indexed"].id, "text_es_index") is None
 
 
-def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
+def test_disable_feature_keeps_a_feature_sharing_its_artefact(
     client: TestClient, test_project
 ):
-    """RAG chat requires sentence similarity search: disabling the latter fails
-    with 400 and names RAG chat."""
+    """Sentence similarity search and RAG chat both need the sentence
+    embeddings: disabling the former leaves RAG chat enabled."""
     response = _act(
         client,
         test_project.id,
@@ -885,5 +884,7 @@ def test_disable_feature_that_an_enabled_feature_requires_is_rejected(
         FeatureAction.DISABLE,
     )
 
-    assert response.status_code == 400, response.text
-    assert "rag_chat" in response.text
+    assert response.status_code == 200, response.text
+    enabled = response.json()
+    assert "rag_chat" in enabled
+    assert "sentence_similarity_search" not in enabled

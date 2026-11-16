@@ -57,11 +57,11 @@ def test_rag_session_rejects_a_list_query(client: TestClient, test_project):
 # ===========================================================================
 
 
-def test_rag_chat_builds_on_sentence_similarity_search():
-    """RAG chat requires sentence similarity search and needs only its sentence
-    embeddings besides the core artefacts."""
-    assert {f.name for f in feature_named("rag_chat").requires_features} == {
-        "sentence_similarity_search"
+def test_rag_chat_requires_the_sentence_embeddings():
+    """RAG chat requires the sentence embeddings, the only artefact it needs
+    besides the core artefacts."""
+    assert feature_named("rag_chat").requires_artefacts == {
+        artefact_named("sentence_embeddings")
     }
     assert feature_registry.required_artefacts([feature_named("rag_chat")]) == {
         artefact_named("sentence_embeddings")

@@ -121,11 +121,11 @@ def test_cota_route_with_a_non_integer_id_is_a_validation_error(client: TestClie
 # ===========================================================================
 
 
-def test_concepts_over_time_builds_on_sentence_similarity_search():
-    """Concepts over time requires sentence similarity search and needs only its sentence
-    embeddings besides the core artefacts."""
-    assert {f.name for f in feature_named("concepts_over_time").requires_features} == {
-        "sentence_similarity_search"
+def test_concepts_over_time_requires_the_sentence_embeddings():
+    """Concepts over time requires the sentence embeddings, the only artefact it needs
+    besides the core artefacts."""
+    assert feature_named("concepts_over_time").requires_artefacts == {
+        artefact_named("sentence_embeddings")
     }
     assert feature_registry.required_artefacts(
         [feature_named("concepts_over_time")]

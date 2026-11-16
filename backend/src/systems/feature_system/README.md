@@ -24,11 +24,12 @@ WORD_FREQUENCY = register_feature(
 | name                 | The text name, stored in `project.enabled_features` and named in the URLs; it never changes without a migration. |
 | `title`, `description` | Shown by the frontend, which reads them from `GET /feature`.                                                 |
 | `area`               | `FeatureArea`; features are listed by area, then by title.                                                     |
-| `requires_artefacts` | The artefacts the feature reads, besides the core artefacts.                                                    |
-| `requires_features`  | The features it builds on (the imported objects); enabling it enables them.                                    |
+| `requires_artefacts` | The artefacts the feature reads; at least one of them is not a core artefact (`always`).                        |
 | `default_enabled`    | Whether a new project without a feature list, and an archive without project details, enable it.              |
 
-Gated routes and jobs import the object (`require_feature(WORD_FREQUENCY)`). The startup check rejects an unregistered artefact or required feature and a cycle.
+A feature requires artefacts only, never another feature, and exists only if it requires an artefact outside the core preprocessing pipeline: enabling it means more processing. Core declares no feature and checks no toggle.
+
+Gated routes and jobs import the object (`require_feature(WORD_FREQUENCY)`). The startup check rejects an unregistered artefact and a feature that requires only core artefacts, all problems in one error.
 
 Names: a name a request names is read strictly (`FeatureService.read_by_name`: an unknown name answers 404, for the three actions and for `ProjectCreate.enabled_features`); a stored name is read tolerantly (an unregistered name is ignored and dropped at the next write of the enabled features).
 
@@ -55,9 +56,9 @@ One endpoint per action: `POST /feature/project/{project_id}/{feature}/{enable|c
 | Complete | Computes the data for the documents that lack it, failed steps too. | Partly available          |
 | Disable  | Turns the feature off. The computed data stays.                     | Partly or fully available |
 
-`FeatureService` carries out the actions after it locked the project. Enable and Complete pass the feature's artefacts (those of the features it requires included) to `ArtefactService.compute`, which starts an artefact computation job that plans and starts the steps in batches. The feature is computing from the request on; so is every feature that needs one of these artefacts. Disable only changes the enabled features and calls nothing in the artefact system. The upload of a document plans with the project's artefact demand (`FeatureService.read_artefact_demand`).
+`FeatureService` carries out the actions after it locked the project. Enable and Complete pass the feature's artefacts to `ArtefactService.compute`, which starts an artefact computation job that plans and starts the steps in batches. The feature is computing from the request on; so is every feature that needs one of these artefacts. Disable only changes the enabled features and calls nothing in the artefact system. The upload of a document plans with the project's artefact demand (`FeatureService.read_artefact_demand`).
 
-Disable is also rejected (400) while an enabled feature requires the feature. Disable never unplans a step: it only changes the enabled features; the step statuses and the computed data stay.
+Disable never unplans a step: it only changes the enabled features; the step statuses and the computed data stay.
 
 There is no Restart and no cancel.
 

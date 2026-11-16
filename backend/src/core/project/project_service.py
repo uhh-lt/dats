@@ -41,18 +41,17 @@ class ProjectService(metaclass=SingletonMeta):
     def create_project(
         self, *, db: Session, create_dto: ProjectCreate, creating_user_id: int
     ) -> ProjectRead:
-        # 1) create the project, with the features its features require; an
-        # unknown name is rejected before the row exists
-        requested = (
+        # 1) create the project with its features; an unknown name is rejected
+        # before the row exists
+        enabled_features = (
             feature_registry.defaults()
             if create_dto.enabled_features is None
             else [self.fs.read_by_name(name=n) for n in create_dto.enabled_features]
         )
-        enabled_features = self.fs.resolve_enabled_features(requested=requested)
         proj = crud_project.create(
             db=db,
             create_dto=create_dto.model_copy(
-                update={"enabled_features": [f.name for f in enabled_features]}
+                update={"enabled_features": sorted({f.name for f in enabled_features})}
             ),
         )
         project_id = proj.id

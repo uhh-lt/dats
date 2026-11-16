@@ -3,9 +3,10 @@
 Every module declares its features with `register_feature` in a `*_feature.py`
 file, which `bootstrap.register_jobs` imports. A feature has a text name,
 a title, a description and an area, requires artefacts (preprocessed document
-data) and other features, and declares whether a new project enables it. The
-feature system passes the artefacts of a feature to the artefact system, which
-derives the pipeline steps they need.
+data), at least one of them not computed for every document, and declares
+whether a new project enables it. A feature requires artefacts only, never
+another feature. The feature system passes the artefacts of a feature to the
+artefact system, which derives the pipeline steps they need.
 """
 
 from collections.abc import Collection
@@ -27,7 +28,6 @@ class Feature:
     description: str
     area: FeatureArea
     requires_artefacts: frozenset[Artefact]
-    requires_features: frozenset["Feature"]
     default_enabled: bool  # whether a new project enables it
 
 
@@ -50,8 +50,9 @@ class FeatureRegistry:
 
     def check(self, artefacts: Collection[Artefact]) -> None:
         """Raise a `FeatureDeclarationError` listing all problems: required
-        artefacts not in `artefacts` (the registered ones), unregistered or
-        cyclic feature requirements."""
+        artefacts not in `artefacts` (the registered ones) and features that
+        require no artefact besides the core artefacts (`always`): such a
+        feature needs no processing and is not toggleable."""
         problems: list[str] = []
         for feature in self._features.values():
             problems += [
@@ -59,13 +60,11 @@ class FeatureRegistry:
                 for a in sorted(feature.requires_artefacts, key=lambda a: a.name)
                 if a not in artefacts
             ]
-            problems += [
-                f"Feature '{feature.name}' requires the undeclared feature '{f.name}'."
-                for f in sorted(feature.requires_features, key=lambda f: f.name)
-                if self._features.get(f.name) is not f
-            ]
-            if feature in self._required_features(feature.requires_features):
-                problems.append(f"Feature '{feature.name}' requires itself (cycle).")
+            if all(a.always for a in feature.requires_artefacts):
+                problems.append(
+                    f"Feature '{feature.name}' requires no artefact besides the core artefacts; "
+                    "it needs no processing and must not be a feature."
+                )
         if problems:
             raise FeatureDeclarationError(problems)
 
@@ -91,31 +90,13 @@ class FeatureRegistry:
         of `declarations()`."""
         return [f for f in self.declarations() if f.default_enabled]
 
-    def closure(self, features: Iterable[Feature]) -> frozenset[Feature]:
-        """The features with all the features they require, transitively."""
-        features = frozenset(features)
-        return features | self._required_features(features)
-
     def required_artefacts(self, features: Iterable[Feature]) -> frozenset[Artefact]:
-        """The artefacts the features (and the features they require) need,
-        without the core artefacts, which every document gets anyway."""
+        """The artefacts the features need, without the core artefacts, which
+        every document gets anyway."""
         return (
-            frozenset().union(*(f.requires_artefacts for f in self.closure(features)))
+            frozenset().union(*(f.requires_artefacts for f in features))
             - artefact_registry.always()
         )
-
-    def _required_features(self, features: Iterable[Feature]) -> frozenset[Feature]:
-        """The features required by the given ones, transitively (without them,
-        unless one of them is required by another)."""
-        result: set[Feature] = set()
-        todo = [r for f in features for r in f.requires_features]
-        while todo:
-            feature = todo.pop()
-            if feature in result:
-                continue
-            result.add(feature)
-            todo.extend(feature.requires_features)
-        return frozenset(result)
 
 
 feature_registry = FeatureRegistry()
@@ -127,21 +108,18 @@ def register_feature(
     title: str,
     description: str,
     area: FeatureArea,
-    requires_artefacts: Collection[Artefact] = (),
-    requires_features: Collection[Feature] = (),
+    requires_artefacts: Collection[Artefact],
     default_enabled: bool = True,
 ) -> Feature:
     """Declare a feature: a user-facing capability that a project can enable,
-    with the artefacts and the other features it requires and whether a new
-    project enables it. Returns the feature, which gated endpoints and jobs and
-    the `requires_features` of other features import."""
+    with the artefacts it requires and whether a new project enables it.
+    Returns the feature, which gated endpoints and jobs import."""
     feature = Feature(
         name=name,
         title=title,
         description=description,
         area=area,
         requires_artefacts=frozenset(requires_artefacts),
-        requires_features=frozenset(requires_features),
         default_enabled=default_enabled,
     )
     feature_registry.register(feature)

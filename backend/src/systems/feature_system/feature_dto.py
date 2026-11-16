@@ -9,9 +9,6 @@ class FeatureRead(BaseModel):
     title: str = Field(description="Title of the Feature")
     description: str = Field(description="Description of the Feature")
     area: FeatureArea = Field(description="Area of the Feature")
-    requires_features: list[str] = Field(
-        description="Names of the Features this Feature requires (directly); enabling it enables them"
-    )
     default_enabled: bool = Field(
         description="Whether a new Project enables the Feature unless the request names its Features"
     )

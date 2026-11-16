@@ -1,6 +1,8 @@
 """The SQL statements of `FeatureService`, private to it: only
 `feature_service.py` imports this file."""
 
+from typing import Iterable
+
 from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
@@ -9,12 +11,10 @@ from systems.feature_system.feature_registry import Feature
 
 
 def update_enabled_features(
-    db: Session, *, project_id: int, features: list[Feature]
+    db: Session, *, project_id: int, features: Iterable[Feature]
 ) -> ProjectORM:
-    """Store the names of the enabled features of the project, sorted. Only
-    `FeatureService.resolve_enabled_features` decides them (it adds the
-    required features and rejects invalid changes). The caller has locked the
-    project (FOR NO KEY UPDATE)."""
+    """Store the names of the enabled features of the project, sorted. The
+    caller has locked the project (FOR NO KEY UPDATE)."""
     db_obj = crud_project.read(db=db, id=project_id)
     db_obj.enabled_features = sorted(f.name for f in features)
     db.add(db_obj)

@@ -62,11 +62,11 @@ def test_confirm_suggestions_is_rejected_when_annotation_scaling_is_disabled(
 # ===========================================================================
 
 
-def test_annotation_scaling_builds_on_sentence_similarity_search():
-    """Annotation scaling requires sentence similarity search and needs only its sentence
-    embeddings besides the core artefacts."""
-    assert {f.name for f in feature_named("annotation_scaling").requires_features} == {
-        "sentence_similarity_search"
+def test_annotation_scaling_requires_the_sentence_embeddings():
+    """Annotation scaling requires the sentence embeddings, the only artefact it needs
+    besides the core artefacts."""
+    assert feature_named("annotation_scaling").requires_artefacts == {
+        artefact_named("sentence_embeddings")
     }
     assert feature_registry.required_artefacts(
         [feature_named("annotation_scaling")]
