@@ -53,7 +53,7 @@ Once you click upload, your documents appear in the **Upload Jobs** section at t
 You will see a progress bar for each file. Depending on the size and modality of the file, this process can take some time. Behind the scenes, DATS is running your data through a complex, multi-modal pipeline:
 
 - **Audio/Video:** Automatically transcribed into text using Speech-to-Text models.
-- **Images:** Run through object detection and automatic image captioning.
+- **Images:** Captioned automatically; object detection runs if its feature is enabled.
 - **Text:** Cleaned, split into chunks, and run through Named Entity Recognition (finding people, organizations, locations).
 - **Embeddings:** Semantic vectors are calculated for text and images to power the cross-modal similarity search.
 

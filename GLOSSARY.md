@@ -75,7 +75,7 @@ _Avoid_: Needed artefacts, project artefacts
 
 **Pipeline Step**:
 One unit of preprocessing for a source document, which requires some artefacts and produces others. Short: "step".
-_Avoid_: Job (a job runs one or more steps), task, stage
+_Avoid_: Job (the job of a step computes it; they share the name), task, stage
 
 **Input Step**:
 A pipeline step that produces an artefact another step requires, for one document type.
@@ -102,7 +102,7 @@ The background work that plans and starts the pipeline steps of some artefacts f
 _Avoid_: Feature activation (its former name), enabling (enabling is the user's action), planning job
 
 **Step Run**:
-One execution of a job for some of the pipeline steps of one source document.
+One execution of the job of one pipeline step for one source document.
 _Avoid_: Job run, task, step job (the job is what runs; a step run is one run of it)
 
 **Artefact Archive**:

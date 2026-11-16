@@ -29,7 +29,7 @@ This is the foundational flow of DATS. It processes standard formats like PDF, D
 1. **Extraction:** DATS uses **Docling** to cleanly extract content from PDFs and Word files. For HTML web pages, it uses **Readability.js** to strip away navigation menus, ads, and irrelevant structure, preserving only the main article text.
 2. **Chunking:** To ensure that subsequent Transformer-based language models can process the text within their token limits, large documents are split into smaller chunks (defaulting to 10-page segments).
 3. **Language Detection:** The text's language is automatically identified using the **GlotLID** model.
-4. **NLP & Entity Recognition:** For supported languages (English, German, Italian), the text is passed through **spaCy** pipelines. This handles tokenization, sentence segmentation, and Named Entity Recognition (NER), automatically identifying people, organizations, and locations.
+4. **NLP:** For supported languages (English, German, Italian), the text is passed through **spaCy** pipelines for tokenization and sentence segmentation. Named Entity Recognition (NER, people, organizations, locations), keywords and word frequencies are steps of their own, computed when a feature needs them: named entities and word frequencies call spaCy themselves, keywords are extracted with YAKE.
 5. **Semantic Embeddings:** Finally, sentence embeddings are computed using a pre-trained multilingual **CLIP** encoder model (via the SentenceTransformers library). This mathematical representation of the text is what makes the cross-modal semantic search possible!
 
 ### 🖼️ 2\. The Image Flow
