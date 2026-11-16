@@ -91,7 +91,7 @@ class SourceDocumentTagLinkTable(ORMBase):
 - **Typed mapping**: every column is `name: Mapped[<py type>] = mapped_column(<SA type>, ...)` with the SQLAlchemy type passed explicitly. Never use legacy `Column(...)` or leave out `Mapped[...]`.
 - **Nullability**: the annotation decides. `Mapped[T]` is `NOT NULL` (`nullable=False` is common and allowed), `Mapped[T | None]` is nullable. Never pass `nullable=True`. The annotation must match the database, so callers handle `None` for optional columns.
 - **Primary key**: `id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)`. Variations that are allowed:
-  - Dependent 1:1 tables use the parent FK as their `id` (`SourceDocumentDataORM`, `SourceDocumentJobStatusORM`).
+  - Dependent 1:1 tables use the parent FK as their `id` (`SourceDocumentDataORM`).
   - Association tables use a composite primary key made of their FKs, with no `id` column.
 - **Timestamps**: always `DateTime(timezone=True)`. `created` uses `server_default=func.now()` and `index=True`. `updated` also sets `onupdate=func.current_timestamp()`.
 - **Defaults**: use `server_default` (a string, or `text(...)` for JSONB), so the default also lands in the migration. Python-side `default=` appears only for booleans in the perspectives module.

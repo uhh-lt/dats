@@ -121,7 +121,7 @@ class FolderMoveCycleError(Exception):
 
 - Every enum class lives in an enum module, one per module, named like the module's exceptions file: `<module>_enum.py` in `core/` and `modules/` (`core/doc/folder_enum.py`, `modules/whiteboard/whiteboard_enum.py`, `modules/eximport/import_enum.py`), `<component>_enum.py` next to its repo or system (`repos/llm_enum.py`, `systems/job_system/job_system_enum.py`), and `common/<name>_enum.py` for shared ones (`doc_type_enum.py`, `job_type_enum.py`, `meta_type_enum.py`, `crud_enum.py`). DTOs, ORMs, CRUDs and services import them from there, so an ORM never imports a DTO module for an enum.
 - Exempt, because they are no plain value sets: `DATSEvent` (`common/dats_event.py`), the enums of `systems/search_system/` (operators, sorting, grouping) and the search columns (`*_columns.py`).
-- Enums subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value; `IntEnum` only where the values are ints (`modules/ml/ml_enum.py`). Keep enum methods small and free of business logic (`DateGroupBy`, `MetaType` map members to columns or expressions).
+- Enums subclass `(str, Enum)` (or `StrEnum`) so they serialize as their value; `(int, Enum)` only where the values are ints (`common/sdoc_status_enum.py`). Keep enum methods small and free of business logic (`DateGroupBy`, `MetaType` map members to columns or expressions).
 - `backend/lint/check_enums.py` enforces this (`enum-location`, `value-type`).
 - Constants are module-level `UPPER_SNAKE_CASE` in the module that owns them (`SYSTEM_USER_ID`, `DEMO_USER_ID` in `core/user/user_crud.py`).
 - Tunables (batch sizes, limits, timeouts) come from the config, not literals: `BATCH_SIZE = conf.postgres.batch_size`.
@@ -153,30 +153,31 @@ sqlr = SQLRepo()
 
 
 @register_job(
-    job_type=JobType.ML,
-    input_type=MLJobInput,
+    job_type=JobType.TAG_RECOMMENDATION,
+    input_type=TagRecommendationJobInput,
+    validate_input=validate_tag_recommendation_input,
     generate_endpoints=EndpointGeneration.ALL,
     publish_updates=True,
     device="api",
     result_ttl=JobTiming.NINETY_DAYS,
 )
-def ml_job(payload: MLJobInput, job: Job) -> None:
+def tag_recommendation_job(payload: TagRecommendationJobInput, job: Job) -> None:
     with sqlr.transaction() as db:
-        match payload.ml_job_type:
-            case MLJobType.QUOTATION_ATTRIBUTION:
-                QuoteService().perform_quotation_detection(db=db, project_id=payload.project_id, ...)
+        TagRecommendationService().classify_untagged_documents(
+            db=db, ml_job_id=job.get_id(), project_id=payload.project_id, ...
+        )
 ```
 
 - Add the job type to `JobType` (`common/job_type_enum.py`, a `StrEnum` for the jobs that are no pipeline steps; a step names its job type as text) and its input/output DTOs to the module's `*_dto.py` (see `backend-dto.instructions.md`).
 - `device` selects the worker queue (`"cpu"`, `"gpu"`, `"api"`). Services start jobs with `JobService().start_job(JobType.X, <X>JobInput(...))`.
-- See [ml_job.py](backend/src/modules/ml/ml_job.py) and `systems/job_system/README.md`.
+- See [tag_recommendation_job.py](backend/src/modules/tag_recommendation/tag_recommendation_job.py) and `systems/job_system/README.md`.
 - A job of a gated module checks its feature in its `validate_input` hook with `FeatureService().assert_enabled(...)` (`duplicate_finder_job.py`).
 
 ## Pipeline Steps
 
 Add a step:
 
-1. Declare new artefacts with `artefact(name, kind=..., always=..., uploaded_for=..., codes=..., archive=...)` in a file of their owner (`core/doc_processing/artefacts.py` for the artefacts every document or several features need, one `*_artefact.py` file next to its step per single-user artefact): `always=True` only if every document needs it whatever features its project enables; an own store (`StorageKind.OWN_STORE`) needs an `ArtefactArchive`, and the system code trees a project needs before the artefact is produced go into `codes` (`core/code/system_codes.py`). See `systems/artefact_system/README.md`.
+1. Declare new artefacts with `artefact(name, kind=..., always=..., uploaded_for=..., codes=..., archive=...)` in a file of their owner (`core/doc_processing/artefacts.py` for the artefacts every document or several features need, one `*_artefact.py` file next to its step per single-user artefact): `always=True` only if every document needs it whatever features its project enables; an own store (`StorageKind.OWN_STORE`) needs an `ArtefactArchive`, and the system code trees a project needs before the artefact is produced go into `codes` (`SystemCode` trees declared next to the artefact, shared ones in `core/code/system_codes.py`). See `systems/artefact_system/README.md`.
 2. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type="<step name>", input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`systems/artefact_system/pipeline_step_decorator.py`), with the imported artefact objects. The step name is text and never changes without a data migration (it is stored in `sourcedocumentstepstatus`); among the ready steps the name breaks ties in the derived order.
 3. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code, and the trees of an artefact that declares `codes` to its `tools/project_doctor/system_codes.yaml`; `test_project_doctor_steps.py` fails otherwise.
 4. Regenerate the API client (`just update-api`) if the step adds an endpoint or a DTO the API uses.

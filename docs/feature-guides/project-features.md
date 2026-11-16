@@ -4,19 +4,22 @@ Not every project needs every DATS feature. A project that only uses the LLM Ass
 
 Annotation, the analysis tools, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. The features below can be switched on and off per project.
 
-| Area                 | Features                                                                                                        |
-| -------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Search               | Full-Text Search, Search & Auto-Annotate, Sentence Search, Image Search                                         |
-| Analysis             | RAG Chat, Concepts Over Time Analysis, Word Frequency Analysis, Keyword Statistics and Filter, Duplicate Finder |
-| Automatic Annotation | Annotation Scaling, Tag Recommendations, Automatic Entity Annotations, Automatic Object Detection               |
+| Area                 | Features                                                                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Search               | Full-Text Search, Search & Auto-Annotate, Sentence Search, Image Search                                                                        |
+| Analysis             | RAG Chat, Concepts Over Time Analysis, Word Frequency Analysis, Keyword Statistics and Filter, Duplicate Finder                                |
+| Automatic Annotation | Annotation Scaling, Tag Recommendations, Automatic Entity Annotations, Automatic Object Detection, Coreference Resolution, Quotation Detection |
 
 Some features build on others: RAG Chat, Annotation Scaling and Concepts Over Time Analysis need **Sentence Search**.
+
+**Coreference Resolution** and **Quotation Detection** annotate German text documents (mention groups; quotations with their speaker, cue, addressee and frame). They run a hosted model for every German text document, so a new project leaves them off until you enable them. Documents in other languages finish without annotations. They replace the former ML Automation page: you no longer start them by hand for the whole project, the pipeline computes them for every German text document of a project that enables them, and Recompute in the document health view runs them again.
 
 ## 1\. Choosing Features When Creating a Project
 
 The **Create new project** dialog lists all features below the project name and description, grouped by area.
 
-- **Everything** (the default) enables all features. The project behaves like every DATS project before project features existed.
+- The dialog preselects the features that are on by default: every feature except Coreference Resolution and Quotation Detection.
+- **Everything** enables all features, the two above included.
 - **Minimal** enables none of them. Uploads only compute what every document needs (text, sentences, image captions, thumbnails, metadata) and are processed fastest.
 - Check or uncheck single features to build your own selection (shown as **Custom**). Checking a feature also checks the features it needs; unchecking a feature also unchecks the features that need it.
 

@@ -1,6 +1,6 @@
 # Design: features, artefacts and self-contained modules
 
-Status: being built. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system) and PR C (open registries, storage kinds, codes on the artefacts), PR D (one job per step, the standard pipeline in core) and PR E (the single-user artefacts in their modules) are built; PR F is not. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
+Status: implemented. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system), PR C (open registries, storage kinds, codes on the artefacts), PR D (one job per step, the standard pipeline in core), PR E (the single-user artefacts in their modules) and PR F (`modules/ml` dissolved) are built. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
 
 ## Goal
 
@@ -60,10 +60,12 @@ The demand is not stored twice. It is always derived from the enabled features; 
 
 ## What a module declares
 
-Sketch for coreference resolution. Names and signatures are illustrative.
+Coreference resolution, shortened from `modules/coreference_resolution`:
 
 ```python
-# modules/coreference_resolution/coreference_artefact.py
+# coreference_artefact.py
+MENTION_CODES = SystemCode("MENTION", "Co-reference mention")
+
 COREFERENCES = artefact(
     "coreferences",
     kind=StorageKind.ANNOTATIONS,        # travels with the annotations
@@ -71,16 +73,24 @@ COREFERENCES = artefact(
 )
 
 
-@pipeline_step("coreference_resolution", requires={TOKENS_SENTENCES}, produces={COREFERENCES})
-def compute_coreferences(payload, job): ...
+# coreference_resolution_job.py
+@pipeline_step(
+    requires={TOKENS_SENTENCES, LANGUAGE},
+    produces={COREFERENCES},
+    doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
+)
+@register_job(job_type="coreference_resolution", input_type=..., enricher=..., device="api")
+def handle_coreference_resolution_job(payload, job): ...
 
 
-# modules/coreference_resolution/coreference_feature.py
-register_feature(
+# coreference_resolution_feature.py
+COREFERENCE_RESOLUTION = register_feature(
     "coreference_resolution",
-    title="Coreference resolution",
+    title="Coreference Resolution",
     description="...",
+    area=FeatureArea.AUTOMATIC_ANNOTATION,
     requires_artefacts={COREFERENCES},
+    default_enabled=False,
 )
 ```
 
@@ -95,7 +105,7 @@ register_feature("sentence_similarity_search", ..., requires_artefacts={SENTENCE
 
 ### The life of an artefact
 
-| Stage             | Declared by the artefact                                                       | Today                                                           |
+| Stage             | Declared by the artefact                                                       | Before                                                          |
 | ----------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | Set up            | The codes the project needs first, declared as data                            | All codes are listed in the config and created in every project |
 | Produce           | The pipeline step and its inputs                                               | Declared on the step, in one module                             |
@@ -132,7 +142,7 @@ Artefacts, pipeline steps and features are declared by the code that owns them. 
 
 Rule: an artefact that every document needs, or that several features use, lives in core. An artefact that one feature uses lives in that feature's module. It is promoted to core when a second user appears.
 
-Based on the declarations in uhh-lt/dats#892. Implemented for every row but coreferences and quotations (PR F):
+Based on the declarations in uhh-lt/dats#892, implemented for every row:
 
 | Lives in                               | Artefact                                                                                                                       | Used by                                                                  |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
@@ -145,8 +155,8 @@ Based on the declarations in uhh-lt/dats#892. Implemented for every row but core
 | `modules/statistics`                   | Keywords                                                                                                                       | Keyword statistics                                                       |
 | `modules/entity_annotations` (new)     | Named-entity spans                                                                                                             | Entity annotations                                                       |
 | `modules/object_detection` (new)       | Object boxes                                                                                                                   | Object detection                                                         |
-| `modules/coreference_resolution` (new) | Coreferences                                                                                                                   | Coreference resolution (today an on-demand ML job)                       |
-| `modules/quotation_detection` (new)    | Quotations                                                                                                                     | Quotation detection (today an on-demand ML job)                          |
+| `modules/coreference_resolution` (new) | Coreferences                                                                                                                   | Coreference resolution                                                   |
+| `modules/quotation_detection` (new)    | Quotations                                                                                                                     | Quotation detection                                                      |
 
 ## Where code lives afterwards
 
@@ -185,12 +195,12 @@ This also resolves issue 884 (the ML job status table), issue 885 (the central j
 | Name of the background work | "Feature Activation" becomes "Artefact Computation": the artefact system computes artefacts and does not know features.                                                                                                                                                                                                       |
 | Codes                       | An artefact declares its codes as data. The artefact system creates them when a project first demands the artefact.                                                                                                                                                                                                           |
 
-## Open questions
+## Decided questions
 
-1. **Codes that belong to no feature.** If the config lists codes that no artefact needs, they stay with the project creation in core.
-2. **Default features of a new project.** Today a new project enables every feature. With coreference resolution and quotation detection as features, every new project would run two more models per text document. Proposal: a feature declares whether it is enabled by default; these two are not.
-3. **A user code named like a system code.** Proposal: enabling the feature is rejected with a clear message, instead of adopting the user's code.
-4. **Coreference and quotation.** They stay limited to text documents and to German, as today; their groups (clusters) are not part of a project export.
+1. **Codes that belong to no feature.** There are none left: every system code tree is declared by an artefact, and a project without such a feature has no system codes.
+2. **Default features of a new project.** A feature declares `default_enabled`; coreference resolution and quotation detection are off, as they run a hosted model for every German text document.
+3. **A user code named like a system code.** Enabling the feature is rejected with 409 and a message that says what to rename, instead of adopting the user's code.
+4. **Coreference and quotation.** They stay limited to German text documents; their groups (clusters) are not part of a project export.
 
 The implementation briefs with the exact interfaces are in `.architecture-reviews/arch-*.md` (not committed).
 
@@ -209,8 +219,4 @@ Each package leaves DATS working and is one pull request, stacked on the one bef
 
 Each pull request updates the glossary, ADRs, READMEs and instruction files it touches. The frontend reads the features from the registry from C on.
 
-## Terms to add to the glossary
-
-- **Artefact Demand**: the artefacts a project's enabled features require.
-- **Core Artefact** (exists as a remark today): an artefact computed for every document.
-- **Module**: a folder that holds one capability with its feature, artefacts, pipeline steps and storage.
+The terms of this design (Artefact Demand, Core Artefact, Module and the others) are defined in `GLOSSARY.md`.

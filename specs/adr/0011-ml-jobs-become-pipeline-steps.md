@@ -1,0 +1,13 @@
+# ADR 0011: The ML jobs become pipeline steps and features
+
+**Date:** 2026-11-16
+
+`modules/ml` goes. Coreference resolution and quotation detection were started by hand on the ML Automation page for a whole project and tracked their progress per document in their own status table (`sourcedocumentjobstatus`). Each is now a module with an artefact of the kind annotations, a pipeline step and a feature: the pipeline computes it for every German text document of a project that enables it, Recompute in the document health view runs it again, and its step statuses replace the status table, which a migration drops without moving its rows (nobody used the ML jobs; closes uhh-lt/dats#884). The step declares all four doctypes, as it follows the spaCy step, which runs for every doctype; a document that is no German text finishes without output and loses the annotations of an earlier run. Each run replaces the system user's spans and groups of its codes in one call (`SpanGroupService.replace_groups`), so a recompute leaves no empty group behind. The code trees `MENTION` and `QUOTATIONS` move from the project creation onto the two artefacts: a project gets them when it enables the feature, and a project without a feature that declares codes has no system codes at all.
+
+Both features declare `default_enabled=False`: a new project and the preselection of the project creation dialog leave them off, as they run a hosted model for every German text document. Tag recommendation becomes the module `modules/tag_recommendation` with the job type `tag_recommendation` and generated job endpoints; the Tag Recommendations page starts it, and the ML Automation page is deleted.
+
+The embedding service goes. Each embedding step, and the similarity search that embeds a query, calls the model service itself. The similarity search and the RAG chat take one text or the id of an image as their query; a list of texts, which was embedded with the LLM model but searched in a CLIP collection, is rejected by the body validation (422).
+
+Deploy: the Redis queues and the failed job registry must be empty and no upload in flight (the ML job and the moved handlers cannot be unpickled), and afterwards `project.artefact_computations` is reset (O14).
+
+We rejected keeping the ML job for coreference and quotation beside the steps (two ways to compute one artefact) and a data migration of the job statuses (no data to keep).
