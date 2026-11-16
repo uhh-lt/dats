@@ -59,9 +59,9 @@ _QUOTE_CODE_NAMES = (
 
 
 class QuotationDetectionJobInput(SdocProcessingJobInput):
-    doctype: DocType
-    language: str | None
-    document: QuoteInputDoc
+    # the input of the quotation model; None for a document that is no German
+    # text document, whose quotations the step removes
+    document: QuoteInputDoc | None
 
 
 def enrich_for_recompute(
@@ -72,33 +72,37 @@ def enrich_for_recompute(
         language = crud_sdoc_meta.read_by_sdoc_and_key(
             db=db, key="language", sdoc_id=payload.sdoc_id
         )
-        document = QuoteInputDoc(
-            id=payload.sdoc_id,
-            text=sdoc_data.content,
-            tokens=[
-                Token(start=start, end=end, sent=sid, text=text)
-                for start, end, sid, text in zip(
-                    sdoc_data.token_starts,
-                    sdoc_data.token_ends,
-                    sdoc_data.token_sentence_ids,
-                    sdoc_data.tokens,
-                )
-            ],
-            sentences=[
-                Span(start=start, end=end + 1, text=text)
-                for start, end, text in zip(
-                    sdoc_data.sentence_token_starts,
-                    sdoc_data.sentence_token_ends,
-                    sdoc_data.sentences,
-                )
-            ],
-        )
+        # the quotation model handles German text documents only; the token data
+        # of other documents is never read, it may not fit the model
+        if (
+            sdoc_data.source_document.doctype != QUOTATION_DOCTYPE
+            or language.str_value != QUOTATION_LANGUAGE
+        ):
+            return QuotationDetectionJobInput(**payload.model_dump(), document=None)
 
         return QuotationDetectionJobInput(
             **payload.model_dump(),
-            doctype=DocType(sdoc_data.source_document.doctype),
-            language=language.str_value,
-            document=document,
+            document=QuoteInputDoc(
+                id=payload.sdoc_id,
+                text=sdoc_data.content,
+                tokens=[
+                    Token(start=start, end=end, sent=sid, text=text)
+                    for start, end, sid, text in zip(
+                        sdoc_data.token_starts,
+                        sdoc_data.token_ends,
+                        sdoc_data.token_sentence_ids,
+                        sdoc_data.tokens,
+                    )
+                ],
+                sentences=[
+                    Span(start=start, end=end + 1, text=text)
+                    for start, end, text in zip(
+                        sdoc_data.sentence_token_starts,
+                        sdoc_data.sentence_token_ends,
+                        sdoc_data.sentences,
+                    )
+                ],
+            ),
         )
 
 
@@ -106,7 +110,7 @@ def enrich_for_recompute(
     requires={TOKENS_SENTENCES, LANGUAGE},
     produces={QUOTATIONS},
     # the doctypes of text_spacy, which a step that follows it must apply to; the
-    # handler skips all but text documents
+    # enricher and handler skip all but German text documents
     doctypes={DocType.text, DocType.image, DocType.audio, DocType.video},
 )
 @register_job(
@@ -118,19 +122,14 @@ def enrich_for_recompute(
 def handle_quotation_detection_job(
     payload: QuotationDetectionJobInput, job: Job
 ) -> None:
-    # a document of another doctype or language finishes without quotations
-    if payload.doctype != QUOTATION_DOCTYPE or payload.language != QUOTATION_LANGUAGE:
-        logger.info(
-            f"Skipping quotation detection of document {payload.sdoc_id}: "
-            f"{payload.doctype.value} document in '{payload.language}'."
-        )
-        return
-
-    output = ray.quote_prediction(
-        QuoteJobInput(
-            id=payload.sdoc_id,
-            project_id=payload.project_id,
-            documents=[payload.document],
+    document = payload.document
+    output = (
+        None
+        if document is None
+        else ray.quote_prediction(
+            QuoteJobInput(
+                id=payload.sdoc_id, project_id=payload.project_id, documents=[document]
+            )
         )
     )
 
@@ -142,31 +141,52 @@ def handle_quotation_detection_job(
             )
         }
         codes = _QuoteCodeIds(*(system_code_ids[name] for name in _QUOTE_CODE_NAMES))
-        adoc = crud_adoc.exists_or_create(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
-        )
 
-        groups: list[list[SpanAnnotationCreateIntern]] = []
-        for doc in output.documents:
-            for quote in doc.quotes:
-                groups.append(
-                    [
-                        *_make_span_annos(
-                            payload,
-                            adoc.id,
-                            _get_quote_type(quote.typ, codes),
-                            quote.quote,
-                        ),
-                        *_make_span_annos(payload, adoc.id, codes.frame, quote.frame),
-                        *_make_span_annos(
-                            payload, adoc.id, codes.addr, quote.addressee
-                        ),
-                        *_make_span_annos(payload, adoc.id, codes.cue, quote.cue),
-                        *_make_span_annos(
-                            payload, adoc.id, codes.speaker, quote.speaker
-                        ),
-                    ]
-                )
+        # a skipped document keeps no quotations of an earlier run, e.g. from
+        # before its language changed; without annotation document it has none
+        if document is None or output is None:
+            logger.info(
+                f"Document {payload.sdoc_id} is no German text document: "
+                "removing its quotations without detecting new ones."
+            )
+            adoc = next(
+                iter(
+                    crud_adoc.read_by_user_and_sdocs(
+                        db=db, user_id=SYSTEM_USER_ID, sdoc_ids=[payload.sdoc_id]
+                    )
+                ),
+                None,
+            )
+            groups: list[list[SpanAnnotationCreateIntern]] = []
+        else:
+            adoc = crud_adoc.exists_or_create(
+                db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
+            )
+            groups = [
+                [
+                    *_make_span_annos(
+                        payload,
+                        document,
+                        adoc.id,
+                        _get_quote_type(quote.typ, codes),
+                        quote.quote,
+                    ),
+                    *_make_span_annos(
+                        payload, document, adoc.id, codes.frame, quote.frame
+                    ),
+                    *_make_span_annos(
+                        payload, document, adoc.id, codes.addr, quote.addressee
+                    ),
+                    *_make_span_annos(payload, document, adoc.id, codes.cue, quote.cue),
+                    *_make_span_annos(
+                        payload, document, adoc.id, codes.speaker, quote.speaker
+                    ),
+                ]
+                for doc in output.documents
+                for quote in doc.quotes
+            ]
+        if adoc is None:
+            return
 
         SpanGroupService().replace_groups(
             db=db,
@@ -179,12 +199,13 @@ def handle_quotation_detection_job(
 
 def _make_span_annos(
     payload: QuotationDetectionJobInput,
+    document: QuoteInputDoc,
     adoc_id: int,
     code_id: int,
     spans: list[tuple[int, int]],
 ) -> list[SpanAnnotationCreateIntern]:
     """One span annotation per token span (begin token, end token exclusive)."""
-    tokens = payload.document.tokens
+    tokens = document.tokens
     annos: list[SpanAnnotationCreateIntern] = []
     for start, end in spans:
         char_begin = tokens[start].start
@@ -197,7 +218,7 @@ def _make_span_annos(
                 end_token=end,
                 begin=char_begin,
                 end=char_end,
-                span_text=payload.document.text[char_begin:char_end],
+                span_text=document.text[char_begin:char_end],
                 code_id=code_id,
                 annotation_document_id=adoc_id,
             )

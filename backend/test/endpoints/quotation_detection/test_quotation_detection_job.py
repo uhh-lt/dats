@@ -209,8 +209,10 @@ def test_quotation_detection_replaces_the_quotations_of_an_earlier_run(
     [
         # a text document in another language than German
         pytest.param("english", id="not-german"),
-        # a German document of another doctype than text (an image caption)
-        pytest.param("german_image", id="not-text"),
+        # a German image whose caption has no sentences
+        pytest.param("german_image", id="image-without-sentences"),
+        # a German audio document with a sentence boundary inside a token
+        pytest.param("german_audio", id="audio-with-split-token"),
     ],
 )
 def test_quotation_detection_skips_documents_the_model_does_not_handle(
@@ -219,11 +221,13 @@ def test_quotation_detection_skips_documents_the_model_does_not_handle(
     held_jobs: HeldJobs,
     document: str,
 ) -> None:
-    """The step finishes without calling the quotation model and without
-    quotations for a document that is no German text document."""
+    """For a document that is no German text document, the step finishes
+    without reading its token data and without calling the quotation model,
+    and the document has no quotations."""
     sdoc = {
         "english": quotation_project["english"],
         "german_image": quotation_project["german_image"],
+        "german_audio": quotation_project["german_audio"],
     }[document]
 
     prediction: MagicMock = _run(held_jobs, sdoc, None)
@@ -231,3 +235,19 @@ def test_quotation_detection_skips_documents_the_model_does_not_handle(
     prediction.assert_not_called()
     assert _groups(db_session, sdoc) == []
     assert read_step_status(db_session, sdoc.id, STEP) == SDocStatus.finished
+
+
+def test_quotation_detection_removes_the_quotations_of_a_document_no_longer_german(
+    db_session: Session, quotation_project: QuotationProject, held_jobs: HeldJobs
+) -> None:
+    """A document whose language changed from German keeps no quotations of an
+    earlier run: the step removes its span group and span annotation without
+    calling the quotation model."""
+    was_german = quotation_project["was_german"]
+
+    prediction: MagicMock = _run(held_jobs, was_german, None)
+
+    prediction.assert_not_called()
+    assert _groups(db_session, was_german) == []
+    assert _span_count(db_session, was_german) == 0
+    assert read_step_status(db_session, was_german.id, STEP) == SDocStatus.finished
