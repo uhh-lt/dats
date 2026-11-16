@@ -64,7 +64,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 ### Naming and Structure
 
 - **Class name**: `CRUD<Entity>` (e.g. `CRUDSpanAnnotation`). Exactly one class whose name starts with `CRUD` per file.
-- **Singleton**: `crud_<name> = CRUD<Entity>(<Entity>ORM)` at the bottom of the file. `<name>` is the snake_case entity name; the only allowed abbreviations are `sdoc`, `adoc`, `span_anno`, `sentence_anno`, `bbox_anno`, `sdoc_meta`, `sdoc_data`, `sdoc_job_status`, `project_meta`. Callers import the singleton, never the class.
+- **Singleton**: `crud_<name> = CRUD<Entity>(<Entity>ORM)` at the bottom of the file. `<name>` is the snake_case entity name; the only allowed abbreviations are `sdoc`, `adoc`, `span_anno`, `sentence_anno`, `bbox_anno`, `sdoc_meta`, `sdoc_data`, `project_meta`. Callers import the singleton, never the class.
 - **Generic parameters**: `SQLCRUDBase[<Entity>ORM, <Create DTO>, <Update DTO>]`, plus the key type for a composite primary key (see Variations). Use the `...CreateIntern` / `...UpdateIntern` DTO when the ORM needs fields the API DTO lacks; the service builds it (e.g. `SpanAnnotationService` looks up the annotation document, `SearchViewService` serializes the view). If the entity is never updated, use `UpdateNotAllowed` from `crud_base`.
 - **Exactly the generic DTOs**: the generic parameters are the CRUD's contract. Overrides of `create` / `create_multi` / `update` / `update_multi` take exactly `create_dto: <Create>` / `create_dtos: list[<Create>]` / `id` + `update_dto: <Update>` / `ids` + `update_dtos: list[<Update>]`, never API DTOs or extra parameters (`user_id`, `codes`). Related rows are linked by their own methods (`crud_classifier.link_codes`).
 - **Sections**: group methods under `### CREATE OPERATIONS ###`, `### READ OPERATIONS ###`, `### UPDATE OPERATIONS ###`, `### DELETE OPERATIONS ###`, `### OTHER OPERATIONS ###`, in that order. Omit empty sections, or keep the header with a `# Inherited from <Base>` comment.
@@ -119,7 +119,7 @@ A CRUD with no custom methods is just `class CRUDAspect(SQLCRUDBase[...]):` + `p
 
 ## Variations
 
-- **Composite primary key** (`document_aspect_crud`, `document_cluster_crud`, `word_frequency_crud`, `source_document_job_status_crud`): pass the key type as the fourth generic parameter, in key column order: `SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate, tuple[int, int]]` for `(sdoc_id, aspect_id)`. The base builds every id filter from the model's primary key (`tuple_(...).in_(ids)`), so `read`, `read_by_ids`, `update_multi`, `delete_multi` and `exists` take these tuples and need no override. The parameter defaults to `int` (a single `id` column).
+- **Composite primary key** (`document_aspect_crud`, `document_cluster_crud`, `word_frequency_crud`): pass the key type as the fourth generic parameter, in key column order: `SQLCRUDBase[DocumentAspectORM, DocumentAspectCreate, DocumentAspectUpdate, tuple[int, int]]` for `(sdoc_id, aspect_id)`. The base builds every id filter from the model's primary key (`tuple_(...).in_(ids)`), so `read`, `read_by_ids`, `update_multi`, `delete_multi` and `exists` take these tuples and need no override. The parameter defaults to `int` (a single `id` column).
 
 ## Examples
 

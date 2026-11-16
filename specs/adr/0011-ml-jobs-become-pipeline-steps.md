@@ -8,6 +8,6 @@ Both features declare `default_enabled=False`: a new project and the preselectio
 
 The embedding service goes. Each embedding step, and the similarity search that embeds a query, calls the model service itself. The similarity search and the RAG chat take one text or the id of an image as their query; a list of texts, which was embedded with the LLM model but searched in a CLIP collection, is rejected by the body validation (422).
 
-Deploy: the Redis queues and the failed job registry must be empty and no upload in flight (the ML job and the moved handlers cannot be unpickled), and afterwards `project.artefact_computations` is reset (O14).
+Deploy: the Redis queues and the failed job registry must be empty and no upload in flight (the ML job and the moved handlers cannot be unpickled), and afterwards `project.artefact_computations` is reset to `{}` for every project: an entry whose job is gone keeps its features at Computing forever. An upgrade from a release before the feature toggles gets this reset from migration `457909d274d4`; an instance already past it runs `UPDATE project SET artefact_computations = '{}'` after emptying the queues.
 
 We rejected keeping the ML job for coreference and quotation beside the steps (two ways to compute one artefact) and a data migration of the job statuses (no data to keep).

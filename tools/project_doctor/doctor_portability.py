@@ -440,7 +440,8 @@ class PortabilityChecker:
                     f"{', '.join(repr(names[i]) for i in orphans[:10])}",
                     fix=None,
                     hint="The project misses system codes. Compare its codes with "
-                    "the system codes of a new project and decide manually.",
+                    "the declared trees in tools/project_doctor/system_codes.yaml "
+                    "and decide manually.",
                 )
             )
         return issues
