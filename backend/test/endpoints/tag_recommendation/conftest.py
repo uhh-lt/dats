@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 import dats_test_utils
+from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
@@ -15,6 +16,8 @@ from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
@@ -24,6 +27,7 @@ from modules.tag_recommendation.tag_recommendation_dto import (
 from modules.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
+from repos.vector.weaviate_repo import WeaviateRepo
 
 OWN_ML_JOB_ID = "own-tag-recommendation-job"
 FOREIGN_ML_JOB_ID = "foreign-tag-recommendation-job"
@@ -156,3 +160,102 @@ def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
       without features finished
     """
     return create_featureless_project(db_session, test_user)
+
+
+class TagRecommendationJobProject(TypedDict):
+    """
+    This fixture sets up the following documents and tags in `test_project`
+    (which enables tag recommendation):
+
+    - tags `sports` "Sports", `politics` "Politics" and `unused` "Unused" (no
+      document carries it)
+    - text document `sports_tagged` "sports_tagged.txt", tagged `sports`, with
+      the document embedding [1, 0, 0]
+    - text document `politics_tagged` "politics_tagged.txt", tagged `politics`,
+      with the document embedding [0, 1, 0]
+    - text document `sports_untagged` "sports_untagged.txt", untagged, with the
+      document embedding [0.9, 0.1, 0]
+    - text document `politics_untagged` "politics_untagged.txt", untagged, with
+      the document embedding [0.1, 0.9, 0]
+    - text document `no_embedding` "no_embedding.txt", untagged, without a
+      document embedding
+
+    Non-obvious derived behavior:
+
+    - Each untagged document lies next to the tagged document of its topic, so
+      KNN and SIMPLE recommend that document's tag for it.
+    - `no_embedding` gets no recommendation and does not fail the job.
+    """
+
+    project: ProjectORM
+    sports: TagORM
+    politics: TagORM
+    unused: TagORM
+    sports_tagged: SourceDocumentORM
+    politics_tagged: SourceDocumentORM
+    sports_untagged: SourceDocumentORM
+    politics_untagged: SourceDocumentORM
+    no_embedding: SourceDocumentORM
+
+
+@pytest.fixture(scope="function")
+def tag_recommendation_job_project(
+    db_session: Session, test_project: ProjectORM
+) -> TagRecommendationJobProject:
+    """See `TagRecommendationJobProject`."""
+    tags = {
+        key: _create_tag(db_session, test_project.id, name)
+        for key, name in (
+            ("sports", "Sports"),
+            ("politics", "Politics"),
+            ("unused", "Unused"),
+        )
+    }
+    embeddings: dict[str, list[float] | None] = {
+        "sports_tagged": [1.0, 0.0, 0.0],
+        "politics_tagged": [0.0, 1.0, 0.0],
+        "sports_untagged": [0.9, 0.1, 0.0],
+        "politics_untagged": [0.1, 0.9, 0.0],
+        "no_embedding": None,
+    }
+    sdocs = {
+        key: dats_test_utils.create_text_document(
+            db_session,
+            project=test_project,
+            filename=f"{key}.txt",
+            name=f"{key}.txt",
+            sentences=[f"A text about {key}."],
+        )
+        for key in embeddings
+    }
+    crud_tag.link_multiple_tags(
+        db=db_session,
+        sdoc_ids=[sdocs["sports_tagged"].id],
+        tag_ids=[tags["sports"].id],
+    )
+    crud_tag.link_multiple_tags(
+        db=db_session,
+        sdoc_ids=[sdocs["politics_tagged"].id],
+        tag_ids=[tags["politics"].id],
+    )
+    client = WeaviateRepo().get_client()
+    for key, embedding in embeddings.items():
+        if embedding is not None:
+            crud_document_embedding.create(
+                client=client,
+                project_id=test_project.id,
+                id=DocumentObjectIdentifier(sdoc_id=sdocs[key].id),
+                embedding=embedding,
+            )
+    db_session.commit()
+    return {
+        "project": test_project,
+        "sports": tags["sports"],
+        "politics": tags["politics"],
+        "unused": tags["unused"],
+        "sports_tagged": sdocs["sports_tagged"],
+        "politics_tagged": sdocs["politics_tagged"],
+        "sports_untagged": sdocs["sports_untagged"],
+        "politics_untagged": sdocs["politics_untagged"],
+        "no_embedding": sdocs["no_embedding"],
+    }

@@ -4,16 +4,23 @@ import pytest
 from fastapi.testclient import TestClient
 
 import dats_test_utils
+from common.job_type_enum import JobType
+from feature_test_utils import FeaturelessProject
 from job_test_utils import HeldJobs
 from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationJobInput,
     TagRecommendationLinkRead,
     TagRecommendationResult,
 )
+from modules.tag_recommendation.tag_recommendation_enum import (
+    TagRecommendationMethod,
+)
+from systems.job_system.job_system_enum import JobStatus
 
 from .conftest import (
     FOREIGN_ML_JOB_ID,
     OWN_ML_JOB_ID,
+    TagRecommendationJobProject,
     TagRecommendationProject,
 )
 
@@ -132,3 +139,121 @@ def test_a_started_tag_recommendation_job_is_listed(
     assert started.status_code == 200, started.text
     assert listed.status_code == 200, listed.text
     assert [job["job_id"] for job in listed.json()] == [started.json()["job_id"]]
+
+
+def test_a_tag_recommendation_job_of_a_disabled_feature_stays_listed(
+    client: TestClient, featureless_project: FeaturelessProject
+):
+    """The generated job listing checks the membership only, as every job
+    listing: a project without tag recommendation lists its jobs (none here),
+    while starting one is rejected (see the job endpoint tests)."""
+    response = client.get(
+        f"/job/tag_recommendation/project/{featureless_project['project'].id}"
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == []
+
+
+# --- running the job --------------------------------------------------------
+# The job runs in-process (held jobs), the recommendations are read by its id.
+
+
+def _run_job(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    payload: TagRecommendationJobInput,
+) -> dict[int, list[int]]:
+    """Start and run the job; its recommendations: tag ids by document id."""
+    started = client.post(
+        "/job/tag_recommendation", json=payload.model_dump(mode="json")
+    )
+    assert started.status_code == 200, started.text
+    held_jobs.run(JobType.TAG_RECOMMENDATION)
+    job_id = started.json()["job_id"]
+    (job,) = held_jobs.ran(JobType.TAG_RECOMMENDATION)
+    assert job.get_status() == JobStatus.FINISHED
+
+    response = client.get(f"/tagrecommendation/job/{job_id}")
+    assert response.status_code == 200, response.text
+    results = [TagRecommendationResult.model_validate(r) for r in response.json()]
+    return {r.sdoc_id: r.suggested_tag_ids for r in results}
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        # the nearest tagged documents vote for their tags
+        pytest.param(TagRecommendationMethod.KNN, id="knn"),
+        # each tagged document passes its tags to its nearest documents
+        pytest.param(TagRecommendationMethod.SIMPLE, id="simple"),
+    ],
+)
+def test_tag_recommendation_job_recommends_the_tag_of_the_nearest_document(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    tag_recommendation_job_project: TagRecommendationJobProject,
+    method: TagRecommendationMethod,
+):
+    """Without tag ids every applied tag counts: each untagged document gets
+    the tag of the tagged document next to it; the document without an
+    embedding gets none, and the job finishes."""
+    p = tag_recommendation_job_project
+
+    recommendations = _run_job(
+        client,
+        held_jobs,
+        TagRecommendationJobInput(project_id=p["project"].id, method=method),
+    )
+
+    assert recommendations == {
+        p["sports_untagged"].id: [p["sports"].id],
+        p["politics_untagged"].id: [p["politics"].id],
+    }
+
+
+def test_tag_recommendation_job_recommends_only_the_given_tags(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    tag_recommendation_job_project: TagRecommendationJobProject,
+):
+    """With the tag ids [politics], SIMPLE recommends politics only, also for
+    the untagged document about politics."""
+    p = tag_recommendation_job_project
+
+    recommendations = _run_job(
+        client,
+        held_jobs,
+        TagRecommendationJobInput(
+            project_id=p["project"].id,
+            method=TagRecommendationMethod.SIMPLE,
+            tag_ids=[p["politics"].id],
+        ),
+    )
+
+    assert recommendations[p["politics_untagged"].id] == [p["politics"].id]
+    assert {tag for tags in recommendations.values() for tag in tags} == {
+        p["politics"].id
+    }
+
+
+def test_tag_recommendation_job_without_a_tagged_document_recommends_nothing(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    tag_recommendation_job_project: TagRecommendationJobProject,
+):
+    """No document carries the tag `unused`: the job finishes without
+    recommendations."""
+    p = tag_recommendation_job_project
+
+    recommendations = _run_job(
+        client,
+        held_jobs,
+        TagRecommendationJobInput(
+            project_id=p["project"].id,
+            method=TagRecommendationMethod.KNN,
+            tag_ids=[p["unused"].id],
+        ),
+    )
+
+    assert recommendations == {}

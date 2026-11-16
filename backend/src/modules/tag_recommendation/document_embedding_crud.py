@@ -43,15 +43,18 @@ class CRUDDocumentEmbedding(
             sdoc_id: The SourceDocument ID to search near
             k: The number of nearest neighbors to return
             threshold: The minimum similarity for a match
-            sdoc_ids: List of SourceDocument IDs to search in
+            sdoc_ids: The SourceDocument IDs to search in; None searches all,
+                an empty list finds nothing
         Returns:
             List of SimSearchResult[DocumentObjectIdentifier]
         """
+        if sdoc_ids is not None and len(sdoc_ids) == 0:
+            return []
         filters = (
             Filter.by_property(
                 self.collection_class.properties["sdoc_id"].name
             ).contains_any(sdoc_ids)
-            if sdoc_ids
+            if sdoc_ids is not None
             else None
         )
         return self.search_near_object(

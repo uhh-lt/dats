@@ -2,6 +2,7 @@ import statistics
 from collections import defaultdict
 from typing import Any, Callable, Iterable, Iterator, Sequence, TypeVar
 
+from loguru import logger
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
@@ -21,6 +22,7 @@ from modules.tag_recommendation.tag_recommendation_dto import (
 from modules.tag_recommendation.tag_recommendation_enum import (
     TagRecommendationMethod,
 )
+from repos.vector.weaviate_exceptions import WeaviateObjectUUIDNotFoundException
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
 
@@ -32,7 +34,7 @@ SimSearchHit = TypeVar("SimSearchHit")
 
 class TagRecommendationService(metaclass=SingletonMeta):
     """
-    Singleton class for managing document classification jobs.
+    Recommends tags for untagged documents (the tag recommendation job).
     This service is responsible for preparing and executing
     classification tasks on source documents and managing the
     associated data.
@@ -66,20 +68,31 @@ class TagRecommendationService(metaclass=SingletonMeta):
         A TagRecommendationLinkCreate DTO is created for each predicted tag.
 
         Args:
-            task_id (int): The ID of the classification task.
-            project_id (int): The project ID to limit the documents and tags.
-            tag_ids (list[int]): The IDs of the tags to consider
-            exclusive (bool): Whether tags are mutually exclusive, either A or B
+            ml_job_id: The ID of the tag recommendation job, stored with each
+                recommendation.
+            project_id: The project ID to limit the documents and tags.
+            tag_ids: The IDs of the tags to recommend; empty means every tag
+                applied to a document of the project.
+            method: How to find the similar documents.
+            multi_class: Whether a document may get several tags.
         """
-        # Fetch all documents that already have tags for the given project
+        # Fetch all documents that carry one of the tags (any tag if none is given)
         sdocs_with_tags = crud_sdoc.read_by_tags(
-            db=db, project_id=project_id, tag_ids=tag_ids
+            db=db, project_id=project_id, tag_ids=tag_ids or None
         )
         # Extract IDs from the tagged documents
         sdoc_ids = {sdoc.id for sdoc in sdocs_with_tags}
+        if not sdoc_ids:
+            # no tagged document: nothing to recommend from
+            return
 
-        # Retrieve a mapping: document_id -> list of associated TagORM objects
-        sdocs_and_tags = crud_tag.read_tags_for_documents(db, sdoc_ids=sdoc_ids)
+        # Retrieve a mapping: document_id -> its tags (only the given ones)
+        sdocs_and_tags = {
+            sdoc_id: [tag for tag in tags if not tag_ids or tag.id in tag_ids]
+            for sdoc_id, tags in crud_tag.read_tags_for_documents(
+                db, sdoc_ids=sdoc_ids
+            ).items()
+        }
 
         # Suggest similar documents based on the already tagged documents
         client = self.weaviate.get_client()
@@ -122,12 +135,8 @@ class TagRecommendationService(metaclass=SingletonMeta):
         # suggest
         hits: list[SimSearchDocumentHit] = []
         for sdoc_id in pos_sdoc_ids:
-            search_result = crud_document_embedding.search_near_sdoc(
-                client=client,
-                project_id=project_id,
-                sdoc_id=sdoc_id,
-                k=top_k,
-                threshold=0.0,
+            search_result = self._search_near_sdoc(
+                client=client, project_id=project_id, sdoc_id=sdoc_id, k=top_k
             )
             hits.extend(
                 [
@@ -152,12 +161,8 @@ class TagRecommendationService(metaclass=SingletonMeta):
             # suggest
             nearest: list[SimSearchDocumentHit] = []
             for sdoc_id in candidates:
-                search_result = crud_document_embedding.search_near_sdoc(
-                    client=client,
-                    project_id=project_id,
-                    sdoc_id=sdoc_id,
-                    k=1,
-                    threshold=0.0,
+                search_result = self._search_near_sdoc(
+                    client=client, project_id=project_id, sdoc_id=sdoc_id, k=1
                 )
                 nearest.extend(
                     [
@@ -178,6 +183,30 @@ class TagRecommendationService(metaclass=SingletonMeta):
             results = hits
         results.sort(key=lambda x: x.score, reverse=True)
         return hits
+
+    def _search_near_sdoc(
+        self,
+        *,
+        client: WeaviateClient,
+        project_id: int,
+        sdoc_id: int,
+        k: int,
+        sdoc_ids: list[int] | None = None,
+    ) -> list[SimSearchResult[DocumentObjectIdentifier]]:
+        """The nearest documents of a document; none if the document has no
+        embedding (yet), so one such document does not fail the job."""
+        try:
+            return crud_document_embedding.search_near_sdoc(
+                client=client,
+                project_id=project_id,
+                sdoc_id=sdoc_id,
+                k=k,
+                threshold=0.0,
+                sdoc_ids=sdoc_ids,
+            )
+        except WeaviateObjectUUIDNotFoundException:
+            logger.warning(f"Document {sdoc_id} has no document embedding")
+            return []
 
     def __unique_consecutive(
         self, hits: list[SimSearchHit], key: Callable[[SimSearchHit], Any]
@@ -254,13 +283,12 @@ class TagRecommendationService(metaclass=SingletonMeta):
         nns: list[list[SimSearchResult[DocumentObjectIdentifier]]] = []
 
         for sdoc_id in sdoc_ids_to_classify:
-            # 1. Find k-nearest neighbors for the current sdoc_id
-            result = crud_document_embedding.search_near_sdoc(
+            # 1. Find the k nearest tagged documents of the current document
+            result = self._search_near_sdoc(
                 client=client,
                 project_id=project_id,
                 sdoc_id=sdoc_id,
                 k=5,
-                threshold=0.0,
                 sdoc_ids=list(sdoc_ids),
             )
             nns.append(result)
@@ -269,11 +297,14 @@ class TagRecommendationService(metaclass=SingletonMeta):
             pairs = [
                 (item.id, items.score)
                 for items in nn
-                for item in sdocs_and_tags[items.id.sdoc_id]
+                for item in sdocs_and_tags.get(items.id.sdoc_id, [])
             ]
             scores = defaultdict[int, list[float]](list)
             for id, score in pairs:
                 scores[id].append(score)
+            if not scores:
+                # no tagged neighbour (or no embedding): no recommendation
+                continue
             best = max(scores.items(), key=lambda x: sum(x[1]))
             yield TagRecommendationLinkCreate(
                 ml_job_id=ml_job_id,

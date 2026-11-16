@@ -183,14 +183,18 @@ class CRUDSourceDocument(
         )
 
     def read_by_tags(
-        self, db: Session, *, project_id: int, tag_ids: list[int] = []
+        self, db: Session, *, project_id: int, tag_ids: list[int] | None
     ) -> list[SourceDocumentORM]:
+        """The documents of the project that carry one of the tags, or any tag
+        if `tag_ids` is None."""
+        has_tag = (
+            SourceDocumentORM.tags.any()
+            if tag_ids is None
+            else SourceDocumentORM.tags.any(TagORM.id.in_(tag_ids))
+        )
         return (
             db.query(SourceDocumentORM)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-                SourceDocumentORM.tags.any(TagORM.id.in_(tag_ids)),
-            )
+            .filter(SourceDocumentORM.project_id == project_id, has_tag)
             .all()
         )
 
