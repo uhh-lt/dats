@@ -70,6 +70,10 @@ export function handleJobUpdate(job: JobRead): void {
       break;
     case TagRecommendationJobRead.job_type.TAG_RECOMMENDATION:
       upsertJob(job, tagRecommendationQueries.job);
+      // the recommendations of the job exist once it finished
+      if (job.status === JobStatus.FINISHED) {
+        queryClient.invalidateQueries({ queryKey: tagRecommendationQueries.byJob(job.job_id).queryKey });
+      }
       break;
     case ClassifierJobRead.job_type.CLASSIFIER:
       upsertJob(job, classifierQueries.job);

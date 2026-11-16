@@ -9,7 +9,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
  *   tagRecommendationQueries.all()                      ["tagRecommendation"]
  *   tagRecommendationQueries.job.byId(jobId)            ["tagRecommendation", "job", "detail", jobId]
  *   tagRecommendationQueries.job.byProject(projectId)   ["tagRecommendation", "job", "project", projectId]
- *   tagRecommendationQueries.byJob(mlJobId)             ["tagRecommendation", "recommendations", mlJobId]
+ *   tagRecommendationQueries.byJob(jobId)               ["tagRecommendation", "recommendations", jobId]
  *
  * Job updates arrive via websocket (JOB_UPDATED) and are written into the job caches by the cache-sync code.
  */
@@ -25,10 +25,10 @@ export const tagRecommendationQueries = {
 
   // the recommendations of one job
   byJobScope: () => [...tagRecommendationQueries.all(), "recommendations"] as const,
-  byJob: (mlJobId: string | null | undefined) =>
+  byJob: (jobId: string | null | undefined) =>
     queryOptions({
-      queryKey: [...tagRecommendationQueries.byJobScope(), mlJobId] as const,
-      queryFn: !mlJobId ? skipToken : () => TagRecommendationService.getAllTagrecommendationsFromJob({ mlJobId }),
+      queryKey: [...tagRecommendationQueries.byJobScope(), jobId] as const,
+      queryFn: !jobId ? skipToken : () => TagRecommendationService.getAllTagrecommendationsFromJob({ mlJobId: jobId }),
       staleTime: 1000 * 60 * 5,
     }),
 };

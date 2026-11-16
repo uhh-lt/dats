@@ -1,4 +1,5 @@
 import { ContentContainerLayout } from "@components/content-layouts";
+import { jobStatusToSimple } from "@core/job";
 import { getIconComponent, Icon } from "@components/icons";
 import { TagHooks } from "@core/tag";
 import { TagRead } from "@models/TagRead";
@@ -43,7 +44,12 @@ export function TagRecommendationsView() {
   // global server state
   const documentTags = TagHooks.useGetAllTags();
   const tagRecommendationJobs = useQuery(tagRecommendationQueries.job.byProject(projectId));
-  const recommendations = useQuery(tagRecommendationQueries.byJob(selectedJobId === "-1" ? null : selectedJobId));
+  const selectedJob = tagRecommendationJobs.data?.find((job) => job.job_id === selectedJobId);
+  const selectedJobState = selectedJob ? jobStatusToSimple[selectedJob.status] : undefined;
+  // the recommendations exist once the job finished (cache-sync refetches them then)
+  const recommendations = useQuery(
+    tagRecommendationQueries.byJob(selectedJobState === "finished" ? selectedJobId : null),
+  );
   const startJob = TagRecommendationHooks.useStartTagRecommendationJob();
 
   // event handlers
@@ -94,9 +100,9 @@ export function TagRecommendationsView() {
             Recommend tags
           </Button>
           <FormControl>
-            <InputLabel id="ml-job-select-label">Job Selection</InputLabel>
+            <InputLabel id="tag-recommendation-job-select-label">Job Selection</InputLabel>
             <Select
-              labelId="ml-job-select-label"
+              labelId="tag-recommendation-job-select-label"
               label="Job Selection"
               value={selectedJobId}
               onChange={handleChange}
@@ -114,12 +120,23 @@ export function TagRecommendationsView() {
             </Select>
           </FormControl>
         </Toolbar>
-        {documentTags.data && recommendations.data && recommendations.data.length > 0 ? (
-          <TagRecommendationsContent results={recommendations.data} tags={documentTags.data} />
-        ) : documentTags.data && recommendations.data && recommendations.data.length === 0 ? (
+        {tagRecommendationJobs.isError ? (
+          <CardContent>The tag recommendation jobs could not be loaded.</CardContent>
+        ) : selectedJobState === "running" ? (
+          <CardContent>The tag recommendation job is running. Its recommendations appear when it finishes.</CardContent>
+        ) : selectedJobState === "error" ? (
           <CardContent>
-            You Processed all recommendations! (Or there were no recommendations in the first place...)
+            The tag recommendation job did not finish ({selectedJob?.status}).
+            {selectedJob?.status_message ? ` ${selectedJob.status_message}` : ""}
           </CardContent>
+        ) : recommendations.isError ? (
+          <CardContent>The recommendations could not be loaded.</CardContent>
+        ) : recommendations.isLoading || documentTags.isLoading ? (
+          <CardContent>Loading the recommendations...</CardContent>
+        ) : documentTags.data && recommendations.data && recommendations.data.length > 0 ? (
+          <TagRecommendationsContent key={selectedJobId} results={recommendations.data} tags={documentTags.data} />
+        ) : recommendations.data ? (
+          <CardContent>No recommendations left to review: you reviewed them all, or the job found none.</CardContent>
         ) : null}
       </Card>
     </ContentContainerLayout>
@@ -146,7 +163,9 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
         current_tags: result.current_tag_ids.map((tagId) => tagId2Tag[tagId]),
         suggested_tags: result.suggested_tag_ids.map((tagId) => tagId2Tag[tagId]),
         merged_tags: result.current_tag_ids.map((tagId) => tagId2Tag[tagId]),
-        reasoning: "Test",
+        reasoning: result.suggested_tag_ids
+          .map((tagId, index) => `${tagId2Tag[tagId]?.name ?? tagId}: similarity ${result.scores[index]?.toFixed(2)}`)
+          .join(", "),
         recommendation_ids: result.recommendation_ids,
       };
     });
