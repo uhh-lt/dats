@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from feature_test_utils import SDOC_SENTENCES
-
-from .conftest import TextStepsProject, run_step_handler
+from text_steps_test_utils import TextStepsProject, run_step_handler
 
 TEXT = " ".join(SDOC_SENTENCES)
 SETTINGS = {

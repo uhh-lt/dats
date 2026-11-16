@@ -2,6 +2,7 @@ import pytest
 
 from core.user.user_orm import UserORM
 from feature_test_utils import FeaturelessProject, create_featureless_project
+from text_steps_test_utils import TextStepsProject, create_text_steps_project
 
 
 @pytest.fixture(scope="function")
@@ -15,3 +16,9 @@ def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
       without features finished
     """
     return create_featureless_project(db_session, test_user)
+
+
+@pytest.fixture(scope="function")
+def text_steps_project(db_session, test_user: UserORM) -> TextStepsProject:
+    """The project described in `TextStepsProject` (`text_steps_test_utils.py`)."""
+    return create_text_steps_project(db_session, test_user)

@@ -26,13 +26,9 @@ from repos.ray.ray_repo import RayRepo
 from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.job_system.job_system_enum import JobStatus
 from systems.search_system.sorting import SortDirection
+from text_steps_test_utils import TextStepsProject, spacy_output
 
-from .conftest import (
-    RecomputeProject,
-    RemovedStepProject,
-    TextStepsProject,
-    spacy_output,
-)
+from .conftest import RecomputeProject, RemovedStepProject
 
 SETTINGS = ProcessingSettings(
     extract_images=False,
@@ -400,16 +396,16 @@ def test_recompute_of_a_step_that_is_not_planned_is_rejected(
     assert read_step_status(db_session, sdoc_id, "text_keywords") is None
 
 
-def test_recompute_starts_a_core_step_that_is_not_planned(
+def test_recompute_plans_a_core_step_that_is_not_planned(
     client: TestClient,
     db_session,
     recompute_project: RecomputeProject,
     held_jobs: HeldJobs,
 ):
     """text_es_index of no_data has no status row (no_data was created without
-    it). It is a core step, which no feature owns: Recompute starts its job,
-    which cannot start for no_data (no content), so its failed hook writes the
-    row as erroneous instead of leaving it unplanned."""
+    it). It is a core step, which no feature owns: Recompute plans it and
+    starts its job, which cannot start for no_data (no content), so it becomes
+    erroneous instead of staying unplanned."""
     p = recompute_project
     sdoc_id = p["no_data"].id
     assert read_step_status(db_session, sdoc_id, "text_es_index") is None

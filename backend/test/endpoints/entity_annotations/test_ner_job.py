@@ -6,8 +6,7 @@ from core.code.code_crud import crud_code
 from core.user.user_crud import SYSTEM_USER_ID
 from feature_test_utils import SDOC_SENTENCES
 from repos.ray.ray_repo import RayRepo
-
-from .conftest import TextStepsProject, run_step_handler, spacy_output
+from text_steps_test_utils import TextStepsProject, run_step_handler, spacy_output
 
 TEXT = " ".join(SDOC_SENTENCES)
 SETTINGS = {

@@ -25,8 +25,9 @@ from systems.artefact_system.step_execution import (
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_service import JobService
 from systems.job_system.job_system_enum import JobStatus
+from text_steps_test_utils import TextStepsProject
 
-from .conftest import DummyStepProjects, TextStepsProject
+from .conftest import DummyStepProjects
 
 SETTINGS = ProcessingSettings(
     extract_images=True,
