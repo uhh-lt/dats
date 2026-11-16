@@ -114,6 +114,11 @@ def test_a_module_must_not_import_another_module(
             "from modules import (\n    rag,\n    simsearch,\n)\n",
             id="from-modules-import-multiline",
         ),
+        # a comment after the first name (with a parenthesis) hides no name
+        pytest.param(
+            "from modules import (\n    rag,  # own (module)\n    simsearch,\n)\n",
+            id="from-modules-import-commented",
+        ),
     ],
 )
 def test_a_module_must_not_import_another_module_from_the_package(

@@ -65,13 +65,14 @@ def imported_modules(lines, i):
     match = MODULES_FROM_IMPORT.search(lines[i])
     if not match:
         return []
-    names = match.group(1)
+    # comments are stripped per line, so a comment hides no name after it
+    names = match.group(1).split("#")[0]
     j = i
     if names.strip().startswith("(") and ")" not in names:
-        while ")" not in lines[j]:
+        while j + 1 < len(lines) and ")" not in names:
             j += 1
-            names += lines[j]
-    names = names.split("#")[0].replace("(", "").replace(")", "")
+            names += " " + lines[j].split("#")[0]
+    names = names.replace("(", "").replace(")", "")
     return [n.split(" as ")[0].strip() for n in names.split(",") if n.strip()]
 
 
