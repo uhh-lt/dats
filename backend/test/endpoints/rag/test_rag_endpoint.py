@@ -1,11 +1,17 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from feature_test_utils import (
     FeaturelessProject,
+    SentenceEmbeddingProject,
     assert_feature_disabled,
     feature_named,
 )
+from modules.rag.rag_dto import ChatSessionResponse
 from pipeline_test_utils import artefact_named
+from repos.llm_repo import LLMRepo
+from repos.ray.dto.clip import ClipEmbeddingOutput, ClipTextEmbeddingInput
+from repos.ray.ray_repo import RayRepo
 from systems.feature_system.feature_registry import feature_registry
 
 # ===========================================================================
@@ -49,6 +55,71 @@ def test_rag_session_rejects_a_list_query(client: TestClient, test_project):
     locations = [error["loc"] for error in response.json()["detail"]]
     assert locations, response.text
     assert all(loc[:2] == ["body", "query"] for loc in locations), locations
+
+
+# --- retrieval (the sentence embeddings, without semantic search) -----------
+# CLIP and the LLM are external services: the tests replace them and record
+# what they were asked.
+
+
+@pytest.fixture
+def stubbed_models(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[str]]:
+    """CLIP embeds every text to [1, 0]; the LLM answers "answer" and records
+    each user prompt."""
+    calls: dict[str, list[str]] = {"clip": [], "prompt": []}
+
+    def embed_text(self, clip_input: ClipTextEmbeddingInput) -> ClipEmbeddingOutput:
+        calls["clip"].extend(clip_input.text)
+        return ClipEmbeddingOutput(embeddings=[[1.0, 0.0] for _ in clip_input.text])
+
+    def chat(self, model: str, user_prompt: str, **kwargs: object) -> tuple[str, str]:
+        calls["prompt"].append(user_prompt)
+        return " answer ", "session"
+
+    monkeypatch.setattr(RayRepo, "clip_text_embedding", embed_text)
+    monkeypatch.setattr(LLMRepo, "llm_chat_with_session", chat)
+    return calls
+
+
+@pytest.mark.parametrize(
+    "sdoc_ids,expected_context",
+    [
+        # every document: sentence 0 is above the threshold, sentence 1 below
+        pytest.param("all", ["Hello world."], id="all-documents"),
+        # another document only: nothing of text.txt is retrieved
+        pytest.param("other", [], id="other-document"),
+    ],
+)
+def test_rag_session_answers_from_the_nearest_sentences_without_semantic_search(
+    client: TestClient,
+    sentence_embedding_project: SentenceEmbeddingProject,
+    stubbed_models: dict[str, list[str]],
+    sdoc_ids: str,
+    expected_context: list[str],
+):
+    """A project with RAG chat but without semantic search: the query is
+    embedded by CLIP, the sentences of the selected documents above the
+    threshold become the context of the prompt, and the answer is returned."""
+    p = sentence_embedding_project
+    ids = [] if sdoc_ids == "all" else [p["text"].id + 1000]
+
+    response = client.post(
+        "/rag/rag_session",
+        params={
+            "project_id": p["project"].id,
+            "top_k": 10,
+            "threshold": 0.75,
+            "model": "default",
+        },
+        json={"query": "a greeting", "sdoc_ids": ids},
+    )
+
+    assert response.status_code == 200, response.text
+    assert ChatSessionResponse.model_validate(response.json()).response == "answer"
+    assert stubbed_models["clip"] == ["a greeting"]
+    (prompt,) = stubbed_models["prompt"]
+    context = prompt.split("Context:\n")[1].split("\n\nQuestion:")[0]
+    assert context.splitlines() == expected_context
 
 
 # ===========================================================================

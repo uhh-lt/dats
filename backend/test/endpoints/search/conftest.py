@@ -686,8 +686,8 @@ def provenance_project_with_copies(
 def featureless_project(seed_db_session, test_user) -> FeaturelessProject:
     """The project described in `FeaturelessProject`, built once next to
     `search_project`: "Featureless Project" of `test_user` without any enabled
-    feature (so full-text search is disabled), with the text document
-    "text_done.txt". It is a project of its own, so it changes no result of the
+    feature, with the text document "text_done.txt", which is in the search
+    index. It is a project of its own, so it changes no result of the
     `search_project` tests."""
     featureless = create_featureless_project(seed_db_session, test_user)
     # end the transaction of the final refreshes: an open transaction of the

@@ -9,6 +9,10 @@ from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import FeatureArea
+from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
+from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
+from core.doc.sentence_embedding_crud import crud_sentence_embedding
+from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
@@ -18,7 +22,9 @@ from core.project.project_service import ProjectService
 from core.user.user_orm import UserORM
 from dats_test_utils import create_text_document
 from pipeline_test_utils import artefact_named, core_steps, set_step_status
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 from systems.feature_system.feature_registry import (
     Feature,
     feature_registry,
@@ -115,8 +121,8 @@ class FeatureProject(TypedDict):
 def create_project_with_features(
     db: Session, user: UserORM, *, title: str, features: list[str]
 ) -> ProjectORM:
-    """Create a project of the user that enables only the given features (and
-    the features they require), named by text."""
+    """Create a project of the user that enables only the given features,
+    named by text."""
     read = ProjectService().create_project(
         db=db,
         create_dto=ProjectCreate(
@@ -300,7 +306,8 @@ class FeaturelessProject(TypedDict):
 
     - project: "Featureless Project" of `test_user`, without any enabled feature
     - sdoc: text document "text_done.txt" with the text of `SDOC_SENTENCES` and
-      the language "en"; the steps of a project without features are finished
+      the language "en"; the steps of a project without features are finished,
+      and its entry of the search index (filename and content) is stored
     """
 
     project: ProjectORM
@@ -319,6 +326,16 @@ def create_featureless_project(db: Session, user: UserORM) -> FeaturelessProject
         doctype=DocType.text,
         status=dict.fromkeys(minimal_text_steps(), 1),
     )
+    crud_sdoc_elastic.create(
+        client=ElasticSearchRepo().get_client(),
+        project_id=project.id,
+        create_dto=ElasticSearchDocumentCreate(
+            project_id=project.id,
+            sdoc_id=sdoc.id,
+            filename=sdoc.filename,
+            content=" ".join(SDOC_SENTENCES),
+        ),
+    )
     db.commit()
     db.refresh(project)
     db.refresh(sdoc)
@@ -336,3 +353,48 @@ def assert_feature_disabled(response: _Response, feature: str) -> None:
     """The request was rejected because the feature is disabled in the project."""
     assert response.status_code == 403, response.text
     assert f"The feature '{feature}' is not enabled" in response.text
+
+
+class SentenceEmbeddingProject(TypedDict):
+    """
+    A project built by `create_sentence_embedding_project`:
+
+    - project: of the user, enabling only the given features (never semantic
+      search)
+    - text: text document "text.txt" with the text of `SDOC_SENTENCES`
+      ("Hello world." and "The cat sits on the mat.") and the language "en";
+      its core steps and text_sentence_embedding are finished; sentence 0 has
+      the sentence embedding [1, 0], sentence 1 [0, 1]
+
+    Non-obvious derived behavior:
+
+    - A query that CLIP embeds to [1, 0] finds sentence 0 with certainty 1.0
+      and sentence 1 with certainty 0.5.
+    """
+
+    project: ProjectORM
+    text: SourceDocumentORM
+
+
+def create_sentence_embedding_project(
+    db: Session, user: UserORM, *, title: str, features: list[str]
+) -> SentenceEmbeddingProject:
+    """The project described in `SentenceEmbeddingProject`."""
+    project = create_project_with_features(db, user, title=title, features=features)
+    text = _create_sdoc(
+        db,
+        project,
+        name="text.txt",
+        doctype=DocType.text,
+        status={**dict.fromkeys(minimal_text_steps(), 1), "text_sentence_embedding": 1},
+    )
+    crud_sentence_embedding.create_multi(
+        client=WeaviateRepo().get_client(),
+        project_id=project.id,
+        ids=[
+            SentenceObjectIdentifier(sdoc_id=text.id, sentence_id=i) for i in range(2)
+        ],
+        embeddings=[[1.0, 0.0], [0.0, 1.0]],
+    )
+    db.commit()
+    return {"project": project, "text": text}

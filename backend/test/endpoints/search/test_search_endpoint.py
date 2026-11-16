@@ -3245,13 +3245,17 @@ def _search_sdocs(client: TestClient, project_id: int, search_query: str):
 def test_search_sdocs_with_a_text_query_works_in_a_project_without_features(
     client: TestClient, featureless_project: FeaturelessProject
 ):
-    """The text query reaches Elasticsearch; the project's document is not
-    stored there, so it finds nothing."""
-    response = _search_sdocs(client, featureless_project["project"].id, "alpha")
+    """Full-text search is core: the text query finds the project's document
+    in Elasticsearch, a query of a word it lacks finds nothing."""
+    project_id = featureless_project["project"].id
 
-    assert response.status_code == 200, response.text
-    hits = PaginatedSDocHits.model_validate(response.json())
-    assert hits.hits == []
+    found = _search_sdocs(client, project_id, "cat")
+    missing = _search_sdocs(client, project_id, "alpha")
+
+    assert found.status_code == 200, found.text
+    hits = PaginatedSDocHits.model_validate(found.json())
+    assert [hit.id for hit in hits.hits] == [featureless_project["sdoc"].id]
+    assert PaginatedSDocHits.model_validate(missing.json()).hits == []
 
 
 def test_search_sdocs_without_a_text_query_works_in_a_project_without_features(

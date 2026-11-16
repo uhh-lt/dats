@@ -1,7 +1,12 @@
 import pytest
 
 from core.user.user_orm import UserORM
-from feature_test_utils import FeaturelessProject, create_featureless_project
+from feature_test_utils import (
+    FeaturelessProject,
+    SentenceEmbeddingProject,
+    create_featureless_project,
+    create_sentence_embedding_project,
+)
 
 
 @pytest.fixture(scope="function")
@@ -15,3 +20,14 @@ def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
       without features finished
     """
     return create_featureless_project(db_session, test_user)
+
+
+@pytest.fixture(scope="function")
+def sentence_embedding_project(
+    db_session, test_user: UserORM
+) -> SentenceEmbeddingProject:
+    """The project of `SentenceEmbeddingProject`, "RAG Only", which enables
+    only rag_chat (not semantic search)."""
+    return create_sentence_embedding_project(
+        db_session, test_user, title="RAG Only", features=["rag_chat"]
+    )

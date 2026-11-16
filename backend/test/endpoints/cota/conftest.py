@@ -4,8 +4,16 @@ import pytest
 
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
-from feature_test_utils import create_featureless_project
-from modules.concept_over_time_analysis.cota_dto import COTACreateIntern, COTARead
+from feature_test_utils import (
+    SentenceEmbeddingProject,
+    create_featureless_project,
+    create_sentence_embedding_project,
+)
+from modules.concept_over_time_analysis.cota_dto import (
+    COTAConcept,
+    COTACreateIntern,
+    COTARead,
+)
 from modules.concept_over_time_analysis.cota_service import COTAService
 
 
@@ -50,3 +58,30 @@ def featureless_project_with_cota(db_session, test_user: UserORM) -> ProjectWith
     )
     db_session.commit()
     return {"project": project, "cota": cota}
+
+
+@pytest.fixture(scope="function")
+def embedded_cota(
+    db_session, test_user: UserORM
+) -> tuple[SentenceEmbeddingProject, COTARead]:
+    """The project of `SentenceEmbeddingProject`, "COTA Only", which enables
+    only concepts over time (not semantic search), and its
+    ConceptOverTimeAnalysis "Embedded COTA" with default settings (search
+    space top 1000, threshold 0.8, no date metadata), an empty search space and
+    the two concepts "greeting" (id "c1") and "animal" (id "c2"), as the
+    refinement job reads it."""
+    project = create_sentence_embedding_project(
+        db_session, test_user, title="COTA Only", features=["concepts_over_time"]
+    )
+    cota = COTAService().create(
+        db=db_session,
+        cota_create=COTACreateIntern(
+            name="Embedded COTA", project_id=project["project"].id
+        ),
+    )
+    db_session.commit()
+    concepts = [
+        COTAConcept(id=i, name=n, description=n, color="#000000", visible=True)
+        for i, n in (("c1", "greeting"), ("c2", "animal"))
+    ]
+    return project, cota.model_copy(update={"concepts": concepts})

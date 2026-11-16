@@ -12,13 +12,15 @@ def test_auto_annotate_works_in_a_project_without_features(
     client: TestClient, featureless_project: FeaturelessProject
 ):
     """Search & Auto-Annotate is no feature: it needs only the core search
-    index. The document of the project is not stored in Elasticsearch, so the
-    query finds nothing."""
+    index, where it finds the word "cat" of the project's document."""
+    sdoc = featureless_project["sdoc"]
     response = client.post(
         "/search_annotate/auto_annotate",
-        params={"project_id": featureless_project["project"].id, "query": "alpha"},
+        params={"project_id": featureless_project["project"].id, "query": "cat"},
     )
 
     assert response.status_code == 200, response.text
     hits = PaginatedSpanAnnotationHits.model_validate(response.json())
-    assert (hits.total_results, hits.hits) == (0, [])
+    assert [(h.span_dto.sdoc_id, h.span_dto.span_text) for h in hits.hits] == [
+        (sdoc.id, "cat")
+    ]
