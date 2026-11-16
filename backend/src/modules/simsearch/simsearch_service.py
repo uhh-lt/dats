@@ -1,6 +1,7 @@
 import numpy as np
 from sqlalchemy.orm import Session
 
+from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
@@ -10,6 +11,7 @@ from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_utils import encode_image
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
+from modules.simsearch.simsearch_exceptions import QueryDocumentNotAnImageError
 from repos.ray.dto.clip import ClipTextEmbeddingInput
 from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -29,6 +31,8 @@ class SimSearchService(metaclass=SingletonMeta):
             sdoc = SourceDocumentRead.model_validate(
                 crud_sdoc.read(db=db, id=int(query))
             )
+            if sdoc.doctype != DocType.image:
+                raise QueryDocumentNotAnImageError(sdoc.id)
             return encode_image(sdoc)
         return self.ray.clip_text_embedding(
             ClipTextEmbeddingInput(text=[query])

@@ -31,6 +31,27 @@ def test_rag_session_is_rejected_when_rag_chat_is_disabled(
     assert_feature_disabled(response, "rag_chat")
 
 
+def test_rag_session_rejects_a_list_query(client: TestClient, test_project):
+    """`test_project` enables RAG chat; a list of texts is no query (one text or
+    the id of an image), so the body validation rejects it: 422 for the `query`
+    of the body, before any LLM call."""
+    response = client.post(
+        "/rag/rag_session",
+        params={
+            "project_id": test_project.id,
+            "top_k": 10,
+            "threshold": 0.5,
+            "model": "default",
+        },
+        json={"query": ["alpha", "beta"], "sdoc_ids": []},
+    )
+
+    assert response.status_code == 422, response.text
+    locations = [error["loc"] for error in response.json()["detail"]]
+    assert locations, response.text
+    assert all(loc[:2] == ["body", "query"] for loc in locations), locations
+
+
 # ===========================================================================
 # FEATURE DECLARATION (rag_feature.py)
 # ===========================================================================
