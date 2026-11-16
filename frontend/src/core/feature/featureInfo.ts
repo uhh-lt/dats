@@ -8,16 +8,9 @@ export interface FeatureInfo {
   description: string;
 }
 
-const reportedMissing = new Set<string>();
-
-/** The feature of this name in the backend list; logs once if the loaded list lacks it. */
+/** The feature of this name in the backend list (a missing name is reported when the list loads). */
 function findFeature(features: readonly FeatureRead[] | undefined, feature: string): FeatureRead | undefined {
-  const found = features?.find((f) => f.feature === feature);
-  if (features !== undefined && found === undefined && !reportedMissing.has(feature)) {
-    reportedMissing.add(feature);
-    console.error(`The backend does not list the feature '${feature}' (GET /feature).`);
-  }
-  return found;
+  return features?.find((f) => f.feature === feature);
 }
 
 function toInfo(found: FeatureRead | undefined, feature: string): FeatureInfo {

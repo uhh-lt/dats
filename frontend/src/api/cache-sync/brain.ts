@@ -325,6 +325,8 @@ export function handleDATSEvent(event: DATSEvent, source: DATSEventSource): void
       replaceListItem(projectQueries.userProjects().queryKey, event.payload);
       // enabling or disabling features changes their state
       queryClient.invalidateQueries({ queryKey: projectQueries.features(event.payload.id).queryKey });
+      // enabling a feature creates the system codes of its artefacts (the set up), which send no code events
+      queryClient.invalidateQueries({ queryKey: codeQueries.byProject(event.payload.id).queryKey });
       break;
     case "PROJECT_DELETED":
       removeListItem(projectQueries.userProjects().queryKey, event.payload.id);

@@ -33,7 +33,7 @@ export function ProjectCreationDialog() {
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
-  // all toggleable features; a new project enables all of them by default ("Everything")
+  // all toggleable features; a new project enables those that declare default_enabled
   const features = useQuery(featureQueries.list());
 
   // form
@@ -183,8 +183,8 @@ export function ProjectCreationDialog() {
             {features.isLoading && <Typography color="text.secondary">Loading features...</Typography>}
             {features.isError && (
               <Typography color="error">
-                The features could not be loaded. The project enables all features; you can change them later in the
-                project settings.
+                The features could not be loaded. The project enables the default features; you can change them later in
+                the project settings.
               </Typography>
             )}
           </Stack>
