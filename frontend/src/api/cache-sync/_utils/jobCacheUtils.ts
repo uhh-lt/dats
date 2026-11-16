@@ -16,9 +16,9 @@ import { documentUploadQueries } from "@features/document-upload/api/documentUpl
 import { duplicateFinderQueries } from "@features/duplicate-finder/api/duplicateFinderQueries";
 import { experimentQueries } from "@features/experiment-studio/api/experimentQueries";
 import { llmAssistantQueries } from "@features/llm-assistant/api/llmAssistantQueries";
-import { mlAutomationQueries } from "@features/ml-automation/api/mlAutomationQueries";
 import { perspectivesQueries } from "@features/perspectives/api/perspectivesQueries";
 import { importQueries } from "@features/project-settings/api/importQueries";
+import { tagRecommendationQueries } from "@features/tag-recommendations/api/tagRecommendationQueries";
 import { timelineAnalysisQueries } from "@features/timeline-analysis/api/timelineAnalysisQueries";
 import { whiteboardQueries } from "@features/whiteboard/api/whiteboardQueries";
 import type { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
@@ -38,6 +38,7 @@ import type { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { MlJobRead } from "@models/MlJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
 import { TaskType } from "@models/TaskType";
 import type { DataTag } from "@tanstack/react-query";
 
@@ -69,7 +70,10 @@ export function handleJobUpdate(job: JobRead): void {
       handleExperimentRunJobUpdate(job);
       break;
     case MlJobRead.job_type.ML:
-      upsertJob(job, mlAutomationQueries.job);
+      // no page lists the ML jobs anymore; the case goes with the job type
+      break;
+    case TagRecommendationJobRead.job_type.TAG_RECOMMENDATION:
+      upsertJob(job, tagRecommendationQueries.job);
       break;
     case ClassifierJobRead.job_type.CLASSIFIER:
       upsertJob(job, classifierQueries.job);

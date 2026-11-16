@@ -12,6 +12,7 @@ import type { ImportJobRead } from "./ImportJobRead";
 import type { LlmAssistantJobRead } from "./LlmAssistantJobRead";
 import type { MlJobRead } from "./MlJobRead";
 import type { PerspectivesJobRead } from "./PerspectivesJobRead";
+import type { TagRecommendationJobRead } from "./TagRecommendationJobRead";
 export type JobUpdatedEvent = {
   type?: string;
   payload:
@@ -24,5 +25,6 @@ export type JobUpdatedEvent = {
     | ExportJobRead
     | ImportJobRead
     | MlJobRead
-    | PerspectivesJobRead;
+    | PerspectivesJobRead
+    | TagRecommendationJobRead;
 };

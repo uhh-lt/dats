@@ -2,8 +2,10 @@ import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { TagHooks } from "@core/tag";
 import { TagRead } from "@models/TagRead";
+import { TagRecommendationMethod } from "@models/TagRecommendationMethod";
 import { TagRecommendationResult } from "@models/TagRecommendationResult";
 import { useQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import { TagRecommendationHooks } from "../../api/tagRecommendationHooks";
 import { tagRecommendationQueries } from "../../api/tagRecommendationQueries";
 // TODO: This feature needs its own components or rework in general
@@ -16,34 +18,81 @@ import {
   Card,
   CardContent,
   FormControl,
+  FormControlLabel,
   InputLabel,
   ListItemText,
   MenuItem,
   Select,
   SelectChangeEvent,
   Stack,
+  Switch,
   Toolbar,
 } from "@mui/material";
 import { useCallback, useState } from "react";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/tag-recommendations");
+
 export function TagRecommendationsView() {
+  const { projectId } = routeApi.useParams();
+
   // local state
   const [selectedJobId, setSelectedJobId] = useState<string>("-1");
+  const [method, setMethod] = useState<TagRecommendationMethod>(TagRecommendationMethod.KNN);
+  const [multiClass, setMultiClass] = useState(false);
 
   // global server state
   const documentTags = TagHooks.useGetAllTags();
-  const tagRecommendationMlJobs = TagRecommendationHooks.useGetAllTagRecommendationJobs();
+  const tagRecommendationJobs = useQuery(tagRecommendationQueries.job.byProject(projectId));
   const recommendations = useQuery(tagRecommendationQueries.byJob(selectedJobId === "-1" ? null : selectedJobId));
+  const startJob = TagRecommendationHooks.useStartTagRecommendationJob();
 
   // event handlers
   const handleChange = (event: SelectChangeEvent<string>) => {
     setSelectedJobId(event.target.value);
   };
+  const handleMethodChange = (event: SelectChangeEvent<TagRecommendationMethod>) => {
+    const selected = Object.values(TagRecommendationMethod).find((value) => value === event.target.value);
+    if (selected) setMethod(selected);
+  };
+  const handleStart = () => {
+    startJob.mutate(
+      { requestBody: { project_id: projectId, method, multi_class: multiClass } },
+      { onSuccess: (job) => setSelectedJobId(job.job_id) },
+    );
+  };
 
   return (
     <ContentContainerLayout>
       <Card className="myFlexContainer h100">
-        <Toolbar>
+        <Toolbar sx={{ gap: 2 }}>
+          <FormControl size="small">
+            <InputLabel id="tag-recommendation-method-label">Method</InputLabel>
+            <Select
+              labelId="tag-recommendation-method-label"
+              label="Method"
+              value={method}
+              onChange={handleMethodChange}
+            >
+              {Object.values(TagRecommendationMethod).map((value) => (
+                <MenuItem key={value} value={value}>
+                  {value}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControlLabel
+            control={<Switch checked={multiClass} onChange={(event) => setMultiClass(event.target.checked)} />}
+            label="Multiple tags per document"
+          />
+          <Button
+            variant="contained"
+            startIcon={getIconComponent(Icon.TAG_RECOMMENDATION)}
+            onClick={handleStart}
+            loading={startJob.isPending}
+            loadingPosition="start"
+          >
+            Recommend tags
+          </Button>
           <FormControl>
             <InputLabel id="ml-job-select-label">Job Selection</InputLabel>
             <Select
@@ -57,9 +106,9 @@ export function TagRecommendationsView() {
               <MenuItem key={"-1"} value={"-1"}>
                 <ListItemText>Select a recommendation job</ListItemText>
               </MenuItem>
-              {tagRecommendationMlJobs.data?.map((mlJob) => (
-                <MenuItem key={mlJob.job_id} value={mlJob.job_id}>
-                  <ListItemText>{mlJob.job_id}</ListItemText>
+              {tagRecommendationJobs.data?.map((job) => (
+                <MenuItem key={job.job_id} value={job.job_id}>
+                  <ListItemText primary={new Date(job.created).toLocaleString()} secondary={job.status} />
                 </MenuItem>
               ))}
             </Select>

@@ -2822,6 +2822,133 @@
         }
       }
     },
+    "/job/tag_recommendation": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start TagRecommendation job",
+        "operationId": "start_tag_recommendation_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/tag_recommendation/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get TagRecommendation job",
+        "operationId": "get_tag_recommendation_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRecommendationJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/tag_recommendation/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort TagRecommendation job",
+        "operationId": "abort_tag_recommendation_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Abort Tag Recommendation Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/tag_recommendation/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry TagRecommendation job",
+        "operationId": "retry_tag_recommendation_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Retry Tag Recommendation Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/tag_recommendation/project/{project_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all TagRecommendation jobs by project",
+        "operationId": "get_tag_recommendation_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRecommendationJobRead" },
+                  "title": "Response Job-Get Tag Recommendation Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/llm_assistant/count_existing_assistant_annotations": {
       "post": {
         "tags": ["llm_assistant"],
@@ -7115,40 +7242,6 @@
                   "type": "object",
                   "additionalProperties": { "type": "integer" },
                   "title": "Response Tag-Count Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/tagrecommendation/{project_id}": {
-      "get": {
-        "tags": ["TagRecommendation"],
-        "summary": "Retrieve all finished tag recommendation MLJobs.",
-        "operationId": "get_all_tagrecommendation_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Tagrecommendation-Get All Tagrecommendation Jobs"
                 }
               }
             }
@@ -12548,37 +12641,6 @@
         "enum": ["umap", "pca", "tsne"],
         "title": "DimensionalityReductionAlgorithm"
       },
-      "DocTagRecommendationParams": {
-        "properties": {
-          "ml_job_type": {
-            "type": "string",
-            "const": "TAG_RECOMMENDATION",
-            "title": "Ml Job Type",
-            "description": "The type of the MLJob"
-          },
-          "multi_class": {
-            "type": "boolean",
-            "title": "Multi Class",
-            "description": "Tags are mutually exclusive if `False`",
-            "default": false
-          },
-          "tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Tag Ids",
-            "description": "Tags to consider. If empty, all tags applied to any document are considered.",
-            "default": []
-          },
-          "method": {
-            "$ref": "#/components/schemas/TagRecommendationMethod",
-            "description": "Method to use for suggestions",
-            "default": "KNN"
-          }
-        },
-        "type": "object",
-        "required": ["ml_job_type"],
-        "title": "DocTagRecommendationParams"
-      },
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
       "DocumentUnit": {
         "type": "string",
@@ -14528,7 +14590,8 @@
               { "$ref": "#/components/schemas/ExportJobRead" },
               { "$ref": "#/components/schemas/ImportJobRead" },
               { "$ref": "#/components/schemas/MlJobRead" },
-              { "$ref": "#/components/schemas/PerspectivesJobRead" }
+              { "$ref": "#/components/schemas/PerspectivesJobRead" },
+              { "$ref": "#/components/schemas/TagRecommendationJobRead" }
             ],
             "title": "Payload"
           }
@@ -14700,15 +14763,13 @@
               {
                 "oneOf": [
                   { "$ref": "#/components/schemas/QuotationAttributionParams" },
-                  { "$ref": "#/components/schemas/DocTagRecommendationParams" },
                   { "$ref": "#/components/schemas/CoreferenceResolutionParams" }
                 ],
                 "discriminator": {
                   "propertyName": "ml_job_type",
                   "mapping": {
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
-                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
-                    "TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams"
+                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
                   }
                 }
               },
@@ -14724,7 +14785,7 @@
       },
       "MLJobType": {
         "type": "string",
-        "enum": ["QUOTATION_ATTRIBUTION", "TAG_RECOMMENDATION", "COREFERENCE_RESOLUTION"],
+        "enum": ["QUOTATION_ATTRIBUTION", "COREFERENCE_RESOLUTION"],
         "title": "MLJobType"
       },
       "MemoColumns": {
@@ -19422,6 +19483,86 @@
         "type": "object",
         "required": ["name", "color", "id", "project_id", "created", "updated", "memo_ids"],
         "title": "TagRead"
+      },
+      "TagRecommendationJobInput": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to recommend tags in"
+          },
+          "multi_class": {
+            "type": "boolean",
+            "title": "Multi Class",
+            "description": "Tags are mutually exclusive if `False`",
+            "default": false
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "Tags to consider. If empty, all tags applied to any document are considered.",
+            "default": []
+          },
+          "method": {
+            "$ref": "#/components/schemas/TagRecommendationMethod",
+            "description": "Method to use for suggestions",
+            "default": "KNN"
+          }
+        },
+        "type": "object",
+        "required": ["project_id"],
+        "title": "TagRecommendationJobInput"
+      },
+      "TagRecommendationJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": {
+            "type": "string",
+            "enum": ["tag_recommendation"],
+            "const": "tag_recommendation",
+            "title": "Job Type",
+            "description": "Type of the job"
+          },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/TagRecommendationJobInput", "description": "Input for the job" },
+          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
+          }
+        },
+        "type": "object",
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
+        "title": "TagRecommendationJobRead"
       },
       "TagRecommendationLinkRead": {
         "properties": {

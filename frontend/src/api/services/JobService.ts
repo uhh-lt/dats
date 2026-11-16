@@ -10,6 +10,8 @@ import type { ExportJobInput } from "@models/ExportJobInput";
 import type { ExportJobRead } from "@models/ExportJobRead";
 import type { MLJobInput } from "@models/MLJobInput";
 import type { MlJobRead } from "@models/MlJobRead";
+import type { TagRecommendationJobInput } from "@models/TagRecommendationJobInput";
+import type { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -248,6 +250,98 @@ export class JobService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/job/ml/project/{project_id}",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Start TagRecommendation job
+   * @returns TagRecommendationJobRead Successful Response
+   * @throws ApiError
+   */
+  public static startTagRecommendationJob({
+    requestBody,
+  }: {
+    requestBody: TagRecommendationJobInput;
+  }): CancelablePromise<TagRecommendationJobRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/tag_recommendation",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get TagRecommendation job
+   * @returns TagRecommendationJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getTagRecommendationJobById({ jobId }: { jobId: string }): CancelablePromise<TagRecommendationJobRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/tag_recommendation/{job_id}",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Abort TagRecommendation job
+   * @returns boolean Successful Response
+   * @throws ApiError
+   */
+  public static abortTagRecommendationJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/tag_recommendation/{job_id}/abort",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Retry TagRecommendation job
+   * @returns boolean Successful Response
+   * @throws ApiError
+   */
+  public static retryTagRecommendationJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/tag_recommendation/{job_id}/retry",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get all TagRecommendation jobs by project
+   * @returns TagRecommendationJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getTagRecommendationJobsByProject({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<TagRecommendationJobRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/tag_recommendation/project/{project_id}",
       path: {
         project_id: projectId,
       },

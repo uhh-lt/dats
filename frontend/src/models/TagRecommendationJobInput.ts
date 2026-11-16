@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TagRecommendationMethod } from "./TagRecommendationMethod";
-export type DocTagRecommendationParams = {
+export type TagRecommendationJobInput = {
   /**
-   * The type of the MLJob
+   * The ID of the Project to recommend tags in
    */
-  ml_job_type: string;
+  project_id: number;
   /**
    * Tags are mutually exclusive if `False`
    */

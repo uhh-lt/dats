@@ -29,7 +29,6 @@ import { Route as AuthProjectProjectIdExperimentsIndexRouteImport } from './rout
 import { Route as AuthProjectProjectIdAnnotationIndexRouteImport } from './routes/_auth/project/$projectId/annotation/index'
 import { Route as AuthProjectProjectIdAnalysisIndexRouteImport } from './routes/_auth/project/$projectId/analysis/index'
 import { Route as AuthProjectProjectIdWhiteboardWhiteboardIdRouteImport } from './routes/_auth/project/$projectId/whiteboard/$whiteboardId'
-import { Route as AuthProjectProjectIdToolsMlAutomationRouteImport } from './routes/_auth/project/$projectId/tools/ml-automation'
 import { Route as AuthProjectProjectIdToolsHealthRouteImport } from './routes/_auth/project/$projectId/tools/health'
 import { Route as AuthProjectProjectIdToolsDuplicateFinderRouteImport } from './routes/_auth/project/$projectId/tools/duplicate-finder'
 import { Route as AuthProjectProjectIdToolsDocumentSamplerRouteImport } from './routes/_auth/project/$projectId/tools/document-sampler'
@@ -161,12 +160,6 @@ const AuthProjectProjectIdWhiteboardWhiteboardIdRoute =
   AuthProjectProjectIdWhiteboardWhiteboardIdRouteImport.update({
     id: '/whiteboard/$whiteboardId',
     path: '/whiteboard/$whiteboardId',
-    getParentRoute: () => AuthProjectProjectIdRouteRoute,
-  } as any)
-const AuthProjectProjectIdToolsMlAutomationRoute =
-  AuthProjectProjectIdToolsMlAutomationRouteImport.update({
-    id: '/tools/ml-automation',
-    path: '/tools/ml-automation',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
 const AuthProjectProjectIdToolsHealthRoute =
@@ -326,7 +319,6 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
-  '/project/$projectId/tools/ml-automation': typeof AuthProjectProjectIdToolsMlAutomationRoute
   '/project/$projectId/whiteboard/$whiteboardId': typeof AuthProjectProjectIdWhiteboardWhiteboardIdRoute
   '/project/$projectId/analysis/': typeof AuthProjectProjectIdAnalysisIndexRoute
   '/project/$projectId/annotation/': typeof AuthProjectProjectIdAnnotationIndexRoute
@@ -366,7 +358,6 @@ export interface FileRoutesByTo {
   '/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
-  '/project/$projectId/tools/ml-automation': typeof AuthProjectProjectIdToolsMlAutomationRoute
   '/project/$projectId/whiteboard/$whiteboardId': typeof AuthProjectProjectIdWhiteboardWhiteboardIdRoute
   '/project/$projectId/analysis': typeof AuthProjectProjectIdAnalysisIndexRoute
   '/project/$projectId/annotation': typeof AuthProjectProjectIdAnnotationIndexRoute
@@ -411,7 +402,6 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/_auth/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/_auth/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
-  '/_auth/project/$projectId/tools/ml-automation': typeof AuthProjectProjectIdToolsMlAutomationRoute
   '/_auth/project/$projectId/whiteboard/$whiteboardId': typeof AuthProjectProjectIdWhiteboardWhiteboardIdRoute
   '/_auth/project/$projectId/analysis/': typeof AuthProjectProjectIdAnalysisIndexRoute
   '/_auth/project/$projectId/annotation/': typeof AuthProjectProjectIdAnnotationIndexRoute
@@ -455,7 +445,6 @@ export interface FileRouteTypes {
     | '/project/$projectId/tools/document-sampler'
     | '/project/$projectId/tools/duplicate-finder'
     | '/project/$projectId/tools/health'
-    | '/project/$projectId/tools/ml-automation'
     | '/project/$projectId/whiteboard/$whiteboardId'
     | '/project/$projectId/analysis/'
     | '/project/$projectId/annotation/'
@@ -495,7 +484,6 @@ export interface FileRouteTypes {
     | '/project/$projectId/tools/document-sampler'
     | '/project/$projectId/tools/duplicate-finder'
     | '/project/$projectId/tools/health'
-    | '/project/$projectId/tools/ml-automation'
     | '/project/$projectId/whiteboard/$whiteboardId'
     | '/project/$projectId/analysis'
     | '/project/$projectId/annotation'
@@ -539,7 +527,6 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/tools/document-sampler'
     | '/_auth/project/$projectId/tools/duplicate-finder'
     | '/_auth/project/$projectId/tools/health'
-    | '/_auth/project/$projectId/tools/ml-automation'
     | '/_auth/project/$projectId/whiteboard/$whiteboardId'
     | '/_auth/project/$projectId/analysis/'
     | '/_auth/project/$projectId/annotation/'
@@ -699,13 +686,6 @@ declare module '@tanstack/react-router' {
       path: '/whiteboard/$whiteboardId'
       fullPath: '/project/$projectId/whiteboard/$whiteboardId'
       preLoaderRoute: typeof AuthProjectProjectIdWhiteboardWhiteboardIdRouteImport
-      parentRoute: typeof AuthProjectProjectIdRouteRoute
-    }
-    '/_auth/project/$projectId/tools/ml-automation': {
-      id: '/_auth/project/$projectId/tools/ml-automation'
-      path: '/tools/ml-automation'
-      fullPath: '/project/$projectId/tools/ml-automation'
-      preLoaderRoute: typeof AuthProjectProjectIdToolsMlAutomationRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
     '/_auth/project/$projectId/tools/health': {
@@ -916,7 +896,6 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdToolsDocumentSamplerRoute: typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   AuthProjectProjectIdToolsDuplicateFinderRoute: typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   AuthProjectProjectIdToolsHealthRoute: typeof AuthProjectProjectIdToolsHealthRoute
-  AuthProjectProjectIdToolsMlAutomationRoute: typeof AuthProjectProjectIdToolsMlAutomationRoute
   AuthProjectProjectIdWhiteboardWhiteboardIdRoute: typeof AuthProjectProjectIdWhiteboardWhiteboardIdRoute
   AuthProjectProjectIdAnalysisIndexRoute: typeof AuthProjectProjectIdAnalysisIndexRoute
   AuthProjectProjectIdAnnotationIndexRoute: typeof AuthProjectProjectIdAnnotationIndexRoute
@@ -966,8 +945,6 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
     AuthProjectProjectIdToolsDuplicateFinderRoute:
       AuthProjectProjectIdToolsDuplicateFinderRoute,
     AuthProjectProjectIdToolsHealthRoute: AuthProjectProjectIdToolsHealthRoute,
-    AuthProjectProjectIdToolsMlAutomationRoute:
-      AuthProjectProjectIdToolsMlAutomationRoute,
     AuthProjectProjectIdWhiteboardWhiteboardIdRoute:
       AuthProjectProjectIdWhiteboardWhiteboardIdRoute,
     AuthProjectProjectIdAnalysisIndexRoute:

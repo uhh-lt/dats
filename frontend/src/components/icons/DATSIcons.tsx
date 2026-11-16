@@ -106,7 +106,6 @@ export enum Icon {
   CRAWLER_JOB = "crawler_job",
   PREPROCESSING_JOB = "preprocessing_job",
   LLM_ASSISTANT_JOB = "llm_assistant_job",
-  ML_JOB = "ml_job",
   EXPORT_JOB = "export_job",
 
   // Job status
@@ -152,7 +151,6 @@ export enum Icon {
   TOOLS = "tools",
   DUPLICATE_FINDER = "duplicate_finder",
   DOCUMENT_SAMPLER = "document_sampler",
-  ML_AUTOMATION = "ml_automation",
 
   // Whiteboard
   WHITEBOARD = "whiteboard",
@@ -255,7 +253,6 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.CRAWLER_JOB]: (iconProps) => <SearchIcon {...iconProps} />,
   [Icon.PREPROCESSING_JOB]: (iconProps) => <TuneIcon {...iconProps} />,
   [Icon.LLM_ASSISTANT_JOB]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
-  [Icon.ML_JOB]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
   [Icon.EXPORT_JOB]: (iconProps) => <SaveAltIcon {...iconProps} />,
 
   // Job status
@@ -301,7 +298,6 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.TOOLS]: (iconProps) => <TuneIcon {...iconProps} />,
   [Icon.DUPLICATE_FINDER]: (iconProps) => <FileCopyIcon {...iconProps} />,
   [Icon.DOCUMENT_SAMPLER]: (iconProps) => <StackedBarChartIcon {...iconProps} />,
-  [Icon.ML_AUTOMATION]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
 
   // Whiteboard
   [Icon.WHITEBOARD]: (iconProps) => <AccountTreeIcon {...iconProps} />,

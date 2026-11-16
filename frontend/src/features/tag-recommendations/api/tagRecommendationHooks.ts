@@ -1,6 +1,7 @@
+import { JobService } from "@api/services/JobService";
 import { TagRecommendationService } from "@api/services/TagRecommendationService";
-import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
+import { useMutation } from "@tanstack/react-query";
 import { tagRecommendationQueries } from "./tagRecommendationQueries";
 
 // TAG RECOMMENDATION QUERIES live in tagRecommendationQueries (used with `useQuery` directly).
@@ -16,12 +17,17 @@ const useReviewTagRecommendations = () =>
     },
   });
 
-const useGetAllTagRecommendationJobs = () => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  return useQuery(tagRecommendationQueries.jobsByProject(projectId));
-};
+const useStartTagRecommendationJob = () =>
+  useMutation({
+    mutationKey: [...tagRecommendationQueries.job.all(), "start"],
+    mutationFn: JobService.startTagRecommendationJob,
+    meta: {
+      datsEvent: "JOB_UPDATED",
+      successMessage: (data: TagRecommendationJobRead) => `Started the tag recommendation (job ${data.job_id})`,
+    },
+  });
 
 export const TagRecommendationHooks = {
   useReviewTagRecommendations,
-  useGetAllTagRecommendationJobs,
+  useStartTagRecommendationJob,
 };

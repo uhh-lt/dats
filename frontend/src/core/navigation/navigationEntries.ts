@@ -247,17 +247,6 @@ export const NAVIGATION_ENTRIES = [
 
   // Tools (sidebar tools menu)
   {
-    id: "ml-automation",
-    group: "tools",
-    title: "ML Automation",
-    to: "/project/$projectId/tools/ml-automation",
-    shortcut: { after: "h", key: "m" },
-    command: {
-      description: "Configure and run ML automation tasks",
-      keywords: ["machine learning", "automation", "ai", "ml"],
-    },
-  },
-  {
     id: "duplicate-finder",
     group: "tools",
     to: "/project/$projectId/tools/duplicate-finder",
