@@ -45,6 +45,7 @@ _TEXT_STEPS = [
     "text_ner",
     "text_spacy",
     "coreference_resolution",
+    "quotation_detection",
     "text_html_mapping",
     "text_sentence_embedding",
     "text_word_frequency",
