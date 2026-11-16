@@ -257,3 +257,56 @@ def test_tag_recommendation_job_without_a_tagged_document_recommends_nothing(
     )
 
     assert recommendations == {}
+
+
+def test_knn_with_tag_ids_classifies_every_document_without_these_tags(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    tag_recommendation_job_project: TagRecommendationJobProject,
+):
+    """With the tag ids [sports], KNN classifies the documents that do not carry
+    sports, untagged ones included: the documents with an embedding all get
+    sports, the only tag."""
+    p = tag_recommendation_job_project
+
+    recommendations = _run_job(
+        client,
+        held_jobs,
+        TagRecommendationJobInput(
+            project_id=p["project"].id,
+            method=TagRecommendationMethod.KNN,
+            tag_ids=[p["sports"].id],
+        ),
+    )
+
+    assert recommendations == {
+        p["politics_tagged"].id: [p["sports"].id],
+        p["sports_untagged"].id: [p["sports"].id],
+        p["politics_untagged"].id: [p["sports"].id],
+    }
+
+
+def test_exclusive_keeps_a_tag_only_where_its_documents_are_nearest(
+    client: TestClient,
+    held_jobs: HeldJobs,
+    tag_recommendation_job_project: TagRecommendationJobProject,
+):
+    """EXCLUSIVE with several tags per document: a tag is recommended only for
+    documents whose nearest tagged document carries it, so each untagged
+    document gets the one tag of its topic, not both."""
+    p = tag_recommendation_job_project
+
+    recommendations = _run_job(
+        client,
+        held_jobs,
+        TagRecommendationJobInput(
+            project_id=p["project"].id,
+            method=TagRecommendationMethod.EXCLUSIVE,
+            multi_class=True,
+        ),
+    )
+
+    assert recommendations == {
+        p["sports_untagged"].id: [p["sports"].id],
+        p["politics_untagged"].id: [p["politics"].id],
+    }

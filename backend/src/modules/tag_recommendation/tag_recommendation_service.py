@@ -18,10 +18,12 @@ from modules.tag_recommendation.tag_recommendation_crud import (
 )
 from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkCreate,
+    TagRecommendationResult,
 )
 from modules.tag_recommendation.tag_recommendation_enum import (
     TagRecommendationMethod,
 )
+from modules.tag_recommendation.tag_recommendation_orm import TagRecommendationLinkORM
 from repos.vector.weaviate_exceptions import WeaviateObjectUUIDNotFoundException
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -121,6 +123,26 @@ class TagRecommendationService(metaclass=SingletonMeta):
         # Insert all generated tag recommendation DTOs into the database at once.
         crud_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
 
+    def group_by_document(
+        self, *, db: Session, links: list[TagRecommendationLinkORM]
+    ) -> list[TagRecommendationResult]:
+        """The recommendations grouped by document, with each document's
+        current tags, in the order the documents first appear."""
+        by_sdoc: dict[int, list[TagRecommendationLinkORM]] = {}
+        for link in links:
+            by_sdoc.setdefault(link.source_document_id, []).append(link)
+        current_tags = crud_tag.read_tags_for_documents(db=db, sdoc_ids=list(by_sdoc))
+        return [
+            TagRecommendationResult(
+                sdoc_id=sdoc_id,
+                recommendation_ids=[link.id for link in sdoc_links],
+                current_tag_ids=[tag.id for tag in current_tags.get(sdoc_id, [])],
+                suggested_tag_ids=[link.predicted_tag_id for link in sdoc_links],
+                scores=[link.prediction_score or 0.0 for link in sdoc_links],
+            )
+            for sdoc_id, sdoc_links in by_sdoc.items()
+        ]
+
     def __suggest_similar_documents(
         self,
         client: WeaviateClient,
@@ -156,33 +178,25 @@ class TagRecommendationService(metaclass=SingletonMeta):
                 hits, key=lambda x: (x.sdoc_id, x.compared_sdoc_id)
             )
         if len(neg_sdoc_ids) > 0:
-            candidates = {h.sdoc_id for h in hits}
-
-            # suggest
-            nearest: list[SimSearchDocumentHit] = []
-            for sdoc_id in candidates:
-                search_result = self._search_near_sdoc(
-                    client=client, project_id=project_id, sdoc_id=sdoc_id, k=1
+            # keep a candidate only if its nearest labelled document is a
+            # positive example
+            nearest_labelled: dict[int, int | None] = {}
+            for candidate in {h.sdoc_id for h in hits}:
+                nearest = self._search_near_sdoc(
+                    client=client,
+                    project_id=project_id,
+                    sdoc_id=candidate,
+                    k=1,
+                    sdoc_ids=list(marked_sdoc_ids),
                 )
-                nearest.extend(
-                    [
-                        SimSearchDocumentHit(
-                            sdoc_id=r.id.sdoc_id,
-                            compared_sdoc_id=sdoc_id,
-                            score=r.score,
-                        )
-                        for r in search_result
-                    ]
-                )
-
-            results = []
-            for hit, near in zip(hits, nearest):
-                if near.sdoc_id not in neg_sdoc_ids:
-                    results.append(hit)
+                nearest_labelled[candidate] = nearest[0].id.sdoc_id if nearest else None
+            results = [
+                h for h in hits if nearest_labelled.get(h.sdoc_id) not in neg_sdoc_ids
+            ]
         else:
             results = hits
         results.sort(key=lambda x: x.score, reverse=True)
-        return hits
+        return results
 
     def _search_near_sdoc(
         self,
@@ -276,7 +290,7 @@ class TagRecommendationService(metaclass=SingletonMeta):
     ) -> Iterator[TagRecommendationLinkCreate]:
         """create suggestions using k-nearest neighbors"""
         sdocs_without_tags = crud_sdoc.read_all_without_tags(
-            db=db, project_id=project_id, tag_ids=tag_ids
+            db=db, project_id=project_id, tag_ids=tag_ids or None
         )
         sdoc_ids_to_classify = [sdoc.id for sdoc in sdocs_without_tags]
 

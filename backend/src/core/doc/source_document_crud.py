@@ -168,17 +168,18 @@ class CRUDSourceDocument(
         return query.first()
 
     def read_all_without_tags(
-        self, db: Session, *, project_id: int, tag_ids: list[int] = []
+        self, db: Session, *, project_id: int, tag_ids: list[int] | None
     ) -> list[SourceDocumentORM]:
+        """The documents of the project that carry none of the tags, or no tag
+        at all if `tag_ids` is None."""
+        has_tag = (
+            SourceDocumentORM.tags.any()
+            if tag_ids is None
+            else SourceDocumentORM.tags.any(TagORM.id.in_(tag_ids))
+        )
         return (
             db.query(SourceDocumentORM)
-            .filter(SourceDocumentORM.project_id == project_id)
-            .outerjoin(SourceDocumentORM.tags)
-            .filter(
-                SourceDocumentORM.tags == None  # noqa: E711
-                if len(tag_ids) == 0
-                else TagORM.id.notin_(tag_ids)
-            )
+            .filter(SourceDocumentORM.project_id == project_id, ~has_tag)
             .all()
         )
 

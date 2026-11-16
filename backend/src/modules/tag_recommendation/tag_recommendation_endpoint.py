@@ -5,7 +5,6 @@ from common.crud_enum import Crud
 from common.dats_event import DATSEvent
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.tag.tag_crud import crud_tag
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
@@ -15,8 +14,8 @@ from modules.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationResult,
 )
 from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
-from modules.tag_recommendation.tag_recommendation_orm import (
-    TagRecommendationLinkORM,
+from modules.tag_recommendation.tag_recommendation_service import (
+    TagRecommendationService,
 )
 from systems.feature_system.feature_service import FeatureService
 from systems.websocket_system.websocket_dependency import WebsocketEmitter
@@ -53,33 +52,7 @@ def get_all_tagrecommendations_from_job(
         db=db, project_id=project_id, feature=TAG_RECOMMENDATION
     )
 
-    sdoc2recommendations: dict[int, list[TagRecommendationLinkORM]] = {}
-    for recommendation in recommendations:
-        sdoc2recommendations.setdefault(recommendation.source_document_id, []).append(
-            recommendation
-        )
-
-    affected_sdoc_ids = list(sdoc2recommendations.keys())
-    sdoc2tags = crud_tag.read_tags_for_documents(db=db, sdoc_ids=affected_sdoc_ids)
-
-    results = [
-        TagRecommendationResult(
-            sdoc_id=sdoc_id,
-            recommendation_ids=[
-                recommendation.id for recommendation in recommendations
-            ],
-            current_tag_ids=[tag.id for tag in sdoc2tags.get(sdoc_id, [])],
-            suggested_tag_ids=[
-                recommendation.predicted_tag_id for recommendation in recommendations
-            ],
-            scores=[
-                recommendation.prediction_score or 0.0
-                for recommendation in recommendations
-            ],
-        )
-        for sdoc_id, recommendations in sdoc2recommendations.items()
-    ]
-    return results
+    return TagRecommendationService().group_by_document(db=db, links=recommendations)
 
 
 # --- update operations
