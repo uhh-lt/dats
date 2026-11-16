@@ -149,7 +149,7 @@ def tag_recommendation_project(
 def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
     """
     This fixture sets up the following project, in addition to `test_project`
-    (which enables all features):
+    (which enables the features that are on by default):
 
     - project: "Featureless Project" of `test_user`, without any enabled feature
     - sdoc: text document "text_done.txt" in it, with the steps of a project

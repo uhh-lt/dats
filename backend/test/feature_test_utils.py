@@ -72,7 +72,8 @@ def minimal_image_steps() -> list[str]:
 class FeatureProject(TypedDict):
     """
     This fixture sets up the following project, in addition to `test_project`
-    (which enables all features and has no documents):
+    (which enables the features that are on by default and has no
+    documents):
 
     - project: "Feature Project" of `test_user`, without any enabled feature
     Every text document has the text of `SDOC_SENTENCES` ("Hello world." and

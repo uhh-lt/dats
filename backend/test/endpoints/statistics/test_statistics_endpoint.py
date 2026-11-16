@@ -22,7 +22,8 @@ def test_keyword_statistics_are_rejected_when_the_feature_is_disabled(
 def test_keyword_statistics_of_a_project_with_the_feature_are_computed(
     client: TestClient, project_with_sdoc
 ):
-    """The test project enables all features; its document has no keywords."""
+    """The test project enables the features on by default; its document has no
+    keywords."""
     response = client.post(
         "/statistics/keyword",
         params={"project_id": project_with_sdoc["project"].id},

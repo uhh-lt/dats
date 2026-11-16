@@ -34,7 +34,7 @@ def test_sdoc_word_frequencies_are_rejected_when_word_frequency_is_disabled(
 def test_sdoc_word_frequencies_of_a_project_with_word_frequency_are_returned(
     client: TestClient, project_with_sdoc
 ):
-    """The test project enables all features; its document has none."""
+    """The test project enables the features on by default; its document has none."""
     response = client.get(
         f"/word_frequency/sdoc/{project_with_sdoc['source_document'].id}"
     )

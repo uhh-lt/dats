@@ -103,10 +103,13 @@ def test_project_features_of_a_project_without_documents_are_ready(
     assert list(features) == feature_registry.names()
     defaults = {f.name for f in feature_registry.defaults()}
     assert {name for name, read in features.items() if read.enabled} == defaults
-    for read in (features[name] for name in defaults):
-        assert read.ready, read
-        assert read.status == FeatureStatus.FULLY_AVAILABLE, read
-        assert (read.covered_documents, read.total_documents) == (0, 0)
+    for name, read in features.items():
+        assert (read.covered_documents, read.total_documents) == (0, 0), read
+        if name in defaults:
+            assert read.ready, read
+            assert read.status == FeatureStatus.FULLY_AVAILABLE, read
+        else:
+            assert read.status == FeatureStatus.DISABLED, read
 
 
 @pytest.mark.parametrize(
