@@ -326,8 +326,9 @@ def create_featureless_project(db: Session, user: UserORM) -> FeaturelessProject
         doctype=DocType.text,
         status=dict.fromkeys(minimal_text_steps(), 1),
     )
+    es_client = ElasticSearchRepo().get_client()
     crud_sdoc_elastic.create(
-        client=ElasticSearchRepo().get_client(),
+        client=es_client,
         project_id=project.id,
         create_dto=ElasticSearchDocumentCreate(
             project_id=project.id,
@@ -335,6 +336,10 @@ def create_featureless_project(db: Session, user: UserORM) -> FeaturelessProject
             filename=sdoc.filename,
             content=" ".join(SDOC_SENTENCES),
         ),
+    )
+    # a search sees the entry only after a refresh of the index
+    es_client.indices.refresh(
+        index=crud_sdoc_elastic.index.get_index_name(project_id=project.id)
     )
     db.commit()
     db.refresh(project)
