@@ -7,10 +7,7 @@ from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
-from modules.simsearch.simsearch_feature import (
-    IMAGE_SIMILARITY_SEARCH,
-    SENTENCE_SIMILARITY_SEARCH,
-)
+from modules.simsearch.simsearch_feature import SEMANTIC_SEARCH
 from modules.simsearch.simsearch_service import SimSearchService
 from systems.feature_system.feature_dependency import require_feature
 from systems.search_system.filtering import Filter
@@ -24,7 +21,7 @@ router = APIRouter(
 
 @router.post(
     "/sentences",
-    dependencies=[Depends(require_feature(SENTENCE_SIMILARITY_SEARCH))],
+    dependencies=[Depends(require_feature(SEMANTIC_SEARCH))],
     response_model=list[SimSearchSentenceHit],
     summary="Returns similar sentences according to a textual or visual query.",
 )
@@ -52,7 +49,7 @@ def find_similar_sentences(
 
 @router.post(
     "/images",
-    dependencies=[Depends(require_feature(IMAGE_SIMILARITY_SEARCH))],
+    dependencies=[Depends(require_feature(SEMANTIC_SEARCH))],
     response_model=list[SimSearchImageHit],
     summary="Returns similar images according to a textual or visual query.",
 )

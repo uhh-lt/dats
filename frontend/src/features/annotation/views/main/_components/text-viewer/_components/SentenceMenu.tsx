@@ -37,8 +37,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
 
   // global server state
   const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
-  const sentenceSearchEnabled = useFeature(Feature.SENTENCE_SIMILARITY_SEARCH);
-  const imageSearchEnabled = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
+  const semanticSearchEnabled = useFeature(Feature.SEMANTIC_SEARCH);
   const fullTextSearchEnabled = useFeature(Feature.FULL_TEXT_SEARCH);
 
   // local state
@@ -70,8 +69,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
   }));
 
   // without the similarity search features and annotations, the menu has no entries
-  const hasEntries =
-    sentenceSearchEnabled || imageSearchEnabled || (annotations !== undefined && annotations.length > 0);
+  const hasEntries = semanticSearchEnabled || (annotations !== undefined && annotations.length > 0);
 
   // ui events
   const handleSentenceSimilaritySearch = () => {
@@ -117,7 +115,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
       }}
     >
       <List dense>
-        {sentenceSearchEnabled && (
+        {semanticSearchEnabled && (
           <ListItem disablePadding>
             <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!sentence}>
               <ListItemIcon>
@@ -127,7 +125,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
             </ListItemButton>
           </ListItem>
         )}
-        {imageSearchEnabled && (
+        {semanticSearchEnabled && (
           <ListItem disablePadding>
             <ListItemButton onClick={handleImageSimilaritySearch} disabled={!sentence}>
               <ListItemIcon>

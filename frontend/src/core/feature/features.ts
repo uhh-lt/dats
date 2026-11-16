@@ -7,8 +7,7 @@ import { FeatureRead } from "@models/FeatureRead";
  */
 export const Feature = {
   FULL_TEXT_SEARCH: "full_text_search",
-  SENTENCE_SIMILARITY_SEARCH: "sentence_similarity_search",
-  IMAGE_SIMILARITY_SEARCH: "image_similarity_search",
+  SEMANTIC_SEARCH: "semantic_search",
   RAG_CHAT: "rag_chat",
   KEYWORD_STATISTICS: "keyword_statistics",
   CONCEPTS_OVER_TIME: "concepts_over_time",

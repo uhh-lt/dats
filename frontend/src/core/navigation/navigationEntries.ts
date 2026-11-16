@@ -22,6 +22,7 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "image-search",
     group: "search",
+    title: "Image Search",
     to: "/project/$projectId/imagesearch",
     shortcut: { after: "s", key: "i" },
     command: {
@@ -32,6 +33,7 @@ export const NAVIGATION_ENTRIES = [
   {
     id: "sentence-search",
     group: "search",
+    title: "Sentence Search",
     to: "/project/$projectId/sentencesearch",
     shortcut: { after: "s", key: "s" },
     command: {

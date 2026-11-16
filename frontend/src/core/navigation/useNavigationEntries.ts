@@ -13,8 +13,9 @@ function findPageRoute(router: AnyRouter, to: NavigationRoute): AnyRoute | undef
 }
 
 /**
- * An entry with the feature and the icon of its route; the page of a feature takes its title and description from
- * the backend list of the features (`featureQueries.list()`), with the feature's name as fallback. The lint rule `local/navigation-entries` rejects an entry whose route or title does not fit; should one
+ * An entry with the feature and the icon of its route; the page of a feature takes its description, and its title
+ * unless several pages share the feature, from the backend list of the features (`featureQueries.list()`), with the
+ * feature's name as fallback. The lint rule `local/navigation-entries` rejects an entry whose route or title does not fit; should one
  * slip through, it is logged and shown with what is known instead of failing every page.
  */
 function resolveNavigationEntry(
@@ -32,8 +33,8 @@ function resolveNavigationEntry(
     if (entry.title === undefined) console.error(`Navigation entry '${entry.id}' needs a title.`);
     return { ...entry, feature, icon, title: entry.title ?? entry.id };
   }
-  if (entry.title !== undefined || entry.description !== undefined) {
-    console.error(`Navigation entry '${entry.id}' takes its title and description from the feature '${feature}'.`);
+  if (entry.description !== undefined) {
+    console.error(`Navigation entry '${entry.id}' takes its description from the feature '${feature}'.`);
   }
   const info = features?.find((f) => f.feature === feature);
   return {

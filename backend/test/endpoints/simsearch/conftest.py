@@ -37,7 +37,7 @@ def featureless_project(db_session, test_user: UserORM) -> FeaturelessProject:
 class SimSearchProject(TypedDict):
     """
     This fixture sets up the following documents in `test_project` (which
-    enables both similarity searches):
+    enables semantic search):
 
     - text document `text` "text.txt" with the text of `SDOC_SENTENCES` ("Hello
       world." and "The cat sits on the mat."); sentence 0 has the sentence

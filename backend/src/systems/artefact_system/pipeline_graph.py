@@ -147,11 +147,13 @@ class PipelineGraph:
         return [s for s in self.steps(doctype) if s in needed]
 
     def applies(self, doctype: DocType, artefacts: frozenset["Artefact"]) -> bool:
-        """Whether these artefacts apply to a document of this doctype: every
-        artefact has a producer for the doctype or is uploaded with it (e.g.
-        image embeddings do not apply to a text document)."""
+        """Whether these artefacts apply to a document of this doctype: one of
+        them has a producer for the doctype or is uploaded with it (e.g. image
+        embeddings do not apply to a text document, the sentence and image
+        embeddings together do). The steps of such a document are those of the
+        artefacts that apply (`steps_for`)."""
         uploaded = self._uploaded(doctype)
-        return all(
+        return any(
             a in uploaded or self.producer(doctype, a) is not None for a in artefacts
         )
 

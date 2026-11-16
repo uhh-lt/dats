@@ -1448,7 +1448,7 @@ const containsCallOf = (node, name) => {
 };
 
 // a route file that declares a feature (`staticData: { feature: Feature.X }`)
-const ROUTE_FEATURE_PATTERN = /\bfeature\s*:\s*Feature\.[A-Z_]+/;
+const ROUTE_FEATURE_PATTERN = /\bfeature\s*:\s*Feature\.([A-Z_]+)/;
 
 const readFileOrNull = (file) => {
   try {
@@ -1689,9 +1689,9 @@ const routeIdToPath = (id) =>
     .join("/")
     .replace(/(.)\/$/, "$1");
 
-/** The page routes (`staticData.tab`) under `routesDir`, by path, with whether they have a feature (own or inherited). */
+/** The page routes (`staticData.tab`) under `routesDir`, by path, with their feature (own or inherited), if any. */
 function readPageRoutes(routesDir) {
-  /** @type {Map<string, { file: string, feature: boolean }>} */
+  /** @type {Map<string, { file: string, feature: string | undefined }>} */
   const pages = new Map();
   const visit = (dir) => {
     let entries;
@@ -1710,7 +1710,9 @@ function readPageRoutes(routesDir) {
       const content = readFileOrNull(file) ?? "";
       const id = content.match(/createFileRoute\(\s*["'`]([^"'`]+)["'`]\s*\)/)?.[1];
       if (!id || !/\btab\s*:\s*true\b/.test(content)) continue;
-      const feature = ROUTE_FEATURE_PATTERN.test(content) || findFeatureParentRouteFile(file) !== undefined;
+      const parent = findFeatureParentRouteFile(file);
+      const feature = (content.match(ROUTE_FEATURE_PATTERN) ??
+        readFileOrNull(parent ?? "")?.match(ROUTE_FEATURE_PATTERN))?.[1];
       pages.set(routeIdToPath(id), { file, feature });
     }
   };
@@ -1725,7 +1727,7 @@ const navigationEntriesRule = {
     fixable: false,
     docs: {
       description:
-        "Every navigation entry points to a page route (`staticData.tab`); the entry of a feature's page has no title or description (they come from the backend list of the features), every other entry has a title.",
+        "Every navigation entry points to a page route (`staticData.tab`); the entry of a feature's page has no description and no title (they come from the backend list of the features), unless several entries' pages share the feature: then each has its own title. Every other entry has a title.",
     },
     messages: {
       to: "The `to` of a navigation entry is a string literal.",
@@ -1733,6 +1735,8 @@ const navigationEntriesRule = {
       featureTitle:
         "The page '{{to}}' has a feature (its route or a parent route declares `staticData.feature`); its entry takes the title and description from the backend list of the features.",
       missingTitle: "The page '{{to}}' has no feature; its entry needs a `title`.",
+      sharedFeatureTitle:
+        "The page '{{to}}' shares its feature with another entry's page; each of their entries needs its own `title`.",
     },
     schema: [],
   },
@@ -1748,6 +1752,8 @@ const navigationEntriesRule = {
         while (list && (list.type === "TSSatisfiesExpression" || list.type === "TSAsExpression"))
           list = list.expression;
         if (!list || list.type !== "ArrayExpression") return;
+        /** @type {{ element: import("estree").ObjectExpression, props: Record<string, import("estree").Property>, to: string, feature: string | undefined }[]} */
+        const entries = [];
         for (const element of list.elements) {
           if (!element || element.type !== "ObjectExpression") continue;
           /** @type {Record<string, import("estree").Property>} */
@@ -1764,11 +1770,23 @@ const navigationEntriesRule = {
             context.report({ node: props.to, messageId: "noRoute", data: { to } });
             continue;
           }
-          if (page.feature && (props.title || props.description)) {
-            context.report({ node: props.title ?? props.description, messageId: "featureTitle", data: { to } });
+          entries.push({ element, props, to, feature: page.feature });
+        }
+        const pagesPerFeature = new Map();
+        for (const { feature } of entries) {
+          if (feature) pagesPerFeature.set(feature, (pagesPerFeature.get(feature) ?? 0) + 1);
+        }
+        for (const { element, props, to, feature } of entries) {
+          if (!feature) {
+            if (!props.title) context.report({ node: element, messageId: "missingTitle", data: { to } });
+            continue;
           }
-          if (!page.feature && !props.title) {
-            context.report({ node: element, messageId: "missingTitle", data: { to } });
+          const shared = pagesPerFeature.get(feature) > 1;
+          if (props.description || (props.title && !shared)) {
+            context.report({ node: props.description ?? props.title, messageId: "featureTitle", data: { to } });
+          }
+          if (shared && !props.title) {
+            context.report({ node: element, messageId: "sharedFeatureTitle", data: { to } });
           }
         }
       },

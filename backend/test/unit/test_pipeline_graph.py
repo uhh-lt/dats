@@ -245,15 +245,16 @@ def test_steps_for_skip_an_artefact_without_producer_for_the_doctype():
     ) == graph.steps_for(DocType.text, frozenset({artefact_named("keywords")}))
 
 
-def test_artefacts_apply_if_each_has_a_producer_or_is_uploaded():
+def test_artefacts_apply_if_one_has_a_producer_or_is_uploaded():
     """The thumbnail applies to images only; the uploaded audio stream to audio
-    documents; a set applies only if all its artefacts do."""
+    documents; a set applies if one of its artefacts does (a feature that
+    reads the thumbnail and the keywords applies to text and images)."""
     graph = _planning_graph()
     thumbnail = frozenset({artefact_named("thumbnail")})
 
     assert graph.applies(DocType.image, thumbnail)
     assert not graph.applies(DocType.text, thumbnail)
-    assert not graph.applies(DocType.text, thumbnail | {artefact_named("keywords")})
+    assert graph.applies(DocType.text, thumbnail | {artefact_named("keywords")})
     assert graph.applies(DocType.audio, frozenset({artefact_named("audio")}))
     assert not graph.applies(DocType.video, frozenset({artefact_named("audio")}))
 

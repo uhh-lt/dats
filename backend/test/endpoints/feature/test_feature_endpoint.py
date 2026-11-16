@@ -189,12 +189,10 @@ def test_project_features_count_the_documents_by_the_status_of_their_steps(
 def test_project_features_count_the_documents_of_a_disabled_feature(
     client: TestClient, feature_project: FeatureProject
 ):
-    """A disabled feature is disabled whatever its documents: sentence
-    similarity search counts text_running as processing (language detection),
-    text_done and the image as not planned (no sentence embeddings)."""
-    read = _features(client, feature_project["project"].id)[
-        "sentence_similarity_search"
-    ]
+    """A disabled feature is disabled whatever its documents: semantic
+    search counts text_running as processing (language detection),
+    text_done and the image as not planned (no sentence or image embeddings)."""
+    read = _features(client, feature_project["project"].id)["semantic_search"]
 
     assert read.status == FeatureStatus.DISABLED
     assert (read.processing_documents, read.not_planned_documents) == (1, 2)
@@ -438,19 +436,19 @@ def test_enable_feature_sharing_an_artefact_of_a_computing_feature_starts_its_co
     feature_project: FeatureProject,
     held_jobs: HeldJobs,
 ):
-    """Enabling RAG chat while sentence similarity search has a pending
+    """Enabling RAG chat while semantic search has a pending
     computation still starts a computation for RAG chat, of the sentence
     embeddings both need."""
     project_id = feature_project["project"].id
-    _activate(client, project_id, "sentence_similarity_search")
+    _activate(client, project_id, "semantic_search")
 
     enabled = _activate(client, project_id, "rag_chat")
 
-    assert enabled == ["rag_chat", "sentence_similarity_search"]
+    assert enabled == ["rag_chat", "semantic_search"]
     computations = held_jobs.inputs(JobType.ARTEFACT_COMPUTATION)
     assert [
         a.artefacts for a in computations if isinstance(a, ArtefactComputationJobInput)
-    ] == [["sentence_embeddings"], ["sentence_embeddings"]]
+    ] == [["image_embeddings", "sentence_embeddings"], ["sentence_embeddings"]]
 
 
 def test_enable_two_features_sharing_a_step_starts_it_once(
@@ -875,16 +873,16 @@ def test_disable_partly_available_feature_keeps_its_failed_steps(
 def test_disable_feature_keeps_a_feature_sharing_its_artefact(
     client: TestClient, test_project
 ):
-    """Sentence similarity search and RAG chat both need the sentence
+    """Semantic search and RAG chat both need the sentence
     embeddings: disabling the former leaves RAG chat enabled."""
     response = _act(
         client,
         test_project.id,
-        "sentence_similarity_search",
+        "semantic_search",
         FeatureAction.DISABLE,
     )
 
     assert response.status_code == 200, response.text
     enabled = response.json()
     assert "rag_chat" in enabled
-    assert "sentence_similarity_search" not in enabled
+    assert "semantic_search" not in enabled

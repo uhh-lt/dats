@@ -632,8 +632,8 @@ def feature_toggle_eximport_projects(
     """
     This fixture sets up the following projects of the test user:
 
-    - Project "Toggled Project" (`project`), which enables only sentence
-      similarity search (all other features are disabled) and also stores the
+    - Project "Toggled Project" (`project`), which enables only semantic
+      search (all other features are disabled) and also stores the
       name "removed_feature" of a feature that is not registered, with three documents
       that hold the data of every artefact archive (`artefact_registry.archives()`):
       - "text.txt" (`text`), a text document with the 30 sentences "Sentence
@@ -670,7 +670,7 @@ def feature_toggle_eximport_projects(
         db_session,
         test_user,
         title="Toggled Project",
-        features=["sentence_similarity_search"],
+        features=["semantic_search"],
     )
     project.enabled_features = [*project.enabled_features, "removed_feature"]
     db_session.commit()

@@ -118,8 +118,8 @@ def _step_status(db: Session, sdoc: SourceDocumentORM) -> dict[str, int]:
 def test_project_import_merges_the_enabled_features(
     db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
 ) -> None:
-    """The target project enables keyword statistics, the archive sentence
-    similarity search: the import enables both and disables nothing. The
+    """The target project enables keyword statistics, the archive semantic
+    search: the import enables both and disables nothing. The
     exported project's stored name of an unregistered feature is not exported,
     so the archive is accepted."""
     projects = feature_toggle_eximport_projects
@@ -129,7 +129,7 @@ def test_project_import_merges_the_enabled_features(
     target = crud_project.read(db=db_session, id=projects["target_project"].id)
     assert target.enabled_features == [
         "keyword_statistics",
-        "sentence_similarity_search",
+        "semantic_search",
     ]
 
 

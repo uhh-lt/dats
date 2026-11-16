@@ -100,8 +100,9 @@ class FeatureProject(TypedDict):
       text_keywords (not text_spacy, keywords need no tokens), so
       text_running misses text_language_detection.
     - Every image has a caption, so features that need text apply to the
-      image too; image features (object detection, image similarity search)
-      apply to the image only.
+      image too; image features (object detection)
+      apply to the image only; semantic search applies to every document
+      (sentence embeddings for all, image embeddings for the image).
     """
 
     project: ProjectORM

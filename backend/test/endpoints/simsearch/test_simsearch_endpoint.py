@@ -1,8 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from feature_test_utils import FeaturelessProject, assert_feature_disabled
+from feature_test_utils import (
+    FeaturelessProject,
+    assert_feature_disabled,
+    feature_named,
+)
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
+from pipeline_test_utils import artefact_named
 from repos.ray.dto.clip import (
     ClipEmbeddingOutput,
     ClipImageEmbeddingInput,
@@ -20,23 +25,19 @@ EMPTY_FILTER = {"id": "root", "logic_operator": "and", "items": []}
 
 
 @pytest.mark.parametrize(
-    "path,feature",
+    "path",
     [
-        pytest.param(
-            "/simsearch/sentences",
-            "sentence_similarity_search",
-            id="sentences",
-        ),
-        pytest.param("/simsearch/images", "image_similarity_search", id="images"),
+        pytest.param("/simsearch/sentences", id="sentences"),
+        pytest.param("/simsearch/images", id="images"),
     ],
 )
-def test_similarity_search_is_rejected_when_its_feature_is_disabled(
+def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
     client: TestClient,
     featureless_project: FeaturelessProject,
     path: str,
-    feature: str,
 ):
-    """A project without similarity search answers 403 naming the feature."""
+    """A project without semantic search answers 403 naming the feature, for
+    sentences and images alike."""
     response = client.post(
         path,
         params={
@@ -47,7 +48,7 @@ def test_similarity_search_is_rejected_when_its_feature_is_disabled(
         json={"query": "alpha", "filter": EMPTY_FILTER},
     )
 
-    assert_feature_disabled(response, feature)
+    assert_feature_disabled(response, "semantic_search")
 
 
 # ===========================================================================
@@ -176,3 +177,17 @@ def test_search_by_the_id_of_a_text_document_is_rejected(
     assert response.status_code == 400, response.text
     assert "not an image" in response.text
     assert clip_calls == {"text": [], "image": []}
+
+
+# ===========================================================================
+# FEATURE DECLARATION (simsearch_feature.py)
+# ===========================================================================
+
+
+def test_semantic_search_requires_the_sentence_and_the_image_embeddings():
+    """Semantic search gates the sentence and the image search and needs both
+    embeddings."""
+    assert feature_named("semantic_search").requires_artefacts == {
+        artefact_named("sentence_embeddings"),
+        artefact_named("image_embeddings"),
+    }

@@ -80,9 +80,8 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const xCentering = svgWidth / 2 - (width * scaledRatio) / 2;
 
   // find similar images
+  const semanticSearchEnabled = useFeature(Feature.SEMANTIC_SEARCH);
   const tabNavigate = useTabNavigate();
-  const imageSearchEnabled = useFeature(Feature.IMAGE_SIMILARITY_SEARCH);
-  const sentenceSearchEnabled = useFeature(Feature.SENTENCE_SIMILARITY_SEARCH);
   const handleImageSimilaritySearch = () => {
     tabNavigate({
       to: "/project/$projectId/imagesearch",
@@ -102,7 +101,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
 
   return (
     <Box>
-      {imageSearchEnabled && (
+      {semanticSearchEnabled && (
         <Button
           variant="outlined"
           onClick={handleImageSimilaritySearch}
@@ -112,7 +111,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
           Similar images
         </Button>
       )}
-      {sentenceSearchEnabled && (
+      {semanticSearchEnabled && (
         <Button variant="outlined" onClick={handleSentenceSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2 }}>
           Similar sentences
         </Button>

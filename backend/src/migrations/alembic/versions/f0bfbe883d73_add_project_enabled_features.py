@@ -21,12 +21,14 @@ down_revision: str | None = "448579029394"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-# Snapshot of the Feature values at this revision, in enum order.
+# The names of all features, so existing projects keep every capability. The
+# list follows the later renames of features that were never deployed (one
+# "semantic_search" for the sentence and the image similarity search); a name
+# that is no feature anymore is ignored when read.
 ALL_FEATURES = [
     "full_text_search",
     "search_annotate",
-    "sentence_similarity_search",
-    "image_similarity_search",
+    "semantic_search",
     "rag_chat",
     "annotation_scaling",
     "concepts_over_time",

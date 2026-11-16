@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
   staticData: {
     tab: true,
     icon: Icon.IMAGE_SEARCH,
-    feature: Feature.IMAGE_SIMILARITY_SEARCH,
+    feature: Feature.SEMANTIC_SEARCH,
   },
   validateSearch: zodValidator(imageSimilaritySearchSchema),
   loaderDeps: ({ search }) => search,
