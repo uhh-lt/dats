@@ -36,7 +36,6 @@ import { ImportJobType } from "@models/ImportJobType";
 import { JobStatus } from "@models/JobStatus";
 import type { LLMAssistantJobOutput } from "@models/LLMAssistantJobOutput";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
-import { MlJobRead } from "@models/MlJobRead";
 import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
 import { TagRecommendationJobRead } from "@models/TagRecommendationJobRead";
 import { TaskType } from "@models/TaskType";
@@ -68,9 +67,6 @@ export function handleJobUpdate(job: JobRead): void {
       break;
     case ExperimentRunJobRead.job_type.EXPERIMENT_RUN:
       handleExperimentRunJobUpdate(job);
-      break;
-    case MlJobRead.job_type.ML:
-      // no page lists the ML jobs anymore; the case goes with the job type
       break;
     case TagRecommendationJobRead.job_type.TAG_RECOMMENDATION:
       upsertJob(job, tagRecommendationQueries.job);

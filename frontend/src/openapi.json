@@ -2703,125 +2703,6 @@
         }
       }
     },
-    "/job/ml": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start Ml job",
-        "operationId": "start_ml_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MlJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/ml/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get Ml job",
-        "operationId": "get_ml_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MlJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/ml/{job_id}/abort": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Abort Ml job",
-        "operationId": "abort_ml_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Ml Job" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/ml/{job_id}/retry": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Retry Ml job",
-        "operationId": "retry_ml_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Ml Job" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/ml/project/{project_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get all Ml jobs by project",
-        "operationId": "get_ml_jobs_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MlJobRead" },
-                  "title": "Response Job-Get Ml Jobs By Project"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/job/tag_recommendation": {
       "post": {
         "tags": ["job"],
@@ -10484,10 +10365,7 @@
       },
       "Body_rag-rag_session": {
         "properties": {
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query"
-          },
+          "query": { "anyOf": [{ "type": "string" }, { "type": "integer" }], "title": "Query" },
           "sdoc_ids": {
             "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
             "title": "Sdoc Ids"
@@ -10520,10 +10398,7 @@
       },
       "Body_simsearch-find_similar_images": {
         "properties": {
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query"
-          },
+          "query": { "anyOf": [{ "type": "string" }, { "type": "integer" }], "title": "Query" },
           "filter": {
             "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
             "description": "The filter of the Concept"
@@ -10535,10 +10410,7 @@
       },
       "Body_simsearch-find_similar_sentences": {
         "properties": {
-          "query": {
-            "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
-            "title": "Query"
-          },
+          "query": { "anyOf": [{ "type": "string" }, { "type": "integer" }], "title": "Query" },
           "filter": {
             "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
             "description": "The filter of the Concept"
@@ -12450,25 +12322,6 @@
         "type": "object",
         "required": ["label", "column", "sortable", "groupable", "operator", "value"],
         "title": "ColumnInfo[WordFrequencyColumns]"
-      },
-      "CoreferenceResolutionParams": {
-        "properties": {
-          "ml_job_type": {
-            "type": "string",
-            "const": "COREFERENCE_RESOLUTION",
-            "title": "Ml Job Type",
-            "description": "The type of the MLJob"
-          },
-          "recompute": {
-            "type": "boolean",
-            "title": "Recompute",
-            "description": "Whether to recompute already processed documents",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["ml_job_type"],
-        "title": "CoreferenceResolutionParams"
       },
       "CotaCreatedEvent": {
         "properties": {
@@ -14589,7 +14442,6 @@
               { "$ref": "#/components/schemas/ExperimentRunJobRead" },
               { "$ref": "#/components/schemas/ExportJobRead" },
               { "$ref": "#/components/schemas/ImportJobRead" },
-              { "$ref": "#/components/schemas/MlJobRead" },
               { "$ref": "#/components/schemas/PerspectivesJobRead" },
               { "$ref": "#/components/schemas/TagRecommendationJobRead" }
             ],
@@ -14753,40 +14605,6 @@
         "enum": ["or", "and"],
         "title": "LogicalOperator",
         "description": "This tells our filter how to combine multiple column expressions."
-      },
-      "MLJobInput": {
-        "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
-          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
-          "specific_ml_job_parameters": {
-            "anyOf": [
-              {
-                "oneOf": [
-                  { "$ref": "#/components/schemas/QuotationAttributionParams" },
-                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" }
-                ],
-                "discriminator": {
-                  "propertyName": "ml_job_type",
-                  "mapping": {
-                    "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
-                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams"
-                  }
-                }
-              },
-              { "type": "null" }
-            ],
-            "title": "Specific Ml Job Parameters",
-            "description": "Specific parameters for the MLJob w.r.t it's type"
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "ml_job_type", "specific_ml_job_parameters"],
-        "title": "MLJobInput"
-      },
-      "MLJobType": {
-        "type": "string",
-        "enum": ["QUOTATION_ATTRIBUTION", "COREFERENCE_RESOLUTION"],
-        "title": "MLJobType"
       },
       "MemoColumns": {
         "type": "string",
@@ -15220,56 +15038,6 @@
         "type": "object",
         "required": ["status", "status_message", "sdoc_id", "current_metadata", "suggested_metadata"],
         "title": "MetadataExtractionResult"
-      },
-      "MlJobRead": {
-        "properties": {
-          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
-          "job_type": {
-            "type": "string",
-            "enum": ["ml"],
-            "const": "ml",
-            "title": "Job Type",
-            "description": "Type of the job"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project ID associated with the job"
-          },
-          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
-          "status_message": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Status Message",
-            "description": "Status message"
-          },
-          "current_step": {
-            "type": "integer",
-            "title": "Current Step",
-            "description": "Current step in the job process"
-          },
-          "steps": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Steps",
-            "description": "Total number of steps in the job process"
-          },
-          "input": { "$ref": "#/components/schemas/MLJobInput", "description": "Input for the job" },
-          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the job"
-          },
-          "finished": {
-            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
-            "title": "Finished",
-            "description": "Finished timestamp of the job"
-          }
-        },
-        "type": "object",
-        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
-        "title": "MlJobRead"
       },
       "NoteNodeData": {
         "properties": {
@@ -17016,25 +16784,6 @@
         "type": "object",
         "required": ["project_id", "filter"],
         "title": "QueryRequest[SpanColumns]"
-      },
-      "QuotationAttributionParams": {
-        "properties": {
-          "ml_job_type": {
-            "type": "string",
-            "const": "QUOTATION_ATTRIBUTION",
-            "title": "Ml Job Type",
-            "description": "The type of the MLJob"
-          },
-          "recompute": {
-            "type": "boolean",
-            "title": "Recompute",
-            "description": "Whether to recompute already processed documents",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["ml_job_type"],
-        "title": "QuotationAttributionParams"
       },
       "RecomputeClusterTitleAndDescriptionParams": {
         "properties": {

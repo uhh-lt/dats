@@ -10,7 +10,6 @@ import type { ExperimentRunJobRead } from "./ExperimentRunJobRead";
 import type { ExportJobRead } from "./ExportJobRead";
 import type { ImportJobRead } from "./ImportJobRead";
 import type { LlmAssistantJobRead } from "./LlmAssistantJobRead";
-import type { MlJobRead } from "./MlJobRead";
 import type { PerspectivesJobRead } from "./PerspectivesJobRead";
 import type { TagRecommendationJobRead } from "./TagRecommendationJobRead";
 export type JobUpdatedEvent = {
@@ -24,7 +23,6 @@ export type JobUpdatedEvent = {
     | ExperimentRunJobRead
     | ExportJobRead
     | ImportJobRead
-    | MlJobRead
     | PerspectivesJobRead
     | TagRecommendationJobRead;
 };
