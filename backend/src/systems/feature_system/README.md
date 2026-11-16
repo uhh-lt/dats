@@ -26,6 +26,7 @@ WORD_FREQUENCY = register_feature(
 | `area`               | `FeatureArea`; features are listed by area, then by title.                                                     |
 | `requires_artefacts` | The artefacts the feature reads; at least one of them is not a core artefact (`always`).                        |
 | `default_enabled`    | Whether a new project without a feature list, and an archive without project details, enable it.              |
+| `set_up`             | Optional hook `(db, project_id) -> None` that sets up what else the feature needs in a project (see below).      |
 
 A feature requires artefacts only, never another feature, and exists only if it requires an artefact outside the core preprocessing pipeline: enabling it means more processing. Core declares no feature and checks no toggle.
 
@@ -33,7 +34,9 @@ Gated routes and jobs import the object (`require_feature(WORD_FREQUENCY)`). The
 
 Names: a name a request names is read strictly (`FeatureService.read_by_name`: an unknown name answers 404, for the three actions and for `ProjectCreate.enabled_features`); a stored name is read tolerantly (an unregistered name is ignored and dropped at the next write of the enabled features).
 
-Enable runs the set up of the artefact system first (`ArtefactService.set_up`): it creates the system codes the feature's artefacts declare. A user code named like one of them makes Enable fail with 409 until it is renamed. Complete and Disable run no set up; Disable keeps the codes.
+Enable, the project creation and the project import set up the feature first (`FeatureService.set_up`): the set up of the artefact system (`ArtefactService.set_up`) creates the system codes the feature's artefacts declare, then the feature's `set_up` hook runs. A user code named like one of the codes makes Enable fail with 409 until it is renamed. Complete and Disable run no set up; Disable keeps the codes.
+
+The `set_up` hook may create anything else the module needs in the project (metadata keys, tags, collections, rows of its own tables) before anything is computed. Its contract: it must be safe to run twice (Enable after a Disable runs it again), and Disable does not undo it. System codes are never created there: they stay declared on the artefacts (`Artefact.codes`), where the import, the startup check and the doctor read them. The feature system calls the hook; the artefact system knows no features.
 
 ## Feature status
 

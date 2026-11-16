@@ -9,9 +9,11 @@ another feature. The feature system passes the artefacts of a feature to the
 artefact system, which derives the pipeline steps they need.
 """
 
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from typing import Iterable
+
+from sqlalchemy.orm import Session
 
 from common.feature_enum import FeatureArea
 from systems.artefact_system.artefact_registry import Artefact, artefact_registry
@@ -29,6 +31,9 @@ class Feature:
     area: FeatureArea
     requires_artefacts: frozenset[Artefact]
     default_enabled: bool  # whether a new project enables it
+    # what the feature sets up in a project before anything is computed (see
+    # `register_feature`); None if it needs nothing besides the system codes
+    set_up: Callable[[Session, int], None] | None = None
 
 
 class FeatureRegistry:
@@ -110,10 +115,20 @@ def register_feature(
     area: FeatureArea,
     requires_artefacts: Collection[Artefact],
     default_enabled: bool = True,
+    set_up: Callable[[Session, int], None] | None = None,
 ) -> Feature:
     """Declare a feature: a user-facing capability that a project can enable,
     with the artefacts it requires and whether a new project enables it.
-    Returns the feature, which gated endpoints and jobs import."""
+    Returns the feature, which gated endpoints and jobs import.
+
+    `set_up(db, project_id)` sets up whatever else the feature needs in a
+    project (metadata keys, tags, rows of the module's own tables). It runs
+    after the system codes the artefacts declare are created and before
+    anything is computed: on Enable, on the creation of a project with the
+    feature and on a project import that enables it; not on Complete or
+    Disable. It must be safe to run twice (Enable again runs it again), and
+    Disable does not undo it. System codes are declared on the artefacts
+    (`Artefact.codes`), never created here."""
     feature = Feature(
         name=name,
         title=title,
@@ -121,6 +136,7 @@ def register_feature(
         area=area,
         requires_artefacts=frozenset(requires_artefacts),
         default_enabled=default_enabled,
+        set_up=set_up,
     )
     feature_registry.register(feature)
     return feature

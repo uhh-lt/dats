@@ -44,8 +44,7 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.filesystem_repo import FilesystemRepo
-from systems.artefact_system.artefact_service import ArtefactService
-from systems.feature_system.feature_registry import feature_registry
+from systems.feature_system.feature_service import FeatureService
 
 # The project details are imported last, see import_project.
 IMPORT_ORDER = [
@@ -163,13 +162,9 @@ def import_project(
     # validate the archived features before importing anything
     features = archived_features(organized_data.get(ExportEntity.PROJECT_DETAILS))
 
-    # create the system codes the archived features need before the codes of
-    # the archive are matched by name
-    ArtefactService().set_up(
-        db=db,
-        project_id=project_id,
-        artefacts=feature_registry.required_artefacts(features),
-    )
+    # set up the archived features (their system codes first) before the codes
+    # of the archive are matched by name
+    FeatureService().set_up(db=db, project_id=project_id, features=features)
 
     # import data
     for entity in IMPORT_ORDER:

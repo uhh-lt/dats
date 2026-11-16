@@ -16,7 +16,6 @@ from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.artefact_system.artefact_service import ArtefactService
 from systems.feature_system.feature_registry import feature_registry
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_service import JobService
@@ -63,12 +62,8 @@ class ProjectService(metaclass=SingletonMeta):
         if creating_user_id != SYSTEM_USER_ID:
             self.associate_user(db=db, project_id=project_id, user_id=creating_user_id)
 
-        # 4) create the system codes the enabled features need
-        ArtefactService().set_up(
-            db=db,
-            project_id=project_id,
-            artefacts=feature_registry.required_artefacts(enabled_features),
-        )
+        # 4) set up the enabled features: their system codes and set-up hooks
+        self.fs.set_up(db=db, project_id=project_id, features=enabled_features)
 
         # 5) create project metadata
         crud_project_meta.create_project_metadata_for_project(

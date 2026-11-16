@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from sqlalchemy.orm import Session
 
@@ -70,6 +70,24 @@ class FeatureService(metaclass=SingletonMeta):
         if feature is None:
             raise FeatureNotFoundError(name)
         return feature
+
+    def set_up(
+        self, *, db: Session, project_id: int, features: Iterable[Feature]
+    ) -> None:
+        """Set up the features in the project before anything is computed for
+        them: first the system codes their artefacts declare
+        (`ArtefactService.set_up`), then the set-up hook of each feature, by
+        name (`register_feature`). Run by Enable, the project creation and the
+        project import, never by Complete or Disable; safe to run twice."""
+        features = sorted(features, key=lambda f: f.name)
+        ArtefactService().set_up(
+            db=db,
+            project_id=project_id,
+            artefacts=self.registry.required_artefacts(features),
+        )
+        for feature in features:
+            if feature.set_up is not None:
+                feature.set_up(db, project_id)
 
     def assert_enabled(self, *, db: Session, project_id: int, feature: Feature) -> None:
         """Raise a `FeatureDisabledError` (403) if the feature is not enabled in
@@ -171,10 +189,12 @@ class FeatureService(metaclass=SingletonMeta):
         statements.update_enabled_features(
             db=db, project_id=project_id, features=self._enabled(project) | {feature}
         )
-        artefacts = self.registry.required_artefacts([feature])
-        ArtefactService().set_up(db=db, project_id=project_id, artefacts=artefacts)
+        self.set_up(db=db, project_id=project_id, features=[feature])
         ArtefactService().compute(
-            db=db, project_id=project_id, artefacts=artefacts, settings=settings
+            db=db,
+            project_id=project_id,
+            artefacts=self.registry.required_artefacts([feature]),
+            settings=settings,
         )
         return ProjectRead.model_validate(crud_project.read(db=db, id=project_id))
 

@@ -2,6 +2,7 @@ from collections.abc import Generator
 from typing import TypedDict
 
 import pytest
+from sqlalchemy.orm import Session
 
 from common.doc_type_enum import DocType
 from common.feature_enum import FeatureArea
@@ -282,6 +283,62 @@ def coded_feature() -> Generator[Feature, None, None]:
     finally:
         feature_registry.unregister_feature(feature.name)
         artefact_registry.unregister_artefact(coded.name)
+
+
+class HookedFeature(TypedDict):
+    """The feature of the `hooked_feature` fixture and the calls of its hook."""
+
+    feature: Feature
+    # one entry per call of the set-up hook: the project id and whether the
+    # system code `TEST_CODED_TREE` existed in the project at that moment
+    calls: list[tuple[int, bool]]
+
+
+@pytest.fixture(scope="function")
+def hooked_feature() -> Generator[HookedFeature, None, None]:
+    """
+    Registers, for the test, the artefact "test_hooked_artefact" (document
+    data, on demand, the uploaded file of an audio document, so no step needs
+    to produce it), which declares the code tree `CODED_TREE`
+    (`TEST_CODED_TREE` > `TEST_CODED_LEAF`), and the feature
+    "test_hooked_feature" (area Analysis, `default_enabled=False`), which
+    requires it and has a set-up hook. The hook records each call in `calls`.
+    Both are removed afterwards.
+
+    Non-obvious derived behavior:
+
+    - The feature applies to no text document, so in a project without audio
+      documents it is fully available right after Enable and can be disabled
+      at once.
+    """
+    calls: list[tuple[int, bool]] = []
+
+    def _set_up(db: Session, project_id: int) -> None:
+        code = crud_code.read_by_name_and_project(
+            db=db, code_name=CODED_TREE.name, project_id=project_id
+        )
+        calls.append((project_id, code is not None))
+
+    hooked = artefact(
+        "test_hooked_artefact",
+        kind=StorageKind.DOCUMENT_DATA,
+        uploaded_for={DocType.audio},
+        codes=(CODED_TREE,),
+    )
+    feature = register_feature(
+        "test_hooked_feature",
+        title="Test Hooked Feature",
+        description="A test feature with a set-up hook.",
+        area=FeatureArea.ANALYSIS,
+        requires_artefacts={hooked},
+        default_enabled=False,
+        set_up=_set_up,
+    )
+    try:
+        yield {"feature": feature, "calls": calls}
+    finally:
+        feature_registry.unregister_feature(feature.name)
+        artefact_registry.unregister_artefact(hooked.name)
 
 
 class CodeImportProjects(TypedDict):

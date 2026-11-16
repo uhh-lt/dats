@@ -1,6 +1,6 @@
-"""The set up of the artefact system: the system codes the artefacts of a
-feature declare are created by Enable, by a project creation and by a project
-import that enable the feature, before anything needs them."""
+"""The set up of a feature: the system codes its artefacts declare and then its
+set-up hook run on Enable, on a project creation and on a project import that
+enable the feature, before anything needs them; never on Disable."""
 
 import zipfile
 
@@ -19,6 +19,8 @@ from systems.artefact_system.artefact_dto import ProcessingSettings
 from systems.feature_system.feature_dto import FeatureActivation
 from systems.feature_system.feature_registry import Feature
 from systems.feature_system.feature_service import FeatureService
+
+from .conftest import HookedFeature
 
 CODE_NAMES = ["TEST_CODED_TREE", "TEST_CODED_LEAF"]
 
@@ -119,3 +121,65 @@ def test_import_creates_the_codes_before_it_imports_the_archived_codes(
     db_session.commit()
 
     assert _codes(db_session, target.id) == dict.fromkeys(CODE_NAMES, True)
+
+
+# ===========================================================================
+# SET-UP HOOK OF A FEATURE
+# ===========================================================================
+
+
+def test_enable_runs_the_set_up_hook_after_the_codes_and_disable_does_not(
+    client: TestClient,
+    db_session: Session,
+    test_user: UserORM,
+    hooked_feature: HookedFeature,
+):
+    """Enable runs the hook once, after the declared system codes exist;
+    Disable runs nothing, and Enable again runs the hook again."""
+    project = _project(db_session, test_user, "Hook Enable", [])
+    base = f"/feature/project/{project.id}/{hooked_feature['feature'].name}"
+    activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
+
+    assert client.post(f"{base}/enable", json=activation).status_code == 200
+    assert hooked_feature["calls"] == [(project.id, True)]
+
+    assert client.post(f"{base}/disable").status_code == 200
+    assert hooked_feature["calls"] == [(project.id, True)]
+
+    assert client.post(f"{base}/enable", json=activation).status_code == 200
+    assert hooked_feature["calls"] == [(project.id, True), (project.id, True)]
+
+
+def test_project_creation_runs_the_set_up_hook_of_its_features_only(
+    db_session: Session, test_user: UserORM, hooked_feature: HookedFeature
+):
+    """A project created with the feature runs its hook after its codes; one
+    created without it does not."""
+    with_feature = _project(
+        db_session, test_user, "Hook With", [hooked_feature["feature"].name]
+    )
+    _project(db_session, test_user, "Hook Without", [])
+
+    assert hooked_feature["calls"] == [(with_feature.id, True)]
+
+
+def test_import_runs_the_set_up_hook_of_the_archived_features(
+    db_session: Session, test_user: UserORM, hooked_feature: HookedFeature
+):
+    """Importing an archive of a project with the feature runs the hook in the
+    target project, after its codes; `add_features` at the end of the import
+    runs it no second time."""
+    source = _project(
+        db_session, test_user, "Hook Source", [hooked_feature["feature"].name]
+    )
+    target = _project(db_session, test_user, "Hook Target", [])
+    fsr = FilesystemRepo()
+    archive = export_project(db=db_session, fsr=fsr, project_id=source.id)
+    import_dir = fsr.create_temp_dir("hook_import")
+    with zipfile.ZipFile(archive) as zip_file:
+        zip_file.extractall(import_dir)
+
+    import_project(db=db_session, fsr=fsr, path_to_dir=import_dir, project_id=target.id)
+    db_session.commit()
+
+    assert hooked_feature["calls"] == [(source.id, True), (target.id, True)]
