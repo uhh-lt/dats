@@ -178,7 +178,7 @@ Add a step:
 
 1. Declare new artefacts with `artefact(name, kind=..., always=..., uploaded_for=..., codes=..., archive=...)` in a file of their owner (`modules/doc_processing/artefacts.py` for the shared ones, one `*_artefact.py` file per single-user artefact): `always=True` only if every document needs it whatever features its project enables; an own store (`StorageKind.OWN_STORE`) needs an `ArtefactArchive`, and the system code trees a project needs before the artefact is produced go into `codes` (`core/code/system_codes.py`). See `systems/artefact_system/README.md`.
 2. Write the step file (`<module>/<name>_job.py`): an input DTO that extends `SdocProcessingJobInput`, an enricher, and the handler registered with `@register_job(job_type="<step name>", input_type, enricher)` and declared with `@pipeline_step(requires, produces, doctypes)` above it (`systems/artefact_system/pipeline_step_decorator.py`), with the imported artefact objects. The step name is text and never changes without a data migration (it is stored in `sourcedocumentstepstatus`); among the ready steps the name breaks ties in the derived order.
-3. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code; `test_project_doctor_steps.py` fails otherwise.
+3. Add the step to the step copy of the project doctor (`tools/project_doctor/doctor_stores.py`), which imports no DATS code, and the trees of an artefact that declares `codes` to its `tools/project_doctor/system_codes.yaml`; `test_project_doctor_steps.py` fails otherwise.
 4. Regenerate the API client (`just update-api`) if the step adds an endpoint or a DTO the API uses.
 
 Rules:

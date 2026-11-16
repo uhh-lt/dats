@@ -27,7 +27,7 @@ KEYWORDS = artefact("keywords", kind=StorageKind.METADATA)
 | `kind`         | Where it is stored (`StorageKind`): the document data row, the metadata, annotations, or an own store (a table, index or file of its own).               |
 | `always`       | Computed for every document, whatever features its project enables (a core artefact). A step produces either always-computed or on-demand artefacts.    |
 | `uploaded_for` | The doctypes whose uploaded file is the artefact, so no step produces it there (the audio stream of an audio document).                                  |
-| `codes`        | The system code trees (`core/code/system_codes.py`) a project needs before the artefact is produced. Data, not a function: the import reads them too.   |
+| `codes`        | The system code trees (`core/code/system_codes.py`) a project needs before the artefact is produced. Data, not a function: the import reads them too. Copy new trees into `tools/project_doctor/system_codes.yaml`. |
 | `archive`      | Required exactly for an own store: an `ArtefactArchive` that reads the artefact for the project export, says whether an archive holds it completely and writes it on import. |
 
 The name never changes without a data migration: step status rows, pending computations and archives store it. A step names the artefacts it requires and produces with the imported objects (`@pipeline_step(requires={CONTENT}, produces={KEYWORDS}, ...)`); tests name them by text (`artefact_named` in `backend/test/pipeline_test_utils.py`).

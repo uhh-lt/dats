@@ -4,7 +4,7 @@ Status: being built. PR A (the per-project feature toggles and the actions rewor
 
 ## Goal
 
-A developer adds a capability to DATS by writing one module. The module declares its feature, the artefacts the feature needs, and how these artefacts are produced, stored, exported and deleted. Nothing outside the module changes.
+A developer adds a capability to DATS by writing one module. The module declares its feature, the artefacts the feature needs, and how these artefacts are produced, stored, exported and imported; deletion stays central. Outside the module, only the copies of the project doctor change (its list of steps and, for declared codes, its `system_codes.yaml`), and for an artefact with its own store the column of the document archive.
 
 Two cases must both be one small step:
 
