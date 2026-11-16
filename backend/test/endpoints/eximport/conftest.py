@@ -888,3 +888,24 @@ def indexing_eximport_projects(
     set_step_status(db_session, projects["text"].id, {"text_es_index": 0})
     db_session.commit()
     return projects
+
+
+@pytest.fixture(scope="function")
+def mid_pipeline_eximport_projects(
+    db_session: Session, feature_toggle_eximport_projects: FeatureToggleEximportProjects
+) -> FeatureToggleEximportProjects:
+    """The projects of `feature_toggle_eximport_projects`, except that the
+    core steps text_spacy and text_es_index of "text.txt" are processing (the
+    document is exported in the middle of its pipeline).
+
+    Non-obvious derived behavior:
+
+    - The imported "text.txt" has no row of text_spacy and text_es_index; its
+      other core steps are imported as finished.
+    """
+    projects = feature_toggle_eximport_projects
+    set_step_status(
+        db_session, projects["text"].id, {"text_spacy": 0, "text_es_index": 0}
+    )
+    db_session.commit()
+    return projects

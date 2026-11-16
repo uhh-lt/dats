@@ -14,7 +14,6 @@ from core.doc_processing.doc_processing_dto import (
 )
 from core.doc_processing.doc_processing_service import DocProcessingService
 from systems.artefact_system.artefact_dto import ProcessingSettings
-from systems.artefact_system.artefact_registry import artefact_registry
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
@@ -40,11 +39,7 @@ def get_search_columns_by_doctype(
     doctype: DocType,
     authz_user: AuthzUser = Depends(),
 ) -> list[SdocHealthColumn]:
-    graph = artefact_registry.graph()
-    core = set(graph.steps_for(doctype, artefact_registry.always()))
-    return [
-        SdocHealthColumn(step=step, core=step in core) for step in graph.steps(doctype)
-    ]
+    return DocProcessingService().read_health_columns(doctype=doctype)
 
 
 @router.post(

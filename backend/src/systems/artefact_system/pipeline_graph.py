@@ -146,6 +146,14 @@ class PipelineGraph:
             todo.extend(deps[step])
         return [s for s in self.steps(doctype) if s in needed]
 
+    def core_steps(self, doctype: DocType) -> list[str]:
+        """The core steps of the doctype, in pipeline order: the steps of the
+        always-computed artefacts, which every document gets whatever features
+        its project enables."""
+        return self.steps_for(
+            doctype, frozenset(a for a in self._artefacts if a.always)
+        )
+
     def applies(self, doctype: DocType, artefacts: frozenset["Artefact"]) -> bool:
         """Whether these artefacts apply to a document of this doctype: one of
         them has a producer for the doctype or is uploaded with it (e.g. image

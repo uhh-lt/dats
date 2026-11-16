@@ -28,8 +28,8 @@ class NoFilesProcessedError(Exception):
 @exception_handler(status.HTTP_400_BAD_REQUEST)
 class StepNotPlannedError(Exception):
     """Raised when the step of a feature is recomputed for documents it is not
-    planned for: Recompute starts an unplanned step only if it is a core step;
-    enabling or completing the feature plans its steps."""
+    planned for: Recompute plans only the missing core steps; enabling or
+    completing the feature plans its steps."""
 
     def __init__(self, step: str, sdoc_ids: list[int]) -> None:
         super().__init__(

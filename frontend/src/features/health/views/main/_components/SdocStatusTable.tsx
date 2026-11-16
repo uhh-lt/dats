@@ -36,7 +36,7 @@ const sdocStatus2Text: Record<SDocStatus, string> = {
 };
 
 // null = the step is not planned for the document: the step of a feature the project does not enable, or a core step
-// that was never computed for it (e.g. an imported document); Recompute computes the latter
+// that was never computed for it (e.g. an imported document); Recompute plans the latter
 const notPlannedIcon = <DoNotDisturbOnOutlinedIcon sx={{ color: "text.disabled" }} />;
 const notPlannedText = "Not computed";
 
@@ -94,7 +94,7 @@ export function SdocStatusTable({
       .filter((id) => !isNaN(id));
   }, [rowSelectionModel]);
 
-  // the steps that can be recomputed: the core steps (Recompute starts them also where they are missing) and the steps of a
+  // the steps that can be recomputed: the core steps (Recompute plans them where they are missing) and the steps of a
   // feature that are planned for at least one selected document
   const plannedSteps = useMemo(() => {
     const selected = new Set(selectedRows);

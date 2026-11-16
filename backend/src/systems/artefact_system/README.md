@@ -10,6 +10,7 @@ The artefacts and the pipeline steps that produce them: their declarations (`art
 | `ArtefactService.compute`             | Enable and Complete of a feature          | Stores a pending artefact computation of the feature's artefacts and starts its job, which plans and starts the steps in batches.   |
 | `ArtefactService.read_availability`   | The feature status                        | Counts the documents per artefact set: ready, processing, failed, not planned; and whether a computation of them is pending.         |
 | `ArtefactService.plan_document`       | The upload (`sdoc_init`)                  | Plans the steps of the core artefacts and of the project's artefact demand for a new document; returns its root steps to start.      |
+| `ArtefactService.plan_core_steps`     | Recompute of a core step without a row    | Plans the missing core steps of some documents in a transaction of its own, then starts those whose inputs are finished.             |
 | `start_steps`                         | Advancing, upload, computation, Recompute | Starts the jobs of some steps of a document.                                                                                         |
 
 Disable calls nothing: the stored data and the step statuses stay. A computation plans the steps of the core artefacts and of those of its artefacts that apply to the doctype (a set applies if one of its artefacts has a producer for the doctype: Semantic Search computes the sentence embeddings of every document and the image embeddings of the images), and plans their erroneous steps again; it never plans the steps of other artefacts.
@@ -48,13 +49,15 @@ Limit of the archive: the document archive has no open column. The archive colum
 | `ProjectService.create_project`                  | For the features the new project enables                                   |
 | `import_project.py`                              | Once, before the entities of the archive: its codes then meet the system codes by name |
 
-Complete runs no set up, and neither does `add_features` (the import has set up before). Disable leaves the codes, as annotations may use them. Recompute never plans the step of a feature: it is rejected (400, `StepNotPlannedError`) for a document that has no status row of the step, so it never runs a step whose set up did not run. A core step needs no set up: Recompute starts it also where it has no row, e.g. for a document imported while the step was running, and the started or failed hook of its job writes the row. The request writes no row: the hooks and `start_steps` write in their own transactions, which would wait for the request's.
+Complete runs no set up, and neither does `add_features` (the import has set up before). Disable leaves the codes, as annotations may use them. Recompute never plans the step of a feature: it is rejected (400, `StepNotPlannedError`) for a document that has no status row of the step, so it never runs a step whose set up did not run. A core step needs no set up: where it has no row, e.g. for a document imported while its core steps ran, Recompute plans all missing core steps of the selected documents (`ArtefactService.plan_core_steps`) and starts those whose inputs are finished.
 
 ## Lock order
 
 Every planning first locks the project row (`crud_project.read_locked`: FOR NO KEY UPDATE to change the enabled features or the pending computations, FOR SHARE to plan a new document or a batch of a computation), then the documents it plans per doctype in the order of `DocType`, ascending by id within a doctype (FOR NO KEY UPDATE). A change of the features waits for the batch in progress; an upload and a batch plan side by side (the upload plans a new document, which is not in the batch); a status change of a document waits for the planning of that document, so the planning never misses a step that finishes while it plans. The feature system only ever locks the project row. A writer outside this order could deadlock or lose a planning without any test failing.
 
 The upload reads the artefact demand under the project share lock (`FeatureService.read_artefact_demand`) and plans with it in the same transaction, so a concurrent Enable waits for the upload and plans its steps for the new document too, or the upload plans them.
+
+`plan_core_steps` takes the same locks in its own transaction and commits before it starts the steps, as `start_steps` writes a step that cannot start in a transaction of its own.
 
 Enable and Complete start the computation job before their transaction commits: the job's first statement is a share lock on the project, which waits for the request's lock, so the job reads the committed state. If the enqueue fails, the request rolls back; if the request rolls back after the enqueue, the job finds no pending computation with its id and stops.
 

@@ -11,6 +11,7 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.doc_processing.doc_processing_dto import (
+    SdocHealthColumn,
     SdocHealthResult,
     SdocHealthSort,
     SdocInitJobInput,
@@ -31,6 +32,7 @@ from systems.artefact_system.artefact_dto import (
     SdocProcessingJobInput,
 )
 from systems.artefact_system.artefact_registry import artefact_registry
+from systems.artefact_system.artefact_service import ArtefactService
 from systems.artefact_system.source_document_step_status_crud import (
     crud_sdoc_step_status,
 )
@@ -109,6 +111,16 @@ class DocProcessingService(metaclass=SingletonMeta):
             raise NoFilesProcessedError()
 
         return jobs
+
+    def read_health_columns(self, *, doctype: DocType) -> list[SdocHealthColumn]:
+        """The columns of the health view of the doctype: its pipeline steps in
+        pipeline order, with whether each is a core step."""
+        graph = artefact_registry.graph()
+        core = set(graph.core_steps(doctype))
+        return [
+            SdocHealthColumn(step=step, core=step in core)
+            for step in graph.steps(doctype)
+        ]
 
     def search_sdoc_health(
         self,
@@ -269,24 +281,29 @@ class DocProcessingService(metaclass=SingletonMeta):
             )
 
         # 4. check that the step of a feature is planned for every document:
-        # Recompute never starts it unplanned, as its set up may not have run.
-        # A core step, which every document gets and no feature owns, starts
-        # unplanned too: its job's started or failed hook writes its row. The
-        # request writes no row, as these hooks write in their own transaction.
+        # Recompute never plans it, as its set up may not have run. A missing
+        # core step, which every document gets and no feature owns, is planned
+        # with all missing core steps of these documents (e.g. documents
+        # imported while their core steps ran); the planning starts what can
+        # start, the rest starts when its inputs finish.
         step = processing_step
         statuses = crud_sdoc_step_status.read_by_sdocs(db=db, sdoc_ids=sdoc_ids)
         not_planned = sorted(i for i in sdoc_ids if step not in statuses.get(i, {}))
-        if not_planned and step not in graph.steps_for(
-            DocType(doctype), artefact_registry.always()
-        ):
+        if not_planned and step not in graph.core_steps(DocType(doctype)):
             raise StepNotPlannedError(step=processing_step, sdoc_ids=not_planned)
+        jobs: list[Job] = []
+        if not_planned:
+            jobs = ArtefactService().plan_core_steps(
+                project_id=project_id, sdoc_ids=not_planned, settings=settings
+            )
 
-        # Start the job of the step for every document.
+        # 5. start the job of the step for every other document.
         # A document whose job cannot be queued (its input data is missing or
         # the queue cannot be reached) gets the step and the pending steps
         # after it erroneous, and the other documents still start.
-        jobs: list[Job] = []
         for sdoc_id in sdoc_ids:
+            if sdoc_id in not_planned:
+                continue
             started = start_steps(
                 project_id=project_id,
                 sdoc_id=sdoc_id,

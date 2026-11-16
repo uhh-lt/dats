@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Collection
+from typing import TYPE_CHECKING, Collection, Iterable
 from uuid import uuid4
 
 from loguru import logger
@@ -198,7 +198,7 @@ class ArtefactService(metaclass=SingletonMeta):
         upload plans them for it."""
         graph = artefact_registry.graph()
         needed = {
-            *graph.steps_for(doctype, artefact_registry.always()),
+            *graph.core_steps(doctype),
             *graph.steps_for(doctype, demand),
         }
         steps = [s for s in graph.steps(doctype) if s in needed]
@@ -206,6 +206,41 @@ class ArtefactService(metaclass=SingletonMeta):
             db=db, sdoc_ids=[sdoc_id], steps=steps, status=SDocStatus.processing
         )
         return [s for s in graph.roots(doctype) if s in needed]
+
+    def plan_core_steps(
+        self, *, project_id: int, sdoc_ids: list[int], settings: ProcessingSettings
+    ) -> list[Job]:
+        """Plan the missing core steps of these documents of the project (e.g.
+        of documents imported while their core steps ran) and start those whose
+        inputs are finished; the others start when their inputs finish. It is
+        the planning of an artefact computation without artefacts (see
+        `_plan_missing_steps`), restricted to these documents: existing rows keep
+        their status. Called by Recompute in the document health view.
+
+        It opens its own transaction, like `handle_artefact_computation_job`:
+        the planning commits before its steps start, as a step that cannot
+        start becomes erroneous in a transaction of its own (`start_steps`).
+        Locks the project (FOR SHARE), then the documents per doctype in the
+        order of `DocType`, ascending by id."""
+        sdoc_steps: dict[int, list[str]] = {}
+        with self.sqlr.transaction() as db:
+            crud_project.read_locked(db=db, id=project_id, shared=True)
+            for doctype in DocType:
+                for sdoc_id in sorted(set(sdoc_ids)):
+                    sdoc_steps |= self._plan_missing_steps(
+                        db=db,
+                        project_id=project_id,
+                        artefacts=frozenset(),
+                        sdoc_ids=(sdoc_id - 1, sdoc_id),
+                        doctypes=[doctype],
+                    )
+        jobs: list[Job] = []
+        for sdoc_id, steps in sdoc_steps.items():
+            started = start_steps(
+                project_id=project_id, sdoc_id=sdoc_id, steps=steps, settings=settings
+            )
+            jobs.extend(job for job in started.values() if job is not None)
+        return jobs
 
     def handle_artefact_computation_job(
         self, *, job: Job, payload: ArtefactComputationJobInput
@@ -341,9 +376,11 @@ class ArtefactService(metaclass=SingletonMeta):
         project_id: int,
         artefacts: frozenset[Artefact],
         sdoc_ids: tuple[int, int],
+        doctypes: Iterable[DocType] = DocType,
     ) -> dict[int, list[str]]:
-        """Plan for the documents of the project in the id range (after, until]
-        the steps of the artefacts and of the core artefacts:
+        """Plan for the documents of the project of these doctypes in the id
+        range (after, until] the steps of the artefacts and of the core
+        artefacts:
 
             to_plan = steps_for(core) | (steps_for(artefacts) if they apply)
             to_redo = steps_for(artefacts) if they apply
@@ -364,13 +401,13 @@ class ArtefactService(metaclass=SingletonMeta):
         graph = artefact_registry.graph()
 
         sdoc_steps: dict[int, list[str]] = {}
-        for doctype in DocType:
+        for doctype in doctypes:
             own = (
                 set(graph.steps_for(doctype, artefacts))
                 if graph.applies(doctype, artefacts)
                 else set()
             )
-            core = set(graph.steps_for(doctype, artefact_registry.always()))
+            core = set(graph.core_steps(doctype))
             to_plan = [s for s in graph.steps(doctype) if s in own | core]
             to_redo = [s for s in to_plan if s in own]
             if not to_plan:

@@ -394,27 +394,71 @@ def test_every_archive_module_has_a_round_trip_case() -> None:
     assert set(ROUND_TRIP_CASES) == {a.name for a, _ in artefact_registry.archives()}
 
 
-def test_recompute_computes_the_core_index_step_an_import_left_unplanned(
+def _has_index_entry(db: Session, sdoc: SourceDocumentORM) -> bool:
+    """Whether the search index of the document's project holds the document."""
+    return bool(
+        ElasticSearchRepo()
+        .get_client()
+        .exists(
+            index=crud_sdoc_elastic.index.get_index_name(project_id=sdoc.project_id),
+            id=str(sdoc.id),
+        )
+    )
+
+
+def _recompute(
+    client: TestClient, projects: FeatureToggleEximportProjects, step: str, sdoc_id: int
+):
+    return client.post(
+        f"/docprocessing/project/{projects['target_project'].id}/recompute",
+        params={"processing_step": step},
+        json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
+    )
+
+
+def test_recompute_plans_the_core_index_step_an_import_left_unplanned(
     client: TestClient,
     db_session: Session,
     indexing_eximport_projects: FeatureToggleEximportProjects,
     held_jobs: HeldJobs,
 ) -> None:
-    """The imported text has no row of the core step text_es_index (it was
-    processing at the export). No feature computes it, so Recompute starts its
-    job without a row, and the job writes the row: finished once it ran."""
+    """The imported text has no row of the core step text_es_index and no
+    index entry (it was processing at the export). No feature computes it, so
+    Recompute plans it and starts its job, which indexes the document."""
     projects = indexing_eximport_projects
     _round_trip(db_session, projects)
-    sdoc_id = _imported(db_session, projects, "text.txt").id
-    assert read_step_status(db_session, sdoc_id, "text_es_index") is None
+    sdoc = _imported(db_session, projects, "text.txt")
+    assert read_step_status(db_session, sdoc.id, "text_es_index") is None
+    assert not _has_index_entry(db_session, sdoc)
 
-    response = client.post(
-        f"/docprocessing/project/{projects['target_project'].id}/recompute",
-        params={"processing_step": "text_es_index"},
-        json={"sdoc_ids": [sdoc_id], "settings": SETTINGS.model_dump(mode="json")},
-    )
+    response = _recompute(client, projects, "text_es_index", sdoc.id)
 
     assert response.status_code == 200, response.text
-    assert started_steps(held_jobs) == {sdoc_id: ["text_es_index"]}
+    assert read_step_status(db_session, sdoc.id, "text_es_index") == 0
+    assert started_steps(held_jobs) == {sdoc.id: ["text_es_index"]}
     held_jobs.run("text_es_index")
-    assert read_step_status(db_session, sdoc_id, "text_es_index") == 1
+    assert read_step_status(db_session, sdoc.id, "text_es_index") == 1
+    assert _has_index_entry(db_session, sdoc)
+
+
+def test_recompute_plans_every_missing_core_step_of_an_imported_document(
+    client: TestClient,
+    db_session: Session,
+    mid_pipeline_eximport_projects: FeatureToggleEximportProjects,
+    held_jobs: HeldJobs,
+) -> None:
+    """The imported text has no row of text_spacy and text_es_index. Recompute
+    of text_es_index plans both, as processing, and starts both, as the
+    inputs of both are finished (text_es_index does not follow text_spacy)."""
+    projects = mid_pipeline_eximport_projects
+    _round_trip(db_session, projects)
+    sdoc_id = _imported(db_session, projects, "text.txt").id
+    assert read_step_status(db_session, sdoc_id, "text_spacy") is None
+    assert read_step_status(db_session, sdoc_id, "text_es_index") is None
+
+    response = _recompute(client, projects, "text_es_index", sdoc_id)
+
+    assert response.status_code == 200, response.text
+    assert read_step_status(db_session, sdoc_id, "text_spacy") == 0
+    assert read_step_status(db_session, sdoc_id, "text_es_index") == 0
+    assert started_steps(held_jobs) == {sdoc_id: ["text_es_index", "text_spacy"]}

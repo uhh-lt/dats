@@ -89,7 +89,7 @@ class SdocStatusRow(BaseModel):
 class SdocHealthColumn(BaseModel):
     step: str = Field(description="Name of the pipeline step")
     core: bool = Field(
-        description="Whether the step is a core step, which every document gets and Recompute starts also where it is missing"
+        description="Whether the step is a core step, which every document gets and Recompute plans where it is missing"
     )
 
 
