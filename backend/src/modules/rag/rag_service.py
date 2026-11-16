@@ -19,7 +19,7 @@ class RAGService(metaclass=SingletonMeta):
     def retrieval_augmented_generation_with_session(
         self,
         project_id: int,
-        query: str | list[str] | int,
+        query: str | int,
         top_k: int,
         threshold: float,
         model: str,

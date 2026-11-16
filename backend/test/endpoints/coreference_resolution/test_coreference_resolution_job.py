@@ -12,7 +12,9 @@ from common.languages_enum import Language
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_dto import SpanGroupWithAnnotationsRead
 from core.code.code_crud import crud_code
+from core.code.code_orm import CodeORM
 from core.project.project_dto import ProjectCreate, ProjectRead
+from core.project.project_orm import ProjectORM
 from core.user.user_crud import SYSTEM_USER_ID
 from job_test_utils import HeldJobs
 from pipeline_test_utils import read_step_status
@@ -158,6 +160,30 @@ def test_enable_reuses_the_mention_code_of_the_project(
         if code.name == "MENTION"
     ]
     assert [code.id for code in mentions] == [p["mention"].id]
+
+
+def test_enable_creates_the_mention_code_and_disable_keeps_it(
+    client: TestClient, db_session: Session, codeless_project: ProjectORM
+):
+    """A project without coreference resolution has no MENTION; Enable creates
+    it as a system code; Disable keeps it, as annotations may use it."""
+
+    def mention() -> CodeORM | None:
+        db_session.expire_all()
+        return crud_code.read_by_name_and_project(
+            db=db_session, code_name="MENTION", project_id=codeless_project.id
+        )
+
+    assert mention() is None
+
+    _enable(client, codeless_project.id)
+    created = mention()
+    assert created is not None and created.is_system
+
+    response = client.post(f"/feature/project/{codeless_project.id}/{FEATURE}/disable")
+    assert response.status_code == 200, response.text
+    kept = mention()
+    assert kept is not None and kept.id == created.id
 
 
 @pytest.mark.parametrize(

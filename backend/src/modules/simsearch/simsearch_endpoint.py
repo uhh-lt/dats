@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
@@ -30,7 +32,7 @@ def find_similar_sentences(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    query: str | list[str] | int,
+    query: Annotated[str | int, Body()],
     top_k: int,
     threshold: float,
     filter: Filter[SdocColumns],
@@ -58,7 +60,7 @@ def find_similar_images(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    query: str | list[str] | int,
+    query: Annotated[str | int, Body()],
     top_k: int,
     threshold: float,
     filter: Filter[SdocColumns],

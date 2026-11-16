@@ -30,7 +30,6 @@ from modules.concept_over_time_analysis.cota_crud import (
 )
 from modules.experiment.experiment_crud import crud_experiment
 from modules.experiment.experiment_run_crud import crud_experiment_run
-from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.cluster_crud import crud_cluster
 from modules.perspectives.document_aspect_crud import crud_document_aspect
@@ -66,7 +65,6 @@ class Crud(Enum):
     REFRESH_TOKEN = crud_refresh_token
     SENTENCE_ANNOTATION = crud_sentence_anno
     SOURCE_DOCUMENT_DATA = crud_sdoc_data
-    SOURCE_DOCUMENT_JOB_STATUS = crud_sdoc_job_status
     SOURCE_DOCUMENT_METADATA = crud_sdoc_meta
     SOURCE_DOCUMENT = crud_sdoc
     SPAN_ANNOTATION = crud_span_anno

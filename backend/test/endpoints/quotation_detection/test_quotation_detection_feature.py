@@ -80,24 +80,30 @@ def test_create_project_leaves_quotation_detection_off_unless_requested(
     assert ProjectRead.model_validate(requested.json()).enabled_features == [FEATURE]
 
 
-def test_enable_quotation_detection_reuses_the_quotation_codes_of_the_project(
+def test_enable_creates_the_quotation_codes_disable_keeps_them_and_enable_reuses_them(
     client: TestClient,
     db_session: Session,
     plain_project: ProjectORM,
     held_jobs: HeldJobs,
 ):
-    """Enable keeps the quotation codes the project has: same ids, no second
-    tree."""
-    before = _quotation_codes(db_session, plain_project.id)
+    """A project without quotation detection has no quotation code; Enable
+    creates the tree as system codes; Disable keeps it; a second Enable reuses
+    the same codes and creates no second tree."""
+    path = f"/feature/project/{plain_project.id}/{FEATURE}"
+    activation = FeatureActivation(settings=SETTINGS).model_dump(mode="json")
+    assert _quotation_codes(db_session, plain_project.id) == {}
 
-    response = client.post(
-        f"/feature/project/{plain_project.id}/{FEATURE}/enable",
-        json=FeatureActivation(settings=SETTINGS).model_dump(mode="json"),
-    )
+    enabled = client.post(f"{path}/enable", json=activation)
+    created = _quotation_codes(db_session, plain_project.id)
+    disabled = client.post(f"{path}/disable")
+    kept = _quotation_codes(db_session, plain_project.id)
+    enabled_again = client.post(f"{path}/enable", json=activation)
 
-    assert response.status_code == 200, response.text
-    assert set(before) == QUOTATION_CODE_NAMES
-    assert _quotation_codes(db_session, plain_project.id) == before
+    for response in (enabled, disabled, enabled_again):
+        assert response.status_code == 200, response.text
+    assert set(created) == QUOTATION_CODE_NAMES
+    assert kept == created
+    assert _quotation_codes(db_session, plain_project.id) == created
     assert sum(
         code.name in QUOTATION_CODE_NAMES
         for code in crud_code.read_system_codes_by_project(

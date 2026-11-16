@@ -22,7 +22,8 @@ from feature_test_utils import (
     minimal_image_steps,
     minimal_text_steps,
 )
-from pipeline_test_utils import set_step_status
+from pipeline_test_utils import artefact_named, set_step_status
+from systems.artefact_system.artefact_service import ArtefactService
 
 # the German text of german_text and german_image; whitespace tokens:
 # 0 "Anna", 1 "liest", 2 "ein", 3 "Buch.", 4 "Sie", 5 "mag", 6 "es", 7 "sehr."
@@ -35,8 +36,8 @@ class CorefProject(TypedDict):
     This fixture sets up the following project:
 
     - project: "Coref Project" of `test_user`, without any enabled feature; it
-      has the system code MENTION (project creation creates it until the
-      coreference artefact is the only one to declare it)
+      has the system code MENTION (below `SYSTEM_CODE`), as after an earlier
+      Enable and Disable of coreference resolution
     - mention: the code MENTION of the project
     - german_text: text document "german.txt" with the text of
       `GERMAN_SENTENCES` ("Anna liest ein Buch." and "Sie mag es sehr.") and the
@@ -156,6 +157,11 @@ def coref_project(db_session: Session, test_user: UserORM) -> CorefProject:
         sentences=GERMAN_SENTENCES,
         language="de",
     )
+    ArtefactService().set_up(
+        db=db_session,
+        project_id=project.id,
+        artefacts=frozenset({artefact_named("coreferences")}),
+    )
     mention = crud_code.read_by_name_and_project(
         db=db_session, code_name="MENTION", project_id=project.id
     )
@@ -181,3 +187,12 @@ def coref_project(db_session: Session, test_user: UserORM) -> CorefProject:
         "german_image": german_image,
         "formerly_german": formerly_german,
     }
+
+
+@pytest.fixture(scope="function")
+def codeless_project(db_session: Session, test_user: UserORM) -> ProjectORM:
+    """The project "Codeless Project" of `test_user`, without any enabled
+    feature, documents or codes (no feature that declares codes is enabled)."""
+    return create_project_with_features(
+        db_session, test_user, title="Codeless Project", features=[]
+    )

@@ -27,7 +27,7 @@ from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
 from core.project.project_service import ProjectService
 from core.user.user_orm import UserORM
-from dats_test_utils import create_span_for_text, create_text_document
+from dats_test_utils import ProjectWithSdoc, create_span_for_text, create_text_document
 
 ZEROSHOT_ID = 9990
 FEWSHOT_ID = 9991
@@ -541,6 +541,41 @@ def feature_activations_database(
         )
         db_session.commit()
         yield project_id
+    finally:
+        db_session.rollback()
+        db_session.close()
+        command.upgrade(config, "head")
+
+
+DROP_ML_JOB_STATUS = "62a07ecd1e32"
+
+
+@pytest.fixture(scope="function")
+def ml_job_status_database(
+    db_session: Session, project_with_sdoc: ProjectWithSdoc
+) -> Generator[int, None, None]:
+    """
+    This fixture migrates the database down to the revision before
+    `62a07ecd1e32_drop_the_ml_job_status_table` and gives the document of
+    `project_with_sdoc` a finished coreference row in `sourcedocumentjobstatus`.
+    It migrates the database back to head afterwards.
+
+    Returns the id of the document.
+    """
+    sdoc_id = project_with_sdoc["source_document"].id
+    db_session.commit()
+    config = alembic_config()
+    command.downgrade(config, ARTEFACT_COMPUTATIONS)
+    try:
+        db_session.execute(
+            sa.text(
+                "INSERT INTO sourcedocumentjobstatus (id, type, status, timestamp) "
+                "VALUES (:id, :type, :status, now())"
+            ),
+            {"id": sdoc_id, "type": ML_COREFERENCE, "status": ML_FINISHED},
+        )
+        db_session.commit()
+        yield sdoc_id
     finally:
         db_session.rollback()
         db_session.close()

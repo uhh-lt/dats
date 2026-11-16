@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
@@ -22,7 +24,7 @@ router = APIRouter(
 )
 def rag_session(
     project_id: int,
-    query: str | list[str] | int,
+    query: Annotated[str | int, Body()],
     top_k: int,
     threshold: float,
     model: str,

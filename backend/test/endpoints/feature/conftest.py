@@ -294,8 +294,7 @@ class CodeImportProjects(TypedDict):
       `NAMED_ENTITY` (with `PERSON`) and enables no feature
     - user_named_entity: "User Named Entity", without any enabled feature, with
       the top-level user code `NAMED_ENTITY` (no parent)
-    - target: "Codes Target", without any enabled feature: it has only the
-      codes `MENTION` and `QUOTATIONS` (below `SYSTEM_CODE`)
+    - target: "Codes Target", without any enabled feature: it has no codes
     - entity_spans: "Entity Spans", with automatic entity annotations enabled
       and one text document "persons.txt" (the sentences "Ada met Alan." and
       "They talked.", with its raw file); its core steps and `text_ner` are

@@ -178,9 +178,8 @@ def quotation_project(db_session: Session, test_user: UserORM) -> QuotationProje
 
 @pytest.fixture(scope="function")
 def plain_project(db_session: Session, test_user: UserORM) -> ProjectORM:
-    """The project "Plain Project" of `test_user`, without any enabled feature
-    and without documents. It has the quotation codes all the same: until the
-    codes move into the module, every new project gets them."""
+    """The project "Plain Project" of `test_user`, without any enabled feature,
+    documents or codes (no feature that declares codes is enabled)."""
     return create_project_with_features(
         db_session, test_user, title="Plain Project", features=[]
     )

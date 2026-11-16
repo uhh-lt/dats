@@ -10,7 +10,6 @@ from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.image_embedding_utils import encode_image
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
-from modules.simsearch.simsearch_exceptions import ListQueryNotSupportedError
 from repos.ray.dto.clip import ClipTextEmbeddingInput
 from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -23,12 +22,9 @@ class SimSearchService(metaclass=SingletonMeta):
         cls.weaviate = WeaviateRepo()
         return super(SimSearchService, cls).__new__(cls)
 
-    def _encode_query(self, db: Session, query: str | list[str] | int) -> np.ndarray:
+    def _encode_query(self, db: Session, query: str | int) -> np.ndarray:
         """The CLIP embedding of the query: the image of a document id (an int or
-        a string of digits), else the text. A list of texts is rejected: the
-        collections hold CLIP embeddings of one text or image."""
-        if isinstance(query, list):
-            raise ListQueryNotSupportedError()
+        a string of digits), else the text."""
         if isinstance(query, int) or query.isdigit():
             sdoc = SourceDocumentRead.model_validate(
                 crud_sdoc.read(db=db, id=int(query))
@@ -42,7 +38,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self,
         db: Session,
         project_id: int,
-        query: str | list[str] | int,
+        query: str | int,
         top_k: int,
         threshold: float,
         sdoc_ids_to_search: list[int] | None = None,
@@ -71,7 +67,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self,
         db: Session,
         project_id: int,
-        query: str | list[str] | int,
+        query: str | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],
@@ -94,7 +90,7 @@ class SimSearchService(metaclass=SingletonMeta):
         db: Session,
         sdoc_ids_to_search: list[int],
         project_id: int,
-        query: str | list[str] | int,
+        query: str | int,
         top_k: int,
         threshold: float,
     ) -> list[SimSearchImageHit]:
@@ -121,7 +117,7 @@ class SimSearchService(metaclass=SingletonMeta):
         self,
         db: Session,
         project_id: int,
-        query: str | list[str] | int,
+        query: str | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],

@@ -56,13 +56,16 @@ def test_similarity_search_is_rejected_when_its_feature_is_disabled(
 def test_similarity_search_rejects_a_list_query(
     client: TestClient, test_project, path: str
 ):
-    """`test_project` enables both searches; a list of texts is no query, as
-    the collections hold CLIP embeddings of one text or image: 400."""
+    """`test_project` enables both searches; a list of texts is no query (one
+    text or the id of an image), so the body validation rejects it: 422 for the
+    `query` of the body, not for a missing URL parameter."""
     response = client.post(
         path,
         params={"project_id": test_project.id, "top_k": 10, "threshold": 0.5},
         json={"query": ["alpha", "beta"], "filter": EMPTY_FILTER},
     )
 
-    assert response.status_code == 400, response.text
-    assert "not a list" in response.text
+    assert response.status_code == 422, response.text
+    locations = [error["loc"] for error in response.json()["detail"]]
+    assert locations, response.text
+    assert all(loc[:2] == ["body", "query"] for loc in locations), locations
