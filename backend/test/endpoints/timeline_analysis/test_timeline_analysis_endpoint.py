@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from modules.analysis.analysis_enum import DateGroupBy
+from common.date_group_by_enum import DateGroupBy
 from modules.timeline_analysis.timeline_analysis_dto import (
     SpanAnnoTimelineAnalysisFilter,
     TimelineAnalysisConceptUpdate,

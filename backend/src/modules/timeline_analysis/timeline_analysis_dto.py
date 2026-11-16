@@ -3,11 +3,11 @@ from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from common.date_group_by_enum import DateGroupBy
 from core.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from core.search.sdoc_search.sdoc_search_columns import SdocColumns
 from core.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from core.search.span_anno_search.span_anno_search_columns import SpanColumns
-from modules.analysis.analysis_enum import DateGroupBy
 from modules.timeline_analysis.timeline_analysis_enum import (
     TAAnnotationAggregationType,
     TimelineAnalysisType,

@@ -4,7 +4,7 @@ from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from modules.analysis.analysis_enum import DateGroupBy
+from common.date_group_by_enum import DateGroupBy
 from modules.concept_over_time_analysis.cota_enum import (
     DimensionalityReductionAlgorithm,
 )
