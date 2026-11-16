@@ -58,7 +58,6 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<Hierarchi
   toolbarExtraProps,
 }: FilterTableContainerProps<HierarchicalElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
-  // without full-text search, documents are searched with filters only (a text query is rejected)
 
   // table columns
   const { data: tableInfo } = useQuery(sdocQueries.tableInfo(projectId));

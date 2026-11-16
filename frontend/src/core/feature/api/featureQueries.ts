@@ -23,8 +23,8 @@ function reportMissingFeatures(features: readonly FeatureRead[]): void {
 export const featureQueries = {
   all: () => ["feature"] as const,
 
-  // every toggleable feature with its title, description, area, the features it requires and whether a new project
-  // enables it, ordered by area and title; fixed per DATS version
+  // every toggleable feature with its title, description, area and whether a new project enables it, ordered by area
+  // and title; fixed per DATS version
   list: () =>
     queryOptions({
       queryKey: [...featureQueries.all(), "list"] as const,

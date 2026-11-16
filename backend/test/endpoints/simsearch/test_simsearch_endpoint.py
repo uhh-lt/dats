@@ -66,7 +66,7 @@ def test_similarity_search_is_rejected_when_semantic_search_is_disabled(
 def test_similarity_search_rejects_a_list_query(
     client: TestClient, test_project, path: str
 ):
-    """`test_project` enables both searches; a list of texts is no query (one
+    """`test_project` enables semantic search; a list of texts is no query (one
     text or the id of an image), so the body validation rejects it: 422 for the
     `query` of the body, not for a missing URL parameter."""
     response = client.post(

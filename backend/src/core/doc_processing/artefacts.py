@@ -1,7 +1,7 @@
-"""The artefacts of the standard pipeline: the ten that every document gets and
-the on-demand artefacts that several features share (the search index, the
-word frequencies, the sentence embeddings), with the archives of their own
-stores."""
+"""The artefacts of the standard pipeline: the eleven that every document gets
+(the search index among them) and the on-demand artefacts that several
+features share (the word frequencies, the sentence embeddings), with the
+archives of their own stores."""
 
 from collections.abc import Mapping
 

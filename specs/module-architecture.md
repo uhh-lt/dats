@@ -170,13 +170,14 @@ Consequences: the search moved to `core/search` and its index is a core artefact
 
 ## Where code lives afterwards
 
-| Place                     | Content                                                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------- |
-| `systems/feature_system`  | Feature registry, enabled features, statuses, actions, endpoints                                  |
-| `systems/artefact_system` | Artefact and step registry, pipeline graph, step planning, step runs, step statuses, availability |
-| `systems/job_system`      | Unchanged                                                                                         |
-| `core/doc_processing`     | The standard pipeline: upload, the core steps, the shared on-demand artefacts                     |
-| `modules/<capability>`    | One feature with its own artefacts, steps, storage, endpoints                                     |
+| Place                     | Content                                                                                                                                                                                             |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `systems/feature_system`  | Feature registry, enabled features, statuses, actions, endpoints                                                                                                                                    |
+| `systems/artefact_system` | Artefact and step registry, pipeline graph, step planning, step runs, step statuses, availability                                                                                                   |
+| `systems/job_system`      | Unchanged                                                                                                                                                                                           |
+| `core/doc_processing`     | The standard pipeline: upload, the core steps, the shared on-demand artefacts                                                                                                                       |
+| `core/search`             | The search of documents, memos and annotations, on the core search index                                                                                                                            |
+| `modules/<capability>`    | One capability, with a feature if it needs an artefact outside the core, with its own artefacts, steps, storage, endpoints; a module without a feature (Search & Auto-Annotate) is always available |
 
 Removed:
 

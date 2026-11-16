@@ -20,7 +20,7 @@ The **Create new project** dialog lists all features below the project name and 
 
 - The dialog preselects the features that are on by default: every feature except Coreference Resolution and Quotation Detection.
 - **Everything** enables all features, the two above included.
-- **Minimal** enables none of them. Uploads only compute what every document needs (text, sentences, image captions, thumbnails, metadata) and are processed fastest.
+- **Minimal** enables none of them. Uploads only compute what every document needs (text, sentences, image captions, thumbnails, metadata, the full-text search index) and are processed fastest.
 - Check or uncheck single features to build your own selection (shown as **Custom**).
 
 You can change your choice at any time later.

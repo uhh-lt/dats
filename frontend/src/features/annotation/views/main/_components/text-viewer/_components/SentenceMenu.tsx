@@ -67,7 +67,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
     close: closeMenu,
   }));
 
-  // without the similarity search features and annotations, the menu has no entries
+  // without Semantic Search and annotations, the menu has no entries
   const hasEntries = semanticSearchEnabled || (annotations !== undefined && annotations.length > 0);
 
   // ui events
