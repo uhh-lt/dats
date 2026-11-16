@@ -3,6 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type Body_rag_rag_session = {
-  query: string | number;
+  query: string;
   sdoc_ids: Array<number> | null;
 };

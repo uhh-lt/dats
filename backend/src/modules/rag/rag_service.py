@@ -4,22 +4,26 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
+from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.rag.rag_dto import ChatSessionResponse
-from modules.simsearch.simsearch_service import SimSearchService
 from repos.llm_repo import LLMRepo
+from repos.ray.dto.clip import ClipTextEmbeddingInput
+from repos.ray.ray_repo import RayRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 
 
 class RAGService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sims: SimSearchService = SimSearchService()
         cls.llm: LLMRepo = LLMRepo()
+        cls.ray: RayRepo = RayRepo()
+        cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(RAGService, cls).__new__(cls)
 
     def retrieval_augmented_generation_with_session(
         self,
         project_id: int,
-        query: str | int,
+        query: str,
         top_k: int,
         threshold: float,
         model: str,
@@ -27,20 +31,23 @@ class RAGService(metaclass=SingletonMeta):
         session_id: str | None = None,
         sdoc_ids: list[int] | None = None,
     ) -> ChatSessionResponse:
-        # Retrieve top-k similar sentences using vector search
-        similar_sentences = self.sims.find_similar_sentences(
-            db=db,
-            sdoc_ids_to_search=sdoc_ids,
+        # Retrieve the top-k sentences most similar to the query text
+        query_emb = self.ray.clip_text_embedding(
+            ClipTextEmbeddingInput(text=[query])
+        ).numpy()[0]
+        similar_sentences = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
+            client=self.weaviate.get_client(),
+            vector=query_emb.tolist(),
             project_id=project_id,
-            query=query,
-            top_k=top_k,
+            k=top_k,
             threshold=threshold,
+            sdoc_ids=sdoc_ids,
         )
 
         # Group hits by source document ID
         sdoc_to_hits = defaultdict(list)
         for hit in similar_sentences:
-            sdoc_to_hits[hit.sdoc_id].append(hit)
+            sdoc_to_hits[hit.id.sdoc_id].append(hit.id)
 
         extracted_sentences = []
         for sdoc_id, hits in sdoc_to_hits.items():

@@ -24,7 +24,7 @@ router = APIRouter(
 )
 def rag_session(
     project_id: int,
-    query: Annotated[str | int, Body()],
+    query: Annotated[str, Body()],
     top_k: int,
     threshold: float,
     model: str,

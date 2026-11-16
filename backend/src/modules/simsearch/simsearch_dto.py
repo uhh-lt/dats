@@ -14,11 +14,5 @@ class SimSearchSentenceHit(SimSearchHit):
     )
 
 
-class SimSearchDocumentHit(SimSearchHit):
-    compared_sdoc_id: int = Field(
-        description="The ID of the SourceDocument that was compared."
-    )
-
-
 class SimSearchImageHit(SimSearchHit):
     pass

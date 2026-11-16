@@ -10,13 +10,13 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
-from modules.simsearch.simsearch_dto import SimSearchDocumentHit
 from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
 from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from modules.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
 from modules.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationDocumentHit,
     TagRecommendationLinkCreate,
     TagRecommendationResult,
 )
@@ -28,10 +28,7 @@ from repos.vector.weaviate_exceptions import WeaviateObjectUUIDNotFoundException
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
 
-SimSearchHit = TypeVar("SimSearchHit")
-
-
-# TODO: This should probably not use SimSearchSentenceHit! Instead, define own DTO
+Hit = TypeVar("Hit")
 
 
 class TagRecommendationService(metaclass=SingletonMeta):
@@ -151,18 +148,18 @@ class TagRecommendationService(metaclass=SingletonMeta):
         neg_sdoc_ids: set[int],
         top_k: int,
         unique: bool,
-    ) -> list[SimSearchDocumentHit]:
+    ) -> list[TagRecommendationDocumentHit]:
         marked_sdoc_ids = pos_sdoc_ids.union(neg_sdoc_ids)
 
         # suggest
-        hits: list[SimSearchDocumentHit] = []
+        hits: list[TagRecommendationDocumentHit] = []
         for sdoc_id in pos_sdoc_ids:
             search_result = self._search_near_sdoc(
                 client=client, project_id=project_id, sdoc_id=sdoc_id, k=top_k
             )
             hits.extend(
                 [
-                    SimSearchDocumentHit(
+                    TagRecommendationDocumentHit(
                         sdoc_id=r.id.sdoc_id,
                         compared_sdoc_id=sdoc_id,
                         score=r.score,
@@ -223,8 +220,8 @@ class TagRecommendationService(metaclass=SingletonMeta):
             return []
 
     def __unique_consecutive(
-        self, hits: list[SimSearchHit], key: Callable[[SimSearchHit], Any]
-    ) -> list[SimSearchHit]:
+        self, hits: list[Hit], key: Callable[[Hit], Any]
+    ) -> list[Hit]:
         if len(hits) == 0:
             return []
         current = hits[0]
@@ -249,7 +246,9 @@ class TagRecommendationService(metaclass=SingletonMeta):
         for sid, tags in sdocs_and_tags.items():
             for t in tags:
                 tag_to_docs[t.id].append(sid)
-        tag_to_similar = {t: list[SimSearchDocumentHit]() for t in tag_to_docs.keys()}
+        tag_to_similar = {
+            t: list[TagRecommendationDocumentHit]() for t in tag_to_docs.keys()
+        }
         for tag, similar_docs_per_tag in tag_to_similar.items():
             pos_sdocs_ids = set(tag_to_docs[tag])
             neg_sodc_ids_lists = [ids for t, ids in tag_to_docs.items() if t != tag]

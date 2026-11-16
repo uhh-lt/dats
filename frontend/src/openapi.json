@@ -10365,7 +10365,7 @@
       },
       "Body_rag-rag_session": {
         "properties": {
-          "query": { "anyOf": [{ "type": "string" }, { "type": "integer" }], "title": "Query" },
+          "query": { "type": "string", "title": "Query" },
           "sdoc_ids": {
             "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
             "title": "Sdoc Ids"

@@ -32,8 +32,7 @@ def test_rag_session_is_rejected_when_rag_chat_is_disabled(
 
 
 def test_rag_session_rejects_a_list_query(client: TestClient, test_project):
-    """`test_project` enables RAG chat; a list of texts is no query (one text or
-    the id of an image), so the body validation rejects it: 422 for the `query`
+    """`test_project` enables RAG chat; a list of texts is no query (one text), so the body validation rejects it: 422 for the `query`
     of the body, before any LLM call."""
     response = client.post(
         "/rag/rag_session",

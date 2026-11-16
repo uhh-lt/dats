@@ -27,7 +27,7 @@ def finetune_apply_compute(
 ) -> list[COTASentence]:
     # 1. rank search space sentences for each concept
     # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
-    # if we do not have sentence annotations, the ranking / similarities were already computed by the initial simsearch (in the first step)
+    # if we do not have sentence annotations, the ranking / similarities were already computed by the initial similarity search (in the first step)
     if __has_min_concept_sentence_annotations(cota=cota, search_space=search_space):
         concept_ids: list[str] = [concept.id for concept in cota.concepts]
         model_path = FilesystemRepo().get_model_dir(

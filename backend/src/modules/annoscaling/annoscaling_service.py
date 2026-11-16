@@ -13,14 +13,13 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
-from modules.annoscaling.annoscaling_dto import AnnoscalingResult
-from modules.simsearch.simsearch_dto import SimSearchSentenceHit
+from modules.annoscaling.annoscaling_dto import (
+    AnnoscalingResult,
+    AnnoscalingSentenceHit,
+)
 from repos.vector.weaviate_repo import WeaviateRepo
 
-SimSearchHit = TypeVar("SimSearchHit")
-
-
-# TODO: This should probably not use SimSearchSentenceHit! Instead, define own DTO
+Hit = TypeVar("Hit")
 
 
 class AnnoScalingService(metaclass=SingletonMeta):
@@ -88,9 +87,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
         pos_sdoc_sent_ids: list[tuple[int, int]],
         neg_sdoc_sent_ids: list[tuple[int, int]],
         top_k: int,
-    ) -> list[SimSearchSentenceHit]:
+    ) -> list[AnnoscalingSentenceHit]:
         # suggest
-        hits: list[SimSearchSentenceHit] = []
+        hits: list[AnnoscalingSentenceHit] = []
 
         client = self.weaviate.get_client()
         for sdoc_id, sent_id in pos_sdoc_sent_ids:
@@ -103,7 +102,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             )
             hits.extend(
                 [
-                    SimSearchSentenceHit(
+                    AnnoscalingSentenceHit(
                         sdoc_id=r.id.sdoc_id,
                         sentence_id=r.id.sentence_id,
                         score=r.score,
@@ -123,7 +122,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
         candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
 
         # suggest
-        nearest: list[SimSearchSentenceHit] = []
+        nearest: list[AnnoscalingSentenceHit] = []
         for sdoc_id, sent_id in candidates:
             search_result = crud_sentence_embedding.search_near_sentence(
                 client=client,
@@ -134,7 +133,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             )
             nearest.extend(
                 [
-                    SimSearchSentenceHit(
+                    AnnoscalingSentenceHit(
                         sdoc_id=r.id.sdoc_id,
                         sentence_id=r.id.sentence_id,
                         score=r.score,
@@ -145,15 +144,15 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
         results = []
         for hit, near in zip(hits, nearest):
-            assert type(near) is SimSearchSentenceHit
+            assert type(near) is AnnoscalingSentenceHit
             if (near.sdoc_id, near.sentence_id) not in neg_sdoc_sent_ids:
                 results.append(hit)
         results.sort(key=lambda x: x.score, reverse=True)
         return results[0 : min(len(results), top_k)]
 
     def __unique_consecutive(
-        self, hits: list[SimSearchHit], key: Callable[[SimSearchHit], Any]
-    ) -> list[SimSearchHit]:
+        self, hits: list[Hit], key: Callable[[Hit], Any]
+    ) -> list[Hit]:
         if len(hits) == 0:
             return []
         current = hits[0]

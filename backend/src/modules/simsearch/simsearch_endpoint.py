@@ -40,7 +40,7 @@ def find_similar_sentences(
 ) -> list[SimSearchSentenceHit]:
     authz_user.assert_in_project(project_id)
 
-    return SimSearchService().find_similar_sentences_with_filter(
+    return SimSearchService().find_similar_sentences(
         db=db,
         project_id=project_id,
         query=query,
@@ -68,7 +68,7 @@ def find_similar_images(
 ) -> list[SimSearchImageHit]:
     authz_user.assert_in_project(project_id)
 
-    return SimSearchService().find_similar_images_with_filter(
+    return SimSearchService().find_similar_images(
         db=db,
         project_id=project_id,
         query=query,

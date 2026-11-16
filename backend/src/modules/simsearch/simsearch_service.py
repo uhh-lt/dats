@@ -45,19 +45,21 @@ class SimSearchService(metaclass=SingletonMeta):
         query: str | int,
         top_k: int,
         threshold: float,
-        sdoc_ids_to_search: list[int] | None = None,
+        filter: Filter[SdocColumns],
     ) -> list[SimSearchSentenceHit]:
-        query_emb = self._encode_query(db=db, query=query).tolist()
-
+        """The sentences of the filtered documents most similar to the query
+        (a text, or the id of an image document)."""
+        sdoc_ids, _ = filter_sdoc_ids(
+            db=db, project_id=project_id, folder_id=None, filter=filter
+        )
         results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
             client=self.weaviate.get_client(),
-            vector=query_emb,
+            vector=self._encode_query(db=db, query=query).tolist(),
             project_id=project_id,
             k=top_k,
             threshold=threshold,
-            sdoc_ids=sdoc_ids_to_search,
+            sdoc_ids=sdoc_ids,
         )
-
         return [
             SimSearchSentenceHit(
                 sdoc_id=result.id.sdoc_id,
@@ -67,74 +69,29 @@ class SimSearchService(metaclass=SingletonMeta):
             for result in results
         ]
 
-    def find_similar_sentences_with_filter(
-        self,
-        db: Session,
-        project_id: int,
-        query: str | int,
-        top_k: int,
-        threshold: float,
-        filter: Filter[SdocColumns],
-    ) -> list[SimSearchSentenceHit]:
-        filtered_sdoc_ids, _ = filter_sdoc_ids(
-            db=db, project_id=project_id, folder_id=None, filter=filter
-        )
-
-        return SimSearchService().find_similar_sentences(
-            db=db,
-            sdoc_ids_to_search=filtered_sdoc_ids,
-            project_id=project_id,
-            query=query,
-            top_k=top_k,
-            threshold=threshold,
-        )
-
     def find_similar_images(
         self,
         db: Session,
-        sdoc_ids_to_search: list[int],
-        project_id: int,
-        query: str | int,
-        top_k: int,
-        threshold: float,
-    ) -> list[SimSearchImageHit]:
-        query_emb = self._encode_query(db=db, query=query).tolist()
-
-        results = crud_image_embedding.search_near_vector_in_sdoc_ids(
-            client=self.weaviate.get_client(),
-            vector=query_emb,
-            project_id=project_id,
-            k=top_k,
-            threshold=threshold,
-            sdoc_ids=sdoc_ids_to_search,
-        )
-
-        return [
-            SimSearchImageHit(
-                sdoc_id=result.id.sdoc_id,
-                score=result.score,
-            )
-            for result in results
-        ]
-
-    def find_similar_images_with_filter(
-        self,
-        db: Session,
         project_id: int,
         query: str | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],
     ) -> list[SimSearchImageHit]:
-        filtered_sdoc_ids, _ = filter_sdoc_ids(
+        """The images of the filtered documents most similar to the query (a
+        text, or the id of an image document)."""
+        sdoc_ids, _ = filter_sdoc_ids(
             db=db, project_id=project_id, folder_id=None, filter=filter
         )
-
-        return SimSearchService().find_similar_images(
-            db=db,
-            sdoc_ids_to_search=filtered_sdoc_ids,
+        results = crud_image_embedding.search_near_vector_in_sdoc_ids(
+            client=self.weaviate.get_client(),
+            vector=self._encode_query(db=db, query=query).tolist(),
             project_id=project_id,
-            query=query,
-            top_k=top_k,
+            k=top_k,
             threshold=threshold,
+            sdoc_ids=sdoc_ids,
         )
+        return [
+            SimSearchImageHit(sdoc_id=result.id.sdoc_id, score=result.score)
+            for result in results
+        ]

@@ -57,3 +57,11 @@ class TagRecommendationResult(BaseModel):
         description="List of suggested tag IDs for the source document"
     )
     scores: list[float] = Field(description="List of the scores of the suggested tags")
+
+
+class TagRecommendationDocumentHit(BaseModel):
+    sdoc_id: int = Field(description="ID of the similar source document")
+    compared_sdoc_id: int = Field(
+        description="ID of the tagged source document it was compared with"
+    )
+    score: float = Field(description="Similarity of the two documents")

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from config import conf
+from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
@@ -12,7 +13,9 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
     COTASentence,
 )
-from modules.simsearch.simsearch_service import SimSearchService
+from repos.ray.dto.clip import ClipTextEmbeddingInput
+from repos.ray.ray_repo import RayRepo
+from repos.vector.weaviate_repo import WeaviateRepo
 
 BATCH_SIZE = conf.postgres.batch_size
 
@@ -22,7 +25,7 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     if len(cota.search_space) > 0:
         return cota.search_space
 
-    # the search space is empty, we build the search space with simsearch
+    # the search space is empty, we build it from the sentences most similar to the concepts
     search_space = __build_search_space(db=db, cota=cota)
 
     # add the sentences to the search space
@@ -44,16 +47,22 @@ def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     )  # we use a dict here to prevent duplicates in the search space
     for concept in cota.concepts:
         # find similar sentences for each concept to define search space
-        sents = SimSearchService().find_similar_sentences(
-            db=db,
-            sdoc_ids_to_search=None,
+        concept_emb = (
+            RayRepo()
+            .clip_text_embedding(ClipTextEmbeddingInput(text=[concept.description]))
+            .numpy()[0]
+        )
+        results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
+            client=WeaviateRepo().get_client(),
+            vector=concept_emb.tolist(),
             project_id=cota.project_id,
-            query=concept.description,
-            top_k=cota.training_settings.search_space_topk,
+            k=cota.training_settings.search_space_topk,
             threshold=cota.training_settings.search_space_threshold,
+            sdoc_ids=None,
         )
 
-        for sent in sents:
+        for result in results:
+            sent = result.id
             cota_sentence_id = f"{sent.sentence_id}-{sent.sdoc_id}"
             cota_sentence = search_space_dict.get(
                 cota_sentence_id,
@@ -71,7 +80,7 @@ def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
                     text="",
                 ),
             )
-            cota_sentence.concept_similarities[concept.id] = sent.score
+            cota_sentence.concept_similarities[concept.id] = result.score
             search_space_dict[cota_sentence_id] = cota_sentence
 
     return list(search_space_dict.values())
