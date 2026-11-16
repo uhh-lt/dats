@@ -95,13 +95,16 @@ def _features(client: TestClient, project_id: int) -> dict[str, ProjectFeatureRe
 def test_project_features_of_a_project_without_documents_are_ready(
     client: TestClient, test_project
 ):
-    """Every feature of `test_project` is enabled and ready: it applies to no
-    document."""
+    """`test_project` is created without a feature list: every feature on by
+    default is enabled and ready (it applies to no document), the others are
+    disabled."""
     features = _features(client, test_project.id)
 
     assert list(features) == feature_registry.names()
-    for read in features.values():
-        assert read.enabled and read.ready, read
+    defaults = {f.name for f in feature_registry.defaults()}
+    assert {name for name, read in features.items() if read.enabled} == defaults
+    for read in (features[name] for name in defaults):
+        assert read.ready, read
         assert read.status == FeatureStatus.FULLY_AVAILABLE, read
         assert (read.covered_documents, read.total_documents) == (0, 0)
 
@@ -701,7 +704,7 @@ def test_enable_feature_in_a_project_without_documents_starts_nothing(
 
     enabled = _activate(client, test_project.id, "keyword_statistics")
 
-    assert enabled == sorted(feature_registry.names())
+    assert enabled == sorted(f.name for f in feature_registry.defaults())
     assert held_jobs.jobs() == []
     read = _features(client, test_project.id)["keyword_statistics"]
     assert read.status == FeatureStatus.FULLY_AVAILABLE

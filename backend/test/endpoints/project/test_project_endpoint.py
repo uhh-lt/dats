@@ -181,4 +181,6 @@ def test_update_project_changes_the_title(client: TestClient, test_project):
     assert response.status_code == 200, response.text
     project = ProjectRead.model_validate(response.json())
     assert project.title == "Renamed"
-    assert project.enabled_features == sorted(feature_registry.names())
+    assert project.enabled_features == sorted(
+        f.name for f in feature_registry.defaults()
+    )
