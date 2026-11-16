@@ -62,7 +62,7 @@ Creating in a project the system codes that the artefacts of its features declar
 _Avoid_: Initialization, provisioning
 
 **Module**:
-A folder that holds one capability of DATS with its feature, the artefacts only it uses, their pipeline steps and storage, and its endpoints.
+A folder that holds one capability of DATS with its feature, the artefacts only it uses, their pipeline steps and storage, and its endpoints (e.g. `modules/entity_annotations`, `modules/object_detection`, `modules/tag_recommendation`).
 _Avoid_: Plugin, package
 
 **Core Artefact**:

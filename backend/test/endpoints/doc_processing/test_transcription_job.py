@@ -37,7 +37,7 @@ SETTINGS = ProcessingSettings(
 )
 
 # ===========================================================================
-# AUDIO TRANSCRIPTION JOB (modules/doc_processing/audio/transcription_job) TESTS
+# AUDIO TRANSCRIPTION JOB (core/doc_processing/audio/transcription_job) TESTS
 # ===========================================================================
 # The transcription runs as a background job of the document processing pipeline,
 # so these tests call its handler directly. The Whisper model is an external

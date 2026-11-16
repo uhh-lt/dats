@@ -1,6 +1,6 @@
 # Design: features, artefacts and self-contained modules
 
-Status: being built. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system) and PR C (open registries, storage kinds, codes on the artefacts) are built; PR D to F are not. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
+Status: being built. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system) and PR C (open registries, storage kinds, codes on the artefacts), PR D (one job per step, the standard pipeline in core) and PR E (the single-user artefacts in their modules) are built; PR F is not. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
 
 ## Goal
 
@@ -132,7 +132,7 @@ Artefacts, pipeline steps and features are declared by the code that owns them. 
 
 Rule: an artefact that every document needs, or that several features use, lives in core. An artefact that one feature uses lives in that feature's module. It is promoted to core when a second user appears.
 
-Based on the declarations in uhh-lt/dats#892:
+Based on the declarations in uhh-lt/dats#892. Implemented for every row but coreferences and quotations (PR F):
 
 | Lives in                               | Artefact                                                                                                                       | Used by                                                                  |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |

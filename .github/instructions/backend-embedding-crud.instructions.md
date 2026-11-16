@@ -16,8 +16,8 @@ Embedding CRUD modules are the data-access layer for one Weaviate vector collect
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
-from core.doc.document_collection import DocumentCollection
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
+from modules.tag_recommendation.document_collection import DocumentCollection
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.vector.embedding_crud_base import EmbeddingCRUDBase
 from repos.vector.weaviate_models import SimSearchResult
 
@@ -86,5 +86,5 @@ crud_document_embedding = CRUDDocumentEmbedding(
 
 See:
 
-- [document_embedding_crud.py](backend/src/core/doc/document_embedding_crud.py) — minimal module: a filtered search wrapper and inherited create, read and delete.
+- [document_embedding_crud.py](backend/src/modules/tag_recommendation/document_embedding_crud.py) — minimal module: a filtered search wrapper and inherited create, read and delete.
 - [aspect_embedding_crud.py](backend/src/modules/perspectives/aspect_embedding_crud.py) — two `delete_by_*` methods and a search scoped to another entity (`search_near_vector_in_aspect`).
