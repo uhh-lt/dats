@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class TagRecommendationLinkORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # the id of the tag recommendation job (named before it became a job of its own)
     ml_job_id: Mapped[str | None] = mapped_column(String, index=True)
     prediction_score: Mapped[float | None] = mapped_column(Float, index=True)
     is_reviewed: Mapped[bool | None] = mapped_column(Boolean, index=True)

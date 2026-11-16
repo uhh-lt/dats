@@ -23,7 +23,7 @@ class TagRecommendationJobInput(JobInputBase):
 
 
 class TagRecommendationLinkBaseDTO(BaseModel):
-    ml_job_id: str = Field(description="Identifier of the corresponding ML Job.")
+    ml_job_id: str = Field(description="Identifier of the tag recommendation job.")
     source_document_id: int = Field(description="ID of the source document")
     predicted_tag_id: int = Field(description="ID of the predicted tag")
     prediction_score: float = Field(description="Prediction score of the tag")

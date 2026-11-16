@@ -31,18 +31,18 @@ router = APIRouter(
 
 
 @router.get(
-    "/job/{ml_job_id}",
+    "/job/{job_id}",
     response_model=list[TagRecommendationResult],
-    summary="Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
+    summary="Retrieve all (non-reviewed) document tag recommendations of the given tag recommendation job.",
 )
 def get_all_tagrecommendations_from_job(
     *,
     db: Session = Depends(get_db_session),
-    ml_job_id: str,
+    job_id: str,
     authz_user: AuthzUser = Depends(),
 ) -> list[TagRecommendationResult]:
     recommendations = crud_tag_recommendation_link.read_by_ml_job_id(
-        db=db, ml_job_id=ml_job_id, exclude_reviewed=True
+        db=db, ml_job_id=job_id, exclude_reviewed=True
     )
     if len(recommendations) == 0:
         return []

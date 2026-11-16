@@ -39,18 +39,18 @@ class TagRecommendationProject(TypedDict):
     - `project` "Simple Test Project" of the test user (testuser@dats.org), the
       only member. It has the text document `sdoc` "Test Document" and the tags
       `tag_a` "Tag A" and `tag_b` "Tag B" (neither linked to the document).
-    - Two unreviewed recommendations of the ML job `OWN_ML_JOB_ID` for `sdoc`:
+    - Two unreviewed recommendations of the tag recommendation job `OWN_ML_JOB_ID` for `sdoc`:
       `recommendation_a` predicts `tag_a` with score 0.9, `recommendation_b`
       predicts `tag_b` with score 0.4.
     - `outsider` "Outside User" (outsider@dats.org) is not a member of `project`.
       `foreign_project` "Foreign Project" belongs to the outsider only; it has
       its own document "Test Document", the tag `foreign_tag` "Foreign Tag" and the
-      unreviewed recommendation `foreign_recommendation` of the ML job
-      `FOREIGN_ML_JOB_ID` (predicts `foreign_tag` with score 0.7).
+      unreviewed recommendation `foreign_recommendation` of the tag recommendation
+      job `FOREIGN_ML_JOB_ID` (predicts `foreign_tag` with score 0.7).
 
     Derived behavior:
 
-    - `GET /tagrecommendation/job/{ml_job_id}` lists only unreviewed
+    - `GET /tagrecommendation/job/{job_id}` lists only unreviewed
       recommendations, so a reviewed recommendation disappears from it.
     """
 
