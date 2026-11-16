@@ -1,12 +1,12 @@
 from loguru import logger
 
 from common.doc_type_enum import DocType
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.doc_processing.image.image_embedding_artefact import IMAGE_EMBEDDINGS
 from modules.ml.embedding_service import EmbeddingService
+from modules.simsearch.image_embedding_artefact import IMAGE_EMBEDDINGS
+from modules.simsearch.image_embedding_crud import crud_image_embedding
+from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_dto import SdocProcessingJobInput

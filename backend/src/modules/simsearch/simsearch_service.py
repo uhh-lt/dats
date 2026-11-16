@@ -5,13 +5,13 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
-from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.ml.embedding_service import EmbeddingService
 from modules.search.sdoc_search.sdoc_search import filter_sdoc_ids
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
+from modules.simsearch.image_embedding_crud import crud_image_embedding
 from modules.simsearch.simsearch_dto import SimSearchImageHit, SimSearchSentenceHit
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.search_system.filtering import Filter

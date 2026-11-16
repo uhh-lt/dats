@@ -13,10 +13,6 @@ from common.meta_type_enum import MetaType
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
@@ -68,6 +64,10 @@ from modules.experiment.experiment_run_dto import (
     ExperimentRunScores,
     ExperimentRunUpdateIntern,
 )
+from modules.simsearch.image_embedding_crud import crud_image_embedding
+from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from pipeline_test_utils import core_steps
 from prompt_test_utils import (
     PromptEximportProjects,

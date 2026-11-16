@@ -5,10 +5,6 @@ import uuid
 import pytest
 
 from config import conf
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.project.project_orm import ProjectORM
@@ -16,6 +12,10 @@ from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
 from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
+from modules.simsearch.image_embedding_crud import crud_image_embedding
+from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.vector.embedding_crud_base import EmbeddingCRUDBase
 from repos.vector.weaviate_models import ObjectIdentifier
 from repos.vector.weaviate_repo import WeaviateRepo

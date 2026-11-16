@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from common.job_type_enum import JobType
 from modules.ml.ml_enum import MLJobStatus, MLJobType
-from modules.ml.ml_feature import TAG_RECOMMENDATION
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
@@ -13,6 +12,7 @@ from modules.ml.ml_job_dto import (
     QuotationAttributionParams,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
+from modules.tag_recommendation.tag_recommendation_feature import TAG_RECOMMENDATION
 from repos.db.sql_repo import SQLRepo
 from systems.feature_system.feature_service import FeatureService
 from systems.job_system.job_dto import Job

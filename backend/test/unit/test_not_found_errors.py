@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 
 from common.common_exceptions import NotFoundError
 from common.exception_handler import exception_handlers
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.source_document_orm import SourceDocumentORM
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.db.sql_exceptions import NoSuchElementError
 from repos.elastic.elastic_exceptions import NoSuchObjectInElasticSearchError
 from repos.vector.weaviate_exceptions import (

@@ -1,6 +1,6 @@
 from common.feature_enum import FeatureArea
 from core.doc_processing.artefacts import SENTENCE_EMBEDDINGS
-from modules.doc_processing.image.image_embedding_artefact import IMAGE_EMBEDDINGS
+from modules.simsearch.image_embedding_artefact import IMAGE_EMBEDDINGS
 from systems.feature_system.feature_registry import register_feature
 
 SENTENCE_SIMILARITY_SEARCH = register_feature(

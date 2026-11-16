@@ -1,8 +1,8 @@
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
-from core.doc.document_collection import DocumentCollection
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
+from modules.tag_recommendation.document_collection import DocumentCollection
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.vector.embedding_crud_base import EmbeddingCRUDBase
 from repos.vector.weaviate_models import SimSearchResult
 

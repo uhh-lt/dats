@@ -10,10 +10,6 @@ from sqlalchemy.orm import Session
 from common.doc_type_enum import DocType
 from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
-from core.doc.image_embedding_crud import crud_image_embedding
-from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.sdoc_elastic_crud import crud_sdoc_elastic
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
@@ -31,6 +27,10 @@ from modules.eximport.sdocs.import_sdocs import (
     ARCHIVE_WITHOUT_STEP_STATUS,
     import_sdocs_to_proj,
 )
+from modules.simsearch.image_embedding_crud import crud_image_embedding
+from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from pipeline_test_utils import artefact_named, read_all_step_status
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo

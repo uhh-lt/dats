@@ -5,9 +5,9 @@ from collections.abc import Mapping
 from pydantic import TypeAdapter
 from sqlalchemy.orm import Session
 
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.source_document_orm import SourceDocumentORM
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.vector.weaviate_exceptions import WeaviateObjectIDNotFoundException
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.artefact_system.artefact_registry import ArtefactArchive, artefact

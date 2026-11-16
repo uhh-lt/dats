@@ -1,8 +1,8 @@
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
-from core.doc.image_collection import ImageCollection
-from core.doc.image_embedding_dto import ImageObjectIdentifier
+from modules.simsearch.image_collection import ImageCollection
+from modules.simsearch.image_embedding_dto import ImageObjectIdentifier
 from repos.vector.embedding_crud_base import EmbeddingCRUDBase
 from repos.vector.weaviate_models import SimSearchResult
 

@@ -4,8 +4,6 @@ from pathlib import Path
 import pytest
 from sqlalchemy.orm import Session
 
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.source_document_crud import crud_sdoc
 from core.user.user_orm import UserORM
@@ -15,6 +13,8 @@ from modules.eximport.import_exceptions import ImportSourceDocumentsError
 from modules.eximport.import_job_dto import ImportJobInput
 from modules.eximport.import_service import ImportService
 from modules.eximport.sdocs.export_sdocs import export_all_sdocs
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 

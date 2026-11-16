@@ -2,9 +2,9 @@ import numpy as np
 
 from common.doc_type_enum import DocType
 from common.singleton_meta import SingletonMeta
-from core.doc.document_embedding_crud import crud_document_embedding
-from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.source_document_dto import SourceDocumentRead
+from modules.tag_recommendation.document_embedding_crud import crud_document_embedding
+from modules.tag_recommendation.document_embedding_dto import DocumentObjectIdentifier
 from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
 from repos.ray.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
