@@ -55,13 +55,17 @@ class CRUDCode(SQLCRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 return db_code.id
             if not existing.is_system:
                 raise SystemCodeConflictError(
-                    project_id=project_id, name=name, reason="a user code has the name"
+                    project_id=project_id,
+                    name=name,
+                    reason="a user code has the name. Rename that code first.",
                 )
             if existing.parent_id != parent_id:
                 raise SystemCodeConflictError(
                     project_id=project_id,
                     name=name,
-                    reason="a system code of the name has another parent",
+                    reason="a system code of the name has another parent. An "
+                    "administrator can move it back with the project doctor "
+                    "(system_code_conflict).",
                 )
             return existing.id
 

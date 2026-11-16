@@ -11,5 +11,5 @@ class SystemCodeConflictError(Exception):
     def __init__(self, project_id: int, name: str, reason: str) -> None:
         super().__init__(
             f"The system code '{name}' cannot be created in project {project_id}: "
-            f"{reason}. Rename that code first."
+            f"{reason}"
         )
