@@ -1,6 +1,6 @@
 # Design: features, artefacts and self-contained modules
 
-Status: implemented. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system), PR C (open registries, storage kinds, codes on the artefacts), PR D (one job per step, the standard pipeline in core), PR E (the single-user artefacts in their modules) and PR F (`modules/ml` dissolved) are built. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
+Status: implemented. PR A (the per-project feature toggles and the actions rework), PR B (captions are core; the artefact system), PR C (open registries, storage kinds, codes on the artefacts), PR D (one job per step, the standard pipeline in core), PR E (the single-user artefacts in their modules), PR F (`modules/ml` dissolved) and PR G (independent modules, search in core, Semantic Search) are built. It builds on the per-project feature toggles (uhh-lt/dats#892) and replaces the placement decisions made there.
 
 ## Goal
 
@@ -15,7 +15,7 @@ Two cases must both be one small step:
 
 ## The model
 
-- A **feature** requires artefacts (and possibly other features). It knows nothing else.
+- A **feature** requires artefacts, at least one of them outside the core preprocessing pipeline, and never another feature. It knows nothing else.
 - An **artefact** knows how it is produced, stored, exported and imported, and which codes a project needs before it can be produced. How it is deleted is not declared: deletion stays central.
 - A **pipeline step** produces artefacts from other artefacts.
 - A **project** enables features. The artefacts its enabled features require are the project's **artefact demand**.
@@ -97,10 +97,10 @@ COREFERENCE_RESOLUTION = register_feature(
 A feature that reuses an existing artefact:
 
 ```python
-# modules/simsearch/simsearch_feature.py
+# modules/rag/rag_feature.py
 from core.doc_processing.artefacts import SENTENCE_EMBEDDINGS
 
-register_feature("sentence_similarity_search", ..., requires_artefacts={SENTENCE_EMBEDDINGS})
+register_feature("rag_chat", ..., requires_artefacts={SENTENCE_EMBEDDINGS})
 ```
 
 ### The life of an artefact
@@ -144,19 +144,28 @@ Rule: an artefact that every document needs, or that several features use, lives
 
 Based on the declarations in uhh-lt/dats#892, implemented for every row:
 
-| Lives in                               | Artefact                                                                                                                       | Used by                                                                  |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Core, always computed                  | Raw HTML, content, language, tokens and sentences, HTML, thumbnail, file metadata, audio stream, transcript, **image caption** | Every document                                                           |
-| Core, computed on demand               | Search index                                                                                                                   | Full-text search, Search & Annotate                                      |
-| Core, computed on demand               | Word frequencies                                                                                                               | Word frequency, Duplicate finder                                         |
-| Core, computed on demand               | Sentence embeddings                                                                                                            | Sentence similarity search, and further services that read them directly |
-| `modules/simsearch`                    | Image embeddings                                                                                                               | Image similarity search                                                  |
-| `modules/tag_recommendation`           | Document embeddings                                                                                                            | Tag recommendation                                                       |
-| `modules/statistics`                   | Keywords                                                                                                                       | Keyword statistics                                                       |
-| `modules/entity_annotations` (new)     | Named-entity spans                                                                                                             | Entity annotations                                                       |
-| `modules/object_detection` (new)       | Object boxes                                                                                                                   | Object detection                                                         |
-| `modules/coreference_resolution` (new) | Coreferences                                                                                                                   | Coreference resolution                                                   |
-| `modules/quotation_detection` (new)    | Quotations                                                                                                                     | Quotation detection                                                      |
+| Lives in                               | Artefact                                                                                                                                         | Used by                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Core, always computed                  | Raw HTML, content, language, tokens and sentences, HTML, thumbnail, file metadata, audio stream, transcript, **image caption**, **search index** | Every document; the search (`core/search`) and Search & Auto-Annotate |
+| Core, computed on demand               | Word frequencies                                                                                                                                 | Word frequency, Duplicate finder                                      |
+| Core, computed on demand               | Sentence embeddings                                                                                                                              | Semantic Search, RAG Chat, Annotation Scaling, Concepts Over Time     |
+| `modules/simsearch`                    | Image embeddings                                                                                                                                 | Semantic Search                                                       |
+| `modules/tag_recommendation`           | Document embeddings                                                                                                                              | Tag recommendation                                                    |
+| `modules/statistics`                   | Keywords                                                                                                                                         | Keyword statistics                                                    |
+| `modules/entity_annotations` (new)     | Named-entity spans                                                                                                                               | Entity annotations                                                    |
+| `modules/object_detection` (new)       | Object boxes                                                                                                                                     | Object detection                                                      |
+| `modules/coreference_resolution` (new) | Coreferences                                                                                                                                     | Coreference resolution                                                |
+| `modules/quotation_detection` (new)    | Quotations                                                                                                                                       | Quotation detection                                                   |
+
+## Three rules (PR G)
+
+Decided after PR F, recorded in `specs/adr/0012-features-need-processing-core-has-none-modules-stand-alone.md`:
+
+1. **Toggle rule:** a feature exists only if it requires an artefact that is not a core artefact; enabling it means more processing. A feature requires artefacts only, never another feature. Features that share an artefact share its computation, not each other.
+2. **Core rule:** core declares no feature and checks no toggle. Everything in core is always available. Core may own on-demand artefacts that several modules use (word frequencies, sentence embeddings); only the features of modules decide whether they are computed.
+3. **Module rule:** a module does not import another module (`backend/lint/check_core.py`, with the remaining pairs listed as exceptions: export/import, and experiment on agreement and the LLM assistant). Small duplication in modules is preferred over a shared service.
+
+Consequences: the search moved to `core/search` and its index is a core artefact, so Full-Text Search and Search & Auto-Annotate are no features; Sentence Search and Image Search are one feature, Semantic Search; RAG Chat, Annotation Scaling and Concepts Over Time require the sentence embeddings and embed their queries themselves.
 
 ## Where code lives afterwards
 
@@ -216,6 +225,7 @@ Each package leaves DATS working and is one pull request, stacked on the one bef
 | D   | Standard pipeline into `core/doc_processing`; one spaCy call per step                                                                                                                                                  | Move and behaviour change |
 | E   | Feature modules: the single-user artefacts and their steps move into their modules                                                                                                                                     | Move                      |
 | F   | Dissolve `modules/ml`: coreference and quotation as features, tag recommendation as a module; drop the embedding service and the ML Automation page                                                                    | Move                      |
+| G   | The three rules: features require artefacts only; search in core with a core index, no search features; one feature Semantic Search; modules decoupled; the module import lint                                         | Change and move           |
 
 Each pull request updates the glossary, ADRs, READMEs and instruction files it touches. The frontend reads the features from the registry from C on.
 

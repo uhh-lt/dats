@@ -46,7 +46,7 @@ A note or comment added to a source document or annotation.
 ### Features and preprocessing
 
 **Feature**:
-A capability of DATS that a project can enable or disable, and that needs certain artefacts of the project's source documents. It is declared by its module with a text name, a title, a description, an area, and whether a new project enables it. Capabilities that need core artefacts only (annotation, for example) are always available and are not features in this sense.
+A capability of DATS that a project can enable or disable, and that needs certain artefacts of the project's source documents, at least one of them not a core artefact: enabling it means more processing. It requires artefacts only, never another feature. It is declared by its module with a text name, a title, a description, an area, and whether a new project enables it. Capabilities that need core artefacts only (annotation, full-text search and Search & Auto-Annotate, for example) are always available and are not features in this sense; core declares no feature.
 _Avoid_: Feature toggle, feature flag, module (a module holds a feature)
 
 **Artefact**:
@@ -62,11 +62,11 @@ Creating in a project the system codes that the artefacts of its features declar
 _Avoid_: Initialization, provisioning
 
 **Module**:
-A folder that holds one capability of DATS with its feature, the artefacts only it uses, their pipeline steps and storage, and its endpoints (e.g. `modules/entity_annotations`, `modules/object_detection`, `modules/tag_recommendation`).
+A folder that holds one capability of DATS with its feature (if it needs an artefact outside the core), the artefacts only it uses, their pipeline steps and storage, and its endpoints (e.g. `modules/entity_annotations`, `modules/object_detection`, `modules/tag_recommendation`). A module does not import another module; the remaining exceptions are listed in `backend/lint/check_core.py`.
 _Avoid_: Plugin, package
 
 **Core Artefact**:
-An artefact computed for every source document, whatever features its project enables, such as the content, the tokens and sentences, or the caption of an image (DATS turns every modality into text). All other artefacts are computed only while a feature needs them.
+An artefact computed for every source document, whatever features its project enables, such as the content, the tokens and sentences, the search index, or the caption of an image (DATS turns every modality into text). All other artefacts are computed only while a feature needs them.
 _Avoid_: Default artefact, base data
 
 **Artefact Demand**:

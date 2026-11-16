@@ -1,0 +1,15 @@
+# ADR 0012: Features need processing, core has none, modules stand alone
+
+**Date:** 2026-11-16
+
+Three rules decide what a feature is and where code lives:
+
+1. **Toggle rule.** A feature exists, and is toggleable, only if it requires an artefact that is not a core artefact (an artefact without `always=True`): enabling a feature means more processing. A feature requires artefacts only, never another feature. The startup check (`feature_registry.check`) rejects a feature without such an artefact.
+2. **Core rule.** Core declares no feature and checks no toggle; everything in core is always available. Core may own on-demand artefacts that several modules use (word frequencies, sentence embeddings); only the features of modules decide whether they are computed.
+3. **Module rule.** A module does not import another module. `backend/lint/check_core.py` enforces it; the remaining pairs are listed with their reason (export/import imports six modules until it becomes a system; experiment builds on agreement and the LLM assistant by design), and an exception that no longer occurs fails the lint. Small duplication in modules is preferred over a shared service.
+
+Consequences: `requires_features` is gone from the registry, the API and the feature dialogs; enabling or disabling a feature never changes another one. RAG Chat, Annotation Scaling and Concepts Over Time require the sentence embeddings; RAG Chat and Concepts Over Time embed their query text themselves, Annotation Scaling and Tag Recommendations have their own hit DTOs. The search moves to `core/search` and the search index becomes a core artefact, so the features Full-Text Search and Search & Auto-Annotate are deleted; Search & Auto-Annotate stays a module without a feature. Sentence Search and Image Search become one feature, Semantic Search, which requires the sentence and the image embeddings; a set of artefacts now applies to a doctype if one of them does, so Semantic Search computes the sentence embeddings of every document and the image embeddings of the images. `DateGroupBy` moves to `common`.
+
+Nothing of this was deployed, so no data migration renames the stored feature names: a stored name of a deleted feature is ignored when read. The migration that enables every feature in existing projects names `semantic_search` instead of the two old names, and the project import drops the names of the deleted features and reads the two old similarity search names as `semantic_search`.
+
+We rejected features that require features (the cascade of enabling and the rejection of disabling made features depend on each other and gave no extra control), a feature for a capability without its own processing (a toggle that saves nothing), and a shared similarity search service for the modules (a dependency between modules for a few lines of code).

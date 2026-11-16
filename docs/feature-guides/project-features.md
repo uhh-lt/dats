@@ -1,16 +1,16 @@
 # Project Features
 
-Not every project needs every DATS feature. A project that only uses the LLM Assistant on tens of thousands of documents does not need a full-text index, sentence embeddings or keyword statistics for each of them. **Project features** let you choose what DATS prepares for your documents: the fewer features you enable, the faster your uploads are processed.
+Not every project needs every DATS feature. A project that only uses the LLM Assistant on tens of thousands of documents does not need sentence embeddings or keyword statistics for each of them. **Project features** let you choose what DATS prepares for your documents: the fewer features you enable, the faster your uploads are processed.
 
-Annotation, the analysis tools, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. The features below can be switched on and off per project.
+Annotation, document search (full-text search included), Search & Auto-Annotate, the analysis tools, the LLM Assistant, Perspectives, the Classifier, Whiteboards and the Logbook are always available. The features below can be switched on and off per project: each of them computes extra data for every document.
 
 | Area                 | Features                                                                                                                                       |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Search               | Full-Text Search, Search & Auto-Annotate, Sentence Search, Image Search                                                                        |
+| Search               | Semantic Search (Sentence Search and Image Search)                                                                                             |
 | Analysis             | RAG Chat, Concepts Over Time Analysis, Word Frequency Analysis, Keyword Statistics and Filter, Duplicate Finder                                |
 | Automatic Annotation | Annotation Scaling, Tag Recommendations, Automatic Entity Annotations, Automatic Object Detection, Coreference Resolution, Quotation Detection |
 
-Some features build on others: RAG Chat, Annotation Scaling and Concepts Over Time Analysis need **Sentence Search**.
+Every feature stands on its own: enabling or disabling one never changes another. Several features may share data: Semantic Search, RAG Chat, Annotation Scaling and Concepts Over Time Analysis all use the sentence embeddings, which are computed once.
 
 **Coreference Resolution** and **Quotation Detection** annotate German text documents (mention groups; quotations with their speaker, cue, addressee and frame). They run a hosted model for every German text document, so a new project leaves them off until you enable them. Documents in other languages finish without annotations. They replace the former ML Automation page: you no longer start them by hand for the whole project, the pipeline computes them for every German text document of a project that enables them, and Recompute in the document health view runs them again.
 
@@ -21,7 +21,7 @@ The **Create new project** dialog lists all features below the project name and 
 - The dialog preselects the features that are on by default: every feature except Coreference Resolution and Quotation Detection.
 - **Everything** enables all features, the two above included.
 - **Minimal** enables none of them. Uploads only compute what every document needs (text, sentences, image captions, thumbnails, metadata) and are processed fastest.
-- Check or uncheck single features to build your own selection (shown as **Custom**). Checking a feature also checks the features it needs; unchecking a feature also unchecks the features that need it.
+- Check or uncheck single features to build your own selection (shown as **Custom**).
 
 You can change your choice at any time later.
 
@@ -36,7 +36,7 @@ Open the **Project Settings** (the cog icon in the bottom left navigation bar) a
 | **Partly available** | The feature is enabled, but some documents have no data for it and nothing is computing for them.         | **Complete**, **Disable** |
 | **Fully available**  | The feature is enabled and all documents have its data.                                                   | **Disable**               |
 
-While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. It offers no action until it stops computing: then it is fully available, or partly available if some documents failed. Views of such a feature (and of a partly available one) show a small hint such as "Full-Text Search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
+While a feature is computing, DATS refreshes its progress by itself, and the feature can already be used with the documents that are ready. It offers no action until it stops computing: then it is fully available, or partly available if some documents failed. Views of such a feature (and of a partly available one) show a small hint such as "Semantic Search: 60 % of documents" in the bottom right corner; click it to open the Features tab.
 
 ### Enabling and Completing a Feature
 
@@ -61,7 +61,7 @@ If a worker stops while it computes a document, DATS notices it after the job's 
 
 A partly or fully available feature can be disabled. Click **Disable** and confirm. The feature is hidden in the project and is no longer computed for new uploads. Its data is **kept**: enabling the feature again only computes the documents that lack it.
 
-A feature that another enabled feature needs cannot be disabled; hover over its greyed out **Disable** button to see which features need it, and disable those first.
+Disabling a feature never disables another one. Data that another enabled feature also uses (the sentence embeddings, for example) is still computed for new uploads.
 
 ### Importing a Project
 

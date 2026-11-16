@@ -12,7 +12,7 @@ The artefacts and the pipeline steps that produce them: their declarations (`art
 | `ArtefactService.plan_document`       | The upload (`sdoc_init`)                  | Plans the steps of the core artefacts and of the project's artefact demand for a new document; returns its root steps to start.      |
 | `start_steps`                         | Advancing, upload, computation, Recompute | Starts the jobs of some steps of a document.                                                                                         |
 
-Disable calls nothing: the stored data and the step statuses stay. A computation plans the steps of the core artefacts and of its artefacts, if they apply to the doctype, and plans their erroneous steps again; it never plans the steps of other artefacts.
+Disable calls nothing: the stored data and the step statuses stay. A computation plans the steps of the core artefacts and of those of its artefacts that apply to the doctype (a set applies if one of its artefacts has a producer for the doctype: Semantic Search computes the sentence embeddings of every document and the image embeddings of the images), and plans their erroneous steps again; it never plans the steps of other artefacts.
 
 ## Declaring an artefact
 

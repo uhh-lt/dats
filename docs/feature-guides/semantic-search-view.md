@@ -6,7 +6,7 @@ Powered by the embeddings generated during the DATS preprocessing pipeline, this
 
 ## Accessing Semantic Search
 
-You can access Semantic Search from the main left navigation bar by clicking the **Magnifying Glass icon** and selecting either **Sentencee Search** or **Image Search** (if your project contains images). This opens the Semantic Search interface, where you can start formulating your queries and exploring the results.
+You can access Semantic Search from the main left navigation bar by clicking the **Magnifying Glass icon** and selecting either **Sentence Search** or **Image Search** (if your project contains images). This opens the Semantic Search interface, where you can start formulating your queries and exploring the results.
 
 ## How Semantic Search Works
 
