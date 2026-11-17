@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.artefact_dto import ArtefactRead, ProcessingSettings
 from systems.feature_system.feature_system_enum import FeatureArea, FeatureStatus
 
 
@@ -11,6 +11,9 @@ class FeatureRead(BaseModel):
     area: FeatureArea = Field(description="Area of the Feature")
     default_enabled: bool = Field(
         description="Whether a new Project enables the Feature unless the request names its Features"
+    )
+    artefacts: list[ArtefactRead] = Field(
+        description="The Artefacts the Feature requires besides the core Artefacts: what enabling it computes"
     )
 
 

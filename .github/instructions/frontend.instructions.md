@@ -95,6 +95,7 @@ Add a page to a feature:
 Rules:
 
 - The title, description and area of a feature come from the backend only: components read them with `useFeatureInfo(Feature.X)`, code outside React (mutation messages) with `featureTitle(queryClient, Feature.X)`; the project route loader ensures `featureQueries.list()`. Never write a feature's title in the frontend.
+- The data a feature needs comes from the backend only (`FeatureRead.artefacts`, each with its name and title), so the frontend never names an artefact or a pipeline step.
 - `Feature` in `core/feature/features.ts` lists only the features with a page or a gate (`FrontendFeature`); a name the backend does not list is reported as a console error when the list loads (`featureQueries.list()`).
 - `NAVIGATION_ENTRIES` in `core/navigation/navigationEntries.ts` lists every page of a project once, with its group, route, shortcut and command, and takes the feature and the icon from the page's route; the sidebar, the analysis dashboard, the command palette, the shortcuts and the tab titles are generated from it through `useNavigationEntries`.
 - A navigation entry has one `title` (Title Case) for all of these; the entry of a feature page has none and takes its title and description from the backend list of the features, unless several listed pages share the feature (Semantic Search: Sentence Search and Image Search), then each entry names its page with its own `title`; a page heading uses `useNavigationTitle()` (lint: `local/navigation-entries`, which also checks that `to` is a page route with `staticData.tab`).

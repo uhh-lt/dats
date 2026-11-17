@@ -9550,6 +9550,15 @@
         "title": "ApiKeyRead"
       },
       "ApproachType": { "type": "string", "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT"], "title": "ApproachType" },
+      "ArtefactRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the Artefact" },
+          "title": { "type": "string", "title": "Title", "description": "Title of the Artefact, shown to users" }
+        },
+        "type": "object",
+        "required": ["name", "title"],
+        "title": "ArtefactRead"
+      },
       "AspectCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
@@ -13291,10 +13300,16 @@
             "type": "boolean",
             "title": "Default Enabled",
             "description": "Whether a new Project enables the Feature unless the request names its Features"
+          },
+          "artefacts": {
+            "items": { "$ref": "#/components/schemas/ArtefactRead" },
+            "type": "array",
+            "title": "Artefacts",
+            "description": "The Artefacts the Feature requires besides the core Artefacts: what enabling it computes"
           }
         },
         "type": "object",
-        "required": ["feature", "title", "description", "area", "default_enabled"],
+        "required": ["feature", "title", "description", "area", "default_enabled", "artefacts"],
         "title": "FeatureRead"
       },
       "FeatureStatus": {

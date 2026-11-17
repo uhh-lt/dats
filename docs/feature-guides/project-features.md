@@ -27,7 +27,7 @@ You can change your choice at any time later.
 
 ## 2\. The Features Tab
 
-Open the **Project Settings** (the cog icon in the bottom left navigation bar) and select the **Features** tab. Every feature is listed with its description, its status and the actions its status allows:
+Open the **Project Settings** (the cog icon in the bottom left navigation bar) and select the **Features** tab. Every feature is listed with its description, the data it needs (for example "Needs: Word frequencies"), its status and the actions its status allows. A disabled feature also says how many documents lack its data, or that its data is already complete (after it was enabled once and disabled again): enabling it then computes nothing.
 
 | Status               | Meaning                                                                                                   | Actions                   |
 | -------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------- |
@@ -40,7 +40,7 @@ While a feature is computing, DATS refreshes its progress by itself, and the fea
 
 ### Enabling and Completing a Feature
 
-Click **Enable** (or **Complete** for a partly available feature). A dialog tells you how many documents will be processed; confirm it. The feature has no processing settings: it uses the default settings of the [Document Upload](document-upload.md) dialog (default model, automatic language detection). DATS computes the missing data in the background, with a lower priority than new uploads. Features that use the same data, such as Word Frequency Analysis and the Duplicate Finder, are computing together while it is computed.
+Click **Enable** (or **Complete** for a partly available feature). A dialog tells you which data is computed and for how many documents (or that nothing is computed because every document has it); confirm it. The feature has no processing settings: it uses the default settings of the [Document Upload](document-upload.md) dialog (default model, automatic language detection). DATS computes the missing data in the background, with a lower priority than new uploads. Features that use the same data, such as Word Frequency Analysis and the Duplicate Finder, are computing together while it is computed.
 
 A feature becomes **partly available** when documents lack its data, for example:
 

@@ -9,7 +9,7 @@ from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from feature_test_utils import FeatureProject, PartlyProject, feature_named
 from job_test_utils import HeldJobs, unreachable_redis
-from pipeline_test_utils import read_step_status, started_steps
+from pipeline_test_utils import artefact_named, read_step_status, started_steps
 from repos.db.sql_repo import SQLRepo
 from systems.artefact_system import artefact_service
 from systems.artefact_system.artefact_computation_job import ARTEFACT_COMPUTATION_JOB
@@ -81,6 +81,23 @@ def test_get_all_features_reports_a_feature_off_by_default(
 
     assert read.default_enabled is False
     assert read.title == off_by_default.title
+
+
+def test_get_all_features_lists_the_artefacts_a_feature_computes(
+    client: TestClient,
+):
+    """A feature lists the artefacts it requires besides the core artefacts,
+    with their titles: keyword statistics the keywords; semantic search the
+    sentence and the image embeddings, ordered by title."""
+    features = _all_features(client)
+
+    assert [(a.name, a.title) for a in features["keyword_statistics"].artefacts] == [
+        ("keywords", artefact_named("keywords").title)
+    ]
+    assert [a.name for a in features["semantic_search"].artefacts] == [
+        "image_embeddings",
+        "sentence_embeddings",
+    ]
 
 
 # ===========================================================================
@@ -200,6 +217,20 @@ def test_project_features_count_the_documents_of_a_disabled_feature(
 
     assert read.status == FeatureStatus.DISABLED
     assert (read.processing_documents, read.not_planned_documents) == (1, 2)
+
+
+def test_project_features_report_a_disabled_feature_whose_data_is_complete(
+    client: TestClient, keywords_complete_project: ProjectORM
+):
+    """Keyword statistics is disabled in the project, but its only document
+    has the keywords: the feature is ready, with nothing lacking, so enabling
+    it computes nothing."""
+    read = _features(client, keywords_complete_project.id)["keyword_statistics"]
+
+    assert read.status == FeatureStatus.DISABLED
+    assert read.ready is True
+    assert (read.covered_documents, read.total_documents) == (1, 1)
+    assert read.lacking_documents == 0
 
 
 # ===========================================================================

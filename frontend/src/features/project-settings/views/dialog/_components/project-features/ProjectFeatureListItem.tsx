@@ -59,6 +59,7 @@ export const ProjectFeatureListItem = memo(({ projectId, feature, state, onActiv
     .filter(Boolean)
     .join(", ");
   const chip = STATUS_CHIP[state.status];
+  const needs = feature.artefacts.map((artefact) => artefact.title).join(", ");
 
   // a partly or fully available feature can be disabled
   const disableButton = (
@@ -111,6 +112,15 @@ export const ProjectFeatureListItem = memo(({ projectId, feature, state, onActiv
         <Typography variant="body2" color="text.secondary">
           {description}
         </Typography>
+        {needs && (
+          <Typography variant="caption" color="text.secondary" component="div" mt={0.5}>
+            Needs: {needs}
+            {state.status === FeatureStatus.DISABLED &&
+              (state.ready
+                ? " · its data is complete, enabling it computes nothing"
+                : ` · ${formatCount(lacking)} of ${formatCount(state.total_documents)} documents lack it`)}
+          </Typography>
+        )}
         {state.status === FeatureStatus.COMPUTING && (
           <Box mt={1} ml={-3}>
             <LinearProgressWithLabel

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectRead
-from systems.artefact_system.artefact_dto import ProcessingSettings
+from systems.artefact_system.artefact_dto import ArtefactRead, ProcessingSettings
 from systems.artefact_system.artefact_registry import Artefact
 from systems.artefact_system.artefact_service import ArtefactService
 from systems.feature_system.feature_dto import FeatureRead, ProjectFeatureRead
@@ -47,7 +47,9 @@ class FeatureService(metaclass=SingletonMeta):
         return super(FeatureService, cls).__new__(cls)
 
     def read_all(self) -> list[FeatureRead]:
-        """All toggleable features, ordered by area and title."""
+        """All toggleable features, ordered by area and title, each with the
+        artefacts it requires besides the core artefacts (what enabling it
+        computes), ordered by title."""
         declarations = self.registry.declarations()
         return [
             FeatureRead(
@@ -56,6 +58,12 @@ class FeatureService(metaclass=SingletonMeta):
                 description=f.description,
                 area=f.area,
                 default_enabled=f.default_enabled,
+                artefacts=[
+                    ArtefactRead(name=a.name, title=a.title)
+                    for a in sorted(
+                        self.registry.required_artefacts([f]), key=lambda a: a.title
+                    )
+                ],
             )
             for f in declarations
         ]

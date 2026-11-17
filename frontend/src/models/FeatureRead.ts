@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ArtefactRead } from "./ArtefactRead";
 import type { FeatureArea } from "./FeatureArea";
 export type FeatureRead = {
   /**
@@ -24,4 +25,8 @@ export type FeatureRead = {
    * Whether a new Project enables the Feature unless the request names its Features
    */
   default_enabled: boolean;
+  /**
+   * The Artefacts the Feature requires besides the core Artefacts: what enabling it computes
+   */
+  artefacts: Array<ArtefactRead>;
 };

@@ -55,6 +55,37 @@ def partly_project(db_session, test_user: UserORM) -> PartlyProject:
     return create_partly_project(db_session, test_user)
 
 
+@pytest.fixture(scope="function")
+def keywords_complete_project(db_session, test_user: UserORM) -> ProjectORM:
+    """
+    This fixture sets up the following project:
+
+    - project: "Keywords Complete Project" of `test_user`, without any enabled
+      feature
+    - keywords_done: text document "keywords_done.txt"; the steps of a project
+      without features and keywords are finished (as if keyword statistics
+      was enabled once and disabled again)
+
+    Non-obvious derived behavior:
+
+    - Keyword statistics is disabled, but every document has its data, so it
+      is ready and enabling it computes nothing.
+    """
+    project = create_project_with_features(
+        db_session, test_user, title="Keywords Complete Project", features=[]
+    )
+    _create_sdoc(
+        db_session,
+        project,
+        name="keywords_done.txt",
+        doctype=DocType.text,
+        status={**dict.fromkeys(minimal_text_steps(), 1), "keywords": 1},
+    )
+    db_session.commit()
+    db_session.refresh(project)
+    return project
+
+
 class DuplicateFinderProject(TypedDict):
     """
     This fixture sets up the following project:

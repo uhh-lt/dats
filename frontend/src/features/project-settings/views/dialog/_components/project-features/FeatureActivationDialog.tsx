@@ -45,6 +45,7 @@ export function FeatureActivationDialog({ projectId, feature, state, onClose }: 
   }, [completeFeatureMutation, enableFeatureMutation, feature, handleSuccess, isComplete, projectId]);
 
   const count = state?.lacking_documents ?? 0;
+  const needs = feature ? feature.artefacts.map((artefact) => artefact.title).join(", ") : "";
 
   return (
     <Dialog open={feature !== null} onClose={closeOnEscape(onClose)} maxWidth="sm" fullWidth fullScreen={isMaximized}>
@@ -59,8 +60,8 @@ export function FeatureActivationDialog({ projectId, feature, state, onClose }: 
           <Typography>{feature?.description}</Typography>
           <Typography>
             {count === 0
-              ? "No document needs to be processed."
-              : `${count.toLocaleString("en-US")} ${count === 1 ? "document is" : "documents are"} processed in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
+              ? `Nothing is computed: every document already has its data (${needs}).`
+              : `Computes ${needs} for ${count.toLocaleString("en-US")} ${count === 1 ? "document" : "documents"} in the background${isComplete ? ` (${count === 1 ? "its" : "their"} data failed or was never computed)` : ""}. The feature can be used while it is computing.`}
           </Typography>
         </Stack>
       </DialogContent>

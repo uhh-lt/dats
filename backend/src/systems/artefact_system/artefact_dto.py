@@ -36,3 +36,8 @@ class ArtefactComputationJobInput(JobInputBase):
     last_sdoc_id: int = Field(
         description="The highest SourceDocument ID of the Project at the request; later documents plan their steps on upload"
     )
+
+
+class ArtefactRead(BaseModel):
+    name: str = Field(description="Name of the Artefact")
+    title: str = Field(description="Title of the Artefact, shown to users")
